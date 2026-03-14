@@ -4,10 +4,13 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import {
+  requiredDeploymentFiles,
   disallowedPackages,
   requiredDirectories,
   requiredPwaFiles,
-  requiredRuleFiles
+  requiredRuleFiles,
+  requiredWorkflowFiles,
+  requiredVersioningFiles
 } from '@/shared/contracts/project-contract'
 
 const repoRoot = resolve(import.meta.dirname, '../..')
@@ -30,6 +33,24 @@ describe('project contract', () => {
 
   it('keeps the required PWA baseline files in place', () => {
     for (const file of requiredPwaFiles) {
+      expect(existsSync(resolve(repoRoot, file)), `${file} should exist`).toBe(true)
+    }
+  })
+
+  it('keeps the SemVer versioning workflow files in place', () => {
+    for (const file of requiredVersioningFiles) {
+      expect(existsSync(resolve(repoRoot, file)), `${file} should exist`).toBe(true)
+    }
+  })
+
+  it('keeps the CI/CD workflow files in place', () => {
+    for (const file of requiredWorkflowFiles) {
+      expect(existsSync(resolve(repoRoot, file)), `${file} should exist`).toBe(true)
+    }
+  })
+
+  it('keeps the deployment configuration files in place', () => {
+    for (const file of requiredDeploymentFiles) {
       expect(existsSync(resolve(repoRoot, file)), `${file} should exist`).toBe(true)
     }
   })

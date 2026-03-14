@@ -26,6 +26,7 @@ This folder contains the canonical Markdown documentation for the repository.
 - `governance/TESTING_RULES.md`
 - `governance/SECURITY_RULES.md`
 - `governance/REGRESSION_RULES.md`
+- `governance/VERSIONING_RULES.md`
 
 ### `checklists/`
 - `checklists/README.md`

@@ -106,3 +106,8 @@ Examples:
 
 ## 11. Anti-regression rule
 Before finalizing a task, check `docs/governance/REGRESSION_RULES.md` and confirm the implementation does not reintroduce corrected mistakes.
+
+## 12. Versioning rule
+- follow `docs/governance/VERSIONING_RULES.md` for release classification
+- meaningful changes should ship with a changeset entry before version application
+- do not guess SemVer bumps ad hoc outside the documented rules

@@ -13,6 +13,7 @@ Testing is a required safety layer, not a polish step.
 3. The project must include contract tests that validate the existence of required rule files and key architectural folders.
 4. When a bug or correction reveals risk, add a regression test whenever practical.
 5. Fast feedback matters: lint, typecheck, unit, and integration checks must be runnable by default from the repository root.
+6. CI must mirror the same primary verification command used locally so quality gates do not drift.
 
 ---
 
@@ -41,6 +42,7 @@ Test cross-file behavior such as:
 Test the repo contract itself:
 - required source-of-truth documents exist
 - required architectural folders exist
+- required CI workflow and deployment config files exist
 - required PWA baseline files exist
 - removed vulnerable dependency chains are not reintroduced
 - critical rule changes are guarded
@@ -91,6 +93,7 @@ src/features/*/tests/   feature-local tests when co-location helps
 3. Failing tests block completion unless the user explicitly accepts a known failure.
 4. If test coverage is intentionally deferred, document the gap in the same task.
 5. Test names should describe business intent, not implementation trivia.
+6. The `main` branch must stay gated by a successful CI quality run even when preview and production deploys are handled by a hosting platform.
 
 ---
 
@@ -102,6 +105,7 @@ The repository must keep these commands meaningful:
 - `npm run test:unit`
 - `npm run test:integration`
 - `npm run test:contract`
+- `npm run version:plan`
 - `npm run verify`
 
 ---

@@ -26,6 +26,7 @@ This means:
 - one main application
 - one main codebase
 - one shared deployment flow
+- one local workflow with preview and production deployments
 - clear separation by business domains/modules
 - strict RBAC and tenant isolation
 - reusable UI system and shared design rules
@@ -39,6 +40,13 @@ This architecture is recommended because the project needs:
 - clear business boundaries
 - high development speed with Codex
 - future scalability without premature infrastructure complexity
+
+The deployment baseline should stay intentionally lean for solo development:
+
+- local development for daily work
+- Netlify Deploy Previews for pull request validation
+- Netlify production deployment from `main`
+- no long-lived staging environment until data, auth, or migration risk justifies it
 
 ---
 

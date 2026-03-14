@@ -33,6 +33,7 @@ Documentation is a living contract, not an afterthought.
 - `docs/governance/DOCUMENTATION_RULES.md`
 - `docs/governance/TESTING_RULES.md`
 - `docs/governance/SECURITY_RULES.md`
+- `docs/governance/VERSIONING_RULES.md`
 - `docs/product/BENCHMARK.md`
 - `README.md`
 
@@ -67,12 +68,20 @@ Update:
 - `docs/domain/RBAC_MODEL.md` if access control changes
 - `docs/domain/BUSINESS_RULES.md` if product policy changes
 - `docs/architecture/TECHNICAL_ARCHITECTURE.md` if technical enforcement changes
+- `README.md` when developer setup or safe operational defaults for external tools such as MCP materially change
 
 ### Testing or quality changes
 Update:
 - `docs/governance/TESTING_RULES.md`
 - `docs/governance/CODING_RULES.md`
 - `docs/product/ROADMAP.md` if milestone expectations change
+
+### Versioning or release workflow changes
+Update:
+- `docs/governance/VERSIONING_RULES.md`
+- `docs/governance/DOCUMENTATION_RULES.md`
+- `README.md`
+- `docs/README.md`
 
 ### Explicit user correction
 Update:
@@ -99,6 +108,7 @@ Before closing any meaningful task, confirm:
 - `docs/README.md` still matches the documentation layout
 - testing docs still match available scripts and expectations
 - security docs still match the current posture
+- versioning rules still match available scripts and expectations
 - README setup instructions remain correct
 - regression rules were updated if a user correction introduced a durable rule
 

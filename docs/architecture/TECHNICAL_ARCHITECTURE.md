@@ -97,6 +97,7 @@ Use SQL migrations for:
 - least-privilege file access
 - audit tables for sensitive actions
 - security posture changes documented in `docs/governance/SECURITY_RULES.md`
+- LLM/MCP access to Supabase must use project scoping, development or branch environments, and read-only defaults unless a reviewed exception is required
 
 ---
 
@@ -180,8 +181,15 @@ Add structured logs/events for critical flows where possible.
 ---
 
 ## 10. Deployment assumptions
+- local development remains the primary day-to-day workflow
+- GitHub Actions is the source of truth for CI quality gates
+- `npm run verify` is the required CI command for pull requests and `main`
+- Netlify handles preview deployments for pull requests once the repository is connected
+- Netlify publishes production from `main`
 - environment variables managed per environment
-- Supabase project separation per environment
+- Netlify manages build-time frontend environments for preview and production
+- Supabase project separation is required once production data exists
+- Supabase MCP or other LLM-connected developer tooling must target a non-production scoped project or branch by default
 - migrations applied consistently
 - storage buckets and policies versioned/documented
 - PWA assets versioned

@@ -14,11 +14,14 @@ export const requiredRuleFiles = [
   'docs/governance/DOCUMENTATION_RULES.md',
   'docs/governance/TESTING_RULES.md',
   'docs/governance/SECURITY_RULES.md',
+  'docs/governance/VERSIONING_RULES.md',
   'docs/product/BENCHMARK.md',
   'README.md'
 ] as const
 
 export const requiredDirectories = [
+  '.github',
+  '.github/workflows',
   'docs',
   'docs/adr',
   'docs/architecture',
@@ -42,5 +45,11 @@ export const requiredDirectories = [
 ] as const
 
 export const requiredPwaFiles = ['public/manifest.webmanifest', 'public/sw.js'] as const
+
+export const requiredVersioningFiles = ['.changeset/config.json', 'scripts/release-plan.mjs'] as const
+
+export const requiredWorkflowFiles = ['.github/workflows/ci.yml'] as const
+
+export const requiredDeploymentFiles = ['netlify.toml'] as const
 
 export const disallowedPackages = ['vite-plugin-pwa', 'workbox-build', '@rollup/plugin-terser'] as const

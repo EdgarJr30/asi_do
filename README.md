@@ -74,8 +74,31 @@ npm run dev
 npm run lint
 npm run typecheck
 npm run test
+npm run version:plan
 npm run verify
 ```
+
+### Versionado SemVer
+
+El proyecto usa **SemVer + Changesets** para decidir el siguiente bump de version:
+
+- `patch`: fixes, refactors no breaking, ajustes internos y cambios no disruptivos
+- `minor`: nuevas capacidades o cambios backward-compatible visibles
+- `major`: breaking changes o cambios contractuales incompatibles
+
+Flujo base:
+
+```bash
+npm run changeset
+npm run version:plan
+npm run version:apply
+```
+
+`npm run version:plan` lee los cambios pendientes y calcula la siguiente version esperada. Ejemplos:
+
+- de `0.0.0` a `0.0.1` para un `patch`
+- de `0.0.1` a `0.1.0` para un `minor`
+- de `0.1.0` a `1.0.0` para un `major`
 
 ### Variables de entorno
 
@@ -86,6 +109,27 @@ VITE_APP_NAME=Talent Marketplace SaaS
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
+
+### CI/CD
+
+El flujo por defecto queda en **local + preview + production** usando **GitHub Actions + Netlify**:
+
+- `CI`: corre `npm run verify` en cada PR y en cada push a `main`.
+- `Preview`: Netlify crea `Deploy Previews` automaticamente para cada PR al conectar el repo.
+- `Production`: Netlify publica automaticamente desde la rama `main`.
+
+Archivos clave:
+
+- `.github/workflows/ci.yml`
+- `netlify.toml`
+
+Configuracion recomendada:
+
+- conectar el repositorio a Netlify con `main` como production branch
+- configurar en Netlify las variables `VITE_APP_NAME`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`
+- revisar que Netlify use `npm run build` y publique `dist` como define `netlify.toml`
+- usar branch protection en `main` y marcar el job `Verify quality gate` como required check
+- si quieres evitar deploys manuales directos, activar en Netlify la opcion de requerir Git workflows para produccion
 
 ## English
 
@@ -125,5 +169,43 @@ npm run dev
 npm run lint
 npm run typecheck
 npm run test
+npm run version:plan
 npm run verify
 ```
+
+### SemVer Versioning
+
+The project uses **SemVer + Changesets** to determine the next release bump:
+
+- `patch`: fixes and non-breaking internal changes
+- `minor`: new backward-compatible capabilities
+- `major`: breaking contractual or behavioral changes
+
+Base flow:
+
+```bash
+npm run changeset
+npm run version:plan
+npm run version:apply
+```
+
+### CI/CD
+
+The default delivery flow is **local + preview + production** using **GitHub Actions + Netlify**:
+
+- `CI`: runs `npm run verify` on every PR and every push to `main`.
+- `Preview`: Netlify creates Deploy Previews automatically for each pull request once the repository is connected.
+- `Production`: Netlify publishes automatically from the `main` branch.
+
+Key files:
+
+- `.github/workflows/ci.yml`
+- `netlify.toml`
+
+Recommended setup:
+
+- connect the repository to Netlify with `main` as the production branch
+- configure `VITE_APP_NAME`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY` in Netlify
+- confirm that Netlify uses `npm run build` and publishes `dist` as defined in `netlify.toml`
+- use branch protection on `main` and mark the `Verify quality gate` job as a required check
+- if you want to block manual production publishes, enable Netlify's Git-based production deploy enforcement

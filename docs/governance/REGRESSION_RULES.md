@@ -74,6 +74,12 @@ Do not reintroduce `vite-plugin-pwa`, `workbox-build`, or equivalent known high-
 ### R-015 — Canonical Markdown docs live under `docs/`
 Strategic Markdown files must stay organized inside `docs/` by category (`product/`, `domain/`, `architecture/`, `governance/`). Keep local operational `README.md` files next to the folders they describe, and keep the repository root limited to entrypoint docs such as `README.md` and `AGENTS.md`.
 
+### R-016 — Versioning is SemVer-based and rule-driven
+The project must use a SemVer workflow backed by `Changesets` and documented versioning rules. Release bumps must be classified as `patch`, `minor`, or `major` according to the documented rules, and the repository must be able to calculate the next version from pending changes before applying it.
+
+### R-017 — Supabase MCP must follow a safe default posture
+When connecting Codex or any LLM-capable tool to Supabase through MCP, use a project-scoped development environment by default, prefer `read_only` access, keep manual approval of tool calls enabled, and treat database content as prompt-injectable untrusted input. Do not default to production connections.
+
 ### R-018 — UX/UI governance must stay benchmarked to current mobile-first standards
 The shared UX/UI rules must remain explicit, numeric, and benchmarked against current professional guidance such as Apple HIG, Material Design, WCAG, and credible UX research sources. Do not fall back to vague design principles when defining sizes, touch targets, spacing, typography, form behavior, or mobile navigation rules.
 
