@@ -74,6 +74,15 @@ Do not reintroduce `vite-plugin-pwa`, `workbox-build`, or equivalent known high-
 ### R-015 — Canonical Markdown docs live under `docs/`
 Strategic Markdown files must stay organized inside `docs/` by category (`product/`, `domain/`, `architecture/`, `governance/`). Keep local operational `README.md` files next to the folders they describe, and keep the repository root limited to entrypoint docs such as `README.md` and `AGENTS.md`.
 
+### R-018 — UX/UI governance must stay benchmarked to current mobile-first standards
+The shared UX/UI rules must remain explicit, numeric, and benchmarked against current professional guidance such as Apple HIG, Material Design, WCAG, and credible UX research sources. Do not fall back to vague design principles when defining sizes, touch targets, spacing, typography, form behavior, or mobile navigation rules.
+
+### R-019 — Apple UI guidance is the primary design reference
+When defining visual hierarchy, spacing, control behavior, navigation feel, or interaction polish, prioritize Apple Human Interface Guidelines as the main design reference for the product. Other sources may complement accessibility and usability guidance, but they should not displace the Apple-inspired design direction unless a documented exception is needed.
+
+### R-020 — Apple UI Design Dos and Don’ts are mandatory review criteria
+All meaningful UI work must be reviewed against Apple’s UI Design Dos and Don’ts, especially for interactivity, readability, image handling, alignment, grouping, and clarity. Do not approve or preserve UI patterns that conflict with those principles unless a documented exception is required.
+
 ---
 
 ## Maintenance rule
