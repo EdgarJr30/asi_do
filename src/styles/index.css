@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", "Segoe UI", sans-serif;
+
+  --color-primary-50: #ecfdf5;
+  --color-primary-100: #d1fae5;
+  --color-primary-200: #a7f3d0;
+  --color-primary-300: #6ee7b7;
+  --color-primary-400: #34d399;
+  --color-primary-500: #10b981;
+  --color-primary-700: #047857;
+
+  --color-secondary-50: #f5f3ff;
+  --color-secondary-100: #ede9fe;
+  --color-secondary-300: #c4b5fd;
+  --color-secondary-500: #8b5cf6;
+
+  --color-accent-50: #f0f9ff;
+  --color-accent-100: #e0f2fe;
+  --color-accent-300: #7dd3fc;
+  --color-accent-500: #0ea5e9;
+
+  --radius-card: 1.75rem;
+}
+
+:root {
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    @apply bg-zinc-50;
+  }
+
+  body {
+    @apply min-h-screen bg-zinc-50 text-zinc-900 antialiased;
+    font-family: var(--font-sans);
+    background-image:
+      radial-gradient(circle at top left, rgba(209, 250, 229, 0.8), transparent 28%),
+      radial-gradient(circle at top right, rgba(224, 242, 254, 0.85), transparent 24%);
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  ::selection {
+    @apply bg-primary-200 text-zinc-950;
+  }
+}

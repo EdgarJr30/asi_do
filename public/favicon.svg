@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Talent Marketplace SaaS">
+  <rect width="128" height="128" rx="32" fill="#ECFDF5" />
+  <path d="M32 36h64v12H70v44H58V48H32z" fill="#10B981" />
+  <path d="M76 64h20c0 16.569-13.431 30-30 30v-12c9.941 0 18-8.059 18-18h-8z" fill="#0EA5E9" />
+</svg>

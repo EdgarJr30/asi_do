@@ -1,0 +1,169 @@
+# BUSINESS_RULES.md — Cross-Module Business Rules
+
+## 1. Identity and accounts
+1. A user may exist in the platform once and still participate in multiple contexts.
+2. A user may be:
+   - a candidate
+   - a member of one or more employer tenants
+   - a platform admin if granted
+3. Candidate identity is global.
+4. Employer staff access is tenant-scoped through memberships.
+5. Authentication does not equal authorization; permissions are checked separately.
+
+---
+
+## 2. Tenant rules
+1. Every employer workspace is a **tenant**.
+2. Jobs, hiring pipelines, settings, role assignments, and team data are tenant-scoped.
+3. A tenant must have at least one owner or admin-equivalent role.
+4. Tenant-sensitive data must never leak across tenants.
+5. Plan/feature limits are enforced at tenant level unless otherwise documented.
+
+---
+
+## 3. Candidate rules
+1. A candidate profile is reusable across applications.
+2. A candidate may update profile data over time.
+3. A candidate may upload one or more CV versions, but one may be marked as default.
+4. A candidate may apply to many jobs.
+5. A candidate must be able to review application history.
+6. Sensitive candidate data must be accessible only to authorized parties.
+
+---
+
+## 4. Company / employer rules
+1. A company profile belongs to one tenant.
+2. Only authorized tenant members may edit company details.
+3. Branding assets such as logos must follow file and storage rules.
+4. Public company pages expose only intentionally public data.
+5. A tenant may invite multiple internal members.
+
+---
+
+## 5. Job rules
+1. A job belongs to exactly one tenant.
+2. A job has a lifecycle:
+   - draft
+   - published
+   - closed
+   - archived
+3. Only authorized tenant roles may create or publish jobs.
+4. A closed or archived job must not accept new applications.
+5. Draft jobs are not public.
+6. Jobs may have screening questions.
+7. Salary visibility may be optional based on tenant preference and plan.
+8. Expiration behavior must be consistent and documented.
+
+---
+
+## 6. Application rules
+1. An application is created by one candidate for one job.
+2. Duplicate applications for the same candidate and job are controlled by policy.
+3. If duplicate applications are blocked, the user must receive clear feedback.
+4. Application submission must snapshot relevant candidate-submitted data required for historical integrity.
+5. Candidate status visibility must reflect the actual pipeline state or its public mapping.
+6. Only authorized tenant members may view or act on applications for their tenant jobs.
+
+---
+
+## 7. ATS-lite rules
+1. Every application belongs to one current stage.
+2. Stage changes create activity history.
+3. Notes and ratings must be attributable to the author.
+4. Stage transitions must respect permissions.
+5. Rejection/hiring actions may require explicit confirmation depending on UX.
+6. Important status changes should notify candidates when policy allows.
+7. The system should preserve auditability of who moved which candidate and when.
+
+---
+
+## 8. RBAC rules
+1. RBAC is mandatory across platform and tenant contexts.
+2. Permissions drive both backend access and frontend affordances.
+3. Tenant owners/admins may create custom tenant roles from the app.
+4. Platform roles are separate from tenant roles.
+5. System roles may be immutable or partially editable by policy.
+6. A role change must be auditable.
+7. A permission removed from a role must immediately affect guarded actions, subject to session refresh mechanics.
+8. Navigation must not expose protected destinations unless intentionally designed.
+
+---
+
+## 9. Moderation and trust rules
+1. Platform admins may flag, suspend, hide, or investigate risky content/entities.
+2. Fraudulent or abusive job posts may be closed immediately.
+3. Suspended tenants/users/jobs must follow clear state rules.
+4. Moderation actions must be auditable.
+5. Public trust and candidate safety are prioritized over convenience when conflicts occur.
+
+---
+
+## 10. Notification rules
+1. Notifications are event-driven.
+2. Notifications should only be sent for meaningful events.
+3. Email and in-app notifications should remain consistent in meaning.
+4. Users should not be spammed by redundant events.
+5. Notification preferences may expand later, but critical system notices may override preferences where justified.
+
+---
+
+## 11. Storage and documents
+1. CVs, logos, and attachments must be stored in policy-controlled storage.
+2. Access to private files must follow role and ownership rules.
+3. Public files must be intentionally marked public.
+4. File naming and path conventions must support auditability and tenant separation where relevant.
+
+---
+
+## 12. Billing / plan rules
+1. Tenants may belong to a subscription plan/tier.
+2. Feature access may depend on plan.
+3. Limits may apply to users, jobs, applications, storage, or advanced features.
+4. Plan enforcement must fail predictably and explain the limitation.
+5. Free-plan assumptions must not leak into the core domain model.
+
+---
+
+## 13. UI/UX business rules
+1. UI must follow `docs/governance/UI_UX_RULES.md`.
+2. The same type of action must look and behave consistently across modules.
+3. Shared components must be reused whenever possible.
+4. New component variants require justification before adoption.
+5. Mobile-first behavior is required for all primary workflows.
+6. Loading, empty, error, success, and disabled states are not optional.
+
+---
+
+## 14. PWA rules
+1. The product must remain installable when eligible.
+2. Offline or flaky-network conditions must fail gracefully.
+3. Users should always receive meaningful feedback when a network-dependent action cannot complete.
+4. Cache policy must avoid stale or unsafe cross-tenant data exposure.
+5. App-shell and navigation behavior should feel app-like on mobile.
+
+---
+
+## 15. Testing and quality rules
+1. Automated verification is part of the product contract.
+2. Critical workflows require tests or explicit documented verification.
+3. Contract tests should protect required rule files and key architectural structure.
+4. RBAC, tenant isolation, and security-sensitive flows require explicit coverage over time.
+5. `docs/governance/TESTING_RULES.md` is mandatory guidance for quality decisions.
+
+---
+
+## 16. Security and trust rules
+1. Security rules are defined in `docs/governance/SECURITY_RULES.md` and are mandatory.
+2. Web security, authorization, storage protection, and auditability are not optional polish items.
+3. OSINT may only be used for legitimate moderation, trust, fraud, or safety purposes documented by product policy.
+4. OSINT must not be used to infer protected characteristics for hiring decisions.
+5. Security-sensitive changes must update related tests and documentation in the same task.
+
+---
+
+## 17. Documentation rules
+1. Business rules are part of the product contract.
+2. Any implementation that changes business behavior must update this file.
+3. User corrections become durable rules and must also be recorded in `docs/governance/REGRESSION_RULES.md`.
+4. When a rule changes, related documents must be reconciled in the same task.
+5. Rule files are living contracts and must self-update when architecture, security, testing, or repository structure changes affect them.

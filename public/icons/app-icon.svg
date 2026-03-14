@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Talent Marketplace SaaS icon">
+  <rect width="512" height="512" rx="128" fill="#f8fafc" />
+  <circle cx="256" cy="176" r="84" fill="#d1fae5" />
+  <path d="M140 380c22-74 88-124 168-124s146 50 168 124H140Z" fill="#10B981" />
+  <path d="M276 216h108v44H304v132h-56V260h-80v-44h108v-48h56z" fill="#0f172a" />
+</svg>
