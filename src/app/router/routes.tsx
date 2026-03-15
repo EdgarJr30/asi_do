@@ -4,6 +4,7 @@ import { AppShell } from '@/app/layouts/app-shell'
 import { AuthConfirmPage } from '@/features/auth/pages/auth-confirm-page'
 import { AuthPage } from '@/features/auth/pages/auth-page'
 import { OnboardingPage } from '@/features/auth/pages/onboarding-page'
+import { ErrorLogReviewPage } from '@/features/error-monitoring/pages/error-log-review-page'
 import { JobsOverviewPage } from '@/features/jobs/pages/jobs-overview-page'
 import { ModerationOverviewPage } from '@/features/moderation/pages/moderation-overview-page'
 import { RbacOverviewPage } from '@/features/rbac/pages/rbac-overview-page'
@@ -84,6 +85,14 @@ export const appRoutes: RouteObject[] = [
         element: (
           <RequirePermission permission="moderation:read">
             <ModerationOverviewPage />
+          </RequirePermission>
+        )
+      },
+      {
+        path: 'admin/errors',
+        element: (
+          <RequirePermission permission="audit_log:read">
+            <ErrorLogReviewPage />
           </RequirePermission>
         )
       },

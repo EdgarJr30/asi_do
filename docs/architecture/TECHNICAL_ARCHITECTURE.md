@@ -182,6 +182,7 @@ Add structured logs/events for critical flows where possible.
 - `audit_logs` is enriched with request metadata, before/after payloads, and transaction ids.
 - All public tables must receive `audit_row_changes` triggers automatically.
 - `app_error_logs` stores user-visible client/runtime failures with route, source, severity, user message, and technical metadata for admin review.
+- platform admins review those logs from an in-app error inbox and can mark incidents as corrected or reopen them when follow-up is still needed.
 - Notification persistence is split into `notifications`, `notification_preferences`, `push_subscriptions`, `notification_deliveries`, and `notification_delivery_logs`.
 - Browser subscriptions are registered from the client through SQL RPC helpers, not ad hoc table writes.
 - Push dispatch runs through the `send-notification` Edge Function so VAPID secrets stay server-side while delivery status remains in Postgres.

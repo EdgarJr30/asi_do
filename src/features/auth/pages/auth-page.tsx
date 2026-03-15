@@ -15,9 +15,11 @@ import {
   signInWithPassword,
   signOutCurrentUser,
   signUpWithPassword,
+  toBootstrapFirstPlatformOwnerErrorMessage,
   toErrorMessage
 } from '@/features/auth/lib/auth-api'
 import { signInSchema, signUpSchema, type SignInValues, type SignUpValues } from '@/features/auth/lib/auth-schemas'
+import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 
 function FieldError({ message }: { message?: string }) {
   if (!message) {
@@ -60,8 +62,14 @@ export function AuthPage() {
       await session.refresh()
       await navigate('/onboarding')
     } catch (error) {
-      toast.error('No pudimos iniciar sesion', {
-        description: toErrorMessage(error)
+      await reportErrorWithToast({
+        title: 'No pudimos iniciar sesion',
+        source: 'auth.sign-in',
+        route: '/auth',
+        userId: session.authUser?.id ?? null,
+        error,
+        description: toErrorMessage(error),
+        userMessage: 'No pudimos iniciar sesion con esas credenciales.'
       })
     }
   }
@@ -84,8 +92,14 @@ export function AuthPage() {
       })
       setMode('signin')
     } catch (error) {
-      toast.error('No pudimos crear tu cuenta', {
-        description: toErrorMessage(error)
+      await reportErrorWithToast({
+        title: 'No pudimos crear tu cuenta',
+        source: 'auth.sign-up',
+        route: '/auth',
+        userId: session.authUser?.id ?? null,
+        error,
+        description: toErrorMessage(error),
+        userMessage: 'No pudimos crear tu cuenta en este momento.'
       })
     }
   }
@@ -101,8 +115,16 @@ export function AuthPage() {
       })
       await navigate('/admin/recruiter-requests')
     } catch (error) {
-      toast.error('No se pudo reclamar el rol inicial', {
-        description: toErrorMessage(error)
+      const description = toBootstrapFirstPlatformOwnerErrorMessage(error)
+
+      await reportErrorWithToast({
+        title: 'No se pudo reclamar el rol inicial',
+        source: 'auth.bootstrap-first-platform-owner',
+        route: '/auth',
+        userId: session.authUser?.id ?? null,
+        error,
+        description,
+        userMessage: description
       })
     } finally {
       setIsBootstrapping(false)
@@ -117,8 +139,14 @@ export function AuthPage() {
       toast.success('Sesion cerrada')
       await navigate('/auth')
     } catch (error) {
-      toast.error('No se pudo cerrar la sesion', {
-        description: toErrorMessage(error)
+      await reportErrorWithToast({
+        title: 'No se pudo cerrar la sesion',
+        source: 'auth.sign-out',
+        route: '/auth',
+        userId: session.authUser?.id ?? null,
+        error,
+        description: toErrorMessage(error),
+        userMessage: 'No pudimos cerrar tu sesion actual.'
       })
     } finally {
       setIsSigningOut(false)

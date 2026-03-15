@@ -716,6 +716,7 @@ The project must include operational visibility from early stages.
 - error logging
 - action logging for critical workflows
 - audit logs for admin-sensitive actions
+- admin-facing error triage with corrected/pending tracking
 - role/permission change logs
 - job publication logs
 - application stage change logs

@@ -75,6 +75,7 @@ Manual checks remain required for:
 - pipeline stage transitions
 - audit-sensitive actions
 - operational error logging into Supabase for meaningful client failures
+- user-facing error explanation quality for known platform failures and admin error-state management
 - notification delivery history and push subscription ownership rules
 - storage access rules
 - documentation/architecture contract integrity

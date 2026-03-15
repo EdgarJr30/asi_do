@@ -107,6 +107,9 @@ Do not hide operational failures behind generic messages. Meaningful errors must
 ### R-026 — Repo guidance must stay context-efficient
 Keep root-level operating instructions concise so routine Codex tasks consume less context and fewer credits. Put durable detail in the canonical files under `docs/`, use progressive disclosure when reading documentation, and prefer short task briefs over broad repeated repo summaries.
 
+### R-027 — Platform errors need real explanations and mandatory logging
+Do not leave platform failures with generic copy when the underlying business or operational reason is known. User-facing errors must explain the actual cause whenever possible, every meaningful visible error must be persisted into `app_error_logs`, and platform admins must be able to manage those errors from an in-app panel by marking them corrected or not corrected.
+
 ---
 
 ## Maintenance rule

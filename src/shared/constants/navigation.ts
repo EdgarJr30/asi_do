@@ -75,5 +75,12 @@ export const navigationItems: NavigationItem[] = [
     descriptionKey: 'navigation.moderation.description',
     requiresAuth: true,
     requiredPermission: 'moderation:read'
+  },
+  {
+    title: 'Errores',
+    href: '/admin/errors',
+    description: 'Revision operativa',
+    requiresAuth: true,
+    requiredPermission: 'audit_log:read'
   }
 ]

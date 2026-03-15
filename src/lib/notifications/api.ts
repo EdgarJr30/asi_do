@@ -1,6 +1,7 @@
 import type { Json } from '@/shared/types/database'
 
 import { supabase } from '@/lib/supabase/client'
+import { collectClientEnvironmentMetadata, getClientSupportLabel } from '@/lib/platform/client-environment'
 
 export interface NotificationPreferencesInput {
   locale: 'es' | 'en'
@@ -110,13 +111,14 @@ export async function registerBrowserPushSubscription(
   const endpoint = subscription.endpoint
   const p256dhKey = getSubscriptionKey(subscription, 'p256dh')
   const authKey = getSubscriptionKey(subscription, 'auth')
-  const userAgent = typeof navigator === 'undefined' ? null : navigator.userAgent
+  const clientEnvironment = await collectClientEnvironmentMetadata()
+  const userAgent = clientEnvironment.userAgent
 
   const response = await client.rpc('register_push_subscription' as never, {
     p_endpoint: endpoint,
     p_p256dh_key: p256dhKey,
     p_auth_key: authKey,
-    p_device_label: options.deviceLabel ?? (typeof window === 'undefined' ? 'Unknown device' : window.navigator.platform),
+    p_device_label: options.deviceLabel ?? getClientSupportLabel(clientEnvironment),
     p_device_kind: userAgent ? resolveDeviceKind(userAgent) : 'desktop',
     p_locale: options.locale,
     p_user_agent: userAgent,

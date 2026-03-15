@@ -194,6 +194,9 @@ A standard user must be able to submit a recruiter request with company data, an
 ### FR-3 RBAC administration
 Tenant owners/admins must be able to manage tenant roles and assign permissions from the app.
 
+### FR-3.1 Admin error operations
+Platform admins with the proper permission must be able to review user-facing platform errors from inside the app, inspect their context, and mark whether each issue is already corrected or still pending.
+
 ### FR-4 Candidate profile
 Candidates must be able to create, edit, and reuse a structured profile.
 

@@ -102,6 +102,8 @@ Examples:
 - `recruiter_request:read`
 - `recruiter_request:review`
 
+Platform roles with `audit_log:read` must also be able to access the in-app operational error inbox backed by `app_error_logs`.
+
 ## 4.2 Tenant permissions
 - `workspace:read`
 - `workspace:update`

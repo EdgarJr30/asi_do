@@ -1,4 +1,6 @@
 import { supabase } from '@/lib/supabase/client'
+import { extractErrorDetails } from '@/lib/errors/error-utils'
+import { collectClientEnvironmentMetadata } from '@/lib/platform/client-environment'
 
 interface CaptureClientErrorInput {
   source: string
@@ -10,36 +12,13 @@ interface CaptureClientErrorInput {
   metadata?: Record<string, unknown>
 }
 
-function serializeError(error: unknown) {
-  if (error instanceof Error) {
-    return {
-      errorCode: error.name,
-      errorMessage: error.message,
-      stack: error.stack ?? null
-    }
-  }
-
-  if (typeof error === 'string') {
-    return {
-      errorCode: 'Error',
-      errorMessage: error,
-      stack: null
-    }
-  }
-
-  return {
-    errorCode: 'UnknownError',
-    errorMessage: 'Unexpected non-error value captured.',
-    stack: null
-  }
-}
-
 export async function captureClientError(input: CaptureClientErrorInput) {
   if (!supabase) {
     return
   }
 
-  const serializedError = serializeError(input.error)
+  const serializedError = extractErrorDetails(input.error)
+  const clientEnvironment = await collectClientEnvironmentMetadata()
 
   try {
     await supabase.from('app_error_logs').insert({
@@ -52,8 +31,9 @@ export async function captureClientError(input: CaptureClientErrorInput) {
       user_message: input.userMessage,
       metadata: {
         ...input.metadata,
+        ...serializedError.metadata,
         stack: serializedError.stack,
-        userAgent: typeof navigator === 'undefined' ? null : navigator.userAgent
+        clientEnvironment
       }
     })
   } catch {

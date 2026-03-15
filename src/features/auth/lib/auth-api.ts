@@ -1,6 +1,7 @@
 import type { EmailOtpType, User } from '@supabase/supabase-js'
 
 import { MAX_UPLOAD_SIZE_BYTES, formatFileSize } from '@/lib/uploads/media'
+import { toErrorMessage } from '@/lib/errors/error-utils'
 import { supabase } from '@/lib/supabase/client'
 import { isPermissionCode, type PermissionCode } from '@/shared/constants/permissions'
 import type { Tables } from '@/shared/types/database'
@@ -55,7 +56,8 @@ const platformPermissionChecks = [
   'user:read',
   'recruiter_request:read',
   'recruiter_request:review',
-  'moderation:read'
+  'moderation:read',
+  'audit_log:read'
 ] as const satisfies readonly PermissionCode[]
 
 function requireSupabase() {
@@ -68,14 +70,6 @@ function requireSupabase() {
 
 function uniquePermissions(values: PermissionCode[]) {
   return [...new Set(values)]
-}
-
-function toErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message
-  }
-
-  return 'Ocurrio un error inesperado.'
 }
 
 function normalizeStoragePath(filePath: string) {
@@ -488,6 +482,24 @@ export async function bootstrapFirstPlatformOwner() {
   }
 
   return response.data
+}
+
+export function toBootstrapFirstPlatformOwnerErrorMessage(error: unknown) {
+  const message = toErrorMessage(error)
+
+  if (/a platform owner already exists/i.test(message)) {
+    return 'Ya existe un primer admin activo. Este boton solo funciona una vez por plataforma.'
+  }
+
+  if (/authentication required/i.test(message)) {
+    return 'Debes iniciar sesion antes de reclamar el rol inicial.'
+  }
+
+  if (/platform owner role not found/i.test(message)) {
+    return 'La configuracion del rol inicial no esta disponible. Revisa la configuracion de RBAC.'
+  }
+
+  return message
 }
 
 export { toErrorMessage }

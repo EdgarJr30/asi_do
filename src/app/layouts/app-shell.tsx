@@ -8,6 +8,7 @@ import { useAppSession } from '@/app/providers/app-session-provider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api'
+import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 import { filterNavigationItems } from '@/lib/permissions/guards'
 import { cn } from '@/lib/utils/cn'
@@ -71,8 +72,14 @@ export function AppShell() {
       toast.success(t('shell.signOutSuccess'))
       await navigate('/auth')
     } catch (error) {
-      toast.error(t('shell.signOutErrorTitle'), {
-        description: toErrorMessage(error)
+      await reportErrorWithToast({
+        title: t('shell.signOutErrorTitle'),
+        source: 'shell.sign-out',
+        route: window.location.pathname,
+        userId: session.authUser?.id ?? null,
+        error,
+        description: toErrorMessage(error),
+        userMessage: t('shell.signOutErrorTitle')
       })
     } finally {
       setIsSigningOut(false)
@@ -152,6 +159,11 @@ export function AppShell() {
                     {session.canReviewRecruiterRequests ? (
                       <Button variant="secondary" onClick={() => void navigate('/admin/recruiter-requests')}>
                         {t('shell.reviewAction')}
+                      </Button>
+                    ) : null}
+                    {session.permissions.includes('audit_log:read') ? (
+                      <Button variant="outline" onClick={() => void navigate('/admin/errors')}>
+                        Errores
                       </Button>
                     ) : null}
                     <Button variant="ghost" onClick={() => void handleSignOut()} disabled={isSigningOut}>

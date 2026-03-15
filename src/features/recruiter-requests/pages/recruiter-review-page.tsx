@@ -13,11 +13,14 @@ import {
   reviewRecruiterRequest,
   toErrorMessage
 } from '@/features/auth/lib/auth-api'
+import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { RecruiterRequestStatusBadge } from '@/features/recruiter-requests/components/recruiter-request-status-badge'
+import { useAppSession } from '@/app/providers/app-session-provider'
 
 const PENDING_REQUESTS_QUERY_KEY = ['recruiter-requests', 'pending'] as const
 
 export function RecruiterReviewPage() {
+  const session = useAppSession()
   const queryClient = useQueryClient()
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({})
 
@@ -45,9 +48,15 @@ export function RecruiterReviewPage() {
         [variables.requestId]: ''
       }))
     },
-    onError: (error) => {
-      toast.error('No pudimos actualizar la solicitud', {
-        description: toErrorMessage(error)
+    onError: async (error) => {
+      await reportErrorWithToast({
+        title: 'No pudimos actualizar la solicitud',
+        source: 'admin.recruiter-request-review',
+        route: '/admin/recruiter-requests',
+        userId: session.authUser?.id ?? null,
+        error,
+        description: toErrorMessage(error),
+        userMessage: 'No pudimos actualizar la solicitud recruiter.'
       })
     }
   })
@@ -57,8 +66,17 @@ export function RecruiterReviewPage() {
       const signedUrl = await createPrivateFileUrl('verification-documents', path)
       window.open(signedUrl, '_blank', 'noopener,noreferrer')
     } catch (error) {
-      toast.error('No pudimos abrir el archivo', {
-        description: toErrorMessage(error)
+      await reportErrorWithToast({
+        title: 'No pudimos abrir el archivo',
+        source: 'admin.recruiter-request-asset-open',
+        route: '/admin/recruiter-requests',
+        userId: session.authUser?.id ?? null,
+        error,
+        description: toErrorMessage(error),
+        userMessage: 'No pudimos abrir el archivo privado de la solicitud.',
+        metadata: {
+          assetPath: path
+        }
       })
     }
   }

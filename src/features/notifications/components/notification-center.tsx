@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { fetchMyNotifications, markNotificationRead, sendNotification } from '@/lib/notifications/api'
+import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
 
 const notificationSchema = z.object({
@@ -76,9 +77,15 @@ export function NotificationCenter() {
         actionUrl: '/'
       })
     },
-    onError: (error) => {
-      toast.error(t('notifications.testErrorTitle'), {
-        description: error instanceof Error ? error.message : t('notifications.testErrorDescription')
+    onError: async (error) => {
+      await reportErrorWithToast({
+        title: t('notifications.testErrorTitle'),
+        source: 'notifications.send-self-test',
+        route: window.location.pathname,
+        userId: session.authUser?.id ?? null,
+        error,
+        description: error instanceof Error ? error.message : t('notifications.testErrorDescription'),
+        userMessage: t('notifications.testErrorDescription')
       })
     }
   })

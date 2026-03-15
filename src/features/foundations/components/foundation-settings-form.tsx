@@ -16,6 +16,7 @@ import {
   registerBrowserPushSubscription,
   saveNotificationPreferences
 } from '@/lib/notifications/api'
+import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { env } from '@/shared/config/env'
 import { isPushSupported, requestNotificationPermission, subscribeToPushNotifications } from '@/lib/notifications/push'
 
@@ -97,8 +98,14 @@ export function FoundationSettingsForm() {
         description: t('foundations.saveSuccessDescription')
       })
     } catch (error) {
-      toast.error(t('notifications.testErrorTitle'), {
-        description: error instanceof Error ? error.message : t('notifications.testErrorDescription')
+      await reportErrorWithToast({
+        title: t('notifications.testErrorTitle'),
+        source: 'foundations.settings-save',
+        route: window.location.pathname,
+        userId: session.authUser?.id ?? null,
+        error,
+        description: error instanceof Error ? error.message : t('notifications.testErrorDescription'),
+        userMessage: t('notifications.testErrorDescription')
       })
     }
   }
@@ -107,8 +114,15 @@ export function FoundationSettingsForm() {
     try {
       if (!isPushSupported()) {
         setPushPermission('unsupported')
-        toast.error(t('foundations.pushDeniedTitle'), {
-          description: t('foundations.pushUnsupported')
+        await reportErrorWithToast({
+          title: t('foundations.pushDeniedTitle'),
+          source: 'foundations.push-unsupported',
+          route: window.location.pathname,
+          userId: session.authUser?.id ?? null,
+          error: new Error(t('foundations.pushUnsupported')),
+          description: t('foundations.pushUnsupported'),
+          userMessage: t('foundations.pushUnsupported'),
+          severity: 'warning'
         })
         return
       }
@@ -118,8 +132,15 @@ export function FoundationSettingsForm() {
       setValue('pushNotifications', permission === 'granted')
 
       if (permission !== 'granted') {
-        toast.error(t('foundations.pushDeniedTitle'), {
-          description: t('foundations.pushDeniedDescription')
+        await reportErrorWithToast({
+          title: t('foundations.pushDeniedTitle'),
+          source: 'foundations.push-denied',
+          route: window.location.pathname,
+          userId: session.authUser?.id ?? null,
+          error: new Error(t('foundations.pushDeniedDescription')),
+          description: t('foundations.pushDeniedDescription'),
+          userMessage: t('foundations.pushDeniedDescription'),
+          severity: 'warning'
         })
         return
       }
@@ -151,8 +172,14 @@ export function FoundationSettingsForm() {
         description: t('foundations.pushReadyDescription')
       })
     } catch (error) {
-      toast.error(t('notifications.testErrorTitle'), {
-        description: error instanceof Error ? error.message : t('notifications.testErrorDescription')
+      await reportErrorWithToast({
+        title: t('notifications.testErrorTitle'),
+        source: 'foundations.push-enable',
+        route: window.location.pathname,
+        userId: session.authUser?.id ?? null,
+        error,
+        description: error instanceof Error ? error.message : t('notifications.testErrorDescription'),
+        userMessage: t('notifications.testErrorDescription')
       })
     }
   }
