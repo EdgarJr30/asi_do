@@ -7,6 +7,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { App } from '@/app/App'
+import '@/lib/i18n/config'
 import { registerServiceWorker } from '@/lib/pwa/register-service-worker'
 import '@/styles/index.css'
 

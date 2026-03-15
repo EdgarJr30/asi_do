@@ -15,7 +15,14 @@ export function hasPermission(permissions: Iterable<PermissionCode>, requiredPer
 
 export function filterNavigationItems(
   items: NavigationItem[],
-  permissions: Iterable<PermissionCode>
+  permissions: Iterable<PermissionCode>,
+  isAuthenticated: boolean
 ) {
-  return items.filter((item) => hasPermission(permissions, item.requiredPermission))
+  return items.filter((item) => {
+    if (item.requiresAuth && !isAuthenticated) {
+      return false
+    }
+
+    return hasPermission(permissions, item.requiredPermission)
+  })
 }

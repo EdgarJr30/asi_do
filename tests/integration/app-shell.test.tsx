@@ -18,7 +18,10 @@ describe('app shell', () => {
     )
 
     expect(await screen.findByText('Talent Marketplace SaaS')).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: /Jobs/i }).length).toBeGreaterThan(0)
-    expect(screen.queryAllByRole('link', { name: /Moderation/i })).toHaveLength(0)
+    expect(screen.getAllByRole('link', { name: /Inicio|Home/i }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: /Acceso|Access/i }).length).toBeGreaterThan(0)
+    expect(screen.queryAllByRole('link', { name: /Jobs/i })).toHaveLength(0)
+    expect(screen.queryAllByRole('link', { name: /Approvals/i })).toHaveLength(0)
+    expect(screen.queryAllByRole('link', { name: /Moderation|Moderacion/i })).toHaveLength(0)
   })
 })

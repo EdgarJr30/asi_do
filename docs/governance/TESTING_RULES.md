@@ -37,6 +37,7 @@ Test cross-file behavior such as:
 - route guards
 - feature contracts
 - configuration behavior
+- migration contracts for identity, recruiter approval, storage policies, and notification delivery workflow
 
 ### Contract and regression tests
 Test the repo contract itself:
@@ -64,11 +65,15 @@ Manual checks remain required for:
 ## 4. Mandatory scenarios to cover over time
 - tenant isolation
 - RBAC helpers and route/action guards
+- auth user mirroring into `public.users`
+- recruiter request approval and tenant bootstrap
+- first platform owner bootstrap
 - job lifecycle transitions
 - application submission
 - duplicate application policy
 - pipeline stage transitions
 - audit-sensitive actions
+- notification delivery history and push subscription ownership rules
 - storage access rules
 - documentation/architecture contract integrity
 
@@ -90,10 +95,12 @@ src/features/*/tests/   feature-local tests when co-location helps
 ## 6. Rules for shipping changes
 1. Every new module must ship with at least one automated check or a documented reason why it is temporarily blocked.
 2. Every change to permissions, tenancy boundaries, security-sensitive workflows, or business invariants must add or update automated verification.
-3. Failing tests block completion unless the user explicitly accepts a known failure.
-4. If test coverage is intentionally deferred, document the gap in the same task.
-5. Test names should describe business intent, not implementation trivia.
-6. The `main` branch must stay gated by a successful CI quality run even when preview and production deploys are handled by a hosting platform.
+3. Database changes that introduce RLS, audit triggers, or notification logging must be verified against Supabase advisors and schema inspection at minimum until SQL regression tests are added.
+4. Push notification changes must verify service worker behavior, RPC contracts, and the deployed Edge Function path when the environment is available.
+5. Failing tests block completion unless the user explicitly accepts a known failure.
+6. If test coverage is intentionally deferred, document the gap in the same task.
+7. Test names should describe business intent, not implementation trivia.
+8. The `main` branch must stay gated by a successful CI quality run even when preview and production deploys are handled by a hosting platform.
 
 ---
 

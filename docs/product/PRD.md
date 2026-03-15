@@ -40,7 +40,7 @@ Candidates also face friction:
 Needs a reusable profile, easy job discovery, fast applications, and status tracking.
 
 ### Employer tenant owner
-Needs to configure company workspace, team, roles, jobs, and permissions.
+Needs to request company validation, get recruiter access approved, and then configure workspace, team, roles, jobs, and permissions.
 
 ### Recruiter / hiring manager
 Needs filtering, review, notes, ratings, and candidate stage movement.
@@ -68,7 +68,7 @@ Needs moderation, plan management, support tools, and governance.
 ### Business goals
 - Reach MVP quickly without compromising architecture
 - Support multi-tenant monetization
-- Enable self-serve onboarding for employers
+- Enable standard-user registration with admin-approved employer onboarding
 - Build a foundation for premium plans and advanced recruiting tooling
 
 ### User goals
@@ -103,9 +103,11 @@ The MVP should **not** initially include:
 ## 8. MVP feature set
 ## 8.1 Auth and onboarding
 - sign up / sign in
-- role-aware onboarding
+- standard user registration for everyone
+- recruiter request submission with company validation data
+- admin approval flow before employer access is activated
 - candidate account flow
-- employer workspace creation
+- employer workspace creation after approval
 - platform admin area
 
 ## 8.2 Candidate profile
@@ -181,10 +183,10 @@ The MVP should **not** initially include:
 
 ## 9. Functional requirements
 ### FR-1 Authentication
-The system must support secure sign-up and sign-in for candidates and employer users.
+The system must support secure sign-up and sign-in for standard platform users, with employer access granted only after approval.
 
-### FR-2 Tenant creation
-An employer user must be able to create a tenant/company workspace.
+### FR-2 Recruiter approval and tenant creation
+A standard user must be able to submit a recruiter request with company data, and a platform admin must approve that request before the tenant/company workspace is created.
 
 ### FR-3 RBAC administration
 Tenant owners/admins must be able to manage tenant roles and assign permissions from the app.

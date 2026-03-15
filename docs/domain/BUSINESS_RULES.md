@@ -2,22 +2,25 @@
 
 ## 1. Identity and accounts
 1. A user may exist in the platform once and still participate in multiple contexts.
-2. A user may be:
+2. Every signup starts as a standard platform user.
+3. A standard user may become employer-side staff only after a platform admin approves a recruiter request and validates the company.
+4. A user may be:
    - a candidate
    - a member of one or more employer tenants
    - a platform admin if granted
-3. Candidate identity is global.
-4. Employer staff access is tenant-scoped through memberships.
-5. Authentication does not equal authorization; permissions are checked separately.
+5. Candidate identity is global.
+6. Employer staff access is tenant-scoped through memberships.
+7. Authentication does not equal authorization; permissions are checked separately.
 
 ---
 
 ## 2. Tenant rules
 1. Every employer workspace is a **tenant**.
-2. Jobs, hiring pipelines, settings, role assignments, and team data are tenant-scoped.
-3. A tenant must have at least one owner or admin-equivalent role.
-4. Tenant-sensitive data must never leak across tenants.
-5. Plan/feature limits are enforced at tenant level unless otherwise documented.
+2. A tenant is created only after a recruiter request is approved by an authorized platform admin.
+3. Jobs, hiring pipelines, settings, role assignments, and team data are tenant-scoped.
+4. A tenant must have at least one owner or admin-equivalent role.
+5. Tenant-sensitive data must never leak across tenants.
+6. Plan/feature limits are enforced at tenant level unless otherwise documented.
 
 ---
 
@@ -33,10 +36,11 @@
 
 ## 4. Company / employer rules
 1. A company profile belongs to one tenant.
-2. Only authorized tenant members may edit company details.
-3. Branding assets such as logos must follow file and storage rules.
-4. Public company pages expose only intentionally public data.
-5. A tenant may invite multiple internal members.
+2. A company cannot appear publicly as an employer until its recruiter request has been approved.
+3. Only authorized tenant members may edit company details.
+4. Branding assets such as logos must follow file and storage rules.
+5. Public company pages expose only intentionally public data.
+6. A tenant may invite multiple internal members.
 
 ---
 
@@ -103,7 +107,9 @@
 2. Notifications should only be sent for meaningful events.
 3. Email and in-app notifications should remain consistent in meaning.
 4. Users should not be spammed by redundant events.
-5. Notification preferences may expand later, but critical system notices may override preferences where justified.
+5. Push notification subscriptions must be explicitly permission-based and revocable by the user.
+6. Every notification delivery attempt must persist technical history and logs in the database.
+7. Notification preferences may expand later, but critical system notices may override preferences where justified.
 
 ---
 
@@ -111,7 +117,8 @@
 1. CVs, logos, and attachments must be stored in policy-controlled storage.
 2. Access to private files must follow role and ownership rules.
 3. Public files must be intentionally marked public.
-4. File naming and path conventions must support auditability and tenant separation where relevant.
+4. Recruiter verification documents are private by default and only readable by the requester and authorized platform reviewers.
+5. File naming and path conventions must support auditability and tenant separation where relevant.
 
 ---
 
@@ -157,7 +164,8 @@
 2. Web security, authorization, storage protection, and auditability are not optional polish items.
 3. OSINT may only be used for legitimate moderation, trust, fraud, or safety purposes documented by product policy.
 4. OSINT must not be used to infer protected characteristics for hiring decisions.
-5. Security-sensitive changes must update related tests and documentation in the same task.
+5. Every meaningful mutation inside the app must leave a durable audit trail with actor, target entity, and change context.
+6. Security-sensitive changes must update related tests and documentation in the same task.
 
 ---
 

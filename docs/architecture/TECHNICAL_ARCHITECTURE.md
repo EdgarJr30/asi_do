@@ -5,6 +5,10 @@
 - TypeScript
 - Vite
 - Tailwind CSS v4
+- i18next + react-i18next
+- react-hook-form + @hookform/resolvers
+- next-themes
+- sonner
 - Supabase (Auth, Postgres, Storage, Realtime)
 - PWA service worker + manifest strategy
 - optional React Query / TanStack Query for server state
@@ -91,11 +95,17 @@ Use SQL migrations for:
 - triggers where justified
 - RLS policies
 
+The initial identity migration must establish:
+- `public.users` synced from `auth.users`
+- recruiter approval requests before tenant creation
+- platform and tenant RBAC tables with auditable assignments
+- private storage buckets for user media, company assets, and verification documents
+
 ### Security strategy
 - RLS enabled on exposed tables
 - helper functions for permission checks
 - least-privilege file access
-- audit tables for sensitive actions
+- audit tables and row-change triggers for sensitive and operational actions
 - security posture changes documented in `docs/governance/SECURITY_RULES.md`
 - LLM/MCP access to Supabase must use project scoping, development or branch environments, and read-only defaults unless a reviewed exception is required
 
@@ -108,6 +118,7 @@ Use SQL migrations for:
 - install prompt handling
 - offline fallback route/page
 - cache partitioning by asset/data class
+- push event handlers and notification-click handling for auditable web push delivery
 
 ### Cache strategy guidance
 - static assets: long-lived versioned caching
@@ -151,14 +162,26 @@ Avoid using a client state store as a shadow backend.
 ## 8. Observability guidance
 Track:
 - auth failures
+- recruiter request submission failures
+- recruiter approval failures
 - tenant creation failures
 - role assignment failures
 - job publish failures
 - application submission failures
 - CV upload failures
 - stage change failures
+- notification delivery failures
+- push subscription registration failures
 
 Add structured logs/events for critical flows where possible.
+
+## 8.1 Audit and notification persistence
+- `audit_logs` is enriched with request metadata, before/after payloads, and transaction ids.
+- All public tables must receive `audit_row_changes` triggers automatically.
+- Notification persistence is split into `notifications`, `notification_preferences`, `push_subscriptions`, `notification_deliveries`, and `notification_delivery_logs`.
+- Browser subscriptions are registered from the client through SQL RPC helpers, not ad hoc table writes.
+- Push dispatch runs through the `send-notification` Edge Function so VAPID secrets stay server-side while delivery status remains in Postgres.
+- The current repository migration extends an already-existing remote identity/RBAC baseline. Backfill missing baseline migrations into `supabase/migrations/` before altering that identity layer again.
 
 ---
 
@@ -173,6 +196,7 @@ Add structured logs/events for critical flows where possible.
 ### Important targets
 - tenant isolation
 - RBAC helpers
+- auth-to-profile sync and recruiter approval bootstrap
 - job publishing
 - application submission
 - stage transitions

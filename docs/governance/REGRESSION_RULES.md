@@ -89,6 +89,12 @@ When defining visual hierarchy, spacing, control behavior, navigation feel, or i
 ### R-020 — Apple UI Design Dos and Don’ts are mandatory review criteria
 All meaningful UI work must be reviewed against Apple’s UI Design Dos and Don’ts, especially for interactivity, readability, image handling, alignment, grouping, and clarity. Do not approve or preserve UI patterns that conflict with those principles unless a documented exception is required.
 
+### R-021 — Every signup starts as a standard user
+Do not model self-serve employer or recruiter registration. Every new account starts as a standard platform user, and employer-side access only begins after a platform admin approves a recruiter request and validates the company.
+
+### R-022 — Every app mutation must be fully auditable
+All tables and meaningful actions in the app must preserve auditability. Row-level changes require database audit triggers or an approved equivalent, and notification flows must persist history plus technical delivery logs in Postgres.
+
 ---
 
 ## Maintenance rule

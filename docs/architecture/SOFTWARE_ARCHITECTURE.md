@@ -83,6 +83,7 @@ The platform must be fully role-based from the beginning:
 - permissions must control access to modules, screens, actions, and data
 - roles must be manageable from inside the application
 - the system must support both platform-level and tenant-level roles
+- standard users must not self-assign employer access; recruiter conversion is approval-driven
 
 ### 3.6 Secure multi-tenancy
 The system must isolate data per tenant using a combination of:
@@ -163,6 +164,7 @@ Responsibilities:
 - domain services
 - permission semantics
 - tenant constraints
+- recruiter approval workflow that creates a tenant only after company validation
 - lifecycle logic for jobs, candidates, companies, applications, and subscriptions
 
 ### 5.4 Infrastructure Layer
@@ -175,7 +177,7 @@ Responsibilities:
 - edge functions
 - notifications integrations
 - analytics integrations
-- logging/audit persistence
+- logging/audit persistence with row-change triggers
 - external services
 
 ---
@@ -189,6 +191,10 @@ The software architecture assumes the following baseline stack:
 - TypeScript
 - Vite
 - Tailwind CSS v4
+- i18next + react-i18next for localization
+- react-hook-form + zod resolvers for form workflows
+- next-themes for persisted theme switching
+- sonner for app-level toast feedback
 - PWA support
 - feature-first folder structure
 - reusable shared UI components

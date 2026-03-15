@@ -19,12 +19,14 @@ Security includes protecting:
 4. Sensitive actions require defense in depth: validation, authorization, auditability, and tests.
 5. Secrets must never be hard-coded in client code or committed to the repo.
 6. Security decisions must be documented when they change product behavior or operational posture.
+7. Auditability is mandatory for all meaningful mutations, not just admin-only actions.
 
 ---
 
 ## 3. Production web security rules
 ### Authentication and session handling
 - Use Supabase Auth as the identity source.
+- Mirror app-level user profile data from `auth.users` into `public.users` through reviewed database triggers, not ad hoc client writes.
 - Do not trust session state in UI alone for authorization decisions.
 - Protect sensitive actions with backend or database enforcement.
 - Keep session renewal and sign-out flows explicit and testable.
@@ -59,6 +61,11 @@ Security includes protecting:
 5. Signed URLs or controlled access must be used for sensitive private files.
 6. SQL migrations are the source of truth for schema and policy evolution.
 7. Never bypass RLS casually for convenience.
+8. Employer-side access must never be granted by client state alone; it requires an approved recruiter request plus role assignment in Postgres.
+9. The one-time first-platform-owner bootstrap must remain auditable and impossible after the first active owner exists.
+10. All public application tables must attach row-change audit triggers or an approved equivalent.
+11. Notification channels must persist delivery attempts and technical logs in Postgres.
+12. Web push VAPID keys and contact metadata must live only in Supabase Edge Function secrets, never in browser code except the public key.
 
 ### Supabase MCP rules for LLM-assisted development
 - Supabase MCP may be used only as an internal developer tool, never as an end-user or customer-facing capability.
@@ -118,10 +125,15 @@ OSINT may be used only for legitimate moderation, fraud prevention, trust verifi
 
 ## 7. Mandatory security verification areas
 - permission helpers
+- auth-to-profile sync triggers
+- recruiter approval workflow
 - route/action guards
 - tenant-scoped data access
 - storage access rules
 - job/application workflow authorization
+- audit trigger coverage and audit log readability
+- notification delivery logging and push subscription ownership
+- notification click/read tracking across service worker, client, and database RPC boundaries
 - documentation integrity for security-sensitive changes
 
 ---

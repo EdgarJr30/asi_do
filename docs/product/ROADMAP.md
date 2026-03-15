@@ -32,8 +32,10 @@ Establish secure multi-tenant access control.
 
 ### Deliverables
 - auth screens
-- onboarding split by actor type
-- tenant creation
+- standard user registration
+- recruiter request submission
+- platform-admin approval for employer onboarding
+- tenant creation after approval
 - memberships
 - system tenant roles
 - custom role CRUD
@@ -42,7 +44,9 @@ Establish secure multi-tenant access control.
 - audit logging baseline
 
 ### Exit criteria
-- user can create tenant
+- standard user can submit recruiter request
+- platform admin can approve or reject recruiter request
+- approval creates tenant, company profile, and first owner membership
 - members can be invited
 - roles can be assigned
 - permissions affect UI and backend behavior
@@ -183,7 +187,7 @@ Operational maturity for launch.
 Foundations + PWA + auth shell
 
 ### Sprint 2
-Tenants + memberships + RBAC skeleton
+Recruiter approval flow + tenants + memberships + RBAC skeleton
 
 ### Sprint 3
 Candidate profile + CV

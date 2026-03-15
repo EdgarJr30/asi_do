@@ -17,6 +17,10 @@ Construir una base escalable para:
 - React 19 + TypeScript + Vite
 - Tailwind CSS v4
 - Supabase
+- `i18next` + `react-i18next` para multi idioma
+- `react-hook-form` + `@hookform/resolvers` para formularios
+- `next-themes` para dark mode
+- `sonner` para feedback y notificaciones UX
 - PWA instalable con `manifest.webmanifest` y `service worker` propio
 - Arquitectura modular monolith orientada por dominio
 
@@ -65,6 +69,7 @@ talent-marketplace-saas/
 - `docs/governance/TESTING_RULES.md` define como el proyecto se verifica a si mismo.
 - `docs/governance/SECURITY_RULES.md` fija la postura de seguridad web, OSINT y proteccion de reglas de negocio/arquitectura.
 - La base PWA evita dependencias con vulnerabilidades conocidas y usa integracion propia de `manifest` + `service worker`.
+- La base `database-first` arranca con una migracion inicial de identidad/RBAC, aprobacion de recruiters y buckets privados de Supabase Storage.
 
 ### Comandos
 
@@ -108,7 +113,29 @@ Copiar `.env.example` y completar:
 VITE_APP_NAME=Talent Marketplace SaaS
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
+VITE_WEB_PUSH_PUBLIC_KEY=
 ```
+
+Configurar tambien en Supabase Edge Functions:
+
+```bash
+WEB_PUSH_VAPID_PUBLIC_KEY=
+WEB_PUSH_VAPID_PRIVATE_KEY=
+WEB_PUSH_CONTACT_EMAIL=
+```
+
+### Estado actual del backend
+
+La primera base del MVP ya define en Supabase:
+
+- `public.users` sincronizado desde `auth.users`
+- RBAC de plataforma y tenant
+- `recruiter_requests` para aprobacion administrativa antes de crear tenants
+- `tenants`, `company_profiles`, `memberships`, `audit_logs`
+- `notification_preferences`, `notifications`, `push_subscriptions`, `notification_deliveries`, `notification_delivery_logs`
+- buckets privados `user-media`, `company-assets` y `verification-documents`
+- triggers `audit_row_changes` para que todas las tablas publicas del app dejen rastro en `audit_logs`
+- Edge Function `send-notification` para despacho web push con persistencia de intentos y fallos
 
 ### CI/CD
 

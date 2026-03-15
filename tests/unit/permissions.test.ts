@@ -9,8 +9,20 @@ describe('permission guards', () => {
   })
 
   it('filters navigation items that the current session cannot access', () => {
-    const visibleItems = filterNavigationItems(navigationItems, ['workspace:read', 'job:read', 'role:read'])
+    const visibleItems = filterNavigationItems(
+      navigationItems,
+      ['workspace:read', 'job:read', 'role:read'],
+      true
+    )
 
-    expect(visibleItems.map((item) => item.title)).toEqual(['Inicio', 'Jobs', 'Workspace', 'RBAC'])
+    expect(visibleItems.map((item) => item.title)).toEqual([
+      'Inicio',
+      'Acceso',
+      'Perfil',
+      'Recruiter',
+      'Jobs',
+      'Workspace',
+      'RBAC'
+    ])
   })
 })

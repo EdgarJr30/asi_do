@@ -34,7 +34,10 @@ Atomic capability that guards actions or visibility.
 Join entity between role and permission.
 
 ### AuditLog
-Tracks sensitive actions and governance changes.
+Tracks row-level changes, request metadata, and governance-sensitive events.
+
+### RecruiterRequest
+Approval request submitted by a standard user to become an employer-side operator through a validated company.
 
 ---
 
@@ -120,13 +123,27 @@ Action taken during moderation.
 ### Notification
 System notification record.
 
+### NotificationPreference
+User-level preference set for in-app, email, and push channels.
+
+### PushSubscription
+Browser/device push endpoint owned by a user.
+
+### NotificationDelivery
+Channel-specific delivery attempt for a notification.
+
+### NotificationDeliveryLog
+Technical log line for provider attempts, failures, and retries.
+
 ---
 
 ## 3. Relationship summary
 - one **User** can have many **Memberships**
+- one **User** can have many **RecruiterRequests**
 - one **Tenant** can have many **Memberships**
 - one **User** can own one **CandidateProfile**
 - one **Tenant** has one primary **CompanyProfile**
+- one approved **RecruiterRequest** creates one **Tenant**, one **CompanyProfile**, and one initial **Membership**
 - one **Tenant** has many **JobPostings**
 - one **JobPosting** has many **Applications**
 - one **CandidateProfile** can have many **Applications**
@@ -142,7 +159,7 @@ System notification record.
 ### Identity & Access
 | Entity | Key fields |
 |---|---|
-| users | id, email, status, created_at |
+| users | id, email, status, avatar_path, created_at |
 | tenants | id, slug, name, status, created_at |
 | memberships | id, tenant_id, user_id, status, joined_at |
 | platform_roles | id, code, name, is_system |
@@ -152,7 +169,8 @@ System notification record.
 | tenant_role_permissions | role_id, permission_id |
 | user_platform_roles | user_id, role_id |
 | membership_roles | membership_id, role_id |
-| audit_logs | id, actor_user_id, tenant_id nullable, event_type, entity_type, entity_id, payload, created_at |
+| recruiter_requests | id, requester_user_id, status, requested_company_name, requested_tenant_slug, company_logo_path, verification_document_path, approved_tenant_id nullable |
+| audit_logs | id, actor_user_id, actor_membership_id nullable, tenant_id nullable, event_type, entity_type, entity_id, record_id nullable, old_record jsonb nullable, new_record jsonb nullable, request_headers jsonb, jwt_claims jsonb, created_at |
 
 ### Candidate
 | Entity | Key fields |
@@ -186,7 +204,11 @@ System notification record.
 | subscription_plans | id, code, name, status, limits_json |
 | tenant_subscriptions | id, tenant_id, plan_id, status, started_at, ends_at nullable |
 | feature_flags | id, code, scope_type, scope_id nullable, is_enabled |
-| notifications | id, user_id, tenant_id nullable, type, title, body, read_at nullable |
+| notifications | id, recipient_user_id, tenant_id nullable, type, title, body, action_url nullable, payload jsonb, read_at nullable |
+| notification_preferences | id, user_id, tenant_id nullable, in_app_enabled, email_enabled, push_enabled, quiet_hours_json |
+| push_subscriptions | id, user_id, tenant_id nullable, endpoint, p256dh_key, auth_key, is_active, last_seen_at |
+| notification_deliveries | id, notification_id, channel, delivery_status, attempt_count, response_payload |
+| notification_delivery_logs | id, delivery_id, log_level, message, metadata |
 | moderation_cases | id, entity_type, entity_id, tenant_id nullable, status, opened_by_user_id |
 | moderation_actions | id, moderation_case_id, action_type, actor_user_id, payload, created_at |
 
@@ -194,18 +216,21 @@ System notification record.
 
 ## 5. Domain invariants
 1. A tenant-scoped entity must never exist without tenant ownership.
-2. An application must always belong to one job and one candidate profile.
-3. An application must always have exactly one current stage.
-4. Permission checks cannot rely on UI state alone.
-5. File access must map to ownership and policy rules.
-6. Role changes must be auditable.
-7. User corrections to domain assumptions must update this model.
+2. Employer-side access cannot exist without an approved recruiter request and an active membership.
+3. An application must always belong to one job and one candidate profile.
+4. An application must always have exactly one current stage.
+5. Permission checks cannot rely on UI state alone.
+6. File access must map to ownership and policy rules.
+7. Role changes must be auditable.
+8. User corrections to domain assumptions must update this model.
+9. Notification channel attempts and row-level state mutations must be recoverable from audit history.
 
 ---
 
 ## 6. Recommended enum groups
 - tenant_status
 - membership_status
+- recruiter_request_status
 - job_status
 - workplace_type
 - employment_type
@@ -220,5 +245,6 @@ System notification record.
 ## 7. Modeling notes
 - Consider snapshotting selected candidate data at time of application when historical integrity matters.
 - Keep candidate identity global while employer operations remain tenant-scoped.
+- Keep recruiter conversion approval-driven: signup creates only a standard user, and approval bootstraps tenant + company + first owner membership.
 - Separate public-facing application status from internal pipeline stage names if needed.
 - Keep permissions granular enough to support custom roles without exploding complexity too early.

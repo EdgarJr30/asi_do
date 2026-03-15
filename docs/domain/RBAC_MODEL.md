@@ -46,6 +46,8 @@ Used inside a company workspace.
 ### Requirement
 Tenant owners/admins must be able to create **custom roles** from the app.
 
+Users do not sign up directly into tenant roles. Everyone enters as a standard platform user, and employer-side access starts only after a platform admin approves a recruiter request and validates the company.
+
 ---
 
 ## 3. Permission design
@@ -95,6 +97,10 @@ Examples:
 - `feature_flag:update`
 - `support:impersonate_limited` *(only if intentionally allowed later)*
 - `audit_log:read`
+- `user:read`
+- `user:update`
+- `recruiter_request:read`
+- `recruiter_request:review`
 
 ## 4.2 Tenant permissions
 - `workspace:read`
@@ -124,6 +130,7 @@ Examples:
 - `role:delete`
 - `role:assign`
 - `notification:read`
+- `notification:manage`
 - `analytics:read`
 
 ---
@@ -133,9 +140,11 @@ Examples:
 2. Some system roles may be locked.
 3. Custom roles can be created per tenant.
 4. Custom roles can be cloned from existing roles.
-5. Roles without permissions should not be assignable unless explicitly allowed by product policy.
-6. Role changes must generate audit logs.
-7. Permission changes must be effective consistently across UI and server-side access rules.
+5. The first approved recruiter request for a company must bootstrap an initial owner-level tenant role assignment for the requester.
+6. Roles without permissions should not be assignable unless explicitly allowed by product policy.
+7. Role changes must generate audit logs.
+8. Permission changes must be effective consistently across UI and server-side access rules.
+9. Notification-management permissions must control who can create notifications, manage push subscriptions by tenant context, and inspect delivery logs.
 
 ---
 
@@ -152,6 +161,8 @@ A user can therefore:
 - be a recruiter in tenant A
 - be a readonly analyst in tenant B
 - also be a platform admin if explicitly assigned
+
+The platform also needs a one-time bootstrap path for the very first platform owner so that recruiter approvals can start without manual schema edits.
 
 ---
 
@@ -177,6 +188,8 @@ Recommended helper functions:
 - `has_platform_permission(permission_code text)`
 - `has_tenant_permission(p_tenant_id uuid, permission_code text)`
 - `my_tenant_ids()`
+- `bootstrap_first_platform_owner()`
+- `review_recruiter_request(p_request_id uuid, p_decision recruiter_request_status, p_review_notes text)`
 
 All permission changes must remain aligned with `docs/governance/SECURITY_RULES.md`, `docs/governance/TESTING_RULES.md`, and `docs/governance/DOCUMENTATION_RULES.md`.
 
@@ -209,6 +222,7 @@ Audit important RBAC events:
 - member invited
 - role assigned to member
 - role removed from member
+- notification-management grants changed
 
 Store:
 - actor

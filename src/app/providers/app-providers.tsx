@@ -1,5 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type PropsWithChildren, useState } from 'react'
+import { Toaster } from 'sonner'
+
+import { NotificationEventBridge } from '@/app/providers/notification-event-bridge'
+import { AppSessionProvider } from '@/app/providers/app-session-provider'
+import { ThemeProvider } from '@/app/providers/theme-provider'
 
 export function AppProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(
@@ -18,5 +23,15 @@ export function AppProviders({ children }: PropsWithChildren) {
       })
   )
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppSessionProvider>
+        <ThemeProvider>
+          <NotificationEventBridge />
+          {children}
+          <Toaster position="top-center" richColors theme="system" />
+        </ThemeProvider>
+      </AppSessionProvider>
+    </QueryClientProvider>
+  )
 }
