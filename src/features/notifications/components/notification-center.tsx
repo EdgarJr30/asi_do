@@ -27,7 +27,6 @@ export function NotificationCenter() {
   const { t } = useTranslation()
   const session = useAppSession()
   const queryClient = useQueryClient()
-  const tenantId = session.primaryMembership?.tenantId ?? null
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', session.authUser?.id],
@@ -48,13 +47,13 @@ export function NotificationCenter() {
     mutationFn: (values: NotificationValues) =>
       sendNotification({
         recipientUserId: session.authUser?.id ?? '',
-        tenantId,
+        tenantId: null,
         type: 'system.test',
         title: values.title,
         body: values.body,
         actionUrl: values.actionUrl,
         payload: {
-          tenantId,
+          tenantId: session.primaryMembership?.tenantId ?? null,
           source: 'notification-center',
           trigger: 'self-test'
         }

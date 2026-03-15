@@ -90,7 +90,7 @@ export function FoundationSettingsForm() {
           emailEnabled: values.emailNotifications,
           pushEnabled: values.pushNotifications,
           inAppEnabled: true,
-          tenantId: session.primaryMembership?.tenantId ?? null
+          tenantId: null
         })
       }
 
@@ -157,14 +157,14 @@ export function FoundationSettingsForm() {
       if (session.isAuthenticated) {
         await registerBrowserPushSubscription(subscription, {
           locale: toLocale(i18n.resolvedLanguage),
-          tenantId: session.primaryMembership?.tenantId ?? null
+          tenantId: null
         })
         await saveNotificationPreferences({
           locale: toLocale(i18n.resolvedLanguage),
           emailEnabled: getValues('emailNotifications'),
           pushEnabled: true,
           inAppEnabled: true,
-          tenantId: session.primaryMembership?.tenantId ?? null
+          tenantId: null
         })
       }
 

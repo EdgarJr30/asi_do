@@ -86,6 +86,7 @@ export async function saveNotificationPreferences(values: NotificationPreference
     p_email_enabled: values.emailEnabled,
     p_push_enabled: values.pushEnabled,
     p_in_app_enabled: values.inAppEnabled,
+    p_quiet_hours_json: {},
     p_tenant_id: values.tenantId ?? null
   } as never)
 
@@ -169,7 +170,17 @@ export async function markNotificationClicked(notificationId: string, deliveryId
 
 export async function sendNotification(values: SendNotificationInput): Promise<SendNotificationResult> {
   const client = requireSupabase()
+  const sessionResponse = await client.auth.getSession()
+  const accessToken = sessionResponse.data.session?.access_token ?? null
+
+  if (!accessToken) {
+    throw new Error('No encontramos una sesion valida para invocar la notificacion push.')
+  }
+
   const response = await client.functions.invoke('send-notification', {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    },
     body: {
       recipientUserId: values.recipientUserId,
       tenantId: values.tenantId ?? null,
