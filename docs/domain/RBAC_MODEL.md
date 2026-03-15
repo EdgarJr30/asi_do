@@ -103,6 +103,7 @@ Examples:
 - `recruiter_request:review`
 
 Platform roles with `audit_log:read` must also be able to access the in-app operational error inbox backed by `app_error_logs`.
+Platform launch-readiness screens must remain split between `platform_dashboard:read`, `moderation:read`, `moderation:act`, `plan:read`, `plan:update`, `feature_flag:read`, and `feature_flag:update` so support, trust, and billing scopes can stay separated.
 
 ## 4.2 Tenant permissions
 - `workspace:read`

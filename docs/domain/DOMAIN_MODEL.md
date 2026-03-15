@@ -220,16 +220,16 @@ Technical log line for provider attempts, failures, and retries.
 ### Platform Ops
 | Entity | Key fields |
 |---|---|
-| subscription_plans | id, code, name, status, limits_json |
-| tenant_subscriptions | id, tenant_id, plan_id, status, started_at, ends_at nullable |
-| feature_flags | id, code, scope_type, scope_id nullable, is_enabled |
+| subscription_plans | id, code, name, status, monthly_price_amount, currency_code, limits_json |
+| tenant_subscriptions | id, tenant_id, plan_id, status, starts_at, ends_at nullable, seat_count, usage_snapshot |
+| feature_flags | id, code, scope_type, scope_id nullable, is_enabled, metadata |
 | notifications | id, recipient_user_id, tenant_id nullable, type, title, body, action_url nullable, payload jsonb, read_at nullable |
 | notification_preferences | id, user_id, tenant_id nullable, in_app_enabled, email_enabled, push_enabled, quiet_hours_json |
 | push_subscriptions | id, user_id, tenant_id nullable, endpoint, p256dh_key, auth_key, is_active, last_seen_at |
 | notification_deliveries | id, notification_id, channel, delivery_status, attempt_count, response_payload |
 | notification_delivery_logs | id, delivery_id, log_level, message, metadata |
-| moderation_cases | id, entity_type, entity_id, tenant_id nullable, status, opened_by_user_id |
-| moderation_actions | id, moderation_case_id, action_type, actor_user_id, payload, created_at |
+| moderation_cases | id, entity_type, entity_id, tenant_id nullable, status, severity, reason, opened_by_user_id, assigned_to_user_id nullable |
+| moderation_actions | id, moderation_case_id, action_type, actor_user_id, note nullable, payload, created_at |
 
 ---
 

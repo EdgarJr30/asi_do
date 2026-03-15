@@ -12,6 +12,7 @@ import { JobDetailPage } from '@/features/jobs/pages/job-detail-page'
 import { JobsOverviewPage } from '@/features/jobs/pages/jobs-overview-page'
 import { ModerationOverviewPage } from '@/features/moderation/pages/moderation-overview-page'
 import { PipelineBoardPage } from '@/features/pipeline/pages/pipeline-board-page'
+import { PlatformOpsDashboardPage } from '@/features/platform-ops/pages/platform-ops-dashboard-page'
 import { RbacOverviewPage } from '@/features/rbac/pages/rbac-overview-page'
 import { RecruiterRequestPage } from '@/features/recruiter-requests/pages/recruiter-request-page'
 import { RecruiterReviewPage } from '@/features/recruiter-requests/pages/recruiter-review-page'
@@ -123,6 +124,14 @@ export const appRoutes: RouteObject[] = [
         element: (
           <RequirePermission permission="recruiter_request:review">
             <RecruiterReviewPage />
+          </RequirePermission>
+        )
+      },
+      {
+        path: 'admin/platform',
+        element: (
+          <RequirePermission permission="platform_dashboard:read">
+            <PlatformOpsDashboardPage />
           </RequirePermission>
         )
       },

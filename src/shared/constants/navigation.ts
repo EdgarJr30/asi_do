@@ -100,6 +100,15 @@ export const navigationItems: NavigationItem[] = [
     requiredPermission: 'recruiter_request:review'
   },
   {
+    title: 'Plataforma',
+    titleKey: 'navigation.platform.title',
+    href: '/admin/platform',
+    description: 'Ops y planes',
+    descriptionKey: 'navigation.platform.description',
+    requiresAuth: true,
+    requiredPermission: 'platform_dashboard:read'
+  },
+  {
     title: 'Moderation',
     titleKey: 'navigation.moderation.title',
     href: '/admin/moderation',

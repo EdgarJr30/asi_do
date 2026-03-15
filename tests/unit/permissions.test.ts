@@ -11,7 +11,15 @@ describe('permission guards', () => {
   it('filters navigation items that the current session cannot access', () => {
     const visibleItems = filterNavigationItems(
       navigationItems,
-      ['workspace:read', 'job:read', 'candidate_directory:read', 'application:read', 'role:read', 'audit_log:read'],
+      [
+        'workspace:read',
+        'job:read',
+        'candidate_directory:read',
+        'application:read',
+        'role:read',
+        'audit_log:read',
+        'platform_dashboard:read'
+      ],
       true
     )
 
@@ -27,6 +35,7 @@ describe('permission guards', () => {
       'Pipeline',
       'Workspace',
       'RBAC',
+      'Plataforma',
       'Errores'
     ])
   })

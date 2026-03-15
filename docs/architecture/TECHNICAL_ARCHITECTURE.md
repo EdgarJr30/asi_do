@@ -131,6 +131,13 @@ The ATS-lite migration must establish:
 - deterministic synchronization between internal stages and candidate-facing `status_public`
 - auditable collaboration artifacts for notes and ratings
 
+The platform-ops migration must establish:
+- `subscription_plans`, `tenant_subscriptions`, `feature_flags`, `moderation_cases`, and `moderation_actions`
+- default tenant subscription bootstrap plus a first plan catalog
+- basic plan-limit enforcement hooks for published jobs
+- server-side workflow notifications and email-hook deliveries for key lifecycle events
+- platform snapshot and moderation RPC helpers for in-app admin operations
+
 ### Security strategy
 - RLS enabled on exposed tables
 - helper functions for permission checks

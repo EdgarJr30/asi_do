@@ -82,6 +82,7 @@ Manual checks remain required for:
 - operational error logging into Supabase for meaningful client failures
 - user-facing error explanation quality for known platform failures, explicit uncertainty when the cause is not yet known, and admin error-state management
 - notification delivery history and push subscription ownership rules
+- moderation case lifecycle, action side effects, and plan-limit enforcement on published jobs
 - storage access rules
 - documentation/architecture contract integrity
 

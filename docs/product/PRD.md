@@ -175,12 +175,16 @@ The MVP should **not** initially include:
 - email notifications
 - new applicant alerts
 - stage/status updates
+- recruiter-request review updates
+- server-side workflow emission so alerts do not depend on a single client session
 
 ## 8.9 Moderation/admin foundations
 - review flagged jobs or tenants
 - suspend or warn
 - basic platform dashboard
 - usage counters / plan hooks
+- feature flag toggles for launch operations
+- seeded plan catalog with tenant subscription baseline
 
 ## 8.10 PWA foundations
 - installable shell
@@ -240,6 +244,9 @@ Relevant actors must receive notifications for major workflow events.
 
 ### FR-12 Moderation
 Platform admins must be able to take moderation actions on risky or abusive content/entities.
+
+### FR-12.1 Plan operations
+Platform admins must be able to inspect tenant plan state, seeded limits, and basic launch counters from inside the application.
 
 ### FR-13 Error transparency and diagnostics
 Meaningful user-facing failures must provide actionable feedback in the UI and also be logged to Supabase so platform admins can investigate the root cause later.

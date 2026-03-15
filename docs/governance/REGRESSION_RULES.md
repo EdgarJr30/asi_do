@@ -128,6 +128,9 @@ Do not hide published jobs behind tenant-only or authenticated-only routing. The
 ### R-033 — ATS movement must stay auditable and status-driven
 Do not regress the hiring workflow back to opaque application state toggles. Every application must keep an explicit current pipeline stage, stage changes must write auditable history, and candidate-facing public status must stay synchronized from the verified stage mapping instead of ad hoc UI-only updates.
 
+### R-034 — Launch operations must remain server-driven and auditable
+Do not move workflow notifications, moderation side effects, or plan-limit enforcement into client-only logic. Core launch-readiness operations must stay durable in Supabase through audited tables, server-side hooks, or reviewed RPCs so admins can trust them even when a browser session fails.
+
 ---
 
 ## Maintenance rule

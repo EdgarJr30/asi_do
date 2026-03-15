@@ -53,6 +53,10 @@ export const resources = {
           title: 'Approvals',
           description: 'Revision de recruiters'
         },
+        platform: {
+          title: 'Plataforma',
+          description: 'Ops y planes'
+        },
         moderation: {
           title: 'Moderation',
           description: 'Trust and safety'
@@ -61,9 +65,9 @@ export const resources = {
       shell: {
         offlineBanner:
           'Modo offline activo. La shell sigue disponible y las mutaciones deben reintentarse cuando vuelva la red.',
-        phaseBadge: 'Fase 6',
+        phaseBadge: 'Fase 7',
         description:
-          'Base mobile-first, PWA-first, RBAC-first y Supabase-first con employer workspace, jobs, applications y ATS-lite auditable.',
+          'Base mobile-first, PWA-first, RBAC-first y Supabase-first con hiring workflow, notificaciones y operaciones de plataforma.',
         liveSession: 'Sesion activa',
         guestSession: 'Sesion invitada',
         authenticatedBadge: 'Autenticado',
@@ -72,7 +76,7 @@ export const resources = {
         adminBadge: 'Admin reviewer',
         navNote: 'Las rutas y la navegacion ya respetan auth, permisos y estados visibles del MVP.',
         eyebrow: 'Recruiting SaaS Platform',
-        title: 'ATS-lite y hiring workflow del MVP',
+        title: 'Launch readiness del MVP',
         profileAction: 'Perfil',
         candidateAction: 'Perfil candidato',
         recruiterAction: 'Solicitud recruiter',
@@ -303,6 +307,10 @@ export const resources = {
           title: 'Approvals',
           description: 'Recruiter reviews'
         },
+        platform: {
+          title: 'Platform',
+          description: 'Ops and plans'
+        },
         moderation: {
           title: 'Moderation',
           description: 'Trust and safety'
@@ -311,9 +319,9 @@ export const resources = {
       shell: {
         offlineBanner:
           'Offline mode is active. The shell remains available and mutations should retry when the network returns.',
-        phaseBadge: 'Phase 6',
+        phaseBadge: 'Phase 7',
         description:
-          'Mobile-first, PWA-first, RBAC-first, and Supabase-first baseline with employer foundations, candidate identity, and talent discovery.',
+          'Mobile-first, PWA-first, RBAC-first, and Supabase-first baseline with hiring workflow, notifications, and platform operations.',
         liveSession: 'Live session',
         guestSession: 'Guest session',
         authenticatedBadge: 'Authenticated',
@@ -322,7 +330,7 @@ export const resources = {
         adminBadge: 'Admin reviewer',
         navNote: 'Routes and navigation already honor auth, permissions, and visible MVP states.',
         eyebrow: 'Recruiting SaaS Platform',
-        title: 'MVP employer and talent discovery foundations',
+        title: 'MVP launch-readiness foundations',
         profileAction: 'Profile',
         candidateAction: 'Candidate profile',
         recruiterAction: 'Recruiter request',

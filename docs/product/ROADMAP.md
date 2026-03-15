@@ -172,11 +172,15 @@ Operational maturity for launch.
 - moderation dashboard baseline
 - plan/limits hooks
 - admin dashboards baseline
+- workflow notifications emitted from durable server-side events
+- seeded free/growth plan catalog plus tenant subscription bootstrap
+- platform feature-flag controls for launch operations
 
 ### Exit criteria
 - core workflow notifications exist
 - moderation actions work
 - basic plan enforcement hooks exist
+- platform admins can inspect launch-health counters from inside the app
 
 ---
 

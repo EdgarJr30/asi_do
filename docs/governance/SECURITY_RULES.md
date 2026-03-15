@@ -146,6 +146,7 @@ OSINT may be used only for legitimate moderation, fraud prevention, trust verifi
 - client error logging into Supabase and admin visibility of those logs
 - in-app admin management of operational errors, including resolved vs pending tracking
 - notification delivery logging and push subscription ownership
+- moderation-case authorization, tenant/job side effects, and plan-limit enforcement hooks
 - notification click/read tracking across service worker, client, and database RPC boundaries
 - documentation integrity for security-sensitive changes
 

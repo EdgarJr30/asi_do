@@ -42,6 +42,10 @@ const atsLiteFixMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260315090000_ats_lite_stage_history_fix.sql'
 )
+const platformOpsMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260315103000_platform_ops_foundations.sql'
+)
 
 describe('supabase schema contract', () => {
   it('keeps the identity, notification, and push workflow migrations in place', () => {
@@ -56,6 +60,7 @@ describe('supabase schema contract', () => {
     expect(existsSync(applicationsMigrationPath)).toBe(true)
     expect(existsSync(atsLiteMigrationPath)).toBe(true)
     expect(existsSync(atsLiteFixMigrationPath)).toBe(true)
+    expect(existsSync(platformOpsMigrationPath)).toBe(true)
   })
 
   it('defines the core identity, approval, and storage foundations', () => {
@@ -174,5 +179,20 @@ describe('supabase schema contract', () => {
     expect(migration).toContain('v_previous_stage_id := v_application.current_stage_id;')
     expect(migration).toContain('from_stage_id,')
     expect(migration).toContain('v_previous_stage_id,')
+  })
+
+  it('keeps platform ops, moderation, and plan hook foundations aligned with the schema contract', () => {
+    const migration = readFileSync(platformOpsMigrationPath, 'utf8')
+
+    expect(migration).toContain('create table if not exists public.subscription_plans')
+    expect(migration).toContain('create table if not exists public.tenant_subscriptions')
+    expect(migration).toContain('create table if not exists public.feature_flags')
+    expect(migration).toContain('create table if not exists public.moderation_cases')
+    expect(migration).toContain('create table if not exists public.moderation_actions')
+    expect(migration).toContain('create or replace function public.system_create_notification(')
+    expect(migration).toContain('create or replace function public.platform_ops_snapshot()')
+    expect(migration).toContain('create or replace function public.open_moderation_case(')
+    expect(migration).toContain('create or replace function public.apply_moderation_action(')
+    expect(migration).toContain('create trigger job_postings_assert_publish_limit')
   })
 })

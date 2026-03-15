@@ -416,6 +416,7 @@ Responsibilities:
 - recruiter-candidate communication if enabled
 - system alerts
 - plan or billing notifications
+- workflow emission from server-side lifecycle hooks so launch alerts survive client interruptions
 
 ## 8.9 Billing & Subscription Module
 Responsibilities:
@@ -425,6 +426,8 @@ Responsibilities:
 - usage checks
 - payment status
 - subscription upgrades/downgrades
+- default plan bootstrap for new tenants
+- launch-readiness counters for subscriptions and pending email hooks
 
 ## 8.10 Platform Admin Module
 Responsibilities:
@@ -434,6 +437,7 @@ Responsibilities:
 - feature flags
 - platform-level analytics
 - tenant oversight
+- auditable moderation cases/actions with platform-admin execution paths
 
 ---
 

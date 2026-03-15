@@ -54,11 +54,18 @@ interface MembershipQueryRow {
 }
 
 const platformPermissionChecks = [
+  'platform_dashboard:read',
   'tenant:read',
   'user:read',
   'recruiter_request:read',
   'recruiter_request:review',
   'moderation:read',
+  'moderation:act',
+  'plan:read',
+  'plan:update',
+  'billing:read',
+  'feature_flag:read',
+  'feature_flag:update',
   'audit_log:read'
 ] as const satisfies readonly PermissionCode[]
 

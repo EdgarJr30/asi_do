@@ -111,6 +111,7 @@
 3. Suspended tenants/users/jobs must follow clear state rules.
 4. Moderation actions must be auditable.
 5. Public trust and candidate safety are prioritized over convenience when conflicts occur.
+6. Moderation cases and actions must live as first-class operational records, not ad hoc support notes outside the product.
 
 ---
 
@@ -122,6 +123,7 @@
 5. Push notification subscriptions must be explicitly permission-based and revocable by the user.
 6. Every notification delivery attempt must persist technical history and logs in the database.
 7. Notification preferences may expand later, but critical system notices may override preferences where justified.
+8. Core workflow notifications must be emitted from durable server-side workflows for application submit, recruiter-request review, and candidate-facing status changes.
 
 ---
 
@@ -144,6 +146,7 @@
 3. Limits may apply to users, jobs, applications, storage, or advanced features.
 4. Plan enforcement must fail predictably and explain the limitation.
 5. Free-plan assumptions must not leak into the core domain model.
+6. New employer tenants must receive a default subscription baseline so plan hooks can operate from day one.
 
 ---
 

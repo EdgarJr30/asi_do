@@ -357,6 +357,42 @@ export type Database = {
           }
         ]
       }
+      feature_flags: {
+        Row: {
+          code: string
+          created_at: string
+          description: string
+          id: string
+          is_enabled: boolean
+          metadata: Json
+          scope_id: string | null
+          scope_type: Database['public']['Enums']['feature_scope_type']
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_enabled?: boolean
+          metadata?: Json
+          scope_id?: string | null
+          scope_type?: Database['public']['Enums']['feature_scope_type']
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_enabled?: boolean
+          metadata?: Json
+          scope_id?: string | null
+          scope_type?: Database['public']['Enums']['feature_scope_type']
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           actor_user_id: string | null
@@ -1107,6 +1143,134 @@ export type Database = {
           }
         ]
       }
+      moderation_actions: {
+        Row: {
+          action_type: Database['public']['Enums']['moderation_action_type']
+          actor_user_id: string
+          created_at: string
+          id: string
+          moderation_case_id: string
+          note: string | null
+          payload: Json
+          updated_at: string
+        }
+        Insert: {
+          action_type: Database['public']['Enums']['moderation_action_type']
+          actor_user_id: string
+          created_at?: string
+          id?: string
+          moderation_case_id: string
+          note?: string | null
+          payload?: Json
+          updated_at?: string
+        }
+        Update: {
+          action_type?: Database['public']['Enums']['moderation_action_type']
+          actor_user_id?: string
+          created_at?: string
+          id?: string
+          moderation_case_id?: string
+          note?: string | null
+          payload?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'moderation_actions_actor_user_id_fkey'
+            columns: ['actor_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'moderation_actions_moderation_case_id_fkey'
+            columns: ['moderation_case_id']
+            isOneToOne: false
+            referencedRelation: 'moderation_cases'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      moderation_cases: {
+        Row: {
+          assigned_to_user_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json
+          opened_by_user_id: string
+          reason: string
+          resolved_at: string | null
+          resolved_by_user_id: string | null
+          severity: string
+          status: Database['public']['Enums']['moderation_case_status']
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to_user_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json
+          opened_by_user_id: string
+          reason: string
+          resolved_at?: string | null
+          resolved_by_user_id?: string | null
+          severity?: string
+          status?: Database['public']['Enums']['moderation_case_status']
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to_user_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          opened_by_user_id?: string
+          reason?: string
+          resolved_at?: string | null
+          resolved_by_user_id?: string | null
+          severity?: string
+          status?: Database['public']['Enums']['moderation_case_status']
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'moderation_cases_assigned_to_user_id_fkey'
+            columns: ['assigned_to_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'moderation_cases_opened_by_user_id_fkey'
+            columns: ['opened_by_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'moderation_cases_resolved_by_user_id_fkey'
+            columns: ['resolved_by_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'moderation_cases_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       permissions: {
         Row: {
           action: string
@@ -1451,6 +1615,60 @@ export type Database = {
           }
         ]
       }
+      tenant_subscriptions: {
+        Row: {
+          created_at: string
+          ends_at: string | null
+          id: string
+          plan_id: string
+          seat_count: number
+          starts_at: string
+          status: Database['public']['Enums']['tenant_subscription_status']
+          tenant_id: string
+          updated_at: string
+          usage_snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          plan_id: string
+          seat_count?: number
+          starts_at?: string
+          status?: Database['public']['Enums']['tenant_subscription_status']
+          tenant_id: string
+          updated_at?: string
+          usage_snapshot?: Json
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          plan_id?: string
+          seat_count?: number
+          starts_at?: string
+          status?: Database['public']['Enums']['tenant_subscription_status']
+          tenant_id?: string
+          updated_at?: string
+          usage_snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'tenant_subscriptions_plan_id_fkey'
+            columns: ['plan_id']
+            isOneToOne: false
+            referencedRelation: 'subscription_plans'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'tenant_subscriptions_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       tenants: {
         Row: {
           created_at: string
@@ -1488,6 +1706,45 @@ export type Database = {
             referencedColumns: ['id']
           }
         ]
+      }
+      subscription_plans: {
+        Row: {
+          code: string
+          created_at: string
+          currency_code: string
+          description: string
+          id: string
+          limits_json: Json
+          monthly_price_amount: number
+          name: string
+          status: Database['public']['Enums']['subscription_plan_status']
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          currency_code?: string
+          description?: string
+          id?: string
+          limits_json?: Json
+          monthly_price_amount?: number
+          name: string
+          status?: Database['public']['Enums']['subscription_plan_status']
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          currency_code?: string
+          description?: string
+          id?: string
+          limits_json?: Json
+          monthly_price_amount?: number
+          name?: string
+          status?: Database['public']['Enums']['subscription_plan_status']
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_platform_roles: {
         Row: {
@@ -1636,6 +1893,39 @@ export type Database = {
         Args: never
         Returns: string[]
       }
+      apply_moderation_action: {
+        Args: {
+          p_action_type: Database['public']['Enums']['moderation_action_type']
+          p_case_id: string
+          p_note?: string
+        }
+        Returns: {
+          assigned_to_user_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json
+          opened_by_user_id: string
+          reason: string
+          resolved_at: string | null
+          resolved_by_user_id: string | null
+          severity: string
+          status: Database['public']['Enums']['moderation_case_status']
+          tenant_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: '*'
+          to: 'moderation_cases'
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_tenant_plan_snapshot: {
+        Args: { p_tenant_id: string }
+        Returns: Json
+      }
       review_recruiter_request: {
         Args: {
           p_decision: Database['public']['Enums']['recruiter_request_status']
@@ -1671,6 +1961,42 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      open_moderation_case: {
+        Args: {
+          p_entity_id: string
+          p_entity_type: string
+          p_metadata?: Json
+          p_reason?: string
+          p_severity?: string
+          p_tenant_id?: string
+        }
+        Returns: {
+          assigned_to_user_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json
+          opened_by_user_id: string
+          reason: string
+          resolved_at: string | null
+          resolved_by_user_id: string | null
+          severity: string
+          status: Database['public']['Enums']['moderation_case_status']
+          tenant_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: '*'
+          to: 'moderation_cases'
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      platform_ops_snapshot: {
+        Args: never
+        Returns: Json
+      }
       move_application_stage: {
         Args: {
           p_application_id: string
@@ -1701,15 +2027,30 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      system_create_notification: {
+        Args: {
+          p_action_url?: string
+          p_body: string
+          p_payload?: Json
+          p_recipient_user_id: string
+          p_tenant_id?: string
+          p_title: string
+          p_type: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       application_public_status: 'submitted' | 'in_review' | 'interviewing' | 'offer' | 'rejected' | 'withdrawn' | 'hired'
       app_error_severity: 'info' | 'warning' | 'error' | 'fatal'
+      feature_scope_type: 'global' | 'plan' | 'tenant'
       job_employment_type: 'full_time' | 'part_time' | 'contract' | 'temporary' | 'internship'
       job_posting_status: 'draft' | 'published' | 'closed' | 'archived'
       job_screening_answer_type: 'short_text' | 'long_text' | 'yes_no' | 'single_select'
       job_workplace_type: 'on_site' | 'hybrid' | 'remote'
       membership_status: 'active' | 'invited' | 'suspended' | 'revoked'
+      moderation_action_type: 'note' | 'warn' | 'close_job' | 'suspend_tenant' | 'restore_tenant' | 'dismiss_case'
+      moderation_case_status: 'open' | 'under_review' | 'resolved' | 'dismissed'
       permission_scope: 'platform' | 'tenant' | 'self'
       recruiter_request_status:
         | 'submitted'
@@ -1717,7 +2058,9 @@ export type Database = {
         | 'approved'
         | 'rejected'
         | 'cancelled'
+      subscription_plan_status: 'draft' | 'active' | 'archived'
       tenant_status: 'active' | 'suspended' | 'archived'
+      tenant_subscription_status: 'trialing' | 'active' | 'past_due' | 'cancelled' | 'ended'
       user_status: 'active' | 'suspended' | 'blocked'
     }
     CompositeTypes: {
