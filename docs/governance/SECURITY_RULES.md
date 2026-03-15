@@ -36,6 +36,10 @@ Security includes protecting:
 - Encode or render user-generated content safely.
 - Do not introduce unsafe HTML rendering without an explicit sanitization strategy.
 - File uploads must validate type, size, and storage destination rules.
+- User-facing upload errors must explain the real failure reason and the recovery path instead of returning a silent or generic failure.
+- Avatars, logos, CVs, recruiter documents, and similar attachments must enforce a maximum upload size of **5 MB**.
+- Modern web-safe formats such as **SVG** and **WEBP** should be accepted where the feature can support them without weakening security.
+- Raster images should be optimized internally before storage when safe compression is available.
 
 ### Browser and deployment controls
 - Production deployments must use HTTPS.
@@ -66,6 +70,7 @@ Security includes protecting:
 10. All public application tables must attach row-change audit triggers or an approved equivalent.
 11. Notification channels must persist delivery attempts and technical logs in Postgres.
 12. Web push VAPID keys and contact metadata must live only in Supabase Edge Function secrets, never in browser code except the public key.
+13. Operational app errors that reach the user should be logged to Supabase in a dedicated reviewable store without blocking the main UX flow.
 
 ### Supabase MCP rules for LLM-assisted development
 - Supabase MCP may be used only as an internal developer tool, never as an end-user or customer-facing capability.
@@ -130,8 +135,10 @@ OSINT may be used only for legitimate moderation, fraud prevention, trust verifi
 - route/action guards
 - tenant-scoped data access
 - storage access rules
+- upload size/type enforcement and user-facing rejection messaging
 - job/application workflow authorization
 - audit trigger coverage and audit log readability
+- client error logging into Supabase and admin visibility of those logs
 - notification delivery logging and push subscription ownership
 - notification click/read tracking across service worker, client, and database RPC boundaries
 - documentation integrity for security-sensitive changes

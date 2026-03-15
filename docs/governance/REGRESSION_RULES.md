@@ -95,6 +95,15 @@ Do not model self-serve employer or recruiter registration. Every new account st
 ### R-022 — Every app mutation must be fully auditable
 All tables and meaningful actions in the app must preserve auditability. Row-level changes require database audit triggers or an approved equivalent, and notification flows must persist history plus technical delivery logs in Postgres.
 
+### R-023 — Modern web upload formats are mandatory where appropriate
+Do not regress upload support back to legacy-only image formats. User-facing media flows such as onboarding avatars and recruiter branding assets must accept modern web formats like SVG and WEBP whenever the use case allows them safely.
+
+### R-024 — Uploads must stay optimized, capped, and transparent
+All multimedia and document uploads must enforce a maximum size of 5 MB, optimize assets internally when the format supports safe compression, and show the user the exact rejection reason including detected file size when relevant.
+
+### R-025 — Meaningful errors must be user-visible and logged
+Do not hide operational failures behind generic messages. Meaningful errors must be captured with actionable user feedback and logged durably to Supabase so platform admins can review and fix them later.
+
 ---
 
 ## Maintenance rule

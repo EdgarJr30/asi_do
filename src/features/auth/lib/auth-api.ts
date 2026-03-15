@@ -1,5 +1,6 @@
 import type { EmailOtpType, User } from '@supabase/supabase-js'
 
+import { MAX_UPLOAD_SIZE_BYTES, formatFileSize } from '@/lib/uploads/media'
 import { supabase } from '@/lib/supabase/client'
 import { isPermissionCode, type PermissionCode } from '@/shared/constants/permissions'
 import type { Tables } from '@/shared/types/database'
@@ -85,6 +86,18 @@ function getFileExtension(file: File) {
   const extension = file.name.split('.').pop()?.trim().toLowerCase()
 
   return extension && extension.length > 0 ? extension : 'bin'
+}
+
+function normalizeStorageUploadErrorMessage(file: File, errorMessage: string) {
+  const unsupportedMimeMatch = /mime type\s+(.+?)\s+is not supported/i.exec(errorMessage)
+
+  if (unsupportedMimeMatch) {
+    const mimeType = (unsupportedMimeMatch[1] ?? file.type) || 'desconocido'
+
+    return `El almacenamiento rechazo el formato ${mimeType}. Intenta con un archivo permitido para este flujo o vuelve a subirlo cuando el bucket este actualizado.`
+  }
+
+  return errorMessage
 }
 
 function getAuthRedirectUrl(nextPath = '/onboarding') {
@@ -343,6 +356,13 @@ export async function uploadPrivateFile(options: {
   prefix: string
 }) {
   const client = requireSupabase()
+
+  if (options.file.size > MAX_UPLOAD_SIZE_BYTES) {
+    throw new Error(
+      `El archivo pesa ${formatFileSize(options.file.size)} y supera el maximo de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)}. Comprime el archivo o carga uno de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)} o menos.`
+    )
+  }
+
   const extension = getFileExtension(options.file)
   const storagePath = `${options.ownerUserId}/${options.prefix}-${crypto.randomUUID()}.${extension}`
 
@@ -354,7 +374,7 @@ export async function uploadPrivateFile(options: {
     })
 
   if (uploadResponse.error) {
-    throw uploadResponse.error
+    throw new Error(normalizeStorageUploadErrorMessage(options.file, uploadResponse.error.message))
   }
 
   return uploadResponse.data.path

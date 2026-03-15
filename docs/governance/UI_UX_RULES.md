@@ -204,6 +204,7 @@ Recommended baseline tokens:
 2. Supporting copy should explain what the user can do next, not restate the title.
 3. Labels use nouns. Actions use verbs.
 4. Error text must state what happened and how to fix it.
+5. When an upload is rejected by size or type, the message should include the detected file size when relevant and a concrete next step such as compressing the file or uploading one of 5 MB or less.
 
 ---
 

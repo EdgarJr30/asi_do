@@ -21,6 +21,14 @@ import {
 } from '@/features/auth/lib/auth-api'
 import { recruiterRequestSchema, type RecruiterRequestValues } from '@/features/auth/lib/auth-schemas'
 import { RecruiterRequestStatusBadge } from '@/features/recruiter-requests/components/recruiter-request-status-badge'
+import { captureClientError } from '@/lib/errors/client-error-logger'
+import {
+  MAX_UPLOAD_SIZE_LABEL,
+  prepareUploadFile,
+  RECRUITER_DOCUMENT_MIME_TYPES,
+  RECRUITER_LOGO_MIME_TYPES,
+  UploadConstraintError
+} from '@/lib/uploads/media'
 
 const MY_REQUESTS_QUERY_KEY = ['recruiter-requests', 'mine'] as const
 
@@ -30,6 +38,10 @@ export function RecruiterRequestPage() {
   const session = useAppSession()
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null)
   const [verificationDocumentFile, setVerificationDocumentFile] = useState<File | null>(null)
+  const [companyLogoFileError, setCompanyLogoFileError] = useState<string | null>(null)
+  const [verificationDocumentFileError, setVerificationDocumentFileError] = useState<string | null>(null)
+  const [isPreparingCompanyLogo, setIsPreparingCompanyLogo] = useState(false)
+  const [isPreparingVerificationDocument, setIsPreparingVerificationDocument] = useState(false)
 
   const form = useForm<RecruiterRequestValues>({
     resolver: zodResolver(recruiterRequestSchema),
@@ -104,6 +116,8 @@ export function RecruiterRequestPage() {
       })
       setCompanyLogoFile(null)
       setVerificationDocumentFile(null)
+      setCompanyLogoFileError(null)
+      setVerificationDocumentFileError(null)
       form.reset({
         requestedCompanyName: '',
         requestedCompanyLegalName: '',
@@ -115,7 +129,18 @@ export function RecruiterRequestPage() {
         companyDescription: ''
       })
     },
-    onError: (error) => {
+    onError: async (error) => {
+      await captureClientError({
+        source: 'recruiter-request.submit',
+        route: '/recruiter-request',
+        userId: session.authUser?.id ?? null,
+        userMessage: 'No pudimos enviar tu solicitud recruiter.',
+        error,
+        metadata: {
+          hasCompanyLogoFile: companyLogoFile !== null,
+          hasVerificationDocumentFile: verificationDocumentFile !== null
+        }
+      })
       toast.error('No pudimos enviar la solicitud', {
         description: toErrorMessage(error)
       })
@@ -126,11 +151,111 @@ export function RecruiterRequestPage() {
   const hasOpenRequest = requests.some((request) => request.status === 'submitted' || request.status === 'under_review')
   const approvedRequest = requests.find((request) => request.status === 'approved')
 
+  async function handleCompanyLogoChange(file: File | null) {
+    setCompanyLogoFileError(null)
+    setCompanyLogoFile(file)
+
+    if (!file) {
+      return
+    }
+
+    setIsPreparingCompanyLogo(true)
+
+    try {
+      const preparedFile = await prepareUploadFile(file, {
+        acceptedMimeTypes: RECRUITER_LOGO_MIME_TYPES,
+        acceptedFormatsLabel: 'SVG, PNG, JPG o WEBP',
+        fieldLabel: 'El logo',
+        maxImageDimension: 1600
+      })
+
+      setCompanyLogoFile(preparedFile)
+    } catch (error) {
+      const message =
+        error instanceof UploadConstraintError ? error.userMessage : toErrorMessage(error)
+
+      setCompanyLogoFile(null)
+      setCompanyLogoFileError(message)
+      toast.error('No pudimos preparar el logo', {
+        description: message
+      })
+      await captureClientError({
+        source: 'recruiter-request.company-logo',
+        route: '/recruiter-request',
+        userId: session.authUser?.id ?? null,
+        userMessage: message,
+        error,
+        metadata: {
+          fileName: file.name,
+          fileSizeBytes: file.size,
+          fileType: file.type
+        }
+      })
+    } finally {
+      setIsPreparingCompanyLogo(false)
+    }
+  }
+
+  async function handleVerificationDocumentChange(file: File | null) {
+    setVerificationDocumentFileError(null)
+    setVerificationDocumentFile(file)
+
+    if (!file) {
+      return
+    }
+
+    setIsPreparingVerificationDocument(true)
+
+    try {
+      const preparedFile = await prepareUploadFile(file, {
+        acceptedMimeTypes: RECRUITER_DOCUMENT_MIME_TYPES,
+        acceptedFormatsLabel: 'PDF, PNG, JPG o WEBP',
+        fieldLabel: 'El documento',
+        maxImageDimension: 2200
+      })
+
+      setVerificationDocumentFile(preparedFile)
+    } catch (error) {
+      const message =
+        error instanceof UploadConstraintError ? error.userMessage : toErrorMessage(error)
+
+      setVerificationDocumentFile(null)
+      setVerificationDocumentFileError(message)
+      toast.error('No pudimos preparar el documento', {
+        description: message
+      })
+      await captureClientError({
+        source: 'recruiter-request.verification-document',
+        route: '/recruiter-request',
+        userId: session.authUser?.id ?? null,
+        userMessage: message,
+        error,
+        metadata: {
+          fileName: file.name,
+          fileSizeBytes: file.size,
+          fileType: file.type
+        }
+      })
+    } finally {
+      setIsPreparingVerificationDocument(false)
+    }
+  }
+
   async function openPrivateAsset(path: string) {
     try {
       const signedUrl = await createPrivateFileUrl('verification-documents', path)
       window.open(signedUrl, '_blank', 'noopener,noreferrer')
     } catch (error) {
+      await captureClientError({
+        source: 'recruiter-request.asset-open',
+        route: '/recruiter-request',
+        userId: session.authUser?.id ?? null,
+        userMessage: 'No pudimos abrir el archivo privado.',
+        error,
+        metadata: {
+          assetPath: path
+        }
+      })
       toast.error('No pudimos abrir el archivo', {
         description: toErrorMessage(error)
       })
@@ -208,11 +333,20 @@ export function RecruiterRequestPage() {
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <span>Logo temporal para revision</span>
                   <Input
-                    accept="image/png,image/jpeg,image/webp"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
                     type="file"
-                    onChange={(event) => setCompanyLogoFile(event.target.files?.[0] ?? null)}
+                    onChange={(event) => void handleCompanyLogoChange(event.target.files?.[0] ?? null)}
                   />
-                  <p className="text-xs text-zinc-500">Opcional. Se guarda privado durante la revision.</p>
+                  <p className="text-xs text-zinc-500">
+                    Opcional. Acepta SVG, PNG, JPG y WEBP. Las imagenes raster se comprimen antes de subirlas y el limite es {MAX_UPLOAD_SIZE_LABEL}.
+                  </p>
+                  <p className="text-xs text-zinc-500">Se guarda privado durante la revision.</p>
+                  {isPreparingCompanyLogo ? (
+                    <p className="text-xs text-zinc-500">Optimizando logo antes de subir...</p>
+                  ) : null}
+                  {companyLogoFileError ? (
+                    <p className="text-xs text-rose-600 dark:text-rose-300">{companyLogoFileError}</p>
+                  ) : null}
                 </label>
 
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
@@ -220,9 +354,18 @@ export function RecruiterRequestPage() {
                   <Input
                     accept="application/pdf,image/png,image/jpeg,image/webp"
                     type="file"
-                    onChange={(event) => setVerificationDocumentFile(event.target.files?.[0] ?? null)}
+                    onChange={(event) => void handleVerificationDocumentChange(event.target.files?.[0] ?? null)}
                   />
-                  <p className="text-xs text-zinc-500">Requerido. Solo el solicitante y reviewers admin pueden verlo.</p>
+                  <p className="text-xs text-zinc-500">
+                    Requerido. Acepta PDF, PNG, JPG y WEBP. Las imagenes se optimizan antes de subirlas y el limite es {MAX_UPLOAD_SIZE_LABEL}.
+                  </p>
+                  <p className="text-xs text-zinc-500">Solo el solicitante y reviewers admin pueden verlo.</p>
+                  {isPreparingVerificationDocument ? (
+                    <p className="text-xs text-zinc-500">Preparando documento antes de subir...</p>
+                  ) : null}
+                  {verificationDocumentFileError ? (
+                    <p className="text-xs text-rose-600 dark:text-rose-300">{verificationDocumentFileError}</p>
+                  ) : null}
                 </label>
               </div>
 

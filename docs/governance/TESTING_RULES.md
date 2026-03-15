@@ -68,11 +68,13 @@ Manual checks remain required for:
 - auth user mirroring into `public.users`
 - recruiter request approval and tenant bootstrap
 - first platform owner bootstrap
+- upload validation for file type, 5 MB size cap, and exact user-facing rejection copy
 - job lifecycle transitions
 - application submission
 - duplicate application policy
 - pipeline stage transitions
 - audit-sensitive actions
+- operational error logging into Supabase for meaningful client failures
 - notification delivery history and push subscription ownership rules
 - storage access rules
 - documentation/architecture contract integrity
@@ -97,10 +99,12 @@ src/features/*/tests/   feature-local tests when co-location helps
 2. Every change to permissions, tenancy boundaries, security-sensitive workflows, or business invariants must add or update automated verification.
 3. Database changes that introduce RLS, audit triggers, or notification logging must be verified against Supabase advisors and schema inspection at minimum until SQL regression tests are added.
 4. Push notification changes must verify service worker behavior, RPC contracts, and the deployed Edge Function path when the environment is available.
-5. Failing tests block completion unless the user explicitly accepts a known failure.
-6. If test coverage is intentionally deferred, document the gap in the same task.
-7. Test names should describe business intent, not implementation trivia.
-8. The `main` branch must stay gated by a successful CI quality run even when preview and production deploys are handled by a hosting platform.
+5. File upload changes must verify allowed formats, internal optimization behavior where applicable, 5 MB rejection, and actionable error copy.
+6. Error-handling changes must verify both the user-visible state and the Supabase logging path when feasible.
+7. Failing tests block completion unless the user explicitly accepts a known failure.
+8. If test coverage is intentionally deferred, document the gap in the same task.
+9. Test names should describe business intent, not implementation trivia.
+10. The `main` branch must stay gated by a successful CI quality run even when preview and production deploys are handled by a hosting platform.
 
 ---
 

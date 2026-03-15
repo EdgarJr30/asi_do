@@ -17,6 +17,13 @@ import {
   updateUserProfile,
   uploadPrivateFile
 } from '@/features/auth/lib/auth-api'
+import { captureClientError } from '@/lib/errors/client-error-logger'
+import {
+  MAX_UPLOAD_SIZE_LABEL,
+  ONBOARDING_AVATAR_MIME_TYPES,
+  prepareUploadFile,
+  UploadConstraintError
+} from '@/lib/uploads/media'
 import { onboardingSchema, type OnboardingValues } from '@/features/auth/lib/auth-schemas'
 
 export function OnboardingPage() {
@@ -24,6 +31,8 @@ export function OnboardingPage() {
   const session = useAppSession()
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null)
+  const [avatarFileError, setAvatarFileError] = useState<string | null>(null)
+  const [isPreparingAvatar, setIsPreparingAvatar] = useState(false)
 
   const form = useForm<OnboardingValues>({
     resolver: zodResolver(onboardingSchema),
@@ -76,15 +85,54 @@ export function OnboardingPage() {
     }
   }, [session.profile?.avatar_path])
 
-  function handleAvatarChange(file: File | null) {
+  async function handleAvatarChange(file: File | null) {
+    setAvatarFileError(null)
     setAvatarFile(file)
 
     if (!file) {
+      setAvatarPreviewUrl(session.profile?.avatar_path ? avatarPreviewUrl : null)
       return
     }
 
-    const objectUrl = URL.createObjectURL(file)
-    setAvatarPreviewUrl(objectUrl)
+    setIsPreparingAvatar(true)
+
+    try {
+      const preparedFile = await prepareUploadFile(file, {
+        acceptedMimeTypes: ONBOARDING_AVATAR_MIME_TYPES,
+        acceptedFormatsLabel: 'SVG, PNG, JPG o WEBP',
+        fieldLabel: 'El avatar',
+        maxImageDimension: 1024
+      })
+
+      setAvatarFile(preparedFile)
+
+      const objectUrl = URL.createObjectURL(preparedFile)
+      setAvatarPreviewUrl(objectUrl)
+    } catch (error) {
+      const message =
+        error instanceof UploadConstraintError ? error.userMessage : toErrorMessage(error)
+
+      setAvatarFile(null)
+      setAvatarFileError(message)
+      setAvatarPreviewUrl(null)
+      toast.error('No pudimos preparar el avatar', {
+        description: message
+      })
+      await captureClientError({
+        source: 'onboarding.avatar',
+        route: '/onboarding',
+        userId: session.authUser?.id ?? null,
+        userMessage: message,
+        error,
+        metadata: {
+          fileName: file.name,
+          fileSizeBytes: file.size,
+          fileType: file.type
+        }
+      })
+    } finally {
+      setIsPreparingAvatar(false)
+    }
   }
 
   async function onSubmit(values: OnboardingValues) {
@@ -118,6 +166,16 @@ export function OnboardingPage() {
         description: 'Tu onboarding base ya quedo listo para seguir con la solicitud recruiter.'
       })
     } catch (error) {
+      await captureClientError({
+        source: 'onboarding.submit',
+        route: '/onboarding',
+        userId: session.authUser.id,
+        userMessage: 'No pudimos guardar tu perfil base.',
+        error,
+        metadata: {
+          hasAvatarFile: avatarFile !== null
+        }
+      })
       toast.error('No pudimos guardar tu perfil', {
         description: toErrorMessage(error)
       })
@@ -167,11 +225,18 @@ export function OnboardingPage() {
             <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
               <span>Avatar</span>
               <Input
-                accept="image/png,image/jpeg,image/webp"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
                 type="file"
-                onChange={(event) => handleAvatarChange(event.target.files?.[0] ?? null)}
+                onChange={(event) => void handleAvatarChange(event.target.files?.[0] ?? null)}
               />
+              <p className="text-xs text-zinc-500">
+                Acepta SVG, PNG, JPG y WEBP. Las imagenes raster se comprimen antes de subirlas y el limite es {MAX_UPLOAD_SIZE_LABEL}.
+              </p>
               <p className="text-xs text-zinc-500">Se guarda en el bucket privado `user-media`.</p>
+              {isPreparingAvatar ? (
+                <p className="text-xs text-zinc-500">Optimizando avatar antes de subir...</p>
+              ) : null}
+              {avatarFileError ? <p className="text-xs text-rose-600 dark:text-rose-300">{avatarFileError}</p> : null}
             </label>
 
             <Button className="w-full" disabled={form.formState.isSubmitting} type="submit">

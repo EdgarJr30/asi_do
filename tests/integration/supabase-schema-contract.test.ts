@@ -14,6 +14,10 @@ const pushWorkflowMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260314130000_push_delivery_workflow.sql'
 )
+const storageAlignmentMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260315023000_align_storage_mime_support_and_limits.sql'
+)
 
 describe('supabase schema contract', () => {
   it('keeps the identity, notification, and push workflow migrations in place', () => {
@@ -21,6 +25,7 @@ describe('supabase schema contract', () => {
     expect(existsSync(hardeningMigrationPath)).toBe(true)
     expect(existsSync(notificationsMigrationPath)).toBe(true)
     expect(existsSync(pushWorkflowMigrationPath)).toBe(true)
+    expect(existsSync(storageAlignmentMigrationPath)).toBe(true)
   })
 
   it('defines the core identity, approval, and storage foundations', () => {
@@ -62,5 +67,16 @@ describe('supabase schema contract', () => {
     expect(migration).toContain("create or replace function public.queue_push_notification(")
     expect(migration).toContain("create or replace function public.update_push_delivery_status(")
     expect(migration).toContain("create or replace function public.mark_notification_clicked(")
+  })
+
+  it('keeps storage bucket limits and mime support aligned with upload rules', () => {
+    const migration = readFileSync(storageAlignmentMigrationPath, 'utf8')
+
+    expect(migration).toContain("where id = 'user-media'")
+    expect(migration).toContain("where id = 'company-assets'")
+    expect(migration).toContain("where id = 'verification-documents'")
+    expect(migration).toContain("'image/svg+xml'")
+    expect(migration).toContain("'application/pdf'")
+    expect(migration).toContain('file_size_limit = 5242880')
   })
 })

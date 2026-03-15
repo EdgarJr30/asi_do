@@ -119,6 +119,10 @@
 3. Public files must be intentionally marked public.
 4. Recruiter verification documents are private by default and only readable by the requester and authorized platform reviewers.
 5. File naming and path conventions must support auditability and tenant separation where relevant.
+6. Avatars, logos, CVs, recruiter verification documents, and any other multimedia or document attachment must be rejected if the file exceeds **5 MB**.
+7. Modern web formats such as **SVG** and **WEBP** must be accepted where the use case allows them safely.
+8. Multimedia uploads must be optimized internally before storage when the file type supports safe compression or transcoding, especially for raster images.
+9. When an upload is rejected, the UI must explain the exact reason, include the detected file size when relevant, and suggest compressing the asset or uploading a file of **5 MB or less**.
 
 ---
 
@@ -138,6 +142,7 @@
 4. New component variants require justification before adoption.
 5. Mobile-first behavior is required for all primary workflows.
 6. Loading, empty, error, success, and disabled states are not optional.
+7. Error states must be actionable: the user should understand what failed, why it failed, and what to do next.
 
 ---
 
@@ -166,6 +171,7 @@
 4. OSINT must not be used to infer protected characteristics for hiring decisions.
 5. Every meaningful mutation inside the app must leave a durable audit trail with actor, target entity, and change context.
 6. Security-sensitive changes must update related tests and documentation in the same task.
+7. User-facing errors from meaningful app flows must be durably logged to Supabase so platform admins can investigate and remediate operational issues.
 
 ---
 

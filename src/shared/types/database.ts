@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_error_logs: {
+        Row: {
+          created_at: string
+          error_code: string | null
+          error_message: string
+          id: string
+          is_resolved: boolean
+          metadata: Json
+          resolved_at: string | null
+          resolved_by_user_id: string | null
+          route: string | null
+          severity: Database['public']['Enums']['app_error_severity']
+          source: string
+          updated_at: string
+          user_id: string | null
+          user_message: string
+        }
+        Insert: {
+          created_at?: string
+          error_code?: string | null
+          error_message: string
+          id?: string
+          is_resolved?: boolean
+          metadata?: Json
+          resolved_at?: string | null
+          resolved_by_user_id?: string | null
+          route?: string | null
+          severity?: Database['public']['Enums']['app_error_severity']
+          source: string
+          updated_at?: string
+          user_id?: string | null
+          user_message: string
+        }
+        Update: {
+          created_at?: string
+          error_code?: string | null
+          error_message?: string
+          id?: string
+          is_resolved?: boolean
+          metadata?: Json
+          resolved_at?: string | null
+          resolved_by_user_id?: string | null
+          route?: string | null
+          severity?: Database['public']['Enums']['app_error_severity']
+          source?: string
+          updated_at?: string
+          user_id?: string | null
+          user_message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'app_error_logs_resolved_by_user_id_fkey'
+            columns: ['resolved_by_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'app_error_logs_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       audit_logs: {
         Row: {
           actor_user_id: string | null
@@ -727,6 +793,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_error_severity: 'info' | 'warning' | 'error' | 'fatal'
       membership_status: 'active' | 'invited' | 'suspended' | 'revoked'
       permission_scope: 'platform' | 'tenant' | 'self'
       recruiter_request_status:

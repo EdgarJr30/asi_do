@@ -109,6 +109,7 @@ The MVP should **not** initially include:
 - candidate account flow
 - employer workspace creation after approval
 - platform admin area
+- avatar and document uploads with modern web formats, 5 MB guardrails, and clear validation feedback
 
 ## 8.2 Candidate profile
 - personal info
@@ -120,6 +121,7 @@ The MVP should **not** initially include:
 - links / portfolio
 - CV upload
 - profile completeness
+- CV rejection feedback that explains file-size limits and how to fix the problem
 
 ## 8.3 Company workspace
 - company profile
@@ -178,6 +180,7 @@ The MVP should **not** initially include:
 - service worker
 - offline fallback
 - resilient loading and retry states
+- actionable error states with technical logging for admin follow-up
 
 ---
 
@@ -195,7 +198,7 @@ Tenant owners/admins must be able to manage tenant roles and assign permissions 
 Candidates must be able to create, edit, and reuse a structured profile.
 
 ### FR-5 CV/document management
-Candidates must be able to upload and manage CV files.
+Candidates must be able to upload and manage CV files, with explicit type and size validation, a maximum size of **5 MB**, and user-facing rejection messages that explain the reason and next step.
 
 ### FR-6 Job publishing
 Authorized tenant users must be able to create, publish, edit, close, and archive vacancies.
@@ -217,6 +220,9 @@ Relevant actors must receive notifications for major workflow events.
 
 ### FR-12 Moderation
 Platform admins must be able to take moderation actions on risky or abusive content/entities.
+
+### FR-13 Error transparency and diagnostics
+Meaningful user-facing failures must provide actionable feedback in the UI and also be logged to Supabase so platform admins can investigate the root cause later.
 
 ---
 

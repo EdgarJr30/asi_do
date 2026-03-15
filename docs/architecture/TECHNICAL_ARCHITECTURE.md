@@ -156,6 +156,8 @@ Avoid using a client state store as a shadow backend.
 - form validation near the boundary
 - database constraints for hard invariants
 - no reliance on frontend-only validation for security-sensitive behavior
+- file uploads must share reusable validation helpers for allowed types, 5 MB maximum size, and actionable rejection messages
+- raster image uploads should be optimized before storage when safe compression/transcoding is available
 
 ---
 
@@ -174,10 +176,12 @@ Track:
 - push subscription registration failures
 
 Add structured logs/events for critical flows where possible.
+- meaningful client-side failures should also persist into a Supabase-backed error log so admins can inspect operational issues after the fact
 
 ## 8.1 Audit and notification persistence
 - `audit_logs` is enriched with request metadata, before/after payloads, and transaction ids.
 - All public tables must receive `audit_row_changes` triggers automatically.
+- `app_error_logs` stores user-visible client/runtime failures with route, source, severity, user message, and technical metadata for admin review.
 - Notification persistence is split into `notifications`, `notification_preferences`, `push_subscriptions`, `notification_deliveries`, and `notification_delivery_logs`.
 - Browser subscriptions are registered from the client through SQL RPC helpers, not ad hoc table writes.
 - Push dispatch runs through the `send-notification` Edge Function so VAPID secrets stay server-side while delivery status remains in Postgres.
