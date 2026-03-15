@@ -1,5 +1,6 @@
 import type { Json } from '@/shared/types/database'
 
+import { toControlledError } from '@/lib/errors/error-utils'
 import { supabase } from '@/lib/supabase/client'
 import { collectClientEnvironmentMetadata, getClientSupportLabel } from '@/lib/platform/client-environment'
 
@@ -58,14 +59,6 @@ function requireSupabase() {
   return supabase
 }
 
-function toErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message
-  }
-
-  return 'Ocurrio un error inesperado.'
-}
-
 function resolveDeviceKind(userAgent: string) {
   const normalizedAgent = userAgent.toLowerCase()
 
@@ -97,7 +90,7 @@ export async function saveNotificationPreferences(values: NotificationPreference
   } as never)
 
   if (response.error) {
-    throw new Error(toErrorMessage(response.error))
+    throw toControlledError(response.error)
   }
 
   return response.data
@@ -126,7 +119,7 @@ export async function registerBrowserPushSubscription(
   } as never)
 
   if (response.error) {
-    throw new Error(toErrorMessage(response.error))
+    throw toControlledError(response.error)
   }
 
   return response.data
@@ -141,7 +134,7 @@ export async function fetchMyNotifications(limit = 6): Promise<AppNotification[]
     .limit(limit)
 
   if (response.error) {
-    throw new Error(toErrorMessage(response.error))
+    throw toControlledError(response.error)
   }
 
   return (response.data ?? []) as AppNotification[]
@@ -154,7 +147,7 @@ export async function markNotificationRead(notificationId: string) {
   } as never)
 
   if (response.error) {
-    throw new Error(toErrorMessage(response.error))
+    throw toControlledError(response.error)
   }
 
   return response.data as AppNotification
@@ -168,7 +161,7 @@ export async function markNotificationClicked(notificationId: string, deliveryId
   } as never)
 
   if (response.error) {
-    throw new Error(toErrorMessage(response.error))
+    throw toControlledError(response.error)
   }
 
   return response.data as AppNotification
@@ -189,7 +182,7 @@ export async function sendNotification(values: SendNotificationInput): Promise<S
   })
 
   if (response.error) {
-    throw new Error(toErrorMessage(response.error))
+    throw toControlledError(response.error)
   }
 
   const data = response.data as SendNotificationResult | null

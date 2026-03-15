@@ -71,3 +71,11 @@ export function extractErrorDetails(error: unknown): ErrorDetails {
 export function toErrorMessage(error: unknown) {
   return extractErrorDetails(error).errorMessage
 }
+
+export function toControlledError(error: unknown, fallbackMessage?: string) {
+  const details = extractErrorDetails(error)
+
+  return new Error(fallbackMessage ?? details.errorMessage, {
+    cause: error
+  })
+}

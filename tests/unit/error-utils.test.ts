@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { extractErrorDetails, toErrorMessage } from '@/lib/errors/error-utils'
+import { extractErrorDetails, toControlledError, toErrorMessage } from '@/lib/errors/error-utils'
 import { toBootstrapFirstPlatformOwnerErrorMessage } from '@/features/auth/lib/auth-api'
 
 describe('error utils', () => {
@@ -26,5 +26,14 @@ describe('error utils', () => {
 
   it('falls back to a generic message for unknown values', () => {
     expect(toErrorMessage(null)).toBe('Ocurrio un error inesperado.')
+  })
+
+  it('creates a controlled Error preserving the normalized message', () => {
+    const error = toControlledError({
+      message: 'Push subscription already exists'
+    })
+
+    expect(error).toBeInstanceOf(Error)
+    expect(error.message).toBe('Push subscription already exists')
   })
 })

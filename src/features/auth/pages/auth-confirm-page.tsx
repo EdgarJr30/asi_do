@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { completeAuthConfirmation, toErrorMessage } from '@/features/auth/lib/auth-api'
 import { resolveAuthCallback } from '@/features/auth/lib/auth-callback'
+import { captureClientError } from '@/lib/errors/client-error-logger'
 
 export function AuthConfirmPage() {
   const navigate = useNavigate()
@@ -60,6 +61,16 @@ export function AuthConfirmPage() {
           return
         }
 
+        await captureClientError({
+          source: 'auth.confirm',
+          route: '/auth/confirm',
+          userId: session.authUser?.id ?? null,
+          userMessage: 'No pudimos confirmar tu correo.',
+          error,
+          metadata: {
+            nextPath: callback.nextPath
+          }
+        })
         setStatus('error')
         setErrorMessage(toErrorMessage(error))
       }
