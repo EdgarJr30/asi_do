@@ -36,6 +36,11 @@
 - do not scatter hard-coded hex values in feature components
 - do not create one-off spacing/typography rules without reuse justification
 - shared UI primitives live in `components/ui` or equivalent
+- standardize reusable component primitives on the `shadcn/ui` approach, owned locally in `src/components/ui`
+- standardize product icon usage on `lucide-react`
+- standardize transient app feedback on `sonner`
+- do not mix multiple general-purpose component or icon libraries for the same UI layer without a documented exception
+- do not introduce `sweetalert`, `sweetalert2`, `react-toastify`, browser `alert/confirm/prompt`, or equivalent overlapping UI-feedback libraries for product flows
 
 ---
 

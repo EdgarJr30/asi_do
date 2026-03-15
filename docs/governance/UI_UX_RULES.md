@@ -37,6 +37,24 @@ When a future redesign changes these rules, the new decision must still be bench
 7. **One primary action at a time.** Each screen or action zone should make the next step obvious.
 8. **Apple-grade clarity is the visual bar.** Interfaces should favor calm hierarchy, generous spacing, obvious affordances, and polished restraint over busy dashboards.
 
+## 3.1 Mandatory UI libraries
+The project must standardize on the same libraries for reusable UI building blocks.
+
+Mandatory choices:
+- **Icons: `lucide-react`**
+- **Component foundation: `shadcn/ui`**
+- **Toast feedback: `sonner`**
+
+Enforcement rules:
+1. Do not introduce additional general-purpose icon libraries such as `react-icons`, Heroicons, Phosphor, Tabler, or Iconify for product UI.
+2. All reusable UI primitives and composed design-system components must live under `src/components/ui`, following the `shadcn/ui` local-ownership model.
+3. `shadcn/ui` components may be customized to match the product visual language, but the project must not mix multiple component-library foundations for the same problem space.
+4. If a needed pattern does not yet exist, prefer adding or adapting a `shadcn/ui`-aligned component before creating a feature-local one-off implementation.
+5. Icons should default to Lucide stroke icons unless a documented brand or product exception requires a custom asset.
+6. Do not introduce alternate toast/alert libraries such as `react-toastify`, `sweetalert2`, or similar packages for app feedback.
+7. Use `sonner` only for transient feedback such as success, lightweight errors, and non-blocking status messages.
+8. Confirmation flows, destructive actions, and multi-step decisions must use shared dialogs, sheets, or full-page flows instead of toast-only patterns or browser alerts.
+
 ---
 
 ## 4. Apple UI design dos and don’ts
@@ -323,6 +341,8 @@ Apple-inspired UI rules:
 4. Destructive confirmations must be explicit about the object being changed or removed.
 5. Footer action order must stay consistent across the app.
 6. Mobile may transform a desktop dialog into a sheet or full-screen flow when needed for usability.
+7. Do not use browser `alert`, `confirm`, or `prompt` for product UI.
+8. Do not use `SweetAlert` or similar all-in-one popup libraries for confirmations; shared app dialogs are the standard.
 
 ---
 
@@ -341,8 +361,9 @@ Every async screen or major component must define:
 Rules:
 1. Empty states must explain what the screen is for and what the user can do next.
 2. Error states must help recovery, not only announce failure.
-3. Use toasts for lightweight transient confirmation, not for critical information that can disappear too quickly.
+3. Use `sonner` toasts for lightweight transient confirmation, not for critical information that can disappear too quickly.
 4. When an action is destructive or expensive, prefer explicit confirmation over relying on a toast alone.
+5. Do not introduce a second toast system such as `react-toastify`; all transient app feedback should remain visually and behaviorally consistent through `sonner`.
 
 ---
 
@@ -373,6 +394,9 @@ Rules:
 3. If a new reusable variant is truly needed, document it here and in the component source of truth.
 4. Do not ship a feature with only desktop table behavior when the mobile equivalent is undefined.
 5. Do not ship a feature whose primary action is hidden behind ambiguous iconography or overflow menus.
+6. For icons, use `lucide-react` only unless a documented exception is approved.
+7. For reusable component primitives, extend the `shadcn/ui`-aligned system in `src/components/ui` instead of introducing another component library.
+8. For non-blocking feedback, use `sonner` only and keep toast behavior consistent across modules.
 
 ---
 
