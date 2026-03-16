@@ -72,13 +72,13 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY })
-      toast.success('Workspace actualizado', {
-        description: 'La presencia de empresa ya quedo alineada para recruiters y jobs.'
+      toast.success('Espacio actualizado', {
+        description: 'La presencia de tu empresa ya quedó alineada para vacantes y nuevas oportunidades.'
       })
     },
     onError: async (error) => {
       await reportErrorWithToast({
-        title: 'No pudimos guardar el workspace',
+        title: 'No pudimos guardar tu espacio',
         source: 'workspace.save-profile',
         route: '/workspace',
         userId: session.authUser?.id ?? null,
@@ -117,7 +117,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY })
       toast.success('Logo actualizado', {
-        description: 'La identidad visual del workspace ya quedo guardada en Supabase Storage.'
+        description: 'La imagen de tu empresa ya quedó guardada y lista para usarse.'
       })
     },
     onError: async (error) => {
@@ -150,7 +150,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY })
       await session.refresh()
       toast.success('Rol actualizado', {
-        description: 'La membresia ya refleja el rol principal seleccionado.'
+        description: 'El acceso de esta persona ya refleja el rol principal seleccionado.'
       })
     },
     onError: async (error) => {
@@ -177,7 +177,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
       setInviteRoleId('')
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY })
       toast.success('Invitacion creada', {
-        description: 'La membresia quedo en estado invited y ya aparece en el workspace.'
+        description: 'La invitación ya fue creada y aparece dentro del equipo.'
       })
     },
     onError: async (error) => {
@@ -203,7 +203,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY })
       toast.success('Invitacion revocada', {
-        description: 'La membresia invitada quedo revocada y auditada.'
+        description: 'La invitación ya fue revocada y el equipo quedó actualizado.'
       })
     },
     onError: async (error) => {
@@ -244,16 +244,16 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Company"
-        title="Configura la identidad de tu empresa y prepara el workspace para operar hiring"
-        description="La presencia de empresa, el branding y el equipo viven aquí antes de abrir jobs, candidate discovery y pipeline."
+        title="Haz que tu empresa se vea bien y mantén a tu equipo listo para contratar"
+        description="La historia de tu empresa, su imagen y las personas que participan en contratación viven aquí."
       >
-        <StatCard label="Tenant" value={bundle.tenant.slug} helper="Slug operativo y público del workspace." />
-        <StatCard label="Estado" value={bundle.tenant.status} helper="Estado actual del tenant employer." />
-        <StatCard label="Miembros" value={activeMembershipCount} helper="Membresías activas dentro del workspace." />
+        <StatCard label="Espacio" value={bundle.tenant.slug} helper="Nombre corto de tu espacio y referencia pública." />
+        <StatCard label="Estado" value={bundle.tenant.status} helper="Cómo se encuentra hoy tu espacio de empresa." />
+        <StatCard label="Miembros" value={activeMembershipCount} helper="Personas activas dentro del espacio de trabajo." />
         <StatCard
           className="bg-[var(--app-surface-muted)]"
-          helper="Invitaciones, cambios de rol y branding quedan auditados y aislados por tenant."
-          label="Gobierno"
+          helper="Invitaciones y accesos pendientes para seguir creciendo el equipo."
+          label="Pendientes"
           value={invitedMembershipCount > 0 ? `${invitedMembershipCount} invitaciones` : 'Listo'}
         />
       </PageHeader>
@@ -261,9 +261,9 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Card className="bg-white">
           <CardHeader>
-            <CardTitle>Company profile</CardTitle>
+            <CardTitle>Perfil de empresa</CardTitle>
             <CardDescription>
-              Ajusta la identidad publica y operativa que usaremos en jobs, solicitudes recruiter y discovery.
+              Ajusta la identidad que verán los candidatos cuando conozcan tu empresa y tus vacantes.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
@@ -318,7 +318,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
               </label>
               <label className="flex items-center gap-3 rounded-[24px] border border-zinc-200 px-4 py-4 text-sm dark:border-zinc-800">
                 <input type="checkbox" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} />
-                <span>Permitir que el perfil de empresa sea visible en discovery publico.</span>
+                <span>Permitir que el perfil de empresa sea visible en la vista pública.</span>
               </label>
             </div>
 
@@ -335,7 +335,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
             <div className="grid gap-3 rounded-[24px] border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">Logo del workspace</p>
+                  <p className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">Logo de tu empresa</p>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">
                     Acepta PNG, JPG, WEBP o SVG. Se comprime cuando aplica y no puede superar 5 MB.
                   </p>
@@ -360,16 +360,16 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
             </div>
 
             <Button onClick={() => saveProfileMutation.mutate()} disabled={saveProfileMutation.isPending}>
-              {saveProfileMutation.isPending ? 'Guardando workspace...' : 'Guardar workspace'}
+              {saveProfileMutation.isPending ? 'Guardando cambios...' : 'Guardar cambios'}
             </Button>
           </CardContent>
         </Card>
 
         <Card className="bg-white">
           <CardHeader>
-            <CardTitle>Equipo y roles</CardTitle>
+            <CardTitle>Equipo y accesos</CardTitle>
             <CardDescription>
-              La gestion de miembros usa membresias multi-tenant y permisos RBAC reales en la base de datos.
+              Invita personas, organiza accesos y mantén a cada colaborador con el nivel correcto dentro del equipo.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -491,9 +491,9 @@ export function WorkspaceOverviewPage() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No tienes un workspace employer activo</CardTitle>
+          <CardTitle>Aún no tienes un espacio de empresa activo</CardTitle>
           <CardDescription>
-            Esta seccion se habilita cuando una solicitud recruiter ya fue aprobada y creo el tenant de empresa.
+            Esta sección se habilita cuando tu empresa ya fue aprobada y quedó lista para empezar a contratar.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -504,8 +504,8 @@ export function WorkspaceOverviewPage() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Cargando workspace</CardTitle>
-          <CardDescription>Estamos recuperando la configuracion, miembros y branding del tenant actual.</CardDescription>
+          <CardTitle>Cargando tu espacio</CardTitle>
+          <CardDescription>Estamos recuperando la configuración, el equipo y la imagen actual de tu empresa.</CardDescription>
         </CardHeader>
       </Card>
     )
@@ -515,7 +515,7 @@ export function WorkspaceOverviewPage() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No pudimos cargar el workspace</CardTitle>
+          <CardTitle>No pudimos cargar tu espacio</CardTitle>
           <CardDescription>{toErrorMessage(workspaceQuery.error)}</CardDescription>
         </CardHeader>
       </Card>

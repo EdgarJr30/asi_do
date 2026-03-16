@@ -28,49 +28,49 @@ type BillingFrequency = 'monthly' | 'annually'
 type Tone = 'info' | 'success' | 'warning' | 'default'
 
 const heroSignals = [
-  'Perfiles reutilizables para candidatos y equipos',
-  'Jobs publicos con discovery claro desde mobile',
-  'RBAC + multi-tenant desde la arquitectura base'
+  'Aplica más rápido con un perfil que ya te representa',
+  'Publica vacantes con una experiencia clara y visual',
+  'Coordina a tu equipo sin perder el hilo del proceso'
 ] as const
 
 const showcaseColumns = [
   [
     {
-      eyebrow: 'Candidate profile',
-      title: 'Perfil reusable y CV privado',
-      description: 'La persona mantiene una identidad profesional viva y aplica sin rehacer formularios.',
+      eyebrow: 'Perfil vivo',
+      title: 'Tu perfil te acompaña a cada oportunidad',
+      description: 'Guarda tu historia, tu CV y tus mejores detalles para aplicar en minutos.',
       tone: 'info',
       icon: FileText
     }
   ],
   [
     {
-      eyebrow: 'Company workspace',
-      title: 'Hiring colaborativo por tenant',
-      description: 'Vacantes, applicants y equipo viven en un workspace limpio y entendible.',
+      eyebrow: 'Proceso claro',
+      title: 'Vacantes y seguimiento en un mismo lugar',
+      description: 'Comparte roles, revisa candidatos y mueve procesos sin saltar entre herramientas.',
       tone: 'success',
       icon: Building2
     },
     {
-      eyebrow: 'ATS-lite',
-      title: 'Pipeline auditable',
-      description: 'Stages, notas y ratings quedan ordenados para que decidir sea mas simple.',
+      eyebrow: 'Ritmo de equipo',
+      title: 'Todo el proceso se entiende de un vistazo',
+      description: 'Comentarios, etapas y próximos pasos con una experiencia limpia y fácil de seguir.',
       tone: 'warning',
       icon: Workflow
     }
   ],
   [
     {
-      eyebrow: 'Governance',
-      title: 'Permisos y memberships reales',
-      description: 'El producto nace con aislamiento multi-tenant y controles de acceso consistentes.',
+      eyebrow: 'Marca de empresa',
+      title: 'Tu empresa se presenta mejor',
+      description: 'Construye una presencia cuidada para atraer talento con más confianza.',
       tone: 'default',
       icon: ShieldCheck
     },
     {
-      eyebrow: 'PWA-first',
-      title: 'Lista para telefono',
-      description: 'La experiencia prioriza thumb reach, claridad y continuidad desde cualquier pantalla.',
+      eyebrow: 'Lista en todas partes',
+      title: 'Se siente bien en móvil y escritorio',
+      description: 'La experiencia se adapta con claridad para descubrir, aplicar y contratar desde cualquier pantalla.',
       tone: 'info',
       icon: Smartphone
     }
@@ -79,45 +79,45 @@ const showcaseColumns = [
 
 const featureCards = [
   {
-    name: 'Candidate profile reusable',
+    name: 'Perfil que ahorra tiempo',
     description:
-      'Cada candidato mantiene perfil, CV privado y visibilidad opt-in para no empezar de cero en cada aplicacion.',
+      'Cada persona guarda su información una sola vez y la usa para aplicar con más confianza y menos fricción.',
     icon: FileText
   },
   {
-    name: 'Company workspace compartido',
+    name: 'Vacantes que invitan a aplicar',
     description:
-      'Las empresas publican jobs, coordinan equipo y revisan applicants sin mezclar el recorrido del cliente con tooling interno.',
+      'Publica roles con una presentación más clara para que el talento entienda rápido la oportunidad y quiera seguir.',
     icon: Building2
   },
   {
-    name: 'ATS-lite con contexto',
+    name: 'Trabajo en equipo sin caos',
     description:
-      'El pipeline ordena applicants, historial y decisiones con una narrativa clara para recruiters e hiring managers.',
+      'El equipo comparte comentarios, contexto y próximos pasos sin depender de mensajes sueltos o hojas paralelas.',
     icon: Workflow
   },
   {
-    name: 'RBAC y aislamiento real',
+    name: 'Una experiencia lista para crecer',
     description:
-      'Permisos, memberships y RLS sostienen el producto desde la base para que cada tenant vea solo lo que le corresponde.',
+      'La plataforma está pensada para crecer con candidatos, empresas y equipos sin perder claridad en el camino.',
     icon: ShieldCheck
   }
 ] as const
 
 const workflowPanels = [
   {
-    title: 'Discovery publico',
-    body: 'Jobs visibles, detalle legible y CTA directos para aplicar o explorar mas roles.',
+    title: 'Atracción que convierte',
+    body: 'Muestra tus vacantes de forma clara y dale al talento un camino rápido para aplicar.',
     icon: BriefcaseBusiness
   },
   {
-    title: 'Identidad reutilizable',
-    body: 'Candidatos y empresas mantienen una presencia persistente que evita friccion repetida.',
+    title: 'Equipo alineado',
+    body: 'Recruiters y líderes encuentran la misma información sin perseguir contexto por varios canales.',
     icon: Layers3
   },
   {
-    title: 'Colaboracion de hiring',
-    body: 'Notas, ratings y stages viven en un mismo flujo para evitar hojas sueltas y contexto perdido.',
+    title: 'Seguimiento con ritmo',
+    body: 'Cada oportunidad avanza con claridad para que nadie se quede preguntando qué sigue.',
     icon: HeartHandshake
   }
 ] as const
@@ -131,7 +131,7 @@ const pricingPlans = [
   {
     name: 'Starter',
     featured: false,
-    description: 'Para equipos que quieren centralizar jobs y applicants sin complejidad inicial.',
+    description: 'Para empezar a publicar vacantes y ordenar tus primeros procesos.',
     price: {
       monthly: '$0',
       annually: '$0'
@@ -141,12 +141,12 @@ const pricingPlans = [
       annually: 'por ano'
     },
     cta: 'Crear cuenta',
-    highlights: ['1 workspace de empresa', 'Hasta 2 jobs activos', 'Perfil candidato reusable', 'Pipeline esencial']
+    highlights: ['1 espacio de empresa', 'Hasta 2 vacantes activas', 'Perfil listo para aplicar', 'Seguimiento esencial']
   },
   {
     name: 'Growth',
     featured: true,
-    description: 'La capa recomendada para hiring continuo, discovery de talento y trabajo en equipo.',
+    description: 'Ideal para equipos que contratan con frecuencia y quieren una experiencia más colaborativa.',
     price: {
       monthly: '$49',
       annually: '$490'
@@ -156,50 +156,50 @@ const pricingPlans = [
       annually: 'por ano'
     },
     cta: 'Solicitar demo',
-    highlights: ['Hasta 10 jobs activos', 'Talent directory opt-in', 'Roles y permisos por equipo', 'Alertas y exportes']
+    highlights: ['Hasta 10 vacantes activas', 'Talento visible por preferencia', 'Accesos para el equipo', 'Alertas y exportes']
   },
   {
     name: 'Scale',
     featured: false,
-    description: 'Para organizaciones con rollout, gobierno operativo y necesidades de implementacion mas amplias.',
+    description: 'Pensado para empresas que quieren acompañamiento, visibilidad y más control del crecimiento.',
     price: {
-      monthly: 'Custom',
-      annually: 'Custom'
+      monthly: 'A medida',
+      annually: 'A medida'
     },
     cadence: {
       monthly: 'plan a medida',
       annually: 'plan a medida'
     },
     cta: 'Hablar con ventas',
-    highlights: ['Jobs y seats a medida', 'Soporte prioritario', 'Acompanamiento de rollout', 'Operaciones avanzadas']
+    highlights: ['Vacantes y equipo a medida', 'Soporte prioritario', 'Acompañamiento de lanzamiento', 'Operación ampliada']
   }
 ] as const
 
 const pricingSections = [
   {
-    name: 'Hiring core',
+    name: 'Publicación',
     features: [
-      { name: 'Jobs publicos', tiers: { Starter: true, Growth: true, Scale: true } },
-      { name: 'Jobs activos incluidos', tiers: { Starter: '2', Growth: '10', Scale: 'Unlimited' } },
-      { name: 'Pipeline ATS-lite', tiers: { Starter: 'Essential', Growth: 'Advanced', Scale: 'Advanced' } },
-      { name: 'Quick apply con perfil reusable', tiers: { Starter: true, Growth: true, Scale: true } }
+      { name: 'Vacantes públicas', tiers: { Starter: true, Growth: true, Scale: true } },
+      { name: 'Vacantes activas incluidas', tiers: { Starter: '2', Growth: '10', Scale: 'Ilimitadas' } },
+      { name: 'Perfiles listos para aplicar', tiers: { Starter: true, Growth: true, Scale: true } },
+      { name: 'Página de empresa', tiers: { Starter: true, Growth: true, Scale: true } }
     ]
   },
   {
-    name: 'Colaboracion',
+    name: 'Colaboración',
     features: [
-      { name: 'Seats de recruiter e hiring manager', tiers: { Starter: '2', Growth: '10', Scale: 'Unlimited' } },
-      { name: 'Talent directory opt-in', tiers: { Starter: false, Growth: true, Scale: true } },
-      { name: 'Notas y ratings compartidos', tiers: { Starter: false, Growth: true, Scale: true } },
+      { name: 'Miembros del equipo', tiers: { Starter: '2', Growth: '10', Scale: 'Ilimitados' } },
+      { name: 'Talento visible por preferencia', tiers: { Starter: false, Growth: true, Scale: true } },
+      { name: 'Comentarios y seguimiento', tiers: { Starter: false, Growth: true, Scale: true } },
       { name: 'Alertas y exportes', tiers: { Starter: false, Growth: true, Scale: true } }
     ]
   },
   {
-    name: 'Gobierno',
+    name: 'Acompañamiento',
     features: [
-      { name: 'RBAC por tenant', tiers: { Starter: true, Growth: true, Scale: true } },
-      { name: 'Aprobacion recruiter', tiers: { Starter: false, Growth: true, Scale: true } },
-      { name: 'Acompanamiento de implementacion', tiers: { Starter: false, Growth: false, Scale: true } },
+      { name: 'Configuración del equipo', tiers: { Starter: true, Growth: true, Scale: true } },
+      { name: 'Ayuda para lanzar la operación', tiers: { Starter: false, Growth: true, Scale: true } },
+      { name: 'Implementación guiada', tiers: { Starter: false, Growth: false, Scale: true } },
       { name: 'Soporte prioritario', tiers: { Starter: false, Growth: false, Scale: true } }
     ]
   }
@@ -207,29 +207,29 @@ const pricingSections = [
 
 const faqs = [
   {
-    question: 'Que problema resuelve esta plataforma?',
+    question: 'Qué hace diferente a Talent Marketplace?',
     answer:
-      'Unifica discovery publico, candidate profile reusable, workspace employer y ATS-lite colaborativo dentro de una sola app mobile-first.'
+      'Reúne candidatos, vacantes y trabajo en equipo en una experiencia más clara para aplicar, contratar y dar seguimiento sin tantas vueltas.'
   },
   {
-    question: 'La plataforma soporta multiples tenants y equipos?',
+    question: 'Pueden participar candidatos y empresas en la misma plataforma?',
     answer:
-      'Si. El producto nace con memberships, tenant roles y permisos para que una persona pueda operar en mas de un tenant sin mezclar accesos ni contexto.'
+      'Sí. El producto está pensado para que el talento y los equipos trabajen en el mismo ecosistema con recorridos claros para cada tipo de usuario.'
   },
   {
-    question: 'Como se habilita el acceso employer?',
+    question: 'Qué pasa si más adelante quiero sumar a mi empresa?',
     answer:
-      'El signup crea un usuario estandar. El acceso recruiter y la creacion del workspace se habilitan por aprobacion administrativa para mantener control operacional.'
+      'Puedes empezar con tu cuenta personal y después pedir acceso para tu empresa cuando quieras abrir vacantes y trabajar con tu equipo.'
   },
   {
-    question: 'Puedo usarla desde el telefono como app real?',
+    question: 'Puedo usarla cómodamente desde el teléfono?',
     answer:
-      'Si. El proyecto es PWA-first y la navegacion prioriza uso diario desde mobile, incluyendo jobs publicos, perfil y tareas de hiring recurrentes.'
+      'Sí. La experiencia está pensada para que descubrir vacantes, revisar perfiles y mover procesos se sienta natural también en móvil.'
   },
   {
-    question: 'La donacion o sponsorship ya procesa pagos?',
+    question: 'La sección de donación o sponsorship ya procesa pagos?',
     answer:
-      'Todavia no. La superficie esta presente para validar la experiencia comercial y el roadmap, pero el procesamiento de pagos sigue desactivado por ahora.'
+      'Todavía no. Esa superficie ya está visible para validar la experiencia comercial, pero el procesamiento de pagos sigue desactivado por ahora.'
   }
 ] as const
 
@@ -242,10 +242,10 @@ const footerNavigation = [
 ] as const
 
 const footerSignals = [
-  { label: 'PWA-first', icon: Smartphone },
-  { label: 'RBAC-first', icon: ShieldCheck },
-  { label: 'Multi-tenant', icon: Layers3 },
-  { label: 'Public jobs', icon: BriefcaseBusiness }
+  { label: 'Lista para móvil', icon: Smartphone },
+  { label: 'Vacantes públicas', icon: BriefcaseBusiness },
+  { label: 'Perfiles reutilizables', icon: Layers3 },
+  { label: 'Equipos coordinados', icon: ShieldCheck }
 ] as const
 
 function toneClasses(tone: Tone) {
@@ -293,7 +293,7 @@ export function HomePage() {
 
   const primaryAction = session.isAuthenticated
     ? session.permissions.includes('workspace:read')
-      ? { label: 'Abrir workspace', href: '/workspace' }
+      ? { label: 'Abrir mi espacio', href: '/workspace' }
       : { label: 'Completar mi perfil', href: '/candidate/profile' }
     : { label: 'Crear cuenta', href: '/auth/sign-up' }
 
@@ -312,7 +312,7 @@ export function HomePage() {
           className="absolute inset-x-0 top-0 -z-10 h-[54rem] opacity-90"
           style={{
             backgroundImage:
-              'radial-gradient(circle at 12% 14%, rgba(94, 169, 125, 0.22), transparent 24%), radial-gradient(circle at 86% 10%, rgba(93, 136, 187, 0.18), transparent 24%), radial-gradient(circle at 82% 34%, rgba(229, 146, 103, 0.18), transparent 20%)'
+              'radial-gradient(circle at 12% 14%, rgba(255, 100, 51, 0.2), transparent 24%), radial-gradient(circle at 86% 10%, rgba(69, 111, 255, 0.18), transparent 24%), radial-gradient(circle at 82% 34%, rgba(247, 154, 0, 0.16), transparent 20%)'
           }}
         />
 
@@ -320,14 +320,14 @@ export function HomePage() {
           <div className="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
             <div className="relative w-full lg:max-w-xl lg:shrink-0 xl:max-w-2xl">
               <Badge className="bg-white/80 text-[var(--app-text)] shadow-[var(--app-shadow-card)] backdrop-blur-sm" variant="outline">
-                Recruiting SaaS client-ready
+                Una experiencia de hiring que sí se siente producto
               </Badge>
-              <h1 className="mt-6 text-5xl font-semibold tracking-tight text-balance text-[var(--app-text)] sm:text-6xl lg:text-7xl">
-                Contrata, descubre talento y mueve tu hiring desde una sola experiencia que se siente lista para cliente
+              <h1 className="mt-6 text-4xl font-semibold tracking-tight text-balance text-[var(--app-text)] sm:text-5xl lg:text-6xl">
+                Publica vacantes, descubre talento y mueve cada proceso con una experiencia más clara y atractiva
               </h1>
-              <p className="mt-8 max-w-2xl text-lg leading-8 text-[var(--app-text-muted)] sm:text-xl">
-                La plataforma une jobs publicos, candidate profiles reutilizables, workspace employer y ATS-lite
-                colaborativo con una base multi-tenant, RBAC-first y mobile-first.
+              <p className="mt-7 max-w-2xl text-base leading-8 text-[var(--app-text-muted)] sm:text-lg">
+                Talent Marketplace conecta candidatos y empresas en un mismo producto para que descubrir oportunidades,
+                contratar mejor y colaborar en equipo se sienta simple desde el primer vistazo.
               </p>
 
               <div className="mt-10 flex flex-col gap-3 sm:flex-row">
@@ -400,12 +400,12 @@ export function HomePage() {
           <div className="mx-auto grid max-w-2xl grid-cols-1 gap-14 sm:gap-y-18 lg:mx-0 lg:max-w-none lg:grid-cols-5">
             <div className="col-span-2">
               <Badge variant="soft">Plataforma</Badge>
-              <h2 className="mt-5 text-4xl font-semibold tracking-tight text-balance text-[var(--app-text)] sm:text-5xl">
-                Todo el recruiting SaaS se presenta como producto, no como un panel improvisado
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-balance text-[var(--app-text)] sm:text-4xl">
+                Descubrir talento y mover procesos puede sentirse simple, ordenado y bonito
               </h2>
-              <p className="mt-6 text-lg leading-8 text-[var(--app-text-muted)]">
-                Cada recorrido conserva su propio contexto. El publico descubre oportunidades, las empresas operan
-                hiring colaborativo y la plataforma mantiene gobierno sin contaminar la experiencia del cliente.
+              <p className="mt-5 text-base leading-8 text-[var(--app-text-muted)] sm:text-lg">
+                Cada persona ve una experiencia clara para su momento: descubrir, aplicar, publicar vacantes o
+                coordinar contrataciones en equipo sin ruido innecesario.
               </p>
             </div>
 
@@ -435,16 +435,15 @@ export function HomePage() {
           <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-12 gap-y-12 lg:mx-0 lg:max-w-none lg:min-w-full lg:flex-none lg:gap-y-8">
             <div className="lg:col-end-1 lg:w-full lg:max-w-lg lg:pb-8">
               <Badge variant="outline">Valor del producto</Badge>
-              <h2 className="mt-5 text-4xl font-semibold tracking-tight text-balance text-[var(--app-text)] sm:text-5xl">
-                Una sola base para candidatos, empresas y hiring teams que necesitan continuidad real
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-balance text-[var(--app-text)] sm:text-4xl">
+                Una sola base para candidatos, empresas y equipos que quieren avanzar con más confianza
               </h2>
-              <p className="mt-6 text-xl leading-8 text-[var(--app-text-muted)]">
-                El producto ya separa discovery publico, autenticacion, trabajo operativo e internal ops para que cada
-                audiencia vea solo lo que le toca ver.
+              <p className="mt-6 text-lg leading-8 text-[var(--app-text-muted)]">
+                Todo está organizado para que cada recorrido se entienda rápido y se sienta natural desde la primera interacción.
               </p>
               <p className="mt-6 text-base leading-7 text-[var(--app-text-muted)]">
-                Esa claridad vuelve creible la app desde el primer vistazo y prepara el terreno para demos, onboarding
-                comercial y crecimiento del hiring loop sin volver al caos de tabs, hojas y correos sueltos.
+                Esa claridad vuelve la plataforma más creíble para demos, onboarding comercial y uso diario sin volver
+                al caos de hojas, chats y tabs dispersos.
               </p>
               <div className="mt-10 flex flex-wrap gap-3">
                 <Button onClick={() => void navigate(primaryAction.href)}>
@@ -465,21 +464,21 @@ export function HomePage() {
                       <Sparkles className="size-5 text-primary-700 dark:text-primary-200" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-[var(--app-text)]">Experiencia comercial lista</p>
-                      <p className="text-sm text-[var(--app-text-muted)]">Hero, pricing, FAQ y CTA alineados al producto</p>
+                      <p className="text-sm font-semibold text-[var(--app-text)]">Una primera impresión que sí vende</p>
+                      <p className="text-sm text-[var(--app-text-muted)]">Mensaje claro, visual fuerte y recorrido comercial coherente</p>
                     </div>
                   </div>
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     <div className="rounded-[22px] bg-[var(--app-info-surface)] px-4 py-4">
-                      <p className="text-sm font-semibold text-[var(--app-text)]">Discovery</p>
+                      <p className="text-sm font-semibold text-[var(--app-text)]">Descubrimiento</p>
                       <p className="mt-2 text-sm leading-6 text-[var(--app-text-muted)]">
-                        Jobs publicos, detalle limpio y acceso rapido a aplicar.
+                        Vacantes atractivas, detalle limpio y acceso rápido para aplicar.
                       </p>
                     </div>
                     <div className="rounded-[22px] bg-[var(--app-warning-surface)] px-4 py-4">
-                      <p className="text-sm font-semibold text-[var(--app-text)]">Permisos</p>
+                      <p className="text-sm font-semibold text-[var(--app-text)]">Equipo</p>
                       <p className="mt-2 text-sm leading-6 text-[var(--app-text-muted)]">
-                        Tenant roles y memberships reales desde el MVP.
+                        Personas, comentarios y seguimiento sin perder el contexto.
                       </p>
                     </div>
                   </div>
@@ -523,12 +522,11 @@ export function HomePage() {
               <Badge className="border-white/20 bg-white/10 text-white" variant="outline">
                 Pricing
               </Badge>
-              <h2 className="mx-auto mt-6 max-w-4xl text-center text-5xl font-semibold tracking-tight text-balance text-white sm:text-6xl">
-                Pricing claro para equipos que quieren dejar atras el hiring improvisado
+              <h2 className="mx-auto mt-6 max-w-4xl text-center text-4xl font-semibold tracking-tight text-balance text-white sm:text-5xl">
+                Planes claros para empezar, crecer y acompañar tu proceso de contratación
               </h2>
-              <p className="mx-auto mt-6 max-w-2xl text-center text-lg font-medium text-pretty text-white/72 sm:text-xl/8">
-                Planes visibles, comparacion entendible y recorrido comercial listo incluso antes de conectar billing
-                real.
+              <p className="mx-auto mt-5 max-w-2xl text-center text-base font-medium leading-8 text-white/72 sm:text-lg">
+                Precios visibles, comparación fácil de entender y una propuesta comercial lista para enseñar desde ya.
               </p>
 
               <div className="mt-14 flex justify-center">
@@ -564,7 +562,7 @@ export function HomePage() {
                 className="absolute inset-x-0 bottom-[-10rem] hidden h-72 rounded-full blur-3xl lg:block"
                 style={{
                   background:
-                    'radial-gradient(circle at center, rgba(94, 169, 125, 0.32), transparent 54%), radial-gradient(circle at 78% 42%, rgba(93, 136, 187, 0.26), transparent 48%)'
+                    'radial-gradient(circle at center, rgba(255, 100, 51, 0.26), transparent 54%), radial-gradient(circle at 78% 42%, rgba(69, 111, 255, 0.24), transparent 48%)'
                 }}
               />
 
@@ -588,7 +586,7 @@ export function HomePage() {
                       {plan.featured ? 'Recomendado' : 'Plan'}
                     </Badge>
                     <p className={cn('text-sm', plan.featured ? 'text-[var(--app-text-subtle)]' : 'text-white/70')}>
-                      {billingFrequency === 'monthly' ? 'Billed monthly' : 'Billed annually'}
+                      {billingFrequency === 'monthly' ? 'Facturación mensual' : 'Facturación anual'}
                     </p>
                   </div>
 
@@ -778,16 +776,15 @@ export function HomePage() {
                     <WalletCards className="size-5 text-primary-700 dark:text-primary-200" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-[var(--app-text)]">Comercialmente claro desde el MVP</p>
+                    <p className="text-sm font-semibold text-[var(--app-text)]">Una propuesta fácil de explicar</p>
                     <p className="text-sm text-[var(--app-text-muted)]">
-                      El pricing ya acompana demos, conversaciones de ventas y evaluaciones internas.
+                      El pricing ya acompaña demos, conversaciones de ventas y evaluaciones internas.
                     </p>
                   </div>
                 </div>
                 <p className="mt-5 text-sm leading-7 text-[var(--app-text-muted)]">
-                  Los planes muestran de forma realista el salto entre descubrimiento, colaboracion y gobierno sin
-                  fingir que el procesamiento de pagos ya esta activo. La superficie comercial existe, la logica de
-                  cobro todavia no.
+                  Los planes muestran de forma realista cómo crece la experiencia sin fingir que los cobros ya están
+                  activos. La superficie comercial existe; el procesamiento de pagos todavía no.
                 </p>
               </div>
 
@@ -823,7 +820,7 @@ export function HomePage() {
               </div>
               <Badge variant="outline">FAQ</Badge>
             </div>
-            <h2 className="mt-5 text-4xl font-semibold tracking-tight text-[var(--app-text)] sm:text-5xl">
+            <h2 className="mt-5 text-3xl font-semibold tracking-tight text-[var(--app-text)] sm:text-4xl">
               Preguntas frecuentes
             </h2>
             <dl className="mt-12 divide-y">
@@ -851,17 +848,17 @@ export function HomePage() {
             <div
               aria-hidden="true"
               className="absolute right-0 bottom-0 h-48 w-48 rounded-full blur-3xl"
-              style={{ background: 'radial-gradient(circle at center, rgba(94, 169, 125, 0.28), transparent 64%)' }}
+              style={{ background: 'radial-gradient(circle at center, rgba(255, 100, 51, 0.24), transparent 64%)' }}
             />
             <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
               <div className="max-w-2xl">
                 <Badge variant="soft">Siguiente paso</Badge>
-                <h2 className="mt-5 text-4xl font-semibold tracking-tight text-balance text-[var(--app-text)] sm:text-5xl">
-                  Comparte la landing, empieza demos y abre el hiring loop desde una base que ya se siente producto
+                <h2 className="mt-5 text-3xl font-semibold tracking-tight text-balance text-[var(--app-text)] sm:text-4xl">
+                  Comparte la landing, empieza demos y abre procesos desde una base que ya se siente premium
                 </h2>
                 <p className="mt-5 text-base leading-7 text-[var(--app-text-muted)]">
-                  Desde aqui puedes llevar usuarios a jobs, signup o workspace sin exponer tooling interno ni sacrificar
-                  claridad comercial.
+                  Desde aquí puedes llevar usuarios a jobs, signup o al espacio de trabajo sin sacrificar claridad ni
+                  mezclar herramientas internas con la experiencia del cliente.
                 </p>
               </div>
 
@@ -919,8 +916,8 @@ export function HomePage() {
           </div>
 
           <p className="mt-10 text-center text-sm leading-6 text-[var(--app-text-muted)]">
-            &copy; {footerYear} Talent Marketplace SaaS. Public jobs, reusable profiles y ATS-lite colaborativo sobre
-            una base multi-tenant.
+            &copy; {footerYear} Talent Marketplace SaaS. Vacantes públicas, perfiles reutilizables y trabajo en equipo
+            en una experiencia de hiring mucho más clara.
           </p>
         </div>
       </footer>

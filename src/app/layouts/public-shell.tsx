@@ -37,7 +37,7 @@ export function PublicShell() {
   const isLanding = location.pathname === '/'
   const primaryAction = session.isAuthenticated
     ? session.permissions.includes('workspace:read')
-      ? { label: 'Abrir app', href: '/workspace' }
+      ? { label: 'Abrir mi espacio', href: '/workspace' }
       : { label: 'Mi perfil', href: '/candidate/profile' }
     : { label: 'Iniciar sesion', href: '/auth/sign-in' }
 
@@ -70,7 +70,7 @@ export function PublicShell() {
             </span>
             <div className="space-y-0.5">
               <p className="text-sm font-semibold text-[var(--app-text)]">Talent Marketplace</p>
-              <p className="text-xs text-[var(--app-text-muted)]">Recruiting SaaS multi-tenant y mobile-first</p>
+              <p className="text-xs text-[var(--app-text-muted)]">Encuentra oportunidades y haz crecer tu equipo con más claridad</p>
             </div>
           </Link>
 

@@ -39,7 +39,7 @@ function CandidateSummaryCard({
         <div>
           <p className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">{candidate.display_name}</p>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            {candidate.desired_role || candidate.headline || 'Perfil candidato opt-in'}
+            {candidate.desired_role || candidate.headline || 'Perfil visible para nuevas oportunidades'}
           </p>
         </div>
         <Badge variant="outline">{candidate.completeness_score}%</Badge>
@@ -98,16 +98,16 @@ export function TalentDirectoryPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Talent search"
-        title="Busca candidatos visibles sin esperar una postulación"
-        description="Solo los miembros con permiso pueden buscar y abrir detalle completo. El candidato sigue controlando su visibilidad desde su propio perfil."
+        title="Encuentra personas abiertas a nuevas oportunidades"
+        description="Busca perfiles visibles, revisa su historia y encuentra talento alineado con lo que tu equipo necesita hoy."
       >
         <StatCard label="Búsqueda" value="Directa" helper="Keyword, skill, idioma y país en una sola vista." />
-        <StatCard label="Visibilidad" value="Opt-in" helper="Cada candidato decide si aparece o no en el directorio." />
+        <StatCard label="Visibilidad" value="Activa" helper="Cada candidato decide si aparece o no en el directorio." />
         <StatCard
           className="bg-[var(--app-surface-muted)]"
-          label="Auditoría"
+          label="Seguimiento"
           value="Activa"
-          helper="Las vistas completas generan rastro operativo para seguimiento interno."
+          helper="Tu equipo puede revisar el historial de consulta cuando hace falta."
         />
       </PageHeader>
 
@@ -170,13 +170,13 @@ export function TalentDirectoryPage() {
           <CardHeader>
             <CardTitle>Perfil completo</CardTitle>
             <CardDescription>
-              Selecciona un resultado para abrir su detalle profesional completo desde el lado employer.
+              Selecciona un resultado para abrir su experiencia, habilidades y materiales más importantes.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {!selectedCandidateProfileId ? (
               <div className="rounded-[24px] border border-dashed border-zinc-300 px-4 py-8 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-                Elige un candidato de la lista para ver su experiencia, educacion, skills, idiomas y CVs cargados.
+                Elige un candidato de la lista para ver su experiencia, educación, habilidades e historial.
               </div>
             ) : detailQuery.isLoading ? (
               <p className="text-sm text-zinc-600 dark:text-zinc-400">Cargando perfil completo...</p>

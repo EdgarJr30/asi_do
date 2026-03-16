@@ -217,6 +217,7 @@ Recommended baseline tokens:
 6. Headings must front-load meaning. Avoid generic titles such as `Overview`, `Details`, or `Info` when a more precise label exists.
 7. Use sentence case across navigation labels, buttons, helper text, empty states, and form labels.
 8. Avoid all caps for controls, navigation, or paragraph text.
+9. Customer-facing headlines, stat values, and supporting copy must stay visually controlled. Do not overscale page heroes, cards, or section titles to the point that supporting content feels oversized or visually shouty on mobile.
 
 ### 7.3 Content hierarchy rules
 1. Every page must have one visible, unique page title.
@@ -268,6 +269,7 @@ Apple-inspired UI rules:
 3. A donation section or donation CTA may be present as UI/UX-only groundwork, but it must still feel intentional and visually integrated.
 4. Internal QA, launch-readiness, or foundations tools must never appear in the public landing experience for standard users.
 5. Public landing content must be product-specific. Do not ship Tailwind demo labels, placeholder navigation items, sample pricing copy, or generic FAQ text in customer-facing routes.
+6. Customer-facing copy in public, auth, candidate, and employer surfaces must be benefit-first and commercially legible. Terms such as `RBAC`, `RLS`, `tenant`, `membership`, `Supabase`, `audit`, and similar implementation language should stay in internal or admin-only contexts unless the user must act on that exact concept.
 
 ### 8.2 Color rules
 1. Pastel accents are allowed only as controlled brand surfaces, highlights, chips, or secondary emphasis.
@@ -278,6 +280,7 @@ Apple-inspired UI rules:
 6. Light mode should default to a **white or near-white page background**. Do not tint the full app canvas cream, gray, or pastel by default.
 7. Cards, sheets, and panels may use subtle white layering and shadows, but the overall page background must still read as white first.
 8. Dark mode must mirror the same hierarchy through semantic theme tokens instead of feature-local ad hoc dark palettes.
+9. The brand palette should feel vivid, polished, and intentional. Do not default the customer-facing product identity to muddy or dull green-dominant branding unless a documented brand decision explicitly requires it.
 
 ### 8.3 Contrast rules
 1. Follow WCAG 2.2 AA by default.

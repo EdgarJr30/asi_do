@@ -223,7 +223,7 @@ export function FoundationSettingsForm() {
                 </div>
                 <input
                   type="checkbox"
-                  className="h-5 w-5 rounded border-zinc-300 accent-emerald-500"
+                  className="h-5 w-5 rounded border-zinc-300 accent-primary-500"
                   {...register('emailNotifications')}
                 />
               </label>
@@ -239,7 +239,7 @@ export function FoundationSettingsForm() {
                 </div>
                 <input
                   type="checkbox"
-                  className="h-5 w-5 rounded border-zinc-300 accent-emerald-500"
+                  className="h-5 w-5 rounded border-zinc-300 accent-primary-500"
                   {...register('pushNotifications')}
                 />
               </label>

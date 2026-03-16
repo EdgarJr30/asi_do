@@ -28,7 +28,7 @@ export function ApplicationsOverviewPage() {
       <PageHeader
         eyebrow="Applications"
         title="Revisa tu avance y vuelve a cada oportunidad con contexto"
-        description="Esta vista es solo para el candidato. El seguimiento employer ya vive dentro de jobs y pipeline."
+        description="Sigue cada proceso en un solo lugar y vuelve a tus oportunidades favoritas cuando quieras."
       >
         <StatCard helper="Postulaciones enviadas con tu perfil actual." label="Enviadas" value={applications.length} />
         <StatCard

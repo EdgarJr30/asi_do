@@ -186,10 +186,10 @@ export function OnboardingPage() {
     <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
       <Card className="bg-[var(--app-surface-muted)]">
         <CardHeader>
-          <Badge variant="soft">Standard onboarding</Badge>
-          <CardTitle>Completa tu perfil base de plataforma</CardTitle>
+          <Badge variant="soft">Tu perfil</Badge>
+          <CardTitle>Cuéntanos lo esencial para empezar con buena presencia</CardTitle>
           <CardDescription>
-            Este paso prepara tu identidad global como candidato o futuro recruiter. La empresa todavia no se crea aqui.
+            Este paso deja tu cuenta lista para aplicar, presentarte mejor y más adelante sumar a tu empresa si hace falta.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -232,7 +232,7 @@ export function OnboardingPage() {
               <p className="text-xs text-zinc-500">
                 Acepta SVG, PNG, JPG y WEBP. Las imagenes raster se comprimen antes de subirlas y el limite es {MAX_UPLOAD_SIZE_LABEL}.
               </p>
-              <p className="text-xs text-zinc-500">Se guarda de forma privada y solo queda visible para ti dentro de tu cuenta.</p>
+              <p className="text-xs text-zinc-500">Tu avatar queda guardado de forma privada hasta que lo uses dentro de tu cuenta.</p>
               {isPreparingAvatar ? (
                 <p className="text-xs text-zinc-500">Optimizando avatar antes de subir...</p>
               ) : null}

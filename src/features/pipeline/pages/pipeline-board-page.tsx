@@ -284,7 +284,7 @@ export function PipelineBoardPage() {
                         onClick={() => setSelectedApplicationId(application.id)}
                         className={`grid w-full gap-2 rounded-[24px] border px-4 py-4 text-left transition ${
                           selectedApplicationId === application.id
-                            ? 'border-emerald-300 bg-emerald-50'
+                            ? 'border-primary-300 bg-primary-50'
                             : 'border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/80'
                         }`}
                       >

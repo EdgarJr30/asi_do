@@ -184,7 +184,7 @@ function JobEditor({
       <CardHeader>
         <CardTitle>{selectedJob ? 'Editar vacante' : 'Nueva vacante'}</CardTitle>
         <CardDescription>
-          Crea drafts, prepara screening y publica solo cuando el contenido este listo para discovery.
+          Prepara cada vacante con calma y publícala solo cuando esté lista para mostrarse al talento.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -265,7 +265,7 @@ function JobEditor({
                 checked={salaryVisible}
                 onChange={(event) => form.setValue('salaryVisible', event.target.checked)}
               />
-              <span>Mostrar rango salarial en el discovery publico</span>
+              <span>Mostrar rango salarial en la vista pública</span>
             </label>
             {salaryVisible ? (
               <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -443,7 +443,7 @@ export function JobsOverviewPage() {
         queryClient.invalidateQueries({ queryKey: TENANT_JOBS_QUERY_KEY })
       ])
       toast.success(`Vacante ${variables.status}`, {
-        description: 'El estado publico y operativo del job ya fue actualizado.'
+        description: 'El estado de la vacante ya fue actualizado.'
       })
     },
     onError: async (error) => {
@@ -512,7 +512,7 @@ export function JobsOverviewPage() {
       setAlertFrequency('weekly')
       await queryClient.invalidateQueries({ queryKey: ['job-alerts'] })
       toast.success('Alerta guardada', {
-        description: 'Tus criterios de discovery quedaron guardados para reutilizarlos luego.'
+        description: 'Tus filtros quedaron guardados para reutilizarlos cuando quieras.'
       })
     },
     onError: async (error) => {
@@ -590,21 +590,21 @@ export function JobsOverviewPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Jobs"
-        title={canManageJobs ? 'Gestiona tus vacantes y cuida el discovery publico desde el mismo producto' : 'Descubre oportunidades con una experiencia clara y directa'}
+        title={canManageJobs ? 'Gestiona tus vacantes y compártelas con una experiencia clara y atractiva' : 'Descubre oportunidades con una experiencia clara y directa'}
         description={
           canManageJobs
-            ? 'Los jobs del tenant y el marketplace público comparten reglas reales, pero ahora cada vista se siente como producto y no como panel mixto.'
-            : 'Explora vacantes publicadas, guarda las que te interesan y revisa detalles sin ruido operativo.'
+            ? 'Publica, actualiza y comparte tus vacantes desde un solo lugar sin perder claridad entre lo interno y lo público.'
+            : 'Explora vacantes publicadas, guarda las que te interesan y revisa detalles sin distracciones.'
         }
       >
-        <StatCard label="Discovery" value={`${publicJobsQuery.data?.jobs.length ?? 0} jobs`} helper="Vacantes publicadas visibles en el marketplace." />
-        <StatCard label="Tenant jobs" value={tenantJobsQuery.data?.length ?? 0} helper="Drafts, publicadas o cerradas dentro de tu empresa." />
-        <StatCard label="Saved jobs" value={publicJobsQuery.data?.savedJobIds.length ?? 0} helper="Guardadas por el candidato para volver más tarde." />
+        <StatCard label="Mercado" value={`${publicJobsQuery.data?.jobs.length ?? 0} jobs`} helper="Vacantes publicadas visibles para nuevos candidatos." />
+        <StatCard label="Tus vacantes" value={tenantJobsQuery.data?.length ?? 0} helper="Borradores, publicadas o cerradas para tu empresa." />
+        <StatCard label="Guardadas" value={publicJobsQuery.data?.savedJobIds.length ?? 0} helper="Vacantes guardadas para volver más tarde." />
         <StatCard
           className="bg-[var(--app-surface-muted)]"
-          label="Reglas"
+          label="Publicacion"
           value="Estado real"
-          helper="Un draft no es público hasta publicarlo y las preguntas de screening quedan listas para aplicar."
+          helper="Controla cuándo una vacante sale a público y cuándo sigue en preparación."
         />
       </PageHeader>
 
@@ -627,8 +627,8 @@ export function JobsOverviewPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Gestion del tenant</CardTitle>
-              <CardDescription>Publica, cierra o archiva vacantes segun su momento del hiring loop.</CardDescription>
+              <CardTitle>Gestion de vacantes</CardTitle>
+              <CardDescription>Publica, cierra o archiva vacantes según el ritmo real de tu búsqueda.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {tenantJobsQuery.data?.length ? (
@@ -667,7 +667,7 @@ export function JobsOverviewPage() {
                 ))
               ) : (
                 <div className="rounded-[24px] border border-dashed border-zinc-300 px-4 py-6 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-                  Todavia no hay vacantes en este tenant.
+                  Todavia no hay vacantes en este espacio.
                 </div>
               )}
             </CardContent>
@@ -747,25 +747,25 @@ export function JobsOverviewPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Estado del discovery</CardTitle>
-            <CardDescription>Esta fase deja listo el terreno para applications y ATS sin bloquear discovery publico.</CardDescription>
+            <CardTitle>Estado de la experiencia pública</CardTitle>
+            <CardDescription>Todo lo necesario para mostrar vacantes con claridad y ayudar al talento a volver cuando quiera.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="rounded-[24px] bg-zinc-50 px-4 py-4 text-sm text-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-300">
-              <p className="font-semibold text-zinc-950 dark:text-zinc-50">Public job detail</p>
-              <p className="mt-1">Cada vacante publicada expone una ruta publica por slug lista para compartir.</p>
+              <p className="font-semibold text-zinc-950 dark:text-zinc-50">Detalle listo para compartir</p>
+              <p className="mt-1">Cada vacante publicada tiene su propia página pública lista para enviar y promocionar.</p>
             </div>
             <div className="rounded-[24px] bg-zinc-50 px-4 py-4 text-sm text-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-300">
-              <p className="font-semibold text-zinc-950 dark:text-zinc-50">Saved jobs</p>
-              <p className="mt-1">Los candidatos ya pueden guardar vacantes sin esperar la fase de application.</p>
+              <p className="font-semibold text-zinc-950 dark:text-zinc-50">Vacantes guardadas</p>
+              <p className="mt-1">Los candidatos ya pueden guardar vacantes para volver más tarde cuando estén listos.</p>
             </div>
             <div className="rounded-[24px] bg-zinc-50 px-4 py-4 text-sm text-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-300">
-              <p className="font-semibold text-zinc-950 dark:text-zinc-50">Screening groundwork</p>
-              <p className="mt-1">Las preguntas screening quedan persistidas para el apply flow de la fase siguiente.</p>
+              <p className="font-semibold text-zinc-950 dark:text-zinc-50">Preparación de filtros</p>
+              <p className="mt-1">Las preguntas clave quedan listas para usarse cuando quieras profundizar el proceso.</p>
             </div>
             <div className="rounded-[24px] bg-zinc-50 px-4 py-4 text-sm text-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-300">
-              <p className="font-semibold text-zinc-950 dark:text-zinc-50">Job alerts</p>
-              <p className="mt-1">Los candidatos pueden guardar criterios basicos y activarlos o pausarlos desde esta misma vista.</p>
+              <p className="font-semibold text-zinc-950 dark:text-zinc-50">Alertas de vacantes</p>
+              <p className="mt-1">Los candidatos pueden guardar criterios básicos y activarlos o pausarlos desde esta misma vista.</p>
             </div>
           </CardContent>
         </Card>
@@ -773,15 +773,15 @@ export function JobsOverviewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Job alerts guardadas</CardTitle>
+          <CardTitle>Alertas guardadas</CardTitle>
           <CardDescription>
-            Guarda un set de filtros basicos para volver rapido a este discovery. El MVP mantiene estas alertas como CRUD propio del candidato.
+            Guarda filtros básicos para volver rápido a las vacantes que más se parecen a lo que estás buscando.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {!candidateProfileQuery.data?.profile ? (
             <div className="rounded-[24px] border border-dashed border-zinc-300 px-4 py-6 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-              Completa tu perfil candidato para crear job alerts y guardar discovery reutilizable.
+              Completa tu perfil para crear alertas y guardar búsquedas que quieras repetir más adelante.
             </div>
           ) : (
             <>

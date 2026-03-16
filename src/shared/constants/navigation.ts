@@ -5,14 +5,14 @@ export const publicNavigationItems: NavigationItem[] = [
     title: 'Producto',
     titleKey: 'navigation.home.title',
     href: '/',
-    description: 'Landing comercial del producto',
+    description: 'Conoce la experiencia',
     descriptionKey: 'navigation.home.description'
   },
   {
     title: 'Jobs',
     titleKey: 'navigation.jobs.title',
     href: '/jobs',
-    description: 'Vacantes publicas',
+    description: 'Oportunidades abiertas',
     descriptionKey: 'navigation.jobs.description'
   }
 ]
@@ -21,30 +21,30 @@ export const candidateNavigationItems: NavigationItem[] = [
   {
     title: 'Jobs',
     href: '/jobs',
-    description: 'Explora oportunidades publicas'
+    description: 'Explora oportunidades abiertas'
   },
   {
     title: 'Aplicaciones',
     href: '/applications',
-    description: 'Seguimiento de tus postulaciones',
+    description: 'Sigue tus procesos',
     requiresAuth: true
   },
   {
     title: 'Perfil',
     href: '/candidate/profile',
-    description: 'Perfil profesional, CV y visibilidad',
+    description: 'Tu perfil, tu CV y tu presencia',
     requiresAuth: true
   },
   {
     title: 'Onboarding',
     href: '/onboarding',
-    description: 'Datos base de tu cuenta',
+    description: 'Ajustes esenciales de tu cuenta',
     requiresAuth: true
   },
   {
     title: 'Acceso employer',
     href: '/recruiter-request',
-    description: 'Solicita validacion de empresa',
+    description: 'Lleva tu empresa a la plataforma',
     requiresAuth: true
   }
 ]
@@ -53,35 +53,35 @@ export const employerNavigationItems: NavigationItem[] = [
   {
     title: 'Company',
     href: '/workspace',
-    description: 'Identidad, equipo y presencia de empresa',
+    description: 'Marca, equipo y presencia de empresa',
     requiresAuth: true,
     requiredPermission: 'workspace:read'
   },
   {
     title: 'Jobs',
     href: '/jobs/manage',
-    description: 'Publica y administra vacantes',
+    description: 'Publica y organiza vacantes',
     requiresAuth: true,
     requiredPermission: 'workspace:read'
   },
   {
     title: 'Candidates',
     href: '/talent',
-    description: 'Descubre talento visible',
+    description: 'Descubre personas abiertas a oportunidades',
     requiresAuth: true,
     requiredPermission: 'candidate_directory:read'
   },
   {
     title: 'Pipeline',
     href: '/pipeline',
-    description: 'Applicants, notas y stages',
+    description: 'Da seguimiento al proceso',
     requiresAuth: true,
     requiredPermission: 'application:read'
   },
   {
     title: 'Roles',
     href: '/rbac',
-    description: 'Roles y permisos',
+    description: 'Accesos del equipo',
     requiresAuth: true,
     requiredPermission: 'role:read'
   }

@@ -52,7 +52,7 @@ export function SignInPage() {
     try {
       await signInWithPassword(values)
       toast.success('Sesion iniciada', {
-        description: 'Ya puedes continuar tu perfil o entrar al workspace que te corresponda.'
+        description: 'Ya puedes continuar tu perfil o entrar al espacio que te corresponda.'
       })
       await session.refresh()
       await navigate('/onboarding')
@@ -73,8 +73,8 @@ export function SignInPage() {
     <div className="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
       <AuthHeroPanel
         eyebrow="Acceso"
-        title="Inicia sesion y retoma tu perfil, tus aplicaciones o tu workspace con una experiencia clara"
-        description="La autenticacion vive separada del resto del producto para mantener foco, confianza y una sensacion real de app SaaS."
+        title="Vuelve a tu cuenta y sigue justo donde lo dejaste"
+        description="Entra a tu perfil, revisa tus procesos o retoma el trabajo de tu equipo con un acceso simple y directo."
       />
 
       <Card className="bg-[var(--app-surface)]">
@@ -84,7 +84,7 @@ export function SignInPage() {
           </div>
           <CardTitle>Entra a tu cuenta</CardTitle>
           <CardDescription>
-            Usa tu correo y contrasena para continuar onboarding, revisar vacantes o volver a tu company workspace.
+            Usa tu correo y tu contrasena para volver a tus vacantes, tu perfil o el espacio de tu empresa.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">

@@ -364,10 +364,10 @@ function CandidateProfileEditor({
   const resumes = bundle.resumes
   const completenessScore = profile?.completeness_score ?? 0
   const completionTone =
-    completenessScore >= 80 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
+    completenessScore >= 80 ? 'bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200'
     : completenessScore >= 50
-      ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
-      : 'bg-sky-50 text-sky-800 dark:bg-sky-950/40 dark:text-sky-200'
+      ? 'bg-secondary-50 text-secondary-600 dark:bg-secondary-500/12 dark:text-secondary-200'
+      : 'bg-accent-50 text-accent-600 dark:bg-accent-500/12 dark:text-accent-200'
 
   async function openResume(storagePath: string) {
     try {
@@ -388,8 +388,8 @@ function CandidateProfileEditor({
     <div className="space-y-6">
       <PageHeader
         eyebrow="Candidate profile"
-        title="Construye un perfil reusable para aplicar y también para ser descubierto"
-        description="Tu identidad candidata vive fuera del tenant. Aquí mantienes tu CV, tu resumen profesional y la visibilidad opt-in para recruiters."
+        title="Haz que tu perfil se vea fuerte y esté listo para cada oportunidad"
+        description="Aquí guardas tu CV, tu resumen y lo que quieres mostrar para aplicar más rápido y presentarte mejor."
       >
         <StatCard
           helper={session.profile?.email}
@@ -401,10 +401,10 @@ function CandidateProfileEditor({
           label="Completitud"
           value={`${completenessScore}%`}
         />
-        <StatCard label="CVs" value={resumes.length} helper={`Storage privado con límite de ${MAX_UPLOAD_SIZE_LABEL}.`} />
+        <StatCard label="CVs" value={resumes.length} helper={`Tus archivos listos para reutilizarlos, con límite de ${MAX_UPLOAD_SIZE_LABEL}.`} />
         <StatCard
           className="bg-[var(--app-surface-muted)]"
-          helper={isVisibleToRecruiters ? 'Visible para recruiters autorizados.' : 'Aún no visible en el directorio employer.'}
+          helper={isVisibleToRecruiters ? 'Tu perfil puede aparecer para empresas que buscan talento.' : 'Tu perfil sigue privado por ahora.'}
           label="Visibilidad"
           value={isVisibleToRecruiters ? 'Activa' : 'Privada'}
         />
@@ -422,13 +422,13 @@ function CandidateProfileEditor({
             Perfil base profesional y metadatos de ubicación conectados a la cuenta.
           </div>
           <div className="rounded-2xl bg-[var(--app-surface)] px-3 py-3 text-sm text-[var(--app-text-muted)]">
-            CV privado en Storage, listo para reuso futuro.
+            CV privado, listo para volver a usar cuando aparezca la oportunidad correcta.
           </div>
           <div className="rounded-2xl bg-[var(--app-surface)] px-3 py-3 text-sm text-[var(--app-text-muted)]">
             Experiencia, educación, skills, idiomas y links como bloques editables.
           </div>
           <div className="rounded-2xl bg-[var(--app-surface)] px-3 py-3 text-sm text-[var(--app-text-muted)]">
-            Activa visibilidad opt-in si quieres que empresas te encuentren sin haber aplicado.
+            Activa tu visibilidad si quieres que empresas te encuentren sin haber aplicado.
           </div>
         </CardContent>
       </Card>
@@ -436,7 +436,7 @@ function CandidateProfileEditor({
       <Card>
         <CardHeader>
           <CardTitle>Estado del candidato</CardTitle>
-          <CardDescription>Tu perfil te acompaña aunque también tengas acceso employer o múltiples memberships.</CardDescription>
+          <CardDescription>Tu perfil te acompaña aunque también colabores con una empresa dentro de la plataforma.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
@@ -445,7 +445,7 @@ function CandidateProfileEditor({
             <Badge variant="outline">{sanitizeCandidateLanguageList(languages).length} idiomas</Badge>
             <Badge variant="outline">{sanitizeCandidateExperienceList(experiences).length} experiencias</Badge>
             <Badge variant={isVisibleToRecruiters ? 'soft' : 'outline'}>
-              {isVisibleToRecruiters ? 'Visible para recruiters' : 'No visible en directorio'}
+              {isVisibleToRecruiters ? 'Visible para empresas' : 'No visible en directorio'}
             </Badge>
           </div>
           <div className="mt-4 rounded-[24px] border px-4 py-4">
@@ -461,7 +461,7 @@ function CandidateProfileEditor({
                 }}
               />
               <span>
-                Permitir que recruiters con permiso encuentren este perfil en el directorio de talento.
+                Permitir que empresas autorizadas encuentren este perfil en el directorio de talento.
                 <span className="mt-1 block text-xs text-[var(--app-text-subtle)]">
                   Esto no afecta tu capacidad de aplicar a vacantes si prefieres mantener el perfil oculto.
                 </span>
@@ -475,7 +475,7 @@ function CandidateProfileEditor({
         <Card>
           <CardHeader>
             <CardTitle>Perfil profesional</CardTitle>
-            <CardDescription>Resumen reusable para futuras aplicaciones y discovery.</CardDescription>
+            <CardDescription>Resumen reutilizable para futuras aplicaciones y nuevas oportunidades.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <form className="space-y-4" onSubmit={(event) => void form.handleSubmit((values) => saveMutation.mutate(values))(event)}>

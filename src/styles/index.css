@@ -5,37 +5,37 @@
 @theme {
   --font-sans: "Manrope", "Segoe UI", sans-serif;
 
-  --color-primary-50: #f3fbf6;
-  --color-primary-100: #e2f4e8;
-  --color-primary-200: #c8e9d5;
-  --color-primary-300: #a5d9ba;
-  --color-primary-400: #7fc39a;
-  --color-primary-500: #5ea97d;
-  --color-primary-600: #4c8f69;
-  --color-primary-700: #3f7657;
+  --color-primary-50: #fff3ee;
+  --color-primary-100: #ffe3d6;
+  --color-primary-200: #ffc7ab;
+  --color-primary-300: #ff9f78;
+  --color-primary-400: #ff7b4d;
+  --color-primary-500: #ff6433;
+  --color-primary-600: #e34d21;
+  --color-primary-700: #bd3b1a;
 
-  --color-secondary-50: #f7f4ff;
-  --color-secondary-100: #efe8ff;
-  --color-secondary-200: #dfd2fb;
-  --color-secondary-300: #ccb4f4;
-  --color-secondary-400: #b493e6;
-  --color-secondary-500: #9774cf;
-  --color-secondary-600: #7a5bb0;
+  --color-secondary-50: #fff7e7;
+  --color-secondary-100: #ffeabf;
+  --color-secondary-200: #ffd98a;
+  --color-secondary-300: #ffc557;
+  --color-secondary-400: #ffb127;
+  --color-secondary-500: #f79a00;
+  --color-secondary-600: #d77b00;
 
-  --color-accent-50: #f2f8ff;
-  --color-accent-100: #e4f0fb;
-  --color-accent-200: #cce0f3;
-  --color-accent-300: #a9c7e7;
-  --color-accent-400: #7ea9d2;
-  --color-accent-500: #5d88bb;
-  --color-accent-600: #486f9e;
+  --color-accent-50: #eef4ff;
+  --color-accent-100: #dce8ff;
+  --color-accent-200: #bed3ff;
+  --color-accent-300: #94b5ff;
+  --color-accent-400: #6893ff;
+  --color-accent-500: #456fff;
+  --color-accent-600: #3556db;
 
-  --color-peach-50: #fff6ef;
-  --color-peach-100: #fee9da;
-  --color-peach-200: #f9d3bc;
-  --color-peach-300: #f2b38f;
-  --color-peach-400: #e59267;
-  --color-peach-500: #d77951;
+  --color-peach-50: #fff1f6;
+  --color-peach-100: #ffdce8;
+  --color-peach-200: #ffb7d0;
+  --color-peach-300: #ff8db1;
+  --color-peach-400: #ff5f90;
+  --color-peach-500: #f23a74;
 
   --radius-card: 1.5rem;
   --radius-panel: 1.25rem;
@@ -45,45 +45,45 @@
 :root {
   color-scheme: light;
   --app-canvas: #ffffff;
-  --app-canvas-strong: #fcfcfc;
+  --app-canvas-strong: #fff9f6;
   --app-surface: #ffffff;
-  --app-surface-muted: #ffffff;
+  --app-surface-muted: #fff8f4;
   --app-surface-elevated: rgba(255, 255, 255, 0.94);
-  --app-border: rgba(106, 99, 88, 0.14);
-  --app-border-strong: rgba(106, 99, 88, 0.22);
-  --app-text: #1d241f;
-  --app-text-muted: #5f6b62;
-  --app-text-subtle: #7f8a82;
-  --app-shadow-soft: 0 16px 36px rgba(102, 91, 74, 0.08);
-  --app-shadow-card: 0 10px 28px rgba(110, 99, 79, 0.06);
-  --app-shadow-floating: 0 24px 56px rgba(95, 86, 70, 0.12);
-  --app-ring: rgba(94, 136, 187, 0.26);
-  --app-success-surface: #ecf8f0;
-  --app-info-surface: #edf5fd;
-  --app-warning-surface: #fff3e7;
-  --app-danger-surface: #fff0f1;
+  --app-border: rgba(78, 63, 104, 0.14);
+  --app-border-strong: rgba(78, 63, 104, 0.22);
+  --app-text: #1a1730;
+  --app-text-muted: #5f5874;
+  --app-text-subtle: #847d98;
+  --app-shadow-soft: 0 18px 40px rgba(64, 45, 95, 0.08);
+  --app-shadow-card: 0 12px 30px rgba(55, 37, 82, 0.08);
+  --app-shadow-floating: 0 30px 72px rgba(51, 32, 79, 0.14);
+  --app-ring: rgba(69, 111, 255, 0.24);
+  --app-success-surface: #eef8f4;
+  --app-info-surface: #eef4ff;
+  --app-warning-surface: #fff6e4;
+  --app-danger-surface: #fff0f6;
 }
 
 .dark {
   color-scheme: dark;
-  --app-canvas: #11161b;
-  --app-canvas-strong: #171d23;
-  --app-surface: #182027;
-  --app-surface-muted: #1f2931;
-  --app-surface-elevated: rgba(26, 34, 41, 0.9);
-  --app-border: rgba(221, 233, 227, 0.11);
-  --app-border-strong: rgba(221, 233, 227, 0.18);
-  --app-text: #edf3ef;
-  --app-text-muted: #c1ccc4;
-  --app-text-subtle: #96a49c;
-  --app-shadow-soft: 0 18px 44px rgba(0, 0, 0, 0.28);
-  --app-shadow-card: 0 14px 32px rgba(0, 0, 0, 0.22);
-  --app-shadow-floating: 0 26px 64px rgba(0, 0, 0, 0.34);
-  --app-ring: rgba(126, 169, 210, 0.32);
-  --app-success-surface: rgba(76, 143, 105, 0.16);
-  --app-info-surface: rgba(93, 136, 187, 0.18);
-  --app-warning-surface: rgba(229, 146, 103, 0.18);
-  --app-danger-surface: rgba(240, 128, 128, 0.18);
+  --app-canvas: #0f1220;
+  --app-canvas-strong: #151a2d;
+  --app-surface: #171d31;
+  --app-surface-muted: #1d243b;
+  --app-surface-elevated: rgba(24, 30, 49, 0.9);
+  --app-border: rgba(215, 221, 255, 0.12);
+  --app-border-strong: rgba(215, 221, 255, 0.19);
+  --app-text: #f4f5fb;
+  --app-text-muted: #c3c8dc;
+  --app-text-subtle: #9198b3;
+  --app-shadow-soft: 0 18px 44px rgba(0, 0, 0, 0.3);
+  --app-shadow-card: 0 16px 34px rgba(0, 0, 0, 0.24);
+  --app-shadow-floating: 0 28px 70px rgba(0, 0, 0, 0.36);
+  --app-ring: rgba(104, 141, 255, 0.34);
+  --app-success-surface: rgba(91, 208, 163, 0.12);
+  --app-info-surface: rgba(104, 141, 255, 0.16);
+  --app-warning-surface: rgba(247, 154, 0, 0.16);
+  --app-danger-surface: rgba(242, 58, 116, 0.16);
 }
 
 @layer base {
@@ -99,15 +99,18 @@
     @apply min-h-screen antialiased;
     font-family: var(--font-sans);
     color: var(--app-text);
+    font-size: 16px;
+    line-height: 1.5;
     background-color: var(--app-canvas);
     background-image: none;
   }
 
   .dark body {
     background-image:
-      radial-gradient(circle at top left, rgba(76, 143, 105, 0.16), transparent 24%),
-      radial-gradient(circle at top right, rgba(93, 136, 187, 0.2), transparent 20%),
-      linear-gradient(180deg, rgba(17, 22, 27, 1) 0%, rgba(22, 29, 35, 1) 100%);
+      radial-gradient(circle at top left, rgba(255, 100, 51, 0.16), transparent 24%),
+      radial-gradient(circle at top right, rgba(69, 111, 255, 0.2), transparent 22%),
+      radial-gradient(circle at bottom center, rgba(242, 58, 116, 0.12), transparent 18%),
+      linear-gradient(180deg, rgba(15, 18, 32, 1) 0%, rgba(20, 25, 44, 1) 100%);
   }
 
   #root {
@@ -133,6 +136,7 @@
 
   p {
     color: var(--app-text-muted);
+    text-wrap: pretty;
   }
 
   input,
@@ -156,19 +160,21 @@
   }
 
   .tm-kicker {
-    @apply inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium;
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-2 text-[0.72rem] font-semibold;
+    letter-spacing: 0.08em;
     background: var(--app-surface);
     color: var(--app-text-muted);
     border: 1px solid var(--app-border);
   }
 
   .tm-page-title {
-    @apply text-[1.75rem] font-semibold tracking-tight sm:text-[2rem];
+    @apply text-[1.625rem] font-semibold tracking-tight sm:text-[1.875rem];
+    line-height: 1.15;
     color: var(--app-text);
   }
 
   .tm-page-copy {
-    @apply text-sm leading-6 sm:text-base;
+    @apply text-sm leading-6 sm:text-[0.95rem];
     color: var(--app-text-muted);
   }
 

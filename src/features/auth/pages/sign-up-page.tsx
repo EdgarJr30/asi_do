@@ -83,8 +83,8 @@ export function SignUpPage() {
     <div className="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
       <AuthHeroPanel
         eyebrow="Registro"
-        title="Crea tu cuenta base y entra al producto por el camino correcto desde el primer dia"
-        description="Primero nace la cuenta, luego el perfil y despues la validacion employer si aplica. Asi el recorrido se siente claro desde el inicio."
+        title="Crea tu cuenta y empieza con una experiencia simple desde el primer minuto"
+        description="Todo arranca con tu cuenta personal. Después completas tu perfil y, si tu empresa entra a la plataforma, sumas ese acceso más adelante."
       />
 
       <Card className="bg-[var(--app-surface)]">
@@ -94,7 +94,7 @@ export function SignUpPage() {
           </div>
           <CardTitle>Crea tu usuario base</CardTitle>
           <CardDescription>
-            Este acceso crea la cuenta inicial de plataforma para que puedas empezar onboarding y luego operar como candidato o solicitar validacion employer.
+            Abre tu cuenta para descubrir vacantes, completar tu perfil y más adelante sumar a tu empresa si lo necesitas.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">

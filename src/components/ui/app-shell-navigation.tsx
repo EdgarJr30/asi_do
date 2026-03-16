@@ -69,7 +69,7 @@ export function AppSidebarNav({
       <div className="space-y-4">
         <div className="tm-kicker w-fit">{brand}</div>
         <div className="space-y-2">
-          <p className="text-[1.75rem] font-semibold tracking-tight text-[var(--app-text)]">{title}</p>
+          <p className="text-[1.5rem] font-semibold tracking-tight text-[var(--app-text)] sm:text-[1.65rem]">{title}</p>
           <p className="text-sm leading-6 text-[var(--app-text-muted)]">{description}</p>
         </div>
       </div>
@@ -96,7 +96,7 @@ export function AppSidebarNav({
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold">{item.title}</span>
-                {item.description ? <span className="mt-1 block text-xs leading-5 text-current/75">{item.description}</span> : null}
+                {item.description ? <span className="mt-1 block text-[0.78rem] leading-5 text-current/75">{item.description}</span> : null}
               </span>
             </button>
           )
@@ -118,7 +118,7 @@ export function AppBottomNav({
   onNavigate: (href: string) => void
 }) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 border-t bg-[color:var(--app-surface-elevated)] px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_22px_rgba(91,81,65,0.08)] backdrop-blur-xl lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 border-t bg-[color:var(--app-surface-elevated)] px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_26px_rgba(60,42,88,0.12)] backdrop-blur-xl lg:hidden">
       <div className="grid grid-cols-4 gap-2">
         {items.map((item) => {
           const Icon = resolveIcon(item)
@@ -128,7 +128,7 @@ export function AppBottomNav({
             <button
               key={item.href}
               className={cn(
-                'flex min-h-12 flex-col items-center justify-center gap-1 rounded-[18px] px-2 py-2 text-[11px] font-semibold transition',
+                'flex min-h-12 flex-col items-center justify-center gap-1 rounded-[18px] px-2 py-2 text-[0.7rem] font-semibold transition',
                 isActive
                   ? 'bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-200'
                   : 'text-[var(--app-text-subtle)] hover:bg-[var(--app-surface-muted)] hover:text-[var(--app-text)]'

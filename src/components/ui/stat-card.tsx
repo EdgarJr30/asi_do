@@ -18,8 +18,8 @@ export function StatCard({ label, value, helper, className, ...props }: StatCard
       {...props}
     >
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-text-subtle)]">{label}</p>
-      <p className="mt-3 text-[1.75rem] font-semibold tracking-tight text-[var(--app-text)]">{value}</p>
-      {helper ? <p className="mt-2 text-sm leading-6 text-[var(--app-text-muted)]">{helper}</p> : null}
+      <p className="mt-3 text-[1.45rem] font-semibold tracking-tight text-[var(--app-text)] sm:text-[1.6rem]">{value}</p>
+      {helper ? <p className="mt-2 text-sm leading-5 text-[var(--app-text-muted)]">{helper}</p> : null}
     </div>
   )
 }

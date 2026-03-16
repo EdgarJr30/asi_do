@@ -35,15 +35,15 @@ export function EmployerShell() {
       <div className="mx-auto flex min-h-screen max-w-[1420px] gap-6 px-4 pb-28 pt-4 sm:px-6 lg:px-8">
         <AppSidebarNav
           activeHref={location.pathname}
-          brand="Employer app"
-          description="Jobs, candidate discovery y pipeline colaborativo con una estructura clara para uso diario."
+          brand="Para equipos"
+          description="Publica vacantes, descubre talento y coordina contrataciones con una experiencia clara."
           footer={
             <Button className="w-full" variant="outline" onClick={() => void navigate('/jobs')}>
               Ver job board publico
             </Button>
           }
           items={sidebarNav}
-          title={session.primaryMembership?.tenantName ?? 'Company workspace'}
+          title={session.primaryMembership?.tenantName ?? 'Tu espacio de empresa'}
           onNavigate={(href) => void navigate(href)}
         />
 
@@ -52,13 +52,13 @@ export function EmployerShell() {
             <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-text-subtle)]">
-                  Employer workspace
+                  Tu empresa
                 </p>
                 <p className="text-lg font-semibold tracking-tight text-[var(--app-text)]">
-                  {currentItem?.title ?? 'Hiring workspace'}
+                  {currentItem?.title ?? 'Tu espacio de hiring'}
                 </p>
                 <p className="text-sm text-[var(--app-text-muted)]">
-                  {currentItem?.description ?? 'Opera jobs, candidates y applicants con una experiencia limpia y repetible.'}
+                  {currentItem?.description ?? 'Organiza vacantes, personas y procesos con un ritmo fácil de seguir.'}
                 </p>
               </div>
 

@@ -6,7 +6,7 @@ type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
-    'border border-primary-600 bg-primary-600 text-white shadow-[0_12px_26px_rgba(76,143,105,0.18)] hover:border-primary-700 hover:bg-primary-700',
+    'border border-primary-600 bg-primary-600 text-white shadow-[0_14px_30px_rgba(255,100,51,0.24)] hover:border-primary-700 hover:bg-primary-700',
   secondary:
     'border border-accent-200 bg-accent-50 text-accent-600 shadow-sm hover:border-accent-300 hover:bg-accent-100 dark:border-accent-500/25 dark:bg-accent-500/10 dark:text-accent-200 dark:hover:bg-accent-500/16',
   outline:
@@ -26,7 +26,7 @@ export function Button({ className, type = 'button', variant = 'primary', ...pro
     <button
       type={type}
       className={cn(
-        'inline-flex h-12 items-center justify-center gap-2 rounded-[20px] px-4 text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] disabled:cursor-not-allowed disabled:opacity-60',
+        'inline-flex h-11 items-center justify-center gap-2 rounded-[18px] px-4 text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-12',
         buttonVariants[variant],
         className
       )}
