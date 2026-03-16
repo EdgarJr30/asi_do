@@ -96,6 +96,8 @@ Referencia corta: `docs/checklists/CODEX_TASK_BRIEF.md`
 
 ### Comandos
 
+Este repo usa `npm` como gestor de paquetes oficial y conserva `package-lock.json` como lockfile canonico. No uses `pnpm` ni `yarn` para instalar dependencias o correr scripts salvo que la configuracion del repositorio cambie de forma explicita.
+
 ```bash
 npm install
 npm run dev

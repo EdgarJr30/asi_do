@@ -15,6 +15,7 @@ This file is intentionally compact. Keep the root guidance lightweight and use `
 - Backend platform: Supabase
 - App model: installable PWA
 - Architecture: multi-tenant, RBAC-first, mobile-first, design-system-first
+- Package manager and scripts: use `npm` with the committed `package-lock.json`
 
 ## Non-negotiable product rules
 1. Mobile-first always.
@@ -107,6 +108,7 @@ Do not introduce casual synonyms.
 - Never treat desktop as the primary context.
 - Never rely on UI checks alone for authorization.
 - Never bypass RLS casually.
+- Never use `pnpm` or `yarn` commands for this repo unless the repository configuration is explicitly changed first.
 
 ## Definition of done
 A meaningful feature is not done unless:

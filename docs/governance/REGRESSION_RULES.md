@@ -170,6 +170,9 @@ Do not fill public, auth, candidate, or employer surfaces with implementation la
 ### R-047 — Customer-facing typography must stay controlled
 Do not regress public or customer-facing surfaces back to oversized hero text, inflated stat values, or supporting copy that feels louder than the content itself. Large headings may still be expressive, but typography must remain balanced and readable on mobile first.
 
+### R-048 — This repository must use npm, not pnpm
+Do not suggest, document, or execute `pnpm` or `yarn` commands for this repository while `package-lock.json` remains the canonical lockfile and the repo scripts are standardized on `npm`. Use `npm install`, `npm run ...`, and related `npm` workflows unless the repository configuration is intentionally changed first.
+
 ---
 
 ## Maintenance rule

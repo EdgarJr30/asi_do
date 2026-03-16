@@ -8,6 +8,8 @@
 - Avoid `any`
 - Keep business logic out of presentation components where practical
 - Prefer reusable primitives over duplication
+- Use `npm` as the only package manager for local commands, scripts, installs, and lockfile updates
+- Do not introduce or reference `pnpm`, `yarn`, or additional lockfiles unless the repo standard changes explicitly
 
 ---
 
