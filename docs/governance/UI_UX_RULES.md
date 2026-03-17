@@ -204,6 +204,8 @@ Rules:
 4. Keep one clear primary action per screen region.
 5. If primary and destructive actions coexist, visually separate them and avoid equal emphasis.
 6. Loading, disabled, pressed, hover, and focus-visible states must be standardized across modules.
+7. Every actionable UI element that supports pointer input must expose a visible hover state. This includes buttons, icon buttons, navigation items, segmented controls, disclosure triggers, clickable cards, selectable rows, and summary toggles.
+8. Hover feedback must be perceptible without relying on the cursor alone. Prefer a clear visual change such as color, border, background, shadow, or controlled motion.
 
 ### 6.4 Control spacing
 - minimum gap between adjacent touch controls: **8px**

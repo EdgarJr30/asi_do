@@ -433,14 +433,18 @@ export function HomePage() {
                 </p>
 
                 <div className="mt-7 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap">
-                  <Button className="w-full sm:min-w-44 sm:w-auto" onClick={() => void navigate(primaryAction.href)}>
+                  <Button className="w-full sm:min-w-44 sm:w-auto hover:shadow-[0_24px_44px_rgba(43,69,143,0.34)]" onClick={() => void navigate(primaryAction.href)}>
                     {primaryAction.label}
                   </Button>
-                  <Button className="w-full sm:min-w-44 sm:w-auto" variant="outline" onClick={() => void navigate('/jobs')}>
+                  <Button
+                    className="w-full sm:min-w-44 sm:w-auto hover:border-primary-400 hover:bg-white hover:shadow-[0_18px_34px_rgba(15,23,42,0.12)]"
+                    variant="outline"
+                    onClick={() => void navigate('/jobs')}
+                  >
                     Explorar jobs
                   </Button>
                   <Button
-                    className="group w-fit justify-start self-start px-0 text-[var(--app-text)] hover:bg-transparent"
+                    className="group w-fit justify-start self-start rounded-full px-3 text-[var(--app-text)] hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]"
                     variant="ghost"
                     onClick={() => scrollToSection('pricing')}
                   >
@@ -569,15 +573,15 @@ export function HomePage() {
                         <div className="absolute left-[0.2rem] top-24 h-12 w-[2px] rounded-full bg-white/16" />
                         <div className="absolute right-[0.2rem] top-32 h-16 w-[2px] rounded-full bg-white/14" />
                         <div className="mt-4 flex items-center justify-between text-white/72">
-                          <button className="flex size-10 items-center justify-center rounded-2xl bg-white/8">
+                          <div aria-hidden="true" className="flex size-10 items-center justify-center rounded-2xl bg-white/8">
                             <Layers3 className="size-4" />
-                          </button>
+                          </div>
                           <div className="rounded-full bg-primary-400/16 px-3 py-1 text-xs font-semibold text-primary-100">
                             Hiring app
                           </div>
-                          <button className="flex size-10 items-center justify-center rounded-2xl bg-white/8">
+                          <div aria-hidden="true" className="flex size-10 items-center justify-center rounded-2xl bg-white/8">
                             <ArrowRight className="size-4" />
-                          </button>
+                          </div>
                         </div>
 
                         <div className="mt-4 rounded-[1.35rem] border border-white/8 bg-white/6 p-3 backdrop-blur">
@@ -841,11 +845,15 @@ export function HomePage() {
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button onClick={() => void navigate(primaryAction.href)}>
+            <Button className="hover:shadow-[0_24px_44px_rgba(43,69,143,0.34)]" onClick={() => void navigate(primaryAction.href)}>
               {primaryAction.label}
               <ArrowRight className="size-4" />
             </Button>
-            <Button variant="outline" onClick={() => scrollToSection('faq')}>
+            <Button
+              className="hover:border-primary-400 hover:bg-white hover:shadow-[0_18px_34px_rgba(15,23,42,0.12)]"
+              variant="outline"
+              onClick={() => scrollToSection('faq')}
+            >
               Resolver dudas
             </Button>
           </div>
@@ -903,7 +911,9 @@ export function HomePage() {
                         key={frequency.value}
                         className={cn(
                           'cursor-pointer rounded-full px-3 py-2 transition',
-                          billingFrequency === frequency.value ? 'bg-primary-500 text-white' : 'text-white/72'
+                          billingFrequency === frequency.value
+                            ? 'bg-primary-500 text-white'
+                            : 'text-white/72 hover:bg-white/10 hover:text-white'
                         )}
                       >
                         <input
@@ -941,8 +951,8 @@ export function HomePage() {
                     className={cn(
                       'relative cursor-pointer rounded-[28px] border p-8 transition duration-300 ease-out xl:p-10',
                       isSelected
-                        ? 'z-20 -translate-y-3 scale-[1.02] border-primary-200/80 bg-white shadow-[0_38px_110px_rgba(18,31,68,0.28)] ring-1 ring-primary-300 lg:-translate-y-6 dark:border-primary-300/40 dark:bg-[linear-gradient(180deg,rgba(245,248,255,0.98)_0%,rgba(232,240,255,0.96)_100%)]'
-                        : 'border-white/10 bg-white/7 text-white shadow-[0_20px_48px_rgba(0,0,0,0.22)] backdrop-blur-md dark:border-white/10 dark:bg-white/6'
+                        ? 'z-20 -translate-y-3 scale-[1.02] border-primary-200/80 bg-white shadow-[0_38px_110px_rgba(18,31,68,0.28)] ring-1 ring-primary-300 hover:shadow-[0_42px_118px_rgba(18,31,68,0.32)] lg:-translate-y-6 dark:border-primary-300/40 dark:bg-[linear-gradient(180deg,rgba(245,248,255,0.98)_0%,rgba(232,240,255,0.96)_100%)]'
+                        : 'border-white/10 bg-white/7 text-white shadow-[0_20px_48px_rgba(0,0,0,0.22)] backdrop-blur-md hover:-translate-y-2 hover:border-white/18 hover:bg-white/10 hover:shadow-[0_28px_68px_rgba(0,0,0,0.28)] dark:border-white/10 dark:bg-white/6 dark:hover:bg-white/10'
                     )}
                     onClick={() => setSelectedPlanName(plan.name)}
                   >
@@ -1017,7 +1027,12 @@ export function HomePage() {
                     </ul>
 
                     <Button
-                      className={cn('mt-8 w-full', !isSelected && 'border-white/12 bg-white/10 text-white hover:bg-white/18')}
+                      className={cn(
+                        'mt-8 w-full',
+                        isSelected
+                          ? 'hover:shadow-[0_24px_42px_rgba(43,69,143,0.34)]'
+                          : 'border-white/12 bg-white/10 text-white hover:border-white/36 hover:bg-white/22 hover:text-white hover:shadow-[0_22px_42px_rgba(8,15,34,0.24)]'
+                      )}
                       variant={isSelected ? 'primary' : 'outline'}
                       onClick={() => void navigate(plan.name === 'Starter' ? '/auth/sign-up' : '/auth/sign-in')}
                     >
@@ -1039,10 +1054,10 @@ export function HomePage() {
                   aria-controls="pricing-comparison-panel"
                   aria-expanded={isPricingComparisonOpen}
                   className={cn(
-                    'tm-pricing-comparison-trigger relative inline-flex min-h-12 min-w-[18rem] items-center justify-center gap-3 rounded-[28px] rounded-b-none border border-[var(--app-border)] px-5 pt-3 pb-2.5 text-sm font-semibold backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 dark:border-white/10',
+                    'tm-pricing-comparison-trigger relative inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-[28px] rounded-b-none border border-[var(--app-border)] px-5 pt-3 pb-2.5 text-sm font-semibold backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 sm:min-w-[18rem] sm:w-auto dark:border-white/10',
                     isPricingComparisonOpen
-                      ? 'border-b-0 bg-[var(--app-surface)] text-[var(--app-text)] shadow-[0_14px_28px_rgba(25,42,86,0.08)] focus-visible:ring-[var(--app-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-surface)] dark:bg-[linear-gradient(180deg,rgba(16,29,63,0.96)_0%,rgba(13,24,52,0.98)_100%)]'
-                      : 'bg-white/94 text-[#15203b] shadow-[0_20px_54px_rgba(12,20,44,0.28)] hover:shadow-[0_24px_60px_rgba(12,20,44,0.36)] focus-visible:ring-white/50'
+                      ? 'border-b-0 bg-[var(--app-surface)] text-[var(--app-text)] shadow-[0_14px_28px_rgba(25,42,86,0.08)] hover:border-[var(--app-border-strong)] hover:bg-[var(--app-surface-muted)] hover:shadow-[0_18px_34px_rgba(25,42,86,0.12)] focus-visible:ring-[var(--app-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-surface)] dark:bg-[linear-gradient(180deg,rgba(16,29,63,0.96)_0%,rgba(13,24,52,0.98)_100%)] dark:hover:bg-[linear-gradient(180deg,rgba(19,34,74,0.98)_0%,rgba(15,28,61,0.98)_100%)]'
+                      : 'bg-white/94 text-[#15203b] shadow-[0_20px_54px_rgba(12,20,44,0.28)] hover:-translate-y-[2px] hover:border-primary-200 hover:bg-white hover:text-primary-700 hover:shadow-[0_26px_64px_rgba(12,20,44,0.4)] focus-visible:ring-white/50'
                   )}
                   data-state={isPricingComparisonOpen ? 'open' : 'closed'}
                   type="button"
@@ -1306,7 +1321,7 @@ export function HomePage() {
             <dl className="mt-10 divide-y">
               {faqs.map((faq) => (
                 <details key={faq.question} className="group py-6 first:pt-0 last:pb-0">
-                  <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-left text-[var(--app-text)]">
+                  <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-left text-[var(--app-text)] transition hover:text-primary-700 dark:hover:text-primary-200">
                     <span className="text-base font-semibold leading-7">{faq.question}</span>
                     <span className="flex h-7 items-center">
                       <span className="flex size-7 items-center justify-center rounded-full border bg-[var(--app-surface)] text-[var(--app-text-muted)] transition group-open:rotate-45">
@@ -1343,8 +1358,14 @@ export function HomePage() {
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-                <Button onClick={() => void navigate(primaryAction.href)}>{primaryAction.label}</Button>
-                <Button variant="outline" onClick={() => void navigate('/jobs')}>
+                <Button className="hover:shadow-[0_24px_44px_rgba(43,69,143,0.34)]" onClick={() => void navigate(primaryAction.href)}>
+                  {primaryAction.label}
+                </Button>
+                <Button
+                  className="hover:border-primary-400 hover:bg-white hover:shadow-[0_18px_34px_rgba(15,23,42,0.12)]"
+                  variant="outline"
+                  onClick={() => void navigate('/jobs')}
+                >
                   Explorar jobs
                 </Button>
               </div>
@@ -1360,7 +1381,7 @@ export function HomePage() {
               'section' in item ? (
                 <button
                   key={item.label}
-                  className="text-[var(--app-text-muted)] transition hover:text-[var(--app-text)]"
+                  className="cursor-pointer rounded-full px-3 py-1.5 text-[var(--app-text-muted)] transition-[transform,background-color,color,box-shadow] duration-200 ease-out hover:-translate-y-px hover:bg-[var(--app-surface)] hover:text-[var(--app-text)] hover:shadow-[var(--app-shadow-card)]"
                   type="button"
                   onClick={() => scrollToSection(item.section)}
                 >
@@ -1369,7 +1390,7 @@ export function HomePage() {
               ) : (
                 <button
                   key={item.label}
-                  className="text-[var(--app-text-muted)] transition hover:text-[var(--app-text)]"
+                  className="cursor-pointer rounded-full px-3 py-1.5 text-[var(--app-text-muted)] transition-[transform,background-color,color,box-shadow] duration-200 ease-out hover:-translate-y-px hover:bg-[var(--app-surface)] hover:text-[var(--app-text)] hover:shadow-[var(--app-shadow-card)]"
                   type="button"
                   onClick={() => void navigate(item.route)}
                 >

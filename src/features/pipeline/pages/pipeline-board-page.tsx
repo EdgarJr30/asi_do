@@ -284,8 +284,8 @@ export function PipelineBoardPage() {
                         onClick={() => setSelectedApplicationId(application.id)}
                         className={`grid w-full gap-2 rounded-[24px] border px-4 py-4 text-left transition ${
                           selectedApplicationId === application.id
-                            ? 'border-primary-300 bg-primary-50'
-                            : 'border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/80'
+                            ? 'border-primary-300 bg-primary-50 shadow-[0_16px_32px_rgba(79,110,216,0.08)] hover:border-primary-400 hover:bg-primary-50/80'
+                            : 'border-zinc-200 bg-zinc-50 hover:border-primary-300 hover:bg-white hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] dark:border-zinc-800 dark:bg-zinc-900/80 dark:hover:border-primary-700 dark:hover:bg-zinc-900'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">

@@ -124,7 +124,7 @@ export function SignUpPage() {
 
           <div className="rounded-[24px] border bg-[var(--app-surface)] px-4 py-4 text-sm leading-6 text-[var(--app-text-muted)]">
             Ya tienes cuenta?{' '}
-            <Link className="font-semibold text-primary-700" to="/auth/sign-in">
+            <Link className="font-semibold text-primary-700 transition hover:text-primary-800 hover:underline dark:hover:text-primary-200" to="/auth/sign-in">
               Inicia sesion
             </Link>
           </div>

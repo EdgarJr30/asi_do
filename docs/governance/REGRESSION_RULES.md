@@ -215,6 +215,9 @@ Do not reintroduce oversized top padding, excessive vertical air, or a redundant
 ### R-062 — Pricing comparison trigger must expand from the panel edge, not float or disappear into it
 Do not leave the public pricing comparison trigger looking like a disconnected floating pill above a separate content block, and do not bury it fully inside the revealed panel header either. When the comparison opens, the same trigger should stay visible as the origin of the disclosure, overlapping the panel edge just enough to read as the point the content expands from; when it closes, the panel should visually collapse back into that same trigger. The open-state trigger should read as an integrated tab with its lower edge absorbed by the panel, not as a fully bordered standalone pill or as a separate connector slab stacked between trigger and panel, and there should be no visible seam or hard shoulder break suggesting the trigger and panel are different surfaces.
 
+### R-063 — Actionable controls must never ship without visible hover feedback
+Do not ship pointer-accessible actions that stay visually inert on hover. Buttons, icon buttons, clickable cards, nav items, segmented controls, disclosure triggers, selectable list rows, and similar actionable surfaces must all show a clear hover response through color, border, background, shadow, or controlled motion. A cursor change by itself is not enough, and this rule applies across the product UI, not only the public landing.
+
 ---
 
 ## Maintenance rule

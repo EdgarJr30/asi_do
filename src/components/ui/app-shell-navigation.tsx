@@ -88,10 +88,10 @@ export function AppSidebarNav({
             <button
               key={item.href}
               className={cn(
-                'flex items-start gap-3 rounded-[20px] px-4 py-3 text-left transition',
+                'flex items-start gap-3 rounded-[20px] px-4 py-3 text-left transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-px',
                 isActive
-                  ? 'border border-primary-200 bg-primary-50 text-primary-700 shadow-sm dark:border-primary-500/18 dark:bg-primary-500/10 dark:text-primary-200'
-                  : 'border border-transparent text-[var(--app-text-muted)] hover:bg-[var(--app-surface-muted)] hover:text-[var(--app-text)]'
+                  ? 'border border-primary-200 bg-primary-50 text-primary-700 shadow-sm hover:border-primary-300 hover:bg-primary-50/90 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] dark:border-primary-500/18 dark:bg-primary-500/10 dark:text-primary-200 dark:hover:border-primary-500/24 dark:hover:bg-primary-500/14'
+                  : 'border border-transparent text-[var(--app-text-muted)] hover:border-[var(--app-border)] hover:bg-[var(--app-surface-muted)] hover:text-[var(--app-text)] hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]'
               )}
               type="button"
               onClick={() => void onNavigate(item.href)}
@@ -133,10 +133,10 @@ export function AppBottomNav({
             <button
               key={item.href}
               className={cn(
-                'flex min-h-12 flex-col items-center justify-center gap-1 rounded-[18px] px-2 py-2 text-[0.7rem] font-semibold transition',
+                'flex min-h-12 flex-col items-center justify-center gap-1 rounded-[18px] px-2 py-2 text-[0.7rem] font-semibold transition-[transform,box-shadow,background-color,color] duration-200 ease-out hover:-translate-y-px',
                 isActive
-                  ? 'bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-200'
-                  : 'text-[var(--app-text-subtle)] hover:bg-[var(--app-surface-muted)] hover:text-[var(--app-text)]'
+                  ? 'bg-primary-50 text-primary-700 hover:bg-primary-100 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] dark:bg-primary-500/10 dark:text-primary-200 dark:hover:bg-primary-500/16'
+                  : 'text-[var(--app-text-subtle)] hover:bg-[var(--app-surface-muted)] hover:text-[var(--app-text)] hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]'
               )}
               type="button"
               onClick={() => void onNavigate(item.href)}
