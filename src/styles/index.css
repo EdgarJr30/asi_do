@@ -106,11 +106,14 @@
   }
 
   .dark body {
+    background-color: var(--app-canvas);
     background-image:
-      radial-gradient(circle at top left, rgba(57, 85, 184, 0.26), transparent 24%),
-      radial-gradient(circle at top right, rgba(111, 142, 244, 0.18), transparent 22%),
-      radial-gradient(circle at bottom center, rgba(144, 160, 185, 0.12), transparent 18%),
-      linear-gradient(180deg, rgba(9, 17, 39, 1) 0%, rgba(16, 25, 52, 1) 100%);
+      radial-gradient(circle at 14% 10%, rgba(98, 126, 232, 0.18) 0%, transparent 30%),
+      radial-gradient(circle at 84% 12%, rgba(73, 99, 191, 0.14) 0%, transparent 28%),
+      radial-gradient(circle at 50% 36%, rgba(29, 46, 91, 0.2) 0%, transparent 36%),
+      radial-gradient(circle at 50% 100%, rgba(12, 22, 46, 0.5) 0%, transparent 42%),
+      linear-gradient(180deg, #0d1530 0%, #0b1430 38%, #091127 100%);
+    background-attachment: fixed;
   }
 
   #root {

@@ -340,19 +340,11 @@ export function HomePage() {
       <section className="relative isolate overflow-hidden">
         <div
           aria-hidden="true"
-          className="absolute inset-x-0 top-0 -z-10 h-[60rem] opacity-90"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 10% 12%, rgba(57, 85, 184, 0.18), transparent 22%), radial-gradient(circle at 88% 8%, rgba(111, 142, 244, 0.14), transparent 20%), radial-gradient(circle at 78% 30%, rgba(143, 160, 185, 0.12), transparent 18%)'
-          }}
+          className="absolute inset-x-0 top-0 -z-10 h-[60rem] opacity-90 bg-[radial-gradient(circle_at_10%_12%,rgba(57,85,184,0.18),transparent_22%),radial-gradient(circle_at_88%_8%,rgba(111,142,244,0.14),transparent_20%),radial-gradient(circle_at_78%_30%,rgba(143,160,185,0.12),transparent_18%)] dark:bg-[radial-gradient(circle_at_14%_10%,rgba(88,116,214,0.14),transparent_26%),radial-gradient(circle_at_84%_10%,rgba(68,97,194,0.12),transparent_24%),radial-gradient(circle_at_50%_32%,rgba(27,45,92,0.18),transparent_34%)]"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-x-0 top-0 -z-20 h-[34rem]"
-          style={{
-            background:
-              'linear-gradient(180deg, rgba(244,247,255,0.94) 0%, rgba(255,255,255,0.72) 60%, rgba(255,255,255,0) 100%)'
-          }}
+          className="absolute inset-x-0 top-0 -z-20 h-[34rem] bg-[linear-gradient(180deg,rgba(244,247,255,0.94)_0%,rgba(255,255,255,0.72)_60%,rgba(255,255,255,0)_100%)] dark:bg-[linear-gradient(180deg,rgba(11,18,40,0.96)_0%,rgba(10,17,38,0.76)_42%,rgba(9,17,39,0.18)_74%,rgba(9,17,39,0)_100%)]"
         />
 
         <div className="mx-auto max-w-[98rem] px-4 pb-14 pt-36 sm:px-6 sm:pb-18 sm:pt-40 lg:px-8 lg:pb-18 lg:pt-40">
