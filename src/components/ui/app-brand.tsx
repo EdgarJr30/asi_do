@@ -1,3 +1,5 @@
+import { useTheme } from 'next-themes'
+
 import { cn } from '@/lib/utils/cn'
 
 const BRAND_NAME = 'ASI Rep. Dominicana'
@@ -8,10 +10,12 @@ export function BrandLockup({
   decorative = false
 }: {
   className?: string
-  surface?: 'light' | 'dark'
+  surface?: 'light' | 'dark' | 'auto'
   decorative?: boolean
 }) {
-  const src = surface === 'dark' ? '/brand/asi-logo-white-transparent.png' : '/brand/asi-logo-light.png'
+  const { resolvedTheme, theme } = useTheme()
+  const activeSurface = surface === 'auto' ? ((resolvedTheme ?? theme) === 'dark' ? 'dark' : 'light') : surface
+  const src = activeSurface === 'dark' ? '/brand/asi-logo-white-transparent.png' : '/brand/asi-logo-light.png'
 
   return (
     <img

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils/cn'
 
 import { Button } from './button'
 
-export function ThemeToggle({ className }: { className?: string }) {
+export function ThemeToggle({ className, compact = false }: { className?: string; compact?: boolean }) {
   const { resolvedTheme, theme, setTheme } = useTheme()
   const isDark = (resolvedTheme ?? theme) === 'dark'
   const label = isDark ? 'Modo claro' : 'Modo oscuro'
@@ -14,13 +14,13 @@ export function ThemeToggle({ className }: { className?: string }) {
   return (
     <Button
       aria-label={label}
-      className={cn('h-12 w-12 px-0 sm:w-auto sm:px-4', className)}
+      className={cn(compact ? 'size-11 min-w-11 rounded-full px-0 sm:size-11' : 'h-12 w-12 px-0 sm:w-auto sm:px-4', className)}
       title={label}
       variant="outline"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
     >
       <Icon className="h-4 w-4 shrink-0" />
-      <span className="hidden sm:inline">{label}</span>
+      {compact ? null : <span className="hidden whitespace-nowrap sm:inline">{label}</span>}
     </Button>
   )
 }

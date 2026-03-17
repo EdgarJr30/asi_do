@@ -173,6 +173,9 @@ Do not regress public or customer-facing surfaces back to oversized hero text, i
 ### R-048 — This repository must use npm, not pnpm
 Do not suggest, document, or execute `pnpm` or `yarn` commands for this repository while `package-lock.json` remains the canonical lockfile and the repo scripts are standardized on `npm`. Use `npm install`, `npm run ...`, and related `npm` workflows unless the repository configuration is intentionally changed first.
 
+### R-049 — Mobile landing spacing must be reviewed as a first-fold system
+Do not approve customer-facing mobile landing changes by checking isolated components only. Public mobile headers, logo tiles, top actions, hero cards, and first badges/headlines must be reviewed together as one first-fold composition, preserving explicit breathing room between chrome and content, keeping mobile spacing within the shared token system, and avoiding oversized logo or header treatments that consume disproportionate vertical space.
+
 ---
 
 ## Maintenance rule

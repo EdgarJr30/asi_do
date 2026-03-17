@@ -26,7 +26,7 @@ export function Button({ className, type = 'button', variant = 'primary', ...pro
     <button
       type={type}
       className={cn(
-        'inline-flex h-11 items-center justify-center gap-2 rounded-[18px] px-4 text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-12',
+        'inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-[18px] px-4 text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-12',
         buttonVariants[variant],
         className
       )}
