@@ -1031,7 +1031,7 @@ export function HomePage() {
             <div className="relative z-10 mt-8">
               <div
                 className={cn(
-                  'flex justify-center transition-[margin,transform] duration-[640ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
+                  'tm-landing-container flex justify-center transition-[margin,transform] duration-[640ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
                   isPricingComparisonOpen ? 'relative z-20 mb-[-1px]' : ''
                 )}
               >

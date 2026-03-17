@@ -258,6 +258,17 @@
   }
 }
 
+@media (max-width: 639px) {
+  .tm-pricing-comparison-panel-shell[data-state='open'] {
+    margin-top: -1.35rem;
+  }
+
+  .tm-pricing-comparison-panel-shell[data-state='open'] .tm-pricing-comparison-panel-surface {
+    border-top-left-radius: 1.5rem;
+    border-top-right-radius: 1.5rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tm-pricing-comparison-trigger,
   .tm-pricing-comparison-panel-shell,
