@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes } from 'react'
+import type { HTMLMotionProps } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 
 import { cn } from '@/lib/utils/cn'
 
@@ -17,19 +18,26 @@ const buttonVariants: Record<ButtonVariant, string> = {
     'border border-rose-300 bg-rose-500 text-white shadow-[0_12px_26px_rgba(244,114,182,0.18)] hover:border-rose-400 hover:bg-rose-600 hover:shadow-[0_18px_34px_rgba(244,114,182,0.24)] dark:border-rose-500/30 dark:bg-rose-500/90'
 }
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends HTMLMotionProps<'button'> {
   variant?: ButtonVariant
 }
 
 export function Button({ className, type = 'button', variant = 'primary', ...props }: ButtonProps) {
+  const shouldReduceMotion = useReducedMotion()
+  const isDisabled = props.disabled ?? false
+
   return (
-    <button
+    <motion.button
+      animate={shouldReduceMotion || isDisabled ? undefined : { y: 0, scale: 1 }}
       type={type}
       className={cn(
-        'inline-flex h-11 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[18px] px-4 text-sm font-semibold transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out enabled:hover:-translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-12',
+        'inline-flex h-11 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[18px] px-4 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-12',
         buttonVariants[variant],
         className
       )}
+      transition={{ type: 'spring', stiffness: 360, damping: 24, mass: 0.7 }}
+      whileHover={shouldReduceMotion || isDisabled ? undefined : { y: -2, scale: 1.01 }}
+      whileTap={shouldReduceMotion || isDisabled ? undefined : { scale: 0.99 }}
       {...props}
     />
   )

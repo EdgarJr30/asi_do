@@ -452,6 +452,9 @@ Rules:
 3. Larger surface transitions may extend to **300ms** when needed, but should still feel responsive.
 4. Avoid decorative motion that delays task completion.
 5. Reduced-motion preferences must simplify or remove non-essential movement.
+6. Customer-facing landing sections should reveal progressively on scroll with calm opacity and vertical-offset motion, not abrupt pop-in or exaggerated parallax. Prefer soft easing and staged hierarchy so the page feels polished without turning into a presentation deck.
+7. When Motion is available, prefer Motion-driven enters, exits, layout transitions, and hover movement over CSS transition choreography for landing-page surfaces and marketing interactions. Static color, border, and state styles may remain in CSS, but the actual movement should come from Motion.
+8. Smooth scrolling should feel native and calm. Anchor or section jumps should use a soft scroll behavior by default, while reduced-motion preferences must disable that smoothing.
 
 ---
 

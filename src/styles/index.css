@@ -93,6 +93,7 @@
 
   html {
     background-color: var(--app-canvas);
+    scroll-behavior: smooth;
   }
 
   body {
@@ -147,6 +148,12 @@
   select,
   button {
     -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
 

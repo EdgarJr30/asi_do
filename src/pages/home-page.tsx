@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -26,6 +26,14 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
 
 type BillingFrequency = 'monthly' | 'annually'
+
+const landingSoftEase = [0.22, 1, 0.36, 1] as const
+const landingHoverSpring = {
+  type: 'spring',
+  stiffness: 320,
+  damping: 26,
+  mass: 0.72
+} as const
 
 const pricingComparisonLayoutTransition = {
   type: 'spring',
@@ -74,6 +82,72 @@ const pricingComparisonContentVariants = {
     }
   }
 } as const
+
+type LandingRevealProps = {
+  amount?: number
+  children: ReactNode
+  className?: string
+  delay?: number
+  y?: number
+}
+
+function LandingReveal({ amount = 0.18, children, className, delay = 0, y = 22 }: LandingRevealProps) {
+  const shouldReduceMotion = useReducedMotion()
+
+  return (
+    <motion.div
+      className={className}
+      initial={shouldReduceMotion ? false : { opacity: 0, y }}
+      transition={{ duration: 0.62, ease: landingSoftEase, delay }}
+      viewport={{ once: true, amount }}
+      whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+type LandingInteractiveSurfaceProps = LandingRevealProps & {
+  hoverScale?: number
+  hoverShadow?: string
+  hoverX?: number
+  hoverY?: number
+}
+
+function LandingInteractiveSurface({
+  amount,
+  children,
+  className,
+  delay,
+  hoverScale = 1.015,
+  hoverShadow = '0 24px 54px rgba(18, 31, 68, 0.14)',
+  hoverX = 0,
+  hoverY = -6,
+  y
+}: LandingInteractiveSurfaceProps) {
+  const shouldReduceMotion = useReducedMotion()
+
+  return (
+    <LandingReveal amount={amount} className={className} delay={delay} y={y}>
+      <motion.div
+        transition={landingHoverSpring}
+        whileHover={
+          shouldReduceMotion
+            ? undefined
+            : {
+                x: hoverX,
+                y: hoverY,
+                scale: hoverScale,
+                boxShadow: hoverShadow
+              }
+        }
+        whileTap={shouldReduceMotion ? undefined : { scale: 0.995 }}
+      >
+        {children}
+      </motion.div>
+    </LandingReveal>
+  )
+}
 
 const heroSignals = [
   {
@@ -375,6 +449,7 @@ export function HomePage() {
   const [billingFrequency, setBillingFrequency] = useState<BillingFrequency>('monthly')
   const [selectedPlanName, setSelectedPlanName] = useState<PricingPlanName>('Growth')
   const [isPricingComparisonOpen, setPricingComparisonOpen] = useState(false)
+  const [openFaqQuestion, setOpenFaqQuestion] = useState<string | null>(faqs[0]?.question ?? null)
   const [profileFeature, jobsFeature, collaborationFeature, growthFeature] = featureCards
 
   const primaryAction = session.isAuthenticated
@@ -387,7 +462,7 @@ export function HomePage() {
 
   function scrollToSection(sectionId: string) {
     const section = document.getElementById(sectionId)
-    section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    section?.scrollIntoView({ behavior: shouldReduceMotion ? 'auto' : 'smooth', block: 'start' })
   }
 
   function togglePricingComparison() {
@@ -407,7 +482,8 @@ export function HomePage() {
         />
 
         <div className="mx-auto max-w-[98rem] px-4 pb-14 pt-36 sm:px-6 sm:pb-18 sm:pt-40 lg:px-8 lg:pb-18 lg:pt-40">
-          <div className="relative overflow-hidden rounded-[32px] border border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(248,250,255,0.82)_100%)] p-5 shadow-[var(--app-shadow-floating)] backdrop-blur-xl dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(16,29,63,0.9)_0%,rgba(9,17,39,0.88)_100%)] sm:rounded-[40px] sm:p-8 xl:p-9">
+          <LandingReveal y={28}>
+            <div className="relative overflow-hidden rounded-[32px] border border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(248,250,255,0.82)_100%)] p-5 shadow-[var(--app-shadow-floating)] backdrop-blur-xl dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(16,29,63,0.9)_0%,rgba(9,17,39,0.88)_100%)] sm:rounded-[40px] sm:p-8 xl:p-9">
             <div
               aria-hidden="true"
               className="absolute inset-x-0 top-0 h-36 opacity-80"
@@ -454,12 +530,12 @@ export function HomePage() {
                     Explorar jobs
                   </Button>
                   <Button
-                    className="group w-fit justify-start self-start rounded-full px-3 text-[var(--app-text)] hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]"
+                    className="w-fit justify-start self-start rounded-full px-3 text-[var(--app-text)] hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]"
                     variant="ghost"
                     onClick={() => scrollToSection('pricing')}
                   >
                     Ver pricing
-                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                    <ArrowRight className="size-4" />
                   </Button>
                 </div>
 
@@ -468,16 +544,19 @@ export function HomePage() {
                     const Icon = signal.icon
 
                     return (
-                      <div
+                      <LandingInteractiveSurface
                         key={signal.title}
                         className="rounded-[24px] border bg-white/78 p-4 shadow-[var(--app-shadow-card)] backdrop-blur-sm dark:bg-white/6"
+                        delay={0.04}
+                        hoverScale={1.02}
+                        hoverShadow="0 24px 56px rgba(18, 31, 68, 0.12)"
                       >
                         <div className="flex size-10 items-center justify-center rounded-2xl bg-[var(--app-info-surface)]">
                           <Icon className="size-4 text-primary-700 dark:text-primary-200" />
                         </div>
                         <p className="mt-3 text-sm font-semibold text-[var(--app-text)]">{signal.title}</p>
                         <p className="mt-1 max-w-[24ch] text-sm leading-6 text-[var(--app-text-muted)]">{signal.description}</p>
-                      </div>
+                      </LandingInteractiveSurface>
                     )
                   })}
                 </div>
@@ -664,27 +743,32 @@ export function HomePage() {
                   </div>
 
                   <div className="mt-6 grid gap-3 rounded-[26px] border bg-[var(--app-surface)]/88 p-3 shadow-[var(--app-shadow-card)] sm:grid-cols-3 sm:gap-4 sm:p-4">
-                    {heroProofs.map((proof) => (
-                      <div
+                    {heroProofs.map((proof, proofIndex) => (
+                      <LandingInteractiveSurface
                         key={proof.title}
                         className="rounded-[20px] bg-[var(--app-surface-muted)]/86 px-4 py-4 text-center sm:min-h-[8.5rem] sm:px-5 sm:py-5 sm:text-left"
+                        delay={proofIndex * 0.04}
+                        hoverScale={1.01}
+                        hoverShadow="0 20px 42px rgba(18, 31, 68, 0.1)"
+                        hoverY={-4}
                       >
                         <p className="text-base font-semibold text-[var(--app-text)]">{proof.title}</p>
                         <p className="mt-2 max-w-[26ch] text-sm leading-6 text-[var(--app-text-muted)] sm:max-w-none">
                           {proof.description}
                         </p>
-                      </div>
+                      </LandingInteractiveSurface>
                     ))}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+            </div>
+          </LandingReveal>
         </div>
       </section>
 
       <section className="tm-landing-section bg-[var(--app-canvas)]" id="features">
-        <div className="mx-auto max-w-[98rem] px-4 sm:px-6 lg:px-8">
+        <LandingReveal className="mx-auto max-w-[98rem] px-4 sm:px-6 lg:px-8" y={24}>
           <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:items-stretch">
             <div className="relative">
               <div className="absolute inset-0 rounded-[32px] bg-white/72 dark:bg-white/6" />
@@ -783,7 +867,7 @@ export function HomePage() {
             </div>
 
             <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
-              <div className="relative">
+              <LandingInteractiveSurface className="relative" delay={0.04} hoverShadow="0 24px 56px rgba(18, 31, 68, 0.12)">
                 <div className="absolute inset-0 rounded-[30px] bg-white/72 dark:bg-white/6" />
                 <div className="relative flex h-full flex-col overflow-hidden rounded-[29px] border bg-[var(--app-surface)]/92 p-5 shadow-[var(--app-shadow-card)] backdrop-blur-sm sm:p-6">
                   <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[var(--app-info-surface)] shadow-[var(--app-shadow-card)]">
@@ -802,9 +886,9 @@ export function HomePage() {
                   </div>
                 </div>
                 <div className="pointer-events-none absolute inset-0 rounded-[30px] shadow-[var(--app-shadow-card)] outline outline-1 outline-black/5 dark:outline-white/10" />
-              </div>
+              </LandingInteractiveSurface>
 
-              <div className="relative">
+              <LandingInteractiveSurface className="relative" delay={0.08} hoverShadow="0 24px 56px rgba(18, 31, 68, 0.12)">
                 <div className="absolute inset-0 rounded-[30px] bg-white/72 dark:bg-white/6" />
                 <div className="relative flex h-full flex-col overflow-hidden rounded-[29px] border bg-[var(--app-surface)]/92 p-5 shadow-[var(--app-shadow-card)] backdrop-blur-sm sm:p-6">
                   <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[var(--app-info-surface)] shadow-[var(--app-shadow-card)]">
@@ -822,9 +906,9 @@ export function HomePage() {
                   </div>
                 </div>
                 <div className="pointer-events-none absolute inset-0 rounded-[30px] shadow-[var(--app-shadow-card)] outline outline-1 outline-black/5 dark:outline-white/10" />
-              </div>
+              </LandingInteractiveSurface>
 
-              <div className="relative lg:col-span-2">
+              <LandingInteractiveSurface className="relative lg:col-span-2" delay={0.12} hoverShadow="0 26px 60px rgba(18, 31, 68, 0.14)">
                 <div className="absolute inset-0 rounded-[30px] bg-white/72 dark:bg-white/6" />
                 <div className="relative flex h-full flex-col overflow-hidden rounded-[29px] border bg-[var(--app-surface)]/92 p-5 shadow-[var(--app-shadow-card)] backdrop-blur-sm sm:p-6">
                   <div className="flex flex-wrap items-start justify-between gap-4">
@@ -857,15 +941,15 @@ export function HomePage() {
                   </div>
                 </div>
                 <div className="pointer-events-none absolute inset-0 rounded-[30px] shadow-[var(--app-shadow-card)] outline outline-1 outline-black/5 dark:outline-white/10" />
-              </div>
+              </LandingInteractiveSurface>
             </div>
           </div>
-        </div>
+        </LandingReveal>
       </section>
 
       <section className="tm-landing-section-tight overflow-hidden">
         <div className="mx-auto max-w-[98rem] px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl text-left lg:max-w-[42rem]">
+          <LandingReveal className="max-w-2xl text-left lg:max-w-[42rem]" y={24}>
             <Badge className="w-fit" variant="outline">
               Valor del producto
             </Badge>
@@ -875,10 +959,10 @@ export function HomePage() {
             <p className="mt-4 max-w-[38rem] text-base leading-8 text-[var(--app-text-muted)] sm:text-lg">
               Menos explicación abstracta y más escenas claras de cómo se ve publicar, colaborar y mover procesos en la plataforma.
             </p>
-          </div>
+          </LandingReveal>
 
           <div className="mt-8 grid grid-cols-1 gap-4 sm:mt-10 sm:gap-5 lg:grid-cols-6">
-            <div className="relative lg:col-span-3">
+            <LandingInteractiveSurface className="relative lg:col-span-3" delay={0.02} hoverShadow="0 30px 68px rgba(18, 31, 68, 0.16)">
               <div className="absolute inset-0 rounded-[32px] bg-white/70 dark:bg-white/6" />
               <div className="relative overflow-hidden rounded-[31px] border bg-[var(--app-surface)]/94 shadow-[var(--app-shadow-floating)] backdrop-blur-sm">
                 <div className="relative h-72 overflow-hidden sm:h-80">
@@ -908,9 +992,9 @@ export function HomePage() {
                 </div>
               </div>
               <div className="pointer-events-none absolute inset-0 rounded-[32px] shadow-[var(--app-shadow-card)] outline outline-1 outline-black/5 dark:outline-white/10" />
-            </div>
+            </LandingInteractiveSurface>
 
-            <div className="relative lg:col-span-3">
+            <LandingInteractiveSurface className="relative lg:col-span-3" delay={0.06} hoverShadow="0 30px 68px rgba(18, 31, 68, 0.16)">
               <div className="absolute inset-0 rounded-[32px] bg-white/70 dark:bg-white/6" />
               <div className="relative overflow-hidden rounded-[31px] border bg-[var(--app-surface)]/94 shadow-[var(--app-shadow-floating)] backdrop-blur-sm">
                 <div className="relative h-72 overflow-hidden sm:h-80">
@@ -949,13 +1033,18 @@ export function HomePage() {
                 </div>
               </div>
               <div className="pointer-events-none absolute inset-0 rounded-[32px] shadow-[var(--app-shadow-card)] outline outline-1 outline-black/5 dark:outline-white/10" />
-            </div>
+            </LandingInteractiveSurface>
 
             {valueBentoCards.map((panel, panelIndex) => {
               const Icon = panel.icon
 
               return (
-                <div key={panel.title} className="relative lg:col-span-2">
+                <LandingInteractiveSurface
+                  key={panel.title}
+                  className="relative lg:col-span-2"
+                  delay={panelIndex * 0.05}
+                  hoverShadow="0 24px 56px rgba(18, 31, 68, 0.14)"
+                >
                   <div className="absolute inset-0 rounded-[30px] bg-white/70 dark:bg-white/6" />
                   <div className="relative flex h-full flex-col overflow-hidden rounded-[29px] border bg-[var(--app-surface)]/94 shadow-[var(--app-shadow-card)] backdrop-blur-sm">
                     <div className="relative h-52 overflow-hidden">
@@ -974,7 +1063,7 @@ export function HomePage() {
                     </div>
                   </div>
                   <div className="pointer-events-none absolute inset-0 rounded-[30px] shadow-[var(--app-shadow-card)] outline outline-1 outline-black/5 dark:outline-white/10" />
-                </div>
+                </LandingInteractiveSurface>
               )
             })}
           </div>
@@ -1030,7 +1119,7 @@ export function HomePage() {
 
         <div className="flow-root border-b border-b-transparent bg-transparent pt-14 pb-12 sm:pt-16 sm:pb-14 lg:pt-18 lg:pb-14">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="relative z-10">
+            <LandingReveal className="relative z-10" y={26}>
               <h2 className="mx-auto max-w-4xl text-center text-4xl font-semibold tracking-tight text-balance text-white sm:text-5xl">
                 Planes claros para empezar, crecer y acompañar tu proceso de contratación
               </h2>
@@ -1040,17 +1129,25 @@ export function HomePage() {
 
               <div className="mt-8 flex justify-center">
                 <fieldset aria-label="Frecuencia de pago">
-                  <div className="grid grid-cols-2 gap-x-1 rounded-full bg-white/8 p-1 text-center text-xs font-semibold text-white">
+                  <div className="relative grid grid-cols-2 gap-x-1 rounded-full bg-white/8 p-1 text-center text-xs font-semibold text-white">
                     {billingFrequencies.map((frequency) => (
                       <label
                         key={frequency.value}
                         className={cn(
-                          'cursor-pointer rounded-full px-3 py-2 transition',
+                          'relative cursor-pointer rounded-full px-3 py-2',
                           billingFrequency === frequency.value
-                            ? 'bg-primary-500 text-white'
+                            ? 'text-white'
                             : 'text-white/72 hover:bg-white/10 hover:text-white'
                         )}
                       >
+                        {billingFrequency === frequency.value ? (
+                          <motion.span
+                            aria-hidden="true"
+                            className="absolute inset-0 rounded-full bg-primary-500"
+                            layoutId="billing-frequency-pill"
+                            transition={landingHoverSpring}
+                          />
+                        ) : null}
                         <input
                           checked={billingFrequency === frequency.value}
                           className="sr-only"
@@ -1059,13 +1156,13 @@ export function HomePage() {
                           value={frequency.value}
                           onChange={() => setBillingFrequency(frequency.value)}
                         />
-                        {frequency.label}
+                        <span className="relative z-10">{frequency.label}</span>
                       </label>
                     ))}
                   </div>
                 </fieldset>
               </div>
-            </div>
+            </LandingReveal>
 
             <div className="relative z-10 mx-auto mt-8 grid max-w-md grid-cols-1 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-6">
               <div
@@ -1081,22 +1178,44 @@ export function HomePage() {
                 const isSelected = selectedPlanName === plan.name
 
                 return (
-                  <div
+                  <LandingReveal key={plan.name} amount={0.12} delay={0.04} y={26}>
+                    <motion.div
                     key={plan.name}
                     className={cn(
-                      'relative cursor-pointer rounded-[28px] border p-8 transition duration-300 ease-out xl:p-10',
+                      'relative cursor-pointer rounded-[28px] border p-8 xl:p-10',
                       isSelected
-                        ? 'z-20 -translate-y-3 scale-[1.02] border-primary-200/80 bg-white shadow-[0_38px_110px_rgba(18,31,68,0.28)] ring-1 ring-primary-300 hover:shadow-[0_42px_118px_rgba(18,31,68,0.32)] lg:-translate-y-6 dark:border-primary-300/40 dark:bg-[linear-gradient(180deg,rgba(245,248,255,0.98)_0%,rgba(232,240,255,0.96)_100%)]'
-                        : 'border-white/10 bg-white/7 text-white shadow-[0_20px_48px_rgba(0,0,0,0.22)] backdrop-blur-md hover:-translate-y-2 hover:border-white/18 hover:bg-white/10 hover:shadow-[0_28px_68px_rgba(0,0,0,0.28)] dark:border-white/10 dark:bg-white/6 dark:hover:bg-white/10'
+                        ? 'z-20 border-primary-200/80 bg-white ring-1 ring-primary-300 dark:border-primary-300/40 dark:bg-[linear-gradient(180deg,rgba(245,248,255,0.98)_0%,rgba(232,240,255,0.96)_100%)]'
+                        : 'border-white/10 bg-white/7 text-white backdrop-blur-md hover:border-white/18 hover:bg-white/10 dark:border-white/10 dark:bg-white/6 dark:hover:bg-white/10'
                     )}
+                    animate={
+                      shouldReduceMotion
+                        ? undefined
+                        : {
+                            y: isSelected ? -18 : 0,
+                            scale: isSelected ? 1.02 : 1,
+                            boxShadow: isSelected
+                              ? '0 38px 110px rgba(18, 31, 68, 0.28)'
+                              : '0 20px 48px rgba(0, 0, 0, 0.22)'
+                          }
+                    }
+                    transition={landingHoverSpring}
+                    whileHover={
+                      shouldReduceMotion
+                        ? undefined
+                        : isSelected
+                          ? { y: -20, boxShadow: '0 42px 118px rgba(18, 31, 68, 0.32)' }
+                          : { y: -8, boxShadow: '0 28px 68px rgba(0, 0, 0, 0.28)' }
+                    }
                     onClick={() => setSelectedPlanName(plan.name)}
                   >
-                    <div
+                    <motion.div
                       aria-hidden="true"
                       className={cn(
-                        'pointer-events-none absolute inset-x-8 -bottom-5 h-8 rounded-full blur-2xl transition duration-300',
+                        'pointer-events-none absolute inset-x-8 -bottom-5 h-8 rounded-full blur-2xl',
                         isSelected ? 'bg-primary-500/30 opacity-100' : 'opacity-0'
                       )}
+                      animate={shouldReduceMotion ? undefined : { opacity: isSelected ? 1 : 0, scale: isSelected ? 1 : 0.8 }}
+                      transition={landingHoverSpring}
                     />
 
                     <div className="flex items-center justify-between gap-3">
@@ -1173,7 +1292,8 @@ export function HomePage() {
                     >
                       {plan.cta}
                     </Button>
-                  </div>
+                    </motion.div>
+                  </LandingReveal>
                 )
               })}
             </div>
@@ -1463,12 +1583,23 @@ export function HomePage() {
                                           const isSelected = selectedPlanName === plan.name
 
                                           return (
-                                            <div
+                                            <motion.div
                                               key={plan.name}
                                               className={cn(
-                                                'rounded-[24px] transition duration-300',
+                                                'rounded-[24px]',
                                                 isSelected ? 'ring-2 ring-primary-500 shadow-[0_22px_48px_rgba(79,110,216,0.14)]' : 'ring-1 ring-[var(--app-border)]'
                                               )}
+                                              animate={
+                                                shouldReduceMotion
+                                                  ? undefined
+                                                  : {
+                                                      scale: isSelected ? 1.01 : 1,
+                                                      boxShadow: isSelected
+                                                        ? '0 22px 48px rgba(79, 110, 216, 0.14)'
+                                                        : '0 0 0 rgba(79, 110, 216, 0)'
+                                                    }
+                                              }
+                                              transition={landingHoverSpring}
                                             />
                                           )
                                         })}
@@ -1531,7 +1662,7 @@ export function HomePage() {
       </section>
 
       <section className="tm-landing-section bg-[var(--app-canvas)]" id="faq">
-        <div className="tm-landing-container">
+        <LandingReveal className="tm-landing-container" y={22}>
           <div className="mx-auto max-w-4xl">
             <div className="flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-2xl bg-[var(--app-info-surface)]">
@@ -1542,27 +1673,50 @@ export function HomePage() {
             <h2 className="mt-5 text-3xl font-semibold tracking-tight text-[var(--app-text)] sm:text-4xl">
               Preguntas frecuentes
             </h2>
-            <dl className="mt-10 divide-y">
+            <dl className="mt-12 divide-y">
               {faqs.map((faq) => (
-                <details key={faq.question} className="group py-6 first:pt-0 last:pb-0">
-                  <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-left text-[var(--app-text)] transition hover:text-primary-700 dark:hover:text-primary-200">
-                    <span className="text-base font-semibold leading-7">{faq.question}</span>
-                    <span className="flex h-7 items-center">
-                      <span className="flex size-7 items-center justify-center rounded-full border bg-[var(--app-surface)] text-[var(--app-text-muted)] transition group-open:rotate-45">
-                        +
-                      </span>
-                    </span>
-                  </summary>
-                  <p className="mt-3 max-w-3xl pr-8 text-base leading-7 text-[var(--app-text-muted)]">{faq.answer}</p>
-                </details>
+                <LandingReveal key={faq.question} amount={0.08} y={18}>
+                  <div className="py-7 first:pt-0 last:pb-0 sm:py-8">
+                    <motion.button
+                      className="flex w-full cursor-pointer items-start justify-between gap-8 rounded-[24px] px-1 py-2 text-left text-[var(--app-text)] hover:text-primary-700 dark:hover:text-primary-200 sm:py-3"
+                      transition={landingHoverSpring}
+                      type="button"
+                      whileHover={shouldReduceMotion ? undefined : { x: 2 }}
+                      onClick={() =>
+                        setOpenFaqQuestion((currentQuestion) => (currentQuestion === faq.question ? null : faq.question))
+                      }
+                    >
+                      <span className="text-base font-semibold leading-7">{faq.question}</span>
+                      <motion.span className="flex h-7 items-center" animate={shouldReduceMotion ? undefined : { rotate: openFaqQuestion === faq.question ? 45 : 0 }}>
+                        <span className="flex size-7 items-center justify-center rounded-full border bg-[var(--app-surface)] text-[var(--app-text-muted)]">
+                          +
+                        </span>
+                      </motion.span>
+                    </motion.button>
+                    <AnimatePresence initial={false}>
+                      {openFaqQuestion === faq.question ? (
+                        <motion.p
+                          key={`${faq.question}-answer`}
+                          className="max-w-3xl pr-8 pt-4 text-base leading-7 text-[var(--app-text-muted)]"
+                          exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, height: 0, y: -8 }}
+                          initial={shouldReduceMotion ? false : { opacity: 0, height: 0, y: -8 }}
+                          transition={{ duration: 0.3, ease: landingSoftEase }}
+                          animate={shouldReduceMotion ? { opacity: 1, height: 'auto' } : { opacity: 1, height: 'auto', y: 0 }}
+                        >
+                          {faq.answer}
+                        </motion.p>
+                      ) : null}
+                    </AnimatePresence>
+                  </div>
+                </LandingReveal>
               ))}
             </dl>
           </div>
-        </div>
+        </LandingReveal>
       </section>
 
       <section className="tm-landing-section overflow-hidden">
-        <div className="tm-landing-container">
+        <LandingReveal className="tm-landing-container" y={24}>
           <div className="relative rounded-[36px] border bg-[var(--app-surface)] px-6 py-8 shadow-[var(--app-shadow-floating)] sm:px-8 sm:py-10 lg:px-12 lg:py-12">
             <div
               aria-hidden="true"
@@ -1595,47 +1749,60 @@ export function HomePage() {
               </div>
             </div>
           </div>
-        </div>
+        </LandingReveal>
       </section>
 
       <footer className="border-t bg-[var(--app-canvas)]">
-        <div className="mx-auto max-w-7xl overflow-hidden px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
+        <LandingReveal className="mx-auto max-w-7xl overflow-hidden px-4 py-12 sm:px-6 sm:py-14 lg:px-8" y={18}>
           <nav aria-label="Footer" className="-mb-6 flex flex-wrap justify-center gap-x-10 gap-y-3 text-sm leading-6">
             {footerNavigation.map((item) =>
               'section' in item ? (
-                <button
+                <motion.button
                   key={item.label}
-                  className="cursor-pointer rounded-full px-3 py-1.5 text-[var(--app-text-muted)] transition-[transform,background-color,color,box-shadow] duration-200 ease-out hover:-translate-y-px hover:bg-[var(--app-surface)] hover:text-[var(--app-text)] hover:shadow-[var(--app-shadow-card)]"
+                  className="cursor-pointer rounded-full px-3 py-1.5 text-[var(--app-text-muted)] hover:bg-[var(--app-surface)] hover:text-[var(--app-text)] hover:shadow-[var(--app-shadow-card)]"
+                  transition={landingHoverSpring}
                   type="button"
+                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
                   onClick={() => scrollToSection(item.section)}
                 >
                   {item.label}
-                </button>
+                </motion.button>
               ) : (
-                <button
+                <motion.button
                   key={item.label}
-                  className="cursor-pointer rounded-full px-3 py-1.5 text-[var(--app-text-muted)] transition-[transform,background-color,color,box-shadow] duration-200 ease-out hover:-translate-y-px hover:bg-[var(--app-surface)] hover:text-[var(--app-text)] hover:shadow-[var(--app-shadow-card)]"
+                  className="cursor-pointer rounded-full px-3 py-1.5 text-[var(--app-text-muted)] hover:bg-[var(--app-surface)] hover:text-[var(--app-text)] hover:shadow-[var(--app-shadow-card)]"
+                  transition={landingHoverSpring}
                   type="button"
+                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
                   onClick={() => void navigate(item.route)}
                 >
                   {item.label}
-                </button>
+                </motion.button>
               )
             )}
           </nav>
 
           <div className="mt-12 flex flex-wrap justify-center gap-4">
-            {footerSignals.map((item) => {
+            {footerSignals.map((item, index) => {
               const Icon = item.icon
 
               return (
-                <div
+                <LandingInteractiveSurface
                   key={item.label}
-                  className="inline-flex items-center gap-2 rounded-full border bg-[var(--app-surface)] px-4 py-2 text-sm text-[var(--app-text-muted)] shadow-[var(--app-shadow-card)]"
+                  className="inline-flex"
+                  delay={index * 0.03}
+                  hoverScale={1.01}
+                  hoverY={-3}
                 >
-                  <Icon className="size-4 text-primary-600 dark:text-primary-300" />
-                  {item.label}
-                </div>
+                  <div className="inline-flex items-center gap-3 rounded-full border border-white/8 bg-[var(--app-surface)] px-4 py-2.5 text-sm text-[var(--app-text-muted)] shadow-[var(--app-shadow-card)]">
+                    <span className="flex size-7 items-center justify-center rounded-full bg-primary-500/10 ring-1 ring-inset ring-primary-300/14">
+                      <Icon className="size-3.5 text-primary-300" />
+                    </span>
+                    <span className="leading-6">{item.label}</span>
+                  </div>
+                </LandingInteractiveSurface>
               )
             })}
           </div>
@@ -1644,7 +1811,7 @@ export function HomePage() {
             &copy; {footerYear} ASI Rep. Dominicana. Vacantes públicas, perfiles reutilizables y trabajo en equipo en
             una experiencia de hiring mucho más clara.
           </p>
-        </div>
+        </LandingReveal>
       </footer>
     </div>
   )
