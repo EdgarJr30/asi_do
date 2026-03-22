@@ -1,8 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { surfacePaths } from '@/app/router/surface-paths'
-import { getAuthRedirectUrl } from '@/features/auth/lib/auth-api'
 import { resolveAuthCallback, sanitizeNextPath } from '@/features/auth/lib/auth-callback'
+
+afterEach(() => {
+  vi.unstubAllEnvs()
+  vi.resetModules()
+})
 
 describe('auth callback helpers', () => {
   it('defaults to onboarding when next is missing or unsafe', () => {
@@ -28,7 +32,12 @@ describe('auth callback helpers', () => {
     })
   })
 
-  it('builds the auth redirect URL without localhost when a public auth site URL is configured', () => {
+  it('builds the auth redirect URL without localhost when a public auth site URL is configured', async () => {
+    vi.stubEnv('VITE_AUTH_SITE_URL', 'https://asi-do.netlify.app')
+    vi.stubEnv('APP_URL', 'https://asi-do.netlify.app')
+
+    const { getAuthRedirectUrl } = await import('@/features/auth/lib/auth-api')
+
     expect(getAuthRedirectUrl()).toBe('https://asi-do.netlify.app/auth/confirm')
   })
 })

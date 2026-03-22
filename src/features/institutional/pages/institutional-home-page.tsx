@@ -144,7 +144,7 @@ export function InstitutionalHomePage() {
       <InstitutionalSection className="!pt-0 !pb-0">
         <div className="space-y-8 sm:space-y-10">
           <motion.div
-            className="asi-gesture-surface relative -mx-5 overflow-hidden rounded-[2rem] bg-[var(--asi-primary)] shadow-[var(--asi-shadow-strong)] sm:-mx-7 sm:rounded-[2.4rem] lg:-mx-10 xl:-mx-14"
+            className="asi-gesture-surface relative overflow-hidden rounded-[2rem] bg-[var(--asi-primary)] shadow-[var(--asi-shadow-strong)] sm:-mx-7 sm:rounded-[2.4rem] lg:-mx-10 xl:-mx-14"
             initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
             transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
             whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}

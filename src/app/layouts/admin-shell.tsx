@@ -19,7 +19,7 @@ export function AdminShell({ fallbackContent }: { fallbackContent?: ReactNode })
   const currentItem = visibleNavigation.find((item) => item.href === location.pathname)
 
   return (
-    <div className="tm-shell">
+    <div className="tm-shell overflow-x-clip">
       <div className="mx-auto flex min-h-screen max-w-[1420px] gap-6 px-4 pb-16 pt-4 sm:px-6 lg:px-8">
         <AppSidebarNav
           activeHref={location.pathname}
@@ -36,7 +36,7 @@ export function AdminShell({ fallbackContent }: { fallbackContent?: ReactNode })
           onNavigate={(href) => void navigate(href)}
         />
 
-        <div className="flex min-h-screen flex-1 flex-col gap-5">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col gap-5">
           <header className="tm-shell-panel sticky top-4 z-20 rounded-[24px]">
             <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-1">
@@ -63,7 +63,7 @@ export function AdminShell({ fallbackContent }: { fallbackContent?: ReactNode })
             </div>
           </header>
 
-          <main className="flex-1">
+          <main className="min-w-0 flex-1">
             {fallbackContent ?? <Outlet />}
           </main>
         </div>

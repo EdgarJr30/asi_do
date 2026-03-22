@@ -183,7 +183,7 @@ export function AppWorkspaceSidebarDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden">
+    <div className="fixed inset-0 z-50 overflow-x-hidden lg:hidden">
       <button
         aria-label="Cerrar navegacion del workspace"
         className="absolute inset-0 bg-slate-900/80"
@@ -191,10 +191,10 @@ export function AppWorkspaceSidebarDrawer({
         onClick={onClose}
       />
 
-      <div className="fixed inset-0 flex">
-        <div className="relative mr-16 flex w-full max-w-xs flex-1">
-          <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
-            <button className="-m-2.5 p-2.5 text-white" type="button" onClick={onClose}>
+      <div className="fixed inset-y-0 left-0 flex w-full max-w-xs">
+        <div className="relative flex min-w-0 flex-1">
+          <div className="absolute right-3 top-3 z-10 flex justify-center">
+            <button className="rounded-full bg-slate-900/80 p-2.5 text-white shadow-lg" type="button" onClick={onClose}>
               <span className="sr-only">Cerrar sidebar</span>
               <X className="size-6" />
             </button>

@@ -51,7 +51,7 @@ export function InstitutionalShell() {
   }, [location.pathname])
 
   return (
-    <div className="asi-site min-h-screen">
+    <div className="asi-site min-h-screen overflow-x-clip">
       <motion.header
         className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 lg:px-6"
         initial={shouldReduceMotion ? false : { opacity: 0, y: -18 }}
@@ -211,7 +211,7 @@ export function InstitutionalShell() {
         ) : null}
       </AnimatePresence>
 
-      <main className="pt-[8.3rem] sm:pt-[8rem] lg:pt-[8.6rem]">
+      <main className="min-w-0 pt-[8.3rem] sm:pt-[8rem] lg:pt-[8.6rem]">
         <Outlet />
       </main>
 

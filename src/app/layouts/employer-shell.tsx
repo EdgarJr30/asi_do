@@ -377,7 +377,7 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
   }
 
   return (
-    <div className="tm-shell min-h-screen bg-white dark:bg-slate-900">
+    <div className="tm-shell min-h-screen overflow-x-clip bg-white dark:bg-slate-900">
       <AppWorkspaceSidebar
         activeHref={location.pathname}
         brand="ASI para equipos"
@@ -398,7 +398,7 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
         tenantName={tenantName}
       />
 
-      <div className="lg:pl-72">
+      <div className="min-w-0 lg:pl-72">
         <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-slate-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8 dark:border-white/10 dark:bg-slate-900 dark:shadow-none">
           <button
             aria-label="Abrir sidebar del workspace"
@@ -411,7 +411,7 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
 
           <div aria-hidden="true" className="h-6 w-px bg-slate-200 lg:hidden dark:bg-white/10" />
 
-          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+          <div className="flex min-w-0 flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="grid flex-1 grid-cols-1">
               <input
                 aria-label="Buscar en el workspace"
@@ -530,8 +530,8 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
           </div>
         </header>
 
-        <main className="py-8">
-          <div className="px-4 sm:px-6 lg:px-8">
+        <main className="min-w-0 py-8">
+          <div className="min-w-0 px-4 sm:px-6 lg:px-8">
             {fallbackContent ?? <Outlet />}
           </div>
         </main>

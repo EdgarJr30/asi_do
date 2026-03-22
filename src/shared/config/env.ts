@@ -1,10 +1,34 @@
+function readEnvValue(...candidates: Array<string | undefined>) {
+  for (const candidate of candidates) {
+    const normalized = candidate?.trim()
+
+    if (normalized) {
+      return normalized
+    }
+  }
+
+  return undefined
+}
+
+function readProcessEnv(key: string) {
+  if (typeof process === 'undefined') {
+    return undefined
+  }
+
+  return process.env[key]
+}
+
 export const env = {
-  appName: import.meta.env.VITE_APP_NAME?.trim() || 'ASI Rep. Dominicana',
-  authSiteUrl: import.meta.env.VITE_AUTH_SITE_URL?.trim(),
-  supabaseUrl: import.meta.env.VITE_SUPABASE_URL?.trim(),
-  supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY?.trim(),
-  webPushPublicKey: import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY?.trim(),
-  mode: import.meta.env.MODE
+  appName: readEnvValue(import.meta.env.VITE_APP_NAME, readProcessEnv('VITE_APP_NAME')) || 'ASI Rep. Dominicana',
+  authSiteUrl: readEnvValue(
+    import.meta.env.VITE_AUTH_SITE_URL,
+    readProcessEnv('VITE_AUTH_SITE_URL'),
+    readProcessEnv('APP_URL')
+  ),
+  supabaseUrl: readEnvValue(import.meta.env.VITE_SUPABASE_URL, readProcessEnv('VITE_SUPABASE_URL')),
+  supabaseAnonKey: readEnvValue(import.meta.env.VITE_SUPABASE_ANON_KEY, readProcessEnv('VITE_SUPABASE_ANON_KEY')),
+  webPushPublicKey: readEnvValue(import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY, readProcessEnv('VITE_WEB_PUSH_PUBLIC_KEY')),
+  mode: readEnvValue(import.meta.env.MODE, readProcessEnv('MODE'))
 }
 
 export function getSupabaseConfig(): { supabaseUrl: string; supabaseAnonKey: string } | null {

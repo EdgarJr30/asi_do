@@ -94,6 +94,7 @@
   html {
     background-color: var(--app-canvas);
     scroll-behavior: smooth;
+    overflow-x: clip;
   }
 
   body {
@@ -104,6 +105,7 @@
     line-height: 1.5;
     background-color: var(--app-canvas);
     background-image: none;
+    overflow-x: clip;
   }
 
   .dark body {
@@ -119,6 +121,7 @@
 
   #root {
     @apply min-h-screen;
+    overflow-x: clip;
   }
 
   a {
