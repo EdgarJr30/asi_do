@@ -61,6 +61,7 @@ export type InstitutionalMediaSlide = {
   imageAlt: string
   primaryAction: InstitutionalAction
   secondaryAction: InstitutionalAction
+  contentMode?: 'default' | 'image-only'
 }
 
 export type InstitutionalStat = {
@@ -165,6 +166,23 @@ export const homeHeroMetrics: InstitutionalStat[] = [
 ] as const
 
 export const homeHeroSlides: InstitutionalMediaSlide[] = [
+  {
+    title: 'Convención ASI 2026',
+    description: '',
+    image: '/media/2026-asi-convention.jpg',
+    imageAlt: 'Convención ASI 2026',
+    primaryAction: {
+      label: 'Únete ahora',
+      to: surfacePaths.institutional.membership,
+      variant: 'primary'
+    },
+    secondaryAction: {
+      label: 'Nuestra misión',
+      to: surfacePaths.institutional.whoWeAre,
+      variant: 'secondary'
+    },
+    contentMode: 'image-only'
+  },
   {
     title: 'Fe en el mercado, servicio en la misión.',
     description: 'Uniendo a profesionales laicos para servir a la comunidad con integridad, propósito y visión compartida.',
