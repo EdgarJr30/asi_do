@@ -1,0 +1,73 @@
+project_id = "talent-marketplace-saas"
+
+[storage]
+enabled = true
+file_size_limit = "5MiB"
+
+[storage.s3_protocol]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "https://asi-do.netlify.app"
+additional_redirect_urls = [
+  "https://asi-do.netlify.app/auth/confirm",
+  "https://asi-do.netlify.app/auth/sign-in",
+  "https://asi-do.netlify.app/candidate/onboarding",
+  "https://asi-do.netlify.app/candidate/profile"
+]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+minimum_password_length = 6
+password_requirements = ""
+
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.mfa.phone]
+enroll_enabled = false
+verify_enabled = false
+otp_length = 6
+template = "Your code is {{ .Code }}"
+max_frequency = "5s"
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+secure_password_change = false
+max_frequency = "1m0s"
+otp_length = 8
+otp_expiry = 3600
+
+[auth.email.template.confirmation]
+subject = "Confirma tu cuenta en ASI"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.invite]
+subject = "Tu acceso a ASI ya esta listo"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.magic_link]
+subject = "Accede a ASI con tu enlace seguro"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.recovery]
+subject = "Restablece tu acceso a ASI"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = "Confirma el cambio de tu correo"
+content_path = "./supabase/templates/email_change.html"
+
+[auth.email.template.reauthentication]
+subject = "Codigo de verificacion de seguridad"
+content_path = "./supabase/templates/reauthentication.html"

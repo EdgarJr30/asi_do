@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { surfacePaths } from '@/app/router/surface-paths'
+import { getAuthRedirectUrl } from '@/features/auth/lib/auth-api'
 import { resolveAuthCallback, sanitizeNextPath } from '@/features/auth/lib/auth-callback'
 
 describe('auth callback helpers', () => {
@@ -25,5 +26,9 @@ describe('auth callback helpers', () => {
       type: 'email',
       nextPath: surfacePaths.candidate.onboarding
     })
+  })
+
+  it('builds the auth redirect URL without localhost when a public auth site URL is configured', () => {
+    expect(getAuthRedirectUrl()).toBe('https://asi-do.netlify.app/auth/confirm')
   })
 })

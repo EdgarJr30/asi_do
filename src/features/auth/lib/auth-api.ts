@@ -4,6 +4,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { MAX_UPLOAD_SIZE_BYTES, formatFileSize } from '@/lib/uploads/media'
 import { toErrorMessage } from '@/lib/errors/error-utils'
 import { supabase } from '@/lib/supabase/client'
+import { env } from '@/shared/config/env'
 import { isPermissionCode, type PermissionCode } from '@/shared/constants/permissions'
 import type { Tables } from '@/shared/types/database'
 
@@ -104,13 +105,18 @@ function normalizeStorageUploadErrorMessage(file: File, errorMessage: string) {
   return errorMessage
 }
 
-function getAuthRedirectUrl(nextPath = surfacePaths.candidate.onboarding) {
-  if (typeof window === 'undefined') {
+export function getAuthRedirectUrl(nextPath = surfacePaths.candidate.onboarding) {
+  const originCandidate = env.authSiteUrl || (typeof window !== 'undefined' ? window.location.origin : null)
+
+  if (!originCandidate) {
     return undefined
   }
 
-  const redirectUrl = new URL(surfacePaths.auth.confirm, window.location.origin)
-  redirectUrl.searchParams.set('next', nextPath)
+  const redirectUrl = new URL(surfacePaths.auth.confirm, originCandidate)
+
+  if (nextPath !== surfacePaths.candidate.onboarding) {
+    redirectUrl.searchParams.set('next', nextPath)
+  }
 
   return redirectUrl.toString()
 }
