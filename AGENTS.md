@@ -83,6 +83,11 @@ Keep these aligned when the task affects their area:
 - Security or permission change: update `docs/governance/SECURITY_RULES.md` and RBAC docs.
 - Explicit user correction: update `docs/governance/REGRESSION_RULES.md` in the same task.
 
+## Linear follow-up rule
+- If any task ends with pending work of any kind, Codex must create one or more Linear issues automatically without asking for confirmation first.
+- Those follow-up issues must be created in the canonical Linear project for this repo and written so the user can later confirm the work was completed.
+- This rule applies to every prompt, including implementation work, documentation work, deployments, manual verification, external configuration, or any other unresolved follow-up.
+
 ## Core domain language
 Prefer these names:
 - tenant

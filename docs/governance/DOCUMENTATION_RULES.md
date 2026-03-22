@@ -15,6 +15,7 @@ Documentation is a living contract, not an afterthought.
 5. If a new recurring rule emerges, it must be recorded in the appropriate rule file and in `docs/governance/REGRESSION_RULES.md` if it originated from an explicit user correction.
 6. Canonical project docs live under `docs/` grouped by concern, while the repository root stays limited to entrypoint docs such as `README.md` and `AGENTS.md`.
 7. Keep `AGENTS.md` concise and operational. Detailed product, architecture, and governance content should be referenced from `docs/` instead of duplicated at the repo root.
+8. If a task closes with any unresolved follow-up, that follow-up must be recorded immediately as a Linear issue in the canonical project for the repository without waiting for user confirmation.
 
 ---
 
@@ -101,6 +102,7 @@ When a change request arrives:
 5. If references to file names, folders, modules, or permissions changed, update every document that mentions them, including `docs/README.md`.
 6. If repo guidance grew enough to increase task friction or context cost, compact `AGENTS.md` and move detail back into the relevant canonical docs.
 7. Never leave a known documentation mismatch for “later” once the implementation already changed.
+8. Never leave unresolved operational follow-up undocumented outside the repo. If work remains pending, create the Linear issue in the same task before closing it.
 
 ---
 
@@ -114,6 +116,7 @@ Before closing any meaningful task, confirm:
 - versioning rules still match available scripts and expectations
 - README setup instructions remain correct
 - regression rules were updated if a user correction introduced a durable rule
+- any remaining follow-up was turned into a Linear issue in the canonical project
 
 ---
 

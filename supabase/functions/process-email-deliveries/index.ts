@@ -56,31 +56,270 @@ function normalizeActionUrl(actionUrl: string | null | undefined, appUrl: string
   return `${appUrl.replace(/\/+$/, '')}/${actionUrl.replace(/^\/+/, '')}`
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+}
+
+function formatHtmlParagraphs(value: string) {
+  return escapeHtml(value)
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p style="margin:0 0 16px; font-size:16px; line-height:1.7; color:#586680;">${paragraph.replaceAll('\n', '<br />')}</p>`)
+    .join('')
+}
+
+function getEmailTheme(type: string) {
+  if (type === 'application.submitted') {
+    return {
+      eyebrow: 'Nuevo talento en revisión',
+      accent: '#4f6ed8',
+      accentSoft: '#eef3ff',
+      accentBorder: '#dfe7ff',
+      badgeLabel: 'Applicant recibido',
+      actionLabel: 'Revisar aplicaciones',
+      summaryTitle: 'Qué sucede ahora',
+      summaryItems: [
+        'Accede al panel para revisar el perfil y el CV del candidato.',
+        'Mantén el proceso claro actualizando etapas y feedback en la plataforma.'
+      ],
+      supportTitle: 'Flujo recomendado',
+      supportBody: 'Mantén el seguimiento dentro del workspace para conservar contexto, trazabilidad y colaboración del equipo.'
+    }
+  }
+
+  if (type === 'application.status_updated') {
+    return {
+      eyebrow: 'Actualización de tu proceso',
+      accent: '#3955b8',
+      accentSoft: '#eef4ff',
+      accentBorder: '#d5e0ff',
+      badgeLabel: 'Estado actualizado',
+      actionLabel: 'Ver mi aplicación',
+      summaryTitle: 'Tu siguiente paso',
+      summaryItems: [
+        'Consulta el estado más reciente y cualquier instrucción nueva del equipo.',
+        'Mantén tu perfil y documentos al día para responder con rapidez.'
+      ],
+      supportTitle: 'Seguimiento centralizado',
+      supportBody: 'Tus cambios de proceso llegan también a tu centro de notificaciones para que no pierdas continuidad.'
+    }
+  }
+
+  if (type === 'recruiter_request.reviewed') {
+    return {
+      eyebrow: 'Revisión de acceso employer',
+      accent: '#2b418f',
+      accentSoft: '#f4f7ff',
+      accentBorder: '#dfe7ff',
+      badgeLabel: 'Solicitud revisada',
+      actionLabel: 'Abrir solicitud',
+      summaryTitle: 'Próximo paso',
+      summaryItems: [
+        'Revisa el resultado de la validación y cualquier nota que haya dejado el equipo.',
+        'Si fue aprobada, ya puedes continuar la configuración del workspace employer.'
+      ],
+      supportTitle: 'Acceso gobernado',
+      supportBody: 'Este flujo protege el entorno multi-tenant y garantiza que cada workspace mantenga permisos y trazabilidad correctos.'
+    }
+  }
+
+  return {
+    eyebrow: 'Notificación oficial',
+    accent: '#4f6ed8',
+    accentSoft: '#eef3ff',
+    accentBorder: '#dfe7ff',
+    badgeLabel: 'Notificación',
+    actionLabel: 'Abrir en la app',
+    summaryTitle: 'Qué puedes hacer',
+    summaryItems: [
+      'Abre la plataforma para revisar el detalle completo de esta actualización.',
+      'Continúa el flujo desde la app para mantener el contexto y la trazabilidad.'
+    ],
+    supportTitle: 'Experiencia unificada',
+    supportBody: 'Todas las notificaciones del sistema se diseñan para conservar claridad, seguimiento y continuidad entre email e inbox.'
+  }
+}
+
 function buildEmailContent(input: {
   appUrl: string
+  type: string
   title: string
   body: string
   actionUrl: string | null
   recipientName: string
 }) {
   const ctaUrl = normalizeActionUrl(input.actionUrl, input.appUrl)
-  const text = `${input.title}\n\n${input.body}\n\nAbrir: ${ctaUrl}`
+  const theme = getEmailTheme(input.type)
+  const escapedTitle = escapeHtml(input.title)
+  const escapedRecipientName = escapeHtml(input.recipientName)
+  const escapedCtaUrl = escapeHtml(ctaUrl)
+  const escapedEyebrow = escapeHtml(theme.eyebrow)
+  const escapedBadgeLabel = escapeHtml(theme.badgeLabel)
+  const escapedSummaryTitle = escapeHtml(theme.summaryTitle)
+  const escapedSupportTitle = escapeHtml(theme.supportTitle)
+  const escapedSupportBody = escapeHtml(theme.supportBody)
+  const escapedActionLabel = escapeHtml(theme.actionLabel)
+  const logoUrl = `${input.appUrl.replace(/\/+$/, '')}/brand/asi-logo-light.png`
+  const contentHtml = formatHtmlParagraphs(input.body)
+  const summaryItemsHtml = theme.summaryItems
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding:0 0 12px; vertical-align:top;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:999px; background:${theme.accent}; margin-top:9px;"></span>
+          </td>
+          <td style="padding:0 0 12px 12px; font-size:15px; line-height:1.7; color:#586680;">
+            ${escapeHtml(item)}
+          </td>
+        </tr>
+      `.trim()
+    )
+    .join('')
+  const text = [
+    'ASI Rep. Dominicana',
+    '',
+    theme.eyebrow,
+    input.title,
+    '',
+    `Hola ${input.recipientName},`,
+    '',
+    input.body,
+    '',
+    `${theme.summaryTitle}:`,
+    ...theme.summaryItems.map((item) => `- ${item}`),
+    '',
+    `${theme.actionLabel}: ${ctaUrl}`,
+    '',
+    `${theme.supportTitle}: ${theme.supportBody}`
+  ].join('\n')
   const html = `
-    <div style="font-family: Manrope, Arial, sans-serif; background:#f5f7fb; padding:24px;">
-      <div style="max-width:560px; margin:0 auto; background:#ffffff; border-radius:20px; padding:32px; color:#111827; border:1px solid #e5e7eb;">
-        <p style="margin:0 0 12px; font-size:14px; letter-spacing:0.18em; text-transform:uppercase; color:#64748b;">
-          Talent Marketplace SaaS
-        </p>
-        <h1 style="margin:0 0 16px; font-size:28px; line-height:1.15;">${input.title}</h1>
-        <p style="margin:0 0 12px; font-size:16px; line-height:1.6;">Hola ${input.recipientName},</p>
-        <p style="margin:0 0 24px; font-size:16px; line-height:1.6;">${input.body}</p>
-        <a href="${ctaUrl}" style="display:inline-block; border-radius:999px; background:#10b981; color:#ffffff; text-decoration:none; padding:14px 22px; font-weight:700;">
-          Abrir en la app
-        </a>
-        <p style="margin:24px 0 0; font-size:13px; line-height:1.6; color:#6b7280;">
-          Si el boton no funciona, usa este enlace: <a href="${ctaUrl}">${ctaUrl}</a>
-        </p>
+    <div style="margin:0; padding:0; background:#f4f7ff;">
+      <div style="display:none; max-height:0; overflow:hidden; opacity:0; color:transparent;">
+        ${escapedTitle}
       </div>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%; border-collapse:collapse; background:
+        radial-gradient(circle at top left, rgba(159,182,255,0.24) 0%, rgba(159,182,255,0) 34%),
+        linear-gradient(180deg, #f4f7ff 0%, #ffffff 42%, #f8faff 100%);">
+        <tr>
+          <td style="padding:24px 16px 40px;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px; margin:0 auto; border-collapse:collapse;">
+              <tr>
+                <td style="padding:0 0 18px;">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                    <tr>
+                      <td style="font-size:0; line-height:0; padding:0 0 14px; border-top:4px solid ${theme.accent};"></td>
+                    </tr>
+                    <tr>
+                      <td style="padding:0 0 22px;">
+                        <img src="${logoUrl}" alt="ASI Rep. Dominicana" width="160" style="display:block; width:160px; max-width:100%; height:auto;" />
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="border:1px solid #dfe7ff; border-radius:28px; background:#ffffff; box-shadow:0 24px 60px rgba(25,42,86,0.10); overflow:hidden;">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                    <tr>
+                      <td style="padding:36px 32px 18px; background:
+                        linear-gradient(180deg, rgba(244,247,255,0.96) 0%, rgba(255,255,255,0.98) 100%);">
+                        <span style="display:inline-block; padding:8px 12px; border-radius:999px; background:${theme.accentSoft}; border:1px solid ${theme.accentBorder}; color:${theme.accent}; font-size:12px; line-height:1; letter-spacing:0.12em; text-transform:uppercase; font-weight:700;">
+                          ${escapedBadgeLabel}
+                        </span>
+                        <p style="margin:20px 0 0; font-size:12px; line-height:1.5; letter-spacing:0.22em; text-transform:uppercase; color:#8290ab; font-weight:700;">
+                          ${escapedEyebrow}
+                        </p>
+                        <h1 style="margin:12px 0 0; font-family:Manrope, Segoe UI, sans-serif; font-size:38px; line-height:1.02; letter-spacing:-0.03em; color:#15203b;">
+                          ${escapedTitle}
+                        </h1>
+                        <p style="margin:18px 0 0; font-size:16px; line-height:1.7; color:#586680;">
+                          Hola ${escapedRecipientName},
+                        </p>
+                        <div style="margin-top:14px;">
+                          ${contentHtml}
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:4px 32px 0;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-top:1px solid #e8edf5;">
+                          <tr>
+                            <td style="padding:24px 0 0;">
+                              <p style="margin:0 0 16px; font-size:12px; line-height:1.5; letter-spacing:0.22em; text-transform:uppercase; color:#8290ab; font-weight:700;">
+                                ${escapedSummaryTitle}
+                              </p>
+                              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                                ${summaryItemsHtml}
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:28px 32px 0;">
+                        <a href="${escapedCtaUrl}" style="display:inline-block; min-width:220px; border-radius:18px; background:${theme.accent}; color:#ffffff; text-decoration:none; text-align:center; padding:16px 24px; font-size:14px; font-weight:700; letter-spacing:0.04em; box-shadow:0 18px 34px rgba(43,65,143,0.22);">
+                          ${escapedActionLabel}
+                        </a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:28px 32px 0;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-top:1px solid #e8edf5;">
+                          <tr>
+                            <td style="padding:24px 0 0;">
+                              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:separate; border-spacing:0 12px;">
+                                <tr>
+                                  <td style="width:50%; vertical-align:top; padding:18px 18px 18px 0;">
+                                    <p style="margin:0 0 8px; font-size:12px; line-height:1.5; letter-spacing:0.18em; text-transform:uppercase; color:#8290ab; font-weight:700;">
+                                      Enlace manual
+                                    </p>
+                                    <p style="margin:0; font-size:14px; line-height:1.7; color:#586680;">
+                                      Si el botón no funciona, abre este enlace:
+                                    </p>
+                                    <p style="margin:8px 0 0; font-size:13px; line-height:1.7; word-break:break-word;">
+                                      <a href="${escapedCtaUrl}" style="color:${theme.accent}; text-decoration:none;">${escapedCtaUrl}</a>
+                                    </p>
+                                  </td>
+                                  <td style="width:50%; vertical-align:top; padding:18px 0 18px 18px;">
+                                    <p style="margin:0 0 8px; font-size:12px; line-height:1.5; letter-spacing:0.18em; text-transform:uppercase; color:#8290ab; font-weight:700;">
+                                      ${escapedSupportTitle}
+                                    </p>
+                                    <p style="margin:0; font-size:14px; line-height:1.7; color:#586680;">
+                                      ${escapedSupportBody}
+                                    </p>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:28px 32px 34px;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-top:1px solid #e8edf5;">
+                          <tr>
+                            <td style="padding:24px 0 0; font-size:12px; line-height:1.8; color:#8290ab;">
+                              Este correo fue enviado por ASI Rep. Dominicana como parte de la experiencia oficial de Talent Marketplace.
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
     </div>
   `.trim()
 
@@ -306,6 +545,7 @@ Deno.serve(async (req) => {
 
       const emailContent = buildEmailContent({
         appUrl,
+        type: delivery.notification.type,
         title: delivery.notification.title,
         body: delivery.notification.body,
         actionUrl: delivery.notification.action_url,

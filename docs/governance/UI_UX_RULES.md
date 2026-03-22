@@ -241,6 +241,19 @@ Recommended baseline tokens:
 9. Customer-facing headlines, stat values, and supporting copy must stay visually controlled. Do not overscale page heroes, cards, or section titles to the point that supporting content feels oversized or visually shouty on mobile.
 10. Public landing hero copy must be concise and scannable. Default to one primary headline, one short support paragraph, and compact value signals instead of stacking multiple dense explanatory blocks above the fold.
 
+---
+
+## 9. Transactional email design rules
+Workflow emails are part of the product experience and must follow the same brand system instead of defaulting to provider-styled templates.
+
+Rules:
+1. Email templates must use the ASI customer-facing palette: royal blue primary actions, deeper navy emphasis, white surfaces, and silver-gray support tones. Green remains reserved for semantic success only when it clarifies meaning.
+2. Email layouts must feel calm, structured, and premium: one primary card, restrained gradients or tints, generous spacing, and a single clear CTA.
+3. The ASI logo must appear in branded emails using approved repository assets, and the lockup must not be stretched, distorted, or replaced with unvetted wordmarks.
+4. Transactional emails must use inline-safe HTML and degrade gracefully across email clients. Do not depend on app CSS, Tailwind classes, JavaScript, or background effects that break core readability.
+5. Each workflow type may adjust its eyebrow, CTA label, and support copy, but all transactional emails must preserve a shared shell so recipients always recognize the product.
+6. Email copy must remain sentence case, readable on mobile, and aligned with the corresponding in-app notification semantics.
+
 ### 7.3 Public landing first-fold standards
 1. The public landing hero should aim to keep its primary message, main CTAs, and dominant visual explanation visible within the desktop first fold whenever layout width reasonably allows it.
 2. Customer-facing hero sections should explain the product first through hierarchy, imagery, and compact visual signals, then through supporting text. Do not rely on long explanatory copy to carry the whole message.

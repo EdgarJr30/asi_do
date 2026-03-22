@@ -233,6 +233,9 @@ Do not bring back a prominent `Cerrar sesion` button in the workspace top bar wh
 ### R-067 — Workspace modules must use shared surfaces and preserve dark-mode contrast
 Do not regress workspace pages back to hardcoded light-only panels like `bg-white`, `bg-zinc-50`, or weak gray text that breaks hierarchy in dark mode. Forms, summary cards, detail panes, and supporting modules under `Company`, `Jobs`, `Candidates`, `Pipeline`, and `Roles` must prefer shared UI primitives and semantic surface tokens so the experience stays elegant, readable, and intuitive for first-time users in both themes.
 
+### R-068 — Pending follow-up work must always create Linear issues automatically
+Do not finish a task with unresolved follow-up left only in chat or implied in the final message. Whenever any prompt leaves pending work of any kind, Codex must create the corresponding Linear issue or issues automatically in the canonical project for this repository without asking for confirmation first, so the user can later verify completion explicitly from Linear.
+
 ---
 
 ## Maintenance rule
