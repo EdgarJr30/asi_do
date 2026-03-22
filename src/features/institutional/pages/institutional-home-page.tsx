@@ -82,6 +82,9 @@ export function InstitutionalHomePage() {
   const [activeHeroIndex, setActiveHeroIndex] = useState(0)
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0)
   const [activeTestimonialIndex, setActiveTestimonialIndex] = useState(0)
+  const [heroInteractionTick, setHeroInteractionTick] = useState(0)
+  const [carouselInteractionTick, setCarouselInteractionTick] = useState(0)
+  const [testimonialInteractionTick, setTestimonialInteractionTick] = useState(0)
   const [platformVideoReady, setPlatformVideoReady] = useState(true)
   const platformDemoVideoPath = '/media/demoApp.mp4'
   const christianEventVideoPath = '/media/christian-event.mp4'
@@ -91,12 +94,12 @@ export function InstitutionalHomePage() {
       return
     }
 
-    const timer = window.setInterval(() => {
+    const timer = window.setTimeout(() => {
       setActiveHeroIndex((current) => wrapIndex(current + 1, homeHeroSlides.length))
     }, 7000)
 
-    return () => window.clearInterval(timer)
-  }, [shouldReduceMotion])
+    return () => window.clearTimeout(timer)
+  }, [activeHeroIndex, heroInteractionTick, shouldReduceMotion])
 
   useEffect(() => {
     homeHeroSlides.forEach((slide) => {
@@ -110,24 +113,51 @@ export function InstitutionalHomePage() {
       return
     }
 
-    const timer = window.setInterval(() => {
+    const timer = window.setTimeout(() => {
       setActiveCarouselIndex((current) => wrapIndex(current + 1, homeCarouselCards.length))
     }, 5200)
 
-    return () => window.clearInterval(timer)
-  }, [shouldReduceMotion])
+    return () => window.clearTimeout(timer)
+  }, [activeCarouselIndex, carouselInteractionTick, shouldReduceMotion])
 
   useEffect(() => {
     if (shouldReduceMotion) {
       return
     }
 
-    const timer = window.setInterval(() => {
+    const timer = window.setTimeout(() => {
       setActiveTestimonialIndex((current) => wrapIndex(current + 1, homeTestimonials.length))
     }, 6400)
 
-    return () => window.clearInterval(timer)
-  }, [shouldReduceMotion])
+    return () => window.clearTimeout(timer)
+  }, [activeTestimonialIndex, testimonialInteractionTick, shouldReduceMotion])
+
+  const goToHeroSlide = (nextIndex: number) => {
+    setHeroInteractionTick((current) => current + 1)
+    setActiveHeroIndex(wrapIndex(nextIndex, homeHeroSlides.length))
+  }
+
+  const stepHeroSlide = (direction: 'next' | 'prev') => {
+    goToHeroSlide(activeHeroIndex + (direction === 'next' ? 1 : -1))
+  }
+
+  const goToCarouselSlide = (nextIndex: number) => {
+    setCarouselInteractionTick((current) => current + 1)
+    setActiveCarouselIndex(wrapIndex(nextIndex, homeCarouselCards.length))
+  }
+
+  const stepCarouselSlide = (direction: 'next' | 'prev') => {
+    goToCarouselSlide(activeCarouselIndex + (direction === 'next' ? 1 : -1))
+  }
+
+  const goToTestimonialSlide = (nextIndex: number) => {
+    setTestimonialInteractionTick((current) => current + 1)
+    setActiveTestimonialIndex(wrapIndex(nextIndex, homeTestimonials.length))
+  }
+
+  const stepTestimonialSlide = (direction: 'next' | 'prev') => {
+    goToTestimonialSlide(activeTestimonialIndex + (direction === 'next' ? 1 : -1))
+  }
 
   const activeHero = homeHeroSlides[activeHeroIndex]
   const visibleCarouselCards = useMemo(
@@ -144,22 +174,20 @@ export function InstitutionalHomePage() {
       <InstitutionalSection className="!pt-0 !pb-0">
         <div className="space-y-8 sm:space-y-10">
           <motion.div
-            className="asi-gesture-surface relative overflow-hidden rounded-[2rem] bg-[var(--asi-primary)] shadow-[var(--asi-shadow-strong)] sm:-mx-7 sm:rounded-[2.4rem] lg:-mx-10 xl:-mx-14"
+            className="relative overflow-hidden rounded-[2rem] bg-[var(--asi-primary)] shadow-[var(--asi-shadow-strong)] sm:-mx-7 sm:rounded-[2.4rem] lg:-mx-10 xl:-mx-14"
             initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
             transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
             whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-            drag={shouldReduceMotion ? false : 'x'}
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.08}
-            onDragEnd={(_, info) => {
+            style={{ cursor: 'default', touchAction: 'pan-y', userSelect: 'none' }}
+            onPanEnd={(_, info) => {
               const direction = getSwipeDirection(info)
 
               if (direction === 'next') {
-                setActiveHeroIndex((current) => wrapIndex(current + 1, homeHeroSlides.length))
+                stepHeroSlide('next')
               }
 
               if (direction === 'prev') {
-                setActiveHeroIndex((current) => wrapIndex(current - 1, homeHeroSlides.length))
+                stepHeroSlide('prev')
               }
             }}
           >
@@ -278,7 +306,7 @@ export function InstitutionalHomePage() {
                               : 'w-2.5 bg-white/28 hover:bg-white/48'
                           )}
                           type="button"
-                          onClick={() => setActiveHeroIndex(index)}
+                          onClick={() => goToHeroSlide(index)}
                         />
                       ))}
                     </div>
@@ -288,7 +316,7 @@ export function InstitutionalHomePage() {
                         aria-label="Ver slide anterior"
                         className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-white/92 text-[var(--asi-primary)] shadow-[0_10px_30px_rgba(0,47,110,0.18)] transition hover:bg-white"
                         type="button"
-                        onClick={() => setActiveHeroIndex((current) => wrapIndex(current - 1, homeHeroSlides.length))}
+                        onClick={() => stepHeroSlide('prev')}
                       >
                         <ChevronLeft className="size-5" />
                       </button>
@@ -296,7 +324,7 @@ export function InstitutionalHomePage() {
                         aria-label="Ver slide siguiente"
                         className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-white/92 text-[var(--asi-primary)] shadow-[0_10px_30px_rgba(0,47,110,0.18)] transition hover:bg-white"
                         type="button"
-                        onClick={() => setActiveHeroIndex((current) => wrapIndex(current + 1, homeHeroSlides.length))}
+                        onClick={() => stepHeroSlide('next')}
                       >
                         <ChevronRight className="size-5" />
                       </button>
@@ -320,7 +348,7 @@ export function InstitutionalHomePage() {
                   aria-label="Tarjeta anterior"
                   className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[var(--asi-surface-muted)] text-[var(--asi-primary)] transition hover:bg-white hover:shadow-[var(--asi-shadow-soft)]"
                   type="button"
-                  onClick={() => setActiveCarouselIndex((current) => wrapIndex(current - 1, homeCarouselCards.length))}
+                  onClick={() => stepCarouselSlide('prev')}
                 >
                   <ArrowLeft className="size-4" />
                 </button>
@@ -328,7 +356,7 @@ export function InstitutionalHomePage() {
                   aria-label="Tarjeta siguiente"
                   className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[var(--asi-surface-muted)] text-[var(--asi-primary)] transition hover:bg-white hover:shadow-[var(--asi-shadow-soft)]"
                   type="button"
-                  onClick={() => setActiveCarouselIndex((current) => wrapIndex(current + 1, homeCarouselCards.length))}
+                  onClick={() => stepCarouselSlide('next')}
                 >
                   <ArrowRight className="size-4" />
                 </button>
@@ -350,11 +378,11 @@ export function InstitutionalHomePage() {
                   const direction = getSwipeDirection(info)
 
                   if (direction === 'next') {
-                    setActiveCarouselIndex((current) => wrapIndex(current + 1, homeCarouselCards.length))
+                    stepCarouselSlide('next')
                   }
 
                   if (direction === 'prev') {
-                    setActiveCarouselIndex((current) => wrapIndex(current - 1, homeCarouselCards.length))
+                    stepCarouselSlide('prev')
                   }
                 }}
               >
@@ -400,7 +428,7 @@ export function InstitutionalHomePage() {
                     index === activeCarouselIndex ? 'w-8 bg-[var(--asi-primary)]' : 'w-2.5 bg-[var(--asi-outline)] hover:bg-[var(--asi-secondary)]/40'
                   )}
                   type="button"
-                  onClick={() => setActiveCarouselIndex(index)}
+                  onClick={() => goToCarouselSlide(index)}
                 />
               ))}
             </div>
@@ -613,7 +641,7 @@ export function InstitutionalHomePage() {
                 aria-label="Testimonio anterior"
                 className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white text-[var(--asi-primary)] shadow-[var(--asi-shadow-soft)] transition hover:bg-[var(--asi-surface-raised)]"
                 type="button"
-                onClick={() => setActiveTestimonialIndex((current) => wrapIndex(current - 1, homeTestimonials.length))}
+                onClick={() => stepTestimonialSlide('prev')}
               >
                 <ArrowLeft className="size-4" />
               </button>
@@ -621,7 +649,7 @@ export function InstitutionalHomePage() {
                 aria-label="Testimonio siguiente"
                 className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white text-[var(--asi-primary)] shadow-[var(--asi-shadow-soft)] transition hover:bg-[var(--asi-surface-raised)]"
                 type="button"
-                onClick={() => setActiveTestimonialIndex((current) => wrapIndex(current + 1, homeTestimonials.length))}
+                onClick={() => stepTestimonialSlide('next')}
               >
                 <ArrowRight className="size-4" />
               </button>
@@ -643,11 +671,11 @@ export function InstitutionalHomePage() {
                 const direction = getSwipeDirection(info)
 
                 if (direction === 'next') {
-                  setActiveTestimonialIndex((current) => wrapIndex(current + 1, homeTestimonials.length))
+                  stepTestimonialSlide('next')
                 }
 
                 if (direction === 'prev') {
-                  setActiveTestimonialIndex((current) => wrapIndex(current - 1, homeTestimonials.length))
+                  stepTestimonialSlide('prev')
                 }
               }}
             >
@@ -679,7 +707,7 @@ export function InstitutionalHomePage() {
                   index === activeTestimonialIndex ? 'w-8 bg-[var(--asi-primary)]' : 'w-2.5 bg-[var(--asi-outline)] hover:bg-[var(--asi-secondary)]/40'
                 )}
                 type="button"
-                onClick={() => setActiveTestimonialIndex(index)}
+                onClick={() => goToTestimonialSlide(index)}
               />
             ))}
           </div>
