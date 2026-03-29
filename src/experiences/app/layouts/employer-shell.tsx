@@ -616,14 +616,23 @@ function buildWorkspaceConfig(session: ReturnType<typeof useAppSession>) {
   const visibleNavigation = filterNavigationItems(employerNavigationItems, session.permissions, session.isAuthenticated).map((item) =>
     mapNavItem(item, 'workspace')
   )
+  const candidateNavItem = session.isAuthenticated
+    ? ({
+        href: surfacePaths.candidate.profile,
+        title: 'Mi perfil',
+        description: 'Abre tu espacio de candidato sin salir de la plataforma',
+        icon: UserRound
+      } satisfies AppNavItem)
+    : null
 
   const primaryNav: AppNavItem[] = [
     surfacePaths.workspace.jobs,
     surfacePaths.workspace.talent,
     surfacePaths.workspace.pipeline,
-    surfacePaths.workspace.root
+    surfacePaths.workspace.root,
+    ...(candidateNavItem ? [surfacePaths.candidate.profile] : [])
   ]
-    .map((href) => findNavItem(visibleNavigation, href))
+    .map((href) => (href === surfacePaths.candidate.profile ? candidateNavItem : findNavItem(visibleNavigation, href)))
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
 
   const secondaryNav: AppNavItem[] = [surfacePaths.workspace.access]
@@ -655,6 +664,14 @@ function buildWorkspaceConfig(session: ReturnType<typeof useAppSession>) {
             .filter((item): item is NonNullable<typeof item> => Boolean(item))
         ]
       },
+      ...(candidateNavItem
+        ? [
+            {
+              title: 'Mi cuenta',
+              items: [candidateNavItem]
+            }
+          ]
+        : []),
       ...(secondaryNav.length
         ? [
             {

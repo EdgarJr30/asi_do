@@ -352,4 +352,11 @@ describe('workspace shell', () => {
 
     expect(await screen.findAllByText('Workspace')).not.toHaveLength(0)
   })
+
+  it('keeps candidate access visible in workspace navigation for authenticated users', async () => {
+    seedWorkspaceSession(['workspace:read'])
+    renderWorkspaceShell()
+
+    expect(await screen.findAllByText('Mi perfil')).not.toHaveLength(0)
+  })
 })
