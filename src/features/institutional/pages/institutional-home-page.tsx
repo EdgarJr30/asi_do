@@ -700,7 +700,7 @@ export function InstitutionalHomePage() {
               }
             }}
           >
-            <div className="asi-hero-frame relative">
+            <div className="asi-hero-frame institutional-home__hero-frame relative">
               {homeHeroSlides.map((slide, index) => (
                 <motion.div
                   key={slide.image}
@@ -841,24 +841,24 @@ export function InstitutionalHomePage() {
                         </motion.div>
                       </AnimatePresence>
 
-                      <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                         <InstitutionalActionLink
                           action={activeHero.primaryAction}
-                          className="min-h-14 w-full justify-center sm:min-w-46 sm:w-auto"
+                          className="min-h-14 w-full justify-center sm:min-w-52 sm:flex-1 sm:w-auto lg:min-h-[3.75rem]"
                         />
                         <InstitutionalActionLink
                           action={activeHero.secondaryAction}
-                          className="min-h-14 w-full justify-center border border-white/30 bg-white/8 text-white hover:bg-white/14 sm:min-w-46 sm:w-auto"
+                          className="min-h-14 w-full justify-center border border-white/30 bg-white/8 text-white hover:bg-white/14 sm:min-w-52 sm:flex-1 sm:w-auto lg:min-h-[3.75rem]"
                         />
                       </div>
                     </div>
 
-                    <div className="mt-8 space-y-5 sm:mt-10 sm:space-y-6">
-                      <div className="grid gap-3 sm:max-w-xl sm:grid-cols-3">
+                    <div className="mt-10 space-y-5 sm:mt-12 sm:space-y-6">
+                      <div className="grid gap-3 sm:max-w-2xl sm:grid-cols-2 sm:gap-4">
                         {homeHeroMetrics.map((metric) => (
                           <motion.div
                             key={metric.label}
-                            className="rounded-3xl border border-white/10 bg-white/12 p-4 backdrop-blur-md"
+                            className="rounded-3xl border border-white/10 bg-white/12 p-5 backdrop-blur-md sm:min-h-40"
                             transition={{ duration: 0.3 }}
                             whileHover={
                               shouldReduceMotion

@@ -154,11 +154,6 @@ export const homeHeroMetrics: InstitutionalStat[] = [
     description: 'Construyendo una comunidad profesional orientada por la fe y la misión.'
   },
   {
-    value: '12',
-    label: 'Líneas de programa',
-    description: 'Espacios de mentoría, liderazgo, comunidad y proyectos con impacto local.'
-  },
-  {
     value: '300+',
     label: 'Aliados y miembros',
     description: 'Profesionales, empresarios y voluntarios colaborando en una misma red.'

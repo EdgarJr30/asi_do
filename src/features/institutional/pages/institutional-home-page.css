@@ -6,6 +6,11 @@
   border-radius: 2rem;
 }
 
+.institutional-home__hero-frame {
+  height: min(52rem, calc(100svh - 3.5rem));
+  min-height: 42rem;
+}
+
 .institutional-home__image-backdrop {
   background-image: linear-gradient(
     135deg,
@@ -288,6 +293,11 @@
 }
 
 @media (min-width: 640px) {
+  .institutional-home__hero-frame {
+    height: min(54rem, calc(100svh - 6.8rem));
+    min-height: 42rem;
+  }
+
   .institutional-home__hero-shell {
     border-radius: 2.4rem;
   }
@@ -328,6 +338,13 @@
 
   .institutional-home__ecosystem-grid {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .institutional-home__hero-frame {
+    height: min(56rem, calc(100svh - 7.2rem));
+    min-height: 44rem;
   }
 }
 
