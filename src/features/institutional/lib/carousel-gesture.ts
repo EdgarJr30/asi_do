@@ -47,3 +47,10 @@ export function normalizeCarouselLoopOffset(
 
   return normalized;
 }
+
+export function normalizeCarouselTrackOffset(
+  trackOffset: number,
+  setWidth: number
+): number {
+  return -normalizeCarouselLoopOffset(-trackOffset, setWidth);
+}

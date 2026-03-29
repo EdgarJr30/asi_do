@@ -7,7 +7,14 @@ import {
   type ReactNode,
 } from 'react';
 
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import {
+  AnimatePresence,
+  animate,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  type PanInfo,
+} from 'motion/react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -34,8 +41,7 @@ import {
   homeTestimonials,
 } from '@/features/institutional/content/site-content';
 import {
-  getTouchPanIntent,
-  normalizeCarouselLoopOffset,
+  normalizeCarouselTrackOffset,
 } from '@/features/institutional/lib/carousel-gesture';
 import { cn } from '@/lib/utils/cn';
 
@@ -43,11 +49,24 @@ function wrapIndex(index: number, length: number) {
   return (index + length) % length;
 }
 
-function setCarouselScrollPosition(
-  viewport: HTMLDivElement,
-  left: number
-): void {
-  viewport.scrollLeft = left;
+function detectIosCarouselStepFallback(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const { userAgent, platform, maxTouchPoints } = window.navigator;
+  const isAppleTouchDevice =
+    /iP(hone|ad|od)/i.test(userAgent) ||
+    (platform === 'MacIntel' && maxTouchPoints > 1);
+
+  return isAppleTouchDevice;
+}
+
+function normalizeMotionCarouselTrack(
+  trackOffset: number,
+  setWidth: number
+): number {
+  return normalizeCarouselTrackOffset(trackOffset, setWidth);
 }
 
 function getVisibleItems<T>(
@@ -78,9 +97,10 @@ function getSwipeDirection(info: {
 
 const CAROUSEL_AUTOPLAY_PIXELS_PER_MS = 0.045;
 const CAROUSEL_AUTOPLAY_MAX_DELTA_MS = 32;
-const CAROUSEL_SCROLL_SETTLE_DELAY_MS = 180;
 const CAROUSEL_AUTOPLAY_RESUME_DELAY_MS = 560;
 const CAROUSEL_NORMALIZATION_EPSILON = 0.5;
+const CAROUSEL_STEP_AUTOPLAY_INTERVAL_MS = 3400;
+const CAROUSEL_STEP_AUTOPLAY_DURATION_S = 0.72;
 
 function AnimatedMetricValue({ value }: { value: string }) {
   const numericValue = Number.parseInt(value.replace(/\D/g, ''), 10);
@@ -203,22 +223,26 @@ export function InstitutionalHomePage() {
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [activeTestimonialIndex, setActiveTestimonialIndex] = useState(0);
   const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [isCarouselStepAutoplay] = useState(() =>
+    detectIosCarouselStepFallback()
+  );
+  const [carouselSetWidth, setCarouselSetWidth] = useState(0);
+  const [carouselAdvanceWidth, setCarouselAdvanceWidth] = useState(0);
   const [heroInteractionTick, setHeroInteractionTick] = useState(0);
   const [testimonialInteractionTick, setTestimonialInteractionTick] =
     useState(0);
   const [platformVideoReady, setPlatformVideoReady] = useState(true);
   const carouselViewportRef = useRef<HTMLDivElement | null>(null);
   const carouselPrimarySetRef = useRef<HTMLDivElement | null>(null);
-  const carouselSetWidthRef = useRef(0);
   const carouselAnimationFrameRef = useRef(0);
+  const carouselMeasuredSetWidthRef = useRef(0);
   const isCarouselHoveredRef = useRef(false);
   const isCarouselTouchingRef = useRef(false);
-  const carouselTouchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const carouselTouchIntentRef = useRef<
-    'horizontal' | 'vertical' | 'undetermined'
-  >('undetermined');
   const carouselResumeTimeoutRef = useRef<number | null>(null);
-  const carouselScrollSettleTimeoutRef = useRef<number | null>(null);
+  const carouselTrackAnimationRef = useRef<ReturnType<typeof animate> | null>(
+    null
+  );
+  const carouselTrackX = useMotionValue(0);
   const platformDemoVideoPath = '/media/demoApp.mp4';
   const christianEventVideoPath = '/media/christian-event.mp4';
 
@@ -250,40 +274,46 @@ export function InstitutionalHomePage() {
       const image = new window.Image();
       image.src = item.image;
     });
-  }, []);
+  }, [carouselTrackX]);
 
   useEffect(() => {
     const syncCarouselMeasurements = (): void => {
-      const viewport = carouselViewportRef.current;
       const primarySet = carouselPrimarySetRef.current;
 
-      if (!viewport || !primarySet) {
+      if (!primarySet) {
         return;
       }
 
       const trackStyles = window.getComputedStyle(primarySet);
       const gap = Number.parseFloat(trackStyles.gap || '0');
-
       const nextSetWidth = primarySet.getBoundingClientRect().width + gap;
+      const firstCard = primarySet.firstElementChild;
+      const nextAdvanceWidth =
+        firstCard instanceof HTMLElement
+          ? firstCard.getBoundingClientRect().width + gap
+          : nextSetWidth / homeCarouselCards.length;
 
-      if (nextSetWidth <= 0) {
+      if (nextSetWidth <= 0 || nextAdvanceWidth <= 0) {
         return;
       }
 
-      const previousSetWidth = carouselSetWidthRef.current;
-      carouselSetWidthRef.current = nextSetWidth;
+      setCarouselSetWidth(nextSetWidth);
+      setCarouselAdvanceWidth(nextAdvanceWidth);
+
+      const previousSetWidth = carouselMeasuredSetWidthRef.current;
+      carouselMeasuredSetWidthRef.current = nextSetWidth;
 
       if (previousSetWidth <= 0) {
-        setCarouselScrollPosition(viewport, nextSetWidth);
+        carouselTrackX.set(-nextSetWidth);
         return;
       }
 
-      const relativeOffset = viewport.scrollLeft - previousSetWidth;
-      const normalizedOffset: number = normalizeCarouselLoopOffset(
-        nextSetWidth + relativeOffset,
+      const relativeOffset = -carouselTrackX.get() - previousSetWidth;
+      const normalizedOffset = normalizeMotionCarouselTrack(
+        -(nextSetWidth + relativeOffset),
         nextSetWidth
       );
-      setCarouselScrollPosition(viewport, normalizedOffset);
+      carouselTrackX.set(normalizedOffset);
     };
 
     syncCarouselMeasurements();
@@ -305,7 +335,7 @@ export function InstitutionalHomePage() {
       observer.disconnect();
       window.removeEventListener('resize', syncCarouselMeasurements);
     };
-  }, []);
+  }, [carouselTrackX]);
 
   useEffect(() => {
     return () => {
@@ -313,11 +343,8 @@ export function InstitutionalHomePage() {
         window.clearTimeout(carouselResumeTimeoutRef.current);
       }
 
-      if (carouselScrollSettleTimeoutRef.current !== null) {
-        window.clearTimeout(carouselScrollSettleTimeoutRef.current);
-      }
-
       window.cancelAnimationFrame(carouselAnimationFrameRef.current);
+      carouselTrackAnimationRef.current?.stop();
     };
   }, []);
 
@@ -330,28 +357,7 @@ export function InstitutionalHomePage() {
     setIsCarouselPaused(true);
   };
 
-  const settleCarouselViewport = useCallback((viewport: HTMLDivElement): void => {
-    if (carouselScrollSettleTimeoutRef.current !== null) {
-      window.clearTimeout(carouselScrollSettleTimeoutRef.current);
-      carouselScrollSettleTimeoutRef.current = null;
-    }
-
-    const setWidth = carouselSetWidthRef.current;
-
-    if (setWidth > 0) {
-      const normalizedLeft: number = normalizeCarouselLoopOffset(
-        viewport.scrollLeft,
-        setWidth
-      );
-
-      if (
-        Math.abs(normalizedLeft - viewport.scrollLeft) >
-        CAROUSEL_NORMALIZATION_EPSILON
-      ) {
-        setCarouselScrollPosition(viewport, normalizedLeft);
-      }
-    }
-
+  const resumeCarouselAutoplay = useCallback((): void => {
     if (carouselResumeTimeoutRef.current !== null) {
       window.clearTimeout(carouselResumeTimeoutRef.current);
     }
@@ -363,45 +369,47 @@ export function InstitutionalHomePage() {
     }, CAROUSEL_AUTOPLAY_RESUME_DELAY_MS);
   }, []);
 
-  const scheduleCarouselLoopNormalization = useCallback(
-    (viewport: HTMLDivElement): void => {
-      if (carouselScrollSettleTimeoutRef.current !== null) {
-        window.clearTimeout(carouselScrollSettleTimeoutRef.current);
+  const animateCarouselTrackTo = useCallback(
+    (targetOffset: number): void => {
+      if (carouselSetWidth <= 0) {
+        return;
       }
 
-      carouselScrollSettleTimeoutRef.current = window.setTimeout(() => {
-        settleCarouselViewport(viewport);
-      }, CAROUSEL_SCROLL_SETTLE_DELAY_MS);
+      carouselTrackAnimationRef.current?.stop();
+
+      const normalizedTarget = normalizeMotionCarouselTrack(
+        targetOffset,
+        carouselSetWidth
+      );
+
+      carouselTrackAnimationRef.current = animate(
+        carouselTrackX,
+        normalizedTarget,
+        {
+          duration: CAROUSEL_STEP_AUTOPLAY_DURATION_S,
+          ease: [0.22, 1, 0.36, 1],
+          onComplete: () => {
+            carouselTrackX.set(
+              normalizeMotionCarouselTrack(
+                carouselTrackX.get(),
+                carouselSetWidth
+              )
+            );
+            carouselTrackAnimationRef.current = null;
+          },
+        }
+      );
     },
-    [settleCarouselViewport]
+    [carouselSetWidth, carouselTrackX]
   );
 
   useEffect(() => {
-    const viewport = carouselViewportRef.current;
-
-    if (!viewport || !('onscrollend' in viewport)) {
-      return;
-    }
-
-    const handleScrollEnd = (): void => {
-      settleCarouselViewport(viewport);
-    };
-
-    viewport.addEventListener('scrollend', handleScrollEnd);
-
-    return () => {
-      viewport.removeEventListener('scrollend', handleScrollEnd);
-    };
-  }, [settleCarouselViewport]);
-
-  useEffect(() => {
-    if (shouldReduceMotion || isCarouselPaused) {
-      return;
-    }
-
-    const viewport = carouselViewportRef.current;
-
-    if (!viewport) {
+    if (
+      shouldReduceMotion ||
+      isCarouselPaused ||
+      isCarouselStepAutoplay ||
+      carouselSetWidth <= 0
+    ) {
       return;
     }
 
@@ -411,16 +419,13 @@ export function InstitutionalHomePage() {
       const delta = timestamp - lastTimestamp;
       lastTimestamp = timestamp;
       const boundedDelta = Math.min(delta, CAROUSEL_AUTOPLAY_MAX_DELTA_MS);
-      const currentScrollLeft = viewport.scrollLeft;
-      const setWidth = carouselSetWidthRef.current;
-
-      const nextLeft: number = normalizeCarouselLoopOffset(
-        currentScrollLeft +
+      const nextOffset = normalizeMotionCarouselTrack(
+        carouselTrackX.get() -
           boundedDelta * CAROUSEL_AUTOPLAY_PIXELS_PER_MS,
-        setWidth
+        carouselSetWidth
       );
 
-      setCarouselScrollPosition(viewport, nextLeft);
+      carouselTrackX.set(nextOffset);
 
       carouselAnimationFrameRef.current = window.requestAnimationFrame(tick);
     };
@@ -428,7 +433,88 @@ export function InstitutionalHomePage() {
     carouselAnimationFrameRef.current = window.requestAnimationFrame(tick);
 
     return () => window.cancelAnimationFrame(carouselAnimationFrameRef.current);
-  }, [isCarouselPaused, shouldReduceMotion]);
+  }, [
+    carouselSetWidth,
+    carouselTrackX,
+    isCarouselPaused,
+    isCarouselStepAutoplay,
+    shouldReduceMotion,
+  ]);
+
+  useEffect(() => {
+    if (
+      shouldReduceMotion ||
+      isCarouselPaused ||
+      !isCarouselStepAutoplay ||
+      carouselSetWidth <= 0 ||
+      carouselAdvanceWidth <= 0
+    ) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      animateCarouselTrackTo(carouselTrackX.get() - carouselAdvanceWidth);
+    }, CAROUSEL_STEP_AUTOPLAY_INTERVAL_MS);
+
+    return () => window.clearInterval(interval);
+  }, [
+    animateCarouselTrackTo,
+    carouselAdvanceWidth,
+    carouselSetWidth,
+    carouselTrackX,
+    isCarouselPaused,
+    isCarouselStepAutoplay,
+      shouldReduceMotion,
+    ]);
+
+  const handleCarouselDragEnd = useCallback(
+    (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo): void => {
+      isCarouselTouchingRef.current = false;
+
+      if (carouselSetWidth <= 0) {
+        resumeCarouselAutoplay();
+        return;
+      }
+
+      const currentOffset = normalizeMotionCarouselTrack(
+        carouselTrackX.get(),
+        carouselSetWidth
+      );
+
+      if (isCarouselStepAutoplay && carouselAdvanceWidth > 0) {
+        const direction = getSwipeDirection(info);
+
+        if (direction === 'next') {
+          animateCarouselTrackTo(currentOffset - carouselAdvanceWidth);
+          resumeCarouselAutoplay();
+          return;
+        }
+
+        if (direction === 'prev') {
+          animateCarouselTrackTo(currentOffset + carouselAdvanceWidth);
+          resumeCarouselAutoplay();
+          return;
+        }
+      }
+
+      if (
+        Math.abs(currentOffset - carouselTrackX.get()) >
+        CAROUSEL_NORMALIZATION_EPSILON
+      ) {
+        animateCarouselTrackTo(currentOffset);
+      }
+
+      resumeCarouselAutoplay();
+    },
+    [
+      animateCarouselTrackTo,
+      carouselAdvanceWidth,
+      carouselSetWidth,
+      carouselTrackX,
+      isCarouselStepAutoplay,
+      resumeCarouselAutoplay,
+    ]
+  );
 
   useEffect(() => {
     if (shouldReduceMotion) {
@@ -742,77 +828,38 @@ export function InstitutionalHomePage() {
             <div
               ref={carouselViewportRef}
               aria-label="Historias destacadas de ASI"
-              className="institutional-home__carousel-viewport overflow-x-auto overflow-y-hidden"
+              className="institutional-home__carousel-viewport overflow-hidden"
               onMouseEnter={() => {
                 isCarouselHoveredRef.current = true;
                 pauseCarouselAutoplay();
               }}
               onMouseLeave={() => {
                 isCarouselHoveredRef.current = false;
-                setIsCarouselPaused(false);
-              }}
-              onTouchStart={(event) => {
-                const touch = event.touches[0];
-
-                if (!touch) {
-                  return;
-                }
-
-                carouselTouchStartRef.current = {
-                  x: touch.clientX,
-                  y: touch.clientY,
-                };
-                carouselTouchIntentRef.current = 'undetermined';
-                isCarouselTouchingRef.current = true;
-                pauseCarouselAutoplay();
-              }}
-              onTouchMove={(event) => {
-                const touch = event.touches[0];
-                const touchStart = carouselTouchStartRef.current;
-
-                if (
-                  !touch ||
-                  !touchStart ||
-                  carouselTouchIntentRef.current !== 'undetermined'
-                ) {
-                  return;
-                }
-
-                const nextIntent = getTouchPanIntent({
-                  x: touch.clientX - touchStart.x,
-                  y: touch.clientY - touchStart.y,
-                });
-
-                if (nextIntent === 'horizontal') {
-                  carouselTouchIntentRef.current = nextIntent;
-                  return;
-                }
-
-                if (nextIntent === 'vertical') {
-                  carouselTouchIntentRef.current = nextIntent;
-                }
-              }}
-              onTouchEnd={(event) => {
-                carouselTouchStartRef.current = null;
-                carouselTouchIntentRef.current = 'undetermined';
-                isCarouselTouchingRef.current = false;
-                scheduleCarouselLoopNormalization(event.currentTarget);
-              }}
-              onTouchCancel={(event) => {
-                carouselTouchStartRef.current = null;
-                carouselTouchIntentRef.current = 'undetermined';
-                isCarouselTouchingRef.current = false;
-                scheduleCarouselLoopNormalization(event.currentTarget);
+                resumeCarouselAutoplay();
               }}
               onWheel={() => {
                 pauseCarouselAutoplay();
-              }}
-              onScroll={(event) => {
-                const viewport = event.currentTarget;
-                scheduleCarouselLoopNormalization(viewport);
+                resumeCarouselAutoplay();
               }}
             >
-              <div className="institutional-home__carousel-track">
+              <motion.div
+                className="institutional-home__carousel-track"
+                drag="x"
+                dragConstraints={{
+                  left: carouselSetWidth > 0 ? -carouselSetWidth * 2 : 0,
+                  right: 0,
+                }}
+                dragDirectionLock
+                dragElastic={0.02}
+                dragMomentum={false}
+                onDragStart={() => {
+                  isCarouselTouchingRef.current = true;
+                  pauseCarouselAutoplay();
+                  carouselTrackAnimationRef.current?.stop();
+                }}
+                onDragEnd={handleCarouselDragEnd}
+                style={{ x: carouselTrackX }}
+              >
                 <div
                   aria-hidden="true"
                   className="institutional-home__carousel-set"
@@ -983,7 +1030,7 @@ export function InstitutionalHomePage() {
                     </article>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>

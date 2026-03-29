@@ -102,12 +102,8 @@
 .institutional-home__carousel-viewport {
   width: 100%;
   background: transparent;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  touch-action: manipulation;
-  overscroll-behavior-x: none;
-  overscroll-behavior-y: auto;
-  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .institutional-home__carousel-viewport::-webkit-scrollbar {
@@ -119,6 +115,13 @@
   width: max-content;
   gap: 0.6rem;
   align-items: stretch;
+  touch-action: pan-y;
+  will-change: transform;
+  cursor: grab;
+}
+
+.institutional-home__carousel-track:active {
+  cursor: grabbing;
 }
 
 .institutional-home__carousel-set {

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getTouchPanIntent,
   normalizeCarouselLoopOffset,
+  normalizeCarouselTrackOffset,
 } from '@/features/institutional/lib/carousel-gesture';
 
 describe('getTouchPanIntent', () => {
@@ -33,5 +34,20 @@ describe('normalizeCarouselLoopOffset', () => {
 
   it('leaves valid middle-loop positions untouched', () => {
     expect(normalizeCarouselLoopOffset(760, 600)).toBe(760);
+  });
+});
+
+describe('normalizeCarouselTrackOffset', () => {
+  it('keeps the motion track inside the middle loop when it drifts too far right', () => {
+    expect(normalizeCarouselTrackOffset(-120, 600)).toBe(-720);
+  });
+
+  it('keeps the motion track inside the middle loop when it drifts too far left', () => {
+    expect(normalizeCarouselTrackOffset(-1310, 600)).toBe(-710);
+    expect(normalizeCarouselTrackOffset(-1910, 600)).toBe(-710);
+  });
+
+  it('leaves valid middle-loop offsets untouched', () => {
+    expect(normalizeCarouselTrackOffset(-760, 600)).toBe(-760);
   });
 });
