@@ -854,11 +854,11 @@ export function InstitutionalHomePage() {
                     </div>
 
                     <div className="mt-8 space-y-5 sm:mt-10 sm:space-y-6">
-                      <div className="grid gap-3 sm:max-w-xl sm:grid-cols-2">
+                      <div className="grid grid-cols-2 gap-2 sm:max-w-xl sm:gap-3">
                         {homeHeroMetrics.map((metric) => (
                           <motion.div
                             key={metric.label}
-                            className="rounded-3xl border border-white/10 bg-white/12 p-4 backdrop-blur-md"
+                            className="rounded-3xl border border-white/10 bg-white/12 p-3 backdrop-blur-md sm:p-4"
                             transition={{ duration: 0.3 }}
                             whileHover={
                               shouldReduceMotion
@@ -869,10 +869,10 @@ export function InstitutionalHomePage() {
                                   }
                             }
                           >
-                            <p className="institutional-home__metric-value text-2xl font-semibold tracking-tight text-white">
+                            <p className="institutional-home__metric-value text-xl font-semibold tracking-tight text-white sm:text-2xl">
                               <AnimatedMetricValue value={metric.value} />
                             </p>
-                            <p className="mt-2 text-sm font-semibold text-white">
+                            <p className="mt-1.5 text-[0.78rem] leading-5 font-semibold text-white sm:mt-2 sm:text-sm">
                               {metric.label}
                             </p>
                           </motion.div>
