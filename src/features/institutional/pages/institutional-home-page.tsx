@@ -27,6 +27,7 @@ import {
   homeProgramShowcase,
   homeTestimonials,
 } from '@/features/institutional/content/site-content';
+import { getTouchPanIntent } from '@/features/institutional/lib/carousel-gesture';
 import { cn } from '@/lib/utils/cn';
 
 function wrapIndex(index: number, length: number) {
@@ -115,6 +116,8 @@ export function InstitutionalHomePage() {
   const carouselAnimationFrameRef = useRef(0);
   const isCarouselHoveredRef = useRef(false);
   const isCarouselTouchingRef = useRef(false);
+  const carouselTouchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const carouselTouchIntentRef = useRef<'horizontal' | 'vertical' | 'undetermined'>('undetermined');
   const carouselResumeTimeoutRef = useRef<number | null>(null);
   const platformDemoVideoPath = '/media/demoApp.mp4';
   const christianEventVideoPath = '/media/christian-event.mp4';
@@ -558,9 +561,16 @@ export function InstitutionalHomePage() {
             </div>
           </motion.div>
 
-          <div className="institutional-home__carousel-shell py-4 sm:-mx-7 sm:py-5 lg:-mx-10 xl:-mx-14">
+          <motion.div
+            className="institutional-home__carousel-shell py-4 sm:-mx-7 sm:py-5 lg:-mx-10 xl:-mx-14"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+            transition={{ duration: 0.68, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true, amount: 0.2 }}
+            whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+          >
             <div
               ref={carouselViewportRef}
+              aria-label="Historias destacadas de ASI"
               className="institutional-home__carousel-viewport overflow-x-auto overflow-y-hidden"
               onMouseEnter={() => {
                 isCarouselHoveredRef.current = true;
@@ -570,22 +580,70 @@ export function InstitutionalHomePage() {
                 isCarouselHoveredRef.current = false;
                 setIsCarouselPaused(false);
               }}
-              onTouchStart={() => {
-                isCarouselTouchingRef.current = true;
-                setIsCarouselPaused(true);
+              onTouchStart={(event) => {
+                const touch = event.touches[0];
+
+                if (!touch) {
+                  return;
+                }
+
+                carouselTouchStartRef.current = {
+                  x: touch.clientX,
+                  y: touch.clientY,
+                };
+                carouselTouchIntentRef.current = 'undetermined';
+                isCarouselTouchingRef.current = false;
               }}
-              onTouchMove={() => {
-                isCarouselTouchingRef.current = true;
-                setIsCarouselPaused(true);
+              onTouchMove={(event) => {
+                const touch = event.touches[0];
+                const touchStart = carouselTouchStartRef.current;
+
+                if (!touch || !touchStart || carouselTouchIntentRef.current !== 'undetermined') {
+                  return;
+                }
+
+                const nextIntent = getTouchPanIntent({
+                  x: touch.clientX - touchStart.x,
+                  y: touch.clientY - touchStart.y,
+                });
+
+                if (nextIntent === 'horizontal') {
+                  carouselTouchIntentRef.current = nextIntent;
+                  isCarouselTouchingRef.current = true;
+                  setIsCarouselPaused(true);
+                  return;
+                }
+
+                if (nextIntent === 'vertical') {
+                  carouselTouchIntentRef.current = nextIntent;
+                  isCarouselTouchingRef.current = false;
+                  setIsCarouselPaused(false);
+                }
               }}
               onTouchEnd={(event) => {
+                const wasHorizontalSwipe = carouselTouchIntentRef.current === 'horizontal';
+
+                carouselTouchStartRef.current = null;
+                carouselTouchIntentRef.current = 'undetermined';
                 isCarouselTouchingRef.current = false;
-                recirculateCarouselViewport(event.currentTarget);
+
+                if (wasHorizontalSwipe) {
+                  recirculateCarouselViewport(event.currentTarget);
+                }
+
                 resumeCarouselAfterSettle();
               }}
               onTouchCancel={(event) => {
+                const wasHorizontalSwipe = carouselTouchIntentRef.current === 'horizontal';
+
+                carouselTouchStartRef.current = null;
+                carouselTouchIntentRef.current = 'undetermined';
                 isCarouselTouchingRef.current = false;
-                recirculateCarouselViewport(event.currentTarget);
+
+                if (wasHorizontalSwipe) {
+                  recirculateCarouselViewport(event.currentTarget);
+                }
+
                 resumeCarouselAfterSettle();
               }}
               onScroll={(event) => {
@@ -593,7 +651,7 @@ export function InstitutionalHomePage() {
                 recirculateCarouselViewport(viewport);
               }}
             >
-              <div className="institutional-home__carousel-track asi-gesture-surface">
+              <div className="institutional-home__carousel-track">
                 <div
                   aria-hidden="true"
                   className="institutional-home__carousel-set"
@@ -783,7 +841,7 @@ export function InstitutionalHomePage() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </InstitutionalSection>
 

@@ -242,6 +242,9 @@ Do not finish a task with unresolved follow-up left only in chat or implied in t
 ### R-071 — Every repository change must end with a git commit
 Do not finish any task that changed repository files, documentation, configuration, or code without creating a git commit for the completed work in the same task. The commit message must reflect the real scope of the change, and uncommitted repository changes must be treated as incomplete work rather than an acceptable stopping point.
 
+### R-072 — Mobile editorial carousels must not hijack page scroll
+Do not ship mobile editorial carousels that trap vertical scroll when the user starts the gesture on top of the carousel surface. On touch devices, a vertical gesture over the carousel must keep scrolling the page naturally, while a clear horizontal swipe must still move the carousel without dead zones or broken gesture negotiation.
+
 ---
 
 ## Maintenance rule

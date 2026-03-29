@@ -77,9 +77,9 @@
   background: transparent;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  touch-action: pan-x;
+  touch-action: manipulation;
   overscroll-behavior-x: contain;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 

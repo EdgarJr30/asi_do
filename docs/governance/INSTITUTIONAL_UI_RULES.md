@@ -50,6 +50,7 @@ The institutional portal follows the `Institutional Curator` direction:
 4. Lists and directories must avoid divider lines; spacing and card separation should do the structural work.
 5. Forms should use minimalist ghost-border inputs with a stronger blue focus line.
 6. Editorial carousels directly under the hero should prioritize tall, photo-led story cards with enough horizontal density to show the breadth of the institution, expanding toward the page edges on wide screens when that improves rhythm.
+7. On mobile, editorial carousels must never trap vertical page scroll. A vertical swipe that begins over the carousel must continue scrolling the page normally, while horizontal swipes on the same surface must still move the carousel reliably.
 
 ## 7. Relationship to the product platform
 1. The institutional portal and the SaaS platform must remain visually distinct.
