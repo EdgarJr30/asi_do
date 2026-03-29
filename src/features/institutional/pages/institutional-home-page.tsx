@@ -841,24 +841,24 @@ export function InstitutionalHomePage() {
                         </motion.div>
                       </AnimatePresence>
 
-                      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                      <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                         <InstitutionalActionLink
                           action={activeHero.primaryAction}
-                          className="min-h-14 w-full justify-center sm:min-w-52 sm:flex-1 sm:w-auto lg:min-h-[3.75rem]"
+                          className="min-h-14 w-full justify-center sm:min-w-46 sm:w-auto"
                         />
                         <InstitutionalActionLink
                           action={activeHero.secondaryAction}
-                          className="min-h-14 w-full justify-center border border-white/30 bg-white/8 text-white hover:bg-white/14 sm:min-w-52 sm:flex-1 sm:w-auto lg:min-h-[3.75rem]"
+                          className="min-h-14 w-full justify-center border border-white/30 bg-white/8 text-white hover:bg-white/14 sm:min-w-46 sm:w-auto"
                         />
                       </div>
                     </div>
 
-                    <div className="mt-10 space-y-5 sm:mt-12 sm:space-y-6">
-                      <div className="grid gap-3 sm:max-w-2xl sm:grid-cols-2 sm:gap-4">
+                    <div className="mt-8 space-y-5 sm:mt-10 sm:space-y-6">
+                      <div className="grid gap-3 sm:max-w-xl sm:grid-cols-2">
                         {homeHeroMetrics.map((metric) => (
                           <motion.div
                             key={metric.label}
-                            className="rounded-3xl border border-white/10 bg-white/12 p-5 backdrop-blur-md sm:min-h-40"
+                            className="rounded-3xl border border-white/10 bg-white/12 p-4 backdrop-blur-md"
                             transition={{ duration: 0.3 }}
                             whileHover={
                               shouldReduceMotion
