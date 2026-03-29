@@ -119,7 +119,6 @@
   width: max-content;
   gap: 0.6rem;
   align-items: stretch;
-  will-change: transform;
 }
 
 .institutional-home__carousel-set {

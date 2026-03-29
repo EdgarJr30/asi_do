@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
@@ -61,6 +68,12 @@ function getSwipeDirection(info: {
 
   return 'stay';
 }
+
+const CAROUSEL_AUTOPLAY_PIXELS_PER_MS = 0.045;
+const CAROUSEL_AUTOPLAY_MAX_DELTA_MS = 32;
+const CAROUSEL_SCROLL_SETTLE_DELAY_MS = 180;
+const CAROUSEL_AUTOPLAY_RESUME_DELAY_MS = 560;
+const CAROUSEL_NORMALIZATION_EPSILON = 0.5;
 
 function AnimatedMetricValue({ value }: { value: string }) {
   const numericValue = Number.parseInt(value.replace(/\D/g, ''), 10);
@@ -300,7 +313,37 @@ export function InstitutionalHomePage() {
     };
   }, []);
 
-  const resumeCarouselAfterSettle = () => {
+  const pauseCarouselAutoplay = () => {
+    if (carouselResumeTimeoutRef.current !== null) {
+      window.clearTimeout(carouselResumeTimeoutRef.current);
+      carouselResumeTimeoutRef.current = null;
+    }
+
+    setIsCarouselPaused(true);
+  };
+
+  const settleCarouselViewport = useCallback((viewport: HTMLDivElement) => {
+    if (carouselScrollSettleTimeoutRef.current !== null) {
+      window.clearTimeout(carouselScrollSettleTimeoutRef.current);
+      carouselScrollSettleTimeoutRef.current = null;
+    }
+
+    const setWidth = carouselSetWidthRef.current;
+
+    if (setWidth > 0) {
+      const normalizedLeft = normalizeCarouselLoopOffset(
+        viewport.scrollLeft,
+        setWidth
+      );
+
+      if (
+        Math.abs(normalizedLeft - viewport.scrollLeft) >
+        CAROUSEL_NORMALIZATION_EPSILON
+      ) {
+        viewport.scrollLeft = normalizedLeft;
+      }
+    }
+
     if (carouselResumeTimeoutRef.current !== null) {
       window.clearTimeout(carouselResumeTimeoutRef.current);
     }
@@ -309,35 +352,39 @@ export function InstitutionalHomePage() {
       if (!isCarouselHoveredRef.current && !isCarouselTouchingRef.current) {
         setIsCarouselPaused(false);
       }
-    }, 480);
-  };
+    }, CAROUSEL_AUTOPLAY_RESUME_DELAY_MS);
+  }, []);
 
-  const scheduleCarouselLoopNormalization = (viewport: HTMLDivElement) => {
-    if (carouselScrollSettleTimeoutRef.current !== null) {
-      window.clearTimeout(carouselScrollSettleTimeoutRef.current);
-    }
+  const scheduleCarouselLoopNormalization = useCallback(
+    (viewport: HTMLDivElement) => {
+      if (carouselScrollSettleTimeoutRef.current !== null) {
+        window.clearTimeout(carouselScrollSettleTimeoutRef.current);
+      }
 
-    carouselScrollSettleTimeoutRef.current = window.setTimeout(() => {
-      recirculateCarouselViewport(viewport);
-    }, 140);
-  };
+      carouselScrollSettleTimeoutRef.current = window.setTimeout(() => {
+        settleCarouselViewport(viewport);
+      }, CAROUSEL_SCROLL_SETTLE_DELAY_MS);
+    },
+    [settleCarouselViewport]
+  );
 
-  const recirculateCarouselViewport = (viewport: HTMLDivElement) => {
-    const setWidth = carouselSetWidthRef.current;
+  useEffect(() => {
+    const viewport = carouselViewportRef.current;
 
-    if (setWidth <= 0) {
+    if (!viewport || !('onscrollend' in viewport)) {
       return;
     }
 
-    const normalizedLeft = normalizeCarouselLoopOffset(
-      viewport.scrollLeft,
-      setWidth
-    );
+    const handleScrollEnd = () => {
+      settleCarouselViewport(viewport);
+    };
 
-    if (Math.abs(normalizedLeft - viewport.scrollLeft) > 0.5) {
-      viewport.scrollLeft = normalizedLeft;
-    }
-  };
+    viewport.addEventListener('scrollend', handleScrollEnd);
+
+    return () => {
+      viewport.removeEventListener('scrollend', handleScrollEnd);
+    };
+  }, [settleCarouselViewport]);
 
   useEffect(() => {
     if (shouldReduceMotion || isCarouselPaused) {
@@ -355,10 +402,10 @@ export function InstitutionalHomePage() {
     const tick = (timestamp: number) => {
       const delta = timestamp - lastTimestamp;
       lastTimestamp = timestamp;
-      const boundedDelta = Math.min(delta, 32);
+      const boundedDelta = Math.min(delta, CAROUSEL_AUTOPLAY_MAX_DELTA_MS);
 
       const nextLeft = normalizeCarouselLoopOffset(
-        viewport.scrollLeft + boundedDelta * 0.045,
+        viewport.scrollLeft + boundedDelta * CAROUSEL_AUTOPLAY_PIXELS_PER_MS,
         carouselSetWidthRef.current
       );
 
@@ -687,7 +734,7 @@ export function InstitutionalHomePage() {
               className="institutional-home__carousel-viewport overflow-x-auto overflow-y-hidden"
               onMouseEnter={() => {
                 isCarouselHoveredRef.current = true;
-                setIsCarouselPaused(true);
+                pauseCarouselAutoplay();
               }}
               onMouseLeave={() => {
                 isCarouselHoveredRef.current = false;
@@ -705,7 +752,8 @@ export function InstitutionalHomePage() {
                   y: touch.clientY,
                 };
                 carouselTouchIntentRef.current = 'undetermined';
-                isCarouselTouchingRef.current = false;
+                isCarouselTouchingRef.current = true;
+                pauseCarouselAutoplay();
               }}
               onTouchMove={(event) => {
                 const touch = event.touches[0];
@@ -726,15 +774,11 @@ export function InstitutionalHomePage() {
 
                 if (nextIntent === 'horizontal') {
                   carouselTouchIntentRef.current = nextIntent;
-                  isCarouselTouchingRef.current = true;
-                  setIsCarouselPaused(true);
                   return;
                 }
 
                 if (nextIntent === 'vertical') {
                   carouselTouchIntentRef.current = nextIntent;
-                  isCarouselTouchingRef.current = false;
-                  setIsCarouselPaused(false);
                 }
               }}
               onTouchEnd={(event) => {
@@ -742,16 +786,15 @@ export function InstitutionalHomePage() {
                 carouselTouchIntentRef.current = 'undetermined';
                 isCarouselTouchingRef.current = false;
                 scheduleCarouselLoopNormalization(event.currentTarget);
-
-                resumeCarouselAfterSettle();
               }}
               onTouchCancel={(event) => {
                 carouselTouchStartRef.current = null;
                 carouselTouchIntentRef.current = 'undetermined';
                 isCarouselTouchingRef.current = false;
                 scheduleCarouselLoopNormalization(event.currentTarget);
-
-                resumeCarouselAfterSettle();
+              }}
+              onWheel={() => {
+                pauseCarouselAutoplay();
               }}
               onScroll={(event) => {
                 const viewport = event.currentTarget;
@@ -821,18 +864,11 @@ export function InstitutionalHomePage() {
                   data-carousel-set="primary"
                 >
                   {homeCarouselCards.map((item) => (
-                    <motion.article
+                    <article
                       key={item.title}
                       className={cn(
                         'institutional-home__carousel-card overflow-hidden rounded-3xl shadow-(--asi-shadow-soft)'
                       )}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 220,
-                        damping: 24,
-                        mass: 0.7,
-                      }}
-                      layout
                     >
                       {item.image ? (
                         <div className="relative h-88 sm:h-96 xl:h-108 2xl:h-112">
@@ -877,7 +913,7 @@ export function InstitutionalHomePage() {
                           </div>
                         </div>
                       )}
-                    </motion.article>
+                    </article>
                   ))}
                 </div>
 
