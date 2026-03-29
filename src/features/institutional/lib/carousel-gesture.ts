@@ -28,7 +28,7 @@ export function getTouchPanIntent(offset: {
 export function normalizeCarouselLoopOffset(
   scrollLeft: number,
   setWidth: number
-) {
+): number {
   if (setWidth <= 0) {
     return scrollLeft;
   }

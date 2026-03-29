@@ -198,6 +198,7 @@ export function InstitutionalHomePage() {
     'horizontal' | 'vertical' | 'undetermined'
   >('undetermined');
   const carouselResumeTimeoutRef = useRef<number | null>(null);
+  const carouselScrollSettleTimeoutRef = useRef<number | null>(null);
   const platformDemoVideoPath = '/media/demoApp.mp4';
   const christianEventVideoPath = '/media/christian-event.mp4';
 
@@ -253,18 +254,15 @@ export function InstitutionalHomePage() {
       carouselSetWidthRef.current = nextSetWidth;
 
       if (previousSetWidth <= 0) {
-        viewport.scrollTo({
-          left: nextSetWidth,
-          behavior: 'auto',
-        });
+        viewport.scrollLeft = nextSetWidth;
         return;
       }
 
       const relativeOffset = viewport.scrollLeft - previousSetWidth;
-      viewport.scrollTo({
-        left: normalizeCarouselLoopOffset(nextSetWidth + relativeOffset, nextSetWidth),
-        behavior: 'auto',
-      });
+      viewport.scrollLeft = normalizeCarouselLoopOffset(
+        nextSetWidth + relativeOffset,
+        nextSetWidth
+      );
     };
 
     syncCarouselMeasurements();
@@ -294,6 +292,10 @@ export function InstitutionalHomePage() {
         window.clearTimeout(carouselResumeTimeoutRef.current);
       }
 
+      if (carouselScrollSettleTimeoutRef.current !== null) {
+        window.clearTimeout(carouselScrollSettleTimeoutRef.current);
+      }
+
       window.cancelAnimationFrame(carouselAnimationFrameRef.current);
     };
   }, []);
@@ -310,6 +312,16 @@ export function InstitutionalHomePage() {
     }, 480);
   };
 
+  const scheduleCarouselLoopNormalization = (viewport: HTMLDivElement) => {
+    if (carouselScrollSettleTimeoutRef.current !== null) {
+      window.clearTimeout(carouselScrollSettleTimeoutRef.current);
+    }
+
+    carouselScrollSettleTimeoutRef.current = window.setTimeout(() => {
+      recirculateCarouselViewport(viewport);
+    }, 140);
+  };
+
   const recirculateCarouselViewport = (viewport: HTMLDivElement) => {
     const setWidth = carouselSetWidthRef.current;
 
@@ -323,10 +335,7 @@ export function InstitutionalHomePage() {
     );
 
     if (Math.abs(normalizedLeft - viewport.scrollLeft) > 0.5) {
-      viewport.scrollTo({
-        left: normalizedLeft,
-        behavior: 'auto',
-      });
+      viewport.scrollLeft = normalizedLeft;
     }
   };
 
@@ -346,17 +355,14 @@ export function InstitutionalHomePage() {
     const tick = (timestamp: number) => {
       const delta = timestamp - lastTimestamp;
       lastTimestamp = timestamp;
+      const boundedDelta = Math.min(delta, 32);
 
       const nextLeft = normalizeCarouselLoopOffset(
-        viewport.scrollLeft + delta * 0.045,
+        viewport.scrollLeft + boundedDelta * 0.045,
         carouselSetWidthRef.current
       );
 
-      viewport.scrollTo({
-        left: nextLeft,
-        behavior: 'auto',
-      });
-      recirculateCarouselViewport(viewport);
+      viewport.scrollLeft = nextLeft;
 
       carouselAnimationFrameRef.current = window.requestAnimationFrame(tick);
     };
@@ -732,36 +738,24 @@ export function InstitutionalHomePage() {
                 }
               }}
               onTouchEnd={(event) => {
-                const wasHorizontalSwipe =
-                  carouselTouchIntentRef.current === 'horizontal';
-
                 carouselTouchStartRef.current = null;
                 carouselTouchIntentRef.current = 'undetermined';
                 isCarouselTouchingRef.current = false;
-
-                if (wasHorizontalSwipe) {
-                  recirculateCarouselViewport(event.currentTarget);
-                }
+                scheduleCarouselLoopNormalization(event.currentTarget);
 
                 resumeCarouselAfterSettle();
               }}
               onTouchCancel={(event) => {
-                const wasHorizontalSwipe =
-                  carouselTouchIntentRef.current === 'horizontal';
-
                 carouselTouchStartRef.current = null;
                 carouselTouchIntentRef.current = 'undetermined';
                 isCarouselTouchingRef.current = false;
-
-                if (wasHorizontalSwipe) {
-                  recirculateCarouselViewport(event.currentTarget);
-                }
+                scheduleCarouselLoopNormalization(event.currentTarget);
 
                 resumeCarouselAfterSettle();
               }}
               onScroll={(event) => {
                 const viewport = event.currentTarget;
-                recirculateCarouselViewport(viewport);
+                scheduleCarouselLoopNormalization(viewport);
               }}
             >
               <div className="institutional-home__carousel-track">

@@ -105,7 +105,7 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   touch-action: manipulation;
-  overscroll-behavior-x: contain;
+  overscroll-behavior-x: none;
   overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
 }
