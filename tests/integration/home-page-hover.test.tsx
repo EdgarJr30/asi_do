@@ -47,7 +47,7 @@ describe('home page hover affordances', () => {
     expect(comparisonTrigger.className).toContain('hover:text-primary-700')
 
     expect(footerPricing.className).toContain('cursor-pointer')
-    expect(footerPricing.className).toContain('hover:bg-[var(--app-surface)]')
-    expect(footerPricing.className).toContain('hover:shadow-[var(--app-shadow-card)]')
+    expect(footerPricing.className).toContain('hover:bg-(--app-surface)')
+    expect(footerPricing.className).toContain('hover:shadow-(--app-shadow-card)')
   })
 })
