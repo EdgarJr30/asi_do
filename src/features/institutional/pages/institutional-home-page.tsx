@@ -8,7 +8,7 @@ import {
   ChevronRight,
   Quote,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
 
 import { surfacePaths } from '@/app/router/surface-paths';
 import './institutional-home-page.css';
@@ -116,7 +116,9 @@ export function InstitutionalHomePage() {
   const isCarouselHoveredRef = useRef(false);
   const isCarouselTouchingRef = useRef(false);
   const carouselTouchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const carouselTouchIntentRef = useRef<'horizontal' | 'vertical' | 'undetermined'>('undetermined');
+  const carouselTouchIntentRef = useRef<
+    'horizontal' | 'vertical' | 'undetermined'
+  >('undetermined');
   const carouselResumeTimeoutRef = useRef<number | null>(null);
   const platformDemoVideoPath = '/media/demoApp.mp4';
   const christianEventVideoPath = '/media/christian-event.mp4';
@@ -562,10 +564,18 @@ export function InstitutionalHomePage() {
 
           <motion.div
             className="institutional-home__carousel-shell py-4 sm:-mx-7 sm:py-5 lg:-mx-10 xl:-mx-14"
-            initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
-            transition={{ duration: 0.68, ease: [0.22, 1, 0.36, 1] }}
-            viewport={{ once: true, amount: 0.2 }}
-            whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+            initial={
+              shouldReduceMotion
+                ? false
+                : { opacity: 0, y: 10, scale: 0.988, filter: 'blur(10px)' }
+            }
+            transition={{ duration: 0.86, ease: [0.16, 1, 0.3, 1] }}
+            viewport={{ once: true, amount: 0.24 }}
+            whileInView={
+              shouldReduceMotion
+                ? undefined
+                : { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
+            }
           >
             <div
               ref={carouselViewportRef}
@@ -597,7 +607,11 @@ export function InstitutionalHomePage() {
                 const touch = event.touches[0];
                 const touchStart = carouselTouchStartRef.current;
 
-                if (!touch || !touchStart || carouselTouchIntentRef.current !== 'undetermined') {
+                if (
+                  !touch ||
+                  !touchStart ||
+                  carouselTouchIntentRef.current !== 'undetermined'
+                ) {
                   return;
                 }
 
@@ -620,7 +634,8 @@ export function InstitutionalHomePage() {
                 }
               }}
               onTouchEnd={(event) => {
-                const wasHorizontalSwipe = carouselTouchIntentRef.current === 'horizontal';
+                const wasHorizontalSwipe =
+                  carouselTouchIntentRef.current === 'horizontal';
 
                 carouselTouchStartRef.current = null;
                 carouselTouchIntentRef.current = 'undetermined';
@@ -633,7 +648,8 @@ export function InstitutionalHomePage() {
                 resumeCarouselAfterSettle();
               }}
               onTouchCancel={(event) => {
-                const wasHorizontalSwipe = carouselTouchIntentRef.current === 'horizontal';
+                const wasHorizontalSwipe =
+                  carouselTouchIntentRef.current === 'horizontal';
 
                 carouselTouchStartRef.current = null;
                 carouselTouchIntentRef.current = 'undetermined';
@@ -1173,7 +1189,6 @@ export function InstitutionalHomePage() {
           </div>
         </div>
       </InstitutionalSection>
-
     </div>
   );
 }
