@@ -9,11 +9,14 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  FileText,
   Grid2x2,
+  Layers3,
   LogOut,
   Menu,
   Search,
   Shield,
+  Sparkles,
   UserRound,
   UsersRound,
   X
@@ -32,12 +35,38 @@ import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api
 import { fetchMyNotifications, markNotificationRead, type AppNotification } from '@/lib/notifications/api'
 import { filterNavigationItems } from '@/lib/permissions/guards'
 import { cn } from '@/lib/utils/cn'
-import { employerNavigationItems } from '@/shared/constants/navigation'
+import { candidateNavigationItems, employerNavigationItems } from '@/shared/constants/navigation'
+import type { NavigationItem } from '@/shared/types/navigation'
 
 const WORKSPACE_NOTIFICATION_QUERY_KEY = ['workspace-shell', 'notifications'] as const
 const WORKSPACE_SIDEBAR_COLLAPSED_STORAGE_KEY = 'asi:workspace-sidebar-collapsed:v1'
 const DESKTOP_SIDEBAR_EXPANDED_WIDTH = 272
 const DESKTOP_SIDEBAR_COLLAPSED_WIDTH = 88
+
+type ShellExperience = 'workspace' | 'candidate' | 'storefront'
+type ShellGuestAction = {
+  href: string
+  label: string
+  variant: 'ghost' | 'outline' | 'primary'
+}
+type ShellConfig = {
+  brand: string
+  footerCaption: string
+  guestActions: ShellGuestAction[]
+  mobileSidebarLabel: string
+  primaryNav: AppNavItem[]
+  profileHref: string
+  profileMenuLinks: Array<{ href: string; label: string }>
+  publicActionHref: string
+  publicActionLabel: string
+  routeMeta: Record<string, Pick<AppNavItem, 'title' | 'description'>>
+  routeMetaDefault: Pick<AppNavItem, 'title' | 'description'>
+  searchPlaceholder: string
+  sidebarGroups: AppNavGroup[]
+  tenantName: string
+  tenantRoleSummary: string
+  topbarEyebrow: string
+}
 
 const workspaceIconByHref: Partial<Record<string, LucideIcon>> = {
   [surfacePaths.workspace.root]: Building2,
@@ -45,6 +74,14 @@ const workspaceIconByHref: Partial<Record<string, LucideIcon>> = {
   [surfacePaths.workspace.talent]: UsersRound,
   [surfacePaths.workspace.pipeline]: Grid2x2,
   [surfacePaths.workspace.access]: Shield
+}
+
+const candidateIconByHref: Partial<Record<string, LucideIcon>> = {
+  [surfacePaths.storefront.jobs]: BriefcaseBusiness,
+  [surfacePaths.candidate.applications]: FileText,
+  [surfacePaths.candidate.profile]: UserRound,
+  [surfacePaths.candidate.onboarding]: Layers3,
+  [surfacePaths.candidate.recruiterRequest]: Building2
 }
 
 const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'description'>> = {
@@ -70,16 +107,70 @@ const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
   }
 }
 
-function mapWorkspaceItem(item: (typeof employerNavigationItems)[number]): AppNavItem {
-  const copy = workspaceCopyByHref[item.href] ?? {
-    title: item.title,
-    description: item.description
+const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'description'>> = {
+  [surfacePaths.storefront.jobs]: {
+    title: 'Jobs',
+    description: 'Explora oportunidades abiertas y aplica con más contexto'
+  },
+  [surfacePaths.candidate.applications]: {
+    title: 'Aplicaciones',
+    description: 'Sigue el avance de cada proceso con un solo vistazo'
+  },
+  [surfacePaths.candidate.profile]: {
+    title: 'Perfil',
+    description: 'Tu presencia profesional, CV y datos clave en un mismo lugar'
+  },
+  [surfacePaths.candidate.onboarding]: {
+    title: 'Onboarding',
+    description: 'Ajustes esenciales para dejar tu cuenta lista'
+  },
+  [surfacePaths.candidate.recruiterRequest]: {
+    title: 'Acceso employer',
+    description: 'Solicita llevar tu empresa a la plataforma'
   }
+}
+
+const storefrontCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'description'>> = {
+  [surfacePaths.storefront.home]: {
+    title: 'Producto',
+    description: 'Resumen comercial, beneficios y propuesta de valor'
+  },
+  [surfacePaths.storefront.jobs]: {
+    title: 'Jobs',
+    description: 'Vacantes públicas, detalles y acceso al flujo de aplicación'
+  },
+  [surfacePaths.auth.signIn]: {
+    title: 'Iniciar sesión',
+    description: 'Accede a tu cuenta para continuar en la plataforma'
+  },
+  [surfacePaths.auth.signUp]: {
+    title: 'Crear cuenta',
+    description: 'Comienza tu acceso a la plataforma con una cuenta nueva'
+  },
+  [surfacePaths.workspace.root]: {
+    title: 'Workspace',
+    description: 'Entra al espacio operativo de tu empresa'
+  },
+  [surfacePaths.candidate.profile]: {
+    title: 'Mi perfil',
+    description: 'Abre tu espacio profesional dentro de la plataforma'
+  }
+}
+
+function mapNavItem(
+  item: NavigationItem,
+  experience: Extract<ShellExperience, 'workspace' | 'candidate'>
+): AppNavItem {
+  const copy = experience === 'workspace' ? workspaceCopyByHref[item.href] : candidateCopyByHref[item.href]
+  const icon = experience === 'workspace' ? workspaceIconByHref[item.href] : candidateIconByHref[item.href]
 
   return {
     ...item,
-    ...copy,
-    icon: workspaceIconByHref[item.href]
+    ...(copy ?? {
+      title: item.title,
+      description: item.description
+    }),
+    icon
   }
 }
 
@@ -119,22 +210,27 @@ function getInitialSidebarCollapsed() {
   return window.localStorage.getItem(WORKSPACE_SIDEBAR_COLLAPSED_STORAGE_KEY) === '1'
 }
 
-function getWorkspaceRouteMeta(pathname: string) {
-  const entries = Object.entries(workspaceCopyByHref).sort((left, right) => right[0].length - left[0].length)
+function getRouteMeta(
+  pathname: string,
+  eyebrow: string,
+  routes: Record<string, Pick<AppNavItem, 'title' | 'description'>>,
+  fallback: Pick<AppNavItem, 'title' | 'description'>
+) {
+  const entries = Object.entries(routes).sort((left, right) => right[0].length - left[0].length)
   const matchedEntry = entries.find(([href]) => pathname === href || pathname.startsWith(`${href}/`))
 
   if (matchedEntry) {
     return {
-      eyebrow: 'Workspace operativo',
+      eyebrow,
       title: matchedEntry[1].title,
-      description: matchedEntry[1].description ?? 'Espacio operativo para coordinar el equipo.'
+      description: matchedEntry[1].description ?? fallback.description
     }
   }
 
   return {
-    eyebrow: 'Workspace operativo',
-    title: 'Workspace',
-    description: 'Centro operativo del equipo de reclutamiento.'
+    eyebrow,
+    title: fallback.title,
+    description: fallback.description
   }
 }
 
@@ -216,46 +312,204 @@ function WorkspaceNotificationPanel({
   )
 }
 
-function WorkspaceSidebarContent({
-  activeHref,
-  brand,
-  groups,
-  isCollapsed,
-  mode,
-  onNavigate,
-  onOpenNotifications,
-  onOpenProfile,
-  onOpenPublicBoard,
-  onSignOut,
-  onToggleSidebar,
+function SidebarFooter({
+  config,
+  isDesktop,
+  session,
+  showCollapsedLabels,
   signOutPending,
-  tenantName,
-  tenantRoleSummary,
   userEmail,
   userInitials,
-  userName
+  userName,
+  onActionNavigate,
+  onOpenNotifications,
+  onOpenProfile,
+  onSignOut
 }: {
-  activeHref: string
-  brand: string
-  groups: AppNavGroup[]
-  isCollapsed: boolean
-  mode: 'desktop' | 'mobile'
-  onNavigate: (href: string) => void
-  onOpenNotifications: () => void
-  onOpenProfile: () => void
-  onOpenPublicBoard: () => void
-  onSignOut: () => void
-  onToggleSidebar: () => void
+  config: ShellConfig
+  isDesktop: boolean
+  session: ReturnType<typeof useAppSession>
+  showCollapsedLabels: boolean
   signOutPending: boolean
-  tenantName: string
-  tenantRoleSummary: string
   userEmail: string
   userInitials: string
   userName: string
+  onActionNavigate: (href: string) => void
+  onOpenNotifications: () => void
+  onOpenProfile: () => void
+  onSignOut: () => void
+}) {
+  const footerYear = new Date().getFullYear()
+
+  if (!session.isAuthenticated) {
+    return (
+      <div className="border-t border-slate-200 px-2.5 py-3 dark:border-white/10">
+        <button
+          className={cn(
+            'flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
+            showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
+            'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white'
+          )}
+          title={showCollapsedLabels ? config.publicActionLabel : undefined}
+          type="button"
+          onClick={() => onActionNavigate(config.publicActionHref)}
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300">
+            <Sparkles className="size-4.5" />
+          </span>
+          {!showCollapsedLabels ? <span>{config.publicActionLabel}</span> : <span className="sr-only">{config.publicActionLabel}</span>}
+        </button>
+
+        <div className="mt-3 grid gap-2">
+          {config.guestActions.map((action) => (
+            <Button
+              key={action.href}
+              className="w-full"
+              variant={action.variant === 'primary' ? undefined : action.variant}
+              onClick={() => onActionNavigate(action.href)}
+            >
+              {action.label}
+            </Button>
+          ))}
+        </div>
+
+        {!showCollapsedLabels ? (
+          <div className="mt-4 border-t border-slate-200 pt-4 text-center dark:border-white/10">
+            <p className="text-xs leading-5 text-slate-400">© {footerYear} {config.brand}</p>
+            <p className="mt-1 text-xs font-medium text-slate-400">{config.footerCaption}</p>
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
+  return (
+    <div className="border-t border-slate-200 px-2.5 py-3 dark:border-white/10">
+      <button
+        className={cn(
+          'flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
+          showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
+          'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white'
+        )}
+        title={showCollapsedLabels ? config.publicActionLabel : undefined}
+        type="button"
+        onClick={() => onActionNavigate(config.publicActionHref)}
+      >
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300">
+          <BriefcaseBusiness className="size-4.5" />
+        </span>
+        {!showCollapsedLabels ? <span>{config.publicActionLabel}</span> : <span className="sr-only">{config.publicActionLabel}</span>}
+      </button>
+
+      {!isDesktop ? (
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5">
+          <div className="flex items-center gap-3">
+            <div className="flex size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-900 dark:border-white/10 dark:bg-white/10 dark:text-white">
+              {userInitials}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{userName}</p>
+              <p className="truncate text-xs text-slate-500 dark:text-slate-400">{userEmail}</p>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-2">
+            <button
+              className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-slate-700 transition hover:bg-white dark:text-slate-200 dark:hover:bg-white/10"
+              type="button"
+              onClick={onOpenProfile}
+            >
+              <UserRound className="size-4" />
+              Mi perfil
+            </button>
+            <button
+              className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-slate-700 transition hover:bg-white dark:text-slate-200 dark:hover:bg-white/10"
+              type="button"
+              onClick={onOpenNotifications}
+            >
+              <Bell className="size-4" />
+              Notificaciones
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <div
+        className={cn(
+          'mt-3 flex items-center',
+          showCollapsedLabels ? 'justify-center' : 'gap-3 px-1'
+        )}
+        title={showCollapsedLabels ? userName : undefined}
+      >
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-950">
+          {userInitials}
+        </div>
+        {!showCollapsedLabels ? (
+          <div className="min-w-0">
+            <p className="truncate text-[13px] font-semibold text-slate-900 dark:text-white">{userName}</p>
+            <p className="truncate text-[11px] text-slate-400">{config.tenantRoleSummary}</p>
+          </div>
+        ) : (
+          <span className="sr-only">{userName}</span>
+        )}
+      </div>
+
+      <button
+        aria-label="Cerrar sesion"
+        className={cn(
+          'mt-4 flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 dark:text-rose-300 dark:hover:bg-rose-500/10 dark:hover:text-rose-200',
+          showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3'
+        )}
+        title={showCollapsedLabels ? 'Cerrar sesion' : undefined}
+        type="button"
+        onClick={onSignOut}
+      >
+        <LogOut className="size-4.5" />
+        {!showCollapsedLabels ? <span>{signOutPending ? 'Cerrando...' : 'Cerrar sesion'}</span> : <span className="sr-only">Cerrar sesion</span>}
+      </button>
+
+      {!showCollapsedLabels ? (
+        <div className="mt-4 border-t border-slate-200 pt-4 text-center dark:border-white/10">
+          <p className="text-xs leading-5 text-slate-400">© {footerYear} {config.brand}</p>
+          <p className="mt-1 text-xs font-medium text-slate-400">{config.footerCaption}</p>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function WorkspaceSidebarContent({
+  activeHref,
+  config,
+  isCollapsed,
+  mode,
+  session,
+  signOutPending,
+  userEmail,
+  userInitials,
+  userName,
+  onActionNavigate,
+  onOpenNotifications,
+  onOpenProfile,
+  onSignOut,
+  onToggleSidebar
+}: {
+  activeHref: string
+  config: ShellConfig
+  isCollapsed: boolean
+  mode: 'desktop' | 'mobile'
+  session: ReturnType<typeof useAppSession>
+  signOutPending: boolean
+  userEmail: string
+  userInitials: string
+  userName: string
+  onActionNavigate: (href: string) => void
+  onOpenNotifications: () => void
+  onOpenProfile: () => void
+  onSignOut: () => void
+  onToggleSidebar: () => void
 }) {
   const isDesktop = mode === 'desktop'
   const showCollapsedLabels = isDesktop && isCollapsed
-  const footerYear = new Date().getFullYear()
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden border-r border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-slate-950 dark:text-white">
@@ -264,53 +518,38 @@ function WorkspaceSidebarContent({
           <BrandMark panelClassName="size-10 rounded-[14px] border-primary-200/40 bg-primary-600 p-2 shadow-[0_16px_36px_rgba(43,69,143,0.2)] dark:border-white/10" />
           {!showCollapsedLabels ? (
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold tracking-tight text-slate-950 dark:text-white">{brand}</p>
-              <p className="mt-0.5 truncate text-xs uppercase tracking-[0.18em] text-slate-400">{tenantName}</p>
+              <p className="truncate text-sm font-semibold tracking-tight text-slate-950 dark:text-white">{config.brand}</p>
+              <p className="mt-0.5 truncate text-xs uppercase tracking-[0.18em] text-slate-400">{config.tenantName}</p>
             </div>
           ) : null}
           <button
             aria-label={
               isDesktop
                 ? isCollapsed
-                  ? 'Expandir sidebar del workspace'
-                  : 'Contraer sidebar del workspace'
-                : 'Cerrar sidebar del workspace'
+                  ? `Expandir sidebar de ${config.mobileSidebarLabel}`
+                  : `Contraer sidebar de ${config.mobileSidebarLabel}`
+                : `Cerrar sidebar de ${config.mobileSidebarLabel}`
             }
             className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-slate-300 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/10"
-            title={
-              isDesktop
-                ? isCollapsed
-                  ? 'Expandir sidebar del workspace'
-                  : 'Contraer sidebar del workspace'
-                : 'Cerrar sidebar del workspace'
-            }
             type="button"
             onClick={onToggleSidebar}
           >
-            {isDesktop ? (
-              isCollapsed ? (
-                <ChevronRight className="size-4.5" />
-              ) : (
-                <ChevronLeft className="size-4.5" />
-              )
-            ) : (
-              <X className="size-4.5" />
-            )}
+            {isDesktop ? isCollapsed ? <ChevronRight className="size-4.5" /> : <ChevronLeft className="size-4.5" /> : <X className="size-4.5" />}
           </button>
         </div>
-        {showCollapsedLabels ? <span className="sr-only">{tenantName}</span> : null}
+        {showCollapsedLabels ? <span className="sr-only">{config.tenantName}</span> : null}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <nav aria-label={`${brand} navigation`} className="flex-1 overflow-y-auto px-2.5 py-3">
-          {groups.map((group, groupIndex) => (
+        <nav aria-label={`${config.brand} navigation`} className="flex-1 overflow-y-auto px-2.5 py-3">
+          {config.sidebarGroups.map((group, groupIndex) => (
             <div key={group.title ?? `group-${groupIndex}`} className={cn(groupIndex === 0 ? '' : 'mt-3 border-t border-slate-200 pt-3 dark:border-white/10')}>
               {group.title && !showCollapsedLabels ? (
                 <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{group.title}</p>
               ) : null}
               <div className="space-y-1">
                 {group.items.map((item) => {
-                  const isActive = activeHref === item.href
+                  const isActive = activeHref === item.href || activeHref.startsWith(`${item.href}/`)
                   const Icon = item.icon
 
                   return (
@@ -326,7 +565,7 @@ function WorkspaceSidebarContent({
                       )}
                       title={showCollapsedLabels ? item.title : undefined}
                       type="button"
-                      onClick={() => onNavigate(item.href)}
+                      onClick={() => onActionNavigate(item.href)}
                     >
                       <span
                         className={cn(
@@ -354,114 +593,29 @@ function WorkspaceSidebarContent({
           ))}
         </nav>
 
-        <div className="border-t border-slate-200 px-2.5 py-3 dark:border-white/10">
-          <button
-            className={cn(
-              'flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
-              showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
-              'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white'
-            )}
-            title={showCollapsedLabels ? 'Ver job board publico' : undefined}
-            type="button"
-            onClick={onOpenPublicBoard}
-          >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300">
-              <BriefcaseBusiness className="size-4.5" />
-            </span>
-            {!showCollapsedLabels ? <span>Ver job board publico</span> : <span className="sr-only">Ver job board publico</span>}
-          </button>
-
-          {!isDesktop ? (
-            <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5">
-              <div className="flex items-center gap-3">
-                <div className="flex size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-900 dark:border-white/10 dark:bg-white/10 dark:text-white">
-                  {userInitials}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{userName}</p>
-                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">{userEmail}</p>
-                </div>
-              </div>
-              <div className="mt-3 grid gap-2">
-                <button
-                  className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-slate-700 transition hover:bg-white dark:text-slate-200 dark:hover:bg-white/10"
-                  type="button"
-                  onClick={onOpenProfile}
-                >
-                  <UserRound className="size-4" />
-                  Mi perfil
-                </button>
-                <button
-                  className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-slate-700 transition hover:bg-white dark:text-slate-200 dark:hover:bg-white/10"
-                  type="button"
-                  onClick={onOpenNotifications}
-                >
-                  <Bell className="size-4" />
-                  Notificaciones
-                </button>
-              </div>
-            </div>
-          ) : null}
-
-          <div
-            className={cn(
-              'mt-3 flex items-center',
-              showCollapsedLabels ? 'justify-center' : 'gap-3 px-1'
-            )}
-            title={showCollapsedLabels ? userName : undefined}
-          >
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-950">
-              {userInitials}
-            </div>
-            {!showCollapsedLabels ? (
-              <div className="min-w-0">
-                <p className="truncate text-[13px] font-semibold text-slate-900 dark:text-white">{userName}</p>
-                <p className="truncate text-[11px] text-slate-400">{tenantRoleSummary}</p>
-              </div>
-            ) : (
-              <span className="sr-only">{userName}</span>
-            )}
-          </div>
-
-          <button
-            aria-label="Cerrar sesion"
-            className={cn(
-              'mt-4 flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 dark:text-rose-300 dark:hover:bg-rose-500/10 dark:hover:text-rose-200',
-              showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3'
-            )}
-            title={showCollapsedLabels ? 'Cerrar sesion' : undefined}
-            type="button"
-            onClick={onSignOut}
-          >
-            <LogOut className="size-4.5" />
-            {!showCollapsedLabels ? <span>{signOutPending ? 'Cerrando...' : 'Cerrar sesion'}</span> : <span className="sr-only">Cerrar sesion</span>}
-          </button>
-
-          {!showCollapsedLabels ? (
-            <div className="mt-4 border-t border-slate-200 pt-4 text-center dark:border-white/10">
-              <p className="text-xs leading-5 text-slate-400">© {footerYear} {brand}</p>
-              <p className="mt-1 text-xs font-medium text-slate-400">Shell de workspace employer</p>
-            </div>
-          ) : null}
-        </div>
+        <SidebarFooter
+          config={config}
+          isDesktop={isDesktop}
+          session={session}
+          showCollapsedLabels={showCollapsedLabels}
+          signOutPending={signOutPending}
+          userEmail={userEmail}
+          userInitials={userInitials}
+          userName={userName}
+          onActionNavigate={onActionNavigate}
+          onOpenNotifications={onOpenNotifications}
+          onOpenProfile={onOpenProfile}
+          onSignOut={onSignOut}
+        />
       </div>
     </div>
   )
 }
 
-export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode }) {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const session = useAppSession()
-  const queryClient = useQueryClient()
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(getInitialSidebarCollapsed)
-  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false)
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
-  const notificationPanelRef = useRef<HTMLDivElement | null>(null)
-  const profileMenuRef = useRef<HTMLDivElement | null>(null)
-
-  const visibleNavigation = filterNavigationItems(employerNavigationItems, session.permissions, session.isAuthenticated).map(mapWorkspaceItem)
+function buildWorkspaceConfig(session: ReturnType<typeof useAppSession>) {
+  const visibleNavigation = filterNavigationItems(employerNavigationItems, session.permissions, session.isAuthenticated).map((item) =>
+    mapNavItem(item, 'workspace')
+  )
 
   const primaryNav: AppNavItem[] = [
     surfacePaths.workspace.jobs,
@@ -476,30 +630,234 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
     .map((href) => findNavItem(visibleNavigation, href))
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
 
-  const sidebarGroups: AppNavGroup[] = [
-    {
+  return {
+    brand: 'ASI para equipos',
+    footerCaption: 'Shell compartido de plataforma',
+    guestActions: [],
+    mobileSidebarLabel: 'workspace',
+    primaryNav,
+    profileHref: surfacePaths.candidate.profile,
+    profileMenuLinks: secondaryNav.map((item) => ({ href: item.href, label: item.title })),
+    publicActionHref: surfacePaths.storefront.jobs,
+    publicActionLabel: 'Ver job board publico',
+    routeMeta: workspaceCopyByHref,
+    routeMetaDefault: {
       title: 'Workspace',
-      items: [
-        ...[surfacePaths.workspace.root, surfacePaths.workspace.jobs, surfacePaths.workspace.talent, surfacePaths.workspace.pipeline]
-          .map((href) => findNavItem(visibleNavigation, href))
-          .filter((item): item is NonNullable<typeof item> => Boolean(item))
-      ]
+      description: 'Centro operativo del equipo de reclutamiento.'
     },
-    ...(secondaryNav.length
-      ? [
-          {
-            title: 'Administra',
-            items: secondaryNav
-          }
+    searchPlaceholder: 'Buscar en el workspace (próximamente)',
+    sidebarGroups: [
+      {
+        title: 'Workspace',
+        items: [
+          ...[surfacePaths.workspace.root, surfacePaths.workspace.jobs, surfacePaths.workspace.talent, surfacePaths.workspace.pipeline]
+            .map((href) => findNavItem(visibleNavigation, href))
+            .filter((item): item is NonNullable<typeof item> => Boolean(item))
         ]
-      : [])
+      },
+      ...(secondaryNav.length
+        ? [
+            {
+              title: 'Administra',
+              items: secondaryNav
+            }
+          ]
+        : [])
+    ],
+    tenantName: session.activeMembership?.tenantName ?? 'Tu espacio de empresa',
+    tenantRoleSummary: session.activeMembership?.roleNames.filter(Boolean).join(', ') || 'Miembro del workspace',
+    topbarEyebrow: 'Workspace operativo'
+  } satisfies ShellConfig
+}
+
+function buildCandidateConfig(session: ReturnType<typeof useAppSession>) {
+  const visibleNavigation = filterNavigationItems(candidateNavigationItems, session.permissions, session.isAuthenticated).map((item) =>
+    mapNavItem(item, 'candidate')
+  )
+
+  const primaryNav: AppNavItem[] = [
+    surfacePaths.storefront.jobs,
+    surfacePaths.candidate.applications,
+    surfacePaths.candidate.profile,
+    surfacePaths.candidate.onboarding
+  ]
+    .map((href) => findNavItem(visibleNavigation, href))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item))
+
+  return {
+    brand: 'ASI para talento',
+    footerCaption: 'Shell compartido de plataforma',
+    guestActions: [],
+    mobileSidebarLabel: 'candidate',
+    primaryNav,
+    profileHref: surfacePaths.candidate.profile,
+    profileMenuLinks: [surfacePaths.candidate.applications, surfacePaths.candidate.onboarding]
+      .map((href) => findNavItem(visibleNavigation, href))
+      .filter((item): item is NonNullable<typeof item> => Boolean(item))
+      .map((item) => ({ href: item.href, label: item.title })),
+    publicActionHref: surfacePaths.storefront.jobs,
+    publicActionLabel: 'Explorar jobs',
+    routeMeta: candidateCopyByHref,
+    routeMetaDefault: {
+      title: 'Tu espacio',
+      description: 'Tu perfil, oportunidades y progreso en un solo lugar.'
+    },
+    searchPlaceholder: 'Buscar oportunidades (próximamente)',
+    sidebarGroups: [
+      {
+        title: 'Candidato',
+        items: [
+          ...[surfacePaths.candidate.profile, surfacePaths.candidate.applications, surfacePaths.storefront.jobs]
+            .map((href) => findNavItem(visibleNavigation, href))
+            .filter((item): item is NonNullable<typeof item> => Boolean(item))
+        ]
+      },
+      {
+        title: 'Cuenta',
+        items: [
+          ...[surfacePaths.candidate.onboarding, surfacePaths.candidate.recruiterRequest]
+            .map((href) => findNavItem(visibleNavigation, href))
+            .filter((item): item is NonNullable<typeof item> => Boolean(item))
+        ]
+      }
+    ],
+    tenantName: session.profile?.display_name ?? session.profile?.full_name ?? 'Tu espacio profesional',
+    tenantRoleSummary: 'Cuenta de candidato',
+    topbarEyebrow: 'Ruta de candidato'
+  } satisfies ShellConfig
+}
+
+function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
+  const hasWorkspaceAccess = session.permissions.includes('workspace:read')
+  const accountItems: AppNavItem[] = session.isAuthenticated
+    ? [
+        hasWorkspaceAccess
+          ? {
+              href: surfacePaths.workspace.root,
+              title: 'Workspace',
+              description: 'Entra al espacio operativo de tu empresa',
+              icon: Building2
+            }
+          : {
+              href: surfacePaths.candidate.profile,
+              title: 'Mi perfil',
+              description: 'Abre tu espacio profesional y tus aplicaciones',
+              icon: UserRound
+            }
+      ]
+    : [
+        {
+          href: surfacePaths.auth.signIn,
+          title: 'Iniciar sesión',
+          description: 'Accede a tu cuenta para continuar en la plataforma',
+          icon: UserRound
+        },
+        {
+          href: surfacePaths.auth.signUp,
+          title: 'Crear cuenta',
+          description: 'Comienza tu acceso a la plataforma',
+          icon: Building2
+        }
+      ]
+
+  const navigationItems: AppNavItem[] = [
+    {
+      href: surfacePaths.storefront.home,
+      title: 'Producto',
+      description: 'Resumen comercial, pricing y propuesta',
+      icon: Sparkles
+    },
+    {
+      href: surfacePaths.storefront.jobs,
+      title: 'Jobs',
+      description: 'Vacantes públicas, detalles y aplicación',
+      icon: BriefcaseBusiness
+    },
+    ...accountItems
   ]
 
-  const tenantName = session.activeMembership?.tenantName ?? 'Tu espacio de empresa'
-  const tenantRoleSummary =
-    session.activeMembership?.roleNames.filter(Boolean).join(', ') || 'Miembro del workspace'
+  return {
+    brand: 'Plataforma ASI',
+    footerCaption: 'Shell compartido de plataforma',
+    guestActions: [
+      { href: surfacePaths.institutional.home, label: 'ASI institucional', variant: 'ghost' },
+      { href: surfacePaths.auth.signUp, label: 'Crear cuenta', variant: 'outline' },
+      { href: surfacePaths.auth.signIn, label: 'Iniciar sesion', variant: 'primary' }
+    ],
+    mobileSidebarLabel: 'plataforma',
+    primaryNav: [surfacePaths.storefront.home, surfacePaths.storefront.jobs, accountItems[0]?.href]
+      .map((href) => (href ? findNavItem(navigationItems, href) : undefined))
+      .filter((item): item is NonNullable<typeof item> => Boolean(item)),
+    profileHref: surfacePaths.candidate.profile,
+    profileMenuLinks: session.isAuthenticated
+      ? [
+          { href: surfacePaths.candidate.profile, label: 'Mi perfil' },
+          ...(hasWorkspaceAccess ? [{ href: surfacePaths.workspace.root, label: 'Abrir mi workspace' }] : [])
+        ]
+      : [],
+    publicActionHref: surfacePaths.institutional.home,
+    publicActionLabel: 'ASI institucional',
+    routeMeta: storefrontCopyByHref,
+    routeMetaDefault: {
+      title: 'Plataforma',
+      description: 'Acceso público a jobs, pricing y rutas de entrada al producto.'
+    },
+    searchPlaceholder: 'Buscar jobs (próximamente)',
+    sidebarGroups: [
+      {
+        title: 'Explora',
+        items: navigationItems.filter((item) => item.href === surfacePaths.storefront.home || item.href === surfacePaths.storefront.jobs)
+      },
+      {
+        title: 'Cuenta',
+        items: navigationItems.filter((item) => item.href !== surfacePaths.storefront.home && item.href !== surfacePaths.storefront.jobs)
+      }
+    ],
+    tenantName: session.isAuthenticated
+      ? session.activeMembership?.tenantName ?? 'Cuenta ASI'
+      : 'Explora la plataforma',
+    tenantRoleSummary: session.isAuthenticated
+      ? hasWorkspaceAccess
+        ? 'Cuenta con acceso a workspace'
+        : 'Cuenta autenticada'
+      : 'Acceso público',
+    topbarEyebrow: 'Plataforma pública'
+  } satisfies ShellConfig
+}
+
+function buildShellConfig(experience: ShellExperience, session: ReturnType<typeof useAppSession>) {
+  if (experience === 'candidate') {
+    return buildCandidateConfig(session)
+  }
+
+  if (experience === 'storefront') {
+    return buildStorefrontConfig(session)
+  }
+
+  return buildWorkspaceConfig(session)
+}
+
+export function PlatformAppShell({
+  experience = 'workspace',
+  fallbackContent
+}: {
+  experience?: ShellExperience
+  fallbackContent?: ReactNode
+}) {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const session = useAppSession()
+  const queryClient = useQueryClient()
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(getInitialSidebarCollapsed)
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const notificationPanelRef = useRef<HTMLDivElement | null>(null)
+  const profileMenuRef = useRef<HTMLDivElement | null>(null)
+
+  const config = buildShellConfig(experience, session)
   const userIdentity = resolveUserIdentity(session)
-  const routeMeta = getWorkspaceRouteMeta(location.pathname)
+  const routeMeta = getRouteMeta(location.pathname, config.topbarEyebrow, config.routeMeta, config.routeMetaDefault)
 
   const shellLayoutStyle = useMemo(
     () =>
@@ -510,7 +868,7 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
   )
 
   const notificationsQuery = useQuery({
-    queryKey: [...WORKSPACE_NOTIFICATION_QUERY_KEY, session.authUser?.id],
+    queryKey: [...WORKSPACE_NOTIFICATION_QUERY_KEY, experience, session.authUser?.id],
     queryFn: () => fetchMyNotifications(6),
     enabled: session.isAuthenticated
   })
@@ -519,7 +877,7 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
     mutationFn: (notificationId: string) => markNotificationRead(notificationId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [...WORKSPACE_NOTIFICATION_QUERY_KEY, session.authUser?.id]
+        queryKey: [...WORKSPACE_NOTIFICATION_QUERY_KEY, experience, session.authUser?.id]
       })
     }
   })
@@ -530,7 +888,7 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
       setProfileMenuOpen(false)
       setNotificationPanelOpen(false)
       toast.success('Sesion cerrada')
-      void navigate(surfacePaths.public.home)
+      void navigate(surfacePaths.storefront.home)
     },
     onError: (error) => {
       toast.error('No se pudo cerrar la sesion', {
@@ -599,28 +957,15 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
     markReadMutation.mutate(notificationId)
   }
 
+  function handleActionNavigate(href: string) {
+    setProfileMenuOpen(false)
+    setNotificationPanelOpen(false)
+    setMobileSidebarOpen(false)
+    void navigate(href)
+  }
+
   function handleSignOut() {
     signOutMutation.mutate()
-  }
-
-  function handleOpenProfile() {
-    setProfileMenuOpen(false)
-    setNotificationPanelOpen(false)
-    setMobileSidebarOpen(false)
-    void navigate(surfacePaths.candidate.profile)
-  }
-
-  function handleOpenPublicBoard() {
-    setProfileMenuOpen(false)
-    setNotificationPanelOpen(false)
-    setMobileSidebarOpen(false)
-    void navigate(surfacePaths.public.jobs)
-  }
-
-  function handleSidebarNavigate(href: string) {
-    setProfileMenuOpen(false)
-    setNotificationPanelOpen(false)
-    void navigate(href)
   }
 
   return (
@@ -631,29 +976,26 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
       >
         <WorkspaceSidebarContent
           activeHref={location.pathname}
-          brand="ASI para equipos"
-          groups={sidebarGroups}
+          config={config}
           isCollapsed={isDesktopSidebarCollapsed}
           mode="desktop"
-          onNavigate={handleSidebarNavigate}
-          onOpenNotifications={() => setNotificationPanelOpen(true)}
-          onOpenProfile={handleOpenProfile}
-          onOpenPublicBoard={handleOpenPublicBoard}
-          onSignOut={handleSignOut}
-          onToggleSidebar={() => setIsDesktopSidebarCollapsed((current) => !current)}
+          session={session}
           signOutPending={signOutMutation.isPending}
-          tenantName={tenantName}
-          tenantRoleSummary={tenantRoleSummary}
           userEmail={userIdentity.email}
           userInitials={userIdentity.initials}
           userName={userIdentity.displayName}
+          onActionNavigate={handleActionNavigate}
+          onOpenNotifications={() => setNotificationPanelOpen(true)}
+          onOpenProfile={() => handleActionNavigate(config.profileHref)}
+          onSignOut={handleSignOut}
+          onToggleSidebar={() => setIsDesktopSidebarCollapsed((current) => !current)}
         />
       </aside>
 
       {mobileSidebarOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
-            aria-label="Cerrar navegacion del workspace"
+            aria-label={`Cerrar navegacion de ${config.mobileSidebarLabel}`}
             className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
             type="button"
             onClick={() => setMobileSidebarOpen(false)}
@@ -661,34 +1003,22 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
           <div className="absolute inset-y-0 left-0 w-full max-w-[20rem]">
             <WorkspaceSidebarContent
               activeHref={location.pathname}
-              brand="ASI para equipos"
-              groups={sidebarGroups}
+              config={config}
               isCollapsed={false}
               mode="mobile"
-              onNavigate={(href) => {
-                setMobileSidebarOpen(false)
-                handleSidebarNavigate(href)
-              }}
+              session={session}
+              signOutPending={signOutMutation.isPending}
+              userEmail={userIdentity.email}
+              userInitials={userIdentity.initials}
+              userName={userIdentity.displayName}
+              onActionNavigate={handleActionNavigate}
               onOpenNotifications={() => {
                 setMobileSidebarOpen(false)
                 setNotificationPanelOpen(true)
               }}
-              onOpenProfile={() => {
-                setMobileSidebarOpen(false)
-                handleOpenProfile()
-              }}
-              onOpenPublicBoard={() => {
-                setMobileSidebarOpen(false)
-                handleOpenPublicBoard()
-              }}
+              onOpenProfile={() => handleActionNavigate(config.profileHref)}
               onSignOut={handleSignOut}
               onToggleSidebar={() => setMobileSidebarOpen(false)}
-              signOutPending={signOutMutation.isPending}
-              tenantName={tenantName}
-              tenantRoleSummary={tenantRoleSummary}
-              userEmail={userIdentity.email}
-              userInitials={userIdentity.initials}
-              userName={userIdentity.displayName}
             />
           </div>
         </div>
@@ -698,7 +1028,7 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
         <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/92 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
           <div className="flex min-h-18 items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
             <button
-              aria-label="Abrir sidebar del workspace"
+              aria-label={`Abrir sidebar de ${config.mobileSidebarLabel}`}
               className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-slate-300 hover:bg-white lg:hidden dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/10"
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
@@ -719,113 +1049,129 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
               <div className="flex h-11 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
                 <Search aria-hidden="true" className="size-4 text-slate-400" />
                 <input
-                  aria-label="Buscar en el workspace"
+                  aria-label={config.searchPlaceholder}
                   className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
-                  placeholder="Buscar en el workspace (próximamente)"
+                  placeholder={config.searchPlaceholder}
                   readOnly
                   value=""
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="relative" ref={notificationPanelRef}>
-                <button
-                  aria-expanded={notificationPanelOpen}
-                  aria-label="Abrir notificaciones"
-                  className="relative inline-flex size-11 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
-                  type="button"
-                  onClick={() => {
-                    setNotificationPanelOpen((current) => !current)
-                    setProfileMenuOpen(false)
-                  }}
-                >
-                  <Bell className="size-5" />
-                  {notificationsQuery.data?.some((notification) => !notification.read_at) ? (
-                    <span className="absolute right-2.5 top-2.5 size-2 rounded-full bg-primary-500" />
-                  ) : null}
-                </button>
+            {session.isAuthenticated ? (
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="relative" ref={notificationPanelRef}>
+                  <button
+                    aria-expanded={notificationPanelOpen}
+                    aria-label="Abrir notificaciones"
+                    className="relative inline-flex size-11 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
+                    type="button"
+                    onClick={() => {
+                      setNotificationPanelOpen((current) => !current)
+                      setProfileMenuOpen(false)
+                    }}
+                  >
+                    <Bell className="size-5" />
+                    {notificationsQuery.data?.some((notification) => !notification.read_at) ? (
+                      <span className="absolute right-2.5 top-2.5 size-2 rounded-full bg-primary-500" />
+                    ) : null}
+                  </button>
 
-                {notificationPanelOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+0.75rem)] z-40">
-                    <WorkspaceNotificationPanel
-                      isLoading={notificationsQuery.isLoading}
-                      notifications={notificationsQuery.data ?? []}
-                      onMarkRead={handleMarkRead}
-                      onOpenNotification={(notification) => void handleOpenNotification(notification)}
-                    />
-                  </div>
-                ) : null}
-              </div>
-
-              <ThemeToggle
-                className="size-11 rounded-2xl border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
-                compact
-              />
-
-              <div aria-hidden="true" className="hidden h-6 w-px bg-slate-200 lg:block dark:bg-white/10" />
-
-              <div className="relative" ref={profileMenuRef}>
-                <button
-                  aria-expanded={profileMenuOpen}
-                  aria-label="Abrir menu de perfil"
-                  className="flex items-center gap-3 rounded-2xl border border-transparent px-1.5 py-1.5 transition hover:border-slate-200 hover:bg-slate-50 dark:hover:border-white/10 dark:hover:bg-white/5"
-                  type="button"
-                  onClick={() => {
-                    setProfileMenuOpen((current) => !current)
-                    setNotificationPanelOpen(false)
-                  }}
-                >
-                  <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700 outline -outline-offset-1 outline-black/5 dark:bg-slate-800 dark:text-white dark:outline-white/10">
-                    {userIdentity.initials}
-                  </span>
-                  <span className="hidden min-w-0 text-left lg:block">
-                    <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</span>
-                    <span className="block truncate text-xs text-slate-400">{tenantRoleSummary}</span>
-                  </span>
-                  <ChevronDown className="hidden size-4 text-slate-400 lg:block dark:text-slate-500" />
-                </button>
-
-                {profileMenuOpen ? (
-                  <div className="absolute right-0 z-10 mt-2.5 w-52 origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_48px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-slate-900">
-                    <div className="border-b border-slate-100 px-3 py-2 dark:border-white/10">
-                      <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</p>
-                      <p className="truncate text-xs text-slate-500 dark:text-slate-400">{tenantRoleSummary}</p>
+                  {notificationPanelOpen ? (
+                    <div className="absolute right-0 top-[calc(100%+0.75rem)] z-40">
+                      <WorkspaceNotificationPanel
+                        isLoading={notificationsQuery.isLoading}
+                        notifications={notificationsQuery.data ?? []}
+                        onMarkRead={handleMarkRead}
+                        onOpenNotification={(notification) => void handleOpenNotification(notification)}
+                      />
                     </div>
+                  ) : null}
+                </div>
 
-                    <button
-                      className="mt-2 block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
-                      type="button"
-                      onClick={() => {
-                        setProfileMenuOpen(false)
-                        handleOpenProfile()
-                      }}
-                    >
-                      Mi perfil
-                    </button>
-                    {secondaryNav.length ? (
+                <ThemeToggle
+                  className="size-11 rounded-2xl border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
+                  compact
+                />
+
+                <div aria-hidden="true" className="hidden h-6 w-px bg-slate-200 lg:block dark:bg-white/10" />
+
+                <div className="relative" ref={profileMenuRef}>
+                  <button
+                    aria-expanded={profileMenuOpen}
+                    aria-label="Abrir menu de perfil"
+                    className="flex items-center gap-3 rounded-2xl border border-transparent px-1.5 py-1.5 transition hover:border-slate-200 hover:bg-slate-50 dark:hover:border-white/10 dark:hover:bg-white/5"
+                    type="button"
+                    onClick={() => {
+                      setProfileMenuOpen((current) => !current)
+                      setNotificationPanelOpen(false)
+                    }}
+                  >
+                    <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700 outline -outline-offset-1 outline-black/5 dark:bg-slate-800 dark:text-white dark:outline-white/10">
+                      {userIdentity.initials}
+                    </span>
+                    <span className="hidden min-w-0 text-left lg:block">
+                      <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</span>
+                      <span className="block truncate text-xs text-slate-400">{config.tenantRoleSummary}</span>
+                    </span>
+                    <ChevronDown className="hidden size-4 text-slate-400 lg:block dark:text-slate-500" />
+                  </button>
+
+                  {profileMenuOpen ? (
+                    <div className="absolute right-0 z-10 mt-2.5 w-56 origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_48px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-slate-900">
+                      <div className="border-b border-slate-100 px-3 py-2 dark:border-white/10">
+                        <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</p>
+                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">{config.tenantRoleSummary}</p>
+                      </div>
+
+                      <button
+                        className="mt-2 block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
+                        type="button"
+                        onClick={() => handleActionNavigate(config.profileHref)}
+                      >
+                        Mi perfil
+                      </button>
+                      {config.profileMenuLinks
+                        .filter((item) => item.href !== config.profileHref)
+                        .map((item) => (
+                          <button
+                            key={item.href}
+                            className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
+                            type="button"
+                            onClick={() => handleActionNavigate(item.href)}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
                       <button
                         className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
                         type="button"
-                        onClick={() => {
-                          setProfileMenuOpen(false)
-                          handleSidebarNavigate(surfacePaths.workspace.access)
-                        }}
+                        onClick={handleSignOut}
                       >
-                        Roles y acceso
+                        {signOutMutation.isPending ? 'Cerrando...' : 'Cerrar sesion'}
                       </button>
-                    ) : null}
-                    <button
-                      className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
-                      type="button"
-                      onClick={handleSignOut}
-                    >
-                      {signOutMutation.isPending ? 'Cerrando...' : 'Cerrar sesion'}
-                    </button>
-                  </div>
-                ) : null}
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="hidden items-center gap-2 lg:flex">
+                <ThemeToggle
+                  className="size-11 rounded-2xl border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
+                  compact
+                />
+                {config.guestActions.map((action) => (
+                  <Button
+                    key={action.href}
+                    className="rounded-full px-5"
+                    variant={action.variant === 'primary' ? undefined : action.variant}
+                    onClick={() => handleActionNavigate(action.href)}
+                  >
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
         </header>
 
@@ -834,7 +1180,11 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
         </main>
       </div>
 
-      <AppBottomNav activeHref={location.pathname} items={primaryNav} variant="workspace" onNavigate={(href) => void navigate(href)} />
+      <AppBottomNav activeHref={location.pathname} items={config.primaryNav} variant="workspace" onNavigate={(href) => void navigate(href)} />
     </div>
   )
+}
+
+export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode }) {
+  return <PlatformAppShell experience="workspace" fallbackContent={fallbackContent} />
 }

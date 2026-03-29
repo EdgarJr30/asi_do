@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
 import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
 import { AppProviders } from '@/app/providers/app-providers'
 import { surfacePaths } from '@/app/router/surface-paths'
@@ -158,6 +159,44 @@ function renderWorkspaceShell(initialEntry = surfacePaths.workspace.root) {
   )
 }
 
+function renderCandidateShell(initialEntry = surfacePaths.candidate.profile) {
+  const router = createMemoryRouter(
+    [
+      {
+        path: surfacePaths.candidate.root,
+        element: <CandidateShell />,
+        children: [
+          {
+            path: 'profile',
+            element: <div>Perfil candidato</div>
+          },
+          {
+            path: 'applications',
+            element: <div>Aplicaciones del candidato</div>
+          },
+          {
+            path: 'onboarding',
+            element: <div>Onboarding candidato</div>
+          }
+        ]
+      },
+      {
+        path: surfacePaths.storefront.jobs,
+        element: <div>Jobs publicos</div>
+      }
+    ],
+    {
+      initialEntries: [initialEntry]
+    }
+  )
+
+  render(
+    <AppProviders>
+      <RouterProvider router={router} />
+    </AppProviders>
+  )
+}
+
 function seedWorkspaceSession(permissions: string[]) {
   authState.session = { user: { id: 'user-1', email: 'owner@acme.test' } }
   authState.snapshot = {
@@ -278,9 +317,9 @@ describe('workspace shell', () => {
     seedWorkspaceSession(['workspace:read', 'role:read'])
     renderWorkspaceShell()
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Contraer sidebar del workspace' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Contraer sidebar de workspace' }))
 
-    expect(await screen.findByRole('button', { name: 'Expandir sidebar del workspace' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Expandir sidebar de workspace' })).toBeInTheDocument()
     expect(window.localStorage.getItem('asi:workspace-sidebar-collapsed:v1')).toBe('1')
   })
 
@@ -294,5 +333,16 @@ describe('workspace shell', () => {
       expect(signOutCurrentUser).toHaveBeenCalled()
     })
     expect(await screen.findByText('Landing publica')).toBeInTheDocument()
+  })
+
+  it('reuses the shared platform chrome for the candidate area', async () => {
+    seedWorkspaceSession([])
+    renderCandidateShell()
+
+    expect(await screen.findByText('ASI para talento')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Abrir notificaciones' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Abrir menu de perfil' })).toBeInTheDocument()
+    expect(screen.getAllByText('Perfil').length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: 'Explorar jobs' })).toBeInTheDocument()
   })
 })

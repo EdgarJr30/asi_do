@@ -37,6 +37,7 @@ When a future redesign changes these rules, the new decision must still be bench
 7. **One primary action at a time.** Each screen or action zone should make the next step obvious.
 8. **Apple-grade clarity is the visual bar.** Interfaces should favor calm hierarchy, generous spacing, obvious affordances, and polished restraint over busy dashboards.
 9. **Customer-facing entrypoints must look like product, not tooling.** Public landing and shell surfaces must avoid exposing QA or operations language by default.
+10. **Platform-internal surfaces must reuse one shared shell.** Candidate routes, workspace routes, and operational `/platform/*` routes such as jobs should share the same sidebar/navbar construction, adapting only navigation copy and allowed destinations instead of diverging into separate chrome patterns.
 
 ## 3.1 Mandatory UI libraries
 The project must standardize on the same libraries for reusable UI building blocks.

@@ -3,8 +3,10 @@ import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppProviders } from '@/app/providers/app-providers'
+import { surfacePaths } from '@/app/router/surface-paths'
 import { appRoutes } from '@/app/router/routes'
 import { StorefrontShell } from '@/experiences/storefront/layouts/storefront-shell'
+import { StorefrontPlatformShell } from '@/experiences/storefront/layouts/storefront-platform-shell'
 
 const authState = {
   session: null as null | { user: { id: string; email?: string } },
@@ -79,6 +81,32 @@ function renderPublicShell(initialEntry = '/platform') {
           {
             index: true,
             element: <div>Public content</div>
+          }
+        ]
+      }
+    ],
+    {
+      initialEntries: [initialEntry]
+    }
+  )
+
+  renderWithProviders(router)
+}
+
+function renderPlatformJobsShell(initialEntry = surfacePaths.storefront.jobs) {
+  const router = createMemoryRouter(
+    [
+      {
+        path: surfacePaths.storefront.jobsRoot,
+        element: <StorefrontPlatformShell />,
+        children: [
+          {
+            index: true,
+            element: <div>Jobs publicos</div>
+          },
+          {
+            path: ':jobSlug',
+            element: <div>Detalle del job</div>
           }
         ]
       }
@@ -184,5 +212,15 @@ describe('route shells', () => {
     expect(screen.queryByRole('link', { name: /Plataforma ASI/i })).not.toBeInTheDocument()
     expect(screen.queryByText(/Hiring workspace para empresas y equipos de selección/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Ver pricing' })).not.toBeInTheDocument()
+  })
+
+  it('renders the shared platform shell for platform jobs routes', async () => {
+    renderPlatformJobsShell()
+
+    expect(await screen.findByText('Plataforma ASI')).toBeInTheDocument()
+    expect(screen.getAllByText('Jobs').length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'ASI institucional' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Crear cuenta' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Iniciar sesion' }).length).toBeGreaterThan(0)
   })
 })

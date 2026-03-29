@@ -56,7 +56,15 @@ function resolveIcon(item: AppNavItem) {
 }
 
 function isActiveHref(activeHref: string, itemHref: string) {
-  return activeHref === itemHref
+  if (activeHref === itemHref) {
+    return true
+  }
+
+  if (itemHref === '/' || itemHref.includes('#')) {
+    return false
+  }
+
+  return activeHref.startsWith(`${itemHref}/`)
 }
 
 function WorkspaceSidebarContent({
