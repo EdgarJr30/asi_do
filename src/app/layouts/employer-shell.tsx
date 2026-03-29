@@ -1,28 +1,31 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Bell,
   BriefcaseBusiness,
+  Building2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Grid2x2,
   LogOut,
   Menu,
   Search,
-  UserRound
+  Shield,
+  UserRound,
+  UsersRound,
+  X
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
-import {
-  AppBottomNav,
-  AppWorkspaceSidebar,
-  AppWorkspaceSidebarDrawer,
-  type AppNavGroup,
-  type AppNavItem
-} from '@/components/ui/app-shell-navigation'
+import { BrandMark } from '@/components/ui/app-brand'
+import { AppBottomNav, type AppNavGroup, type AppNavItem } from '@/components/ui/app-shell-navigation'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -32,6 +35,17 @@ import { cn } from '@/lib/utils/cn'
 import { employerNavigationItems } from '@/shared/constants/navigation'
 
 const WORKSPACE_NOTIFICATION_QUERY_KEY = ['workspace-shell', 'notifications'] as const
+const WORKSPACE_SIDEBAR_COLLAPSED_STORAGE_KEY = 'asi:workspace-sidebar-collapsed:v1'
+const DESKTOP_SIDEBAR_EXPANDED_WIDTH = 272
+const DESKTOP_SIDEBAR_COLLAPSED_WIDTH = 88
+
+const workspaceIconByHref: Partial<Record<string, LucideIcon>> = {
+  [surfacePaths.workspace.root]: Building2,
+  [surfacePaths.workspace.jobs]: BriefcaseBusiness,
+  [surfacePaths.workspace.talent]: UsersRound,
+  [surfacePaths.workspace.pipeline]: Grid2x2,
+  [surfacePaths.workspace.access]: Shield
+}
 
 const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'description'>> = {
   [surfacePaths.workspace.root]: {
@@ -64,7 +78,8 @@ function mapWorkspaceItem(item: (typeof employerNavigationItems)[number]): AppNa
 
   return {
     ...item,
-    ...copy
+    ...copy,
+    icon: workspaceIconByHref[item.href]
   }
 }
 
@@ -94,6 +109,33 @@ function formatNotificationTimestamp(value: string) {
 
 function isExternalUrl(value: string) {
   return /^https?:\/\//i.test(value)
+}
+
+function getInitialSidebarCollapsed() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return window.localStorage.getItem(WORKSPACE_SIDEBAR_COLLAPSED_STORAGE_KEY) === '1'
+}
+
+function getWorkspaceRouteMeta(pathname: string) {
+  const entries = Object.entries(workspaceCopyByHref).sort((left, right) => right[0].length - left[0].length)
+  const matchedEntry = entries.find(([href]) => pathname === href || pathname.startsWith(`${href}/`))
+
+  if (matchedEntry) {
+    return {
+      eyebrow: 'Workspace operativo',
+      title: matchedEntry[1].title,
+      description: matchedEntry[1].description ?? 'Espacio operativo para coordinar el equipo.'
+    }
+  }
+
+  return {
+    eyebrow: 'Workspace operativo',
+    title: 'Workspace',
+    description: 'Centro operativo del equipo de reclutamiento.'
+  }
 }
 
 function WorkspaceNotificationPanel({
@@ -174,12 +216,246 @@ function WorkspaceNotificationPanel({
   )
 }
 
+function WorkspaceSidebarContent({
+  activeHref,
+  brand,
+  groups,
+  isCollapsed,
+  mode,
+  onNavigate,
+  onOpenNotifications,
+  onOpenProfile,
+  onOpenPublicBoard,
+  onSignOut,
+  onToggleSidebar,
+  signOutPending,
+  tenantName,
+  tenantRoleSummary,
+  userEmail,
+  userInitials,
+  userName
+}: {
+  activeHref: string
+  brand: string
+  groups: AppNavGroup[]
+  isCollapsed: boolean
+  mode: 'desktop' | 'mobile'
+  onNavigate: (href: string) => void
+  onOpenNotifications: () => void
+  onOpenProfile: () => void
+  onOpenPublicBoard: () => void
+  onSignOut: () => void
+  onToggleSidebar: () => void
+  signOutPending: boolean
+  tenantName: string
+  tenantRoleSummary: string
+  userEmail: string
+  userInitials: string
+  userName: string
+}) {
+  const isDesktop = mode === 'desktop'
+  const showCollapsedLabels = isDesktop && isCollapsed
+  const footerYear = new Date().getFullYear()
+
+  return (
+    <div className="flex h-full min-h-0 flex-col overflow-hidden border-r border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-slate-950 dark:text-white">
+      <div className="border-b border-slate-200 px-3 py-3.5 dark:border-white/10">
+        <div className={cn('flex items-center', showCollapsedLabels ? 'justify-center' : 'gap-3')}>
+          <BrandMark panelClassName="size-10 rounded-[14px] border-primary-200/40 bg-primary-600 p-2 shadow-[0_16px_36px_rgba(43,69,143,0.2)] dark:border-white/10" />
+          {!showCollapsedLabels ? (
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold tracking-tight text-slate-950 dark:text-white">{brand}</p>
+              <p className="mt-0.5 truncate text-xs uppercase tracking-[0.18em] text-slate-400">{tenantName}</p>
+            </div>
+          ) : null}
+          <button
+            aria-label={
+              isDesktop
+                ? isCollapsed
+                  ? 'Expandir sidebar del workspace'
+                  : 'Contraer sidebar del workspace'
+                : 'Cerrar sidebar del workspace'
+            }
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-slate-300 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/10"
+            title={
+              isDesktop
+                ? isCollapsed
+                  ? 'Expandir sidebar del workspace'
+                  : 'Contraer sidebar del workspace'
+                : 'Cerrar sidebar del workspace'
+            }
+            type="button"
+            onClick={onToggleSidebar}
+          >
+            {isDesktop ? (
+              isCollapsed ? (
+                <ChevronRight className="size-4.5" />
+              ) : (
+                <ChevronLeft className="size-4.5" />
+              )
+            ) : (
+              <X className="size-4.5" />
+            )}
+          </button>
+        </div>
+        {showCollapsedLabels ? <span className="sr-only">{tenantName}</span> : null}
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <nav aria-label={`${brand} navigation`} className="flex-1 overflow-y-auto px-2.5 py-3">
+          {groups.map((group, groupIndex) => (
+            <div key={group.title ?? `group-${groupIndex}`} className={cn(groupIndex === 0 ? '' : 'mt-3 border-t border-slate-200 pt-3 dark:border-white/10')}>
+              {group.title && !showCollapsedLabels ? (
+                <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{group.title}</p>
+              ) : null}
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = activeHref === item.href
+                  const Icon = item.icon
+
+                  return (
+                    <button
+                      key={item.href}
+                      aria-label={item.title}
+                      className={cn(
+                        'group flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
+                        showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
+                        isActive
+                          ? 'bg-slate-900 text-white shadow-[0_14px_28px_rgba(15,23,42,0.16)] dark:bg-white dark:text-slate-950'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white'
+                      )}
+                      title={showCollapsedLabels ? item.title : undefined}
+                      type="button"
+                      onClick={() => onNavigate(item.href)}
+                    >
+                      <span
+                        className={cn(
+                          'flex size-9 shrink-0 items-center justify-center rounded-lg transition',
+                          isActive
+                            ? 'bg-white/12 text-current dark:bg-slate-900/10'
+                            : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-slate-900 dark:bg-white/5 dark:text-slate-300 dark:group-hover:bg-white/10 dark:group-hover:text-white'
+                        )}
+                      >
+                        {Icon ? <Icon className="size-4.5" /> : null}
+                      </span>
+                      {!showCollapsedLabels ? (
+                        <span className="min-w-0">
+                          <span className="block truncate">{item.title}</span>
+                          {item.description ? <span className={cn('mt-0.5 block truncate text-[11px]', isActive ? 'text-white/72 dark:text-slate-700' : 'text-slate-400 dark:text-slate-500')}>{item.description}</span> : null}
+                        </span>
+                      ) : (
+                        <span className="sr-only">{item.title}</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        <div className="border-t border-slate-200 px-2.5 py-3 dark:border-white/10">
+          <button
+            className={cn(
+              'flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
+              showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
+              'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white'
+            )}
+            title={showCollapsedLabels ? 'Ver job board publico' : undefined}
+            type="button"
+            onClick={onOpenPublicBoard}
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300">
+              <BriefcaseBusiness className="size-4.5" />
+            </span>
+            {!showCollapsedLabels ? <span>Ver job board publico</span> : <span className="sr-only">Ver job board publico</span>}
+          </button>
+
+          {!isDesktop ? (
+            <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5">
+              <div className="flex items-center gap-3">
+                <div className="flex size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-900 dark:border-white/10 dark:bg-white/10 dark:text-white">
+                  {userInitials}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{userName}</p>
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">{userEmail}</p>
+                </div>
+              </div>
+              <div className="mt-3 grid gap-2">
+                <button
+                  className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-slate-700 transition hover:bg-white dark:text-slate-200 dark:hover:bg-white/10"
+                  type="button"
+                  onClick={onOpenProfile}
+                >
+                  <UserRound className="size-4" />
+                  Mi perfil
+                </button>
+                <button
+                  className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-slate-700 transition hover:bg-white dark:text-slate-200 dark:hover:bg-white/10"
+                  type="button"
+                  onClick={onOpenNotifications}
+                >
+                  <Bell className="size-4" />
+                  Notificaciones
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          <div
+            className={cn(
+              'mt-3 flex items-center',
+              showCollapsedLabels ? 'justify-center' : 'gap-3 px-1'
+            )}
+            title={showCollapsedLabels ? userName : undefined}
+          >
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-950">
+              {userInitials}
+            </div>
+            {!showCollapsedLabels ? (
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-semibold text-slate-900 dark:text-white">{userName}</p>
+                <p className="truncate text-[11px] text-slate-400">{tenantRoleSummary}</p>
+              </div>
+            ) : (
+              <span className="sr-only">{userName}</span>
+            )}
+          </div>
+
+          <button
+            aria-label="Cerrar sesion"
+            className={cn(
+              'mt-4 flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 dark:text-rose-300 dark:hover:bg-rose-500/10 dark:hover:text-rose-200',
+              showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3'
+            )}
+            title={showCollapsedLabels ? 'Cerrar sesion' : undefined}
+            type="button"
+            onClick={onSignOut}
+          >
+            <LogOut className="size-4.5" />
+            {!showCollapsedLabels ? <span>{signOutPending ? 'Cerrando...' : 'Cerrar sesion'}</span> : <span className="sr-only">Cerrar sesion</span>}
+          </button>
+
+          {!showCollapsedLabels ? (
+            <div className="mt-4 border-t border-slate-200 pt-4 text-center dark:border-white/10">
+              <p className="text-xs leading-5 text-slate-400">© {footerYear} {brand}</p>
+              <p className="mt-1 text-xs font-medium text-slate-400">Shell de workspace employer</p>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode }) {
   const navigate = useNavigate()
   const location = useLocation()
   const session = useAppSession()
   const queryClient = useQueryClient()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(getInitialSidebarCollapsed)
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const notificationPanelRef = useRef<HTMLDivElement | null>(null)
@@ -223,6 +499,15 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
   const tenantRoleSummary =
     session.activeMembership?.roleNames.filter(Boolean).join(', ') || 'Miembro del workspace'
   const userIdentity = resolveUserIdentity(session)
+  const routeMeta = getWorkspaceRouteMeta(location.pathname)
+
+  const shellLayoutStyle = useMemo(
+    () =>
+      ({
+        '--shell-sidebar-width': `${isDesktopSidebarCollapsed ? DESKTOP_SIDEBAR_COLLAPSED_WIDTH : DESKTOP_SIDEBAR_EXPANDED_WIDTH}px`
+      }) as CSSProperties,
+    [isDesktopSidebarCollapsed]
+  )
 
   const notificationsQuery = useQuery({
     queryKey: [...WORKSPACE_NOTIFICATION_QUERY_KEY, session.authUser?.id],
@@ -253,6 +538,10 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
       })
     }
   })
+
+  useEffect(() => {
+    window.localStorage.setItem(WORKSPACE_SIDEBAR_COLLAPSED_STORAGE_KEY, isDesktopSidebarCollapsed ? '1' : '0')
+  }, [isDesktopSidebarCollapsed])
 
   useEffect(() => {
     if (!notificationPanelOpen && !profileMenuOpen) {
@@ -314,133 +603,146 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
     signOutMutation.mutate()
   }
 
-  function renderSidebarFooter() {
-    return (
-      <div className="space-y-3 border-t border-slate-200 pt-4 dark:border-white/10">
-        <Button
-          className="w-full justify-start rounded-md border-slate-200 bg-white text-slate-900 hover:border-primary-300 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/10"
-          variant="outline"
-          onClick={() => void navigate(surfacePaths.public.jobs)}
-        >
-          <BriefcaseBusiness className="size-4" />
-          Ver job board publico
-        </Button>
+  function handleOpenProfile() {
+    setProfileMenuOpen(false)
+    setNotificationPanelOpen(false)
+    setMobileSidebarOpen(false)
+    void navigate(surfacePaths.candidate.profile)
+  }
 
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 dark:border-white/10 dark:bg-white/5 lg:hidden">
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-900 dark:border-white/10 dark:bg-white/10 dark:text-white">
-              {userIdentity.initials}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</p>
-              <p className="truncate text-xs text-slate-500 dark:text-slate-400">{userIdentity.email}</p>
-            </div>
-          </div>
+  function handleOpenPublicBoard() {
+    setProfileMenuOpen(false)
+    setNotificationPanelOpen(false)
+    setMobileSidebarOpen(false)
+    void navigate(surfacePaths.public.jobs)
+  }
 
-          <div className="mt-3 grid gap-2">
-            <Button
-              className="justify-start rounded-md text-slate-700 hover:bg-white dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
-              variant="ghost"
-              onClick={() => {
-                setMobileSidebarOpen(false)
-                void navigate(surfacePaths.candidate.profile)
-              }}
-            >
-              <UserRound className="size-4" />
-              Mi perfil
-            </Button>
-            <Button
-              className="justify-start rounded-md text-slate-700 hover:bg-white dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
-              variant="ghost"
-              onClick={() => {
-                setMobileSidebarOpen(false)
-                setNotificationPanelOpen(true)
-              }}
-            >
-              <Bell className="size-4" />
-              Notificaciones
-            </Button>
-          </div>
-        </div>
-
-        <Button
-          aria-label="Cerrar sesion"
-          className="w-full justify-start rounded-md border-rose-200/80 bg-rose-50/80 text-rose-700 hover:border-rose-300 hover:bg-rose-100/80 hover:text-rose-800 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:border-rose-500/30 dark:hover:bg-rose-500/16 dark:hover:text-rose-100"
-          variant="ghost"
-          onClick={handleSignOut}
-        >
-          <LogOut className="size-4" />
-          {signOutMutation.isPending ? 'Cerrando...' : 'Cerrar sesion'}
-        </Button>
-      </div>
-    )
+  function handleSidebarNavigate(href: string) {
+    setProfileMenuOpen(false)
+    setNotificationPanelOpen(false)
+    void navigate(href)
   }
 
   return (
-    <div className="tm-shell min-h-screen overflow-x-clip bg-white dark:bg-slate-900">
-      <AppWorkspaceSidebar
-        activeHref={location.pathname}
-        brand="ASI para equipos"
-        footer={renderSidebarFooter()}
-        groups={sidebarGroups}
-        onNavigate={(href) => void navigate(href)}
-        tenantName={tenantName}
-      />
+    <div className="tm-shell min-h-screen overflow-x-clip bg-white dark:bg-slate-900" style={shellLayoutStyle}>
+      <aside
+        className="fixed inset-y-0 left-0 z-50 hidden lg:block"
+        style={{ width: isDesktopSidebarCollapsed ? DESKTOP_SIDEBAR_COLLAPSED_WIDTH : DESKTOP_SIDEBAR_EXPANDED_WIDTH }}
+      >
+        <WorkspaceSidebarContent
+          activeHref={location.pathname}
+          brand="ASI para equipos"
+          groups={sidebarGroups}
+          isCollapsed={isDesktopSidebarCollapsed}
+          mode="desktop"
+          onNavigate={handleSidebarNavigate}
+          onOpenNotifications={() => setNotificationPanelOpen(true)}
+          onOpenProfile={handleOpenProfile}
+          onOpenPublicBoard={handleOpenPublicBoard}
+          onSignOut={handleSignOut}
+          onToggleSidebar={() => setIsDesktopSidebarCollapsed((current) => !current)}
+          signOutPending={signOutMutation.isPending}
+          tenantName={tenantName}
+          tenantRoleSummary={tenantRoleSummary}
+          userEmail={userIdentity.email}
+          userInitials={userIdentity.initials}
+          userName={userIdentity.displayName}
+        />
+      </aside>
 
-      <AppWorkspaceSidebarDrawer
-        activeHref={location.pathname}
-        brand="ASI para equipos"
-        footer={renderSidebarFooter()}
-        groups={sidebarGroups}
-        isOpen={mobileSidebarOpen}
-        onClose={() => setMobileSidebarOpen(false)}
-        onNavigate={(href) => void navigate(href)}
-        tenantName={tenantName}
-      />
-
-      <div className="min-w-0 lg:pl-72">
-        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-slate-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8 dark:border-white/10 dark:bg-slate-900 dark:shadow-none">
+      {mobileSidebarOpen ? (
+        <div className="fixed inset-0 z-50 lg:hidden">
           <button
-            aria-label="Abrir sidebar del workspace"
-            className="-m-2.5 p-2.5 text-slate-700 hover:text-slate-900 lg:hidden dark:text-slate-400 dark:hover:text-white"
+            aria-label="Cerrar navegacion del workspace"
+            className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
             type="button"
-            onClick={() => setMobileSidebarOpen(true)}
-          >
-            <Menu className="size-6" />
-          </button>
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <div className="absolute inset-y-0 left-0 w-full max-w-[20rem]">
+            <WorkspaceSidebarContent
+              activeHref={location.pathname}
+              brand="ASI para equipos"
+              groups={sidebarGroups}
+              isCollapsed={false}
+              mode="mobile"
+              onNavigate={(href) => {
+                setMobileSidebarOpen(false)
+                handleSidebarNavigate(href)
+              }}
+              onOpenNotifications={() => {
+                setMobileSidebarOpen(false)
+                setNotificationPanelOpen(true)
+              }}
+              onOpenProfile={() => {
+                setMobileSidebarOpen(false)
+                handleOpenProfile()
+              }}
+              onOpenPublicBoard={() => {
+                setMobileSidebarOpen(false)
+                handleOpenPublicBoard()
+              }}
+              onSignOut={handleSignOut}
+              onToggleSidebar={() => setMobileSidebarOpen(false)}
+              signOutPending={signOutMutation.isPending}
+              tenantName={tenantName}
+              tenantRoleSummary={tenantRoleSummary}
+              userEmail={userIdentity.email}
+              userInitials={userIdentity.initials}
+              userName={userIdentity.displayName}
+            />
+          </div>
+        </div>
+      ) : null}
 
-          <div aria-hidden="true" className="h-6 w-px bg-slate-200 lg:hidden dark:bg-white/10" />
+      <div className="min-w-0 lg:pl-[var(--shell-sidebar-width)]">
+        <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/92 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
+          <div className="flex min-h-18 items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
+            <button
+              aria-label="Abrir sidebar del workspace"
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-slate-300 hover:bg-white lg:hidden dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/10"
+              type="button"
+              onClick={() => setMobileSidebarOpen(true)}
+            >
+              <Menu className="size-5" />
+            </button>
 
-          <div className="flex min-w-0 flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="grid flex-1 grid-cols-1">
-              <input
-                aria-label="Buscar en el workspace"
-                className="col-start-1 row-start-1 block size-full bg-transparent pl-8 text-base text-slate-900 outline-none placeholder:text-slate-400 sm:text-sm/6 dark:text-white dark:placeholder:text-slate-500"
-                placeholder="Buscar en el workspace (próximamente)"
-                readOnly
-                value=""
-              />
-              <Search
-                aria-hidden="true"
-                className="pointer-events-none col-start-1 row-start-1 size-5 self-center text-slate-400"
-              />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{routeMeta.eyebrow}</p>
+              <div className="mt-0.5 flex min-w-0 items-center gap-3">
+                <p className="truncate text-lg font-semibold tracking-tight text-slate-950 dark:text-white">{routeMeta.title}</p>
+                <span className="hidden h-5 w-px bg-slate-200 lg:block dark:bg-white/10" />
+                <p className="hidden truncate text-sm text-slate-500 lg:block dark:text-slate-400">{routeMeta.description}</p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-x-4 lg:gap-x-6">
+            <div className="hidden max-w-sm flex-1 lg:block">
+              <div className="flex h-11 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+                <Search aria-hidden="true" className="size-4 text-slate-400" />
+                <input
+                  aria-label="Buscar en el workspace"
+                  className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
+                  placeholder="Buscar en el workspace (próximamente)"
+                  readOnly
+                  value=""
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="relative" ref={notificationPanelRef}>
                 <button
                   aria-expanded={notificationPanelOpen}
                   aria-label="Abrir notificaciones"
-                  className="relative -m-2.5 p-2.5 text-slate-400 hover:text-slate-500 dark:hover:text-white"
+                  className="relative inline-flex size-11 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
                   type="button"
                   onClick={() => {
                     setNotificationPanelOpen((current) => !current)
                     setProfileMenuOpen(false)
                   }}
                 >
-                  <Bell className="size-6" />
+                  <Bell className="size-5" />
                   {notificationsQuery.data?.some((notification) => !notification.read_at) ? (
-                    <span className="absolute right-1 top-1.5 size-2 rounded-full bg-primary-500" />
+                    <span className="absolute right-2.5 top-2.5 size-2 rounded-full bg-primary-500" />
                   ) : null}
                 </button>
 
@@ -457,67 +759,64 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
               </div>
 
               <ThemeToggle
-                className="size-10 rounded-md border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:bg-slate-100 hover:text-slate-900 dark:bg-transparent dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white"
+                className="size-11 rounded-2xl border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
                 compact
               />
 
-              <div aria-hidden="true" className="hidden lg:block lg:h-6 lg:w-px lg:bg-slate-200 dark:lg:bg-white/10" />
+              <div aria-hidden="true" className="hidden h-6 w-px bg-slate-200 lg:block dark:bg-white/10" />
 
               <div className="relative" ref={profileMenuRef}>
                 <button
                   aria-expanded={profileMenuOpen}
                   aria-label="Abrir menu de perfil"
-                  className="relative flex items-center"
+                  className="flex items-center gap-3 rounded-2xl border border-transparent px-1.5 py-1.5 transition hover:border-slate-200 hover:bg-slate-50 dark:hover:border-white/10 dark:hover:bg-white/5"
                   type="button"
                   onClick={() => {
                     setProfileMenuOpen((current) => !current)
                     setNotificationPanelOpen(false)
                   }}
                 >
-                  <span className="absolute -inset-1.5" />
-                  <span className="sr-only">Abrir menu de perfil</span>
                   <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700 outline -outline-offset-1 outline-black/5 dark:bg-slate-800 dark:text-white dark:outline-white/10">
                     {userIdentity.initials}
                   </span>
-                  <span className="hidden lg:flex lg:items-center">
-                    <span aria-hidden="true" className="ml-4 text-sm/6 font-semibold text-slate-900 dark:text-white">
-                      {userIdentity.displayName}
-                    </span>
-                    <ChevronDown aria-hidden="true" className="ml-2 size-5 text-slate-400 dark:text-slate-500" />
+                  <span className="hidden min-w-0 text-left lg:block">
+                    <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</span>
+                    <span className="block truncate text-xs text-slate-400">{tenantRoleSummary}</span>
                   </span>
+                  <ChevronDown className="hidden size-4 text-slate-400 lg:block dark:text-slate-500" />
                 </button>
 
                 {profileMenuOpen ? (
-                  <div className="absolute right-0 z-10 mt-2.5 w-44 origin-top-right rounded-md bg-white py-2 shadow-lg outline-1 outline-slate-900/5 dark:bg-slate-800 dark:outline-white/10">
+                  <div className="absolute right-0 z-10 mt-2.5 w-52 origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_48px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-slate-900">
                     <div className="border-b border-slate-100 px-3 py-2 dark:border-white/10">
                       <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</p>
                       <p className="truncate text-xs text-slate-500 dark:text-slate-400">{tenantRoleSummary}</p>
                     </div>
 
                     <button
-                      className="block w-full px-3 py-2 text-left text-sm/6 text-slate-900 hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
+                      className="mt-2 block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
                       type="button"
                       onClick={() => {
                         setProfileMenuOpen(false)
-                        void navigate(surfacePaths.candidate.profile)
+                        handleOpenProfile()
                       }}
                     >
                       Mi perfil
                     </button>
                     {secondaryNav.length ? (
                       <button
-                        className="block w-full px-3 py-2 text-left text-sm/6 text-slate-900 hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
+                        className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
                         type="button"
                         onClick={() => {
                           setProfileMenuOpen(false)
-                          void navigate(surfacePaths.workspace.access)
+                          handleSidebarNavigate(surfacePaths.workspace.access)
                         }}
                       >
                         Roles y acceso
                       </button>
                     ) : null}
                     <button
-                      className="block w-full px-3 py-2 text-left text-sm/6 text-slate-900 hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
+                      className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
                       type="button"
                       onClick={handleSignOut}
                     >
@@ -531,9 +830,7 @@ export function EmployerShell({ fallbackContent }: { fallbackContent?: ReactNode
         </header>
 
         <main className="min-w-0 py-8">
-          <div className="min-w-0 px-4 sm:px-6 lg:px-8">
-            {fallbackContent ?? <Outlet />}
-          </div>
+          <div className="min-w-0 px-4 sm:px-6 lg:px-8">{fallbackContent ?? <Outlet />}</div>
         </main>
       </div>
 

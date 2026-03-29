@@ -186,6 +186,7 @@ function seedWorkspaceSession(permissions: string[]) {
 }
 
 beforeEach(() => {
+  window.localStorage.clear()
   authState.session = null
   authState.snapshot = {
     profile: null,
@@ -271,6 +272,16 @@ describe('workspace shell', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Mi perfil' }).at(-1)!)
 
     expect(await screen.findByText('Perfil candidato')).toBeInTheDocument()
+  })
+
+  it('persists the desktop sidebar collapsed state', async () => {
+    seedWorkspaceSession(['workspace:read', 'role:read'])
+    renderWorkspaceShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Contraer sidebar del workspace' }))
+
+    expect(await screen.findByRole('button', { name: 'Expandir sidebar del workspace' })).toBeInTheDocument()
+    expect(window.localStorage.getItem('asi:workspace-sidebar-collapsed:v1')).toBe('1')
   })
 
   it('supports sign out from the workspace sidebar footer', async () => {
