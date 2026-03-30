@@ -224,6 +224,11 @@ function seedWorkspaceSession(permissions: string[]) {
   }
 }
 
+function seedWorkspaceAdminSession(permissions: string[]) {
+  seedWorkspaceSession(permissions)
+  authState.snapshot.isPlatformAdmin = true
+}
+
 function isActiveNavigationButton(button: HTMLElement) {
   return button.getAttribute('data-active') === 'true' && button.getAttribute('aria-current') === 'page'
 }
@@ -362,6 +367,21 @@ describe('workspace shell', () => {
     renderWorkspaceShell()
 
     expect(await screen.findAllByText('Mi perfil')).not.toHaveLength(0)
+  })
+
+  it('hides tenant role labels from non-admin users in the workspace chrome', async () => {
+    seedWorkspaceSession(['workspace:read'])
+    renderWorkspaceShell()
+
+    expect(await screen.findAllByText('Ana Torres')).not.toHaveLength(0)
+    expect(screen.queryByText('Owner')).not.toBeInTheDocument()
+  })
+
+  it('keeps tenant role labels visible for admin sessions', async () => {
+    seedWorkspaceAdminSession(['workspace:read'])
+    renderWorkspaceShell()
+
+    expect(await screen.findAllByText('Owner')).not.toHaveLength(0)
   })
 
   it('marks only the current workspace destination as active', async () => {

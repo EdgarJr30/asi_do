@@ -227,6 +227,9 @@ Do not regress the shared application shell into route matching that leaves two 
 ### R-078 — Platform UI density must stay product-compact and avoid non-functional filler
 Do not let authenticated platform screens drift back toward oversized marketing proportions. Internal pages such as `Company`, `Jobs`, `Candidates`, `Applications`, and `Pipeline` should keep compact cards, restrained paddings, smaller but still accessible controls, and copy that goes straight to the hiring task. Avoid restoring decorative top metric bands, checklist banners, or “experience status” explainer panels that do not materially help the user complete the current workflow. Forms should stay grouped into logical sections with tighter desktop layouts and concise ATS-oriented labels and descriptions.
 
+### R-079 — Tenant role labels must stay out of general user chrome
+Do not expose tenant role summaries in the shared platform chrome for normal users. Sidebar footers, top-bar identity blocks, and profile dropdown headers should avoid showing role strings like `Owner`, `Reviewer`, `Tenant Admin`, or similar unless the session has real administrative access. General users only need identity and navigation; role visibility in chrome is reserved for admin-capable sessions.
+
 ### R-064 — Tailwind utility syntax and override strategy must stay canonical
 Do not reintroduce non-canonical Tailwind utility spellings when the framework already provides an exact built-in token. Do not rely on CSS important overrides or Tailwind important modifiers as the default fix for styling conflicts; prefer semantic component APIs, Tailwind layer order, or clearer selectors so overrides resolve through the normal cascade. Prefer scale-based height utilities such as `h-88`, `sm:h-96`, `xl:h-108`, `2xl:h-112`, or `min-h-96` over arbitrary `rem` values like `h-[22rem]`, `sm:h-[24rem]`, `xl:h-[27rem]`, or `min-h-[24rem]` whenever the values map exactly to the Tailwind spacing scale.
 
