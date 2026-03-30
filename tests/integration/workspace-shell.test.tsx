@@ -224,11 +224,6 @@ function seedWorkspaceSession(permissions: string[]) {
   }
 }
 
-function seedWorkspaceAdminSession(permissions: string[]) {
-  seedWorkspaceSession(permissions)
-  authState.snapshot.isPlatformAdmin = true
-}
-
 function seedWorkspaceInternalDeveloperSession(permissions: string[]) {
   seedWorkspaceSession(permissions)
   if (authState.snapshot.profile) {
@@ -384,14 +379,7 @@ describe('workspace shell', () => {
     expect(screen.queryByText('Owner')).not.toBeInTheDocument()
   })
 
-  it('keeps tenant role labels visible for admin sessions', async () => {
-    seedWorkspaceAdminSession(['workspace:read'])
-    renderWorkspaceShell()
-
-    expect(await screen.findAllByText('Owner')).not.toHaveLength(0)
-  })
-
-  it('keeps tenant role labels hidden for internal developer sessions without platform admin access', async () => {
+  it('keeps tenant role labels hidden for internal developer sessions', async () => {
     seedWorkspaceInternalDeveloperSession(['workspace:read'])
     renderWorkspaceShell()
 

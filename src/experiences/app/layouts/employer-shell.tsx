@@ -64,7 +64,6 @@ type ShellConfig = {
   searchPlaceholder: string
   sidebarGroups: AppNavGroup[]
   tenantName: string
-  tenantRoleSummary?: string
   topbarEyebrow: string
 }
 
@@ -463,7 +462,7 @@ function SidebarFooter({
         {!showCollapsedLabels ? (
           <div className="min-w-0">
             <p className="truncate text-[13px] font-semibold text-slate-900 dark:text-white">{userName}</p>
-            {config.tenantRoleSummary ? <p className="truncate text-[11px] text-slate-400">{config.tenantRoleSummary}</p> : null}
+            <p className="truncate text-[11px] text-slate-400">{userEmail}</p>
           </div>
         ) : (
           <span className="sr-only">{userName}</span>
@@ -633,7 +632,6 @@ function WorkspaceSidebarContent({
 }
 
 function buildWorkspaceConfig(session: ReturnType<typeof useAppSession>) {
-  const shouldExposeRoleSummary = session.isPlatformAdmin
   const visibleNavigation = filterNavigationItems(employerNavigationItems, session.permissions, session.isAuthenticated).map((item) =>
     mapNavItem(item, 'workspace')
   )
@@ -703,15 +701,11 @@ function buildWorkspaceConfig(session: ReturnType<typeof useAppSession>) {
         : [])
     ],
     tenantName: session.activeMembership?.tenantName ?? 'Tu espacio de empresa',
-    tenantRoleSummary: shouldExposeRoleSummary
-      ? session.activeMembership?.roleNames.filter(Boolean).join(', ') || 'Miembro del workspace'
-      : undefined,
     topbarEyebrow: 'Workspace operativo'
   } satisfies ShellConfig
 }
 
 function buildCandidateConfig(session: ReturnType<typeof useAppSession>) {
-  const shouldExposeRoleSummary = session.isPlatformAdmin
   const visibleNavigation = filterNavigationItems(candidateNavigationItems, session.permissions, session.isAuthenticated).map((item) =>
     mapNavItem(item, 'candidate')
   )
@@ -777,14 +771,12 @@ function buildCandidateConfig(session: ReturnType<typeof useAppSession>) {
       }
     ],
     tenantName: session.profile?.display_name ?? session.profile?.full_name ?? 'Tu espacio profesional',
-    tenantRoleSummary: shouldExposeRoleSummary ? 'Cuenta de candidato' : undefined,
     topbarEyebrow: 'Ruta de candidato'
   } satisfies ShellConfig
 }
 
 function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
   const hasWorkspaceAccess = session.permissions.includes('workspace:read')
-  const shouldExposeRoleSummary = session.isPlatformAdmin
   const accountItems: AppNavItem[] = session.isAuthenticated
     ? [
         {
@@ -875,12 +867,6 @@ function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
     tenantName: session.isAuthenticated
       ? session.activeMembership?.tenantName ?? 'Cuenta ASI'
       : 'Explora la plataforma',
-    tenantRoleSummary:
-      session.isAuthenticated && shouldExposeRoleSummary
-        ? hasWorkspaceAccess
-          ? 'Cuenta con acceso a workspace'
-          : 'Cuenta autenticada'
-        : undefined,
     topbarEyebrow: 'Plataforma pública'
   } satisfies ShellConfig
 }
@@ -1172,9 +1158,7 @@ export function PlatformAppShell({
                     </span>
                     <span className="hidden min-w-0 text-left lg:block">
                       <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</span>
-                      {config.tenantRoleSummary ? (
-                        <span className="block truncate text-xs text-slate-400">{config.tenantRoleSummary}</span>
-                      ) : null}
+                      <span className="block truncate text-xs text-slate-400">{userIdentity.email}</span>
                     </span>
                     <ChevronDown className="hidden size-4 text-slate-400 lg:block dark:text-slate-500" />
                   </button>
@@ -1183,9 +1167,7 @@ export function PlatformAppShell({
                     <div className="absolute right-0 z-10 mt-2.5 w-56 origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_48px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-slate-900">
                       <div className="border-b border-slate-100 px-3 py-2 dark:border-white/10">
                         <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</p>
-                        {config.tenantRoleSummary ? (
-                          <p className="truncate text-xs text-slate-500 dark:text-slate-400">{config.tenantRoleSummary}</p>
-                        ) : null}
+                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">{userIdentity.email}</p>
                       </div>
 
                       <button
