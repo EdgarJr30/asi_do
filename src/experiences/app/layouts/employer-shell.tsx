@@ -274,11 +274,11 @@ function WorkspaceNotificationPanel({
       </div>
 
       {isLoading ? (
-        <div className="rounded-[20px] border border-dashed border-(--app-border) bg-(--app-surface) px-4 py-6 text-sm text-(--app-text-muted)">
+        <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface) px-4 py-6 text-sm text-(--app-text-muted)">
           Cargando notificaciones...
         </div>
       ) : notifications.length === 0 ? (
-        <div className="rounded-[20px] border border-dashed border-(--app-border) bg-(--app-surface) px-4 py-6 text-sm text-(--app-text-muted)">
+        <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface) px-4 py-6 text-sm text-(--app-text-muted)">
           Aún no tienes notificaciones recientes.
         </div>
       ) : (
@@ -1070,7 +1070,7 @@ export function PlatformAppShell({
         </div>
       ) : null}
 
-      <div className="min-w-0 lg:pl-[var(--shell-sidebar-width)]">
+      <div className="min-w-0 lg:pl-(--shell-sidebar-width)">
         <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/92 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
           <div className="flex min-h-18 items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
             <button

@@ -230,6 +230,9 @@ Do not let authenticated platform screens drift back toward oversized marketing 
 ### R-079 — Tenant role labels must stay out of general user chrome
 Do not expose tenant role summaries in the shared platform chrome. Sidebar footers, top-bar identity blocks, and profile dropdown headers should never show role strings like `Owner`, `Reviewer`, `Tenant Admin`, or similar. The shared chrome should stick to identity and navigation only; if administrators need role visibility, that belongs in dedicated admin surfaces, not in the platform shell seen during day-to-day use.
 
+### R-080 — Tailwind class names must stay canonical
+Do not introduce arbitrary Tailwind utility spellings when the same value already exists as a built-in scale token or as a documented project token. Prefer canonical classes such as `w-74`, `w-27.5`, `sm:w-31.5`, `max-w-300`, `rounded-panel`, `rounded-2xl`, and `lg:pl-(--shell-sidebar-width)` over equivalent arbitrary forms like `w-[296px]`, `w-[110px]`, `sm:w-[126px]`, `max-w-[1200px]`, `rounded-[20px]`, `rounded-[16px]`, or `lg:pl-[var(--shell-sidebar-width)]`. Canonical Tailwind usage is mandatory across product code, and lint enforcement should be preferred over manual review alone.
+
 ### R-064 — Tailwind utility syntax and override strategy must stay canonical
 Do not reintroduce non-canonical Tailwind utility spellings when the framework already provides an exact built-in token. Do not rely on CSS important overrides or Tailwind important modifiers as the default fix for styling conflicts; prefer semantic component APIs, Tailwind layer order, or clearer selectors so overrides resolve through the normal cascade. Prefer scale-based height utilities such as `h-88`, `sm:h-96`, `xl:h-108`, `2xl:h-112`, or `min-h-96` over arbitrary `rem` values like `h-[22rem]`, `sm:h-[24rem]`, `xl:h-[27rem]`, or `min-h-[24rem]` whenever the values map exactly to the Tailwind spacing scale.
 

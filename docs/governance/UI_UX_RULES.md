@@ -56,6 +56,7 @@ Enforcement rules:
 6. Do not introduce alternate toast/alert libraries such as `react-toastify`, `sweetalert2`, or similar packages for app feedback.
 7. Use `sonner` only for transient feedback such as success, lightweight errors, and non-blocking status messages.
 8. Confirmation flows, destructive actions, and multi-step decisions must use shared dialogs, sheets, or full-page flows instead of toast-only patterns or browser alerts.
+9. Tailwind classes must use canonical utility spellings whenever an exact built-in token or project token already exists. Do not write arbitrary equivalents such as `w-[296px]`, `max-w-[1200px]`, `rounded-[20px]`, or `lg:pl-[var(--shell-sidebar-width)]` when the canonical form is `w-74`, `max-w-300`, `rounded-panel`, or `lg:pl-(--shell-sidebar-width)`.
 
 ---
 

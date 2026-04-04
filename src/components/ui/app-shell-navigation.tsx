@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 
 import {
   BriefcaseBusiness,
@@ -12,22 +12,22 @@ import {
   UserRound,
   UsersRound,
   Wrench,
-  X
-} from 'lucide-react'
+  X,
+} from 'lucide-react';
 
-import { BrandMark } from '@/components/ui/app-brand'
-import { cn } from '@/lib/utils/cn'
+import { BrandMark } from '@/components/ui/app-brand';
+import { cn } from '@/lib/utils/cn';
 
 export interface AppNavItem {
-  title: string
-  href: string
-  description?: string
-  icon?: LucideIcon
+  title: string;
+  href: string;
+  description?: string;
+  icon?: LucideIcon;
 }
 
 export interface AppNavGroup {
-  title?: string
-  items: AppNavItem[]
+  title?: string;
+  items: AppNavItem[];
 }
 
 const iconByHref: Record<string, LucideIcon> = {
@@ -48,31 +48,31 @@ const iconByHref: Record<string, LucideIcon> = {
   '/admin/platform': Building2,
   '/admin/moderation': Layers3,
   '/admin/errors': FileText,
-  '/admin/bootstrap-owner': Wrench
-}
+  '/admin/bootstrap-owner': Wrench,
+};
 
 function resolveIcon(item: AppNavItem) {
-  return item.icon ?? iconByHref[item.href] ?? Sparkles
+  return item.icon ?? iconByHref[item.href] ?? Sparkles;
 }
 
 function resolveActiveItemHref(items: AppNavItem[], pathname: string) {
   return items
     .filter((item) => {
       if (pathname === item.href) {
-        return true
+        return true;
       }
 
       if (item.href === '/' || item.href.includes('#')) {
-        return false
+        return false;
       }
 
-      return pathname.startsWith(`${item.href}/`)
+      return pathname.startsWith(`${item.href}/`);
     })
-    .sort((left, right) => right.href.length - left.href.length)[0]?.href
+    .sort((left, right) => right.href.length - left.href.length)[0]?.href;
 }
 
 function isActiveHref(activeItemHref: string | undefined, itemHref: string) {
-  return activeItemHref === itemHref
+  return activeItemHref === itemHref;
 }
 
 function WorkspaceSidebarContent({
@@ -81,37 +81,51 @@ function WorkspaceSidebarContent({
   footer,
   groups,
   onNavigate,
-  tenantName
+  tenantName,
 }: {
-  activeHref: string
-  brand: string
-  footer?: ReactNode
-  groups: AppNavGroup[]
-  onNavigate: (href: string) => void
-  tenantName: string
+  activeHref: string;
+  brand: string;
+  footer?: ReactNode;
+  groups: AppNavGroup[];
+  onNavigate: (href: string) => void;
+  tenantName: string;
 }) {
-  const activeItemHref = resolveActiveItemHref(groups.flatMap((group) => group.items), activeHref)
+  const activeItemHref = resolveActiveItemHref(
+    groups.flatMap((group) => group.items),
+    activeHref
+  );
 
   return (
     <div className="relative flex h-full flex-col overflow-y-auto border-r border-slate-200 bg-white px-6 pb-5 dark:border-white/10 dark:bg-slate-950">
       <div className="flex h-16 shrink-0 items-center gap-3">
         <BrandMark panelClassName="size-10 rounded-[14px] border-primary-200/60 bg-primary-600 p-2 shadow-none dark:border-white/10 dark:bg-white/10" />
         <div className="min-w-0">
-          <p className="truncate text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{brand}</p>
-          <p className="truncate text-base font-semibold tracking-tight text-slate-950 dark:text-white">{tenantName}</p>
+          <p className="truncate text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            {brand}
+          </p>
+          <p className="truncate text-base font-semibold tracking-tight text-slate-950 dark:text-white">
+            {tenantName}
+          </p>
         </div>
       </div>
 
-      <nav aria-label={`${brand} navigation`} className="mt-5 flex flex-1 flex-col">
+      <nav
+        aria-label={`${brand} navigation`}
+        className="mt-5 flex flex-1 flex-col"
+      >
         <ul className="flex flex-1 flex-col gap-y-7">
           {groups.map((group, groupIndex) => (
             <li key={group.title ?? `group-${groupIndex}`}>
-              {group.title ? <div className="text-xs/6 font-semibold text-slate-400">{group.title}</div> : null}
+              {group.title ? (
+                <div className="text-xs/6 font-semibold text-slate-400">
+                  {group.title}
+                </div>
+              ) : null}
 
               <ul className="-mx-2 mt-2 space-y-1">
                 {group.items.map((item) => {
-                  const Icon = resolveIcon(item)
-                  const isActive = isActiveHref(activeItemHref, item.href)
+                  const Icon = resolveIcon(item);
+                  const isActive = isActiveHref(activeItemHref, item.href);
 
                   return (
                     <li key={item.href}>
@@ -138,7 +152,7 @@ function WorkspaceSidebarContent({
                         <span className="truncate">{item.title}</span>
                       </button>
                     </li>
-                  )
+                  );
                 })}
               </ul>
             </li>
@@ -147,7 +161,7 @@ function WorkspaceSidebarContent({
         </ul>
       </nav>
     </div>
-  )
+  );
 }
 
 export function AppWorkspaceSidebar({
@@ -156,14 +170,14 @@ export function AppWorkspaceSidebar({
   footer,
   groups,
   onNavigate,
-  tenantName
+  tenantName,
 }: {
-  activeHref: string
-  brand: string
-  footer?: ReactNode
-  groups: AppNavGroup[]
-  onNavigate: (href: string) => void
-  tenantName: string
+  activeHref: string;
+  brand: string;
+  footer?: ReactNode;
+  groups: AppNavGroup[];
+  onNavigate: (href: string) => void;
+  tenantName: string;
 }) {
   return (
     <aside className="hidden bg-slate-950 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
@@ -176,7 +190,7 @@ export function AppWorkspaceSidebar({
         tenantName={tenantName}
       />
     </aside>
-  )
+  );
 }
 
 export function AppWorkspaceSidebarDrawer({
@@ -187,19 +201,19 @@ export function AppWorkspaceSidebarDrawer({
   isOpen,
   onClose,
   onNavigate,
-  tenantName
+  tenantName,
 }: {
-  activeHref: string
-  brand: string
-  footer?: ReactNode
-  groups: AppNavGroup[]
-  isOpen: boolean
-  onClose: () => void
-  onNavigate: (href: string) => void
-  tenantName: string
+  activeHref: string;
+  brand: string;
+  footer?: ReactNode;
+  groups: AppNavGroup[];
+  isOpen: boolean;
+  onClose: () => void;
+  onNavigate: (href: string) => void;
+  tenantName: string;
 }) {
   if (!isOpen) {
-    return null
+    return null;
   }
 
   return (
@@ -214,7 +228,11 @@ export function AppWorkspaceSidebarDrawer({
       <div className="fixed inset-y-0 left-0 flex w-full max-w-xs">
         <div className="relative flex min-w-0 flex-1">
           <div className="absolute right-3 top-3 z-10 flex justify-center">
-            <button className="rounded-full bg-slate-900/80 p-2.5 text-white shadow-lg" type="button" onClick={onClose}>
+            <button
+              className="rounded-full bg-slate-900/80 p-2.5 text-white shadow-lg"
+              type="button"
+              onClick={onClose}
+            >
               <span className="sr-only">Cerrar sidebar</span>
               <X className="size-6" />
             </button>
@@ -227,8 +245,8 @@ export function AppWorkspaceSidebarDrawer({
               footer={footer}
               groups={groups}
               onNavigate={(href) => {
-                onClose()
-                onNavigate(href)
+                onClose();
+                onNavigate(href);
               }}
               tenantName={tenantName}
             />
@@ -236,7 +254,7 @@ export function AppWorkspaceSidebarDrawer({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function AppSidebarNav({
@@ -247,43 +265,47 @@ export function AppSidebarNav({
   items,
   activeHref,
   onNavigate,
-  footer
+  footer,
 }: {
-  title: string
-  description: string
-  brand: string
-  brandMark?: ReactNode
-  items: AppNavItem[]
-  activeHref: string
-  onNavigate: (href: string) => void
-  footer?: ReactNode
+  title: string;
+  description: string;
+  brand: string;
+  brandMark?: ReactNode;
+  items: AppNavItem[];
+  activeHref: string;
+  onNavigate: (href: string) => void;
+  footer?: ReactNode;
 }) {
-  const activeItemHref = resolveActiveItemHref(items, activeHref)
+  const activeItemHref = resolveActiveItemHref(items, activeHref);
 
   return (
-    <aside className="hidden w-[296px] shrink-0 rounded-[28px] border bg-(--app-surface-elevated) p-5 shadow-(--app-shadow-soft) lg:flex lg:flex-col">
+    <aside className="hidden w-74 shrink-0 rounded-[28px] border bg-(--app-surface-elevated) p-5 shadow-(--app-shadow-soft) lg:flex lg:flex-col">
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           {brandMark ?? null}
           <div className="tm-kicker w-fit">{brand}</div>
         </div>
         <div className="space-y-2">
-          <p className="text-[1.5rem] font-semibold tracking-tight text-(--app-text) sm:text-[1.65rem]">{title}</p>
-          <p className="text-sm leading-6 text-(--app-text-muted)">{description}</p>
+          <p className="text-[1.5rem] font-semibold tracking-tight text-(--app-text) sm:text-[1.65rem]">
+            {title}
+          </p>
+          <p className="text-sm leading-6 text-(--app-text-muted)">
+            {description}
+          </p>
         </div>
       </div>
 
       <nav className="mt-8 flex flex-1 flex-col gap-2">
         {items.map((item) => {
-          const Icon = resolveIcon(item)
-          const isActive = isActiveHref(activeItemHref, item.href)
+          const Icon = resolveIcon(item);
+          const isActive = isActiveHref(activeItemHref, item.href);
 
           return (
             <button
               aria-current={isActive ? 'page' : undefined}
               key={item.href}
               className={cn(
-                'flex items-start gap-3 rounded-[20px] px-4 py-3 text-left transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-px',
+                'flex items-start gap-3 rounded-panel px-4 py-3 text-left transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-px',
                 isActive
                   ? 'border border-primary-200 bg-primary-50 text-primary-700 shadow-sm hover:border-primary-300 hover:bg-primary-50/90 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] dark:border-primary-500/18 dark:bg-primary-500/10 dark:text-primary-200 dark:hover:border-primary-500/24 dark:hover:bg-primary-500/14'
                   : 'border border-transparent text-(--app-text-muted) hover:border-(--app-border) hover:bg-(--app-surface-muted) hover:text-(--app-text) hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]'
@@ -292,36 +314,42 @@ export function AppSidebarNav({
               type="button"
               onClick={() => void onNavigate(item.href)}
             >
-              <span className="mt-0.5 rounded-[16px] bg-(--app-surface) p-2 text-current shadow-sm">
+              <span className="mt-0.5 rounded-2xl bg-(--app-surface) p-2 text-current shadow-sm">
                 <Icon className="h-4 w-4" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold">{item.title}</span>
-                {item.description ? <span className="mt-1 block text-[0.78rem] leading-5 text-current/75">{item.description}</span> : null}
+                <span className="block text-sm font-semibold">
+                  {item.title}
+                </span>
+                {item.description ? (
+                  <span className="mt-1 block text-[0.78rem] leading-5 text-current/75">
+                    {item.description}
+                  </span>
+                ) : null}
               </span>
             </button>
-          )
+          );
         })}
       </nav>
 
       {footer ? <div className="mt-6">{footer}</div> : null}
     </aside>
-  )
+  );
 }
 
 export function AppBottomNav({
   items,
   activeHref,
   onNavigate,
-  variant = 'default'
+  variant = 'default',
 }: {
-  items: AppNavItem[]
-  activeHref: string
-  onNavigate: (href: string) => void
-  variant?: 'default' | 'workspace'
+  items: AppNavItem[];
+  activeHref: string;
+  onNavigate: (href: string) => void;
+  variant?: 'default' | 'workspace';
 }) {
-  const columns = Math.min(Math.max(items.length, 1), 5)
-  const activeItemHref = resolveActiveItemHref(items, activeHref)
+  const columns = Math.min(Math.max(items.length, 1), 5);
+  const activeItemHref = resolveActiveItemHref(items, activeHref);
 
   return (
     <nav
@@ -332,10 +360,13 @@ export function AppBottomNav({
           : 'bg-(--app-surface-elevated) shadow-[0_-10px_26px_rgba(24,39,78,0.14)]'
       )}
     >
-      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+      <div
+        className="grid gap-2"
+        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+      >
         {items.map((item) => {
-          const Icon = resolveIcon(item)
-          const isActive = activeItemHref === item.href
+          const Icon = resolveIcon(item);
+          const isActive = activeItemHref === item.href;
 
           return (
             <button
@@ -348,8 +379,8 @@ export function AppBottomNav({
                     ? 'bg-white/10 text-white hover:bg-white/12 hover:shadow-[0_14px_28px_rgba(15,23,42,0.18)]'
                     : 'text-white/58 hover:bg-white/6 hover:text-white hover:shadow-[0_14px_28px_rgba(15,23,42,0.16)]'
                   : isActive
-                    ? 'bg-primary-50 text-primary-700 hover:bg-primary-100 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] dark:bg-primary-500/10 dark:text-primary-200 dark:hover:bg-primary-500/16'
-                    : 'text-(--app-text-subtle) hover:bg-(--app-surface-muted) hover:text-(--app-text) hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]'
+                  ? 'bg-primary-50 text-primary-700 hover:bg-primary-100 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] dark:bg-primary-500/10 dark:text-primary-200 dark:hover:bg-primary-500/16'
+                  : 'text-(--app-text-subtle) hover:bg-(--app-surface-muted) hover:text-(--app-text) hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]'
               )}
               data-active={isActive ? 'true' : 'false'}
               type="button"
@@ -358,9 +389,9 @@ export function AppBottomNav({
               <Icon className="h-4 w-4" />
               <span className="truncate">{item.title}</span>
             </button>
-          )
+          );
         })}
       </div>
     </nav>
-  )
+  );
 }

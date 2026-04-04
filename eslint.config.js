@@ -5,6 +5,15 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 const tailwindClassHelperNames = new Set(['cn', 'clsx'])
+const canonicalUtilityMappings = new Map([
+  ['w-[296px]', 'w-74'],
+  ['w-[110px]', 'w-27.5'],
+  ['sm:w-[126px]', 'sm:w-31.5'],
+  ['max-w-[1200px]', 'max-w-300'],
+  ['rounded-[20px]', 'rounded-panel'],
+  ['rounded-[16px]', 'rounded-2xl'],
+  ['lg:pl-[var(--shell-sidebar-width)]', 'lg:pl-(--shell-sidebar-width)']
+])
 
 function canonicalizeTailwindToken(token) {
   const fixes = []
@@ -44,6 +53,17 @@ function canonicalizeTailwindToken(token) {
 
       nextToken = canonicalToken
     }
+  }
+
+  const directUtilityMatch = canonicalUtilityMappings.get(nextToken)
+
+  if (directUtilityMatch) {
+    fixes.push({
+      from: nextToken,
+      to: directUtilityMatch
+    })
+
+    nextToken = directUtilityMatch
   }
 
   return {
