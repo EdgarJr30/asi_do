@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, CalendarHeart, CircleDollarSign, HandCoins, Landmark, Megaphone, ShieldCheck } from 'lucide-react'
+import { BriefcaseBusiness, CircleDollarSign, HandCoins, Megaphone, ShieldCheck } from 'lucide-react'
 
 import { surfacePaths } from '@/app/router/surface-paths'
 import type { InstitutionalPageContent } from '@/experiences/institutional/content/site-content'

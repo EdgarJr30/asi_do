@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, Building2, CalendarHeart, HandHeart, Megaphone, MonitorPlay } from 'lucide-react'
+import { Building2, CalendarHeart, HandHeart, Megaphone, MonitorPlay } from 'lucide-react'
 
 import { surfacePaths } from '@/app/router/surface-paths'
 import type { InstitutionalPageContent } from '@/experiences/institutional/content/site-content'
