@@ -269,6 +269,9 @@ Do not reintroduce `@typescript-eslint/no-unsafe-assignment` or `@typescript-esl
 ### R-075 — Experience ownership must stay split between institutional, storefront, and app
 Do not let route-owned code drift back into a single mixed bucket of layouts and top-level pages. The repository must keep three explicit experience ownership zones under `src/experiences`: `institutional` for the ASI portal, `storefront` for product marketing and public jobs, and `app` for authenticated product usage. Shared business logic may stay in `src/features`, but route trees, experience shells, and experience-specific entry pages should live under their owning experience folder so future growth can split deployables or workspaces without untangling mixed ownership again.
 
+### R-076 — Institutional membership applications must stay gated by eligibility and category filtering
+Do not reintroduce a direct-open institutional membership application route that exposes the full form without a valid eligibility result. The `/membership/apply` surface must require a fresh eligibility token before rendering, redirect back to the eligibility wizard when that token is missing or invalid, and keep the form pre-filtered to the category that the user already qualified for instead of letting applicants browse or switch categories inside the application itself.
+
 ---
 
 ## Maintenance rule

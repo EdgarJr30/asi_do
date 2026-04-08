@@ -58,3 +58,8 @@ if (!globalThis.IntersectionObserver) {
     value: MockIntersectionObserver
   })
 }
+
+Object.defineProperty(window, 'scrollTo', {
+  writable: true,
+  value: () => undefined
+})
