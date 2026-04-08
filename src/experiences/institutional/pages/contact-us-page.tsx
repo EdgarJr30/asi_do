@@ -21,8 +21,8 @@ export function ContactUsPage() {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
           <div>
             <p className="asi-kicker">Contáctanos</p>
-            <h1 className="asi-display mt-5 max-w-[13ch]">Contacto institucional con forma clara, cálida y accionable.</h1>
-            <p className="asi-copy mt-6 max-w-[62ch] text-[1.02rem]">
+            <h1 className="asi-heading-lg mt-4 max-w-[13ch]">Contacto institucional con forma clara, cálida y accionable.</h1>
+            <p className="asi-copy mt-5 max-w-[62ch] text-[1.02rem]">
               Esta página combina tarjetas de contacto, señales de confianza y un formulario ligero que prepara el correo
               para seguir la conversación fuera de la web.
             </p>

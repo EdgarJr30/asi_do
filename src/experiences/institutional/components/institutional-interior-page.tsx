@@ -19,10 +19,10 @@ export function InstitutionalInteriorPage({
         <div className="grid gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-start">
           <div>
             <p className="asi-kicker">{content.hero.eyebrow}</p>
-            <h1 className="asi-display mt-5 max-w-[14ch]">
+            <h1 className="asi-heading-lg mt-4 max-w-[14ch]">
               {content.hero.title}
             </h1>
-            <p className="asi-copy mt-6 max-w-[62ch] text-[1.02rem]">
+            <p className="asi-copy mt-5 max-w-[62ch] text-[1.02rem]">
               {content.hero.description}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">

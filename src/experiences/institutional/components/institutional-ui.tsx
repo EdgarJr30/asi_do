@@ -84,7 +84,10 @@ export function InstitutionalLead({
         {content.title}
       </h2>
       <p
-        className={cn('asi-copy mt-4 max-w-[66ch]', invert && 'text-white/78')}
+        className={cn(
+          'asi-copy mt-4 max-w-[66ch] text-[1.02rem]',
+          invert && 'text-white/78'
+        )}
       >
         {content.description}
       </p>
@@ -176,7 +179,9 @@ export function InstitutionalCtaBand({
           <h2 className="asi-heading-lg mt-4 text-white">{title}</h2>
         </div>
         <div className="lg:justify-self-end lg:text-right">
-          <p className="asi-copy max-w-2xl text-white/80">{description}</p>
+          <p className="asi-copy max-w-2xl text-[1.02rem] text-white/80">
+            {description}
+          </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:justify-end">
             <InstitutionalActionLink action={primaryAction} />
             <InstitutionalActionLink action={secondaryAction} />
