@@ -1,6 +1,7 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { useAppSession } from '@/app/providers/app-session-provider';
+import { RouteScrollManager } from '@/app/router/route-scroll-manager';
 import {
   getAuthenticatedHomePath,
   surfacePaths,
@@ -18,6 +19,8 @@ export function AuthShell() {
 
   return (
     <div className="tm-shell">
+      <RouteScrollManager />
+
       <header className="border-b bg-(--app-surface-elevated) backdrop-blur-xl">
         <div className="mx-auto flex max-w-300 items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <button

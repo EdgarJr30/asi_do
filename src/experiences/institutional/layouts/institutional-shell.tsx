@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Menu, MoveRight, Search, X } from 'lucide-react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
+import { RouteScrollManager } from '@/app/router/route-scroll-manager';
 import { surfacePaths } from '@/app/router/surface-paths';
 import { institutionalNavigation } from '@/experiences/institutional/content/site-content';
 import { BrandLockup } from '@/components/ui/app-brand';
@@ -58,6 +59,8 @@ export function InstitutionalShell() {
 
   return (
     <div className="asi-site min-h-screen overflow-x-clip">
+      <RouteScrollManager />
+
       <motion.header
         className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 lg:px-6"
         initial={shouldReduceMotion ? false : { opacity: 0, y: -18 }}

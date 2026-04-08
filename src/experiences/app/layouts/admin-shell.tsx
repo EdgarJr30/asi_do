@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
+import { RouteScrollManager } from '@/app/router/route-scroll-manager'
 import { BrandMark } from '@/components/ui/app-brand'
 import { AppSidebarNav } from '@/components/ui/app-shell-navigation'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,8 @@ export function AdminShell({ fallbackContent }: { fallbackContent?: ReactNode })
 
   return (
     <div className="tm-shell overflow-x-clip">
+      <RouteScrollManager />
+
       <div className="mx-auto flex min-h-screen max-w-[1420px] gap-6 px-4 pb-16 pt-4 sm:px-6 lg:px-8">
         <AppSidebarNav
           activeHref={location.pathname}

@@ -26,6 +26,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
+import { RouteScrollManager } from '@/app/router/route-scroll-manager'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { BrandMark } from '@/components/ui/app-brand'
 import { AppBottomNav, type AppNavGroup, type AppNavItem } from '@/components/ui/app-shell-navigation'
@@ -1016,6 +1017,8 @@ export function PlatformAppShell({
 
   return (
     <div className="tm-shell min-h-screen overflow-x-clip bg-white dark:bg-slate-900" style={shellLayoutStyle}>
+      <RouteScrollManager />
+
       <aside
         className="fixed inset-y-0 left-0 z-50 hidden lg:block"
         style={{ width: isDesktopSidebarCollapsed ? DESKTOP_SIDEBAR_COLLAPSED_WIDTH : DESKTOP_SIDEBAR_EXPANDED_WIDTH }}

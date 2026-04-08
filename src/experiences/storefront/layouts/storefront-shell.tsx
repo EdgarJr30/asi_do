@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 
 import { useAppSession } from '@/app/providers/app-session-provider';
+import { RouteScrollManager } from '@/app/router/route-scroll-manager';
 import {
   getAuthenticatedHomePath,
   surfacePaths,
@@ -18,20 +19,6 @@ const storefrontNavigation = [
   { label: 'FAQ', to: `${surfacePaths.storefront.home}#faq` },
   { label: 'Jobs', to: surfacePaths.storefront.jobsRoot },
 ] as const;
-
-function scrollToHashTarget(hash: string) {
-  if (!hash) {
-    return;
-  }
-
-  const target = document.getElementById(hash.replace('#', ''));
-
-  if (!target) {
-    return;
-  }
-
-  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
 
 export function StorefrontShell() {
   const navigate = useNavigate();
@@ -52,20 +39,10 @@ export function StorefrontShell() {
       }
     : { label: 'Iniciar sesion', href: '/auth/sign-in' };
 
-  useEffect(() => {
-    if (location.pathname !== surfacePaths.storefront.home || !location.hash) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      scrollToHashTarget(location.hash);
-    }, 40);
-
-    return () => window.clearTimeout(timer);
-  }, [location.hash, location.pathname]);
-
   return (
     <div className="tm-shell overflow-x-clip">
+      <RouteScrollManager />
+
       <header
         className={cn(
           'inset-x-0 top-0 z-40',
