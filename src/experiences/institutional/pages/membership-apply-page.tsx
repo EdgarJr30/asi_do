@@ -16,11 +16,41 @@ import { getMembershipApplicationVariant } from '@/experiences/institutional/con
 
 // ─── Guard ────────────────────────────────────────────────────────────────────
 
+interface MembershipApplyLocationState {
+  eligibilityToken?: EligibilityTokenPayload;
+}
+
+function isEligibilityTokenPayload(
+  value: unknown
+): value is EligibilityTokenPayload {
+  if (typeof value !== 'object' || value === null) return false;
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.eligible === 'boolean' &&
+    typeof candidate.category === 'string' &&
+    typeof candidate.categorySlug === 'string' &&
+    typeof candidate.dues === 'string'
+  );
+}
+
+function readRouteEligibilityToken(
+  state: unknown
+): EligibilityTokenPayload | null {
+  if (typeof state !== 'object' || state === null) return null;
+
+  const candidate = state as MembershipApplyLocationState;
+
+  return isEligibilityTokenPayload(candidate.eligibilityToken)
+    ? candidate.eligibilityToken
+    : null;
+}
+
 function useEligibilityGuard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const routeToken = (location.state as { eligibilityToken?: EligibilityTokenPayload } | null)
-    ?.eligibilityToken;
+  const routeToken = readRouteEligibilityToken(location.state);
   const token = useMemo<EligibilityToken | null>(() => {
     if (routeToken) {
       return {
