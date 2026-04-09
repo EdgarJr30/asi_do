@@ -96,6 +96,24 @@ function useEligibilityGuard() {
   return hasKnownCategory ? token : null;
 }
 
+function RedirectNotice() {
+  return (
+    <InstitutionalSection className="min-h-[70vh]">
+      <div className="mx-auto max-w-2xl rounded-[1.75rem] border border-(--asi-outline) bg-(--asi-surface-raised) p-8 text-center shadow-(--asi-shadow-soft)">
+        <p className="asi-kicker">Membresía</p>
+        <h1 className="asi-heading-md mt-3">
+          Validando acceso al formulario
+        </h1>
+        <p className="asi-copy mt-3">
+          Este formulario solo se habilita después de completar la verificación
+          de elegibilidad. Si no encontramos un token válido, te redirigimos
+          para completar ese paso primero.
+        </p>
+      </div>
+    </InstitutionalSection>
+  );
+}
+
 // ─── Category label badge ─────────────────────────────────────────────────────
 
 function CategoryBadge({ category, dues }: { category: string; dues: string }) {
@@ -127,14 +145,13 @@ function CategoryBadge({ category, dues }: { category: string; dues: string }) {
 export function MembershipApplyPage() {
   const token = useEligibilityGuard();
 
-  // Blocked — redirect already fired via useEffect
-  if (!token) return null;
+  if (!token) return <RedirectNotice />;
 
   const categoryInfo = membershipCategories.find(
     (c) => c.slug === token.categorySlug
   );
 
-  if (!categoryInfo) return null;
+  if (!categoryInfo) return <RedirectNotice />;
 
   return (
     <InstitutionalSection className="min-h-[70vh]">

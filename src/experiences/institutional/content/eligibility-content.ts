@@ -1,5 +1,4 @@
 export const ELIGIBILITY_SESSION_KEY = 'asi:eligibility_result'
-export const ELIGIBILITY_ACCESS_TOKEN_PREFIX = 'asi:eligibility_access:'
 export const ELIGIBILITY_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 
 export interface EligibilityToken {
@@ -26,16 +25,41 @@ export function saveEligibilityToken(token: EligibilityTokenPayload) {
   }
 }
 
-function buildEligibilityAccessStorageKey(accessToken: string) {
-  return `${ELIGIBILITY_ACCESS_TOKEN_PREFIX}${accessToken}`
+function encodeEligibilityAccessToken(token: EligibilityToken) {
+  const json = JSON.stringify(token)
+  const encoded = btoa(json)
+
+  return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
 }
 
-function createEligibilityAccessTokenValue() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
+function decodeEligibilityAccessToken(accessToken: string) {
+  const normalized = accessToken
+    .replace(/-/g, '+')
+    .replace(/_/g, '/')
+    .padEnd(Math.ceil(accessToken.length / 4) * 4, '=')
 
-  return `eligibility-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  return atob(normalized)
+}
+
+function readLegacyEligibilityAccessToken(
+  accessToken: string
+): EligibilityToken | null {
+  if (!accessToken) return null
+
+  try {
+    const raw = sessionStorage.getItem(`asi:eligibility_access:${accessToken}`)
+    if (!raw) return null
+
+    const data = JSON.parse(raw) as EligibilityToken
+    if (Date.now() - data.timestamp > ELIGIBILITY_TTL_MS) {
+      sessionStorage.removeItem(`asi:eligibility_access:${accessToken}`)
+      return null
+    }
+
+    return data
+  } catch {
+    return null
+  }
 }
 
 export function readEligibilityToken(): EligibilityToken | null {
@@ -54,19 +78,12 @@ export function readEligibilityToken(): EligibilityToken | null {
 }
 
 export function createEligibilityAccessToken(token: EligibilityTokenPayload) {
-  const accessToken = createEligibilityAccessTokenValue()
-
   try {
     const data: EligibilityToken = { ...token, timestamp: Date.now() }
-    sessionStorage.setItem(
-      buildEligibilityAccessStorageKey(accessToken),
-      JSON.stringify(data)
-    )
+    return encodeEligibilityAccessToken(data)
   } catch {
     return ''
   }
-
-  return accessToken
 }
 
 export function readEligibilityTokenFromAccessToken(
@@ -75,19 +92,16 @@ export function readEligibilityTokenFromAccessToken(
   if (!accessToken) return null
 
   try {
-    const storageKey = buildEligibilityAccessStorageKey(accessToken)
-    const raw = sessionStorage.getItem(storageKey)
-    if (!raw) return null
-
-    const data = JSON.parse(raw) as EligibilityToken
+    const data = JSON.parse(
+      decodeEligibilityAccessToken(accessToken)
+    ) as EligibilityToken
     if (Date.now() - data.timestamp > ELIGIBILITY_TTL_MS) {
-      sessionStorage.removeItem(storageKey)
       return null
     }
 
     return data
   } catch {
-    return null
+    return readLegacyEligibilityAccessToken(accessToken)
   }
 }
 
