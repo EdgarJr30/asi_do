@@ -4,7 +4,6 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
 import {
   InstitutionalActionLink,
-  InstitutionalCtaBand,
   InstitutionalLead,
   InstitutionalSection,
 } from '@/experiences/institutional/components/institutional-ui';
@@ -53,12 +52,8 @@ const mediaVariants = {
 
 export function WhoWeArePage() {
   const shouldReduceMotion = useReducedMotion();
-  const [openResource, setOpenResource] = useState<string | null>(
-    whoWeAreResources[0]?.title ?? null
-  );
-  const [openRegion, setOpenRegion] = useState<string | null>(
-    whoWeAreGlobalRegions[0]?.title ?? null
-  );
+  const [openResource, setOpenResource] = useState<string | null>(null);
+  const [openRegion, setOpenRegion] = useState<string | null>(null);
   const revealProps = shouldReduceMotion
     ? {}
     : {
@@ -67,6 +62,18 @@ export function WhoWeArePage() {
         viewport: { once: true, amount: 0.18 },
         variants: containerVariants,
       };
+
+  const flagFromCode = (code: string) => {
+    if (code === 'eu') {
+      return 'EU';
+    }
+
+    return code
+      .toUpperCase()
+      .replace(/./g, (char) =>
+        String.fromCodePoint(127397 + char.charCodeAt(0))
+      );
+  };
 
   return (
     <div>
@@ -469,7 +476,21 @@ export function WhoWeArePage() {
                                   target="_blank"
                                 >
                                   <span className="mt-2 h-2 w-4 shrink-0 rounded-full bg-(--asi-primary)" />
-                                  <span>{link.label}</span>
+                                  <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                                    <span>{link.label}</span>
+                                    {link.flags ? (
+                                      <span className="inline-flex flex-wrap items-center gap-1.5">
+                                        {link.flags.map((flag) => (
+                                          <span
+                                            key={`${link.label}-${flag}`}
+                                            className="inline-flex min-h-7 min-w-7 items-center justify-center rounded-full bg-(--asi-primary)/8 px-2 text-sm font-semibold text-(--asi-primary)"
+                                          >
+                                            {flagFromCode(flag)}
+                                          </span>
+                                        ))}
+                                      </span>
+                                    ) : null}
+                                  </span>
                                 </a>
                               </li>
                             ))}
@@ -485,19 +506,21 @@ export function WhoWeArePage() {
         </motion.div>
       </InstitutionalSection>
 
-      <InstitutionalSection reveal="mount">
+      <InstitutionalSection tone="brand" reveal="mount">
         <motion.div
           className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-end"
           {...revealProps}
         >
           <div>
-            <p className="asi-kicker">Confianza institucional</p>
-            <h2 className="asi-heading-lg mt-4 text-(--asi-primary)">
+            <p className="asi-kicker border-white/15 bg-white/10 text-white/82">
+              Confianza institucional
+            </p>
+            <h2 className="asi-heading-lg mt-4 text-white">
               Una identidad clara que se reconoce en la misión, la estructura y la comunidad.
             </h2>
           </div>
           <div className="lg:justify-self-end lg:text-right">
-            <p className="asi-copy max-w-2xl">
+            <p className="asi-copy max-w-2xl text-white/80">
               ASI reúne personas de toda trayectoria profesional con un mismo
               objetivo: apoyar la misión de la Iglesia y compartir las buenas
               nuevas del amor de Dios en el lugar donde cada uno ya sirve.
@@ -522,16 +545,16 @@ export function WhoWeArePage() {
             return (
               <motion.article
                 key={item.title}
-                className="asi-card bg-white"
+                className="asi-card bg-white/10 text-white backdrop-blur-md"
                 variants={itemVariants}
               >
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-(--asi-primary)">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-white/12 text-white">
                   <Icon className="size-6" />
                 </div>
-                <p className="mt-5 text-lg font-semibold text-(--asi-text)">
+                <p className="mt-5 text-lg font-semibold text-white">
                   {item.title}
                 </p>
-                <p className="mt-2 text-sm leading-7 text-(--asi-text-muted)">
+                <p className="mt-2 text-sm leading-7 text-white/80">
                   {item.description}
                 </p>
               </motion.article>
@@ -540,20 +563,42 @@ export function WhoWeArePage() {
         </motion.div>
       </InstitutionalSection>
 
-      <InstitutionalCtaBand
-        description="Conocer la historia de ASI prepara el siguiente paso: integrarte a la comunidad o apoyar los proyectos donde esa misión ya está en marcha."
-        primaryAction={{
-          label: 'Aprender sobre membership',
-          to: surfacePaths.institutional.membership,
-          variant: 'primary',
-        }}
-        secondaryAction={{
-          label: 'Contáctanos',
-          to: surfacePaths.institutional.contactUs,
-          variant: 'secondary',
-        }}
-        title="Haz de tu vocación una forma visible de compartir a Cristo."
-      />
+      <InstitutionalSection reveal="mount">
+        <motion.div
+          className="grid gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-end"
+          {...revealProps}
+        >
+          <div>
+            <p className="asi-kicker">Siguiente paso</p>
+            <h2 className="asi-heading-lg mt-4 text-(--asi-primary)">
+              Haz de tu vocación una forma visible de compartir a Cristo.
+            </h2>
+          </div>
+          <div className="lg:justify-self-end lg:text-right">
+            <p className="asi-copy max-w-2xl text-[1.02rem]">
+              Conocer la historia de ASI prepara el siguiente paso:
+              integrarte a la comunidad o apoyar los proyectos donde esa
+              misión ya está en marcha.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:justify-end">
+              <InstitutionalActionLink
+                action={{
+                  label: 'Aprender sobre membership',
+                  to: surfacePaths.institutional.membership,
+                  variant: 'primary',
+                }}
+              />
+              <InstitutionalActionLink
+                action={{
+                  label: 'Contáctanos',
+                  to: surfacePaths.institutional.contactUs,
+                  variant: 'secondary',
+                }}
+              />
+            </div>
+          </div>
+        </motion.div>
+      </InstitutionalSection>
     </div>
   );
 }

@@ -171,20 +171,20 @@ export const whoWeAreGlobalRegions = [
     summary:
       'Capítulos y páginas regionales para Europa y organizaciones nacionales asociadas.',
     links: [
-      { label: 'ASI Europe', url: 'https://asi-europe.org' },
-      { label: 'ASI Austria', url: 'https://www.asi-austria.at' },
-      { label: 'ASI Bulgaria', url: 'https://www.asi-bg.org' },
-      { label: 'ASI Czech Republic', url: 'https://www.asi-cs.cz' },
-      { label: 'ASI Germany', url: 'https://www.asideutschland.de' },
-      { label: 'ASI Hungary', url: 'http://www.asi-hungary.org' },
-      { label: 'ASI Italy', url: 'https://asi-italia.it' },
-      { label: 'ASI Poland', url: 'http://asi.org.pl' },
-      { label: 'ASI Portugal', url: 'http://www.asiportugal.org' },
-      { label: 'ASI Romania', url: 'http://asiromania.ro' },
-      { label: 'ASI Scandinavia', url: 'https://www.asiscandinavia.org' },
-      { label: 'ASI Spain', url: 'http://www.asi-spain.org' },
-      { label: 'ASI Switzerland', url: 'http://www.asi-ch.org' },
-      { label: 'ASI United Kingdom', url: 'http://asi-uk.asiministries.org' },
+      { label: 'ASI Europe', url: 'https://asi-europe.org', flags: ['eu'] },
+      { label: 'ASI Austria', url: 'https://www.asi-austria.at', flags: ['at'] },
+      { label: 'ASI Bulgaria', url: 'https://www.asi-bg.org', flags: ['bg'] },
+      { label: 'ASI Czech Republic', url: 'https://www.asi-cs.cz', flags: ['cz'] },
+      { label: 'ASI Germany', url: 'https://www.asideutschland.de', flags: ['de'] },
+      { label: 'ASI Hungary', url: 'http://www.asi-hungary.org', flags: ['hu'] },
+      { label: 'ASI Italy', url: 'https://asi-italia.it', flags: ['it'] },
+      { label: 'ASI Poland', url: 'http://asi.org.pl', flags: ['pl'] },
+      { label: 'ASI Portugal', url: 'http://www.asiportugal.org', flags: ['pt'] },
+      { label: 'ASI Romania', url: 'http://asiromania.ro', flags: ['ro'] },
+      { label: 'ASI Scandinavia', url: 'https://www.asiscandinavia.org', flags: ['dk', 'fi', 'no', 'se'] },
+      { label: 'ASI Spain', url: 'http://www.asi-spain.org', flags: ['es'] },
+      { label: 'ASI Switzerland', url: 'http://www.asi-ch.org', flags: ['ch'] },
+      { label: 'ASI United Kingdom', url: 'http://asi-uk.asiministries.org', flags: ['gb'] },
     ],
   },
   {
@@ -192,14 +192,20 @@ export const whoWeAreGlobalRegions = [
     summary:
       'Referencia principal para países y territorios cubiertos por la región interamericana, incluida República Dominicana.',
     links: [
-      { label: 'ASI Inter-America', url: 'https://asi.interamerica.org' },
       {
-        label: 'República Dominicana e islas del Caribe vinculadas',
+        label: 'Caribe y República Dominicana',
         url: 'https://asi.interamerica.org',
+        flags: ['do', 'jm', 'pr'],
       },
       {
         label: 'Centroamérica y territorios asociados',
         url: 'https://asi.interamerica.org',
+        flags: ['gt', 'cr', 'pa'],
+      },
+      {
+        label: 'México y norte de Suramérica',
+        url: 'https://asi.interamerica.org',
+        flags: ['mx', 'co', 've'],
       },
     ],
   },
@@ -208,10 +214,11 @@ export const whoWeAreGlobalRegions = [
     summary:
       'Presencia regional para Sudáfrica y vínculo operativo usado en elegibilidad para territorios asociados del sur de África.',
     links: [
-      { label: 'ASI South Africa', url: 'https://www.asisauministries.org.za' },
+      { label: 'ASI South Africa', url: 'https://www.asisauministries.org.za', flags: ['za'] },
       {
         label: 'Southern Africa-Indian Ocean Division',
         url: 'http://www.sidadventist.org',
+        flags: ['za', 'bw', 'na', 'mz'],
       },
     ],
   },
