@@ -1,147 +1,198 @@
-import { BookOpenText, Building2, CalendarHeart, Church, HandCoins, HandHeart, ShieldCheck } from 'lucide-react'
+import { surfacePaths } from '@/app/router/surface-paths';
 
-import { surfacePaths } from '@/app/router/surface-paths'
-import type { InstitutionalPageContent } from '@/experiences/institutional/content/site-content'
+export type ProjectFeature = {
+  name: string;
+  project: string;
+  description: string;
+  amount: string;
+  category: string;
+  image: string;
+  imageAlt: string;
+};
 
-export const projectsPageContent: InstitutionalPageContent = {
-  hero: {
-    eyebrow: 'Proyectos',
-    title: 'Proyectos que convierten intención institucional en impacto visible.',
+export type PastProjectYear = {
+  year: string;
+  href: string;
+};
+
+export const projectsHeroContent = {
+  eyebrow: 'Projects',
+  titleLines: ['Together We', 'Transform', 'Lives!'],
+  heading: 'Empowering Missions Worldwide',
+  description:
+    'The ASI Missions Inc. Board selects projects each year to receive grants from the offering gathered at the ASI International Convention. Online donations are accepted to support current offerings and fulfill previous pledges. Each project is allocated funding to make a meaningful global impact. In the event that any project does not progress within a reasonable timeframe, as determined by ASI, funds may be redirected to another ASI-approved project.',
+  followUp:
+    'Below are the organizations selected to receive funding and the planned use of project funds.',
+  overflowIntro:
+    'Overflow contributions from the ASI Offering are directed to additional impactful initiatives, ensuring every gift supports the mission of sharing Christ worldwide.',
+  primaryAction: {
+    label: 'Funding Application',
+    to: surfacePaths.institutional.projectFunding,
+    variant: 'primary' as const,
+  },
+  secondaryAction: {
+    label: 'Donate Today',
+    to: surfacePaths.institutional.donate,
+    variant: 'secondary' as const,
+  },
+} as const;
+
+export const projectsHeroMedia = {
+  image: 'https://asiministries.org/wp-content/uploads/projects.png',
+  imageAlt: 'ASI mission projects collage',
+  video: 'https://asiministries.org/wp-content/uploads/wfL-March-2024-1.mp4',
+  videoLabel: 'Motivational mission project video',
+} as const;
+
+export const projectsImpactStats = [
+  {
+    value: '41',
+    label: '2025 projects',
+    description: 'Latest published offering collection from ASI Missions Inc.',
+  },
+  {
+    value: '$1.932M',
+    label: 'Allocated funding',
+    description: 'Combined allocation across the published 2025 project list.',
+  },
+  {
+    value: '3',
+    label: 'Overflow projects',
+    description: 'Additional initiatives supported when offerings exceed the goal.',
+  },
+] as const;
+
+export const overflowProjects2025 = [
+  'Ellen G. White Estate Digital Project',
+  'Hearts for Mission International (Africa)',
+  'Roofs Over Africa/One Day Church',
+] as const;
+
+export const currentProjects2025: ProjectFeature[] = [
+  {
+    name: 'ASAP Ministries',
+    project:
+      'To expand seven mission schools in West Thailand to reach multiple people groups.',
     description:
-      'La web de proyectos debe ayudar a entender áreas de trabajo, prioridades, oportunidades de colaboración y caminos de financiamiento con una narrativa confiable.',
-    primaryAction: {
-      label: 'Ver financiamiento',
-      to: surfacePaths.institutional.projectFunding,
-      variant: 'primary',
-    },
-    secondaryAction: {
-      label: 'Contactar equipo',
-      to: surfacePaths.institutional.contactUs,
-      variant: 'secondary',
-    },
-    aside: [
-      {
-        title: 'Enfoque misional',
-        description: 'Cada proyecto se presenta desde necesidad, propósito y resultados esperados.',
-        icon: Church,
-      },
-      {
-        title: 'Gobernanza clara',
-        description: 'Priorización, seguimiento y comunicación institucional consistente.',
-        icon: ShieldCheck,
-      },
-      {
-        title: 'Oportunidades abiertas',
-        description: 'Financiamiento, voluntariado, difusión y alianzas estratégicas.',
-        icon: HandCoins,
-      },
-    ],
+      'Local missionaries meet practical needs, build trust, and share the holistic gospel through education in underserved communities.',
+    amount: '$100,000',
+    category: 'Mission schools',
+    image:
+      'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80',
+    imageAlt: 'Students gathered in a bright classroom',
   },
-  sections: [
-    {
-      type: 'feature-grid',
-      lead: {
-        eyebrow: 'Áreas',
-        title: 'Cuatro líneas para organizar el impacto.',
-        description: 'La experiencia debe permitir escanear rápido sin convertir la web en un dashboard frío.',
-      },
-      items: [
-        {
-          title: 'Comunidad y servicio',
-          description: 'Proyectos que responden a necesidades locales con acompañamiento, voluntariado y recursos.',
-          icon: HandHeart,
-        },
-        {
-          title: 'Formación y mentoría',
-          description: 'Iniciativas para desarrollar liderazgo, ética profesional y madurez espiritual.',
-          icon: BookOpenText,
-        },
-        {
-          title: 'Eventos y alcance',
-          description: 'Convenciones, campañas y momentos editoriales que amplifican la misión.',
-          icon: CalendarHeart,
-        },
-        {
-          title: 'Infraestructura para crecer',
-          description: 'Herramientas, activos y capacidades que fortalecen la operación institucional.',
-          icon: Building2,
-        },
-      ],
-      columns: 2,
-    },
-    {
-      type: 'split',
-      tone: 'muted',
-      lead: {
-        eyebrow: 'Método',
-        title: 'Un marco simple para elegir y sostener iniciativas.',
-        description: 'La narrativa debe sentirse seria y bien curada, no improvisada.',
-      },
-      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80',
-      imageAlt: 'Equipo planeando proyectos alrededor de una mesa',
-      bodyTitle: 'Cómo se leen y priorizan los proyectos',
-      bodyCopy: [
-        'Cada iniciativa se comunica desde su necesidad real, la respuesta propuesta, los recursos requeridos y el seguimiento esperado.',
-        'La web debe ayudar a que líderes, donantes y voluntarios entiendan dónde una oportunidad ya está madura y dónde todavía se está formando.',
-      ],
-      highlights: [
-        {
-          title: 'Necesidad',
-          description: 'Contexto claro y humano, no solo cifras.',
-        },
-        {
-          title: 'Respuesta',
-          description: 'Qué se hará, con quién y para qué.',
-        },
-        {
-          title: 'Sostenibilidad',
-          description: 'Cómo se cuidará continuidad, comunicación y cierre.',
-        },
-      ],
-    },
-    {
-      type: 'list',
-      lead: {
-        eyebrow: 'Iniciativas',
-        title: 'Ejemplos de iniciativas para la primera fase editorial.',
-        description: 'Estas colecciones locales sirven como punto de partida antes de una futura fuente dinámica.',
-      },
-      items: [
-        {
-          title: 'Red de mentoría profesional',
-          description: 'Pareos, sesiones temáticas y acompañamiento con enfoque de fe en el mercado.',
-          tag: 'Mentoría',
-        },
-        {
-          title: 'Convención anual y circuitos regionales',
-          description: 'Programación, comunicación, materiales y cobertura de experiencias clave.',
-          tag: 'Eventos',
-        },
-        {
-          title: 'Fondo para proyectos comunitarios',
-          description: 'Prioridades de financiamiento para servicio local con seguimiento institucional.',
-          tag: 'Financiamiento',
-        },
-        {
-          title: 'Biblioteca editorial y media',
-          description: 'Activos para extender el alcance de historias, campañas y testimonios.',
-          tag: 'Multimedia',
-        },
-      ],
-    },
-  ],
-  cta: {
-    title: 'Activa recursos para proyectos listos para crecer.',
-    description: 'La página de funding organiza las prioridades y los caminos de aporte sin requerir backend dinámico en esta fase.',
-    primaryAction: {
-      label: 'Ir a funding',
-      to: surfacePaths.institutional.projectFunding,
-      variant: 'primary',
-    },
-    secondaryAction: {
-      label: 'Donar ahora',
-      to: surfacePaths.institutional.donate,
-      variant: 'secondary',
-    },
+  {
+    name: 'AudioVerse',
+    project:
+      'To expand audio Bible offerings and use AI to index Bible and Spirit of Prophecy content.',
+    description:
+      'The project improves Bible access and creates deeper study pathways by connecting sermons, passages, and topics.',
+    amount: '$50,000',
+    category: 'Digital discipleship',
+    image:
+      'https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80',
+    imageAlt: 'Laptop and study materials on a table',
   },
-}
+  {
+    name: 'Child Impact International',
+    project: 'To build a Rescue Campus in the Philippines.',
+    description:
+      'A safe haven for children that combines education, vocational training, spiritual guidance, and long-term care.',
+    amount: '$25,000',
+    category: 'Child protection',
+    image:
+      'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80',
+    imageAlt: 'Children smiling during an outdoor community activity',
+  },
+  {
+    name: 'Ellen G. White Estate, Inc.',
+    project:
+      'To establish an AI server and expand the digitization of translations.',
+    description:
+      'This work makes Spirit of Prophecy resources more accessible worldwide through digital search and translation expansion.',
+    amount: '$100,000',
+    category: 'Digital library',
+    image:
+      'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=80',
+    imageAlt: 'Library shelves filled with books',
+  },
+  {
+    name: 'FARM STEW International',
+    project: 'To train agricultural and health missionaries in Burundi.',
+    description:
+      'Women are equipped with biblical, agricultural, health, and savings principles that strengthen families and communities.',
+    amount: '$20,000',
+    category: 'Health and agriculture',
+    image:
+      'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=80',
+    imageAlt: 'Hands tending crops in a field',
+  },
+  {
+    name: 'Hearts for Mission International',
+    project: 'To provide funds to conduct two surgical camps.',
+    description:
+      'Surgical supplies, ultrasound units, and evangelistic materials support heart surgeries and outreach in Africa.',
+    amount: '$100,000',
+    category: 'Medical mission',
+    image:
+      'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=1200&q=80',
+    imageAlt: 'Medical worker caring for a child',
+  },
+  {
+    name: 'Lay Institute for Global Health Training',
+    project: 'To expand teaching teams and provide basic training materials.',
+    description:
+      'LIGHT strengthens global medical evangelism training by preparing course coordinators and practical outreach resources.',
+    amount: '$100,000',
+    category: 'Training',
+    image:
+      'https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1200&q=80',
+    imageAlt: 'Small group studying together',
+  },
+  {
+    name: 'One Day Church/Roofs Over Africa',
+    project:
+      'To provide quickly assembled church structures and steel roofing materials.',
+    description:
+      'Congregations in remote and underserved regions receive practical infrastructure that helps churches gather and grow.',
+    amount: '$100,000',
+    category: 'Church infrastructure',
+    image:
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+    imageAlt: 'Simple rural building surrounded by open landscape',
+  },
+  {
+    name: 'Water for Life',
+    project: 'To drill 35 new wells.',
+    description:
+      'Clean water access in Guatemala is paired with Bible workers who continue sharing living water after each well project.',
+    amount: '$40,000',
+    category: 'Clean water',
+    image:
+      'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=1200&q=80',
+    imageAlt: 'Person drawing clean water outdoors',
+  },
+];
+
+export const pastProjectYears: PastProjectYear[] = [
+  {
+    year: '2024',
+    href: 'https://asiministries.org/project-year/2024/',
+  },
+  {
+    year: '2023',
+    href: 'https://asiministries.org/project-year/2023/',
+  },
+  {
+    year: '2022',
+    href: 'https://asiministries.org/project-year/2022/',
+  },
+  {
+    year: '2021',
+    href: 'https://asiministries.org/project-year/2021/',
+  },
+  {
+    year: '2020',
+    href: 'https://asiministries.org/project-year/2020/',
+  },
+];
