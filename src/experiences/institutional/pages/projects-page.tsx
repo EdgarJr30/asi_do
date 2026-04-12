@@ -38,13 +38,13 @@ const itemVariants = {
 };
 
 function LazyAutoplayVideo() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoRef = useRef<HTMLDivElement | null>(null);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
 
   useEffect(() => {
-    const video = videoRef.current;
+    const videoFrame = videoRef.current;
 
-    if (!video) {
+    if (!videoFrame) {
       return;
     }
 
@@ -52,11 +52,7 @@ function LazyAutoplayVideo() {
       ([entry]) => {
         if (entry?.isIntersecting) {
           setShouldLoadVideo(true);
-          void video.play().catch(() => undefined);
-          return;
         }
-
-        video.pause();
       },
       {
         rootMargin: '240px 0px',
@@ -64,41 +60,38 @@ function LazyAutoplayVideo() {
       }
     );
 
-    observer.observe(video);
+    observer.observe(videoFrame);
 
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (!shouldLoadVideo) {
-      return;
-    }
-
-    const frame = window.requestAnimationFrame(() => {
-      void videoRef.current?.play().catch(() => undefined);
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [shouldLoadVideo]);
-
   return (
-    <video
+    <div
       ref={videoRef}
       aria-label={projectsHeroMedia.videoLabel}
-      autoPlay
-      className="pointer-events-none aspect-4/3 w-full object-cover lg:aspect-square lg:max-h-110"
-      loop
-      muted
       onContextMenu={(event) => event.preventDefault()}
-      playsInline
-      poster={projectsHeroMedia.image}
-      preload="none"
-      tabIndex={-1}
+      className="relative aspect-4/3 w-full overflow-hidden lg:aspect-square lg:max-h-110"
     >
       {shouldLoadVideo ? (
-        <source src={projectsHeroMedia.video} type={projectsHeroMedia.videoType} />
-      ) : null}
-    </video>
+        <iframe
+          allow="autoplay; encrypted-media; picture-in-picture"
+          className="pointer-events-none h-full w-full"
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          src={projectsHeroMedia.video}
+          tabIndex={-1}
+          title={projectsHeroMedia.videoLabel}
+        />
+      ) : (
+        <img
+          alt={projectsHeroMedia.imageAlt}
+          className="h-full w-full object-cover"
+          decoding="async"
+          loading="lazy"
+          src={projectsHeroMedia.image}
+        />
+      )}
+    </div>
   );
 }
 

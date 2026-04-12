@@ -38,12 +38,11 @@ export const projectsHeroContent = {
 
 export const projectsHeroMedia = {
   image:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Church_Refugee_Resettlement.webm/Church_Refugee_Resettlement.webm.jpg',
-  imageAlt: 'Miembros de iglesia apoyando a una familia refugiada',
+    'https://i.ytimg.com/vi/75CVhnv1ngk/hqdefault.jpg',
+  imageAlt: 'Video motivador sobre proyectos de ayuda misionera',
   video:
-    'https://upload.wikimedia.org/wikipedia/commons/transcoded/f/fa/Church_Refugee_Resettlement.webm/Church_Refugee_Resettlement.webm.240p.vp9.webm',
-  videoType: 'video/webm',
-  videoLabel: 'Video motivador sobre apoyo de iglesias a familias refugiadas',
+    'https://www.youtube-nocookie.com/embed/75CVhnv1ngk?autoplay=1&mute=1&controls=0&loop=1&playlist=75CVhnv1ngk&playsinline=1&modestbranding=1&rel=0&disablekb=1&fs=0&iv_load_policy=3',
+  videoLabel: 'Video motivador sobre proyectos de ayuda misionera',
 } as const;
 
 export const projectsImpactStats = [
