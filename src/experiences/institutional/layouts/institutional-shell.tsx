@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils/cn';
 const institutionalPrimaryNavigation = [
   { label: 'Eventos', to: surfacePaths.institutional.news },
   { label: 'Membresía', to: surfacePaths.institutional.membership },
-  { label: 'Programas', to: surfacePaths.institutional.projects },
+  { label: 'Proyectos', to: surfacePaths.institutional.projects },
   { label: 'Quiénes somos', to: surfacePaths.institutional.whoWeAre },
 ] as const;
 

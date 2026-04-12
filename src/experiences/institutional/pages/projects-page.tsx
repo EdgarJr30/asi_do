@@ -1,4 +1,7 @@
-import { ArrowRight, ExternalLink, HeartHandshake, PlayCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+
+import { motion, useReducedMotion } from 'motion/react';
+import { ArrowRight, HeartHandshake, PlayCircle } from 'lucide-react';
 
 import {
   InstitutionalActionLink,
@@ -15,13 +18,101 @@ import {
   type ProjectFeature,
 } from '@/experiences/institutional/content/projects-content';
 
+const containerVariants = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.06,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 18 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+
+function LazyAutoplayVideo() {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setShouldLoadVideo(true);
+          void video.play().catch(() => undefined);
+          return;
+        }
+
+        video.pause();
+      },
+      {
+        rootMargin: '240px 0px',
+        threshold: 0.16,
+      }
+    );
+
+    observer.observe(video);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoadVideo) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      void videoRef.current?.play().catch(() => undefined);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [shouldLoadVideo]);
+
+  return (
+    <video
+      ref={videoRef}
+      aria-label={projectsHeroMedia.videoLabel}
+      autoPlay
+      className="pointer-events-none aspect-4/3 w-full object-cover lg:aspect-square lg:max-h-110"
+      loop
+      muted
+      onContextMenu={(event) => event.preventDefault()}
+      playsInline
+      poster={projectsHeroMedia.image}
+      preload="none"
+      tabIndex={-1}
+    >
+      {shouldLoadVideo ? (
+        <source src={projectsHeroMedia.video} type={projectsHeroMedia.videoType} />
+      ) : null}
+    </video>
+  );
+}
+
 function ProjectCard({ project }: { project: ProjectFeature }) {
   return (
-    <article className="asi-card flex h-full flex-col overflow-hidden p-0">
+    <motion.article
+      className="asi-card flex h-full flex-col overflow-hidden p-0"
+      variants={itemVariants}
+    >
       <div className="relative h-56 overflow-hidden rounded-t-[1.5rem] bg-(--asi-surface-muted)">
         <img
           alt={project.imageAlt}
           className="h-full w-full object-cover"
+          decoding="async"
           loading="lazy"
           src={project.image}
         />
@@ -40,29 +131,47 @@ function ProjectCard({ project }: { project: ProjectFeature }) {
           {project.name}
         </p>
         <p className="mt-3 text-sm font-semibold leading-6 text-(--asi-primary)">
-          Project: {project.project}
+          Proyecto: {project.project}
         </p>
         <p className="asi-copy mt-3 text-sm">{project.description}</p>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
 export function ProjectsPage() {
+  const shouldReduceMotion = useReducedMotion();
+  const revealProps = shouldReduceMotion
+    ? {}
+    : {
+        initial: 'hidden',
+        whileInView: 'show',
+        viewport: { once: true, amount: 0.18 },
+        variants: containerVariants,
+      };
+
   return (
     <div>
       <InstitutionalSection className="overflow-hidden" reveal="mount">
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
-          <div>
-            <p className="asi-kicker">{projectsHeroContent.eyebrow}</p>
-            <h1 className="asi-heading-lg mt-4 max-w-[22ch]">
+        <motion.div
+          className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16"
+          {...revealProps}
+        >
+          <motion.div variants={itemVariants}>
+            <motion.p className="asi-kicker" variants={itemVariants}>
+              {projectsHeroContent.eyebrow}
+            </motion.p>
+            <motion.h1
+              className="asi-heading-lg mt-4 max-w-[22ch]"
+              variants={itemVariants}
+            >
               {projectsHeroContent.titleLines.map((line) => (
                 <span key={line} className="block">
                   {line}
                 </span>
               ))}
-            </h1>
-            <div className="mt-5 max-w-[58ch]">
+            </motion.h1>
+            <motion.div className="mt-5 max-w-[58ch]" variants={itemVariants}>
               <p className="text-xl font-semibold text-(--asi-primary)">
                 {projectsHeroContent.heading}
               </p>
@@ -72,30 +181,27 @@ export function ProjectsPage() {
               <p className="asi-copy mt-4 text-[1.02rem]">
                 {projectsHeroContent.followUp}
               </p>
-            </div>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            </motion.div>
+            <motion.div
+              className="mt-10 flex flex-col gap-3 sm:flex-row"
+              variants={itemVariants}
+            >
               <InstitutionalActionLink action={projectsHeroContent.primaryAction} />
               <InstitutionalActionLink action={projectsHeroContent.secondaryAction} />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          <div className="grid gap-5">
+          <motion.div className="grid gap-5" variants={itemVariants}>
             <div className="overflow-hidden rounded-[1.75rem] bg-[#08111f] shadow-2xl ring-1 ring-black/8">
-              <video
-                aria-label={projectsHeroMedia.videoLabel}
-                className="aspect-4/3 w-full object-cover lg:aspect-square lg:max-h-110"
-                controls
-                muted
-                playsInline
-                poster={projectsHeroMedia.image}
-                preload="metadata"
-              >
-                <source src={projectsHeroMedia.video} type="video/mp4" />
-              </video>
+              <LazyAutoplayVideo />
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               {projectsImpactStats.map((stat) => (
-                <article key={stat.label} className="asi-card bg-white/82">
+                <motion.article
+                  key={stat.label}
+                  className="asi-card bg-white/82"
+                  variants={itemVariants}
+                >
                   <p className="text-4xl font-semibold text-(--asi-primary)">
                     {stat.value}
                   </p>
@@ -105,27 +211,31 @@ export function ProjectsPage() {
                   <p className="mt-2 text-sm leading-6 text-(--asi-text-muted)">
                     {stat.description}
                   </p>
-                </article>
+                </motion.article>
               ))}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </InstitutionalSection>
 
       <InstitutionalSection tone="muted" reveal="mount">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-start">
+        <motion.div
+          className="grid gap-8 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-start"
+          {...revealProps}
+        >
           <InstitutionalLead
             content={{
-              eyebrow: '2025 overflow',
-              title: 'Every extra gift still has a destination.',
+              eyebrow: 'Fondos adicionales 2025',
+              title: 'Cada don adicional sigue teniendo destino.',
               description: projectsHeroContent.overflowIntro,
             }}
           />
-          <div className="grid gap-4">
+          <motion.div className="grid gap-4" variants={containerVariants}>
             {overflowProjects2025.map((project, index) => (
-              <div
+              <motion.div
                 key={project}
                 className="flex items-center gap-4 rounded-[1.5rem] bg-white p-5 shadow-(--asi-shadow-soft) outline-1 outline-(--asi-outline)"
+                variants={itemVariants}
               >
                 <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-sm font-bold text-(--asi-primary)">
                   {index + 1}
@@ -133,116 +243,128 @@ export function ProjectsPage() {
                 <p className="text-base font-semibold leading-7 text-(--asi-text)">
                   {project}
                 </p>
-              </div>
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </InstitutionalSection>
 
       <InstitutionalSection tone="brand" reveal="mount">
-        <div className="space-y-10">
+        <motion.div className="space-y-10" {...revealProps}>
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <InstitutionalLead
               invert
               content={{
-                eyebrow: 'Latest published project year',
-                title: '2025 Projects',
+                eyebrow: 'Año de proyectos publicado más reciente',
+                title: 'Proyectos 2025',
                 description:
-                  'A focused selection from the published project list, shaped for quick scanning while still showing the mission, use of funds, images, and allocation for each initiative.',
+                  'Una selección enfocada de la lista publicada, pensada para escanear rápido sin perder la misión, el uso de fondos, las imágenes y la asignación de cada iniciativa.',
               }}
             />
-            <div className="rounded-[1.5rem] bg-white/10 p-5 backdrop-blur-md">
+            <motion.div
+              className="rounded-[1.5rem] bg-white/10 p-5 backdrop-blur-md"
+              variants={itemVariants}
+            >
               <p className="text-sm font-semibold text-white/82">
-                Published total
+                Total publicado
               </p>
               <p className="mt-1 text-2xl font-semibold text-white">
-                41 projects - $1.932M
+                41 proyectos - $1.932M
               </p>
               <p className="mt-2 max-w-[34ch] text-sm leading-6 text-white/76">
-                Presented as allocations for the ASI International Convention
-                offering.
+                Presentado como asignaciones para la ofrenda de la Convención
+                Internacional de ASI.
               </p>
-            </div>
+            </motion.div>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <motion.div
+            className="grid gap-5 md:grid-cols-2 xl:grid-cols-3"
+            variants={containerVariants}
+          >
             {currentProjects2025.map((project) => (
               <ProjectCard key={project.name} project={project} />
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </InstitutionalSection>
 
       <InstitutionalSection tone="muted" reveal="mount">
-        <div className="mx-auto max-w-5xl text-center">
-          <p className="asi-kicker">Archives</p>
+        <motion.div className="mx-auto max-w-5xl text-center" {...revealProps}>
+          <p className="asi-kicker">Archivo</p>
           <h2 className="asi-heading-lg mx-auto mt-5 max-w-[22ch] text-(--asi-primary)">
-            Past Year&apos;s Projects
+            Proyectos de años anteriores
           </h2>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-5 sm:gap-x-10">
+          <motion.div
+            className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-5 sm:gap-x-10"
+            variants={containerVariants}
+          >
             {pastProjectYears.map((item, index) => (
-              <a
+              <motion.div
                 key={item.year}
-                className="group inline-flex min-h-12 items-center gap-5 text-xl font-semibold text-(--asi-primary) transition hover:text-(--asi-primary-container) sm:text-2xl"
-                href={item.href}
-                rel="noreferrer"
-                target="_blank"
+                className="inline-flex min-h-12 items-center gap-5 text-xl font-semibold text-(--asi-primary) sm:text-2xl"
+                variants={itemVariants}
               >
                 <span>{item.year}</span>
                 {index < pastProjectYears.length - 1 ? (
-                  <ArrowRight className="size-9 transition group-hover:translate-x-1" />
-                ) : (
-                  <ExternalLink className="size-5 opacity-70 transition group-hover:translate-x-0.5" />
-                )}
-              </a>
+                  <ArrowRight className="size-9" />
+                ) : null}
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </InstitutionalSection>
 
       <InstitutionalSection tone="brand" reveal="mount">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-end">
+        <motion.div
+          className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-end"
+          {...revealProps}
+        >
           <div>
             <p className="asi-kicker border-white/15 bg-white/10 text-white/82">
-              Mission giving
+              Donación misionera
             </p>
             <h2 className="asi-heading-lg mt-4 text-white">
-              Support projects ready to move from vision to impact.
+              Apoya proyectos listos para pasar de la visión al impacto.
             </h2>
           </div>
           <div className="lg:justify-self-end lg:text-right">
             <p className="asi-copy max-w-2xl text-white/80">
-              Your participation helps missions serve communities through
-              education, health, media, evangelism, infrastructure, and practical
-              care.
+              Tu participación ayuda a que las misiones sirvan a comunidades
+              por medio de educación, salud, medios, evangelismo,
+              infraestructura y cuidado práctico.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:justify-end">
               <InstitutionalActionLink action={projectsHeroContent.primaryAction} />
               <InstitutionalActionLink action={projectsHeroContent.secondaryAction} />
             </div>
           </div>
-        </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-2">
+        </motion.div>
+        <motion.div
+          className="mt-10 grid gap-4 md:grid-cols-2"
+          {...revealProps}
+        >
           {[
             {
-              title: 'Clear stewardship',
+              title: 'Mayordomía clara',
               description:
-                'Project funds are tied to the selected ministry use case and monitored through ASI reporting expectations.',
+                'Los fondos se conectan con el uso ministerial seleccionado y se cuidan mediante expectativas de reporte de ASI.',
               icon: HeartHandshake,
             },
             {
-              title: 'Motivated generosity',
+              title: 'Generosidad con propósito',
               description:
-                'A focused project page helps donors understand where their gift can serve today.',
+                'Una página enfocada ayuda a los donantes a entender dónde su aporte puede servir hoy.',
               icon: PlayCircle,
             },
           ].map((item) => {
             const Icon = item.icon;
 
             return (
-              <div
+              <motion.div
                 key={item.title}
                 className="rounded-[1.5rem] bg-white/10 p-6 text-left backdrop-blur-md"
+                variants={itemVariants}
               >
                 <div className="flex size-12 items-center justify-center rounded-2xl bg-white/12 text-white">
                   <Icon className="size-6" />
@@ -253,10 +375,10 @@ export function ProjectsPage() {
                 <p className="mt-2 text-sm leading-7 text-white/76">
                   {item.description}
                 </p>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </InstitutionalSection>
     </div>
   );
