@@ -3,9 +3,9 @@ import {
   BriefcaseBusiness,
   Church,
   FileText,
+  FolderOpen,
   Globe2,
   HeartHandshake,
-  Landmark,
   ShieldCheck,
   Sparkles,
   UsersRound,
@@ -143,40 +143,77 @@ export const whoWeAreResources = [
     title: 'Folleto ASI',
     description:
       'Resumen institucional para comprender identidad, propósito y alcance de la organización.',
-    icon: BookOpenText,
+    icon: FolderOpen,
+    fileLabel: 'ASI Brochure',
+    url: 'https://asiministries.org/wp-content/uploads/ASI-Brochure.pdf',
   },
   {
     title: 'Plan estratégico',
     description:
       'Dirección de prioridades y metas que orientan el crecimiento y el servicio de la red.',
-    icon: Landmark,
+    icon: BookOpenText,
+    fileLabel: 'ASI Strategic Plan',
+    url: 'https://asiministries.org/wp-content/uploads/ASI-Strategic-Plan.pdf',
   },
   {
     title: 'Estatutos',
     description:
       'Marco institucional que ordena gobierno, membresía y funcionamiento de ASI.',
     icon: FileText,
+    fileLabel: 'ASI Constitution and Bylaws',
+    url: 'https://asiministries.org/wp-content/uploads/ASI-Constitution-and-Bylaws-2023_2023-08-02.pdf',
   },
 ] as const;
 
-export const whoWeAreGlobalNetwork = [
+export const whoWeAreGlobalRegions = [
   {
     title: 'ASI Europa',
-    description:
-      'Una red con capítulos y organizaciones en países como Austria, Bulgaria, República Checa, Alemania, Hungría, Italia, Polonia, Portugal, Rumanía, España, Suiza y Reino Unido.',
-    tag: 'Europa',
+    summary:
+      'Capítulos y páginas regionales para Europa y organizaciones nacionales asociadas.',
+    links: [
+      { label: 'ASI Europe', url: 'https://asi-europe.org' },
+      { label: 'ASI Austria', url: 'https://www.asi-austria.at' },
+      { label: 'ASI Bulgaria', url: 'https://www.asi-bg.org' },
+      { label: 'ASI Czech Republic', url: 'https://www.asi-cs.cz' },
+      { label: 'ASI Germany', url: 'https://www.asideutschland.de' },
+      { label: 'ASI Hungary', url: 'http://www.asi-hungary.org' },
+      { label: 'ASI Italy', url: 'https://asi-italia.it' },
+      { label: 'ASI Poland', url: 'http://asi.org.pl' },
+      { label: 'ASI Portugal', url: 'http://www.asiportugal.org' },
+      { label: 'ASI Romania', url: 'http://asiromania.ro' },
+      { label: 'ASI Scandinavia', url: 'https://www.asiscandinavia.org' },
+      { label: 'ASI Spain', url: 'http://www.asi-spain.org' },
+      { label: 'ASI Switzerland', url: 'http://www.asi-ch.org' },
+      { label: 'ASI United Kingdom', url: 'http://asi-uk.asiministries.org' },
+    ],
   },
   {
     title: 'ASI Inter-América',
-    description:
-      'La visión también se articula en la División Interamericana, fortaleciendo conexiones regionales y proyectos alineados con la misión.',
-    tag: 'Inter-América',
+    summary:
+      'Referencia principal para países y territorios cubiertos por la región interamericana, incluida República Dominicana.',
+    links: [
+      { label: 'ASI Inter-America', url: 'https://asi.interamerica.org' },
+      {
+        label: 'República Dominicana e islas del Caribe vinculadas',
+        url: 'https://asi.interamerica.org',
+      },
+      {
+        label: 'Centroamérica y territorios asociados',
+        url: 'https://asi.interamerica.org',
+      },
+    ],
   },
   {
     title: 'ASI Sudáfrica',
-    description:
-      'Expresión local de la misma vocación: convenciones, comunidad y apoyo a iniciativas que nacen dentro y fuera del territorio.',
-    tag: 'África',
+    summary:
+      'Presencia regional para Sudáfrica y vínculo operativo usado en elegibilidad para territorios asociados del sur de África.',
+    links: [
+      { label: 'ASI South Africa', url: 'https://www.asisauministries.org.za' },
+      {
+        label: 'Southern Africa-Indian Ocean Division',
+        url: 'http://www.sidadventist.org',
+      },
+    ],
   },
 ] as const;
 

@@ -1,4 +1,6 @@
-import { motion, useReducedMotion } from 'motion/react';
+import { useState } from 'react';
+import { Download, Minus, Plus } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
 import {
   InstitutionalActionLink,
@@ -8,7 +10,7 @@ import {
 } from '@/experiences/institutional/components/institutional-ui';
 import {
   whoWeAreAboutPoints,
-  whoWeAreGlobalNetwork,
+  whoWeAreGlobalRegions,
   whoWeAreHeroContent,
   whoWeAreHeroHighlights,
   whoWeAreHeroMedia,
@@ -51,6 +53,12 @@ const mediaVariants = {
 
 export function WhoWeArePage() {
   const shouldReduceMotion = useReducedMotion();
+  const [openResource, setOpenResource] = useState<string | null>(
+    whoWeAreResources[0]?.title ?? null
+  );
+  const [openRegion, setOpenRegion] = useState<string | null>(
+    whoWeAreGlobalRegions[0]?.title ?? null
+  );
   const revealProps = shouldReduceMotion
     ? {}
     : {
@@ -311,73 +319,168 @@ export function WhoWeArePage() {
 
       <InstitutionalSection tone="muted" reveal="mount">
         <motion.div
-          className="grid gap-8 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:items-start"
+          className="grid gap-10 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:items-start"
           {...revealProps}
         >
-          <div className="space-y-8">
+          <div>
             <InstitutionalLead
               content={{
                 eyebrow: 'Recursos',
                 title: 'Documentos que ayudan a entender la organización con más profundidad.',
                 description:
-                  'La página original reúne un folleto institucional, el plan estratégico y los estatutos como piezas clave para profundizar en la identidad y el marco de trabajo de ASI.',
+                  'Aquí reunimos materiales clave para que miembros, aliados y visitantes puedan descargar referencias institucionales oficiales con facilidad.',
               }}
             />
-            <div className="grid gap-4">
-              {whoWeAreResources.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <motion.article
-                    key={item.title}
-                    className="asi-card bg-white"
-                    variants={itemVariants}
-                  >
-                    <div className="flex size-12 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-(--asi-primary)">
-                      <Icon className="size-6" />
-                    </div>
-                    <p className="mt-5 text-lg font-semibold text-(--asi-text)">
-                      {item.title}
-                    </p>
-                    <p className="mt-2 text-sm leading-7 text-(--asi-text-muted)">
-                      {item.description}
-                    </p>
-                  </motion.article>
-                );
-              })}
-            </div>
           </div>
+          <dl className="divide-y divide-(--asi-outline)">
+            {whoWeAreResources.map((item) => {
+              const Icon = item.icon;
+              const isOpen = openResource === item.title;
 
-          <div className="space-y-8">
+              return (
+                <div key={item.title} className="py-4 first:pt-0 last:pb-0">
+                  <dt>
+                    <button
+                      className="flex w-full items-center justify-between gap-4 text-left text-(--asi-text)"
+                      onClick={() => setOpenResource(isOpen ? null : item.title)}
+                    >
+                      <span className="flex items-center gap-4">
+                        <span className="flex size-11 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-(--asi-primary)">
+                          <Icon className="size-5" />
+                        </span>
+                        <span className="text-lg font-semibold leading-7">
+                          {item.title}
+                        </span>
+                      </span>
+                      <span className="flex size-6 shrink-0 items-center justify-center">
+                        {isOpen ? (
+                          <Minus aria-hidden="true" className="size-5" />
+                        ) : (
+                          <Plus aria-hidden="true" className="size-5" />
+                        )}
+                      </span>
+                    </button>
+                  </dt>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.dd
+                        key={item.title}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={
+                          shouldReduceMotion
+                            ? { duration: 0 }
+                            : { duration: 0.38, ease: [0.22, 1, 0.36, 1] }
+                        }
+                        className="overflow-hidden"
+                      >
+                        <div className="pt-4 pr-1 pb-2 pl-0 sm:pl-14">
+                          <p className="text-sm leading-7 text-(--asi-text-muted)">
+                            {item.description}
+                          </p>
+                          <div className="mt-5 flex flex-wrap items-center gap-4">
+                            <span className="text-base font-semibold text-(--asi-primary)">
+                              {item.fileLabel}
+                            </span>
+                            <a
+                              className="inline-flex min-h-12 items-center gap-2 rounded-full border border-(--asi-outline) bg-white px-4 text-sm font-semibold text-(--asi-primary) transition-colors hover:border-(--asi-primary) hover:bg-(--asi-primary)/6"
+                              href={item.url}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              Descargar
+                              <Download className="size-4" />
+                            </a>
+                          </div>
+                        </div>
+                      </motion.dd>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </dl>
+        </motion.div>
+      </InstitutionalSection>
+
+      <InstitutionalSection reveal="mount">
+        <motion.div
+          className="grid gap-10 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] lg:items-start"
+          {...revealProps}
+        >
+          <div>
             <InstitutionalLead
               content={{
                 eyebrow: 'ASI en el mundo',
                 title: 'Una misma vocación expresada en regiones y capítulos locales.',
                 description:
-                  'Los miembros de Norteamérica participan en proyectos alrededor del mundo y otras divisiones adventistas cuentan con organizaciones ASI propias, convenciones y proyectos tanto locales como internacionales.',
+                  'Los miembros de Norteamérica participan en proyectos alrededor del mundo y otras divisiones adventistas cuentan con organizaciones ASI propias. Esta sección reúne los destinos regionales relevantes y los enlaces aplicables vistos en elegibilidad.',
               }}
             />
-            <motion.div className="grid gap-4" variants={containerVariants}>
-              {whoWeAreGlobalNetwork.map((item) => (
-                <motion.article
-                  key={item.title}
-                  className="asi-card bg-white/82"
+          </div>
+          <div className="space-y-4">
+            {whoWeAreGlobalRegions.map((region) => {
+              const isOpen = openRegion === region.title;
+
+              return (
+                <motion.div
+                  key={region.title}
+                  className="overflow-hidden rounded-panel outline outline-1 outline-(--asi-outline)"
                   variants={itemVariants}
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-lg font-semibold text-(--asi-text)">
-                        {item.title}
-                      </p>
-                      <p className="mt-2 text-sm leading-7 text-(--asi-text-muted)">
-                        {item.description}
-                      </p>
-                    </div>
-                    <span className="asi-pill">{item.tag}</span>
-                  </div>
-                </motion.article>
-              ))}
-            </motion.div>
+                  <button
+                    className="flex min-h-16 w-full items-center justify-between gap-4 bg-(--asi-primary) px-5 py-4 text-left text-white"
+                    onClick={() => setOpenRegion(isOpen ? null : region.title)}
+                  >
+                    <span className="text-lg font-semibold">{region.title}</span>
+                    <span className="flex size-8 items-center justify-center text-[#ffc107]">
+                      {isOpen ? (
+                        <Minus aria-hidden="true" className="size-6" />
+                      ) : (
+                        <Plus aria-hidden="true" className="size-6" />
+                      )}
+                    </span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={
+                          shouldReduceMotion
+                            ? { duration: 0 }
+                            : { duration: 0.38, ease: [0.22, 1, 0.36, 1] }
+                        }
+                        className="overflow-hidden bg-white"
+                      >
+                        <div className="px-6 py-6">
+                          <p className="text-sm leading-7 text-(--asi-text-muted)">
+                            {region.summary}
+                          </p>
+                          <ul className="mt-5 grid gap-3">
+                            {region.links.map((link) => (
+                              <li key={`${region.title}-${link.label}`}>
+                                <a
+                                  className="inline-flex items-start gap-3 text-base font-semibold text-[#1ea7ff] transition-colors hover:text-(--asi-primary)"
+                                  href={link.url}
+                                  rel="noreferrer"
+                                  target="_blank"
+                                >
+                                  <span className="mt-2 h-2 w-4 shrink-0 rounded-full bg-(--asi-primary)" />
+                                  <span>{link.label}</span>
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
       </InstitutionalSection>
