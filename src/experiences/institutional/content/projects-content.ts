@@ -5,6 +5,12 @@ export type ProjectFeature = {
   project: string;
   description: string;
   amount: string;
+  amountCounter: {
+    end: number;
+    prefix?: string;
+    suffix?: string;
+    decimals?: number;
+  };
   category: string;
   image: string;
   imageAlt: string;
@@ -60,7 +66,7 @@ export const projectsHeroMedia = {
 export const projectsImpactStats: ProjectImpactStat[] = [
   {
     value: '41',
-    label: 'Proyectos 2025',
+    label: 'Proyectos 2026',
     description: 'Colección publicada más reciente de ASI Missions Inc.',
     counter: {
       end: 41,
@@ -69,7 +75,7 @@ export const projectsImpactStats: ProjectImpactStat[] = [
   {
     value: '$1.932M',
     label: 'Fondos asignados',
-    description: 'Asignación combinada para la lista publicada de proyectos 2025.',
+    description: 'Asignación combinada para la lista publicada de proyectos 2026.',
     counter: {
       end: 1.932,
       prefix: '$',
@@ -101,6 +107,10 @@ export const currentProjects2025: ProjectFeature[] = [
     description:
       'Misioneros locales atienden necesidades prácticas, construyen confianza y comparten el evangelio integral por medio de la educación en comunidades con menos acceso.',
     amount: '$100,000',
+    amountCounter: {
+      end: 100000,
+      prefix: '$',
+    },
     category: 'Escuelas misioneras',
     image:
       'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80',
@@ -113,6 +123,10 @@ export const currentProjects2025: ProjectFeature[] = [
     description:
       'El proyecto mejora el acceso a la Biblia y crea rutas de estudio más profundas al conectar sermones, pasajes y temas.',
     amount: '$50,000',
+    amountCounter: {
+      end: 50000,
+      prefix: '$',
+    },
     category: 'Discipulado digital',
     image:
       'https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80',
@@ -124,6 +138,10 @@ export const currentProjects2025: ProjectFeature[] = [
     description:
       'Un espacio seguro para niños que combina educación, formación vocacional, acompañamiento espiritual y cuidado de largo plazo.',
     amount: '$25,000',
+    amountCounter: {
+      end: 25000,
+      prefix: '$',
+    },
     category: 'Protección infantil',
     image:
       'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80',
@@ -136,6 +154,10 @@ export const currentProjects2025: ProjectFeature[] = [
     description:
       'Este trabajo hace más accesibles los recursos del Espíritu de Profecía a nivel mundial mediante búsqueda digital y expansión de traducciones.',
     amount: '$100,000',
+    amountCounter: {
+      end: 100000,
+      prefix: '$',
+    },
     category: 'Biblioteca digital',
     image:
       'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=80',
@@ -147,6 +169,10 @@ export const currentProjects2025: ProjectFeature[] = [
     description:
       'Mujeres son capacitadas con principios bíblicos, agrícolas, de salud y ahorro que fortalecen familias y comunidades.',
     amount: '$20,000',
+    amountCounter: {
+      end: 20000,
+      prefix: '$',
+    },
     category: 'Salud y agricultura',
     image:
       'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=80',
@@ -158,6 +184,10 @@ export const currentProjects2025: ProjectFeature[] = [
     description:
       'Suministros quirúrgicos, equipos de ultrasonido y materiales evangelísticos apoyan cirugías cardíacas y alcance misionero en África.',
     amount: '$100,000',
+    amountCounter: {
+      end: 100000,
+      prefix: '$',
+    },
     category: 'Misión médica',
     image:
       'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=1200&q=80',
@@ -169,6 +199,10 @@ export const currentProjects2025: ProjectFeature[] = [
     description:
       'LIGHT fortalece la capacitación global en evangelismo médico preparando coordinadores de cursos y recursos prácticos de alcance.',
     amount: '$100,000',
+    amountCounter: {
+      end: 100000,
+      prefix: '$',
+    },
     category: 'Capacitación',
     image:
       'https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1200&q=80',
@@ -181,6 +215,10 @@ export const currentProjects2025: ProjectFeature[] = [
     description:
       'Congregaciones en regiones remotas y con menos recursos reciben infraestructura práctica para reunirse y crecer.',
     amount: '$100,000',
+    amountCounter: {
+      end: 100000,
+      prefix: '$',
+    },
     category: 'Infraestructura',
     image:
       'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
@@ -192,6 +230,10 @@ export const currentProjects2025: ProjectFeature[] = [
     description:
       'El acceso a agua limpia en Guatemala se acompaña de obreros bíblicos que continúan compartiendo el agua viva después de cada pozo.',
     amount: '$40,000',
+    amountCounter: {
+      end: 40000,
+      prefix: '$',
+    },
     category: 'Agua limpia',
     image:
       'https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=1200&q=80',

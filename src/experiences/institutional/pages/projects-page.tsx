@@ -21,7 +21,6 @@ import {
   projectsHeroContent,
   projectsHeroMedia,
   projectsImpactStats,
-  type ProjectImpactStat,
   type ProjectFeature,
 } from '@/experiences/institutional/content/projects-content';
 
@@ -103,22 +102,31 @@ function LazyAutoplayVideo() {
 }
 
 function AnimatedStatValue({
+  className,
+  counterConfig,
+  value,
   shouldReduceMotion,
-  stat,
 }: {
+  className?: string;
+  counterConfig: {
+    end: number;
+    prefix?: string;
+    suffix?: string;
+    decimals?: number;
+  };
+  value: string;
   shouldReduceMotion: boolean;
-  stat: ProjectImpactStat;
 }) {
   const ref = useRef<HTMLSpanElement | null>(null);
   const isInView = useInView(ref, { once: true, amount: 0.72 });
-  const counter = useMotionValue(0);
-  const displayValue = useTransform(counter, (latest) => {
+  const counterValue = useMotionValue(0);
+  const displayValue = useTransform(counterValue, (latest) => {
     const formatted = latest.toLocaleString('en-US', {
-      maximumFractionDigits: stat.counter.decimals ?? 0,
-      minimumFractionDigits: stat.counter.decimals ?? 0,
+      maximumFractionDigits: counterConfig.decimals ?? 0,
+      minimumFractionDigits: counterConfig.decimals ?? 0,
     });
 
-    return `${stat.counter.prefix ?? ''}${formatted}${stat.counter.suffix ?? ''}`;
+    return `${counterConfig.prefix ?? ''}${formatted}${counterConfig.suffix ?? ''}`;
   });
 
   useEffect(() => {
@@ -126,26 +134,32 @@ function AnimatedStatValue({
       return;
     }
 
-    const controls = animate(counter, stat.counter.end, {
+    const controls = animate(counterValue, counterConfig.end, {
       duration: 1.35,
       ease: [0.22, 1, 0.36, 1],
     });
 
     return () => controls.stop();
-  }, [counter, isInView, shouldReduceMotion, stat.counter.end]);
+  }, [counterConfig.end, counterValue, isInView, shouldReduceMotion]);
 
   if (shouldReduceMotion) {
-    return <span ref={ref}>{stat.value}</span>;
+    return (
+      <span ref={ref} className={className}>
+        {value}
+      </span>
+    );
   }
 
   return (
-    <motion.span ref={ref} aria-label={stat.value}>
+    <motion.span ref={ref} aria-label={value} className={className}>
       {displayValue}
     </motion.span>
   );
 }
 
 function ProjectCard({ project }: { project: ProjectFeature }) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <motion.article
       className="asi-card flex h-full flex-col overflow-hidden p-0"
@@ -165,7 +179,11 @@ function ProjectCard({ project }: { project: ProjectFeature }) {
             {project.category}
           </span>
           <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-(--asi-primary) shadow-(--asi-shadow-soft)">
-            {project.amount}
+            <AnimatedStatValue
+              counterConfig={project.amountCounter}
+              shouldReduceMotion={Boolean(shouldReduceMotion)}
+              value={project.amount}
+            />
           </span>
         </div>
       </div>
@@ -247,8 +265,9 @@ export function ProjectsPage() {
                 >
                   <p className="text-4xl font-semibold text-(--asi-primary)">
                     <AnimatedStatValue
+                      counterConfig={stat.counter}
                       shouldReduceMotion={Boolean(shouldReduceMotion)}
-                      stat={stat}
+                      value={stat.value}
                     />
                   </p>
                   <p className="mt-3 text-base font-semibold text-(--asi-text)">
@@ -264,29 +283,38 @@ export function ProjectsPage() {
         </motion.div>
       </InstitutionalSection>
 
-      <InstitutionalSection tone="brand" reveal="mount">
+      <InstitutionalSection tone="muted" reveal="mount">
         <motion.div className="space-y-10" {...revealProps}>
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <InstitutionalLead
-              invert
               content={{
                 eyebrow: 'Año de proyectos publicado más reciente',
-                title: 'Proyectos 2025',
+                title: 'Proyectos 2026',
                 description:
                   'Una selección enfocada de la lista publicada, pensada para escanear rápido sin perder la misión, el uso de fondos, las imágenes y la asignación de cada iniciativa.',
               }}
             />
             <motion.div
-              className="rounded-[1.5rem] bg-white/10 p-5 backdrop-blur-md"
+              className="asi-card bg-white p-5"
               variants={itemVariants}
             >
-              <p className="text-sm font-semibold text-white/82">
+              <p className="text-sm font-semibold text-(--asi-text-muted)">
                 Total publicado
               </p>
-              <p className="mt-1 text-2xl font-semibold text-white">
-                41 proyectos - $1.932M
+              <p className="mt-1 text-2xl font-semibold text-(--asi-primary)">
+                <AnimatedStatValue
+                  counterConfig={{ end: 41 }}
+                  shouldReduceMotion={Boolean(shouldReduceMotion)}
+                  value="41"
+                />{' '}
+                proyectos -{' '}
+                <AnimatedStatValue
+                  counterConfig={{ end: 1.932, prefix: '$', suffix: 'M', decimals: 3 }}
+                  shouldReduceMotion={Boolean(shouldReduceMotion)}
+                  value="$1.932M"
+                />
               </p>
-              <p className="mt-2 max-w-[34ch] text-sm leading-6 text-white/76">
+              <p className="mt-2 max-w-[34ch] text-sm leading-6 text-(--asi-text-muted)">
                 Presentado como asignaciones para la ofrenda de la Convención
                 Internacional de ASI.
               </p>
@@ -304,10 +332,12 @@ export function ProjectsPage() {
         </motion.div>
       </InstitutionalSection>
 
-      <InstitutionalSection tone="muted" reveal="mount">
+      <InstitutionalSection tone="brand" reveal="mount">
         <motion.div className="mx-auto max-w-5xl text-center" {...revealProps}>
-          <p className="asi-kicker">Archivo</p>
-          <h2 className="asi-heading-lg mx-auto mt-5 max-w-[22ch] text-(--asi-primary)">
+          <p className="asi-kicker border-white/15 bg-white/10 text-white/82">
+            Archivo
+          </p>
+          <h2 className="asi-heading-lg mx-auto mt-5 max-w-[22ch] text-white">
             Proyectos de años anteriores
           </h2>
           <motion.div
@@ -317,7 +347,7 @@ export function ProjectsPage() {
             {pastProjectYears.map((item, index) => (
               <motion.div
                 key={item.year}
-                className="inline-flex min-h-12 items-center gap-5 text-xl font-semibold text-(--asi-primary) sm:text-2xl"
+                className="inline-flex min-h-12 items-center gap-5 text-xl font-semibold text-white sm:text-2xl"
                 variants={itemVariants}
               >
                 <span>{item.year}</span>
@@ -330,21 +360,21 @@ export function ProjectsPage() {
         </motion.div>
       </InstitutionalSection>
 
-      <InstitutionalSection tone="brand" reveal="mount">
+      <InstitutionalSection tone="muted" reveal="mount">
         <motion.div
           className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-end"
           {...revealProps}
         >
           <div>
-            <p className="asi-kicker border-white/15 bg-white/10 text-white/82">
+            <p className="asi-kicker">
               Donación misionera
             </p>
-            <h2 className="asi-heading-lg mt-4 text-white">
+            <h2 className="asi-heading-lg mt-4 text-(--asi-primary)">
               Apoya proyectos listos para pasar de la visión al impacto.
             </h2>
           </div>
           <div className="lg:justify-self-end lg:text-right">
-            <p className="asi-copy max-w-2xl text-white/80">
+            <p className="asi-copy max-w-2xl">
               Tu participación ayuda a que las misiones sirvan a comunidades
               por medio de educación, salud, medios, evangelismo,
               infraestructura y cuidado práctico.
@@ -378,16 +408,16 @@ export function ProjectsPage() {
             return (
               <motion.div
                 key={item.title}
-                className="rounded-[1.5rem] bg-white/10 p-6 text-left backdrop-blur-md"
+                className="asi-card bg-white p-6 text-left"
                 variants={itemVariants}
               >
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-white/12 text-white">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-(--asi-primary)">
                   <Icon className="size-6" />
                 </div>
-                <p className="mt-5 text-lg font-semibold text-white">
+                <p className="mt-5 text-lg font-semibold text-(--asi-text)">
                   {item.title}
                 </p>
-                <p className="mt-2 text-sm leading-7 text-white/76">
+                <p className="mt-2 text-sm leading-7 text-(--asi-text-muted)">
                   {item.description}
                 </p>
               </motion.div>
