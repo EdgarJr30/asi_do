@@ -1,146 +1,187 @@
-import { Church, Globe2, HeartHandshake, Landmark, ShieldCheck, Sparkles, UsersRound } from 'lucide-react'
+import {
+  BookOpenText,
+  BriefcaseBusiness,
+  Church,
+  FileText,
+  Globe2,
+  HeartHandshake,
+  Landmark,
+  ShieldCheck,
+  Sparkles,
+  UsersRound,
+} from 'lucide-react';
 
-import { surfacePaths } from '@/app/router/surface-paths'
-import type { InstitutionalPageContent } from '@/experiences/institutional/content/site-content'
+import { surfacePaths } from '@/app/router/surface-paths';
 
-export const whoWeArePageContent: InstitutionalPageContent = {
-  hero: {
-    eyebrow: 'Quiénes somos',
-    title: 'Una asociación que curaría mejor su identidad, historia y propósito en la web.',
+export const whoWeAreHeroContent = {
+  eyebrow: 'Quiénes somos',
+  titleLines: ['Compartiendo', 'el amor de Cristo', 'en el día a día'],
+  heading:
+    'ASI une empresas, profesionales y ministerios para vivir y extender una misión centrada en Cristo.',
+  description:
+    'Comprometidos con apoyar a la Iglesia Adventista del Séptimo Día, caminamos junto a personas de distintas vocaciones que desean servir con integridad, propósito y presencia misionera en cada espacio donde trabajan y viven.',
+  primaryAction: {
+    label: 'Conocer membership',
+    to: surfacePaths.institutional.membership,
+    variant: 'primary' as const,
+  },
+  secondaryAction: {
+    label: 'Explorar proyectos',
+    to: surfacePaths.institutional.projects,
+    variant: 'secondary' as const,
+  },
+} as const;
+
+export const whoWeAreHeroMedia = {
+  image:
+    'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1600&q=80',
+  imageAlt:
+    'Profesionales y voluntarios compartiendo en una actividad comunitaria',
+} as const;
+
+export const whoWeAreHeroStats = [
+  {
+    value: '1904',
+    label: 'Raíces históricas',
     description:
-      'La sección institucional debe afirmar misión, trayectoria y liderazgo con una mezcla de autoridad, cercanía y dirección editorial.',
-    primaryAction: {
-      label: 'Conocer proyectos',
-      to: surfacePaths.institutional.projects,
-      variant: 'primary',
-    },
-    secondaryAction: {
-      label: 'Ver directorio',
-      to: surfacePaths.institutional.directory,
-      variant: 'secondary',
-    },
-    aside: [
-      {
-        title: 'Misión clara',
-        description: 'Fe, vocación y servicio articulados sin ambigüedad.',
-        icon: Church,
-      },
-      {
-        title: 'Historia viva',
-        description: 'Trayectoria que se cuenta con sobriedad y sentido contemporáneo.',
-        icon: Landmark,
-      },
-      {
-        title: 'Liderazgo visible',
-        description: 'Personas, equipos y frentes presentados con orden.',
-        icon: UsersRound,
-      },
-    ],
+      'La historia que dio origen a ASI se remonta a Madison College, una institución adventista de sostén propio en Tennessee.',
   },
-  sections: [
-    {
-      type: 'split',
-      tone: 'muted',
-      lead: {
-        eyebrow: 'Historia',
-        title: 'La institución necesita una narrativa que conecte pasado, presente y dirección.',
-        description: 'La página no debe limitarse a una biografía larga; debe ayudar a entender por qué ASI existe hoy.',
-      },
-      image: 'https://images.unsplash.com/photo-1515169067868-5387ec356754?auto=format&fit=crop&w=1200&q=80',
-      imageAlt: 'Reunión institucional alrededor de una mesa',
-      bodyTitle: 'Una trayectoria que da contexto',
-      bodyCopy: [
-        'La historia institucional se presenta como continuidad de servicio, liderazgo y comunidad, no solo como cronología.',
-        'La web debe permitir que una persona nueva entienda rápidamente la identidad de ASI y que una persona cercana la reconozca sin verla genérica.',
-      ],
-      highlights: [
-        {
-          title: 'Fe en el mercado',
-          description: 'Vocación profesional conectada con misión.',
-        },
-        {
-          title: 'Servicio visible',
-          description: 'Impacto que no se queda en discurso.',
-        },
-        {
-          title: 'Comunidad organizada',
-          description: 'Relaciones sostenidas por estructura y propósito.',
-        },
-      ],
-    },
-    {
-      type: 'feature-grid',
-      lead: {
-        eyebrow: 'Principios',
-        title: 'Valores que deben sentirse también en el diseño.',
-        description: 'La identidad visual propuesta necesita reflejar estos principios de forma consistente.',
-      },
-      items: [
-        {
-          title: 'Integridad',
-          description: 'Decisiones, lenguaje y acciones alineadas con fe y transparencia.',
-          icon: ShieldCheck,
-        },
-        {
-          title: 'Excelencia',
-          description: 'Una experiencia cuidada, curada y útil en cada punto de contacto.',
-          icon: Sparkles,
-        },
-        {
-          title: 'Comunidad',
-          description: 'Pertenencia, colaboración y cuidado mutuo como estructuras reales.',
-          icon: HeartHandshake,
-        },
-        {
-          title: 'Misión',
-          description: 'Toda iniciativa debe seguir apuntando hacia servicio y testimonio.',
-          icon: Globe2,
-        },
-      ],
-      columns: 2,
-    },
-    {
-      type: 'people',
-      tone: 'muted',
-      lead: {
-        eyebrow: 'Leadership',
-        title: 'Liderazgo presentado como comunidad de servicio.',
-        description: 'No se trata de llenar la página de perfiles, sino de dar referencias claras y confiables.',
-      },
-      items: [
-        {
-          name: 'Pastor Daniel Rosario',
-          role: 'Presidencia',
-          description: 'Dirección general, visión institucional y acompañamiento de frentes estratégicos.',
-          image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80',
-        },
-        {
-          name: 'Martha Almonte',
-          role: 'Coordinación de membresía',
-          description: 'Relación con capítulos, acompañamiento a miembros y activación de comunidad.',
-          image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80',
-        },
-        {
-          name: 'Samuel Peña',
-          role: 'Proyectos y alianzas',
-          description: 'Seguimiento de prioridades, patrocinios y relaciones de impacto.',
-          image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80',
-        },
-      ],
-    },
-  ],
-  cta: {
-    title: 'Conoce la institución y luego decide cómo quieres participar.',
-    description: 'La relación entre misión, membresía, proyectos y donación debe sentirse natural desde aquí.',
-    primaryAction: {
-      label: 'Explorar membership',
-      to: surfacePaths.institutional.membership,
-      variant: 'primary',
-    },
-    secondaryAction: {
-      label: 'Ir a contact us',
-      to: surfacePaths.institutional.contactUs,
-      variant: 'secondary',
-    },
+  {
+    value: '1947',
+    label: 'Nacimiento formal',
+    description:
+      'Las instituciones de sostén propio se unieron para formar la Association of Seventh-day Adventist Self-Supporting Institutions.',
   },
-}
+  {
+    value: '1979',
+    label: 'Nombre actual',
+    description:
+      'La organización adoptó Adventist-laymen’s Services & Industries para reflejar una membresía más amplia y diversa.',
+  },
+] as const;
+
+export const whoWeAreAboutPoints = [
+  {
+    title: 'Vida centrada en Cristo',
+    description:
+      'La filosofía de ASI promueve una relación diaria con Dios que se expresa en decisiones, servicio y testimonio.',
+    icon: Church,
+  },
+  {
+    title: 'Apoyo a la misión global',
+    description:
+      'La red acompaña iniciativas de salud, educación, evangelismo, servicio comunitario, familia y proyectos especiales.',
+    icon: HeartHandshake,
+  },
+  {
+    title: 'Una comunidad diversa',
+    description:
+      'Empresarios, profesionales y ministerios de apoyo forman una sola familia adventista desde distintos campos de trabajo.',
+    icon: UsersRound,
+  },
+] as const;
+
+export const whoWeAreHistoryTimeline = [
+  {
+    year: '1904',
+    title: 'Madison College',
+    description:
+      'E.A. Sutherland y Percy Magan establecieron cerca de Nashville una institución adventista de sostén propio que luego impulsó escuelas y entidades satélite en otros lugares.',
+  },
+  {
+    year: '1947',
+    title: 'Primer cuerpo asociativo',
+    description:
+      'Las instituciones de sostén propio se organizaron como la Association of Seventh-day Adventist Self-Supporting Institutions, con fuerte presencia educativa y de salud.',
+  },
+  {
+    year: '1979',
+    title: 'ASI se amplía',
+    description:
+      'La membresía comenzó a incluir negocios, emprendedores y profesionales adventistas, y el nombre evolucionó para reflejar esa realidad.',
+  },
+] as const;
+
+export const whoWeAreMissionValues = [
+  {
+    title: 'Desafiar',
+    description:
+      'ASI existe para retar a los laicos adventistas a vivir una fe visible y activa en profesiones, industria, educación y servicios.',
+    icon: Sparkles,
+  },
+  {
+    title: 'Nutrir',
+    description:
+      'La comunidad crea espacios de acompañamiento, visión y crecimiento para sostener una vida profesional arraigada en Cristo.',
+    icon: HeartHandshake,
+  },
+  {
+    title: 'Compartir a Cristo en el mercado',
+    description:
+      'Nuestro lema resume una misión sencilla y exigente: testificar de Jesús en el trabajo cotidiano y en cada relación humana.',
+    icon: BriefcaseBusiness,
+  },
+  {
+    title: 'Respaldar la misión mundial',
+    description:
+      'Todo esto se conecta con el compromiso de apoyar la misión global de la Iglesia Adventista del Séptimo Día.',
+    icon: Globe2,
+  },
+] as const;
+
+export const whoWeAreResources = [
+  {
+    title: 'Folleto ASI',
+    description:
+      'Resumen institucional para comprender identidad, propósito y alcance de la organización.',
+    icon: BookOpenText,
+  },
+  {
+    title: 'Plan estratégico',
+    description:
+      'Dirección de prioridades y metas que orientan el crecimiento y el servicio de la red.',
+    icon: Landmark,
+  },
+  {
+    title: 'Estatutos',
+    description:
+      'Marco institucional que ordena gobierno, membresía y funcionamiento de ASI.',
+    icon: FileText,
+  },
+] as const;
+
+export const whoWeAreGlobalNetwork = [
+  {
+    title: 'ASI Europa',
+    description:
+      'Una red con capítulos y organizaciones en países como Austria, Bulgaria, República Checa, Alemania, Hungría, Italia, Polonia, Portugal, Rumanía, España, Suiza y Reino Unido.',
+    tag: 'Europa',
+  },
+  {
+    title: 'ASI Inter-América',
+    description:
+      'La visión también se articula en la División Interamericana, fortaleciendo conexiones regionales y proyectos alineados con la misión.',
+    tag: 'Inter-América',
+  },
+  {
+    title: 'ASI Sudáfrica',
+    description:
+      'Expresión local de la misma vocación: convenciones, comunidad y apoyo a iniciativas que nacen dentro y fuera del territorio.',
+    tag: 'África',
+  },
+] as const;
+
+export const whoWeAreTrustSignals = [
+  {
+    title: 'Base adventista clara',
+    description:
+      'ASI apoya a la Iglesia Adventista del Séptimo Día y a sus distintos frentes de alcance y servicio.',
+    icon: ShieldCheck,
+  },
+  {
+    title: 'Presencia global',
+    description:
+      'Miembros de Norteamérica participan en proyectos alrededor del mundo y otras divisiones cuentan con organizaciones ASI propias.',
+    icon: Globe2,
+  },
+] as const;
