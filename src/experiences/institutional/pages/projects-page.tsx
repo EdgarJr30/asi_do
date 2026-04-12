@@ -17,7 +17,6 @@ import {
 } from '@/experiences/institutional/components/institutional-ui';
 import {
   currentProjects2025,
-  overflowProjects2025,
   pastProjectYears,
   projectsHeroContent,
   projectsHeroMedia,
@@ -261,37 +260,6 @@ export function ProjectsPage() {
                 </motion.article>
               ))}
             </div>
-          </motion.div>
-        </motion.div>
-      </InstitutionalSection>
-
-      <InstitutionalSection tone="muted" reveal="mount">
-        <motion.div
-          className="grid gap-8 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-start"
-          {...revealProps}
-        >
-          <InstitutionalLead
-            content={{
-              eyebrow: 'Fondos adicionales 2025',
-              title: 'Cada don adicional sigue teniendo destino.',
-              description: projectsHeroContent.overflowIntro,
-            }}
-          />
-          <motion.div className="grid gap-4" variants={containerVariants}>
-            {overflowProjects2025.map((project, index) => (
-              <motion.div
-                key={project}
-                className="flex items-center gap-4 rounded-[1.5rem] bg-white p-5 shadow-(--asi-shadow-soft) outline-1 outline-(--asi-outline)"
-                variants={itemVariants}
-              >
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-sm font-bold text-(--asi-primary)">
-                  {index + 1}
-                </span>
-                <p className="text-base font-semibold leading-7 text-(--asi-text)">
-                  {project}
-                </p>
-              </motion.div>
-            ))}
           </motion.div>
         </motion.div>
       </InstitutionalSection>
