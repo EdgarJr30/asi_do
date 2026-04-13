@@ -29,6 +29,11 @@
   );
 }
 
+.institutional-home__image-backdrop-fill {
+  filter: blur(28px);
+  opacity: 0.44;
+}
+
 .institutional-home__image-backdrop .institutional-home__image-frame {
   object-fit: contain;
   object-position: center;

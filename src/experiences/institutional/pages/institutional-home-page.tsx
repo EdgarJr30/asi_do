@@ -770,8 +770,15 @@ export function InstitutionalHomePage() {
                     <>
                       <div className="institutional-home__image-backdrop absolute inset-0">
                         <img
+                          aria-hidden="true"
+                          alt=""
+                          className="institutional-home__image-backdrop-fill absolute inset-0 h-full w-full scale-105 object-cover"
+                          loading="lazy"
+                          src={slide.image}
+                        />
+                        <img
                           alt={slide.imageAlt}
-                          className="institutional-home__image-frame h-full w-full object-cover"
+                          className="institutional-home__image-frame relative h-full w-full object-cover"
                           loading="lazy"
                           src={slide.image}
                         />
