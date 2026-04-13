@@ -11,7 +11,7 @@ import { BrandLockup } from '@/components/ui/app-brand';
 import { cn } from '@/lib/utils/cn';
 
 const institutionalPrimaryNavigation = [
-  { label: 'Eventos', to: surfacePaths.institutional.news },
+  { label: 'Contáctanos', to: surfacePaths.institutional.contactUs },
   { label: 'Membresía', to: surfacePaths.institutional.membership },
   { label: 'Proyectos', to: surfacePaths.institutional.projects },
   { label: 'Quiénes somos', to: surfacePaths.institutional.whoWeAre },
