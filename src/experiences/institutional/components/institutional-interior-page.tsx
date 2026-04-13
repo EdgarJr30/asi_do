@@ -15,48 +15,91 @@ export function InstitutionalInteriorPage({
 }) {
   return (
     <div>
-      <InstitutionalSection className="pt-28 sm:pt-32">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-start">
-          <div>
-            <p className="asi-kicker">{content.hero.eyebrow}</p>
-            <h1 className="asi-heading-lg mt-4 max-w-[14ch]">
-              {content.hero.title}
-            </h1>
-            <p className="asi-copy mt-5 max-w-[62ch] text-[1.02rem]">
-              {content.hero.description}
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <InstitutionalActionLink action={content.hero.primaryAction} />
-              <InstitutionalActionLink action={content.hero.secondaryAction} />
+      <InstitutionalSection>
+        {content.hero.image ? (
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+            <div>
+              <p className="asi-kicker">{content.hero.eyebrow}</p>
+              <h1 className="asi-heading-lg mt-4 max-w-[14ch]">
+                {content.hero.title}
+              </h1>
+              <p className="asi-copy mt-5 max-w-[52ch] text-[1.02rem]">
+                {content.hero.description}
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <InstitutionalActionLink action={content.hero.primaryAction} />
+                <InstitutionalActionLink action={content.hero.secondaryAction} />
+              </div>
+              <div className="mt-6 grid grid-cols-3 gap-3">
+                {content.hero.aside.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.title}
+                      className="rounded-2xl bg-white/75 px-4 py-4 backdrop-blur-md"
+                    >
+                      <div className="flex size-8 items-center justify-center rounded-xl bg-(--asi-surface-raised) text-(--asi-primary)">
+                        <Icon className="size-4" />
+                      </div>
+                      <p className="mt-3 text-sm font-semibold leading-snug tracking-tight text-(--asi-text)">
+                        {item.title}
+                      </p>
+                      <p className="mt-1.5 text-xs leading-5 text-(--asi-text-muted)">
+                        {item.description}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <img
+              alt={content.hero.imageAlt ?? ''}
+              className="h-120 w-full rounded-[1.75rem] object-cover shadow-(--asi-shadow-soft)"
+              loading="eager"
+              src={content.hero.image}
+            />
+          </div>
+        ) : (
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-start">
+            <div>
+              <p className="asi-kicker">{content.hero.eyebrow}</p>
+              <h1 className="asi-heading-lg mt-4 max-w-[14ch]">
+                {content.hero.title}
+              </h1>
+              <p className="asi-copy mt-5 max-w-[62ch] text-[1.02rem]">
+                {content.hero.description}
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <InstitutionalActionLink action={content.hero.primaryAction} />
+                <InstitutionalActionLink action={content.hero.secondaryAction} />
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+              {content.hero.aside.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <InstitutionalCard
+                    key={item.title}
+                    className="bg-white/75 backdrop-blur-md"
+                  >
+                    <div className="flex size-11 items-center justify-center rounded-2xl bg-(--asi-surface-raised) text-(--asi-primary)">
+                      <Icon className="size-5" />
+                    </div>
+                    <p className="mt-4 text-lg font-semibold tracking-tight text-(--asi-text)">
+                      {item.title}
+                    </p>
+                    <p className="asi-copy mt-2">{item.description}</p>
+                    {item.meta ? (
+                      <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-(--asi-secondary)">
+                        {item.meta}
+                      </p>
+                    ) : null}
+                  </InstitutionalCard>
+                );
+              })}
             </div>
           </div>
-
-          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-            {content.hero.aside.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <InstitutionalCard
-                  key={item.title}
-                  className="bg-white/75 backdrop-blur-md"
-                >
-                  <div className="flex size-11 items-center justify-center rounded-2xl bg-(--asi-surface-raised) text-(--asi-primary)">
-                    <Icon className="size-5" />
-                  </div>
-                  <p className="mt-4 text-lg font-semibold tracking-tight text-(--asi-text)">
-                    {item.title}
-                  </p>
-                  <p className="asi-copy mt-2">{item.description}</p>
-                  {item.meta ? (
-                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-(--asi-secondary)">
-                      {item.meta}
-                    </p>
-                  ) : null}
-                </InstitutionalCard>
-              );
-            })}
-          </div>
-        </div>
+        )}
       </InstitutionalSection>
 
       {content.sections.map((section) => {

@@ -8,7 +8,6 @@ import { DirectoryPage } from '@/experiences/institutional/pages/directory-page'
 import { DonatePage } from '@/experiences/institutional/pages/donate-page'
 import { EligibilityPage } from '@/experiences/institutional/pages/eligibility-page'
 import { InstitutionalHomePage } from '@/experiences/institutional/pages/institutional-home-page'
-import { MediaPage } from '@/experiences/institutional/pages/media-page'
 import { MembershipApplyPage } from '@/experiences/institutional/pages/membership-apply-page'
 import { MembershipCategoriesPage } from '@/experiences/institutional/pages/membership-categories-page'
 import { MembershipPage } from '@/experiences/institutional/pages/membership-page'
@@ -73,10 +72,6 @@ export const institutionalRoutes: RouteObject[] = [
       {
         path: 'news',
         element: <NewsPage />
-      },
-      {
-        path: 'media',
-        element: <MediaPage />
       },
       {
         path: '*',

@@ -21,8 +21,7 @@ export const surfacePaths = {
     whoWeAre: '/who-we-are',
     contactUs: '/contact-us',
     directory: '/directory',
-    news: '/news',
-    media: '/media'
+    news: '/news'
   },
   storefront: storefrontPaths,
   public: storefrontPaths,

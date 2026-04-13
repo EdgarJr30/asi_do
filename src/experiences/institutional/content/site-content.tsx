@@ -137,6 +137,8 @@ export type InstitutionalPageContent = {
     primaryAction: InstitutionalAction;
     secondaryAction: InstitutionalAction;
     aside: InstitutionalHeroCard[];
+    image?: string;
+    imageAlt?: string;
   };
   sections: InstitutionalSection[];
   cta?: {
@@ -152,7 +154,6 @@ export const institutionalNavigation = [
   { label: 'Membresía', to: surfacePaths.institutional.membership },
   { label: 'Proyectos', to: surfacePaths.institutional.projects },
   { label: 'Noticias', to: surfacePaths.institutional.news },
-  { label: 'Multimedia', to: surfacePaths.institutional.media },
   { label: 'Directorio', to: surfacePaths.institutional.directory },
   { label: 'Contáctanos', to: surfacePaths.institutional.contactUs },
 ] as const;
@@ -239,8 +240,8 @@ export const homeHeroSlides: InstitutionalMediaSlide[] = [
       variant: 'primary',
     },
     secondaryAction: {
-      label: 'Ir a multimedia',
-      to: surfacePaths.institutional.media,
+      label: 'Ver proyectos',
+      to: surfacePaths.institutional.projects,
       variant: 'secondary',
     },
   },
@@ -1357,8 +1358,8 @@ export const newsPageContent: InstitutionalPageContent = {
     description:
       'La sección de news debe ayudar a mantener agenda, actualidad y cobertura sin caer en una lista plana de comunicados.',
     primaryAction: {
-      label: 'Ver multimedia',
-      to: surfacePaths.institutional.media,
+      label: 'Ver proyectos',
+      to: surfacePaths.institutional.projects,
       variant: 'primary',
     },
     secondaryAction: {
@@ -1432,10 +1433,10 @@ export const newsPageContent: InstitutionalPageContent = {
   cta: {
     title: 'Mantén viva la conversación con una agenda editorial clara.',
     description:
-      'Noticias y multimedia deben complementarse, no competir por el mismo espacio.',
+      'Noticias y proyectos deben complementarse para comunicar una misión con dirección y propósito.',
     primaryAction: {
-      label: 'Ir a multimedia',
-      to: surfacePaths.institutional.media,
+      label: 'Explorar proyectos',
+      to: surfacePaths.institutional.projects,
       variant: 'primary',
     },
     secondaryAction: {

@@ -10,8 +10,8 @@ export const newsPageContent: InstitutionalPageContent = {
     description:
       'La sección de news debe ayudar a mantener agenda, actualidad y cobertura sin caer en una lista plana de comunicados.',
     primaryAction: {
-      label: 'Ver multimedia',
-      to: surfacePaths.institutional.media,
+      label: 'Ver proyectos',
+      to: surfacePaths.institutional.projects,
       variant: 'primary',
     },
     secondaryAction: {
@@ -78,8 +78,8 @@ export const newsPageContent: InstitutionalPageContent = {
     title: 'Mantén viva la conversación con una agenda editorial clara.',
     description: 'Noticias y multimedia deben complementarse, no competir por el mismo espacio.',
     primaryAction: {
-      label: 'Ir a multimedia',
-      to: surfacePaths.institutional.media,
+      label: 'Explorar proyectos',
+      to: surfacePaths.institutional.projects,
       variant: 'primary',
     },
     secondaryAction: {
