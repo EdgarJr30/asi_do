@@ -1,16 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react';
 
-import { Mail, PhoneCall, Send, UsersRound } from 'lucide-react'
-import { motion, useReducedMotion } from 'motion/react'
+import { Mail, PhoneCall, Send, UsersRound } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 
-import { surfacePaths } from '@/app/router/surface-paths'
+import { surfacePaths } from '@/app/router/surface-paths';
 import {
   InstitutionalActionLink,
   InstitutionalCard,
   InstitutionalLead,
   InstitutionalSection,
-} from '@/experiences/institutional/components/institutional-ui'
-import { contactPoints } from '@/experiences/institutional/content/site-content'
+} from '@/experiences/institutional/components/institutional-ui';
+import { contactPoints } from '@/experiences/institutional/content/site-content';
 
 const containerVariants = {
   hidden: {},
@@ -20,7 +20,7 @@ const containerVariants = {
       delayChildren: 0.06,
     },
   },
-}
+};
 
 const itemVariants = {
   hidden: { opacity: 0, y: 18 },
@@ -29,17 +29,17 @@ const itemVariants = {
     y: 0,
     transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
   },
-}
+};
 
 const heroImage = {
   src: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1800&q=80',
   alt: 'Personas dialogando con alegría en un encuentro comunitario',
-} as const
+} as const;
 
 const contactFormImage = {
   src: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1400&q=80',
   alt: 'Equipo conversando y colaborando alrededor de una mesa',
-} as const
+} as const;
 
 const quickActions = [
   {
@@ -54,21 +54,21 @@ const quickActions = [
     href: 'mailto:secretaria@asirdo.org',
     icon: Mail,
   },
-] as const
+] as const;
 
 const priorityContacts = contactPoints.filter(
   (item) =>
     item.title === 'Secretaría general' ||
     item.title === 'Membresía' ||
     item.title === 'Proyectos y financiamiento'
-)
+);
 
 export function ContactUsPage() {
-  const shouldReduceMotion = useReducedMotion()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [topic, setTopic] = useState('Consulta general')
-  const [message, setMessage] = useState('')
+  const shouldReduceMotion = useReducedMotion();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [topic, setTopic] = useState('Consulta general');
+  const [message, setMessage] = useState('');
 
   const revealProps = shouldReduceMotion
     ? {}
@@ -77,17 +77,19 @@ export function ContactUsPage() {
         whileInView: 'show',
         viewport: { once: true, amount: 0.18 },
         variants: containerVariants,
-      }
+      };
 
   const mailtoHref = useMemo(
     () =>
       `mailto:secretaria@asirdo.org?subject=${encodeURIComponent(
         `${topic} - ${name || 'ASI'}`
       )}&body=${encodeURIComponent(
-        `Nombre: ${name || '-'}\nCorreo: ${email || '-'}\nAsunto: ${topic}\n\nMensaje:\n${message || '-'}`
+        `Nombre: ${name || '-'}\nCorreo: ${
+          email || '-'
+        }\nAsunto: ${topic}\n\nMensaje:\n${message || '-'}`
       )}`,
     [email, message, name, topic]
-  )
+  );
 
   return (
     <div>
@@ -99,7 +101,7 @@ export function ContactUsPage() {
           >
             <img
               alt={heroImage.alt}
-              className="h-[24rem] w-full object-cover sm:h-[28rem] lg:h-[34rem]"
+              className="h-96 w-full object-cover sm:h-112 lg:h-136"
               decoding="async"
               loading="lazy"
               sizes="100vw"
@@ -114,7 +116,7 @@ export function ContactUsPage() {
                 <h1 className="asi-heading-lg mt-4 max-w-[12ch] text-white">
                   Habla con nosotros.
                 </h1>
-                <p className="mt-4 max-w-[44rem] text-base leading-7 text-white/86 sm:text-[1.02rem]">
+                <p className="mt-4 max-w-176 text-base leading-7 text-white/86 sm:text-[1.02rem]">
                   Si necesitas orientación, apoyo o quieres iniciar una
                   conversación con ASI, aquí tienes la forma más directa de
                   hacerlo.
@@ -122,7 +124,7 @@ export function ContactUsPage() {
               </div>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 {quickActions.map((action) => {
-                  const Icon = action.icon
+                  const Icon = action.icon;
 
                   return (
                     <a
@@ -132,53 +134,52 @@ export function ContactUsPage() {
                     >
                       <Icon className="size-4" />
                       <span>{action.label}</span>
-                      <span className="text-(--asi-text-muted)">{action.value}</span>
+                      <span className="text-(--asi-text-muted)">
+                        {action.value}
+                      </span>
                     </a>
-                  )
+                  );
                 })}
               </div>
             </div>
           </motion.div>
 
-          <motion.div
-            className="space-y-4"
-            variants={containerVariants}
-          >
+          <motion.div className="space-y-4" variants={containerVariants}>
             <motion.div variants={itemVariants}>
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-(--asi-secondary)">
                 Canales directos
               </p>
-              <p className="mt-2 max-w-[48rem] text-sm leading-6 text-(--asi-text-muted)">
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-(--asi-text-muted)">
                 Si ya sabes a qué frente deseas escribir, aquí tienes los tres
                 accesos principales.
               </p>
             </motion.div>
 
             <div className="grid gap-3 md:grid-cols-3">
-            {priorityContacts.map((item) => {
-              const Icon = item.icon ?? UsersRound
+              {priorityContacts.map((item) => {
+                const Icon = item.icon ?? UsersRound;
 
-              return (
-                <motion.article
-                  key={item.title}
-                  className="asi-card bg-white px-4 py-4 sm:px-5 sm:py-5"
-                  variants={itemVariants}
-                >
-                  <div className="flex size-10 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-(--asi-primary)">
-                    <Icon className="size-4.5" />
-                  </div>
-                  <p className="mt-3 text-[0.98rem] font-semibold text-(--asi-text)">
-                    {item.title}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-(--asi-text-muted)">
-                    {item.description}
-                  </p>
-                  <p className="mt-3 text-sm font-semibold text-(--asi-primary)">
-                    {item.meta}
-                  </p>
-                </motion.article>
-              )
-            })}
+                return (
+                  <motion.article
+                    key={item.title}
+                    className="asi-card bg-white px-4 py-4 sm:px-5 sm:py-5"
+                    variants={itemVariants}
+                  >
+                    <div className="flex size-10 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-(--asi-primary)">
+                      <Icon className="size-4.5" />
+                    </div>
+                    <p className="mt-3 text-[0.98rem] font-semibold text-(--asi-text)">
+                      {item.title}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-(--asi-text-muted)">
+                      {item.description}
+                    </p>
+                    <p className="mt-3 text-sm font-semibold text-(--asi-primary)">
+                      {item.meta}
+                    </p>
+                  </motion.article>
+                );
+              })}
             </div>
           </motion.div>
         </motion.div>
@@ -199,14 +200,11 @@ export function ContactUsPage() {
                     'Si prefieres escribir con más detalle, completa este formulario y prepararemos tu correo con toda la información básica.',
                 }}
               />
-              <motion.div
-                className="hidden lg:block"
-                variants={itemVariants}
-              >
+              <motion.div className="hidden lg:block" variants={itemVariants}>
                 <div className="relative overflow-hidden rounded-[1.5rem] shadow-(--asi-shadow-soft) ring-1 ring-black/8">
                   <img
                     alt={contactFormImage.alt}
-                    className="h-[20rem] w-full object-cover"
+                    className="h-80 w-full object-cover"
                     decoding="async"
                     loading="lazy"
                     sizes="(max-width: 1023px) 0px, 42vw"
@@ -223,8 +221,8 @@ export function ContactUsPage() {
               <form
                 className="grid gap-5"
                 onSubmit={(event) => {
-                  event.preventDefault()
-                  window.location.href = mailtoHref
+                  event.preventDefault();
+                  window.location.href = mailtoHref;
                 }}
               >
                 <label className="grid gap-2">
@@ -317,5 +315,5 @@ export function ContactUsPage() {
         </motion.div>
       </InstitutionalSection>
     </div>
-  )
+  );
 }

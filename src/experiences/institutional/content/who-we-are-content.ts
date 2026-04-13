@@ -127,7 +127,7 @@ export const whoWeAreHeroStats: WhoWeAreStat[] = [
     value: '1979',
     label: 'Nombre actual',
     description:
-      'La organización adoptó Adventist-laymen's Services & Industries para reflejar una membresía más amplia y diversa.',
+      "La organización adoptó Adventist-laymen's Services & Industries para reflejar una membresía más amplia y diversa.",
   },
 ];
 

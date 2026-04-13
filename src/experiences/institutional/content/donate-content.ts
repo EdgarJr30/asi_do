@@ -1,16 +1,13 @@
 import {
-  BookOpenText,
   BriefcaseBusiness,
   CalendarHeart,
   CircleDollarSign,
   HandCoins,
   HandHeart,
-  HeartHandshake,
   Landmark,
   Megaphone,
   ShieldCheck,
   Sparkles,
-  UsersRound,
 } from 'lucide-react'
 
 import { surfacePaths } from '@/app/router/surface-paths'
