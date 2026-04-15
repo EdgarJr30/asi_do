@@ -209,7 +209,7 @@ Technical log line for provider attempts, failures, and retries.
 |---|---|
 | company_profiles | id, tenant_id, profile_kind, profile_metadata, logo_path, description, industry, size_range, website |
 | talent_directory_search | tenant permission-gated search surface over visible `candidate_profiles` plus skills, languages, and work history |
-| job_postings | id, tenant_id, title, slug, status, opportunity_type, workplace_type, employment_type, compensation_type, compensation fields, opportunity_metadata, location, salary legacy fields, expires_at |
+| job_postings | id, tenant_id, title, slug, status, opportunity_type, workplace_type, employment_type, compensation_type, compensation fields, opportunity_metadata (`operating_scope`, `delivery_timeline`, `engagement_model`, `service_scope`), location, salary legacy fields, expires_at |
 | job_screening_questions | id, job_posting_id, question_text, answer_type, is_required |
 | saved_jobs | id, candidate_profile_id, job_posting_id |
 | job_alerts | id, candidate_profile_id, criteria_json, frequency, is_active |
@@ -240,6 +240,7 @@ Launch-readiness notes:
 - `memberships.status = invited` is a first-class MVP state used by employer invitations and invite revocation.
 - `job_alerts.criteria_json` stores the current MVP discovery filters: query, workplace type, and country code.
 - Email workflow notifications remain durable in `notification_deliveries` until the processor marks them `sent` or `failed` and writes `notification_delivery_logs`.
+- `recruiter_requests.request_metadata` stores tenant-kind-specific onboarding data such as `operating_scope`, `sponsoring_entity`, `field_region`, and `conversion_intent`.
 
 ---
 

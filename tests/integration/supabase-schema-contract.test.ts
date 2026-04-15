@@ -54,6 +54,10 @@ const asiAccessOpportunityKindsMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260415021000_asi_access_and_opportunity_kinds.sql'
 )
+const asiTypeRequirementsMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260415031500_asi_type_requirements.sql'
+)
 
 describe('supabase schema contract', () => {
   it('keeps the identity, notification, and push workflow migrations in place', () => {
@@ -71,6 +75,7 @@ describe('supabase schema contract', () => {
     expect(existsSync(platformOpsMigrationPath)).toBe(true)
     expect(existsSync(mvpLaunchReadinessMigrationPath)).toBe(true)
     expect(existsSync(asiAccessOpportunityKindsMigrationPath)).toBe(true)
+    expect(existsSync(asiTypeRequirementsMigrationPath)).toBe(true)
   })
 
   it('defines the core identity, approval, and storage foundations', () => {
@@ -174,6 +179,18 @@ describe('supabase schema contract', () => {
     expect(migration).toContain('create or replace function public.can_publish_opportunity')
     expect(migration).toContain('create policy "job_postings_protected_or_tenant_read"')
     expect(migration).toContain('revoke all on public.job_postings from anon')
+  })
+
+  it('keeps tenant-kind and opportunity-type validation requirements aligned with the schema contract', () => {
+    const migration = readFileSync(asiTypeRequirementsMigrationPath, 'utf8')
+
+    expect(migration).toContain('create or replace function public.validate_recruiter_request_requirements()')
+    expect(migration).toContain('create trigger recruiter_requests_validate_requirements')
+    expect(migration).toContain('Project requests require sponsoring_entity metadata')
+    expect(migration).toContain('create or replace function public.validate_job_posting_requirements()')
+    expect(migration).toContain('Project opportunities require delivery_timeline metadata')
+    expect(migration).toContain('Volunteer opportunities require engagement_model metadata')
+    expect(migration).toContain('create trigger job_postings_validate_requirements')
   })
 
   it('keeps applications foundations aligned with the schema contract', () => {

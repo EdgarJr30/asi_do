@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import {
   createPrivateFileUrl,
@@ -21,6 +22,7 @@ import {
   uploadPrivateFile
 } from '@/features/auth/lib/auth-api'
 import { recruiterRequestSchema, type RecruiterRequestValues } from '@/features/auth/lib/auth-schemas'
+import { getTenantKindLabel, tenantKindOptions, tenantKindRequirementSummary } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { RecruiterRequestStatusBadge } from '@/features/recruiter-requests/components/recruiter-request-status-badge'
 import { captureClientError } from '@/lib/errors/client-error-logger'
 import {
@@ -32,6 +34,25 @@ import {
 } from '@/lib/uploads/media'
 
 const MY_REQUESTS_QUERY_KEY = ['recruiter-requests', 'mine'] as const
+
+function getTenantNameLabel(kind: RecruiterRequestValues['requestedTenantKind']) {
+  switch (kind) {
+    case 'company':
+      return 'Nombre comercial'
+    case 'ministry':
+      return 'Nombre del ministerio'
+    case 'project':
+      return 'Nombre del proyecto'
+    case 'field':
+      return 'Nombre del campo o región'
+    default:
+      return 'Nombre del perfil'
+  }
+}
+
+function getLegalNameLabel(kind: RecruiterRequestValues['requestedTenantKind']) {
+  return kind === 'company' ? 'Razón social' : 'Nombre legal o institucional'
+}
 
 export function RecruiterRequestPage() {
   const navigate = useNavigate()
@@ -47,6 +68,7 @@ export function RecruiterRequestPage() {
   const form = useForm<RecruiterRequestValues>({
     resolver: zodResolver(recruiterRequestSchema),
     defaultValues: {
+      requestedTenantKind: 'company',
       requestedCompanyName: '',
       requestedCompanyLegalName: '',
       requestedTenantSlug: '',
@@ -54,8 +76,16 @@ export function RecruiterRequestPage() {
       companyEmail: session.authUser?.email ?? '',
       companyPhone: '',
       companyCountryCode: session.profile?.country_code ?? 'DO',
-      companyDescription: ''
+      companyDescription: '',
+      operatingScope: '',
+      sponsoringEntity: '',
+      fieldRegion: '',
+      conversionIntent: ''
     }
+  })
+  const requestedTenantKind = useWatch({
+    control: form.control,
+    name: 'requestedTenantKind'
   })
 
   const myRequestsQuery = useQuery({
@@ -98,6 +128,7 @@ export function RecruiterRequestPage() {
 
       return submitRecruiterRequest({
         requesterUserId: session.authUser.id,
+        requestedTenantKind: values.requestedTenantKind,
         requestedCompanyName: values.requestedCompanyName,
         requestedCompanyLegalName: values.requestedCompanyLegalName,
         requestedTenantSlug: values.requestedTenantSlug,
@@ -106,6 +137,12 @@ export function RecruiterRequestPage() {
         companyPhone: values.companyPhone,
         companyCountryCode: values.companyCountryCode.toUpperCase(),
         companyDescription: values.companyDescription,
+        requestMetadata: {
+          operating_scope: values.operatingScope?.trim() || null,
+          sponsoring_entity: values.sponsoringEntity?.trim() || null,
+          field_region: values.fieldRegion?.trim() || null,
+          conversion_intent: values.conversionIntent?.trim() || null
+        },
         companyLogoPath,
         verificationDocumentPath
       })
@@ -120,6 +157,7 @@ export function RecruiterRequestPage() {
       setCompanyLogoFileError(null)
       setVerificationDocumentFileError(null)
       form.reset({
+        requestedTenantKind: 'company',
         requestedCompanyName: '',
         requestedCompanyLegalName: '',
         requestedTenantSlug: '',
@@ -127,7 +165,11 @@ export function RecruiterRequestPage() {
         companyEmail: session.authUser?.email ?? '',
         companyPhone: '',
         companyCountryCode: session.profile?.country_code ?? 'DO',
-        companyDescription: ''
+        companyDescription: '',
+        operatingScope: '',
+        sponsoringEntity: '',
+        fieldRegion: '',
+        conversionIntent: ''
       })
     },
     onError: async (error) => {
@@ -268,9 +310,9 @@ export function RecruiterRequestPage() {
       <Card className="bg-(--app-surface-muted)">
         <CardHeader>
           <Badge variant="soft">Recruiter request</Badge>
-          <CardTitle>Solicita la validacion de tu empresa</CardTitle>
+          <CardTitle>Solicita la validación de tu tenant</CardTitle>
           <CardDescription>
-            El admin revisa esta solicitud antes de crear tu tenant y habilitar tu acceso employer.
+            El admin revisa el tipo de tenant, sus datos obligatorios y los archivos privados antes de habilitar tu acceso operativo.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -280,15 +322,38 @@ export function RecruiterRequestPage() {
             </div>
           ) : (
             <form className="space-y-4" onSubmit={(event) => void form.handleSubmit((values) => submitMutation.mutate(values))(event)}>
+              <div className="grid gap-4 sm:grid-cols-[0.85fr_1.15fr]">
+                <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                  <span>Tipo de tenant</span>
+                  <Select {...form.register('requestedTenantKind')}>
+                    {tenantKindOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
+                </label>
+
+                <div className="rounded-3xl border border-zinc-200 bg-white/75 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/70 dark:text-zinc-300">
+                  <p className="font-semibold text-zinc-900 dark:text-zinc-50">Mínimos para {getTenantKindLabel(requestedTenantKind)}</p>
+                  <ul className="mt-2 space-y-1">
+                    {tenantKindRequirementSummary[requestedTenantKind].map((item) => (
+                      <li key={item}>- {item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>Nombre comercial</span>
+                <span>{getTenantNameLabel(requestedTenantKind)}</span>
                 <Input placeholder="ASI Rep. Dominicana" {...form.register('requestedCompanyName')} />
                 <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.requestedCompanyName?.message}</p>
               </label>
 
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>Razon social</span>
+                <span>{getLegalNameLabel(requestedTenantKind)}</span>
                 <Input placeholder="ASI Republica Dominicana SRL" {...form.register('requestedCompanyLegalName')} />
+                <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.requestedCompanyLegalName?.message}</p>
               </label>
 
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
@@ -325,10 +390,48 @@ export function RecruiterRequestPage() {
               </div>
 
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>Descripcion de la empresa</span>
-                <Textarea placeholder="Que hace la empresa, como contrata y por que necesita acceso recruiter..." {...form.register('companyDescription')} />
+                <span>Descripción operativa</span>
+                <Textarea placeholder="Qué hace este tenant, cómo operará en ASI y por qué necesita acceso..." {...form.register('companyDescription')} />
                 <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.companyDescription?.message}</p>
               </label>
+
+              {requestedTenantKind === 'ministry' || requestedTenantKind === 'project' ? (
+                <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                  <span>Alcance operativo</span>
+                  <Textarea
+                    placeholder="Países, regiones, población atendida o alcance previsto."
+                    {...form.register('operatingScope')}
+                  />
+                  <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.operatingScope?.message}</p>
+                </label>
+              ) : null}
+
+              {requestedTenantKind === 'project' || requestedTenantKind === 'field' ? (
+                <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                  <span>Entidad patrocinadora o supervisora</span>
+                  <Input placeholder="ASI, ministerio, asociación, campo..." {...form.register('sponsoringEntity')} />
+                  <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.sponsoringEntity?.message}</p>
+                </label>
+              ) : null}
+
+              {requestedTenantKind === 'field' ? (
+                <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                  <span>Campo o región</span>
+                  <Input placeholder="Unión Dominicana, Norte, región este..." {...form.register('fieldRegion')} />
+                  <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.fieldRegion?.message}</p>
+                </label>
+              ) : null}
+
+              {requestedTenantKind === 'generic_profile' ? (
+                <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                  <span>Intención de conversión</span>
+                  <Textarea
+                    placeholder="Describe cómo este perfil podría convertirse luego en empresa, ministerio o proyecto formal."
+                    {...form.register('conversionIntent')}
+                  />
+                  <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.conversionIntent?.message}</p>
+                </label>
+              ) : null}
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
@@ -399,7 +502,9 @@ export function RecruiterRequestPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{request.requested_company_name}</p>
-                        <p className="text-xs text-zinc-500">{request.requested_tenant_slug}</p>
+                        <p className="text-xs text-zinc-500">
+                          {getTenantKindLabel(request.requested_tenant_kind)} · {request.requested_tenant_slug}
+                        </p>
                       </div>
                       <RecruiterRequestStatusBadge status={request.status} />
                     </div>

@@ -112,6 +112,21 @@ export async function listTenantJobs(tenantId: string) {
   return (response.data ?? []) as unknown as JobPostingQueryRow[]
 }
 
+export async function listOpportunityStageTemplates(opportunityType: Tables<'opportunity_stage_templates'>['opportunity_type']) {
+  const client = requireSupabase()
+  const response = await client
+    .from('opportunity_stage_templates')
+    .select('*')
+    .eq('opportunity_type', opportunityType)
+    .order('position', { ascending: true })
+
+  if (response.error) {
+    throw response.error
+  }
+
+  return response.data ?? []
+}
+
 export async function getPublicJobBySlug(slug: string, candidateProfileId?: string | null) {
   const client = requireSupabase()
   const response = await client
@@ -167,6 +182,7 @@ export async function createOrUpdateJobPosting(input: {
   companyProfileId: string
   actorUserId: string
   jobId?: string
+  opportunityType: Tables<'job_postings'>['opportunity_type']
   title: string
   slug: string
   summary: string
@@ -175,10 +191,12 @@ export async function createOrUpdateJobPosting(input: {
   employmentType: Tables<'job_postings'>['employment_type']
   cityName?: string
   countryCode?: string
-  salaryVisible: boolean
-  salaryMinAmount?: number | null
-  salaryMaxAmount?: number | null
-  salaryCurrency?: string
+  compensationVisible: boolean
+  compensationType: Tables<'job_postings'>['compensation_type']
+  compensationMinAmount?: number | null
+  compensationMaxAmount?: number | null
+  compensationCurrency?: string
+  opportunityMetadata?: Record<string, string | null>
   experienceLevel?: string
   expiresAt?: string
   questions: Array<{
@@ -194,6 +212,7 @@ export async function createOrUpdateJobPosting(input: {
     tenant_id: input.tenantId,
     company_profile_id: input.companyProfileId,
     created_by_user_id: input.actorUserId,
+    opportunity_type: input.opportunityType,
     title: input.title,
     slug: input.slug,
     summary: input.summary,
@@ -202,10 +221,16 @@ export async function createOrUpdateJobPosting(input: {
     employment_type: input.employmentType,
     city_name: input.cityName || null,
     country_code: input.countryCode?.toUpperCase() || null,
-    salary_visible: input.salaryVisible,
-    salary_min_amount: input.salaryVisible ? input.salaryMinAmount ?? null : null,
-    salary_max_amount: input.salaryVisible ? input.salaryMaxAmount ?? null : null,
-    salary_currency: input.salaryVisible ? input.salaryCurrency?.toUpperCase() || null : null,
+    compensation_type: input.compensationType,
+    compensation_min_amount: input.compensationVisible ? input.compensationMinAmount ?? null : null,
+    compensation_max_amount: input.compensationVisible ? input.compensationMaxAmount ?? null : null,
+    compensation_currency: input.compensationVisible ? input.compensationCurrency?.toUpperCase() || null : null,
+    opportunity_metadata: input.opportunityMetadata ?? {},
+    salary_visible: input.compensationVisible && input.compensationType === 'salary',
+    salary_min_amount: input.compensationVisible && input.compensationType === 'salary' ? input.compensationMinAmount ?? null : null,
+    salary_max_amount: input.compensationVisible && input.compensationType === 'salary' ? input.compensationMaxAmount ?? null : null,
+    salary_currency:
+      input.compensationVisible && input.compensationType === 'salary' ? input.compensationCurrency?.toUpperCase() || null : null,
     experience_level: input.experienceLevel || null,
     expires_at: input.expiresAt || null
   }

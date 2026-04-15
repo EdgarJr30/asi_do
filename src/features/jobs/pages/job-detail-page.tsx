@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
 import { getPublicJobBySlug, toggleSavedJob } from '@/features/jobs/lib/jobs-api'
+import { getCompensationTypeLabel, getOpportunityTypeLabel } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
 
@@ -86,6 +87,10 @@ export function JobDetailPage() {
   }
 
   const job = jobQuery.data
+  const compensationLabel =
+    job.compensation_min_amount || job.compensation_max_amount
+      ? `${getCompensationTypeLabel(job.compensation_type)}: ${job.compensation_currency || 'USD'} ${(job.compensation_min_amount || job.compensation_max_amount || 0).toLocaleString()}${job.compensation_min_amount && job.compensation_max_amount ? ` - ${job.compensation_max_amount.toLocaleString()}` : ''}`
+      : getCompensationTypeLabel(job.compensation_type)
 
   return (
     <div className="space-y-6">
@@ -94,7 +99,7 @@ export function JobDetailPage() {
           <Badge variant="soft">Oportunidad ASI</Badge>
           <CardTitle className="max-w-3xl text-2xl sm:text-3xl">{job.title}</CardTitle>
           <CardDescription>
-            {job.company_profile?.display_name || 'Company'} · {job.workplace_type} · {job.employment_type}
+            {job.company_profile?.display_name || 'Company'} · {getOpportunityTypeLabel(job.opportunity_type)} · {job.workplace_type}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
@@ -103,7 +108,7 @@ export function JobDetailPage() {
             <div className="flex flex-wrap gap-2">
               {job.country_code ? <Badge variant="outline">{job.country_code}</Badge> : null}
               {job.experience_level ? <Badge variant="outline">{job.experience_level}</Badge> : null}
-              <Badge variant="outline">{job.salary_visible ? 'Salario visible' : 'Salario no visible'}</Badge>
+              <Badge variant="outline">{compensationLabel}</Badge>
             </div>
           </div>
 

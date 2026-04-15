@@ -50,6 +50,7 @@
 6. A tenant may invite multiple internal members.
 7. Tenant member invitations are only valid for users who already registered as standard platform users; MVP does not create tenant invites for unknown emails.
 8. Tenant-side candidate sourcing is allowed even when the candidate has not applied yet, but only for visible opt-in profiles.
+9. Recruiter requests enforce minimum data by `tenant_kind`: company requires legal name, ministry requires legal name plus operating scope, project requires sponsoring entity plus operating scope, field requires field region plus sponsoring entity, and generic profile requires conversion intent.
 
 ---
 
@@ -69,6 +70,7 @@
 9. Published opportunities must not be discoverable by guest users for now; access requires approved user status, ASI membership, and an active subscription.
 10. Candidates may save published opportunities without immediately entering the application flow.
 11. Opportunity discovery and application submission use `opportunity_type` to distinguish employment, project, volunteer, and professional-service workflows while preserving one shared MVP posting table.
+12. Minimum opportunity data is enforced by `opportunity_type`: projects require operating scope plus delivery timeline, volunteering requires operating scope plus engagement model, and professional services require service scope.
 
 ---
 

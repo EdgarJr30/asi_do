@@ -43,6 +43,12 @@ The repository migration `20260415021000_asi_access_and_opportunity_kinds.sql` a
 - type-specific opportunity stage templates
 - RLS changes that remove anonymous access to job discovery tables
 
+The repository migration `20260415031500_asi_type_requirements.sql` adds enforcement for:
+
+- recruiter-request minimum fields by `tenant_kind`
+- opportunity minimum metadata by `opportunity_type`
+- compensation currency checks when compensated opportunities include amounts
+
 The deployed Edge Function `send-notification` dispatches browser push messages and expects these Supabase project secrets:
 
 - `WEB_PUSH_VAPID_PUBLIC_KEY`

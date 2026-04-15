@@ -150,6 +150,7 @@ The ASI access-gating migration must establish:
 - auditable manual access override fields
 - `has_active_asi_access`, `has_active_tenant_subscription`, and `can_publish_opportunity` helper functions
 - RLS changes that remove anonymous job discovery
+- follow-up validation triggers that enforce required recruiter-request metadata by `tenant_kind` and required opportunity metadata by `opportunity_type`
 
 ### Security strategy
 - RLS enabled on exposed tables

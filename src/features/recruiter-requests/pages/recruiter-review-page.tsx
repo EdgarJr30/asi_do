@@ -15,6 +15,7 @@ import {
   toErrorMessage
 } from '@/features/auth/lib/auth-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
+import { getTenantKindLabel } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { RecruiterRequestStatusBadge } from '@/features/recruiter-requests/components/recruiter-request-status-badge'
 import { useAppSession } from '@/app/providers/app-session-provider'
 
@@ -117,20 +118,26 @@ export function RecruiterReviewPage() {
           <CardContent className="py-8 text-sm text-zinc-500">No hay solicitudes recruiter pendientes en este momento.</CardContent>
         </Card>
       ) : (
-        pendingRequests.map((request) => (
-          <Card key={request.id}>
-            <CardHeader>
+        pendingRequests.map((request) => {
+          const requestMetadata =
+            request.request_metadata && typeof request.request_metadata === 'object' && !Array.isArray(request.request_metadata)
+              ? (request.request_metadata as Record<string, unknown>)
+              : {}
+
+          return (
+            <Card key={request.id}>
+              <CardHeader>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-1">
                   <CardTitle>{request.requested_company_name}</CardTitle>
                   <CardDescription>
-                    {request.requested_company_legal_name || 'Sin razon social'} · `{request.requested_tenant_slug}`
+                    {getTenantKindLabel(request.requested_tenant_kind)} · {request.requested_company_legal_name || 'Sin razon social'} · `{request.requested_tenant_slug}`
                   </CardDescription>
                 </div>
                 <RecruiterRequestStatusBadge status={request.status} />
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </CardHeader>
+              <CardContent className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="rounded-3xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300">
                   <p className="font-semibold text-zinc-900 dark:text-zinc-50">Contacto</p>
@@ -142,6 +149,26 @@ export function RecruiterReviewPage() {
                   <p className="font-semibold text-zinc-900 dark:text-zinc-50">Fechas</p>
                   <p className="mt-1">Enviada: {new Date(request.submitted_at).toLocaleString()}</p>
                   <p>Ultima actualizacion: {new Date(request.updated_at).toLocaleString()}</p>
+                </div>
+              </div>
+
+              <div className="rounded-3xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300">
+                <p className="font-semibold text-zinc-900 dark:text-zinc-50">Datos del tipo de tenant</p>
+                <div className="mt-2 grid gap-2 md:grid-cols-2">
+                  <p>Tipo: {getTenantKindLabel(request.requested_tenant_kind)}</p>
+                  <p>Website: {request.company_website_url || 'Sin website'}</p>
+                  {typeof requestMetadata.operating_scope === 'string' ? (
+                    <p>Alcance: {requestMetadata.operating_scope}</p>
+                  ) : null}
+                  {typeof requestMetadata.sponsoring_entity === 'string' ? (
+                    <p>Patrocinador: {requestMetadata.sponsoring_entity}</p>
+                  ) : null}
+                  {typeof requestMetadata.field_region === 'string' ? (
+                    <p>Campo o región: {requestMetadata.field_region}</p>
+                  ) : null}
+                  {typeof requestMetadata.conversion_intent === 'string' ? (
+                    <p>Conversión futura: {requestMetadata.conversion_intent}</p>
+                  ) : null}
                 </div>
               </div>
 
@@ -212,9 +239,10 @@ export function RecruiterReviewPage() {
                   Rechazar solicitud
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        ))
+              </CardContent>
+            </Card>
+          )
+        })
       )}
     </div>
   )

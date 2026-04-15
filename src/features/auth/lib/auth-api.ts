@@ -415,6 +415,7 @@ export async function createPrivateFileUrl(bucket: PrivateStorageBucket, path: s
 
 export async function submitRecruiterRequest(values: {
   requesterUserId: string
+  requestedTenantKind: Tables<'recruiter_requests'>['requested_tenant_kind']
   requestedCompanyName: string
   requestedCompanyLegalName?: string
   requestedTenantSlug: string
@@ -423,6 +424,7 @@ export async function submitRecruiterRequest(values: {
   companyPhone?: string
   companyCountryCode?: string
   companyDescription?: string
+  requestMetadata?: Record<string, string | null>
   companyLogoPath?: string | null
   verificationDocumentPath?: string | null
 }) {
@@ -431,6 +433,7 @@ export async function submitRecruiterRequest(values: {
     .from('recruiter_requests')
     .insert({
       requester_user_id: values.requesterUserId,
+      requested_tenant_kind: values.requestedTenantKind,
       requested_company_name: values.requestedCompanyName,
       requested_company_legal_name: values.requestedCompanyLegalName || null,
       requested_tenant_slug: values.requestedTenantSlug,
@@ -439,6 +442,7 @@ export async function submitRecruiterRequest(values: {
       company_phone: values.companyPhone || null,
       company_country_code: values.companyCountryCode || null,
       company_description: values.companyDescription || null,
+      request_metadata: values.requestMetadata ?? {},
       company_logo_path: values.companyLogoPath || null,
       verification_document_path: values.verificationDocumentPath || null
     })

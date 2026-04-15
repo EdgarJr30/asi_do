@@ -22,6 +22,7 @@ import {
   createOrUpdateJobPosting,
   deleteJobAlert,
   listJobAlerts,
+  listOpportunityStageTemplates,
   listPublicJobs,
   listTenantJobs,
   toggleSavedJob,
@@ -37,6 +38,12 @@ import {
   type JobPostingFormValues,
   type JobScreeningQuestionDraft
 } from '@/features/jobs/lib/job-schemas'
+import {
+  compensationTypeOptions,
+  getCompensationTypeLabel,
+  getOpportunityTypeLabel,
+  opportunityTypeOptions
+} from '@/features/opportunities/lib/opportunity-taxonomy'
 import { fetchWorkspaceBundle, type WorkspaceBundle } from '@/features/tenants/lib/workspace-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
@@ -54,22 +61,42 @@ function JobStatusBadge({ status }: { status: string }) {
 }
 
 function formatCompensation(job: JobPostingBundle['jobs'][number]) {
-  if (!job.salary_visible || (!job.salary_min_amount && !job.salary_max_amount)) {
-    return 'Salario no visible'
+  if (
+    job.compensation_type === 'unpaid' ||
+    job.compensation_type === 'donation_based' ||
+    job.compensation_type === 'not_disclosed'
+  ) {
+    return getCompensationTypeLabel(job.compensation_type)
   }
 
-  const currency = job.salary_currency || 'USD'
-
-  if (job.salary_min_amount && job.salary_max_amount) {
-    return `${currency} ${job.salary_min_amount.toLocaleString()} - ${job.salary_max_amount.toLocaleString()}`
+  if (!job.compensation_min_amount && !job.compensation_max_amount) {
+    return getCompensationTypeLabel(job.compensation_type)
   }
 
-  return `${currency} ${(job.salary_min_amount || job.salary_max_amount || 0).toLocaleString()}`
+  const currency = job.compensation_currency || 'USD'
+  const label = getCompensationTypeLabel(job.compensation_type)
+
+  if (job.compensation_min_amount && job.compensation_max_amount) {
+    return `${label}: ${currency} ${job.compensation_min_amount.toLocaleString()} - ${job.compensation_max_amount.toLocaleString()}`
+  }
+
+  return `${label}: ${currency} ${(job.compensation_min_amount || job.compensation_max_amount || 0).toLocaleString()}`
+}
+
+function parseOpportunityMetadata(value: JobPostingBundle['jobs'][number]['opportunity_metadata']) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>
+  }
+
+  return {}
 }
 
 function getJobInitialValues(selectedJob: JobPostingBundle['jobs'][number] | null, fallbackCountryCode: string) {
+  const metadata = selectedJob ? parseOpportunityMetadata(selectedJob.opportunity_metadata) : {}
+
   if (!selectedJob) {
     return {
+      opportunityType: 'employment',
       title: '',
       slug: '',
       summary: '',
@@ -78,16 +105,22 @@ function getJobInitialValues(selectedJob: JobPostingBundle['jobs'][number] | nul
       employmentType: 'full_time',
       cityName: '',
       countryCode: fallbackCountryCode,
-      salaryVisible: false,
-      salaryMinAmount: '',
-      salaryMaxAmount: '',
-      salaryCurrency: 'USD',
+      compensationVisible: false,
+      compensationType: 'not_disclosed',
+      compensationMinAmount: '',
+      compensationMaxAmount: '',
+      compensationCurrency: 'USD',
       experienceLevel: '',
-      expiresAt: ''
+      expiresAt: '',
+      operatingScope: '',
+      deliveryTimeline: '',
+      engagementModel: '',
+      serviceScope: ''
     } satisfies JobPostingFormValues
   }
 
   return {
+    opportunityType: selectedJob.opportunity_type,
     title: selectedJob.title,
     slug: selectedJob.slug,
     summary: selectedJob.summary,
@@ -96,12 +129,20 @@ function getJobInitialValues(selectedJob: JobPostingBundle['jobs'][number] | nul
     employmentType: selectedJob.employment_type,
     cityName: selectedJob.city_name ?? '',
     countryCode: selectedJob.country_code ?? '',
-    salaryVisible: selectedJob.salary_visible,
-    salaryMinAmount: selectedJob.salary_min_amount?.toString() ?? '',
-    salaryMaxAmount: selectedJob.salary_max_amount?.toString() ?? '',
-    salaryCurrency: selectedJob.salary_currency ?? 'USD',
+    compensationVisible:
+      selectedJob.compensation_type !== 'not_disclosed' &&
+      selectedJob.compensation_type !== 'unpaid' &&
+      selectedJob.compensation_type !== 'donation_based',
+    compensationType: selectedJob.compensation_type,
+    compensationMinAmount: selectedJob.compensation_min_amount?.toString() ?? '',
+    compensationMaxAmount: selectedJob.compensation_max_amount?.toString() ?? '',
+    compensationCurrency: selectedJob.compensation_currency ?? 'USD',
     experienceLevel: selectedJob.experience_level ?? '',
-    expiresAt: selectedJob.expires_at ? selectedJob.expires_at.slice(0, 10) : ''
+    expiresAt: selectedJob.expires_at ? selectedJob.expires_at.slice(0, 10) : '',
+    operatingScope: typeof metadata.operating_scope === 'string' ? metadata.operating_scope : '',
+    deliveryTimeline: typeof metadata.delivery_timeline === 'string' ? metadata.delivery_timeline : '',
+    engagementModel: typeof metadata.engagement_model === 'string' ? metadata.engagement_model : '',
+    serviceScope: typeof metadata.service_scope === 'string' ? metadata.service_scope : ''
   } satisfies JobPostingFormValues
 }
 
@@ -125,7 +166,16 @@ function JobEditor({
   })
   const salaryVisible = useWatch({
     control: form.control,
-    name: 'salaryVisible'
+    name: 'compensationVisible'
+  })
+  const opportunityType = useWatch({
+    control: form.control,
+    name: 'opportunityType'
+  })
+  const stageTemplatesQuery = useQuery({
+    queryKey: ['opportunity-stage-templates', opportunityType],
+    queryFn: async () => listOpportunityStageTemplates(opportunityType),
+    enabled: Boolean(opportunityType)
   })
 
   const saveMutation = useMutation({
@@ -139,6 +189,7 @@ function JobEditor({
         companyProfileId: workspace.companyProfile.id,
         actorUserId: session.authUser.id,
         jobId: selectedJob?.id,
+        opportunityType: values.opportunityType,
         title: values.title.trim(),
         slug: values.slug.trim(),
         summary: values.summary.trim(),
@@ -147,10 +198,17 @@ function JobEditor({
         employmentType: values.employmentType,
         cityName: values.cityName?.trim() || undefined,
         countryCode: values.countryCode?.trim() || undefined,
-        salaryVisible: values.salaryVisible,
-        salaryMinAmount: values.salaryMinAmount ? Number(values.salaryMinAmount) : null,
-        salaryMaxAmount: values.salaryMaxAmount ? Number(values.salaryMaxAmount) : null,
-        salaryCurrency: values.salaryCurrency?.trim() || undefined,
+        compensationVisible: values.compensationVisible,
+        compensationType: values.compensationType,
+        compensationMinAmount: values.compensationMinAmount ? Number(values.compensationMinAmount) : null,
+        compensationMaxAmount: values.compensationMaxAmount ? Number(values.compensationMaxAmount) : null,
+        compensationCurrency: values.compensationCurrency?.trim() || undefined,
+        opportunityMetadata: {
+          operating_scope: values.operatingScope?.trim() || null,
+          delivery_timeline: values.deliveryTimeline?.trim() || null,
+          engagement_model: values.engagementModel?.trim() || null,
+          service_scope: values.serviceScope?.trim() || null
+        },
         experienceLevel: values.experienceLevel?.trim() || undefined,
         expiresAt: values.expiresAt || undefined,
         questions: sanitizeScreeningQuestions(questions).map((question) => ({
@@ -163,14 +221,14 @@ function JobEditor({
       })
     },
     onSuccess: async () => {
-      toast.success(selectedJob ? 'Vacante actualizada' : 'Vacante creada', {
-        description: 'El registro ya quedo persistido y listo para publish cuando corresponda.'
+      toast.success(selectedJob ? 'Oportunidad actualizada' : 'Oportunidad creada', {
+        description: 'El registro ya quedó persistido y listo para publicar cuando corresponda.'
       })
       await onSaved()
     },
     onError: async (error) => {
       await reportErrorWithToast({
-        title: 'No pudimos guardar la vacante',
+        title: 'No pudimos guardar la oportunidad',
         source: 'jobs.save',
         route: surfacePaths.public.jobs,
         userId: session.authUser?.id ?? null,
@@ -182,13 +240,36 @@ function JobEditor({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{selectedJob ? 'Editar vacante' : 'Nueva vacante'}</CardTitle>
+        <CardTitle>{selectedJob ? 'Editar oportunidad' : 'Nueva oportunidad'}</CardTitle>
         <CardDescription>
-          Define la vacante con el nivel de detalle necesario antes de publicarla al talento.
+          Define el tipo, la compensación y el flujo esperado antes de publicarla al talento aprobado.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={(event) => void form.handleSubmit((values) => saveMutation.mutate(values))(event)}>
+          <div className="grid gap-4 sm:grid-cols-[0.8fr_1.2fr]">
+            <label className="grid gap-2 text-sm">
+              <span>Tipo de oportunidad</span>
+              <Select {...form.register('opportunityType')}>
+                {opportunityTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <div className="rounded-[24px] border border-(--app-border) bg-(--app-surface-muted) p-4 text-sm">
+              <p className="font-semibold text-(--app-text)">Etapas sugeridas para {getOpportunityTypeLabel(opportunityType)}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {stageTemplatesQuery.data?.map((stage) => (
+                  <Badge key={stage.id} variant="outline">
+                    {stage.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-[1fr_0.7fr]">
             <label className="grid gap-2 text-sm">
               <span>Título</span>
@@ -232,7 +313,7 @@ function JobEditor({
               </Select>
             </label>
             <label className="grid gap-2 text-sm">
-              <span>Tipo de empleo</span>
+              <span>{opportunityType === 'employment' ? 'Tipo de empleo' : 'Ritmo del engagement'}</span>
               <Select {...form.register('employmentType')}>
                 <option value="full_time">Full-time</option>
                 <option value="part_time">Part-time</option>
@@ -263,28 +344,73 @@ function JobEditor({
               <input
                 type="checkbox"
                 checked={salaryVisible}
-                onChange={(event) => form.setValue('salaryVisible', event.target.checked)}
+                onChange={(event) => form.setValue('compensationVisible', event.target.checked)}
               />
-              <span>Mostrar rango salarial a miembros aprobados</span>
+              <span>Mostrar compensación a miembros aprobados</span>
             </label>
+            <div className="mt-4 grid gap-4 sm:grid-cols-[0.8fr_1.2fr]">
+              <label className="grid gap-2 text-sm">
+                <span>Tipo de compensación</span>
+                <Select {...form.register('compensationType')}>
+                  {compensationTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+              </label>
+            </div>
             {salaryVisible ? (
               <div className="mt-4 grid gap-4 sm:grid-cols-3">
                 <label className="grid gap-2 text-sm">
                   <span>Mínimo</span>
-                  <Input {...form.register('salaryMinAmount')} />
+                  <Input {...form.register('compensationMinAmount')} />
                 </label>
                 <label className="grid gap-2 text-sm">
                   <span>Máximo</span>
-                  <Input {...form.register('salaryMaxAmount')} />
-                  <p className="text-xs text-rose-600">{form.formState.errors.salaryMaxAmount?.message}</p>
+                  <Input {...form.register('compensationMaxAmount')} />
+                  <p className="text-xs text-rose-600">{form.formState.errors.compensationMaxAmount?.message}</p>
                 </label>
                 <label className="grid gap-2 text-sm">
                   <span>Moneda</span>
-                  <Input maxLength={3} {...form.register('salaryCurrency')} />
+                  <Input maxLength={3} {...form.register('compensationCurrency')} />
+                  <p className="text-xs text-rose-600">{form.formState.errors.compensationCurrency?.message}</p>
                 </label>
               </div>
             ) : null}
           </div>
+
+          {opportunityType === 'project' || opportunityType === 'volunteer' ? (
+            <label className="grid gap-2 text-sm">
+              <span>Alcance operativo</span>
+              <Textarea rows={3} {...form.register('operatingScope')} />
+              <p className="text-xs text-rose-600">{form.formState.errors.operatingScope?.message}</p>
+            </label>
+          ) : null}
+
+          {opportunityType === 'project' ? (
+            <label className="grid gap-2 text-sm">
+              <span>Timeline estimado</span>
+              <Input placeholder="8 semanas, Q3 2026, entrega continua..." {...form.register('deliveryTimeline')} />
+              <p className="text-xs text-rose-600">{form.formState.errors.deliveryTimeline?.message}</p>
+            </label>
+          ) : null}
+
+          {opportunityType === 'volunteer' ? (
+            <label className="grid gap-2 text-sm">
+              <span>Modelo de servicio</span>
+              <Input placeholder="Fines de semana, por eventos, 6 horas semanales..." {...form.register('engagementModel')} />
+              <p className="text-xs text-rose-600">{form.formState.errors.engagementModel?.message}</p>
+            </label>
+          ) : null}
+
+          {opportunityType === 'professional_service' ? (
+            <label className="grid gap-2 text-sm">
+              <span>Alcance del servicio</span>
+              <Textarea rows={3} {...form.register('serviceScope')} />
+              <p className="text-xs text-rose-600">{form.formState.errors.serviceScope?.message}</p>
+            </label>
+          ) : null}
 
           <label className="grid gap-2 text-sm">
             <span>Expira el</span>
@@ -627,7 +753,9 @@ export function JobsOverviewPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-(--app-text)">{job.title}</p>
-                        <p className="mt-1 text-sm text-(--app-text-muted)">{job.summary}</p>
+                        <p className="mt-1 text-sm text-(--app-text-muted)">
+                          {getOpportunityTypeLabel(job.opportunity_type)} · {job.summary}
+                        </p>
                       </div>
                       <JobStatusBadge status={job.status} />
                     </div>
@@ -698,7 +826,7 @@ export function JobsOverviewPage() {
                         <div>
                           <p className="text-lg font-semibold text-(--app-text)">{job.title}</p>
                           <p className="mt-1 text-sm text-(--app-text-muted)">
-                            {job.company_profile?.display_name || 'Company'} · {job.workplace_type} · {job.employment_type}
+                            {job.company_profile?.display_name || 'Company'} · {getOpportunityTypeLabel(job.opportunity_type)} · {job.workplace_type}
                           </p>
                         </div>
                         <JobStatusBadge status={job.status} />
