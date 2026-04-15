@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import { createContext, type PropsWithChildren, useContext, useEffect, useState } from 'react'
+import { createContext, type PropsWithChildren, useContext, useEffect, useRef, useState } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 
 import { fetchSessionSnapshot, type AppMembership } from '@/features/auth/lib/auth-api'
@@ -68,9 +68,13 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
   const [isInternalDeveloper, setIsInternalDeveloper] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const hydratedUserIdRef = useRef<string | null>(null)
 
-  async function hydrateSession(user: User | null) {
+  async function hydrateSession(user: User | null, options: { showLoading?: boolean } = {}) {
+    const { showLoading = true } = options
+
     if (!user || !supabase) {
+      hydratedUserIdRef.current = null
       setProfile(null)
       setMemberships([])
       setPermissions([])
@@ -81,11 +85,14 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
       return
     }
 
-    setIsLoading(true)
+    if (showLoading) {
+      setIsLoading(true)
+    }
 
     try {
       const snapshot = await fetchSessionSnapshot(user)
 
+      hydratedUserIdRef.current = user.id
       setProfile(snapshot.profile)
       setMemberships(snapshot.memberships)
       setPermissions(snapshot.permissions)
@@ -132,8 +139,15 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
         return
       }
 
+      const nextUserId = nextSession?.user.id ?? null
+
       setSession(nextSession)
-      void hydrateSession(nextSession?.user ?? null)
+
+      if (nextUserId !== null && nextUserId === hydratedUserIdRef.current) {
+        return
+      }
+
+      void hydrateSession(nextSession?.user ?? null, { showLoading: hydratedUserIdRef.current === null })
     })
 
     return () => {
