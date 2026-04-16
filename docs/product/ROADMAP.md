@@ -54,9 +54,10 @@ Establish secure multi-tenant access control.
 - pastor can submit cedula-backed validation request with union, association, and district scope
 - regional administrator can submit cedula plus appointment-backed validation request with union or association scope
 - approved pastors and regional administrators can authorize only requests inside their approved territory
-- regional administrators authorize pastors and normal professional users only, not companies by default
+- regional administrators authorize pastors and normal professional users inside their territory and may provide territorial endorsement for company/operator requests without finalizing tenant onboarding or license activation
+- pastors may provide district/church-scoped endorsement for company/operator requests without finalizing tenant onboarding or license activation
 - license activation remains separate from pastor/regional authorization
-- only super administrators and platform support can activate final licenses
+- only super administrators and platform support receive `license:activate` by default, and any extra activator requires explicit super-administrator assignment
 - platform admin can approve or reject tenant-operator request
 - user approval, ASI membership, and active subscription gate protected product content
 - tenant approval creates tenant, tenant profile, and first owner membership
@@ -124,6 +125,7 @@ Ship protected opportunity publishing and candidate discovery for approved ASI m
 - coordinator candidate detail view with RBAC-protected full profile access
 - opportunity type support for jobs, projects, volunteering, and professional services
 - type-specific opportunity stage templates are seeded for later tenant pipeline customization
+- shared ATS UI remains the default, with type-aware presets, labels, and optional per-type checklists as the preferred evolution path
 
 ### Exit criteria
 - authorized tenant can publish an opportunity

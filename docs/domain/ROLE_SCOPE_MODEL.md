@@ -14,7 +14,7 @@ These layers may overlap for one user, but they must not be collapsed into one g
 
 ## 2. Core role principles
 1. RBAC is permission-driven; role names are presets, not shortcuts around permission checks.
-2. License activation is a platform operation limited to super administrators and platform support.
+2. License activation is a platform operation granted by default to super administrators and platform support; any extra holder of `license:activate` must receive that permission through explicit super-administrator assignment.
 3. Pastor and regional authorization is territorial and does not activate licenses.
 4. Tenant ownership is separate from platform authority.
 5. Individual ASI members are not tenants and cannot create job postings by individual membership alone.
@@ -144,6 +144,7 @@ Scope: approved union or association.
 
 Purpose:
 - authorizes pastors and normal professional users inside the approved territory
+- can provide territorial endorsement for company/operator requests inside the approved territory
 - supports membership authorization, not license activation
 
 Baseline permissions:
@@ -156,6 +157,7 @@ Baseline permissions:
 May:
 - approve or reject pastor validation requests within scope
 - authorize normal users who will pay membership within scope
+- endorse company/operator requests within scope as part of the platform approval flow
 - request more information when evidence is incomplete
 
 May not:
@@ -163,6 +165,7 @@ May not:
 - grant platform support or super administrator roles
 - manage tenant roles
 - authorize users outside the approved territory
+- finalize tenant onboarding or license activation through this role alone
 - create job postings through this role alone
 
 ### Pastor Administrator
@@ -170,6 +173,7 @@ Scope: approved district and optional churches.
 
 Purpose:
 - validates and authorizes normal professional users in the pastor's approved district/church scope
+- can provide pastoral endorsement for company/operator requests inside the approved district/church scope
 - acts as pastoral authorization, not as product administrator
 
 Baseline permissions:
@@ -179,13 +183,14 @@ Baseline permissions:
 
 May:
 - authorize normal users who will pay membership within scope
+- endorse company/operator requests within scope as part of the platform approval flow
 - request more information when pastoral evidence is incomplete
 
 May not:
 - activate licenses
 - approve pastors
 - approve regional administrators
-- authorize companies by default
+- finalize tenant onboarding or license activation
 - manage tenant roles
 - publish job postings
 - access admin console modules outside pastoral authorization queues

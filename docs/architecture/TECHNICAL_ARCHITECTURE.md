@@ -88,6 +88,13 @@ tests/
 - Realtime for targeted events only
 - Edge Functions only where server-only behavior is needed and cannot remain in SQL + client safely
 
+### Environment strategy
+- Local development is the primary integration environment.
+- Netlify Deploy Previews are the default shared validation surface for branch and pull request work.
+- Production deploys from `main`.
+- Do not add a dedicated or long-lived staging environment unless a reviewed architecture decision changes that rule.
+- Stress, migration, and high-risk operational validation must target local or explicitly approved development/preview environments, never production by default.
+
 ### Schema strategy
 Use SQL migrations for:
 - enums
@@ -135,6 +142,7 @@ The ATS-lite migration must establish:
 - a server-validated `move_application_stage(...)` RPC for permission-safe stage transitions
 - deterministic synchronization between internal stages and candidate-facing `status_public` (legacy column name, not a guest-public status)
 - auditable collaboration artifacts for notes and ratings
+- one shared pipeline shell for MVP with type-aware presets, labels, and optional future per-type checklists instead of forking the ATS UI too early by `opportunity_type`
 
 The platform-ops migration must establish:
 - `subscription_plans`, `tenant_subscriptions`, `feature_flags`, `moderation_cases`, and `moderation_actions`

@@ -48,7 +48,7 @@ The deployment baseline should stay intentionally lean for solo development:
 - local development for daily work
 - Netlify Deploy Previews for pull request validation
 - Netlify production deployment from `main`
-- no long-lived staging environment until data, auth, or migration risk justifies it
+- no dedicated or long-lived staging environment in the current operating model; use local plus preview environments until an explicit architecture decision changes that baseline
 
 ---
 

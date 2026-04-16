@@ -14,9 +14,9 @@
 8. Viewing or applying to protected product opportunities requires approved user status, ASI membership, and an active subscription.
 9. Protected content access is granted only when `user_approval_status = approved`, `asi_membership_status in (active, grace_period)`, `user_subscription_status in (trialing, active, grace_period)`, the account itself is active, and any configured membership/subscription expiration has not passed, unless an auditable manual override is still active.
 10. Pastor and regional administrator authority is request-based, evidence-backed, scoped to church territory, and separate from final user license activation.
-11. Pastors may authorize standard professional users only inside their approved district/church scope, but pastors may not activate licenses, authorize companies, or approve other pastors/regional administrators.
-12. Regional administrators may authorize pastors and standard professional users only inside their approved territory, but may not activate licenses or authorize companies by default.
-13. Super administrators and platform support users may activate the final license after the required authorization and platform checks pass.
+11. Pastors may authorize standard professional users and provide scoped pastoral endorsement for company/operator requests only inside their approved district/church scope, but pastors may not activate licenses, finalize tenant onboarding, or approve other pastors/regional administrators.
+12. Regional administrators may authorize pastors, standard professional users, and provide scoped territorial endorsement for company/operator requests only inside their approved territory, but may not activate licenses or finalize tenant onboarding by themselves.
+13. Final license activation is permission-driven and is granted by default only to super administrators and platform support; any additional platform admin may activate final licenses only when a super administrator explicitly assigns `license:activate`.
 
 ---
 
@@ -57,6 +57,7 @@
 8. Tenant-side candidate sourcing is allowed even when the candidate has not applied yet, but only for visible opt-in profiles.
 9. Tenant-operator requests enforce minimum data by `tenant_kind`: company requires legal name, ministry requires legal name plus operating scope, project requires sponsoring entity plus operating scope, field requires field region plus sponsoring entity, and generic profile requires conversion intent.
 10. Tenant ownership does not imply platform authority; tenant owners can manage only their approved tenant scope.
+11. When policy requires pastoral or regional endorsement for a company/operator request, that scoped endorsement is advisory input to the platform review flow and never creates the tenant or activates access by itself.
 
 ---
 
@@ -109,6 +110,7 @@
 9. Candidate-facing application status may be derived from the internal stage mapping, but the mapping must stay explicit and deterministic.
 10. ATS-lite applies to jobs, projects, volunteering, and professional services, not only employment vacancies.
 11. The MVP seeds stage templates per opportunity type, but applications may continue using the existing shared pipeline until type-specific tenant pipelines are explicitly enabled.
+12. Best-practice future UI for stage differences should keep one shared ATS shell and add type-aware stage presets, language, badges, and optional per-type checklists or artifacts, instead of splitting the product into separate pipeline applications per opportunity type too early.
 
 ---
 

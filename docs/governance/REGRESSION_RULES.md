@@ -239,6 +239,18 @@ Do not regress the shared application shell into route matching that leaves two 
 ### R-078 — Platform UI density must stay product-compact and avoid non-functional filler
 Do not let authenticated platform screens drift back toward oversized marketing proportions. Internal pages such as `Company`, `Jobs`, `Candidates`, `Applications`, and `Pipeline` should keep compact cards, restrained paddings, smaller but still accessible controls, and copy that goes straight to the hiring task. Avoid restoring decorative top metric bands, checklist banners, or “experience status” explainer panels that do not materially help the user complete the current workflow. Forms should stay grouped into logical sections with tighter desktop layouts and concise ATS-oriented labels and descriptions.
 
+### R-083 — The environment strategy must stay lean and avoid a standing staging tier
+Do not reintroduce a dedicated or long-lived staging environment by default. The current operating model is local development, Netlify Deploy Previews for shared validation, and production from `main`. Stress, migration, or operational validation should target local or explicitly approved development/preview environments unless a reviewed architecture decision changes that baseline.
+
+### R-084 — Final license activation stays permission-driven and tightly delegated
+Do not hard-code final license activation to broad admin categories, union roles, or pastoral roles. `license:activate` is granted by default only to `Super Administrator` and `Platform Support`, and any additional activator must receive that permission through an explicit super-administrator assignment that remains auditable.
+
+### R-085 — Pastoral and regional company endorsement does not replace platform approval
+Do not assume pastors or regional administrators are limited to endorsing only individual professionals. They may also provide scoped endorsement for company/operator requests inside their approved territory, but that endorsement is never the final approval that creates a tenant or activates access.
+
+### R-086 — Opportunity-type differences should evolve inside one shared ATS shell
+Do not split the ATS into separate pipeline applications per `opportunity_type` as the first answer to stage differences. The preferred evolution path is one shared ATS shell with type-aware stage presets, language, badges, and optional per-type checklists or artifacts, while the application model remains unified until operational evidence justifies deeper divergence.
+
 ### R-079 — Tenant role labels must stay out of general user chrome
 Do not expose tenant role summaries in the shared platform chrome. Sidebar footers, top-bar identity blocks, and profile dropdown headers should never show role strings like `Owner`, `Reviewer`, `Tenant Admin`, or similar. The shared chrome should stick to identity and navigation only; if administrators need role visibility, that belongs in dedicated admin surfaces, not in the platform shell seen during day-to-day use.
 

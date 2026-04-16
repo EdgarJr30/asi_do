@@ -168,10 +168,10 @@ A future anonymous opportunity preview may exist only as a separate public summa
 9. Notification-management permissions must control who can create notifications, manage push subscriptions by tenant context, and inspect delivery logs.
 10. Candidate sourcing permissions must be distinct from application review permissions.
 11. Pastor and regional administrator validation flows must collect a form submission and require admin approval before granting elevated or tenant-operational access.
-12. Pastor authorization must be scoped to the approved district/churches and may only authorize standard professional users inside that scope.
-13. Regional administrator authorization must be scoped to the approved union or association and may review pastors and standard professional users inside that territory.
-14. Pastor and regional administrator roles do not authorize company/operator account requests by default.
-15. Final license activation is separate from pastor/regional authorization and must remain limited to super administrators and platform support.
+12. Pastor authorization must be scoped to the approved district/churches and may authorize standard professional users plus provide pastoral endorsement for company/operator requests inside that scope.
+13. Regional administrator authorization must be scoped to the approved union or association and may review pastors, authorize standard professional users, and provide territorial endorsement for company/operator requests inside that territory.
+14. Pastor and regional administrator endorsement of a company/operator request is never the final approval that creates a tenant or activates a license.
+15. Final license activation is separate from pastor/regional authorization and is granted by default only to super administrators and platform support; any extra holder of `license:activate` requires explicit super-administrator assignment.
 16. Only company tenants may receive job creation and publishing permissions for employment job postings.
 17. The full role and scope taxonomy is defined in `docs/domain/ROLE_SCOPE_MODEL.md`.
 

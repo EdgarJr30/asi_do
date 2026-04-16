@@ -122,7 +122,7 @@ The MVP should **not** initially include:
 - pastor validation form with cedula upload, union, association, district, optional churches, and platform-admin approval before scoped pastor authorization is granted
 - regional administrator validation form with cedula upload, appointment evidence, union/association scope, and platform-admin approval before scoped regional authorization is granted
 - role-scope model that separates super administrator, platform support, platform moderator, readonly platform auditor, regional administrator, pastor administrator, tenant owner, tenant member, tenant billing contact, Joven Profesional candidate-only users, and other individual ASI members
-- two-step authorization model where pastors or regional administrators may authorize normal users within scope, but final license activation remains limited to the super administrator or platform support
+- two-step authorization model where pastors or regional administrators may authorize normal users and provide scoped endorsement for company/operator requests within scope, while final license activation remains permission-driven and stays with super administrator, platform support, or another platform admin explicitly granted `license:activate` by a super administrator
 - avatar and document uploads with modern web formats, 5 MB guardrails, and clear validation feedback
 - authenticated app entry redirect that sends employer users to `/workspace` and standard users to `/candidate/profile`
 
@@ -168,6 +168,7 @@ The MVP should **not** initially include:
 - protected `/platform/jobs` listing and `/platform/jobs/:slug` detail routes that require an approved user, ASI membership, and active subscription
 - opportunity scope covers jobs, projects, volunteering, and professional services
 - opportunity stage templates vary by opportunity type while sharing one MVP application model
+- future stage UX should keep one shared ATS shell with type-aware presets, labels, and optional per-type checklists instead of splitting into separate pipeline applications too early
 
 ## 8.6 Applications
 - fast apply with stored profile

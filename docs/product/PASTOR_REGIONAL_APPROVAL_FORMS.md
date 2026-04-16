@@ -63,13 +63,14 @@ An approved pastor receives a platform-level pastor authorization role scoped to
 
 The pastor may:
 - authorize standard professional users within the approved church/district scope
+- provide pastoral endorsement for company/operator requests within the approved church/district scope
 - see only the authorization queue and history for their approved scope
 
 The pastor may not:
 - activate a user license or subscription
 - approve another pastor
 - approve a regional administrator
-- authorize company or organization account requests by default
+- create a tenant or finalize operator onboarding by themselves
 - grant platform admin permissions
 - bypass ASI membership or subscription requirements
 - see users, companies, or requests outside the approved scope
@@ -105,17 +106,19 @@ An approved regional administrator receives a platform-level administrator role 
 Association-scope administrators may:
 - review and authorize pastors inside their association
 - review and authorize standard professional users inside their association
+- provide territorial endorsement for company/operator requests inside their association
 - see only approval queues and history for their association scope
 
 Union-scope administrators may:
 - review and authorize pastors across the union
 - review and authorize association administrators across the union
 - review and authorize standard professional users across the union
+- provide territorial endorsement for company/operator requests across the union
 
 Regional administrators may not:
 - exceed their approved territory
 - bypass the final license/subscription gate
-- authorize company or organization account requests by default
+- create a tenant or finalize operator onboarding by themselves
 - activate the final user license
 - grant super administrator access
 - bypass audit logging
@@ -144,6 +147,7 @@ For professional users:
 3. The user gets product access only after all existing gates pass: approved user status, ASI membership status, active user subscription/license status, active account status, and valid expiration policy.
 
 Company/operator account requests are approved through the tenant/operator approval flow and do not become pastor-authorized by default.
+When policy requires it, the pastoral or regional endorsement becomes one auditable input to that tenant/operator approval flow, but tenant creation and final license activation still require the platform-controlled steps above.
 
 ---
 
