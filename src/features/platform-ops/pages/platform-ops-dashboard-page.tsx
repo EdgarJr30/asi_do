@@ -80,7 +80,7 @@ export function PlatformOpsDashboardPage() {
         {[
           ['Tenants activos', stats?.activeTenants ?? 0],
           ['Casos de moderacion abiertos', stats?.openModerationCases ?? 0],
-          ['Recruiter requests pendientes', stats?.pendingRecruiterRequests ?? 0],
+          ['Solicitudes de operador pendientes', stats?.pendingRecruiterRequests ?? 0],
           ['Subscriptions activas', stats?.activeSubscriptions ?? 0],
           ['Email hooks pendientes', stats?.pendingEmailHooks ?? 0],
           ['Feature flags habilitadas', stats?.featureFlagsEnabled ?? 0]

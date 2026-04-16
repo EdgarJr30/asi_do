@@ -172,7 +172,7 @@ const heroSignals = [
   },
   {
     title: 'Pipeline compartido',
-    description: 'Recruiting y líderes avanzan sobre la misma información.',
+    description: 'Coordinadores y líderes avanzan sobre la misma información.',
     icon: Workflow,
   },
   {
@@ -296,7 +296,7 @@ const valueBentoCards = [
   },
   {
     title: 'Equipo alineado',
-    body: 'Recruiters y líderes encuentran la misma información sin perseguir contexto por varios canales.',
+    body: 'Coordinadores y líderes encuentran la misma información sin perseguir contexto por varios canales.',
     icon: Layers3,
     image:
       'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=1200&h=900&q=80',
@@ -585,10 +585,10 @@ export function HomePage() {
                     className="max-w-full whitespace-nowrap text-left bg-white/82 text-(--app-text) shadow-(--app-shadow-card) backdrop-blur-sm dark:border-white/12 dark:bg-white/10 dark:text-white"
                     variant="outline"
                   >
-                    Hiring workspace para equipos de selección
+                    Workspace para equipos de selección
                   </Badge>
                   <h1 className="mt-5 max-w-[11ch] text-[2.9rem] font-semibold tracking-tight text-(--app-text) sm:text-[3.4rem] lg:text-[3.9rem] lg:leading-[1.02]">
-                    Vacantes, talento y hiring en un solo lugar.
+                    Vacantes, talento y selección en un solo lugar.
                   </h1>
                   <p className="mt-5 max-w-148 text-base leading-7 text-(--app-text-muted) sm:text-lg">
                     Convierte vacantes, feedback y seguimiento dispersos en una
@@ -955,7 +955,7 @@ export function HomePage() {
                             <Layers3 className="size-4" />
                           </div>
                           <div className="rounded-full bg-primary-400/16 px-3 py-1 text-xs font-semibold text-primary-100">
-                            Hiring app
+                            App de oportunidades
                           </div>
                           <div
                             aria-hidden="true"
@@ -1140,8 +1140,8 @@ export function HomePage() {
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
                     {[
-                      ['Recruiting', 'Perfil fuerte para entrevista'],
-                      ['Hiring manager', 'Buen fit para el equipo'],
+                      ['Coordinador', 'Perfil fuerte para entrevista'],
+                      ['Revisor', 'Buen fit para el equipo'],
                     ].map(([label, value]) => (
                       <div
                         key={label}
@@ -1276,7 +1276,7 @@ export function HomePage() {
                       Una sola conversación
                     </p>
                     <p className="mt-1 max-w-[20ch] text-sm leading-6 text-white/76">
-                      Recruiters y líderes avanzan sobre la misma información.
+                      Coordinadores y líderes avanzan sobre la misma información.
                     </p>
                   </div>
                 </div>
@@ -2316,7 +2316,7 @@ export function HomePage() {
           <p className="mt-10 text-center text-sm leading-6 text-(--app-text-muted)">
             &copy; {footerYear} ASI Rep. Dominicana. Oportunidades para miembros,
             perfiles reutilizables y trabajo en equipo en una experiencia de
-            hiring mucho más clara.
+            selección mucho más clara.
           </p>
         </LandingReveal>
       </footer>

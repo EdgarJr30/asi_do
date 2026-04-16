@@ -82,7 +82,7 @@ Dentro de `app`, las superficies activas siguen siendo `auth`, `candidate`, `wor
 - `docs/governance/TESTING_RULES.md` define como el proyecto se verifica a si mismo.
 - `docs/governance/SECURITY_RULES.md` fija la postura de seguridad web, OSINT y proteccion de reglas de negocio/arquitectura.
 - La base PWA evita dependencias con vulnerabilidades conocidas y usa integracion propia de `manifest` + `service worker`.
-- La base `database-first` arranca con una migracion inicial de identidad/RBAC, aprobacion de recruiters y buckets privados de Supabase Storage.
+- La base `database-first` arranca con una migracion inicial de identidad/RBAC, aprobacion de operadores de tenant y buckets privados de Supabase Storage.
 
 ### Flujo de trabajo de bajo consumo
 
@@ -166,7 +166,7 @@ La primera base del MVP ya define en Supabase:
 
 - `public.users` sincronizado desde `auth.users`
 - RBAC de plataforma y tenant
-- `recruiter_requests` para aprobacion administrativa antes de crear tenants
+- `recruiter_requests` para aprobacion administrativa de operadores antes de crear tenants
 - `tenants`, `company_profiles`, `memberships`, `audit_logs`
 - `notification_preferences`, `notifications`, `push_subscriptions`, `notification_deliveries`, `notification_delivery_logs`
 - buckets privados `user-media`, `company-assets` y `verification-documents`
@@ -203,7 +203,7 @@ Multi-tenant recruiting and jobs SaaS with reusable professional profiles, prelo
 Build a scalable foundation for:
 - companies publishing jobs and managing applicants
 - candidates with reusable profiles and CVs
-- hiring teams collaborating with stages, notes, and ratings
+- opportunity teams collaborating with stages, notes, and ratings
 - platform admins handling moderation, plans, and governance
 
 ### Official stack

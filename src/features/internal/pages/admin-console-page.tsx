@@ -11,8 +11,8 @@ import { NotificationCenter } from '@/features/notifications/components/notifica
 const adminTools = [
   {
     href: surfacePaths.admin.approvals,
-    title: 'Recruiter approvals',
-    description: 'Revisa solicitudes recruiter y provisiona acceso employer.',
+    title: 'Solicitudes de operador',
+    description: 'Revisa solicitudes de operador y provisiona acceso al workspace.',
     permission: 'recruiter_request:review'
   },
   {

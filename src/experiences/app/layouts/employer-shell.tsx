@@ -91,7 +91,7 @@ const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
   },
   [surfacePaths.workspace.jobs]: {
     title: 'Jobs',
-    description: 'Vacantes, visibilidad y ritmo comercial del hiring'
+    description: 'Vacantes, visibilidad y ritmo del proceso'
   },
   [surfacePaths.workspace.talent]: {
     title: 'Candidates',
@@ -125,7 +125,7 @@ const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
     description: 'Ajustes esenciales para dejar tu cuenta lista'
   },
   [surfacePaths.candidate.recruiterRequest]: {
-    title: 'Acceso employer',
+    title: 'Acceso operador',
     description: 'Solicita llevar tu empresa a la plataforma'
   }
 }

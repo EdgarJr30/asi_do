@@ -144,8 +144,8 @@ export function PipelineBoardPage() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No tienes un tenant employer activo</CardTitle>
-          <CardDescription>El pipeline ATS-lite se habilita para memberships employer con acceso recruiter.</CardDescription>
+          <CardTitle>No tienes un workspace operativo activo</CardTitle>
+          <CardDescription>El pipeline ATS-lite se habilita para tenants aprobados con acceso de coordinador.</CardDescription>
         </CardHeader>
       </Card>
     )

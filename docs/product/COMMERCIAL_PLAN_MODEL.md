@@ -27,7 +27,7 @@ All relevant checks are required. A role must never bypass plan limits, and a pl
 6. Tenant roles do not replace individual access gates.
 7. User-level access is checked before tenant-level plan limits for protected product content.
 8. Tenant-level publishing and ATS features require both user permission and active tenant subscription state.
-9. Tenant Billing Contact can read plan and billing state, but cannot manage hiring or activate user licenses by default.
+9. Tenant Billing Contact can read plan and billing state, but cannot manage opportunity workflows or activate user licenses by default.
 10. Free-plan assumptions must not leak into the core domain. A default tenant baseline may exist for provisioning, but public commercial packaging must remain explicit.
 11. Plan enforcement must fail predictably with actionable user-facing copy.
 
@@ -178,7 +178,7 @@ Typical limits:
 
 ### `tenant_scale`
 Purpose:
-- high-volume organization with advanced hiring/team needs
+- high-volume organization with advanced opportunity/team needs
 
 Best fit:
 - larger company

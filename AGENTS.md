@@ -4,7 +4,7 @@
 Build a mobile-first, multi-tenant recruiting SaaS where:
 - companies publish jobs and manage applicants
 - candidates maintain a reusable professional profile and CV
-- hiring teams collaborate through an ATS-lite workflow
+- opportunity teams collaborate through an ATS-lite workflow
 - platform admins govern access, moderation, and plans
 
 This file is intentionally compact. Keep the root guidance lightweight and use `docs/` for detail.
@@ -110,7 +110,7 @@ Do not introduce casual synonyms.
 
 ## Guardrails
 - Never assume a user belongs to only one tenant.
-- Never assume a company has only one recruiter.
+- Never assume a company has only one coordinador, revisor, or responsable de oportunidad.
 - Never assume a candidate will have only one CV forever.
 - Never treat desktop as the primary context.
 - Never rely on UI checks alone for authorization.

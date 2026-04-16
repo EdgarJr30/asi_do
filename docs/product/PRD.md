@@ -1,13 +1,13 @@
 # PRD.md — Product Requirements Document
 
 ## 1. Product summary
-A **multi-tenant ats and recruiting SaaS for approved ASI members** that allows:
+A **multi-tenant opportunity and applicant-management SaaS for approved ASI members** that allows:
 - companies, ministries, projects, fields, and generic profiles to publish opportunities and manage applicants
 - approved ASI members with active subscriptions to create reusable professional profiles, keep a preloaded CV, and apply quickly
-- hiring, project, volunteer, and services teams to collaborate through an ATS-lite workflow
+- opportunity, project, volunteer, and services teams to collaborate through an ATS-lite workflow
 - platform admins to govern moderation, plans, and compliance foundations
 
-The product should launch as an **MVP** and scale gradually toward a more complete recruiting ecosystem.
+The product should launch as an **MVP** and scale gradually toward a more complete opportunity-management ecosystem.
 
 ---
 
@@ -17,7 +17,7 @@ Create a modern ASI member platform that replaces fragmented opportunity managem
 ---
 
 ## 3. Problem statement
-Many ASI companies, ministries, projects, and fields still manage recruiting or participation workflows with disconnected tools:
+Many ASI companies, ministries, projects, and fields still manage selection, service, recruiting, or participation workflows with disconnected tools:
 - opportunities posted manually in multiple places
 - CVs arriving by email or chat
 - no structured applicant pipeline
@@ -42,7 +42,7 @@ Needs an approved account, active ASI membership, reusable profile, protected op
 ### Tenant owner
 Needs to request validation for an ASI company, ministry, project, field, or generic profile, get operator access approved, and then configure workspace, team, roles, opportunities, and permissions.
 
-### Recruiter / coordinator / hiring manager
+### Coordinador / revisor / responsable de oportunidad
 Needs filtering, review, notes, ratings, and applicant stage movement across jobs, projects, volunteering, and professional services.
 
 ### Platform admin
@@ -78,7 +78,7 @@ Needs a validated intake flow to prove administrative appointment, attach cedula
 - Reach MVP quickly without compromising architecture
 - Support multi-tenant monetization and ASI membership/subscription gating
 - Enable standard-user registration with admin-approved account creation and tenant onboarding
-- Build a foundation for premium plans and advanced recruiting tooling
+- Build a foundation for premium plans and advanced opportunity-management tooling
 
 ### User goals
 - Reduce application friction for approved ASI members
@@ -137,7 +137,7 @@ The MVP should **not** initially include:
 - CV upload
 - profile completeness
 - candidate profile dashboard with reusable sections and default CV selection
-- recruiter visibility toggle that is opt-in by the candidate
+- candidate-directory visibility toggle that is opt-in by the candidate
 - CV rejection feedback that explains file-size limits and how to fix the problem
 
 ## 8.3 Tenant workspace
@@ -163,7 +163,7 @@ The MVP should **not** initially include:
 - saved jobs
 - salary visibility toggle
 - screening questions
-- recruiter-side candidate directory for visible opt-in profiles
+- tenant-side candidate directory for visible opt-in profiles
 - full candidate profile review from employer side without requiring an application first
 - protected `/platform/jobs` listing and `/platform/jobs/:slug` detail routes that require an approved user, ASI membership, and active subscription
 - opportunity scope covers jobs, projects, volunteering, and professional services
@@ -195,7 +195,7 @@ The MVP should **not** initially include:
 - auditable email delivery processing for workflow notifications
 - new applicant alerts
 - stage/status updates
-- recruiter-request review updates
+- tenant-operator request review updates
 - membership, access, tenant, opportunity, application, interview, moderation, support, and security alerts
 - daily/weekly digest support for high-volume activity
 - server-side workflow emission so alerts do not depend on a single client session
@@ -232,7 +232,7 @@ The MVP should **not** initially include:
 ### FR-1 Authentication
 The system must support secure sign-up and sign-in for standard platform users, with account activation, content access, and tenant operator access granted only after the required administrative approvals.
 
-### FR-2 Recruiter approval and tenant creation
+### FR-2 Tenant-operator approval and tenant creation
 A standard user must be able to submit a tenant operator request with company, ministry, project, field, or generic-profile data, and a platform admin must approve that request before the tenant workspace is created.
 
 ### FR-2.1 Pastor and regional administrator validation
@@ -251,7 +251,7 @@ Platform admins with the proper permission must be able to review user-facing pl
 Candidates must be able to create, edit, and reuse a structured profile with headline, summary, location, desired role, work history, education, skills, languages, and relevant links.
 
 ### FR-4.1 Candidate visibility
-Candidates must be able to control whether their profile appears in recruiter talent search, and the default state must be opt-in disabled.
+Candidates must be able to control whether their profile appears in tenant candidate search, and the default state must be opt-in disabled.
 
 ### FR-5 CV/document management
 Candidates must be able to upload and manage CV files, with explicit type and size validation, a maximum size of **5 MB**, and user-facing rejection messages that explain the reason and next step.
@@ -259,12 +259,12 @@ Candidates must be able to upload and manage CV files, with explicit type and si
 ### FR-6 Job publishing
 Authorized tenant users must be able to create, publish, edit, close, and archive opportunities across jobs, projects, volunteering, and professional services.
 
-Employment job creation and publishing must be limited to approved company tenants with the required tenant permissions. Professional individual users may view and apply to opportunities, but may not create or publish job postings.
+Employment job creation and publishing must be limited to approved company tenants with the required tenant permissions. Joven Profesional users and other individual ASI members may view and apply to opportunities, but may not create or publish job postings unless separately assigned to an approved tenant role that permits it.
 
 ### FR-7 Search/discovery
 Approved ASI members with active subscriptions must be able to browse/search/filter opportunities.
 
-Future scope may add an anonymous opportunity preview that shows limited public opportunity summaries without exposing full details, saved jobs, applications, screening questions, or candidate/recruiter workflows. Full discovery remains member-gated unless that future surface is intentionally designed and documented.
+Future scope may add an anonymous opportunity preview that shows limited public opportunity summaries without exposing full details, saved jobs, applications, screening questions, or candidate/coordinator workflows. Full discovery remains member-gated unless that future surface is intentionally designed and documented.
 
 ### FR-7.1 Candidate opportunity alerts
 Candidates must be able to save, pause, reactivate, and delete basic opportunity alerts based on discovery filters.
@@ -341,7 +341,7 @@ Meaningful user-facing failures must provide actionable feedback in the UI and a
 - jobs published per active tenant
 - applications per published job
 - plan conversion from free to paid
-- retention of hiring teams
+- retention of opportunity teams
 
 ---
 
@@ -365,9 +365,9 @@ The MVP can be considered launch-ready when:
 - a candidate can create a full profile and upload CV
 - a candidate can save and manage at least one job alert
 - a candidate can apply from mobile without major friction
-- a hiring team can review and move applications through stages
-- a hiring team can leave notes and ratings while preserving auditable activity history
-- an authorized recruiter can filter pipeline applicants and export the filtered set to CSV
+- an opportunity team can review and move applications through stages
+- an opportunity team can leave notes and ratings while preserving auditable activity history
+- an authorized coordinator can filter pipeline applicants and export the filtered set to CSV
 - key flows are permission-safe and tenant-safe
 - the app is installable as a PWA
 - workflow email deliveries can leave `pending` and land in `sent` or `failed` with technical logs

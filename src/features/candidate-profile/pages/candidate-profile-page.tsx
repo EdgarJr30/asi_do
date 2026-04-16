@@ -342,9 +342,9 @@ function CandidateProfileEditor({
     onSuccess: async (_, nextValue) => {
       setIsVisibleToRecruiters(nextValue)
       await queryClient.invalidateQueries({ queryKey: CANDIDATE_PROFILE_QUERY_KEY })
-      toast.success(nextValue ? 'Perfil visible para recruiters' : 'Perfil oculto para recruiters', {
+      toast.success(nextValue ? 'Perfil visible para empresas autorizadas' : 'Perfil oculto del directorio', {
         description: nextValue
-          ? 'Tu perfil ya puede aparecer en busquedas employer fuera de applications.'
+          ? 'Tu perfil ya puede aparecer en busquedas de empresas autorizadas fuera de tus aplicaciones.'
           : 'Tu perfil deja de aparecer en el directorio de talento, pero todavia puedes aplicar a vacantes.'
       })
     },
@@ -433,7 +433,7 @@ function CandidateProfileEditor({
             <form className="space-y-4" onSubmit={(event) => void form.handleSubmit((values) => saveMutation.mutate(values))(event)}>
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                 <span>Titular profesional</span>
-                <Input placeholder="Ej. Recruiter Operations Specialist" {...form.register('headline')} />
+                <Input placeholder="Ej. Coordinador de proyectos" {...form.register('headline')} />
                 <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.headline?.message}</p>
               </label>
 

@@ -152,7 +152,7 @@ Platform launch-readiness screens must remain split between `platform_dashboard:
 Protected opportunity discovery and application routes must also check approved user status, ASI membership, and active user subscription status before tenant-level or candidate-profile permissions are considered.
 The canonical SQL helper for this prerequisite is `has_active_asi_access(user_id)`. Publishing an opportunity also requires active tenant subscription state through `can_publish_opportunity(tenant_id)`.
 
-A future anonymous opportunity preview may exist only as a separate public summary surface. It must not reuse protected opportunity detail, saved-job, application, screening-question, or recruiter-discovery permissions.
+A future anonymous opportunity preview may exist only as a separate public summary surface. It must not reuse protected opportunity detail, saved-job, application, screening-question, or coordinator-discovery permissions.
 
 ---
 
@@ -187,11 +187,11 @@ A user gets platform permissions through:
 
 A user can therefore:
 - be a candidate globally
-- be a recruiter in tenant A
+- be a coordinator in tenant A
 - be a readonly analyst in tenant B
 - also be a platform admin if explicitly assigned
 
-The platform also needs a one-time bootstrap path for the very first platform owner so that recruiter approvals can start without manual schema edits.
+The platform also needs a one-time bootstrap path for the very first platform owner so that tenant-operator approvals can start without manual schema edits.
 
 Internal developer access may also exist as an explicit operational flag on the global user profile. That flag only unlocks the admin console and must not be treated as a substitute for platform RBAC or tenant RBAC.
 
@@ -229,6 +229,13 @@ Recommended helper functions:
 - `review_recruiter_request(p_request_id uuid, p_decision recruiter_request_status, p_review_notes text)`
 
 All permission changes must remain aligned with `docs/governance/SECURITY_RULES.md`, `docs/governance/TESTING_RULES.md`, and `docs/governance/DOCUMENTATION_RULES.md`.
+
+Visible product labels for tenant-side opportunity work are:
+- `Responsable de oportunidad` for the accountable owner of an opportunity or tenant-side selection process
+- `Coordinador de oportunidad` for users mapped to the internal `Opportunity Manager` role
+- `Revisor de aplicaciones` for users mapped to the internal `Application Reviewer` role
+
+Avoid visible `recruiter` and `hiring manager` language. Keep legacy technical identifiers unchanged until a dedicated migration safely renames database objects, permission codes, routes, and generated types.
 
 ---
 

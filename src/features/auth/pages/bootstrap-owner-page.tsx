@@ -27,7 +27,7 @@ export function BootstrapOwnerPage() {
       await bootstrapFirstPlatformOwner()
       await session.refresh()
       toast.success('Primer admin inicializado', {
-        description: 'Tu cuenta ya puede revisar solicitudes recruiter y operar la plataforma.'
+        description: 'Tu cuenta ya puede revisar solicitudes de operador y operar la plataforma.'
       })
       await navigate(surfacePaths.admin.approvals)
     } catch (error) {

@@ -125,9 +125,9 @@ History of stage transitions.
 Internal note about an application.
 
 ### ApplicationRating
-Evaluation/rating by hiring staff.
+Evaluation/rating by authorized opportunity staff.
 
-### HiringTeamMember
+### OpportunityTeamMember
 Can be represented through Membership + Role, but this concept is useful at the domain level.
 
 ---
@@ -270,7 +270,7 @@ Launch-readiness notes:
 - Commercial plan behavior must follow `docs/product/COMMERCIAL_PLAN_MODEL.md`; individual user subscriptions and tenant subscriptions must remain separate concepts.
 - Email workflow notifications remain durable in `notification_deliveries` until the processor marks them `sent` or `failed` and writes `notification_delivery_logs`.
 - Notification events, preferences, templates, inbox items, deliveries, and push subscriptions must evolve according to `docs/product/NOTIFICATION_IMPLEMENTATION_PLAN.md`.
-- `recruiter_requests.request_metadata` stores tenant-kind-specific onboarding data such as `operating_scope`, `sponsoring_entity`, `field_region`, and `conversion_intent`.
+- `recruiter_requests.request_metadata` stores tenant-kind-specific operator onboarding data such as `operating_scope`, `sponsoring_entity`, `field_region`, and `conversion_intent`. The table name is a legacy technical identifier; visible product copy should call this an operator request.
 
 ---
 

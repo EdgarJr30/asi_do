@@ -28,7 +28,7 @@ describe('permission guards', () => {
       'Aplicaciones',
       'Perfil',
       'Onboarding',
-      'Acceso employer',
+      'Acceso operador',
       'Workspace',
       'Jobs',
       'Candidates',

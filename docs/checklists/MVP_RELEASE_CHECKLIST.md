@@ -5,12 +5,12 @@
 - Aprobacion administrativa de usuario, membresia ASI y suscripcion activa antes de acceder a contenido protegido
 - Callback de confirmacion de email en `/auth/confirm`
 - Onboarding base en `/candidate/onboarding`
-- Solicitud recruiter en `/candidate/recruiter-request`
+- Solicitud de operador en `/candidate/recruiter-request`
 - Aprobacion admin en `/admin/approvals`
 - Workspace employer en `/workspace`
 - Creacion y publish de job en `/platform/jobs` con listado protegido para miembros aprobados
 - Apply flow en `/platform/jobs/:slug/apply`
-- Pipeline recruiter en `/workspace/pipeline`
+- Pipeline de coordinadores en `/workspace/pipeline`
 
 ## PWA readiness
 - Manifest instalable visible en mobile
@@ -38,4 +38,4 @@
 ## Candidate utilities
 - Saved jobs sigue funcionando con perfil candidato
 - Job alerts se pueden crear, pausar, reactivar y eliminar
-- El candidato puede seguir aplicando aunque no sea visible a recruiters
+- El candidato puede seguir aplicando aunque no sea visible a coordinadores

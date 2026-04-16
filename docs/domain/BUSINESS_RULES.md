@@ -37,10 +37,10 @@
 4. A candidate may apply to many opportunities.
 5. A candidate must be able to review application history.
 6. Sensitive candidate data must be accessible only to authorized parties.
-7. Candidate identity remains global even if the same user later gains recruiter or tenant memberships.
+7. Candidate identity remains global even if the same user later gains tenant memberships.
 8. Candidate profile completeness must be derived from persisted candidate data so later workflows can trust it.
-9. Candidate visibility for recruiter discovery must be opt-in and disabled by default.
-10. A candidate may stay hidden from recruiter search and still apply normally to opportunities.
+9. Candidate visibility for tenant-side candidate discovery must be opt-in and disabled by default.
+10. A candidate may stay hidden from tenant candidate search and still apply normally to opportunities.
 11. Candidate opportunity discovery, saved jobs, and application flows are not public guest experiences; they require approved ASI membership and an active subscription.
 12. A future anonymous opportunity preview is allowed as a deliberately limited public surface, but it must expose only non-sensitive summary information and must not include opportunity detail, saved jobs, application submission, candidate discovery, screening questions, or tenant-private workflow data.
 
@@ -55,7 +55,7 @@
 6. A tenant may invite multiple internal members.
 7. Tenant member invitations are only valid for users who already registered as standard platform users; MVP does not create tenant invites for unknown emails.
 8. Tenant-side candidate sourcing is allowed even when the candidate has not applied yet, but only for visible opt-in profiles.
-9. Recruiter requests enforce minimum data by `tenant_kind`: company requires legal name, ministry requires legal name plus operating scope, project requires sponsoring entity plus operating scope, field requires field region plus sponsoring entity, and generic profile requires conversion intent.
+9. Tenant-operator requests enforce minimum data by `tenant_kind`: company requires legal name, ministry requires legal name plus operating scope, project requires sponsoring entity plus operating scope, field requires field region plus sponsoring entity, and generic profile requires conversion intent.
 10. Tenant ownership does not imply platform authority; tenant owners can manage only their approved tenant scope.
 
 ---
@@ -90,7 +90,7 @@
 4. Application submission must snapshot relevant candidate-submitted data required for historical integrity.
 5. Candidate status visibility must reflect the actual pipeline state or its candidate-facing mapping.
 6. Candidate opportunity alerts are owned by the candidate profile and must remain private to that profile owner.
-7. Recruiter CSV export must include only fields already authorized by `application:export` and tenant-scoped application visibility.
+7. Applicant CSV export must include only fields already authorized by `application:export` and tenant-scoped application visibility.
 8. Only authorized tenant members may view or act on applications for their tenant opportunities.
 9. Application review and talent sourcing are related but distinct flows.
 10. Duplicate applications for the same candidate and opportunity must be blocked at the database layer, not only in the UI.
@@ -159,7 +159,7 @@
 8. Critical notices for security, access, approvals, membership/subscription, compliance, and role/permission changes must not be fully disabled, though limited channel preference may be allowed when safe.
 9. Non-critical notifications must be configurable by channel and frequency.
 10. High-volume notifications must support digest, grouping, deduplication, and rate limiting.
-11. Core workflow notifications must be emitted from durable server-side workflows for application submit, recruiter-request review, membership/access changes, tenant/team changes, candidate-facing status changes, interviews, and moderation/support operations.
+11. Core workflow notifications must be emitted from durable server-side workflows for application submit, operator-request review, membership/access changes, tenant/team changes, candidate-facing status changes, interviews, and moderation/support operations.
 12. The canonical notification implementation contract lives in `docs/product/NOTIFICATION_IMPLEMENTATION_PLAN.md`.
 
 ---
@@ -168,9 +168,9 @@
 1. CVs, logos, and attachments must be stored in policy-controlled storage.
 2. Access to private files must follow role and ownership rules.
 3. Public files must be intentionally marked public.
-4. Recruiter verification documents are private by default and only readable by the requester and authorized platform reviewers.
+4. Operator verification documents are private by default and only readable by the requester and authorized platform reviewers.
 5. File naming and path conventions must support auditability and tenant separation where relevant.
-6. Avatars, logos, CVs, recruiter verification documents, and any other multimedia or document attachment must be rejected if the file exceeds **5 MB**.
+6. Avatars, logos, CVs, operator verification documents, and any other multimedia or document attachment must be rejected if the file exceeds **5 MB**.
 7. Modern web formats such as **SVG** and **WEBP** must be accepted where the use case allows them safely.
 8. Multimedia uploads must be optimized internally before storage when the file type supports safe compression or transcoding, especially for raster images.
 9. When an upload is rejected, the UI must explain the exact reason, include the detected file size when relevant, and suggest compressing the asset or uploading a file of **5 MB or less**.
@@ -212,6 +212,8 @@
 14. Candidate-owned authenticated workflows must live under `/candidate/*`; employer tenant workflows must live under `/workspace/*`.
 15. The restricted platform console must use `/admin/*` as the canonical route family.
 16. Historical aliases such as `/internal/*`, `/applications`, `/onboarding`, `/recruiter-request`, `/jobs/manage`, `/talent`, `/pipeline`, and `/rbac` are not part of the active route contract.
+17. Visible product language must use `Responsable de oportunidad`, `Coordinador de oportunidad`, and `Revisor de aplicaciones` for tenant-side opportunity workflows instead of `recruiter` or `hiring manager`.
+18. Legacy technical identifiers such as `recruiter_request`, `recruiter_request:review`, route names, table names, and migration history may remain until a deliberate schema/refactor task changes them safely; they must not leak into new user-facing copy.
 
 ---
 

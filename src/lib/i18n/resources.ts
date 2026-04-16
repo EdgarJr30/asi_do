@@ -22,7 +22,7 @@ export const resources = {
           description: 'CV y completitud'
         },
         recruiterRequest: {
-          title: 'Recruiter',
+          title: 'Operador',
           description: 'Solicitud de validacion'
         },
         jobs: {
@@ -51,7 +51,7 @@ export const resources = {
         },
         approvals: {
           title: 'Approvals',
-          description: 'Revision de recruiters'
+          description: 'Revision de operadores'
         },
         platform: {
           title: 'Plataforma',
@@ -67,7 +67,7 @@ export const resources = {
           'Modo offline activo. La shell sigue disponible y las mutaciones deben reintentarse cuando vuelva la red.',
         phaseBadge: 'Fase 7',
         description:
-          'Base mobile-first, PWA-first, RBAC-first y Supabase-first con hiring workflow, notificaciones y operaciones de plataforma.',
+          'Base mobile-first, PWA-first, RBAC-first y Supabase-first con flujo de oportunidades, notificaciones y operaciones de plataforma.',
         liveSession: 'Sesion activa',
         guestSession: 'Sesion invitada',
         authenticatedBadge: 'Autenticado',
@@ -75,11 +75,11 @@ export const resources = {
         configBadge: 'Config pendiente',
         adminBadge: 'Admin reviewer',
         navNote: 'Las rutas y la navegacion ya respetan auth, permisos y estados visibles del MVP.',
-        eyebrow: 'Recruiting SaaS Platform',
+        eyebrow: 'Opportunity SaaS Platform',
         title: 'Launch readiness del MVP',
         profileAction: 'Perfil',
         candidateAction: 'Perfil candidato',
-        recruiterAction: 'Solicitud recruiter',
+        recruiterAction: 'Solicitud de operador',
         reviewAction: 'Review admin',
         accessAction: 'Entrar',
         signOutAction: 'Cerrar sesion',
@@ -90,25 +90,25 @@ export const resources = {
       home: {
         heroBadge: 'MVP identity',
         heroTitle:
-          'Autenticacion, onboarding estandar y aprobacion recruiter sobre una base multi-tenant real.',
+          'Autenticacion, onboarding estandar y aprobacion de operadores sobre una base multi-tenant real.',
         heroDescription:
-          'Todos entran como usuario normal, los adjuntos sensibles viven en Supabase Storage y la creacion del workspace recruiter queda controlada por aprobacion administrativa.',
+          'Todos entran como usuario normal, los adjuntos sensibles viven en Supabase Storage y la creacion del workspace operativo queda controlada por aprobacion administrativa.',
         accountCardEyebrow: 'Cuenta actual',
         statusCardEyebrow: 'Estado de acceso',
         statusAuthenticated: 'Sesion con Supabase',
         statusGuest: 'Sin sesion iniciada',
-        statusRecruiterApproved: 'Employer habilitado con tenant activo.',
-        statusRecruiterStandard: 'Usuario estandar pendiente de validacion recruiter.',
+        statusRecruiterApproved: 'Workspace operativo habilitado con tenant activo.',
+        statusRecruiterStandard: 'Usuario estandar pendiente de validacion como operador.',
         primaryGuestAction: 'Crear cuenta o iniciar sesion',
-        secondaryGuestAction: 'Conocer el flujo recruiter',
+        secondaryGuestAction: 'Conocer el flujo de operador',
         primaryAuthenticatedAction: 'Completar onboarding',
-        secondaryAuthenticatedAction: 'Enviar solicitud recruiter',
+        secondaryAuthenticatedAction: 'Enviar solicitud de operador',
         moduleCardEyebrow: 'Regla de negocio activa',
-        moduleCardTitle: 'No existe signup recruiter directo',
+        moduleCardTitle: 'No existe signup directo de operador',
         moduleCardDescription:
           'El flujo del MVP protege la plataforma con RBAC, aprobacion humana y assets privados hasta que la empresa sea validada.',
         moduleCardRuleOne: 'Todo signup crea un usuario normal de plataforma.',
-        moduleCardRuleTwo: 'Solo admins pueden aprobar y provisionar el tenant recruiter.',
+        moduleCardRuleTwo: 'Solo admins pueden aprobar y provisionar el tenant operativo.',
         moduleCardRuleThree: 'Logos y documentos de verificacion se guardan en Supabase Storage.',
         journeyTitle: 'Journey del modulo',
         journeyDescription: 'El home ahora sirve como tablero de entrada para los pasos base del MVP.',
@@ -116,7 +116,7 @@ export const resources = {
         stepAccountDescription: 'Email + contrasena con sesion real de Supabase Auth.',
         stepProfileTitle: 'Onboarding estandar',
         stepProfileDescription: 'Perfil base, locale, pais y avatar privado del usuario.',
-        stepRequestTitle: 'Solicitud recruiter',
+        stepRequestTitle: 'Solicitud de operador',
         stepRequestDescription: 'Empresa, slug, logo temporal y documento de verificacion.',
         stepReviewTitle: 'Revision administrativa',
         stepReviewDescription: 'Aprobacion que crea tenant, company profile y membership owner.',
@@ -130,9 +130,9 @@ export const resources = {
         accessUserTitle: 'Acceso inicial',
         accessUserDescription:
           'Todo usuario entra como standard user y no hereda permisos employer por registrarse.',
-        accessRecruiterTitle: 'Provisioning recruiter',
+        accessRecruiterTitle: 'Provisioning operativo',
         accessRecruiterDescription:
-          'El tenant solo nace cuando una solicitud recruiter es aprobada por un admin con permiso.',
+          'El tenant solo nace cuando una solicitud de operador es aprobada por un admin con permiso.',
         accessStorageTitle: 'Storage privado',
         accessStorageDescription:
           'Avatar, logo temporal y documentos sensibles viajan por buckets privados y signed URLs.',
@@ -143,9 +143,9 @@ export const resources = {
         actionProfileDescription:
           'El onboarding vive detras de auth y consolida los datos minimos del usuario.',
         actionProfileButton: 'Abrir Auth',
-        actionReviewGuestTitle: 'Flujo recruiter',
+        actionReviewGuestTitle: 'Flujo de operador',
         actionReviewGuestDescription:
-          'La validacion recruiter se habilita despues del registro y no desde el signup.',
+          'La validacion como operador se habilita despues del registro y no desde el signup.',
         actionReviewGuestButton: 'Ver acceso',
         actionOnboardingTitle: 'Completar onboarding',
         actionOnboardingPending:
@@ -153,15 +153,15 @@ export const resources = {
         actionOnboardingReady:
           'Tu perfil ya tiene la data minima; puedes revisarlo o actualizarlo.',
         actionOnboardingButton: 'Abrir perfil',
-        actionRecruiterTitle: 'Solicitar validacion recruiter',
+        actionRecruiterTitle: 'Solicitar validacion de operador',
         actionRecruiterPending:
           'Envia tu empresa para revision administrativa y provisioning del tenant.',
         actionRecruiterApproved:
           'Tu cuenta ya tiene acceso employer, pero puedes revisar el historial de solicitudes.',
-        actionRecruiterButton: 'Abrir recruiter request',
+        actionRecruiterButton: 'Abrir solicitud de operador',
         actionAdminTitle: 'Review administrativo',
         actionAdminEnabled:
-          'Tu sesion puede aprobar solicitudes y provisionar recruiters desde la app.',
+          'Tu sesion puede aprobar solicitudes y provisionar operadores desde la app.',
         actionAdminLocked:
           'Solo usuarios con `recruiter_request:review` pueden abrir esta bandeja.',
         actionAdminButton: 'Abrir approvals',
@@ -276,7 +276,7 @@ export const resources = {
           description: 'Resume and completeness'
         },
         recruiterRequest: {
-          title: 'Recruiter',
+          title: 'Operator',
           description: 'Validation request'
         },
         jobs: {
@@ -305,7 +305,7 @@ export const resources = {
         },
         approvals: {
           title: 'Approvals',
-          description: 'Recruiter reviews'
+          description: 'Operator reviews'
         },
         platform: {
           title: 'Platform',
@@ -321,7 +321,7 @@ export const resources = {
           'Offline mode is active. The shell remains available and mutations should retry when the network returns.',
         phaseBadge: 'Phase 7',
         description:
-          'Mobile-first, PWA-first, RBAC-first, and Supabase-first baseline with hiring workflow, notifications, and platform operations.',
+          'Mobile-first, PWA-first, RBAC-first, and Supabase-first baseline with opportunity workflow, notifications, and platform operations.',
         liveSession: 'Live session',
         guestSession: 'Guest session',
         authenticatedBadge: 'Authenticated',
@@ -329,11 +329,11 @@ export const resources = {
         configBadge: 'Setup pending',
         adminBadge: 'Admin reviewer',
         navNote: 'Routes and navigation already honor auth, permissions, and visible MVP states.',
-        eyebrow: 'Recruiting SaaS Platform',
+        eyebrow: 'Opportunity SaaS Platform',
         title: 'MVP launch-readiness foundations',
         profileAction: 'Profile',
         candidateAction: 'Candidate profile',
-        recruiterAction: 'Recruiter request',
+        recruiterAction: 'Operator request',
         reviewAction: 'Admin review',
         accessAction: 'Access',
         signOutAction: 'Sign out',
@@ -344,25 +344,25 @@ export const resources = {
       home: {
         heroBadge: 'MVP identity',
         heroTitle:
-          'Authentication, standard onboarding, and recruiter approval on top of a real multi-tenant foundation.',
+          'Authentication, standard onboarding, and operator approval on top of a real multi-tenant foundation.',
         heroDescription:
-          'Every account starts as a standard user, sensitive attachments live in Supabase Storage, and recruiter workspace creation stays behind administrative approval.',
+          'Every account starts as a standard user, sensitive attachments live in Supabase Storage, and operational workspace creation stays behind administrative approval.',
         accountCardEyebrow: 'Current account',
         statusCardEyebrow: 'Access state',
         statusAuthenticated: 'Supabase session active',
         statusGuest: 'No active session',
-        statusRecruiterApproved: 'Employer access is active with a tenant.',
-        statusRecruiterStandard: 'Standard user still pending recruiter validation.',
+        statusRecruiterApproved: 'Operational workspace access is active with a tenant.',
+        statusRecruiterStandard: 'Standard user still pending operator validation.',
         primaryGuestAction: 'Create account or sign in',
-        secondaryGuestAction: 'Learn the recruiter flow',
+        secondaryGuestAction: 'Learn the operator flow',
         primaryAuthenticatedAction: 'Complete onboarding',
-        secondaryAuthenticatedAction: 'Submit recruiter request',
+        secondaryAuthenticatedAction: 'Submit operator request',
         moduleCardEyebrow: 'Active business rule',
-        moduleCardTitle: 'There is no direct recruiter signup',
+        moduleCardTitle: 'There is no direct operator signup',
         moduleCardDescription:
           'The MVP flow protects the platform with RBAC, human approval, and private assets until the company is validated.',
         moduleCardRuleOne: 'Every signup creates a standard platform user.',
-        moduleCardRuleTwo: 'Only admins can approve and provision a recruiter tenant.',
+        moduleCardRuleTwo: 'Only admins can approve and provision an operational tenant.',
         moduleCardRuleThree: 'Temporary logos and verification documents live in Supabase Storage.',
         journeyTitle: 'Module journey',
         journeyDescription: 'Home now acts as the entry dashboard for the MVP identity flow.',
@@ -370,7 +370,7 @@ export const resources = {
         stepAccountDescription: 'Email + password backed by a real Supabase Auth session.',
         stepProfileTitle: 'Standard onboarding',
         stepProfileDescription: 'Baseline profile, locale, country, and private user avatar.',
-        stepRequestTitle: 'Recruiter request',
+        stepRequestTitle: 'Operator request',
         stepRequestDescription: 'Company data, slug, temporary logo, and verification document.',
         stepReviewTitle: 'Administrative review',
         stepReviewDescription: 'Approval creates the tenant, company profile, and owner membership.',
@@ -384,9 +384,9 @@ export const resources = {
         accessUserTitle: 'Initial access',
         accessUserDescription:
           'Every user starts as a standard user and does not inherit employer access from signup.',
-        accessRecruiterTitle: 'Recruiter provisioning',
+        accessRecruiterTitle: 'Operator provisioning',
         accessRecruiterDescription:
-          'The tenant only exists after an approved recruiter request by an authorized admin.',
+          'The tenant only exists after an approved operator request by an authorized admin.',
         accessStorageTitle: 'Private storage',
         accessStorageDescription:
           'Avatar, temporary logo, and sensitive documents use private buckets and signed URLs.',
@@ -397,9 +397,9 @@ export const resources = {
         actionProfileDescription:
           'Onboarding stays behind auth and consolidates the user baseline data.',
         actionProfileButton: 'Open auth',
-        actionReviewGuestTitle: 'Recruiter flow',
+        actionReviewGuestTitle: 'Operator flow',
         actionReviewGuestDescription:
-          'Recruiter validation is enabled after signup, never directly from registration.',
+          'Operator validation is enabled after signup, never directly from registration.',
         actionReviewGuestButton: 'See access',
         actionOnboardingTitle: 'Complete onboarding',
         actionOnboardingPending:
@@ -407,14 +407,14 @@ export const resources = {
         actionOnboardingReady:
           'Your profile already has the minimum data; you can review or update it.',
         actionOnboardingButton: 'Open profile',
-        actionRecruiterTitle: 'Request recruiter validation',
+        actionRecruiterTitle: 'Request operator validation',
         actionRecruiterPending:
           'Submit your company for administrative review and tenant provisioning.',
         actionRecruiterApproved:
           'Your account already has employer access, but you can review request history.',
-        actionRecruiterButton: 'Open recruiter request',
+        actionRecruiterButton: 'Open operator request',
         actionAdminTitle: 'Administrative review',
-        actionAdminEnabled: 'Your session can approve requests and provision recruiters from the app.',
+        actionAdminEnabled: 'Your session can approve requests and provision operators from the app.',
         actionAdminLocked: 'Only users with `recruiter_request:review` can open this inbox.',
         actionAdminButton: 'Open approvals',
         actionAdminSecondaryButton: 'See access'

@@ -165,7 +165,7 @@ Identity documents and appointment evidence must live in private storage with re
 ---
 
 ## 7. MVP-safe implementation notes
-- Keep pastor and regional administrator requests separate from general recruiter/operator requests, even if the UI later presents them in one admin approvals queue.
+- Keep pastor and regional administrator requests separate from general tenant-operator requests, even if the UI later presents them in one admin approvals queue.
 - Store territory references as structured IDs instead of free text once the canonical union/association/district/church catalog exists.
 - Until that catalog exists, free-text territory fields may be accepted only as a temporary intake layer and must be normalized before granting authority.
 - Do not grant authorization capability from form submission alone; approval must create the scoped authority assignment.

@@ -39,7 +39,7 @@ Test cross-file behavior such as:
 - route guards
 - feature contracts
 - configuration behavior
-- migration contracts for identity, recruiter approval, storage policies, and notification delivery workflow
+- migration contracts for identity, tenant-operator approval, storage policies, and notification delivery workflow
 
 ### Contract and regression tests
 Test the repo contract itself:
@@ -53,7 +53,7 @@ Test the repo contract itself:
 ### E2E smoke tests
 E2E coverage becomes mandatory as soon as auth, job application, and ATS flows are interactive.
 These tests should prioritize mobile viewport coverage for the core hiring loop.
-Minimum smoke coverage now includes auth callback shell, onboarding, recruiter request, jobs discovery, applications, and pipeline surfaces.
+Minimum smoke coverage now includes auth callback shell, onboarding, tenant-operator request, jobs discovery, applications, and pipeline surfaces.
 Institutional motion carousels that depend on looping, autoplay, or gesture negotiation must add browser coverage for the affected engines when their behavior changes, including WebKit desktop/mobile checks, Android-like mobile Chromium checks when touch behavior changes, and assertions that the visible viewport does not expose a blank edge while the loop advances.
 
 ### Manual QA
@@ -70,11 +70,11 @@ Manual checks remain required for:
 - tenant isolation
 - RBAC helpers and route/action guards
 - auth user mirroring into `public.users`
-- recruiter request approval and tenant bootstrap
+- tenant-operator request approval and tenant bootstrap
 - first platform owner bootstrap
 - upload validation for file type, 5 MB size cap, and exact user-facing rejection copy
 - candidate profile persistence, completeness updates, and CV storage access
-- candidate visibility opt-in and recruiter talent search permission gates
+- candidate visibility opt-in and coordinator talent search permission gates
 - job lifecycle transitions
 - member-gated jobs listing/detail visibility and saved-jobs ownership rules
 - user approval, ASI membership, and active subscription gates for protected product content

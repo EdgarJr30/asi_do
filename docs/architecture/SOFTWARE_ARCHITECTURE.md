@@ -408,7 +408,7 @@ Responsibilities:
 - candidate application flow
 - CV/profile submission
 - status tracking
-- recruiter review
+- coordinator review
 - internal notes
 - candidate progression
 - rejection reasons
@@ -418,7 +418,7 @@ Responsibilities:
 Responsibilities:
 - stage management
 - kanban/list views
-- recruiter actions
+- coordinator actions
 - shortlist actions
 - assignment to reviewers
 - activity timeline
@@ -429,7 +429,7 @@ Responsibilities:
 - in-app notifications
 - email triggers
 - status update notifications
-- recruiter-candidate communication if enabled
+- coordinator-candidate communication if enabled
 - system alerts
 - plan or billing notifications
 - workflow emission from server-side lifecycle hooks so launch alerts survive client interruptions
@@ -775,7 +775,7 @@ Storage rules:
 - tenant isolation must be respected where applicable
 - file naming must be deterministic and safe
 - sensitive files must not be publicly exposed by default
-- recruiter-facing sourcing must never bypass candidate visibility settings
+- coordinator-facing sourcing must never bypass candidate visibility settings
 
 ---
 
@@ -786,8 +786,8 @@ Search is a core architectural concern for this product.
 The platform should be designed to support:
 - job search
 - company search
-- candidate filtering for recruiters
-- candidate full-profile sourcing for recruiters when visibility is opt-in
+- candidate filtering for coordinators
+- candidate full-profile sourcing for coordinators when visibility is opt-in
 - application filtering by stage/status
 - saved search patterns later
 - analytics-ready filtering dimensions

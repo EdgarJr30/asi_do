@@ -17,7 +17,7 @@ These layers may overlap for one user, but they must not be collapsed into one g
 2. License activation is a platform operation limited to super administrators and platform support.
 3. Pastor and regional authorization is territorial and does not activate licenses.
 4. Tenant ownership is separate from platform authority.
-5. Professional individual users are not tenants and cannot create job postings.
+5. Individual ASI members are not tenants and cannot create job postings by individual membership alone.
 6. Only company tenants may create employment job postings.
 7. Tenant team members receive only the permissions assigned by the tenant owner/admin.
 8. Every elevated authorization, license activation, role assignment, and permission change must be auditable.
@@ -269,6 +269,7 @@ Status: MVP tenant role.
 
 Purpose:
 - creates and manages job postings for an approved company tenant without managing team roles
+- appears in visible product copy as **Coordinador de oportunidad**
 
 Baseline permissions:
 - `workspace:read`
@@ -285,13 +286,15 @@ Baseline permissions:
 - `application:rate`
 
 Why it is included:
-- companies often need hiring operators who can run opportunities but should not control workspace roles or ownership
+- companies often need coordinators who can run opportunities but should not control workspace roles or ownership
+- the visible label should emphasize ownership of the opportunity workflow, not a generic recruiter title
 
 ### Application Reviewer
 Status: MVP tenant role.
 
 Purpose:
 - reviews candidates and collaborates in the ATS-lite workflow without creating jobs or managing the workspace
+- appears in visible product copy as **Revisor de aplicaciones**
 
 Baseline permissions:
 - `workspace:read`
@@ -307,13 +310,14 @@ Optional permissions:
 - `candidate_resume:read`
 
 Why it is included:
-- companies may invite interviewers, department leads, or assistants who should not own the whole hiring process
+- companies may invite interviewers, department leads, or assistants who should not own the whole selection process
+- the visible label should remain narrow so reviewers are not confused with opportunity owners or tenant admins
 
 ### Tenant Billing Contact
 Status: MVP tenant role.
 
 Purpose:
-- sees invoices, plan state, and billing status for a tenant without managing hiring or candidates
+- sees invoices, plan state, and billing status for a tenant without managing opportunities or candidates
 
 Baseline permissions:
 - `workspace:read`
@@ -331,7 +335,7 @@ May not:
 - mutate billing or plan state unless a future explicit billing-write permission is introduced
 
 Why it is included:
-- billing contact is usually not the same person as hiring owner
+- billing contact is usually not the same person as the opportunity owner
 
 ---
 
@@ -390,7 +394,7 @@ Purpose:
 
 May:
 - access workspace modules allowed by assigned tenant role
-- perform hiring workflows only if granted tenant permissions
+- perform opportunity workflows only if granted tenant permissions
 
 May not:
 - manage roles or members unless explicitly granted
@@ -454,6 +458,8 @@ Use customer-facing labels carefully:
 - `Pastor Administrator` is the scoped pastoral authorization label.
 - `Platform Moderator` is an internal trust/safety label.
 - `Readonly Platform Auditor` is an internal read-only governance label.
-- `Tenant Owner`, `Tenant Admin`, `Opportunity Manager`, `Application Reviewer`, and `Tenant Billing Contact` are tenant-side operational labels.
+- `Tenant Owner`, `Tenant Admin`, `Opportunity Manager`, `Application Reviewer`, and `Tenant Billing Contact` are internal tenant-side operational role labels.
+- Visible product language should use `Responsable de oportunidad` for the accountable tenant-side owner of a published opportunity, `Coordinador de oportunidad` for users who create/manage opportunities and move applicants, and `Revisor de aplicaciones` for users who review, rate, comment, or optionally move candidates without owning the full opportunity.
+- Avoid `recruiter` and `hiring manager` in visible product copy. They may remain in technical identifiers such as legacy permission codes, routes, table names, RPC names, or migration history until a deliberate schema/refactor task renames them safely.
 - `Joven Profesional` is the canonical customer-facing role/category for an individual user who only applies to opportunities and does not publish opportunities.
 - `Other Individual ASI Member` covers other individual annual membership categories and is not a tenant or platform admin role by itself.

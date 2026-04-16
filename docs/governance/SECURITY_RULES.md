@@ -37,7 +37,7 @@ Security includes protecting:
 - Do not introduce unsafe HTML rendering without an explicit sanitization strategy.
 - File uploads must validate type, size, and storage destination rules.
 - User-facing upload errors must explain the real failure reason and the recovery path instead of returning a silent or generic failure.
-- Avatars, logos, CVs, recruiter documents, and similar attachments must enforce a maximum upload size of **5 MB**.
+- Avatars, logos, CVs, operator verification documents, and similar attachments must enforce a maximum upload size of **5 MB**.
 - Modern web-safe formats such as **SVG** and **WEBP** should be accepted where the feature can support them without weakening security.
 - Raster images should be optimized internally before storage when safe compression is available.
 
@@ -65,7 +65,7 @@ Security includes protecting:
 5. Signed URLs or controlled access must be used for sensitive private files.
 6. SQL migrations are the source of truth for schema and policy evolution.
 7. Never bypass RLS casually for convenience.
-8. Employer-side access must never be granted by client state alone; it requires an approved recruiter request plus role assignment in Postgres.
+8. Tenant-side operator access must never be granted by client state alone; it requires an approved operator request plus role assignment in Postgres.
 9. The one-time first-platform-owner bootstrap must remain auditable and impossible after the first active owner exists.
 10. All public application tables must attach row-change audit triggers or an approved equivalent.
 11. Notification channels must persist delivery attempts and technical logs in Postgres.
@@ -144,13 +144,13 @@ OSINT may be used only for legitimate moderation, fraud prevention, trust verifi
 ## 7. Mandatory security verification areas
 - permission helpers
 - auth-to-profile sync triggers
-- recruiter approval workflow
+- tenant-operator approval workflow
 - route/action guards
 - tenant-scoped data access
 - storage access rules
 - upload size/type enforcement and user-facing rejection messaging
 - job/application workflow authorization
-- candidate directory visibility enforcement and recruiter permission checks
+- candidate directory visibility enforcement and coordinator permission checks
 - audit trigger coverage and audit log readability
 - member-gated job visibility rules and candidate-owned saved-jobs access
 - `has_active_asi_access` and `can_publish_opportunity` helper coverage for protected content gates

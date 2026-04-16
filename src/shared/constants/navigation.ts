@@ -43,7 +43,7 @@ export const candidateNavigationItems: NavigationItem[] = [
     requiresAuth: true
   },
   {
-    title: 'Acceso employer',
+    title: 'Acceso operador',
     href: '/candidate/recruiter-request',
     description: 'Lleva tu empresa a la plataforma',
     requiresAuth: true
@@ -98,7 +98,7 @@ export const adminNavigationItems: NavigationItem[] = [
   {
     title: 'Approvals',
     href: surfacePaths.admin.approvals,
-    description: 'Recruiter requests',
+    description: 'Solicitudes de operador',
     requiresAuth: true,
     requiredPermission: 'recruiter_request:review'
   },

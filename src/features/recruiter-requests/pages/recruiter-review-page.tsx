@@ -58,7 +58,7 @@ export function RecruiterReviewPage() {
         userId: session.authUser?.id ?? null,
         error,
         description: toErrorMessage(error),
-        userMessage: 'No pudimos actualizar la solicitud recruiter.'
+        userMessage: 'No pudimos actualizar la solicitud de operador.'
       })
     }
   })
@@ -89,8 +89,8 @@ export function RecruiterReviewPage() {
     <div className="space-y-4">
       <Card className="bg-(--app-surface-muted)">
         <CardHeader>
-          <Badge variant="soft">Admin review</Badge>
-          <CardTitle>Revision de solicitudes recruiter</CardTitle>
+          <Badge variant="soft">Revision admin</Badge>
+          <CardTitle>Revision de solicitudes de operador</CardTitle>
           <CardDescription>
             Esta vista usa `recruiter_request:review` y la RPC de aprobacion para crear el tenant solo cuando el admin lo confirme.
           </CardDescription>
@@ -115,7 +115,7 @@ export function RecruiterReviewPage() {
         </Card>
       ) : pendingRequests.length === 0 ? (
         <Card>
-          <CardContent className="py-8 text-sm text-zinc-500">No hay solicitudes recruiter pendientes en este momento.</CardContent>
+          <CardContent className="py-8 text-sm text-zinc-500">No hay solicitudes de operador pendientes en este momento.</CardContent>
         </Card>
       ) : (
         pendingRequests.map((request) => {

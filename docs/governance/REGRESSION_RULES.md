@@ -90,13 +90,13 @@ When defining visual hierarchy, spacing, control behavior, navigation feel, or i
 All meaningful UI work must be reviewed against Apple’s UI Design Dos and Don’ts, especially for interactivity, readability, image handling, alignment, grouping, and clarity. Do not approve or preserve UI patterns that conflict with those principles unless a documented exception is required.
 
 ### R-021 — Every signup starts as a standard user
-Do not model self-serve employer or recruiter registration. Every new account starts as a standard platform user, and employer-side access only begins after a platform admin approves a recruiter request and validates the company.
+Do not model self-serve employer or operator registration. Every new account starts as a standard platform user, and tenant-side operator access only begins after a platform admin approves an operator request and validates the company or organization.
 
 ### R-022 — Every app mutation must be fully auditable
 All tables and meaningful actions in the app must preserve auditability. Row-level changes require database audit triggers or an approved equivalent, and notification flows must persist history plus technical delivery logs in Postgres.
 
 ### R-023 — Modern web upload formats are mandatory where appropriate
-Do not regress upload support back to legacy-only image formats. User-facing media flows such as onboarding avatars and recruiter branding assets must accept modern web formats like SVG and WEBP whenever the use case allows them safely.
+Do not regress upload support back to legacy-only image formats. User-facing media flows such as onboarding avatars and operator branding assets must accept modern web formats like SVG and WEBP whenever the use case allows them safely.
 
 ### R-024 — Uploads must stay optimized, capped, and transparent
 All multimedia and document uploads must enforce a maximum size of 5 MB, optimize assets internally when the format supports safe compression, and show the user the exact rejection reason including detected file size when relevant.
@@ -120,13 +120,13 @@ Do not redefine lightweight local error mappers in feature APIs when a shared co
 Under no circumstance may the platform invent, guess, or fabricate the cause of an error. If the real cause is not known from verified evidence, the UI and logs must say that the cause is still undetermined and preserve only factual technical context.
 
 ### R-031 — Talent sourcing is part of the MVP and must remain opt-in
-Do not regress the product back to an applications-only marketplace. The MVP must allow authorized employer users to search candidates directly even if they have not applied, but only when the candidate explicitly opted into recruiter visibility.
+Do not regress the product back to an applications-only marketplace. The MVP must allow authorized tenant users to search candidates directly even if they have not applied, but only when the candidate explicitly opted into coordinator visibility.
 
 ### R-032 — Jobs discovery must stay member-gated
 Do not expose published jobs or opportunity detail views to guest users. For now, `/platform/jobs*` must require approved user status, ASI membership, and active subscription status before showing full jobs, while keeping tenant CRUD and saved-jobs ownership under the proper permissions and profile rules. A future anonymous preview of opportunities is allowed only as a separate limited summary surface, without detail pages, screening questions, applications, saved jobs, candidate discovery, or tenant-private workflow data.
 
 ### R-033 — ATS movement must stay auditable and status-driven
-Do not regress the hiring workflow back to opaque application state toggles. Every application must keep an explicit current pipeline stage, stage changes must write auditable history, and candidate-facing status must stay synchronized from the verified stage mapping instead of ad hoc UI-only updates. Any legacy `status_public` naming must be treated as candidate-facing only, not guest-public exposure.
+Do not regress the opportunity workflow back to opaque application state toggles. Every application must keep an explicit current pipeline stage, stage changes must write auditable history, and candidate-facing status must stay synchronized from the verified stage mapping instead of ad hoc UI-only updates. Any legacy `status_public` naming must be treated as candidate-facing only, not guest-public exposure.
 
 ### R-034 — Launch operations must remain server-driven and auditable
 Do not move workflow notifications, moderation side effects, or plan-limit enforcement into client-only logic. Core launch-readiness operations must stay durable in Supabase through audited tables, server-side hooks, or reviewed RPCs so admins can trust them even when a browser session fails.
@@ -135,7 +135,7 @@ Do not move workflow notifications, moderation side effects, or plan-limit enfor
 Do not reintroduce opaque unknown-email workspace invitations for the MVP. Employer invitations must target users who already registered as standard platform users, preserve the `invited` membership state, and allow revocation from the workspace.
 
 ### R-036 — Launch readiness must keep alerts, export, and email delivery processing
-Do not regress job alerts back to schema-only groundwork, applicant export back to a dormant permission, or email hooks back to permanent `pending` deliveries. The MVP must keep candidate-managed job alerts, recruiter CSV export for authorized roles, and an auditable email processor that resolves deliveries to `sent` or `failed`.
+Do not regress job alerts back to schema-only groundwork, applicant export back to a dormant permission, or email hooks back to permanent `pending` deliveries. The MVP must keep candidate-managed job alerts, coordinator CSV export for authorized roles, and an auditable email processor that resolves deliveries to `sent` or `failed`.
 
 ### R-036A — Notifications must stay event-driven and preference-aware
 Do not implement notifications as scattered client-only sends or one-off provider calls. Notifications must originate from durable product events when they affect workflow state, resolve recipients through server-authoritative permissions, preserve delivery history, and follow `docs/product/NOTIFICATION_IMPLEMENTATION_PLAN.md`. Critical security, access, approval, membership/subscription, compliance, role/permission, and sensitive-action notices must not be fully disabled; non-critical categories must respect channel/frequency preferences and high-volume events must support digest, grouping, deduplication, or rate limits.
@@ -145,6 +145,9 @@ Do not collapse individual ASI membership/subscription, tenant workspace plans, 
 
 ### R-036C — Candidate-only individual access is Joven Profesional
 Do not describe the individual candidate-only user as a generic student plan or generic professional user when the product needs the commercial category. The user who only applies to opportunities and does not publish opportunities is `Joven Profesional` with annual dues of $25. This category can discover and apply after approval and active membership/license gates pass, but it must not receive tenant publishing, tenant plan management, or job creation capability unless separately approved into a tenant role under a valid tenant.
+
+### R-036D — Visible opportunity-language must be ASI-native
+Do not introduce new visible product copy that calls tenant-side opportunity operators `recruiter` or `hiring manager`. Use `Responsable de oportunidad`, `Coordinador de oportunidad`, and `Revisor de aplicaciones` according to responsibility level. Legacy technical identifiers may remain in code, database objects, permissions, routes, and generated types until a deliberate migration handles them safely, but they must not leak into new customer-facing labels, buttons, empty states, or instructional copy.
 
 ### R-037 — The public app must look client-ready and internal tooling must stay isolated
 Do not reuse the product home or shell as a generic launch-readiness panel. The public root experience must behave as a real SaaS landing with pricing and donation UI surfaces, while foundations, notification testing, and similar internal tooling stay visible only to platform admins and explicitly flagged internal developers.

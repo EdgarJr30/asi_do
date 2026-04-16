@@ -326,6 +326,8 @@ Apple-inspired UI rules:
 5. Public landing content must be product-specific. Do not ship Tailwind demo labels, placeholder navigation items, sample pricing copy, or generic FAQ text in customer-facing routes.
 6. Customer-facing copy in public, auth, candidate, and employer surfaces must be benefit-first and commercially legible. Terms such as `RBAC`, `RLS`, `tenant`, `membership`, `Supabase`, `audit`, and similar implementation language should stay in internal or admin-only contexts unless the user must act on that exact concept.
 7. The institutional portal under `/` may use a different visual system from the product landing, but it must still respect the shared mobile-first, accessibility, and clarity rules defined in this document. Its dedicated visual language belongs in `INSTITUTIONAL_UI_RULES.md`.
+8. Visible opportunity workflow copy must use ASI-native labels: `Responsable de oportunidad` for accountable owners, `Coordinador de oportunidad` for users who create/manage opportunities or move applicants, and `Revisor de aplicaciones` for users who review, rate, comment, or optionally move applicants.
+9. Avoid visible `recruiter` and `hiring manager` labels in navigation, buttons, empty states, helper text, notifications, and product copy. Legacy technical identifiers may appear only in developer-facing diagnostics or explicit permission-code references.
 
 ### 8.2 Color rules
 1. Pastel accents are allowed only as controlled brand surfaces, highlights, chips, or secondary emphasis.

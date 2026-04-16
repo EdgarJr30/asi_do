@@ -50,14 +50,14 @@ Establish secure multi-tenant access control.
 - audit logging baseline
 
 ### Exit criteria
-- standard user can submit recruiter request
+- standard user can submit tenant-operator request
 - pastor can submit cedula-backed validation request with union, association, and district scope
 - regional administrator can submit cedula plus appointment-backed validation request with union or association scope
 - approved pastors and regional administrators can authorize only requests inside their approved territory
 - regional administrators authorize pastors and normal professional users only, not companies by default
 - license activation remains separate from pastor/regional authorization
 - only super administrators and platform support can activate final licenses
-- platform admin can approve or reject recruiter request
+- platform admin can approve or reject tenant-operator request
 - user approval, ASI membership, and active subscription gate protected product content
 - tenant approval creates tenant, tenant profile, and first owner membership
 - `tenant_kind` supports company, ministry, project, field, and generic profile
@@ -77,7 +77,7 @@ Enable reusable candidate identity.
 - CV upload
 - profile completeness
 - candidate dashboard
-- opt-in visibility toggle for recruiter discovery
+- opt-in visibility toggle for tenant candidate discovery
 - private `candidate-resumes` storage bucket with self-service access policies
 
 ### Exit criteria
@@ -85,7 +85,7 @@ Enable reusable candidate identity.
 - CV upload works
 - profile can be reused later in applications
 - completeness score is updated from persisted candidate data, not only from client state
-- candidate can choose whether the profile appears in recruiter sourcing
+- candidate can choose whether the profile appears in tenant candidate sourcing
 
 ---
 
@@ -120,8 +120,8 @@ Ship protected opportunity publishing and candidate discovery for approved ASI m
 - search/filter
 - saved jobs
 - basic alerts UI and CRUD
-- recruiter-facing candidate directory for opt-in profiles
-- recruiter candidate detail view with RBAC-protected full profile access
+- coordinator-facing candidate directory for opt-in profiles
+- coordinator candidate detail view with RBAC-protected full profile access
 - opportunity type support for jobs, projects, volunteering, and professional services
 - type-specific opportunity stage templates are seeded for later tenant pipeline customization
 
@@ -129,11 +129,11 @@ Ship protected opportunity publishing and candidate discovery for approved ASI m
 - authorized tenant can publish an opportunity
 - approved ASI member with active subscription can browse opportunities on mobile
 - guest users cannot browse protected listing/detail routes
-- authorized recruiters can search visible candidates without waiting for an application
+- authorized coordinators can search visible candidates without waiting for an application
 - candidates can save published opportunities before the application phase is enabled
 
 ### Future consideration
-- anonymous opportunity preview may later expose limited public summary cards, but full opportunity detail, saved jobs, applications, screening questions, and recruiter/candidate workflows remain member-gated unless a future phase explicitly changes that contract
+- anonymous opportunity preview may later expose limited public summary cards, but full opportunity detail, saved jobs, applications, screening questions, and coordinator/candidate workflows remain member-gated unless a future phase explicitly changes that contract
 
 ---
 
@@ -169,13 +169,13 @@ Let teams manage applicants in structured stages.
 - ratings
 - activity history
 - permission-aware actions
-- simple recruiter filters and CSV export for authorized roles
+- simple coordinator filters and CSV export for authorized roles
 - seeded system stages with tenant override capacity
 - candidate-facing status synced from internal stage decisions
 - auditable pipeline mutations for moves, notes, and ratings
 
 ### Exit criteria
-- hiring team can operate a simple pipeline
+- opportunity team can operate a simple pipeline
 - candidate status can be surfaced appropriately
 - stage history is auditable
 - notes and ratings remain attributable to the author
@@ -248,7 +248,7 @@ Operational maturity for launch.
 Foundations + PWA + auth shell
 
 ### Sprint 2
-Recruiter approval flow + tenants + memberships + RBAC skeleton
+Tenant-operator approval flow + tenants + memberships + RBAC skeleton
 
 ### Sprint 3
 Candidate profile + CV

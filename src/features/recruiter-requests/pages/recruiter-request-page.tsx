@@ -177,7 +177,7 @@ export function RecruiterRequestPage() {
         source: 'recruiter-request.submit',
         route: surfacePaths.candidate.recruiterRequest,
         userId: session.authUser?.id ?? null,
-        userMessage: 'No pudimos enviar tu solicitud recruiter.',
+        userMessage: 'No pudimos enviar tu solicitud de operador.',
         error,
         metadata: {
           hasCompanyLogoFile: companyLogoFile !== null,
@@ -309,7 +309,7 @@ export function RecruiterRequestPage() {
     <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
       <Card className="bg-(--app-surface-muted)">
         <CardHeader>
-          <Badge variant="soft">Recruiter request</Badge>
+          <Badge variant="soft">Solicitud de operador</Badge>
           <CardTitle>Solicita la validación de tu tenant</CardTitle>
           <CardDescription>
             El admin revisa el tipo de tenant, sus datos obligatorios y los archivos privados antes de habilitar tu acceso operativo.
@@ -463,7 +463,7 @@ export function RecruiterRequestPage() {
                   <p className="text-xs text-zinc-500">
                     Requerido. Acepta PDF, PNG, JPG y WEBP. Las imagenes se optimizan antes de subirlas y el limite es {MAX_UPLOAD_SIZE_LABEL}.
                   </p>
-                  <p className="text-xs text-zinc-500">Solo el solicitante y reviewers admin pueden verlo.</p>
+                  <p className="text-xs text-zinc-500">Solo el solicitante y revisores admin pueden verlo.</p>
                   {isPreparingVerificationDocument ? (
                     <p className="text-xs text-zinc-500">Preparando documento antes de subir...</p>
                   ) : null}
@@ -474,7 +474,7 @@ export function RecruiterRequestPage() {
               </div>
 
               <Button className="w-full" disabled={submitMutation.isPending} type="submit">
-                {submitMutation.isPending ? 'Enviando solicitud...' : 'Enviar solicitud recruiter'}
+                {submitMutation.isPending ? 'Enviando solicitud...' : 'Enviar solicitud de operador'}
               </Button>
             </form>
           )}
@@ -490,7 +490,7 @@ export function RecruiterRequestPage() {
           <CardContent className="space-y-3">
             {requests.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-zinc-300 px-4 py-6 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                Aun no has enviado solicitudes recruiter.
+                Aun no has enviado solicitudes de operador.
               </div>
             ) : (
               requests.map((request) => {

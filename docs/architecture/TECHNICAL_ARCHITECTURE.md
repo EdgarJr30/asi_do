@@ -100,7 +100,7 @@ Use SQL migrations for:
 
 The initial identity migration must establish:
 - `public.users` synced from `auth.users`
-- recruiter approval requests before tenant creation
+- tenant-operator approval requests before tenant creation
 - platform and tenant RBAC tables with auditable assignments
 - private storage buckets for user media, company assets, and verification documents
 
@@ -113,7 +113,7 @@ The employer/talent discovery migration must establish:
 - employer workspace editing over `company_profiles`
 - candidate opt-in discovery fields on `candidate_profiles`
 - tenant permissions for candidate directory search and full sourced-profile review
-- RPC helpers for recruiter candidate search and full profile detail with audit logging
+- RPC helpers for coordinator candidate search and full profile detail with audit logging
 
 The jobs/discovery migration must establish:
 - `job_postings`, `job_screening_questions`, `saved_jobs`, and `job_alerts`
@@ -131,7 +131,7 @@ The applications migration must establish:
 
 The ATS-lite migration must establish:
 - `pipeline_stages`, `application_stage_history`, `application_notes`, and `application_ratings`
-- client-side recruiter filters and CSV export over tenant-authorized application datasets
+- client-side coordinator filters and CSV export over tenant-authorized application datasets
 - a server-validated `move_application_stage(...)` RPC for permission-safe stage transitions
 - deterministic synchronization between internal stages and candidate-facing `status_public` (legacy column name, not a guest-public status)
 - auditable collaboration artifacts for notes and ratings
@@ -150,7 +150,7 @@ The ASI access-gating migration must establish:
 - auditable manual access override fields
 - `has_active_asi_access`, `has_active_tenant_subscription`, and `can_publish_opportunity` helper functions
 - RLS changes that remove anonymous job discovery
-- follow-up validation triggers that enforce required recruiter-request metadata by `tenant_kind` and required opportunity metadata by `opportunity_type`
+- follow-up validation triggers that enforce required operator-request metadata by `tenant_kind` and required opportunity metadata by `opportunity_type`
 
 ### Security strategy
 - RLS enabled on exposed tables
@@ -238,8 +238,8 @@ Implementation note:
 ## 8. Observability guidance
 Track:
 - auth failures
-- recruiter request submission failures
-- recruiter approval failures
+- operator request submission failures
+- operator approval failures
 - tenant creation failures
 - candidate profile persistence failures
 - candidate resume upload failures
@@ -278,7 +278,7 @@ Add structured logs/events for critical flows where possible.
 ### Important targets
 - tenant isolation
 - RBAC helpers
-- auth-to-profile sync and recruiter approval bootstrap
+- auth-to-profile sync and operator approval bootstrap
 - job publishing
 - application submission
 - stage transitions

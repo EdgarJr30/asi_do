@@ -164,7 +164,7 @@ export function OnboardingPage() {
 
       await session.refresh()
       toast.success('Perfil actualizado', {
-        description: 'Tu onboarding base ya quedo listo para seguir con la solicitud recruiter.'
+        description: 'Tu onboarding base ya quedo listo para seguir con la solicitud de operador.'
       })
     } catch (error) {
       await captureClientError({
@@ -251,7 +251,7 @@ export function OnboardingPage() {
         <Card>
           <CardHeader>
             <CardTitle>Vista previa</CardTitle>
-            <CardDescription>Lo que queda listo antes de solicitar validacion recruiter.</CardDescription>
+            <CardDescription>Lo que queda listo antes de solicitar validacion como operador.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
@@ -269,11 +269,11 @@ export function OnboardingPage() {
             </div>
 
             <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-400">
-              Cuando completes esta pantalla puedes pasar a la solicitud recruiter o seguir como candidato global.
+              Cuando completes esta pantalla puedes pasar a la solicitud de operador o seguir como candidato global.
             </div>
 
             <Button className="w-full" variant="outline" onClick={() => void navigate(surfacePaths.candidate.recruiterRequest)}>
-              Ir a solicitud recruiter
+              Ir a solicitud de operador
             </Button>
           </CardContent>
         </Card>
