@@ -38,6 +38,7 @@ Used inside an ASI tenant workspace. A tenant may represent a company, ministry,
 - Tenant Admin
 - Opportunity Manager
 - Application Reviewer
+- Tenant Billing Contact
 - Readonly Analyst
 
 ### Requirement

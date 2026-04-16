@@ -37,7 +37,7 @@ Establish secure multi-tenant access control.
 - pastor and regional administrator validation forms
 - scoped pastor/regional authorization workflow
 - final license activation gate for super administrator or platform support
-- role-scope presets for platform, church-territory, tenant, and professional users
+- role-scope presets for platform, church-territory, tenant, billing-contact, and professional users
 - tenant operator request submission
 - platform-admin approval for tenant onboarding
 - tenant creation after approval

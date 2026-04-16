@@ -121,7 +121,7 @@ The MVP should **not** initially include:
 - platform admin area
 - pastor validation form with cedula upload, union, association, district, optional churches, and platform-admin approval before scoped pastor authorization is granted
 - regional administrator validation form with cedula upload, appointment evidence, union/association scope, and platform-admin approval before scoped regional authorization is granted
-- role-scope model that separates super administrator, platform support, regional administrator, pastor administrator, tenant owner, tenant member, and professional individual user
+- role-scope model that separates super administrator, platform support, platform moderator, readonly platform auditor, regional administrator, pastor administrator, tenant owner, tenant member, tenant billing contact, and professional individual user
 - two-step authorization model where pastors or regional administrators may authorize normal users within scope, but final license activation remains limited to the super administrator or platform support
 - avatar and document uploads with modern web formats, 5 MB guardrails, and clear validation feedback
 - authenticated app entry redirect that sends employer users to `/workspace` and standard users to `/candidate/profile`

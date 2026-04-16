@@ -102,7 +102,7 @@ Guardrails:
 - should not bypass audit logging
 
 ### Platform Moderator
-Status: recommended supporting role.
+Status: MVP role.
 
 Purpose:
 - reviews flagged users, tenants, opportunities, and abusive content
@@ -115,12 +115,12 @@ Baseline permissions:
 - `user:read`
 - `audit_log:read`
 
-Why it is needed:
+Why it is included:
 - support tickets and trust/safety decisions are different workflows
 - moderation may need stronger policy controls than ordinary support
 
 ### Readonly Platform Auditor
-Status: recommended supporting role.
+Status: MVP role.
 
 Purpose:
 - read-only operational review for leadership, compliance, QA, or external audit support
@@ -132,7 +132,7 @@ Baseline permissions:
 - `audit_log:read`
 - `app_error_log:read`
 
-Why it is needed:
+Why it is included:
 - not everyone who needs visibility should be able to mutate data
 
 ---
@@ -265,7 +265,7 @@ Baseline permissions:
 - `analytics:read`
 
 ### Opportunity Manager
-Status: recommended tenant role.
+Status: MVP tenant role.
 
 Purpose:
 - creates and manages job postings for an approved company tenant without managing team roles
@@ -284,11 +284,11 @@ Baseline permissions:
 - `application:add_note`
 - `application:rate`
 
-Why it is needed:
+Why it is included:
 - companies often need hiring operators who can run opportunities but should not control workspace roles or ownership
 
 ### Application Reviewer
-Status: recommended tenant role.
+Status: MVP tenant role.
 
 Purpose:
 - reviews candidates and collaborates in the ATS-lite workflow without creating jobs or managing the workspace
@@ -306,20 +306,32 @@ Optional permissions:
 - `candidate_profile:read_full`
 - `candidate_resume:read`
 
-Why it is needed:
+Why it is included:
 - companies may invite interviewers, department leads, or assistants who should not own the whole hiring process
 
 ### Tenant Billing Contact
-Status: future role.
+Status: MVP tenant role.
 
 Purpose:
 - sees invoices, plan state, and billing status for a tenant without managing hiring or candidates
 
-Why it may be needed later:
-- billing contact is usually not the same person as hiring owner
+Baseline permissions:
+- `workspace:read`
+- `plan:read` for the assigned tenant billing context
+- `billing:read` for the assigned tenant billing context
 
-MVP note:
-- keep this future-only unless billing workflows require it.
+May:
+- view tenant plan state, invoices, billing contact details, and payment follow-up status
+
+May not:
+- create or publish job postings
+- review applications or candidate resumes by default
+- manage tenant roles or members
+- activate platform user licenses
+- mutate billing or plan state unless a future explicit billing-write permission is introduced
+
+Why it is included:
+- billing contact is usually not the same person as hiring owner
 
 ---
 
@@ -382,29 +394,30 @@ Ship these role presets first:
 - Tenant Admin
 - Opportunity Manager
 - Application Reviewer
-- Professional Individual User
-
-Recommended but not blocking for first RBAC build:
 - Platform Moderator
 - Readonly Platform Auditor
+- Professional Individual User
 - Tenant Billing Contact
 
 ---
 
 ## 9. Permission matrix
 
-| Capability | Super Admin | Platform Support | Regional Admin | Pastor Admin | Tenant Owner | Tenant Admin | Opportunity Manager | Application Reviewer | Professional User |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Full platform governance | yes | no | no | no | no | no | no | no | no |
-| Support tickets/admin console support | yes | yes | no | no | no | no | no | no | no |
-| Activate licenses | yes | yes | no | no | no | no | no | no | no |
-| Authorize pastors | yes | no | yes, within territory | no | no | no | no | no | no |
-| Authorize normal professional users | yes | no | yes, within territory | yes, within scope | no | no | no | no | no |
-| Own tenant workspace | no by default | no | no | no | yes | no | no | no | no |
-| Manage tenant team and roles | no by default | no | no | no | yes | limited if granted | no | no | no |
-| Create employment job postings | no by default | no | no | no | yes, company tenants only | yes, company tenants only | yes, company tenants only | no | no |
-| Review applications | no by default | no | no | no | yes | yes | yes | yes | own applications only |
-| View/apply to opportunities | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes |
+| Capability | Super Admin | Platform Support | Platform Moderator | Readonly Auditor | Regional Admin | Pastor Admin | Tenant Owner | Tenant Admin | Opportunity Manager | Application Reviewer | Tenant Billing Contact | Professional User |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Full platform governance | yes | no | no | no | no | no | no | no | no | no | no | no |
+| Support tickets/admin console support | yes | yes | no | read only | no | no | no | no | no | no | no | no |
+| Moderate flagged content/entities | yes | no by default | yes | read only | no | no | no | no | no | no | no | no |
+| Read audit logs | yes | yes | yes | yes | no | no | no | no | no | no | no | no |
+| Activate licenses | yes | yes | no | no | no | no | no | no | no | no | no | no |
+| Authorize pastors | yes | no | no | no | yes, within territory | no | no | no | no | no | no | no |
+| Authorize normal professional users | yes | no | no | no | yes, within territory | yes, within scope | no | no | no | no | no | no |
+| Own tenant workspace | no by default | no | no | no | no | no | yes | no | no | no | no | no |
+| Manage tenant team and roles | no by default | no | no | no | no | no | yes | limited if granted | no | no | no | no |
+| Read tenant billing/plan state | yes | yes | no | no by default | no | no | yes | optional | no | no | yes | no |
+| Create employment job postings | no by default | no | no | no | no | no | yes, company tenants only | yes, company tenants only | yes, company tenants only | no | no | no |
+| Review applications | no by default | no | no | no | no | no | yes | yes | yes | yes | no | own applications only |
+| View/apply to opportunities | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes | yes if member gate passes |
 
 ---
 
@@ -414,5 +427,7 @@ Use customer-facing labels carefully:
 - `Platform Support` is internal staff/support.
 - `Regional Administrator` is the territory admin label.
 - `Pastor Administrator` is the scoped pastoral authorization label.
-- `Tenant Owner`, `Tenant Admin`, `Opportunity Manager`, and `Application Reviewer` are tenant-side operational labels.
+- `Platform Moderator` is an internal trust/safety label.
+- `Readonly Platform Auditor` is an internal read-only governance label.
+- `Tenant Owner`, `Tenant Admin`, `Opportunity Manager`, `Application Reviewer`, and `Tenant Billing Contact` are tenant-side operational labels.
 - `Professional Individual User` is a product/account type, not a platform admin role.

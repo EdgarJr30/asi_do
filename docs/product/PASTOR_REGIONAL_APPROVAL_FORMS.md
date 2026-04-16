@@ -147,17 +147,7 @@ Company/operator account requests are approved through the tenant/operator appro
 
 ---
 
-## 6. Permission outcomes
-| Actor | Territory scope | Can authorize professionals | Can authorize companies | Can approve pastors | Can approve regional admins | Can activate license |
-|---|---|---:|---:|---:|---:|---:|
-| Super administrator | all platform | yes | yes | yes | yes | yes |
-| Platform support | support console | no | no | no | no | yes |
-| Union/regional administrator | approved union or association | yes | no by default | yes, within territory | association admins only | no |
-| Pastor | approved district/churches | yes | no by default | no | no | no |
-
----
-
-## 7. Data and audit requirements
+## 6. Data and audit requirements
 Every request and decision must preserve:
 - requester user
 - requested authority type
@@ -174,10 +164,10 @@ Identity documents and appointment evidence must live in private storage with re
 
 ---
 
-## 8. MVP-safe implementation notes
+## 7. MVP-safe implementation notes
 - Keep pastor and regional administrator requests separate from general recruiter/operator requests, even if the UI later presents them in one admin approvals queue.
 - Store territory references as structured IDs instead of free text once the canonical union/association/district/church catalog exists.
 - Until that catalog exists, free-text territory fields may be accepted only as a temporary intake layer and must be normalized before granting authority.
 - Do not grant authorization capability from form submission alone; approval must create the scoped authority assignment.
 - Do not let scoped authorization replace platform license activation.
-- Keep the full role and scope taxonomy aligned with `docs/domain/ROLE_SCOPE_MODEL.md`.
+- Keep the full role, scope, and permission matrix in `docs/domain/ROLE_SCOPE_MODEL.md`.
