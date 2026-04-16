@@ -9,6 +9,7 @@ This folder contains the canonical Markdown documentation for the repository.
 - `product/ROADMAP.md`
 - `product/BENCHMARK.md`
 - `product/PASTOR_REGIONAL_APPROVAL_FORMS.md`
+- `product/NOTIFICATION_IMPLEMENTATION_PLAN.md`
 
 ### `domain/`
 - `domain/BUSINESS_RULES.md`

@@ -190,11 +190,16 @@ The MVP should **not** initially include:
 ## 8.8 Notifications
 - in-app notifications
 - email notifications
+- web push notifications with explicit opt-in and revocation
+- preference center by topic/category, channel, frequency, tenant context, role context, quiet hours, and timezone
 - auditable email delivery processing for workflow notifications
 - new applicant alerts
 - stage/status updates
 - recruiter-request review updates
+- membership, access, tenant, opportunity, application, interview, moderation, support, and security alerts
+- daily/weekly digest support for high-volume activity
 - server-side workflow emission so alerts do not depend on a single client session
+- canonical implementation details in `docs/product/NOTIFICATION_IMPLEMENTATION_PLAN.md`
 
 ## 8.9 Moderation/admin foundations
 - review flagged jobs or tenants
@@ -282,6 +287,8 @@ Authorized tenant users with the export permission must be able to download a CS
 
 ### FR-11 Notifications
 Relevant actors must receive notifications for major workflow events.
+
+The notification system must support email, in-app, and web push channels; user preferences by topic/category, channel, frequency, tenant context, role context, quiet hours, and timezone; critical notices that cannot be fully disabled; digest/noise-control behavior for high-volume events; and auditable delivery history. The canonical event taxonomy and implementation path live in `docs/product/NOTIFICATION_IMPLEMENTATION_PLAN.md`.
 
 ### FR-12 Moderation
 Platform admins must be able to take moderation actions on risky or abusive content/entities.

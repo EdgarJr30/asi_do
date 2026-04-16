@@ -249,10 +249,12 @@ Technical log line for provider attempts, failures, and retries.
 | tenant_subscriptions | id, tenant_id, plan_id, status, starts_at, ends_at nullable, seat_count, usage_snapshot |
 | user_subscriptions | id, user_id, status, starts_at, ends_at nullable, source, metadata |
 | feature_flags | id, code, scope_type, scope_id nullable, is_enabled, metadata |
-| notifications | id, recipient_user_id, tenant_id nullable, type, title, body, action_url nullable, payload jsonb, read_at nullable |
-| notification_preferences | id, user_id, tenant_id nullable, in_app_enabled, email_enabled, push_enabled, quiet_hours_json |
+| notification_events | id, type, actor_user_id nullable, entity_type, entity_id, tenant_id nullable, priority, preference_category, payload jsonb, dedupe_key nullable, created_at |
+| notifications | id, recipient_user_id, tenant_id nullable, event_id nullable, type, title, body, action_url nullable, payload jsonb, read_at nullable, archived_at nullable, snoozed_until nullable |
+| notification_preferences | id, user_id, tenant_id nullable, preference_category, channel, frequency, is_enabled, quiet_hours_json, timezone, role_context nullable |
+| notification_templates | id, type, channel, locale, version, subject nullable, title, body, cta_label nullable, metadata |
 | push_subscriptions | id, user_id, tenant_id nullable, endpoint, p256dh_key, auth_key, is_active, last_seen_at |
-| notification_deliveries | id, notification_id, channel, delivery_status, attempt_count, response_payload |
+| notification_deliveries | id, notification_id nullable, event_id nullable, recipient_user_id, channel, provider nullable, delivery_status, attempt_count, response_payload |
 | notification_delivery_logs | id, delivery_id, log_level, message, metadata |
 | moderation_cases | id, entity_type, entity_id, tenant_id nullable, status, severity, reason, opened_by_user_id, assigned_to_user_id nullable |
 | moderation_actions | id, moderation_case_id, action_type, actor_user_id, note nullable, payload, created_at |
@@ -261,6 +263,7 @@ Launch-readiness notes:
 - `memberships.status = invited` is a first-class MVP state used by employer invitations and invite revocation.
 - `job_alerts.criteria_json` stores the current MVP discovery filters: query, workplace type, and country code.
 - Email workflow notifications remain durable in `notification_deliveries` until the processor marks them `sent` or `failed` and writes `notification_delivery_logs`.
+- Notification events, preferences, templates, inbox items, deliveries, and push subscriptions must evolve according to `docs/product/NOTIFICATION_IMPLEMENTATION_PLAN.md`.
 - `recruiter_requests.request_metadata` stores tenant-kind-specific onboarding data such as `operating_scope`, `sponsoring_entity`, `field_region`, and `conversion_intent`.
 
 ---

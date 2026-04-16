@@ -82,6 +82,8 @@ Security includes protecting:
 22. Pastor/regional authorization must not activate product access by itself. Final license activation must remain a separate audited action limited to super administrators and platform support.
 23. Professional individual users must not be able to create or publish job postings. Employment job creation and publishing must be restricted to approved company tenants with the required tenant permissions.
 24. A future anonymous opportunity preview must be backed by an intentionally public, least-privilege read path that returns only approved summary fields and never exposes full job detail, screening questions, saved jobs, applications, candidate data, or tenant-private workflow state.
+25. Notification recipients must be resolved from server-authoritative authorization state, and notification payloads/deep links must not expose tenant-private, candidate-private, or admin-only data to users who cannot access the target route.
+26. Critical notification preferences must never allow users to fully disable security, access, approval, membership/subscription, compliance, role/permission, or sensitive-action notices.
 
 ### Supabase MCP rules for LLM-assisted development
 - Supabase MCP may be used only as an internal developer tool, never as an end-user or customer-facing capability.
@@ -160,6 +162,8 @@ OSINT may be used only for legitimate moderation, fraud prevention, trust verifi
 - email delivery processor authorization and sent/failed auditability
 - moderation-case authorization, tenant/job side effects, and plan-limit enforcement hooks
 - notification click/read tracking across service worker, client, and database RPC boundaries
+- notification preference enforcement for non-critical categories without disabling critical system notices
+- notification deep-link authorization and payload minimization
 - documentation integrity for security-sensitive changes
 
 ---

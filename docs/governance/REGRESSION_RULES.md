@@ -137,6 +137,9 @@ Do not reintroduce opaque unknown-email workspace invitations for the MVP. Emplo
 ### R-036 — Launch readiness must keep alerts, export, and email delivery processing
 Do not regress job alerts back to schema-only groundwork, applicant export back to a dormant permission, or email hooks back to permanent `pending` deliveries. The MVP must keep candidate-managed job alerts, recruiter CSV export for authorized roles, and an auditable email processor that resolves deliveries to `sent` or `failed`.
 
+### R-036A — Notifications must stay event-driven and preference-aware
+Do not implement notifications as scattered client-only sends or one-off provider calls. Notifications must originate from durable product events when they affect workflow state, resolve recipients through server-authoritative permissions, preserve delivery history, and follow `docs/product/NOTIFICATION_IMPLEMENTATION_PLAN.md`. Critical security, access, approval, membership/subscription, compliance, role/permission, and sensitive-action notices must not be fully disabled; non-critical categories must respect channel/frequency preferences and high-volume events must support digest, grouping, deduplication, or rate limits.
+
 ### R-037 — The public app must look client-ready and internal tooling must stay isolated
 Do not reuse the product home or shell as a generic launch-readiness panel. The public root experience must behave as a real SaaS landing with pricing and donation UI surfaces, while foundations, notification testing, and similar internal tooling stay visible only to platform admins and explicitly flagged internal developers.
 

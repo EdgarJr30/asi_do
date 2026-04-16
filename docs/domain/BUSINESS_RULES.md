@@ -155,8 +155,12 @@
 4. Users should not be spammed by redundant events.
 5. Push notification subscriptions must be explicitly permission-based and revocable by the user.
 6. Every notification delivery attempt must persist technical history and logs in the database.
-7. Notification preferences may expand later, but critical system notices may override preferences where justified.
-8. Core workflow notifications must be emitted from durable server-side workflows for application submit, recruiter-request review, and candidate-facing status changes.
+7. Notification preferences must support topic/category, channel, frequency, tenant context, role context, quiet hours, and user timezone as the system matures.
+8. Critical notices for security, access, approvals, membership/subscription, compliance, and role/permission changes must not be fully disabled, though limited channel preference may be allowed when safe.
+9. Non-critical notifications must be configurable by channel and frequency.
+10. High-volume notifications must support digest, grouping, deduplication, and rate limiting.
+11. Core workflow notifications must be emitted from durable server-side workflows for application submit, recruiter-request review, membership/access changes, tenant/team changes, candidate-facing status changes, interviews, and moderation/support operations.
+12. The canonical notification implementation contract lives in `docs/product/NOTIFICATION_IMPLEMENTATION_PLAN.md`.
 
 ---
 

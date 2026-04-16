@@ -189,8 +189,13 @@ Operational maturity for launch.
 
 ### Deliverables
 - in-app notifications
+- notification event taxonomy and audience resolver contracts
 - email event hooks
 - email delivery processor edge function with durable sent/failed status updates
+- web push opt-in, subscription, revocation, and click tracking
+- notification preference center by topic/category, channel, frequency, tenant context, role context, quiet hours, and timezone
+- daily/weekly digest and deduplication rules for high-volume events
+- critical notice policy for security, access, approvals, membership/subscription, compliance, and role/permission changes
 - moderation dashboard baseline
 - plan/limits hooks
 - admin dashboards baseline
@@ -204,6 +209,9 @@ Operational maturity for launch.
 ### Exit criteria
 - core workflow notifications exist
 - pending email deliveries can be processed into sent/failed states with auditable logs
+- non-critical notifications respect user preferences without disabling critical system notices
+- high-volume notification types can be grouped or digested without duplicate spam
+- push notifications require explicit consent and can be revoked
 - moderation actions work
 - basic plan enforcement hooks exist
 - platform admins can inspect launch-health counters from inside the app
