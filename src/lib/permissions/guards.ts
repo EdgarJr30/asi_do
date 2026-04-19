@@ -13,6 +13,16 @@ export function hasPermission(permissions: Iterable<PermissionCode>, requiredPer
   return toPermissionSet(permissions).has(requiredPermission)
 }
 
+export function hasAnyPermission(permissions: Iterable<PermissionCode>, requiredPermissions?: PermissionCode[]) {
+  if (!requiredPermissions?.length) {
+    return true
+  }
+
+  const permissionSet = toPermissionSet(permissions)
+
+  return requiredPermissions.some((permission) => permissionSet.has(permission))
+}
+
 export function filterNavigationItems(
   items: NavigationItem[],
   permissions: Iterable<PermissionCode>,
@@ -23,6 +33,6 @@ export function filterNavigationItems(
       return false
     }
 
-    return hasPermission(permissions, item.requiredPermission)
+    return hasPermission(permissions, item.requiredPermission) && hasAnyPermission(permissions, item.requiredAnyPermission)
   })
 }

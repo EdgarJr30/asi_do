@@ -20,7 +20,7 @@ import { RecruiterRequestPage } from '@/features/recruiter-requests/pages/recrui
 import { RecruiterReviewPage } from '@/features/recruiter-requests/pages/recruiter-review-page'
 import { TalentDirectoryPage } from '@/features/talent/pages/talent-directory-page'
 import { WorkspaceOverviewPage } from '@/features/tenants/pages/workspace-overview-page'
-import { RequireActiveAsiAccess, RequireAdminAccess, RequireAuth, RequirePermission } from '@/lib/auth/guards'
+import { RequireActiveAsiAccess, RequireAdminAccess, RequireAnyPermission, RequireAuth, RequirePermission } from '@/lib/auth/guards'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { SurfaceStatusPage } from '@/app/router/routes/surface-status-page'
 import { AdminShell } from '@/experiences/app/layouts/admin-shell'
@@ -28,6 +28,7 @@ import { AuthShell } from '@/experiences/app/layouts/auth-shell'
 import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
 import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
 import { AppEntryRedirect } from '@/experiences/app/routes/app-entry-redirect'
+import { approvalReviewPermissions } from '@/shared/constants/navigation'
 
 export const applicationRoutes: RouteObject[] = [
   {
@@ -164,7 +165,11 @@ export const applicationRoutes: RouteObject[] = [
       },
       {
         path: 'approvals',
-        element: <RecruiterReviewPage />
+        element: (
+          <RequireAnyPermission permissions={approvalReviewPermissions} surface="admin">
+            <RecruiterReviewPage />
+          </RequireAnyPermission>
+        )
       },
       {
         path: 'platform',

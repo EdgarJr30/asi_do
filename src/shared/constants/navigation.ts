@@ -1,5 +1,14 @@
 import type { NavigationItem } from '@/shared/types/navigation'
 import { surfacePaths } from '@/app/router/surface-paths'
+import type { PermissionCode } from '@/shared/constants/permissions'
+
+export const approvalReviewPermissions: PermissionCode[] = [
+  'recruiter_request:review',
+  'user:approve',
+  'pastor_authority_request:review',
+  'regional_authority_request:review',
+  'scoped_user_authorization:review'
+]
 
 export const publicNavigationItems: NavigationItem[] = [
   {
@@ -105,7 +114,8 @@ export const adminNavigationItems: NavigationItem[] = [
     title: 'Approvals',
     href: surfacePaths.admin.approvals,
     description: 'Operador, membresía y autoridad territorial',
-    requiresAuth: true
+    requiresAuth: true,
+    requiredAnyPermission: approvalReviewPermissions
   },
   {
     title: 'Platform',

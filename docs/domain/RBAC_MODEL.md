@@ -208,7 +208,8 @@ Commercial plan checks are separate from RBAC checks. Roles grant permission to 
 4. Unauthorized deep links must fail gracefully.
 5. Permission checks in UI are supportive only; backend and RLS remain authoritative.
 6. Admin console routes under `/admin/*` must require either platform-admin authority or the explicit internal-developer flag, and they must stay hidden from the normal customer navigation model.
-7. `/platform/jobs*` routes must behave as protected member content for now, not guest-visible public browsing.
+7. The unified admin approvals route must require at least one approval/review permission, such as `recruiter_request:review`, `user:approve`, `pastor_authority_request:review`, `regional_authority_request:review`, or `scoped_user_authorization:review`.
+8. `/platform/jobs*` routes must behave as protected member content for now, not guest-visible public browsing.
 
 ---
 

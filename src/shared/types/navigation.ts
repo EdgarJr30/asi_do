@@ -8,4 +8,5 @@ export interface NavigationItem {
   descriptionKey?: string
   requiresAuth?: boolean
   requiredPermission?: PermissionCode
+  requiredAnyPermission?: PermissionCode[]
 }
