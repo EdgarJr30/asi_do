@@ -12,7 +12,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { PageHeader } from '@/components/ui/page-header'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -714,15 +713,29 @@ export function JobsOverviewPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Jobs"
-        title={canManageJobs ? 'Gestiona oportunidades internas y publicadas para miembros desde una misma vista' : 'Descubre oportunidades con filtros simples y contexto suficiente'}
-        description={
-          canManageJobs
-            ? 'Crea borradores, publica cuando corresponda y mantén ordenado el frente de talento aprobado.'
-            : 'Explora oportunidades publicadas para miembros, guarda las más relevantes y vuelve a ellas con menos fricción.'
-        }
-      />
+      <section className="rounded-[30px] border border-(--app-border) bg-white px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] sm:px-7">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+              Reclutamiento
+            </div>
+            <h1 className="mt-4 text-[1.75rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2rem]">
+              {canManageJobs ? 'Vacantes y oportunidades desde una sola vista' : 'Explora oportunidades con filtros simples'}
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-(--app-text-muted)">
+              {canManageJobs
+                ? 'Crea borradores, publica cuando corresponda y mantén ordenado el frente de talento aprobado.'
+                : 'Explora oportunidades publicadas para miembros, guarda las más relevantes y vuelve a ellas con menos friccion.'}
+            </p>
+          </div>
+          {canManageJobs ? (
+            <div className="rounded-[22px] border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-right">
+              <p className="text-[0.76rem] font-medium text-(--app-text-muted)">Vacantes del workspace</p>
+              <p className="mt-1 text-[1.55rem] font-bold tracking-[-0.03em] text-(--app-text)">{tenantJobsQuery.data?.length ?? 0}</p>
+            </div>
+          ) : null}
+        </div>
+      </section>
 
       {canManageJobs && workspaceQuery.data ? (
         <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
@@ -749,7 +762,7 @@ export function JobsOverviewPage() {
             <CardContent className="space-y-3">
               {tenantJobsQuery.data?.length ? (
                 tenantJobsQuery.data.map((job) => (
-                  <div key={job.id} className="rounded-[24px] border border-(--app-border) bg-(--app-surface-muted) p-4">
+                  <div key={job.id} className="rounded-panel border border-(--app-border) bg-(--app-surface-muted) p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-(--app-text)">{job.title}</p>
@@ -784,7 +797,7 @@ export function JobsOverviewPage() {
                   </div>
                 ))
               ) : (
-                <div className="rounded-[24px] border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-6 text-sm text-(--app-text-muted)">
+                <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-6 text-sm text-(--app-text-muted)">
                   Todavia no hay vacantes en este espacio.
                 </div>
               )}
@@ -821,7 +834,7 @@ export function JobsOverviewPage() {
                   const isSaved = publicJobsQuery.data.savedJobIds.includes(job.id)
 
                   return (
-                    <div key={job.id} className="rounded-[24px] border border-(--app-border) bg-(--app-surface-muted) p-4">
+                    <div key={job.id} className="rounded-panel border border-(--app-border) bg-(--app-surface-muted) p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-lg font-semibold text-(--app-text)">{job.title}</p>
@@ -855,7 +868,7 @@ export function JobsOverviewPage() {
                   )
                 })
               ) : (
-                <div className="rounded-[24px] border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-6 text-sm text-(--app-text-muted)">
+                <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-6 text-sm text-(--app-text-muted)">
                   No hay oportunidades publicadas que coincidan con estos filtros.
                 </div>
               )}
@@ -913,7 +926,7 @@ export function JobsOverviewPage() {
                     const criteria = (alert.criteria_json ?? {}) as Record<string, unknown>
 
                     return (
-                      <div key={alert.id} className="rounded-[24px] border border-(--app-border) bg-(--app-surface-muted) p-4">
+                      <div key={alert.id} className="rounded-panel border border-(--app-border) bg-(--app-surface-muted) p-4">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-(--app-text)">{alert.label}</p>

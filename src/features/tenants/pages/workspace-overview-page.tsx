@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -15,7 +16,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { PageHeader } from '@/components/ui/page-header';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toErrorMessage } from '@/features/auth/lib/auth-api';
@@ -273,14 +273,76 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
   const invitedMembershipCount = bundle.memberships.filter(
     (membership) => membership.status === 'invited'
   ).length;
+  const publishedStateLabel = isPublic ? 'Perfil publico' : 'Perfil privado';
+  const workspaceStats = [
+    {
+      label: 'Miembros activos',
+      value: activeMembershipCount.toString(),
+      sublabel: 'personas operando este espacio',
+    },
+    {
+      label: 'Invitaciones pendientes',
+      value: invitedMembershipCount.toString(),
+      sublabel: 'accesos aun por aceptar',
+    },
+    {
+      label: 'Roles configurados',
+      value: assignableRoles.length.toString(),
+      sublabel: 'estructura actual del equipo',
+    },
+    {
+      label: 'Visibilidad',
+      value: publishedStateLabel,
+      sublabel: 'presencia actual de la empresa',
+    },
+  ] as const;
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Company"
-        title="Administra la identidad de tu empresa y el acceso del equipo desde una sola vista"
-        description="Mantén claro cómo se presenta tu empresa, quién puede operar vacantes y qué accesos siguen pendientes."
-      />
+      <section className="rounded-[30px] border border-(--app-border) bg-white px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] sm:px-7">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+              Dashboard
+            </div>
+            <h1 className="mt-4 text-[1.75rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2rem]">
+              Buenos dias, {session.profile?.display_name ?? session.profile?.full_name ?? 'equipo'}
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-(--app-text-muted)">
+              Revisa el estado del workspace, manten clara la identidad de empresa y resuelve accesos pendientes desde una sola vista.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-(--app-border) bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+              to={surfacePaths.workspace.jobs}
+            >
+              Ver vacantes
+            </Link>
+            <Link
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-primary-600 bg-primary-600 px-4 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(43,69,143,0.18)] transition hover:border-primary-700 hover:bg-primary-700"
+              to={surfacePaths.workspace.pipeline}
+            >
+              Abrir pipeline
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {workspaceStats.map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-[22px] border border-(--app-border) bg-(--app-surface-muted) px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
+            >
+              <p className="text-[0.8rem] font-medium text-(--app-text-muted)">{stat.label}</p>
+              <p className="mt-2 text-[1.7rem] font-bold tracking-[-0.03em] text-(--app-text)">
+                {stat.value}
+              </p>
+              <p className="mt-1 text-xs text-(--app-text-subtle)">{stat.sublabel}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>

@@ -302,6 +302,7 @@ Surface-direction rule:
 - Authenticated operational surfaces should default to cleaner, brighter, calmer layouts that prioritize readability, task flow, and repeated daily use.
 - Authentication must live in its own isolated shell. Login and sign-up cannot inherit employer sidebars, admin console navigation, or any dashboard chrome.
 - Desktop auth should use a split composition: a calm light form pane for the active task and a branded informational pane that reinforces trust, product value, and platform context. On mobile, collapse to a single-column form-first flow without losing brand recognition.
+- The operational app shell should use a dark brand-anchored sidebar with grouped navigation, a light top bar with breadcrumb context, and a soft light content canvas. Dense internal work such as vacancies, candidates, and pipeline should feel compact and purposeful rather than marketing-like.
 - Navigation must be contextual by audience: public, auth, candidate, employer, and internal surfaces each need their own navigation model.
 - Bootstrap, foundations, launch-readiness, and similar tooling flows must stay visually and navigationally inside internal-only surfaces.
 - Theme selection may default to the system preference, but the product chrome must always expose a visible user-facing toggle so people can switch between light and dark mode without entering internal settings.

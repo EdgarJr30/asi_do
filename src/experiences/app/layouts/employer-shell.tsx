@@ -28,7 +28,7 @@ import { toast } from 'sonner'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { RouteScrollManager } from '@/app/router/route-scroll-manager'
 import { surfacePaths } from '@/app/router/surface-paths'
-import { BrandMark } from '@/components/ui/app-brand'
+import { BrandLockup, BrandMark } from '@/components/ui/app-brand'
 import { AppBottomNav, type AppNavGroup, type AppNavItem } from '@/components/ui/app-shell-navigation'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -86,31 +86,31 @@ const candidateIconByHref: Partial<Record<string, LucideIcon>> = {
 
 const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'description'>> = {
   [surfacePaths.workspace.root]: {
-    title: 'Company',
-    description: 'Marca, equipo y presencia compartida de tu empresa'
+    title: 'Resumen',
+    description: 'Estado operativo del workspace, equipo e identidad de empresa'
   },
   [surfacePaths.workspace.jobs]: {
-    title: 'Jobs',
-    description: 'Vacantes, visibilidad y ritmo del proceso'
+    title: 'Vacantes',
+    description: 'Publicacion, estado y ritmo del frente de reclutamiento'
   },
   [surfacePaths.workspace.talent]: {
-    title: 'Candidates',
-    description: 'Directorio de talento visible para tu equipo'
+    title: 'Candidatos',
+    description: 'Talento visible para el equipo con contexto suficiente para decidir'
   },
   [surfacePaths.workspace.pipeline]: {
     title: 'Pipeline',
-    description: 'Seguimiento colaborativo de cada aplicación'
+    description: 'Seguimiento colaborativo de cada aplicacion por etapa'
   },
   [surfacePaths.workspace.access]: {
-    title: 'Roles',
-    description: 'Permisos, accesos y estructura del equipo'
+    title: 'Accesos',
+    description: 'Roles, permisos y estructura operativa del equipo'
   }
 }
 
 const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'description'>> = {
   [surfacePaths.storefront.jobs]: {
-    title: 'Jobs',
-    description: 'Explora oportunidades abiertas y aplica con más contexto'
+    title: 'Vacantes',
+    description: 'Explora oportunidades abiertas y aplica con mas contexto'
   },
   [surfacePaths.candidate.applications]: {
     title: 'Aplicaciones',
@@ -232,6 +232,26 @@ function getRouteMeta(
     title: fallback.title,
     description: fallback.description
   }
+}
+
+function getRouteBreadcrumbs(groups: AppNavGroup[], pathname: string, fallbackTitle: string) {
+  for (const group of groups) {
+    const matchedItem = group.items
+      .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+      .sort((left, right) => right.href.length - left.href.length)[0]
+
+    if (matchedItem) {
+      const breadcrumbs = group.title ? [group.title] : []
+
+      if (breadcrumbs.at(-1) !== matchedItem.title) {
+        breadcrumbs.push(matchedItem.title)
+      }
+
+      return breadcrumbs
+    }
+  }
+
+  return [fallbackTitle]
 }
 
 function resolveActiveShellItemHref(groups: AppNavGroup[], pathname: string) {
@@ -360,18 +380,18 @@ function SidebarFooter({
 
   if (!session.isAuthenticated) {
     return (
-      <div className="border-t border-slate-200 px-2.5 py-3 dark:border-white/10">
+      <div className="border-t border-white/10 px-2.5 py-3">
         <button
           className={cn(
             'flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
             showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
-            'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white'
+            'text-white/78 hover:bg-white/6 hover:text-white'
           )}
           title={showCollapsedLabels ? config.publicActionLabel : undefined}
           type="button"
           onClick={() => onActionNavigate(config.publicActionHref)}
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/8 text-white/78">
             <Sparkles className="size-4.5" />
           </span>
           {!showCollapsedLabels ? <span>{config.publicActionLabel}</span> : <span className="sr-only">{config.publicActionLabel}</span>}
@@ -391,9 +411,9 @@ function SidebarFooter({
         </div>
 
         {!showCollapsedLabels ? (
-          <div className="mt-4 border-t border-slate-200 pt-4 text-center dark:border-white/10">
-            <p className="text-xs leading-5 text-slate-400">© {footerYear} {config.brand}</p>
-            <p className="mt-1 text-xs font-medium text-slate-400">{config.footerCaption}</p>
+          <div className="mt-4 border-t border-white/10 pt-4 text-center">
+            <p className="text-xs leading-5 text-white/42">© {footerYear} {config.brand}</p>
+            <p className="mt-1 text-xs font-medium text-white/42">{config.footerCaption}</p>
           </div>
         ) : null}
       </div>
@@ -401,37 +421,37 @@ function SidebarFooter({
   }
 
   return (
-    <div className="border-t border-slate-200 px-2.5 py-3 dark:border-white/10">
+    <div className="border-t border-white/10 px-2.5 py-3">
       <button
         className={cn(
           'flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
           showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
-          'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white'
+          'text-white/78 hover:bg-white/6 hover:text-white'
         )}
         title={showCollapsedLabels ? config.publicActionLabel : undefined}
         type="button"
         onClick={() => onActionNavigate(config.publicActionHref)}
       >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/8 text-white/78">
           <BriefcaseBusiness className="size-4.5" />
         </span>
         {!showCollapsedLabels ? <span>{config.publicActionLabel}</span> : <span className="sr-only">{config.publicActionLabel}</span>}
       </button>
 
       {!isDesktop ? (
-        <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5">
+        <div className="mt-3 rounded-2xl border border-white/10 bg-white/6 p-3">
           <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-900 dark:border-white/10 dark:bg-white/10 dark:text-white">
+            <div className="flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/10 text-sm font-semibold text-white">
               {userInitials}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{userName}</p>
-              <p className="truncate text-xs text-slate-500 dark:text-slate-400">{userEmail}</p>
+              <p className="truncate text-sm font-semibold text-white">{userName}</p>
+              <p className="truncate text-xs text-white/58">{userEmail}</p>
             </div>
           </div>
           <div className="mt-3 grid gap-2">
             <button
-              className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-slate-700 transition hover:bg-white dark:text-slate-200 dark:hover:bg-white/10"
+              className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-white/78 transition hover:bg-white/10 hover:text-white"
               type="button"
               onClick={onOpenProfile}
             >
@@ -439,7 +459,7 @@ function SidebarFooter({
               Mi perfil
             </button>
             <button
-              className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-slate-700 transition hover:bg-white dark:text-slate-200 dark:hover:bg-white/10"
+              className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-white/78 transition hover:bg-white/10 hover:text-white"
               type="button"
               onClick={onOpenNotifications}
             >
@@ -457,13 +477,13 @@ function SidebarFooter({
         )}
         title={showCollapsedLabels ? userName : undefined}
       >
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white dark:bg-white dark:text-slate-950">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/12 text-[11px] font-semibold text-white">
           {userInitials}
         </div>
         {!showCollapsedLabels ? (
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-semibold text-slate-900 dark:text-white">{userName}</p>
-            <p className="truncate text-[11px] text-slate-400">{userEmail}</p>
+            <p className="truncate text-[13px] font-semibold text-white">{userName}</p>
+            <p className="truncate text-[11px] text-white/44">{userEmail}</p>
           </div>
         ) : (
           <span className="sr-only">{userName}</span>
@@ -473,7 +493,7 @@ function SidebarFooter({
       <button
         aria-label="Cerrar sesion"
         className={cn(
-          'mt-4 flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 dark:text-rose-300 dark:hover:bg-rose-500/10 dark:hover:text-rose-200',
+          'mt-4 flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium text-rose-200 transition hover:bg-rose-400/10 hover:text-rose-100',
           showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3'
         )}
         title={showCollapsedLabels ? 'Cerrar sesion' : undefined}
@@ -485,9 +505,9 @@ function SidebarFooter({
       </button>
 
       {!showCollapsedLabels ? (
-        <div className="mt-4 border-t border-slate-200 pt-4 text-center dark:border-white/10">
-          <p className="text-xs leading-5 text-slate-400">© {footerYear} {config.brand}</p>
-          <p className="mt-1 text-xs font-medium text-slate-400">{config.footerCaption}</p>
+        <div className="mt-4 border-t border-white/10 pt-4 text-center">
+          <p className="text-xs leading-5 text-white/42">© {footerYear} {config.brand}</p>
+          <p className="mt-1 text-xs font-medium text-white/42">{config.footerCaption}</p>
         </div>
       ) : null}
     </div>
@@ -530,15 +550,19 @@ function WorkspaceSidebarContent({
   const activeItemHref = resolveActiveShellItemHref(config.sidebarGroups, activeHref)
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden border-r border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-slate-950 dark:text-white">
-      <div className="border-b border-slate-200 px-3 py-3.5 dark:border-white/10">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[linear-gradient(180deg,#132a61_0%,#163777_34%,#1a3b88_100%)] text-white">
+      <div className="border-b border-white/10 px-3 py-3.5">
         <div className={cn('flex items-center', showCollapsedLabels ? 'justify-center' : 'gap-3')}>
-          <BrandMark panelClassName="size-10 rounded-[14px] border-primary-200/40 bg-primary-600 p-2 shadow-[0_16px_36px_rgba(43,69,143,0.2)] dark:border-white/10" />
-          {!showCollapsedLabels ? (
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold tracking-tight text-slate-950 dark:text-white">{config.brand}</p>
-              <p className="mt-0.5 truncate text-xs uppercase tracking-[0.18em] text-slate-400">{config.tenantName}</p>
+          {showCollapsedLabels ? (
+            <BrandMark panelClassName="size-10 rounded-[14px] border-white/12 bg-white/10 p-2 shadow-none" />
+          ) : (
+            <div className="min-w-0 flex-1 rounded-[18px] bg-white/6 px-3 py-2">
+              <BrandLockup className="w-28" surface="dark" />
+              <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-white/48">{config.tenantName}</p>
             </div>
+          )}
+          {!showCollapsedLabels ? (
+            <span className="sr-only">{config.brand}</span>
           ) : null}
           <button
             aria-label={
@@ -548,7 +572,7 @@ function WorkspaceSidebarContent({
                   : `Contraer sidebar de ${config.mobileSidebarLabel}`
                 : `Cerrar sidebar de ${config.mobileSidebarLabel}`
             }
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-slate-300 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/10"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/6 text-white/76 transition hover:border-white/18 hover:bg-white/10 hover:text-white"
             type="button"
             onClick={onToggleSidebar}
           >
@@ -561,9 +585,9 @@ function WorkspaceSidebarContent({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <nav aria-label={`${config.brand} navigation`} className="flex-1 overflow-y-auto px-2.5 py-3">
           {config.sidebarGroups.map((group, groupIndex) => (
-            <div key={group.title ?? `group-${groupIndex}`} className={cn(groupIndex === 0 ? '' : 'mt-3 border-t border-slate-200 pt-3 dark:border-white/10')}>
+            <div key={group.title ?? `group-${groupIndex}`} className={cn(groupIndex === 0 ? '' : 'mt-3 border-t border-white/8 pt-3')}>
               {group.title && !showCollapsedLabels ? (
-                <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{group.title}</p>
+                <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40">{group.title}</p>
               ) : null}
               <div className="space-y-1">
                 {group.items.map((item) => {
@@ -579,8 +603,8 @@ function WorkspaceSidebarContent({
                         'group flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
                         showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
                         isActive
-                          ? 'bg-slate-900 text-white shadow-[0_14px_28px_rgba(15,23,42,0.16)] dark:bg-white dark:text-slate-950'
-                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white'
+                          ? 'bg-white/10 text-white shadow-[0_14px_30px_rgba(11,19,45,0.26)]'
+                          : 'text-white/70 hover:bg-white/6 hover:text-white'
                       )}
                       data-active={isActive ? 'true' : 'false'}
                       title={showCollapsedLabels ? item.title : undefined}
@@ -591,8 +615,8 @@ function WorkspaceSidebarContent({
                         className={cn(
                           'flex size-9 shrink-0 items-center justify-center rounded-lg transition',
                           isActive
-                            ? 'bg-white/12 text-current dark:bg-slate-900/10'
-                            : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-slate-900 dark:bg-white/5 dark:text-slate-300 dark:group-hover:bg-white/10 dark:group-hover:text-white'
+                            ? 'bg-white/10 text-current'
+                            : 'bg-white/8 text-white/68 group-hover:bg-white/10 group-hover:text-white'
                         )}
                       >
                         {Icon ? <Icon className="size-4.5" /> : null}
@@ -600,7 +624,7 @@ function WorkspaceSidebarContent({
                       {!showCollapsedLabels ? (
                         <span className="min-w-0">
                           <span className="block truncate">{item.title}</span>
-                          {item.description ? <span className={cn('mt-0.5 block truncate text-[11px]', isActive ? 'text-white/72 dark:text-slate-700' : 'text-slate-400 dark:text-slate-500')}>{item.description}</span> : null}
+                          {item.description ? <span className={cn('mt-0.5 block truncate text-[11px]', isActive ? 'text-white/68' : 'text-white/38')}>{item.description}</span> : null}
                         </span>
                       ) : (
                         <span className="sr-only">{item.title}</span>
@@ -905,6 +929,7 @@ export function PlatformAppShell({
   const config = buildShellConfig(experience, session)
   const userIdentity = resolveUserIdentity(session)
   const routeMeta = getRouteMeta(location.pathname, config.topbarEyebrow, config.routeMeta, config.routeMetaDefault)
+  const breadcrumbs = getRouteBreadcrumbs(config.sidebarGroups, location.pathname, routeMeta.title)
 
   const shellLayoutStyle = useMemo(
     () =>
@@ -1016,7 +1041,7 @@ export function PlatformAppShell({
   }
 
   return (
-    <div className="tm-shell min-h-screen overflow-x-clip bg-white dark:bg-slate-900" style={shellLayoutStyle}>
+    <div className="tm-shell min-h-screen overflow-x-clip bg-[#f4f7fc] dark:bg-slate-900" style={shellLayoutStyle}>
       <RouteScrollManager />
 
       <aside
@@ -1074,7 +1099,7 @@ export function PlatformAppShell({
       ) : null}
 
       <div className="min-w-0 lg:pl-(--shell-sidebar-width)">
-        <header className="sticky top-0 z-40 border-b border-slate-200/90 bg-white/92 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
+        <header className="sticky top-0 z-40 border-b border-(--app-border) bg-white/94 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
           <div className="flex min-h-18 items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
             <button
               aria-label={`Abrir sidebar de ${config.mobileSidebarLabel}`}
@@ -1087,15 +1112,27 @@ export function PlatformAppShell({
 
             <div className="min-w-0 flex-1">
               <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{routeMeta.eyebrow}</p>
-              <div className="mt-0.5 flex min-w-0 items-center gap-3">
-                <p className="truncate text-lg font-semibold tracking-tight text-slate-950 dark:text-white">{routeMeta.title}</p>
+              <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
+                {breadcrumbs.map((crumb, index) => (
+                  <div key={`${crumb}-${index}`} className="flex min-w-0 items-center gap-2">
+                    {index > 0 ? <span className="text-sm text-slate-300">/</span> : null}
+                    <span
+                      className={cn(
+                        'truncate text-sm font-medium',
+                        index === breadcrumbs.length - 1 ? 'text-slate-950 dark:text-white' : 'text-slate-500 dark:text-slate-400'
+                      )}
+                    >
+                      {crumb}
+                    </span>
+                  </div>
+                ))}
                 <span className="hidden h-5 w-px bg-slate-200 lg:block dark:bg-white/10" />
                 <p className="hidden truncate text-sm text-slate-500 lg:block dark:text-slate-400">{routeMeta.description}</p>
               </div>
             </div>
 
             <div className="hidden max-w-sm flex-1 lg:block">
-              <div className="flex h-11 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+              <div className="flex h-11 items-center gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
                 <Search aria-hidden="true" className="size-4 text-slate-400" />
                 <input
                   aria-label={config.searchPlaceholder}
@@ -1224,7 +1261,7 @@ export function PlatformAppShell({
           </div>
         </header>
 
-        <main className="min-w-0 py-8">
+        <main className="min-w-0 bg-[radial-gradient(circle_at_top_right,rgba(143,171,229,0.16),transparent_24%),linear-gradient(180deg,#f4f7fc_0%,#eef3fb_100%)] py-8 dark:bg-none">
           <div className="min-w-0 px-4 sm:px-6 lg:px-8">{fallbackContent ?? <Outlet />}</div>
         </main>
       </div>
