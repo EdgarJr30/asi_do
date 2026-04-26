@@ -104,6 +104,43 @@ function saveEligibilityToken(token: {
   )
 }
 
+async function completeContactStep() {
+  fireEvent.change(await screen.findByRole('textbox', { name: /nombre\*/i }), {
+    target: { value: 'Ana' },
+  })
+  fireEvent.change(screen.getByRole('textbox', { name: /apellido/i }), {
+    target: { value: 'Pérez' },
+  })
+  const genderButton = screen
+    .getAllByRole('button', { name: /masculino/i })
+    .find((button) => button.textContent === 'Masculino')
+
+  expect(genderButton).toBeDefined()
+  fireEvent.click(genderButton as HTMLElement)
+  fireEvent.change(screen.getByRole('textbox', { name: /teléfono residencial/i }), {
+    target: { value: '809-555-1111' },
+  })
+  fireEvent.change(screen.getByRole('textbox', { name: /teléfono celular/i }), {
+    target: { value: '809-555-2222' },
+  })
+  fireEvent.change(screen.getByRole('textbox', { name: /correo electrónico/i }), {
+    target: { value: 'ana@example.com' },
+  })
+  fireEvent.change(screen.getByRole('textbox', { name: /^dirección del hogar\*/i }), {
+    target: { value: 'Calle 1, Santo Domingo' },
+  })
+  fireEvent.change(screen.getByRole('textbox', { name: /^ciudad\*/i }), {
+    target: { value: 'Santo Domingo' },
+  })
+  fireEvent.change(screen.getByRole('textbox', { name: /provincia o estado/i }), {
+    target: { value: 'Distrito Nacional' },
+  })
+  fireEvent.change(screen.getByRole('textbox', { name: /código postal/i }), {
+    target: { value: '10101' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: /siguiente/i }))
+}
+
 beforeEach(() => {
   authState.session = null
   authState.snapshot = {
@@ -140,6 +177,14 @@ describe('institutional membership application flow', () => {
     expect(
       await screen.findByRole('heading', { name: 'Solicitud de membresía ASI' })
     ).toBeInTheDocument()
+    expect(screen.getByText('Fase 1 de 6')).toBeInTheDocument()
+    expect(
+      screen.getByRole('progressbar', { name: /progreso de solicitud 17%/i })
+    ).toBeInTheDocument()
+
+    await completeContactStep()
+
+    expect(await screen.findByText('Fase 2 de 6')).toBeInTheDocument()
     expect(
       screen.getByRole('textbox', { name: /nombre de la organización/i })
     ).toBeInTheDocument()
@@ -165,8 +210,11 @@ describe('institutional membership application flow', () => {
     expect(
       await screen.findByRole('heading', { name: 'Solicitud de membresía ASI' })
     ).toBeInTheDocument()
+
+    await completeContactStep()
+
     expect(
-      screen.getByRole('combobox', { name: /etapa actual/i })
+      await screen.findByRole('combobox', { name: /etapa actual/i })
     ).toBeInTheDocument()
     expect(
       screen.getByRole('textbox', { name: /institución o emprendimiento/i })
@@ -192,8 +240,11 @@ describe('institutional membership application flow', () => {
     expect(
       await screen.findByRole('heading', { name: 'Solicitud de membresía ASI' })
     ).toBeInTheDocument()
+
+    await completeContactStep()
+
     expect(
-      screen.getByRole('textbox', { name: /nombre del negocio o práctica/i })
+      await screen.findByRole('textbox', { name: /nombre del negocio o práctica/i })
     ).toBeInTheDocument()
   })
 
@@ -239,8 +290,11 @@ describe('institutional membership application flow', () => {
     expect(
       await screen.findByRole('heading', { name: 'Solicitud de membresía ASI' })
     ).toBeInTheDocument()
+
+    await completeContactStep()
+
     expect(
-      screen.getByRole('combobox', { name: /etapa actual/i })
+      await screen.findByRole('combobox', { name: /etapa actual/i })
     ).toBeInTheDocument()
   })
 })

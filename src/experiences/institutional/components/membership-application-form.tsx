@@ -10,7 +10,14 @@ import {
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { CheckCircle2, CircleAlert, LockKeyhole, PencilLine } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  CircleAlert,
+  LockKeyhole,
+  PencilLine,
+} from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -137,6 +144,150 @@ interface PersistedSubmission {
 type StringFieldName = {
   [K in keyof MembershipApplicationValues]: MembershipApplicationValues[K] extends string ? K : never
 }[keyof MembershipApplicationValues]
+
+type ApplicationFieldName = keyof MembershipApplicationValues
+
+interface ApplicationStep {
+  id: string
+  title: string
+  summary: string
+  fields: ApplicationFieldName[]
+}
+
+const contactStepFields = [
+  'firstName',
+  'lastName',
+  'gender',
+  'spouseName',
+  'homePhone',
+  'cellPhone',
+  'email',
+  'address1',
+  'address2',
+  'city',
+  'stateProvince',
+  'postalCode',
+  'country',
+] satisfies ApplicationFieldName[]
+
+const categoryStepFields = [
+  'organizationName',
+  'organizationType',
+  'organizationAddress1',
+  'organizationAddress2',
+  'organizationCity',
+  'organizationStateProvince',
+  'organizationPostalCode',
+  'organizationCountry',
+  'organizationActivities',
+  'yearEstablished',
+  'employeeCount',
+  'workPhone',
+  'website',
+  'certificatePreference',
+  'employerName',
+  'roleTitle',
+  'yearsInRole',
+  'peopleSupervised',
+  'professionalFocus',
+  'businessName',
+  'servicesOffered',
+  'retiredFrom',
+  'retirementYear',
+  'retirementSummary',
+  'institutionName',
+  'fieldOfStudy',
+  'currentStage',
+  'expectedGraduationYear',
+  'youngProfessionalGoals',
+] satisfies ApplicationFieldName[]
+
+const evangelismStepFields = [
+  'shareFaith',
+  'ministries',
+  'ministriesOther',
+  'volunteerAreas',
+  'volunteerAreasOther',
+  'additionalInfo',
+] satisfies ApplicationFieldName[]
+
+const referenceStepFields = [
+  'homeChurchName',
+  'churchCity',
+  'churchStateProvince',
+  'conference',
+  'pastorName',
+  'pastorPhone',
+  'pastorEmail',
+] satisfies ApplicationFieldName[]
+
+const duesStepFields = [
+  'billingSameAsHome',
+  'billingAddress1',
+  'billingAddress2',
+  'billingCity',
+  'billingStateProvince',
+  'billingPostalCode',
+  'billingCountry',
+  'paymentType',
+  'bankAccountType',
+  'checkingType',
+  'accountName',
+  'accountNumber',
+  'routingNumber',
+  'bankName',
+  'bankCity',
+  'bankState',
+  'discountCode',
+  'paymentPreference',
+  'membershipPrompt',
+] satisfies ApplicationFieldName[]
+
+const commitmentStepFields = [
+  'commitmentStatusChanges',
+  'commitmentProcessing',
+  'signature',
+  'signatureConsent',
+] satisfies ApplicationFieldName[]
+
+const applicationSteps = [
+  {
+    id: 'contact',
+    title: 'Datos de contacto',
+    summary: 'Identificación y dirección principal',
+    fields: contactStepFields,
+  },
+  {
+    id: 'category',
+    title: 'Datos de categoría',
+    summary: 'Información específica de la membresía aprobada',
+    fields: categoryStepFields,
+  },
+  {
+    id: 'evangelism',
+    title: 'Evangelismo personal',
+    summary: 'Misión, ministerio y voluntariado',
+    fields: evangelismStepFields,
+  },
+  {
+    id: 'reference',
+    title: 'Referencia',
+    summary: 'Iglesia local y referencia pastoral',
+    fields: referenceStepFields,
+  },
+  {
+    id: 'dues',
+    title: 'Cuotas de membresía',
+    summary: 'Facturación y coordinación de pago',
+    fields: duesStepFields,
+  },
+  {
+    id: 'commitment',
+    title: 'Compromiso',
+    summary: 'Aceptaciones y firma digital',
+    fields: commitmentStepFields,
+  },
+] satisfies ApplicationStep[]
 
 function buildApplicationSchema(categorySlug: string) {
   const variant = getMembershipApplicationVariant(categorySlug)
@@ -848,6 +999,97 @@ function LockedQualificationCard({
   )
 }
 
+function ApplicationProgress({
+  currentStep,
+  steps,
+}: {
+  currentStep: number
+  steps: readonly ApplicationStep[]
+}) {
+  const progress = Math.round(((currentStep + 1) / steps.length) * 100)
+  const activeStep = steps[currentStep]
+
+  return (
+    <div className="rounded-[1.5rem] border border-(--asi-outline) bg-(--asi-surface-raised) p-5 shadow-(--asi-shadow-soft) sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-secondary)">
+            Fase {currentStep + 1} de {steps.length}
+          </p>
+          <h2 className="mt-2 text-xl font-semibold tracking-tight text-(--asi-text)">
+            {activeStep.title}
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-(--asi-text-muted)">
+            {activeStep.summary}
+          </p>
+        </div>
+        <div className="shrink-0 rounded-2xl border border-(--asi-outline) bg-white px-4 py-3 text-left sm:text-right">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
+            Progreso
+          </p>
+          <p className="mt-1 text-2xl font-semibold tracking-tight text-(--asi-primary)">
+            {progress}%
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        <div
+          className="h-3 overflow-hidden rounded-full bg-(--asi-primary)/10"
+          aria-label={`Progreso de solicitud ${progress}%`}
+          aria-valuemax={100}
+          aria-valuemin={0}
+          aria-valuenow={progress}
+          role="progressbar"
+        >
+          <div
+            className="h-full rounded-full bg-(--asi-primary) transition-[width] duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      <ol className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {steps.map((step, index) => {
+          const isCompleted = index < currentStep
+          const isActive = index === currentStep
+
+          return (
+            <li
+              key={step.id}
+              className={cn(
+                'flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm',
+                isActive
+                  ? 'border-(--asi-primary) bg-(--asi-primary)/8 text-(--asi-primary)'
+                  : isCompleted
+                    ? 'border-green-200 bg-green-50 text-green-700'
+                    : 'border-(--asi-outline) bg-white text-(--asi-text-muted)'
+              )}
+            >
+              <span
+                className={cn(
+                  'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                  isActive
+                    ? 'bg-(--asi-primary) text-white'
+                    : isCompleted
+                      ? 'bg-green-600 text-white'
+                      : 'bg-(--asi-primary)/10 text-(--asi-text-muted)'
+                )}
+              >
+                {isCompleted ? <CheckCircle2 className="size-4" /> : index + 1}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-semibold">{step.title}</span>
+                <span className="block truncate text-xs opacity-80">{step.summary}</span>
+              </span>
+            </li>
+          )
+        })}
+      </ol>
+    </div>
+  )
+}
+
 function SubmissionSuccess({
   submission,
   onEdit,
@@ -963,6 +1205,10 @@ export function MembershipApplicationForm({
     token.categorySlug === ORGANIZATIONAL_FOR_PROFIT_SLUG
   const draftKey = `asi:membership_application_draft:${token.categorySlug}`
   const [submission, setSubmission] = useState<PersistedSubmission | null>(null)
+  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const currentStep = applicationSteps[currentStepIndex]
+  const isFirstStep = currentStepIndex === 0
+  const isLastStep = currentStepIndex === applicationSteps.length - 1
 
   const defaultValues = useMemo(() => {
     const initial = createDefaultValues(token)
@@ -1143,6 +1389,36 @@ export function MembershipApplicationForm({
     submitMutation.mutate(values)
   }
 
+  async function handleNextStep() {
+    const isCurrentStepValid = await form.trigger(currentStep.fields, {
+      shouldFocus: true,
+    })
+
+    if (!isCurrentStepValid) return
+
+    setCurrentStepIndex((index) => Math.min(index + 1, applicationSteps.length - 1))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handlePreviousStep() {
+    setCurrentStepIndex((index) => Math.max(index - 1, 0))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleInvalidSubmission(
+    formErrors: typeof form.formState.errors
+  ) {
+    const invalidFieldNames = new Set(Object.keys(formErrors))
+    const firstInvalidStepIndex = applicationSteps.findIndex((step) =>
+      step.fields.some((fieldName) => invalidFieldNames.has(fieldName))
+    )
+
+    if (firstInvalidStepIndex >= 0) {
+      setCurrentStepIndex(firstInvalidStepIndex)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
   if (!variant) {
     return (
       <div className="rounded-[1.5rem] border border-red-200 bg-red-50 p-5 text-sm leading-7 text-red-700">
@@ -1159,7 +1435,7 @@ export function MembershipApplicationForm({
     <form
       className="space-y-6"
       onSubmit={(event) => {
-        void form.handleSubmit(handlePrepareSubmission)(event)
+        void form.handleSubmit(handlePrepareSubmission, handleInvalidSubmission)(event)
       }}
     >
       <LockedQualificationCard
@@ -1170,16 +1446,19 @@ export function MembershipApplicationForm({
         requirements={categoryInfo.requirements}
       />
 
+      <ApplicationProgress currentStep={currentStepIndex} steps={applicationSteps} />
+
       {submitMutation.isError ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-700">
           No pudimos guardar la solicitud real. Revisa los datos o vuelve a intentar.
         </div>
       ) : null}
 
-      <ApplicationSection
-        title="Datos de contacto"
-        description="Estos datos identifican a la persona de contacto principal de la solicitud y serán usados para el seguimiento del expediente."
-      >
+      {currentStep.id === 'contact' ? (
+        <ApplicationSection
+          title="Datos de contacto"
+          description="Estos datos identifican a la persona de contacto principal de la solicitud y serán usados para el seguimiento del expediente."
+        >
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField
             label="Nombre"
@@ -1288,12 +1567,14 @@ export function MembershipApplicationForm({
           error={errors.country?.message}
           {...form.register('country')}
         />
-      </ApplicationSection>
+        </ApplicationSection>
+      ) : null}
 
-      <ApplicationSection
-        title={variant.sectionTitle}
-        description={variant.sectionDescription}
-      >
+      {currentStep.id === 'category' ? (
+        <ApplicationSection
+          title={variant.sectionTitle}
+          description={variant.sectionDescription}
+        >
         {variant.id === 'organization' ? (
           <>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -1678,12 +1959,14 @@ export function MembershipApplicationForm({
             />
           </>
         ) : null}
-      </ApplicationSection>
+        </ApplicationSection>
+      ) : null}
 
-      <ApplicationSection
-        title="Evangelismo personal"
-        description="Estas respuestas ayudan a entender cómo su vida profesional y su misión personal se conectan con la visión de ASI."
-      >
+      {currentStep.id === 'evangelism' ? (
+        <ApplicationSection
+          title="Evangelismo personal"
+          description="Estas respuestas ayudan a entender cómo su vida profesional y su misión personal se conectan con la visión de ASI."
+        >
         <TextAreaField
           label="Describa brevemente cómo comparte su fe en su entorno profesional"
           required
@@ -1734,12 +2017,14 @@ export function MembershipApplicationForm({
           placeholder="Comparte cualquier contexto adicional que ayude a revisar tu solicitud."
           {...form.register('additionalInfo')}
         />
-      </ApplicationSection>
+        </ApplicationSection>
+      ) : null}
 
-      <ApplicationSection
-        title="Referencia"
-        description="La referencia pastoral forma parte obligatoria del expediente. El pastor recibirá seguimiento adicional cuando corresponda."
-      >
+      {currentStep.id === 'reference' ? (
+        <ApplicationSection
+          title="Referencia"
+          description="La referencia pastoral forma parte obligatoria del expediente. El pastor recibirá seguimiento adicional cuando corresponda."
+        >
         <div className="grid gap-4 md:grid-cols-3">
           <TextField
             label="Nombre de la iglesia local"
@@ -1789,16 +2074,18 @@ export function MembershipApplicationForm({
             {...form.register('pastorEmail')}
           />
         </div>
-      </ApplicationSection>
+        </ApplicationSection>
+      ) : null}
 
-      <ApplicationSection
-        title="Cuotas de membresía"
-        description={
-          isOrganizationalForProfit
-            ? 'Complete la dirección de facturación y los datos de eCheck requeridos para esta solicitud.'
-            : 'La cuota anual ya está determinada por la categoría aprobada. Aquí solo registramos cómo debe quedar el expediente de facturación.'
-        }
-      >
+      {currentStep.id === 'dues' ? (
+        <ApplicationSection
+          title="Cuotas de membresía"
+          description={
+            isOrganizationalForProfit
+              ? 'Complete la dirección de facturación y los datos de eCheck requeridos para esta solicitud.'
+              : 'La cuota anual ya está determinada por la categoría aprobada. Aquí solo registramos cómo debe quedar el expediente de facturación.'
+          }
+        >
         {isOrganizationalForProfit ? (
           <>
             <TextField
@@ -2063,12 +2350,14 @@ export function MembershipApplicationForm({
           placeholder="Comparta la razón principal por la que desea integrarse a la comunidad ASI."
           {...form.register('membershipPrompt')}
         />
-      </ApplicationSection>
+        </ApplicationSection>
+      ) : null}
 
-      <ApplicationSection
-        title="Compromiso"
-        description="Al continuar, confirma que entiende el propósito de ASI y que su solicitud debe sostenerse en información veraz y actualizada."
-      >
+      {currentStep.id === 'commitment' ? (
+        <ApplicationSection
+          title="Compromiso"
+          description="Al continuar, confirma que entiende el propósito de ASI y que su solicitud debe sostenerse en información veraz y actualizada."
+        >
         <div className="rounded-2xl border border-(--asi-outline) bg-white p-4">
           <p className="text-sm leading-7 text-(--asi-text-muted)">
             Habiendo leído el propósito y los objetivos de ASI, y reconociendo que mi negocio o profesión es un ministerio, deseo y me comprometo a sostener los estándares y metas de ASI. Comprometo mi vida, mi oficina, mis talentos y mis fortalezas a compartir a Cristo en el mercado.
@@ -2118,16 +2407,42 @@ export function MembershipApplicationForm({
             })
           }
         />
-      </ApplicationSection>
+        </ApplicationSection>
+      ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-        <button
-          type="submit"
-          disabled={submitMutation.isPending}
-          className="asi-button asi-button-primary w-full justify-center disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
-        >
-          {submitMutation.isPending ? 'Enviando solicitud...' : 'Enviar solicitud'}
-        </button>
+        {!isFirstStep ? (
+          <button
+            type="button"
+            disabled={submitMutation.isPending}
+            className="asi-button asi-button-secondary w-full justify-center disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+            onClick={handlePreviousStep}
+          >
+            <ArrowLeft className="size-4" />
+            Anterior
+          </button>
+        ) : null}
+
+        {isLastStep ? (
+          <button
+            type="submit"
+            disabled={submitMutation.isPending}
+            className="asi-button asi-button-primary w-full justify-center disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+          >
+            {submitMutation.isPending ? 'Enviando solicitud...' : 'Enviar solicitud'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="asi-button asi-button-primary w-full justify-center sm:w-auto"
+            onClick={() => {
+              void handleNextStep()
+            }}
+          >
+            Siguiente
+            <ArrowRight className="size-4" />
+          </button>
+        )}
       </div>
     </form>
   )
