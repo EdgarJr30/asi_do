@@ -1006,7 +1006,7 @@ function ApplicationProgress({
   currentStep: number
   steps: readonly ApplicationStep[]
 }) {
-  const progress = Math.round(((currentStep + 1) / steps.length) * 100)
+  const progress = Math.round((currentStep / (steps.length - 1)) * 100)
   const activeStep = steps[currentStep]
 
   return (

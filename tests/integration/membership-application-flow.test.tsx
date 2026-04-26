@@ -179,7 +179,7 @@ describe('institutional membership application flow', () => {
     ).toBeInTheDocument()
     expect(screen.getByText('Fase 1 de 6')).toBeInTheDocument()
     expect(
-      screen.getByRole('progressbar', { name: /progreso de solicitud 17%/i })
+      screen.getByRole('progressbar', { name: /progreso de solicitud 0%/i })
     ).toBeInTheDocument()
 
     await completeContactStep()
