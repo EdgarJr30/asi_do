@@ -1,14 +1,15 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { getAuthenticatedHomePath, surfacePaths } from '@/app/router/surface-paths'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { AuthHeroPanel } from '@/features/auth/components/auth-hero-panel'
 import { signUpWithPassword, toErrorMessage } from '@/features/auth/lib/auth-api'
 import { signUpSchema, type SignUpValues } from '@/features/auth/lib/auth-schemas'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
@@ -24,6 +25,7 @@ function FieldError({ message }: { message?: string }) {
 export function SignUpPage() {
   const navigate = useNavigate()
   const session = useAppSession()
+  const [showPassword, setShowPassword] = useState(false)
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -81,56 +83,76 @@ export function SignUpPage() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
-      <AuthHeroPanel
-        eyebrow="Registro"
-        title="Crea tu cuenta y empieza con una experiencia simple desde el primer minuto"
-        description="Todo arranca con tu cuenta personal. Después completas tu perfil y, si tu empresa entra a la plataforma, sumas ese acceso más adelante."
-      />
+    <section>
+      <div className="mb-8">
+        <h1 className="text-[1.9rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2.1rem]">
+          Crea tu espacio
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+          Configura tu cuenta base de ASI en menos de un minuto y luego completa tu onboarding.
+        </p>
+      </div>
 
-      <Card className="bg-(--app-surface)">
-        <CardHeader className="space-y-3">
-          <div className="tm-kicker w-fit">
-            Crear cuenta
+      <Card className="border-(--app-border) bg-(--app-surface) shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
+        <CardHeader className="space-y-3 border-b border-(--app-border) pb-6">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-primary-700 uppercase">
+            Registro inicial
           </div>
-          <CardTitle>Crea tu usuario base</CardTitle>
-          <CardDescription>
-            Abre tu cuenta para descubrir vacantes, completar tu perfil y más adelante sumar a tu empresa si lo necesitas.
+          <CardTitle className="text-2xl tracking-[-0.02em]">Crea tu usuario base</CardTitle>
+          <CardDescription className="max-w-sm text-sm leading-6">
+            Empiezas con tu cuenta personal. El acceso a empresas y espacios de trabajo llega despues, segun tu caso.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-5">
+
+        <div className="space-y-6 p-6 sm:p-7">
           <form className="space-y-4" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
-            <label className="space-y-2 text-sm font-medium text-(--app-text)">
-              <span>Nombre completo</span>
-              <Input placeholder="Edgar Perez" {...form.register('fullName')} />
+            <label className="block space-y-2">
+              <span className="text-xs font-semibold tracking-[-0.01em] text-(--app-text)">Nombre completo</span>
+              <Input className="h-11.5 rounded-[18px]" placeholder="Maria Reyes" {...form.register('fullName')} />
               <FieldError message={form.formState.errors.fullName?.message} />
             </label>
 
-            <label className="space-y-2 text-sm font-medium text-(--app-text)">
-              <span>Email</span>
-              <Input autoComplete="email" placeholder="tu@correo.com" type="email" {...form.register('email')} />
+            <label className="block space-y-2">
+              <span className="text-xs font-semibold tracking-[-0.01em] text-(--app-text)">Correo corporativo</span>
+              <Input autoComplete="email" className="h-11.5 rounded-[18px]" placeholder="tu@empresa.com" type="email" {...form.register('email')} />
               <FieldError message={form.formState.errors.email?.message} />
             </label>
 
-            <label className="space-y-2 text-sm font-medium text-(--app-text)">
-              <span>Contrasena</span>
-              <Input autoComplete="new-password" placeholder="Minimo 8 caracteres" type="password" {...form.register('password')} />
+            <label className="block space-y-2">
+              <span className="text-xs font-semibold tracking-[-0.01em] text-(--app-text)">Contrasena</span>
+              <div className="relative">
+                <Input
+                  autoComplete="new-password"
+                  className="h-11.5 rounded-[18px] pr-11"
+                  placeholder="Minimo 8 caracteres"
+                  type={showPassword ? 'text' : 'password'}
+                  {...form.register('password')}
+                />
+                <button
+                  aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+                  className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-(--app-text-subtle) transition hover:text-(--app-text)"
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
               <FieldError message={form.formState.errors.password?.message} />
             </label>
 
-            <Button className="w-full" disabled={form.formState.isSubmitting} type="submit">
+            <Button className="mt-2 h-11.5 w-full rounded-[18px] text-sm" disabled={form.formState.isSubmitting} type="submit">
               {form.formState.isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
             </Button>
           </form>
 
-          <div className="rounded-[24px] border bg-(--app-surface) px-4 py-4 text-sm leading-6 text-(--app-text-muted)">
+          <div className="rounded-panel border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-sm leading-6 text-(--app-text-muted)">
             Ya tienes cuenta?{' '}
-            <Link className="font-semibold text-primary-700 transition hover:text-primary-800 hover:underline dark:hover:text-primary-200" to="/auth/sign-in">
+            <Link className="font-semibold text-primary-700 transition hover:text-primary-800 hover:underline dark:hover:text-primary-200" to={surfacePaths.auth.signIn}>
               Inicia sesion
             </Link>
           </div>
-        </CardContent>
+        </div>
       </Card>
-    </div>
+    </section>
   )
 }
