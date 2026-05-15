@@ -187,6 +187,14 @@ describe('institutional membership application flow', () => {
     expect(
       screen.getByText(/la organización no debe ser propiedad/i)
     ).toBeInTheDocument()
+    const femaleGenderButton = screen.getByRole('button', { name: 'Femenino' })
+    const maleGenderButton = screen.getByRole('button', { name: 'Masculino' })
+
+    expect(femaleGenderButton).toHaveAttribute('aria-pressed', 'false')
+    expect(maleGenderButton).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(screen.getByText('Género'))
+    expect(femaleGenderButton).toHaveAttribute('aria-pressed', 'false')
+    expect(maleGenderButton).toHaveAttribute('aria-pressed', 'false')
 
     await completeContactStep()
 

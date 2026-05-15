@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useId,
   useMemo,
   useState,
   type InputHTMLAttributes,
@@ -686,7 +687,7 @@ function ApplicationSection({
   children: ReactNode
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-(--asi-outline) bg-(--asi-surface-raised) p-5 shadow-(--asi-shadow-soft) sm:p-7">
+    <section className="rounded-[1.25rem] border border-(--asi-outline) bg-(--asi-surface-raised) p-4 shadow-(--asi-shadow-soft) sm:p-5">
       <div className="max-w-3xl">
         <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
           {title}
@@ -697,7 +698,7 @@ function ApplicationSection({
           </p>
         ) : null}
       </div>
-      <div className="mt-6 space-y-5">{children}</div>
+      <div className="mt-4 space-y-4">{children}</div>
     </section>
   )
 }
@@ -706,33 +707,38 @@ function Field({
   label,
   hint,
   error,
+  htmlFor,
   required = false,
   children,
 }: {
   label: string
   hint?: string
   error?: string
+  htmlFor?: string
   required?: boolean
   children: ReactNode
 }) {
   return (
-    <label className="block space-y-2.5">
-      <span className="text-sm font-semibold text-(--asi-text)">
+    <div className="space-y-2">
+      <label
+        className="block text-sm font-semibold text-(--asi-text)"
+        htmlFor={htmlFor}
+      >
         {label}
         {required ? <span className="ml-1 text-red-500">*</span> : null}
-      </span>
+      </label>
       {children}
       {hint ? <p className="text-xs leading-6 text-(--asi-text-muted)">{hint}</p> : null}
       {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
-    </label>
+    </div>
   )
 }
 
 const fieldInputClassName =
-  'h-12 w-full rounded-2xl border border-(--asi-outline) bg-white px-4 text-sm text-(--asi-text) outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-(--asi-text-muted) hover:border-(--asi-primary)/45 focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/12'
+  'h-11 w-full rounded-xl border border-(--asi-outline) bg-white px-3.5 text-sm text-(--asi-text) outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-(--asi-text-muted) hover:border-(--asi-primary)/45 focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/12'
 
 const fieldTextareaClassName =
-  'min-h-32 w-full rounded-2xl border border-(--asi-outline) bg-white px-4 py-3 text-sm text-(--asi-text) outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-(--asi-text-muted) hover:border-(--asi-primary)/45 focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/12'
+  'min-h-28 w-full rounded-xl border border-(--asi-outline) bg-white px-3.5 py-3 text-sm text-(--asi-text) outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-(--asi-text-muted) hover:border-(--asi-primary)/45 focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/12'
 
 function TextField({
   label,
@@ -749,9 +755,13 @@ function TextField({
   required?: boolean
   inputClassName?: string
 }) {
+  const generatedId = useId()
+  const fieldId = props.id ?? generatedId
+
   return (
-    <Field label={label} hint={hint} error={error} required={required}>
+    <Field label={label} hint={hint} error={error} htmlFor={fieldId} required={required}>
       <input
+        id={fieldId}
         className={cn(fieldInputClassName, inputClassName, className)}
         {...props}
       />
@@ -772,9 +782,12 @@ function TextAreaField({
   error?: string
   required?: boolean
 }) {
+  const generatedId = useId()
+  const fieldId = props.id ?? generatedId
+
   return (
-    <Field label={label} hint={hint} error={error} required={required}>
-      <textarea className={cn(fieldTextareaClassName, className)} {...props} />
+    <Field label={label} hint={hint} error={error} htmlFor={fieldId} required={required}>
+      <textarea id={fieldId} className={cn(fieldTextareaClassName, className)} {...props} />
     </Field>
   )
 }
@@ -793,9 +806,12 @@ function SelectField({
   error?: string
   required?: boolean
 }) {
+  const generatedId = useId()
+  const fieldId = props.id ?? generatedId
+
   return (
-    <Field label={label} hint={hint} error={error} required={required}>
-      <select className={cn(fieldInputClassName, className)} {...props}>
+    <Field label={label} hint={hint} error={error} htmlFor={fieldId} required={required}>
+      <select id={fieldId} className={cn(fieldInputClassName, className)} {...props}>
         {children}
       </select>
     </Field>
@@ -820,25 +836,30 @@ function RadioTileGroup({
   onChange: (value: string) => void
 }) {
   return (
-    <Field label={label} hint={hint} error={error} required={required}>
-      <div className="grid gap-3 sm:grid-cols-2">
+    <fieldset className="space-y-2">
+      <legend className="text-sm font-semibold text-(--asi-text)">
+        {label}
+        {required ? <span className="ml-1 text-red-500">*</span> : null}
+      </legend>
+      <div className="inline-grid w-full grid-cols-2 gap-2 rounded-xl border border-(--asi-outline) bg-(--asi-canvas) p-1">
         {options.map((option) => {
           const selected = option.value === value
           return (
             <button
               key={option.value}
               type="button"
+              aria-pressed={selected}
               onClick={() => onChange(option.value)}
               className={cn(
-                'flex min-h-12 items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-medium transition-all duration-150',
+                'flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition-all duration-150',
                 selected
-                  ? 'border-(--asi-primary) bg-(--asi-primary)/8 text-(--asi-primary)'
-                  : 'border-(--asi-outline) bg-white text-(--asi-text) hover:border-(--asi-primary)/45'
+                  ? 'bg-white text-(--asi-primary) shadow-[0_5px_18px_rgba(0,47,110,0.10)] ring-1 ring-(--asi-primary)'
+                  : 'text-(--asi-text-muted) hover:bg-white/70 hover:text-(--asi-text)'
               )}
             >
               <span
                 className={cn(
-                  'flex size-5 shrink-0 rounded-full border-2',
+                  'flex size-4 shrink-0 rounded-full border-2',
                   selected
                     ? 'border-(--asi-primary) shadow-[inset_0_0_0_4px_var(--asi-primary)]'
                     : 'border-(--asi-outline)'
@@ -849,7 +870,9 @@ function RadioTileGroup({
           )
         })}
       </div>
-    </Field>
+      {hint ? <p className="text-xs leading-6 text-(--asi-text-muted)">{hint}</p> : null}
+      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+    </fieldset>
   )
 }
 
@@ -1491,12 +1514,13 @@ export function MembershipApplicationForm({
           title="Datos de contacto"
           description="Estos datos identifican a la persona de contacto principal de la solicitud y serán usados para el seguimiento del expediente."
         >
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <TextField
             label="Nombre"
             required
             error={errors.firstName?.message}
             placeholder="Ingresa tu nombre"
+            autoComplete="given-name"
             {...form.register('firstName')}
           />
           <TextField
@@ -1504,11 +1528,12 @@ export function MembershipApplicationForm({
             required
             error={errors.lastName?.message}
             placeholder="Ingresa tu apellido"
+            autoComplete="family-name"
             {...form.register('lastName')}
           />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)]">
           <RadioTileGroup
             label="Género"
             required
@@ -1526,44 +1551,52 @@ export function MembershipApplicationForm({
             label="Nombre del cónyuge"
             error={errors.spouseName?.message}
             placeholder="Opcional"
+            autoComplete="off"
             {...form.register('spouseName')}
           />
         </div>
 
-        <TextField
-          label="Teléfono celular"
-          required
-          error={errors.cellPhone?.message}
-          placeholder="809-000-0000"
-          {...form.register('cellPhone')}
-        />
+        <div className="grid gap-4 md:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
+          <TextField
+            label="Teléfono celular"
+            required
+            error={errors.cellPhone?.message}
+            placeholder="809-000-0000"
+            inputMode="tel"
+            autoComplete="tel"
+            {...form.register('cellPhone')}
+          />
 
-        <TextField
-          label="Correo electrónico"
-          required
-          hint="Se usará para iniciar sesión y para dar seguimiento a la solicitud."
-          error={errors.email?.message}
-          placeholder="nombre@correo.com"
-          type="email"
-          {...form.register('email')}
-        />
+          <TextField
+            label="Correo electrónico"
+            required
+            error={errors.email?.message}
+            placeholder="nombre@correo.com"
+            type="email"
+            autoComplete="email"
+            {...form.register('email')}
+          />
+        </div>
 
-        <TextField
-          label="Dirección del hogar"
-          required
-          error={errors.address1?.message}
-          placeholder="Calle, número y sector"
-          {...form.register('address1')}
-        />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.55fr)]">
+          <TextField
+            label="Dirección del hogar"
+            required
+            error={errors.address1?.message}
+            placeholder="Calle, número y sector"
+            autoComplete="street-address"
+            {...form.register('address1')}
+          />
 
-        <TextField
-          label="Dirección del hogar (línea 2)"
-          error={errors.address2?.message}
-          placeholder="Apartamento, edificio o referencia"
-          {...form.register('address2')}
-        />
+          <TextField
+            label="Apto. o referencia"
+            error={errors.address2?.message}
+            placeholder="Opcional"
+            {...form.register('address2')}
+          />
+        </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.55fr)_minmax(0,0.9fr)]">
           <TextField
             label="Ciudad"
             required
@@ -1580,16 +1613,17 @@ export function MembershipApplicationForm({
             label="Código postal"
             required
             error={errors.postalCode?.message}
+            autoComplete="postal-code"
             {...form.register('postalCode')}
           />
+          <TextField
+            label="País"
+            required
+            error={errors.country?.message}
+            autoComplete="country-name"
+            {...form.register('country')}
+          />
         </div>
-
-        <TextField
-          label="País"
-          required
-          error={errors.country?.message}
-          {...form.register('country')}
-        />
         </ApplicationSection>
       ) : null}
 

@@ -305,6 +305,9 @@ Do not reintroduce a direct-open institutional membership application route that
 ### R-077 — Eligibility wizard progress must persist until application handoff
 Do not let the public eligibility wizard lose completed answers or navigation history when the user refreshes, leaves the route, or returns later. Persist the eligibility draft locally across route changes, keep the back path usable from the restored step, and clear that draft only when the user explicitly continues into `/membership/apply` with the qualified eligibility result.
 
+### R-078 — Segmented form choices must not select accidentally
+Do not wrap segmented controls, radio-like buttons, or checkbox groups inside a broad parent `<label>` that can activate a choice when the user clicks surrounding label or whitespace. Required choice groups must render with no default selection unless the user or a saved draft explicitly selected a value, and labels must be associated semantically with the real input/control without creating accidental first-option activation.
+
 ---
 
 ## Maintenance rule
