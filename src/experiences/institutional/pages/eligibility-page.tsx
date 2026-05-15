@@ -15,6 +15,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { InstitutionalSection } from '@/experiences/institutional/components/institutional-ui'
 import {
   createEligibilityAccessToken,
+  ELIGIBILITY_DRAFT_STORAGE_KEY,
   internationalDivisionCountries,
   saveEligibilityToken,
   type EligibilityTokenPayload,
@@ -58,7 +59,84 @@ interface EligibilityState {
   orgTaxDeductible?: boolean
   orgSize?: 'two-or-more' | 'only-one'
   orgChurchOwned?: boolean
+  otherDivisionCountry?: string
   result?: EligibilityResult
+}
+
+const initialEligibilityState: EligibilityState = {
+  step: 'adventist',
+  history: [],
+}
+
+const validSteps: StepId[] = [
+  'adventist',
+  'location',
+  'other-divisions',
+  'applicant-type',
+  'church-employee',
+  'employment-status',
+  'authority',
+  'org-type',
+  'org-tax-deductible',
+  'org-size',
+  'org-church',
+  'result',
+]
+
+function isStepId(value: unknown): value is StepId {
+  return typeof value === 'string' && validSteps.includes(value as StepId)
+}
+
+function isEligibilityResult(value: unknown): value is EligibilityResult {
+  if (!value || typeof value !== 'object') return false
+
+  const result = value as Partial<EligibilityResult>
+
+  return (
+    typeof result.eligible === 'boolean' &&
+    typeof result.category === 'string' &&
+    typeof result.categorySlug === 'string' &&
+    typeof result.dues === 'string' &&
+    typeof result.message === 'string'
+  )
+}
+
+function readEligibilityDraft(): EligibilityState {
+  try {
+    const raw = localStorage.getItem(ELIGIBILITY_DRAFT_STORAGE_KEY)
+    if (!raw) return initialEligibilityState
+
+    const parsed = JSON.parse(raw) as Partial<EligibilityState>
+    if (!isStepId(parsed.step)) return initialEligibilityState
+
+    return {
+      ...parsed,
+      step: parsed.step,
+      history: Array.isArray(parsed.history)
+        ? parsed.history.filter(isStepId)
+        : [],
+      result: isEligibilityResult(parsed.result) ? parsed.result : undefined,
+    }
+  } catch {
+    localStorage.removeItem(ELIGIBILITY_DRAFT_STORAGE_KEY)
+    return initialEligibilityState
+  }
+}
+
+function saveEligibilityDraft(state: EligibilityState) {
+  try {
+    localStorage.setItem(ELIGIBILITY_DRAFT_STORAGE_KEY, JSON.stringify(state))
+  } catch {
+    return
+  }
+}
+
+function clearEligibilityDraft() {
+  try {
+    localStorage.removeItem(ELIGIBILITY_DRAFT_STORAGE_KEY)
+  } catch {
+    return
+  }
 }
 
 // ─── Progress calculation ─────────────────────────────────────────────────────
@@ -334,11 +412,18 @@ function CountryCombobox({
   )
 }
 
-function OtherDivisionsStep() {
-  const [selectedCountry, setSelectedCountry] = useState('')
+function OtherDivisionsStep({
+  selectedCountry,
+  onSelectedCountryChange,
+}: {
+  selectedCountry: string
+  onSelectedCountryChange: (country: string) => void
+}) {
   const selected = internationalDivisionCountries.find((c) => c.country === selectedCountry)
 
   useEffect(() => {
+    if (selectedCountry) return
+
     fetch('https://ipapi.co/json/')
       .then((res) => res.json())
       .then((data: { country_code?: string }) => {
@@ -346,10 +431,10 @@ function OtherDivisionsStep() {
         const match = internationalDivisionCountries.find(
           (c) => c.iso.toUpperCase() === data.country_code!.toUpperCase()
         )
-        if (match) setSelectedCountry(match.country)
+        if (match) onSelectedCountryChange(match.country)
       })
       .catch(() => { /* silently ignore geolocation failures */ })
-  }, [])
+  }, [onSelectedCountryChange, selectedCountry])
 
   return (
     <StepWrapper stepKey="other-divisions">
@@ -365,7 +450,7 @@ function OtherDivisionsStep() {
 
         <div className="space-y-2">
           <p className="text-sm font-semibold text-(--asi-text)">Seleccione su país</p>
-          <CountryCombobox value={selectedCountry} onChange={setSelectedCountry} />
+          <CountryCombobox value={selectedCountry} onChange={onSelectedCountryChange} />
         </div>
 
         {selected && (
@@ -401,10 +486,11 @@ function OtherDivisionsStep() {
 
 export function EligibilityPage() {
   const navigate = useNavigate()
-  const [state, setState] = useState<EligibilityState>({
-    step: 'adventist',
-    history: [],
-  })
+  const [state, setState] = useState<EligibilityState>(() => readEligibilityDraft())
+
+  useEffect(() => {
+    saveEligibilityDraft(state)
+  }, [state])
 
   const goTo = (nextStep: StepId, updates: Partial<EligibilityState> = {}) => {
     setState((prev) => ({
@@ -449,6 +535,7 @@ export function EligibilityPage() {
     const accessToken = createEligibilityAccessToken(tokenPayload)
 
     saveEligibilityToken(tokenPayload)
+    clearEligibilityDraft()
 
     const membershipApplyPath = accessToken
       ? `${surfacePaths.institutional.membershipApply}?eligibilityToken=${encodeURIComponent(accessToken)}`
@@ -542,7 +629,13 @@ export function EligibilityPage() {
 
             {/* ── Paso: Otras divisiones (terminal) ────────────── */}
             {state.step === 'other-divisions' && (
-              <OtherDivisionsStep key="other-divisions" />
+              <OtherDivisionsStep
+                key="other-divisions"
+                selectedCountry={state.otherDivisionCountry ?? ''}
+                onSelectedCountryChange={(country) =>
+                  setState((prev) => ({ ...prev, otherDivisionCountry: country }))
+                }
+              />
             )}
 
             {/* ── Paso 3: Tipo de solicitante ───────────────────── */}

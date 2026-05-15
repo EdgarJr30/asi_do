@@ -1,11 +1,14 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppProviders } from '@/app/providers/app-providers'
 import { appRoutes } from '@/app/router/routes'
 import { surfacePaths } from '@/app/router/surface-paths'
-import { ELIGIBILITY_SESSION_KEY } from '@/experiences/institutional/content/eligibility-content'
+import {
+  ELIGIBILITY_DRAFT_STORAGE_KEY,
+  ELIGIBILITY_SESSION_KEY,
+} from '@/experiences/institutional/content/eligibility-content'
 
 const authState = {
   session: null as null | { user: { id: string; email?: string } },
@@ -151,6 +154,7 @@ beforeEach(() => {
     isPlatformAdmin: false,
   }
   window.sessionStorage.clear()
+  window.localStorage.clear()
 })
 
 describe('institutional membership application flow', () => {
@@ -296,5 +300,67 @@ describe('institutional membership application flow', () => {
     expect(
       await screen.findByRole('combobox', { name: /etapa actual/i })
     ).toBeInTheDocument()
+  })
+
+  it('restores the eligibility wizard draft after leaving the page', async () => {
+    renderRoute(surfacePaths.institutional.eligibility)
+
+    fireEvent.click(await screen.findByRole('button', { name: /sí/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /unión dominicana/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /yo personalmente/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /no/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /empleado/i }))
+
+    expect(
+      await screen.findByRole('heading', {
+        name: /autoridad para contratar o despedir empleados/i,
+      })
+    ).toBeInTheDocument()
+
+    cleanup()
+    renderRoute(surfacePaths.institutional.eligibility)
+
+    expect(
+      await screen.findByRole('heading', {
+        name: /autoridad para contratar o despedir empleados/i,
+      })
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /atrás/i }))
+
+    expect(
+      await screen.findByRole('heading', {
+        name: /actualmente empleado, jubilado o es un joven profesional/i,
+      })
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^empleado/i })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
+  })
+
+  it('clears the eligibility draft only when continuing to the application', async () => {
+    renderRoute(surfacePaths.institutional.eligibility)
+
+    fireEvent.click(await screen.findByRole('button', { name: /sí/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /unión dominicana/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /yo personalmente/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /no/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /joven profesional/i }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Joven Profesional' })
+    ).toBeInTheDocument()
+
+    expect(window.localStorage.getItem(ELIGIBILITY_DRAFT_STORAGE_KEY)).not.toBeNull()
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /continuar con la solicitud/i })
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: 'Solicitud de membresía ASI' })
+    ).toBeInTheDocument()
+    expect(window.localStorage.getItem(ELIGIBILITY_DRAFT_STORAGE_KEY)).toBeNull()
   })
 })

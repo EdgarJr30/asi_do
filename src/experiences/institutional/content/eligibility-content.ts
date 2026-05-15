@@ -1,4 +1,5 @@
 export const ELIGIBILITY_SESSION_KEY = 'asi:eligibility_result'
+export const ELIGIBILITY_DRAFT_STORAGE_KEY = 'asi:eligibility_draft'
 export const ELIGIBILITY_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 
 export interface EligibilityToken {

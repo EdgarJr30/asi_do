@@ -302,6 +302,9 @@ Do not let route-owned code drift back into a single mixed bucket of layouts and
 ### R-076 — Institutional membership applications must stay gated by eligibility and category filtering
 Do not reintroduce a direct-open institutional membership application route that exposes the full form without a valid eligibility result. The `/membership/apply` surface must require a fresh eligibility token before rendering, redirect back to the eligibility wizard when that token is missing or invalid, and keep the form pre-filtered to the category that the user already qualified for instead of letting applicants browse or switch categories inside the application itself.
 
+### R-077 — Eligibility wizard progress must persist until application handoff
+Do not let the public eligibility wizard lose completed answers or navigation history when the user refreshes, leaves the route, or returns later. Persist the eligibility draft locally across route changes, keep the back path usable from the restored step, and clear that draft only when the user explicitly continues into `/membership/apply` with the qualified eligibility result.
+
 ---
 
 ## Maintenance rule
