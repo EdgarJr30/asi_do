@@ -120,9 +120,6 @@ async function completeContactStep() {
 
   expect(genderButton).toBeDefined()
   fireEvent.click(genderButton as HTMLElement)
-  fireEvent.change(screen.getByRole('textbox', { name: /teléfono residencial/i }), {
-    target: { value: '809-555-1111' },
-  })
   fireEvent.change(screen.getByRole('textbox', { name: /teléfono celular/i }), {
     target: { value: '809-555-2222' },
   })

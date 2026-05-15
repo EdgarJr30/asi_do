@@ -23,8 +23,10 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
-import type { EligibilityToken } from '@/experiences/institutional/content/eligibility-content'
-import type { MembershipCategoryInfo } from '@/experiences/institutional/content/eligibility-content'
+import {
+  membershipCategories,
+  type EligibilityToken,
+} from '@/experiences/institutional/content/eligibility-content'
 import {
   bankAccountTypeOptions,
   checkingTypeOptions,
@@ -55,7 +57,6 @@ export interface MembershipApplicationValues {
   lastName: string
   gender: string
   spouseName: string
-  homePhone: string
   cellPhone: string
   email: string
   address1: string
@@ -159,7 +160,6 @@ const contactStepFields = [
   'lastName',
   'gender',
   'spouseName',
-  'homePhone',
   'cellPhone',
   'email',
   'address1',
@@ -303,7 +303,6 @@ function buildApplicationSchema(categorySlug: string) {
       lastName: z.string().trim().min(2, 'Ingresa tu apellido.'),
       gender: z.string().trim().min(1, 'Selecciona tu género.'),
       spouseName: z.string().trim(),
-      homePhone: z.string().trim().min(7, 'Ingresa un teléfono residencial o alterno.'),
       cellPhone: z.string().trim().min(7, 'Ingresa un teléfono celular.'),
       email: z.string().trim().email('Ingresa un correo electrónico válido.'),
       address1: z.string().trim().min(5, 'Ingresa tu dirección principal.'),
@@ -579,7 +578,6 @@ function createDefaultValues(token: EligibilityToken): MembershipApplicationValu
     lastName: '',
     gender: '',
     spouseName: '',
-    homePhone: '',
     cellPhone: '',
     email: '',
     address1: '',
@@ -932,69 +930,63 @@ function LockedQualificationCard({
   dues,
   badgeLabel,
   requirements,
-  note,
 }: {
   categoryName: string
   dues: string
   badgeLabel: string
   requirements: string[]
-  note?: string
 }) {
+  const visibleRequirements = requirements.slice(0, 2)
+  const hiddenRequirementCount = Math.max(requirements.length - visibleRequirements.length, 0)
+
   return (
-    <div className="rounded-[1.5rem] border border-(--asi-outline) bg-(--asi-primary)/5 p-5 sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-3">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-secondary)">
+    <div className="rounded-2xl border border-(--asi-outline) bg-(--asi-primary)/5 px-4 py-3 sm:px-5">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 space-y-2">
+          <div className="inline-flex w-fit max-w-full items-center gap-2 rounded-full bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-(--asi-secondary)">
             <LockKeyhole className="size-3.5" />
             Categoría bloqueada por elegibilidad
           </div>
-          <div>
-            <p className="text-xl font-semibold tracking-tight text-(--asi-primary)">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end">
+            <p className="text-lg font-semibold tracking-tight text-(--asi-primary)">
               {categoryName}
             </p>
-            <p className="mt-1 text-sm leading-6 text-(--asi-text-muted)">
-              El formulario ya está filtrado según el resultado de tu verificación. No necesitas volver a seleccionar categoría ni cuota.
+            <p className="text-sm text-(--asi-text-muted)">
+              Ya verificada. Solo completa los datos pendientes.
             </p>
           </div>
         </div>
-        <div className="rounded-2xl border border-(--asi-outline) bg-white px-4 py-3 text-right">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
-            Cuota anual
-          </p>
-          <p className="mt-1 text-2xl font-semibold tracking-tight text-(--asi-primary)">
+        <div className="flex shrink-0 items-center justify-between gap-4 rounded-xl border border-(--asi-outline) bg-white px-4 py-2 lg:min-w-48">
+          <div>
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-(--asi-text-muted)">
+              Cuota anual
+            </p>
+            <p className="mt-0.5 text-xs text-(--asi-text-muted)">{badgeLabel}</p>
+          </div>
+          <p className="text-xl font-semibold tracking-tight text-(--asi-primary)">
             {dues}
           </p>
-          <p className="mt-1 text-xs text-(--asi-text-muted)">{badgeLabel}</p>
         </div>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <div>
-          <p className="text-sm font-semibold text-(--asi-text)">Requisitos ya confirmados</p>
-          <ul className="mt-3 space-y-2">
-            {requirements.map((requirement) => (
-              <li
-                key={requirement}
-                className="flex items-start gap-2 text-sm leading-6 text-(--asi-text-muted)"
-              >
-                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-(--asi-primary)" />
-                {requirement}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="rounded-2xl border border-dashed border-(--asi-outline) bg-white/80 p-4">
-          <p className="text-sm font-semibold text-(--asi-text)">Qué sigue</p>
-          <p className="mt-2 text-sm leading-7 text-(--asi-text-muted)">
-            Completa solo los datos complementarios de esta categoría. La referencia pastoral y la coordinación de pago seguirán el mismo expediente.
+      {visibleRequirements.length > 0 ? (
+        <div className="mt-3 flex flex-col gap-2 border-t border-(--asi-outline) pt-3 text-xs leading-5 text-(--asi-text-muted) md:flex-row md:flex-wrap md:items-center">
+          <p className="font-semibold text-(--asi-text)">
+            Requisitos confirmados:
           </p>
-          {note ? (
-            <p className="mt-3 text-sm leading-7 text-(--asi-primary)">
-              {note}
-            </p>
+          {visibleRequirements.map((requirement) => (
+            <span key={requirement} className="inline-flex items-start gap-1.5">
+              <span className="mt-2 size-1 shrink-0 rounded-full bg-(--asi-primary)" />
+              {requirement}
+            </span>
+          ))}
+          {hiddenRequirementCount > 0 ? (
+            <span className="font-medium text-(--asi-primary)">
+              +{hiddenRequirementCount} más
+            </span>
           ) : null}
         </div>
-      </div>
+      ) : null}
     </div>
   )
 }
@@ -1010,21 +1002,21 @@ function ApplicationProgress({
   const activeStep = steps[currentStep]
 
   return (
-    <div className="rounded-[1.5rem] border border-(--asi-outline) bg-(--asi-surface-raised) p-5 shadow-(--asi-shadow-soft) sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="rounded-2xl border border-(--asi-outline) bg-(--asi-surface-raised) px-4 py-4 shadow-(--asi-shadow-soft) sm:px-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-secondary)">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--asi-secondary)">
             Fase {currentStep + 1} de {steps.length}
           </p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-(--asi-text)">
+          <h2 className="mt-1 text-xl font-semibold tracking-tight text-(--asi-text)">
             {activeStep.title}
           </h2>
           <p className="mt-1 text-sm leading-6 text-(--asi-text-muted)">
             {activeStep.summary}
           </p>
         </div>
-        <div className="shrink-0 rounded-2xl border border-(--asi-outline) bg-white px-4 py-3 text-left sm:text-right">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
+        <div className="shrink-0 text-left sm:text-right">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--asi-text-muted)">
             Progreso
           </p>
           <p className="mt-1 text-2xl font-semibold tracking-tight text-(--asi-primary)">
@@ -1033,9 +1025,9 @@ function ApplicationProgress({
         </div>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-4">
         <div
-          className="h-3 overflow-hidden rounded-full bg-(--asi-primary)/10"
+          className="h-2 overflow-hidden rounded-full bg-(--asi-primary)/10"
           aria-label={`Progreso de solicitud ${progress}%`}
           aria-valuemax={100}
           aria-valuemin={0}
@@ -1049,7 +1041,7 @@ function ApplicationProgress({
         </div>
       </div>
 
-      <ol className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <ol className="mt-4 flex gap-2 overflow-x-auto pb-1">
         {steps.map((step, index) => {
           const isCompleted = index < currentStep
           const isActive = index === currentStep
@@ -1058,7 +1050,7 @@ function ApplicationProgress({
             <li
               key={step.id}
               className={cn(
-                'flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm',
+                'flex min-w-[11rem] items-center gap-2 rounded-xl border px-3 py-2 text-sm',
                 isActive
                   ? 'border-(--asi-primary) bg-(--asi-primary)/8 text-(--asi-primary)'
                   : isCompleted
@@ -1068,7 +1060,7 @@ function ApplicationProgress({
             >
               <span
                 className={cn(
-                  'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                  'flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
                   isActive
                     ? 'bg-(--asi-primary) text-white'
                     : isCompleted
@@ -1080,7 +1072,6 @@ function ApplicationProgress({
               </span>
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{step.title}</span>
-                <span className="block truncate text-xs opacity-80">{step.summary}</span>
               </span>
             </li>
           )
@@ -1194,13 +1185,14 @@ function SubmissionSuccess({
 
 export function MembershipApplicationForm({
   token,
-  categoryInfo,
 }: {
   token: EligibilityToken
-  categoryInfo: MembershipCategoryInfo
 }) {
   const session = useAppSession()
   const variant = getMembershipApplicationVariant(token.categorySlug)
+  const categoryInfo =
+    membershipCategories.find((category) => category.slug === token.categorySlug) ??
+    null
   const isOrganizationalForProfit =
     token.categorySlug === ORGANIZATIONAL_FOR_PROFIT_SLUG
   const draftKey = `asi:membership_application_draft:${token.categorySlug}`
@@ -1442,8 +1434,7 @@ export function MembershipApplicationForm({
         badgeLabel={variant.lockedBadgeLabel}
         categoryName={token.category}
         dues={token.dues}
-        note={categoryInfo.note ?? variant.note}
-        requirements={categoryInfo.requirements}
+        requirements={categoryInfo?.requirements ?? []}
       />
 
       <ApplicationProgress currentStep={currentStepIndex} steps={applicationSteps} />
@@ -1498,22 +1489,13 @@ export function MembershipApplicationForm({
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <TextField
-            label="Teléfono residencial"
-            required
-            error={errors.homePhone?.message}
-            placeholder="809-000-0000"
-            {...form.register('homePhone')}
-          />
-          <TextField
-            label="Teléfono celular"
-            required
-            error={errors.cellPhone?.message}
-            placeholder="809-000-0000"
-            {...form.register('cellPhone')}
-          />
-        </div>
+        <TextField
+          label="Teléfono celular"
+          required
+          error={errors.cellPhone?.message}
+          placeholder="809-000-0000"
+          {...form.register('cellPhone')}
+        />
 
         <TextField
           label="Correo electrónico"

@@ -517,6 +517,9 @@ Before closing a UI task, verify:
 9. The solution reuses the design system instead of inventing feature-local patterns.
 10. The screen satisfies Apple UI Design Dos and Don’ts for interactivity, readability, graphics, and clarity.
 
+### Public application form focus
+Public application forms must put the user's first actionable fields in the first viewport whenever practical. Eligibility confirmations, locked category summaries, progress indicators, and explanatory copy should stay compact and secondary once the user has entered the application form; avoid large repeated requirement panels or oversized instructional cards before the form fields.
+
 ---
 
 ## 19. Reference notes

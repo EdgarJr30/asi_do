@@ -9,7 +9,6 @@ import {
   readEligibilityTokenFromAccessToken,
   readEligibilityToken,
   saveEligibilityToken,
-  membershipCategories,
   type EligibilityToken,
 } from '@/experiences/institutional/content/eligibility-content';
 import { getMembershipApplicationVariant } from '@/experiences/institutional/content/membership-application-content';
@@ -114,32 +113,6 @@ function RedirectNotice() {
   );
 }
 
-// ─── Category label badge ─────────────────────────────────────────────────────
-
-function CategoryBadge({ category, dues }: { category: string; dues: string }) {
-  return (
-    <div className="inline-flex items-center gap-3 rounded-2xl bg-(--asi-primary)/8 px-5 py-3">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-(--asi-secondary)">
-          Categoría aprobada
-        </p>
-        <p className="mt-0.5 text-lg font-semibold text-(--asi-primary)">
-          {category}
-        </p>
-      </div>
-      <div className="h-8 w-px bg-(--asi-primary)/20" />
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-(--asi-secondary)">
-          Cuota anual
-        </p>
-        <p className="mt-0.5 text-lg font-semibold text-(--asi-primary)">
-          {dues}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function MembershipApplyPage() {
@@ -147,52 +120,21 @@ export function MembershipApplyPage() {
 
   if (!token) return <RedirectNotice />;
 
-  const categoryInfo = membershipCategories.find(
-    (c) => c.slug === token.categorySlug
-  );
-
-  if (!categoryInfo) return <RedirectNotice />;
-
   return (
     <InstitutionalSection className="min-h-[70vh]" reveal="mount">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-5">
           <p className="asi-kicker">Membresía</p>
-          <h1 className="asi-heading-lg mt-3">Solicitud de membresía ASI</h1>
-          <p className="asi-copy mt-3 max-w-[56ch]">
-            Completa el formulario de esta categoría para dejar listo tu
-            expediente preliminar. El acceso a esta solicitud se habilita solo
-            después de completar la verificación de elegibilidad.
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-(--asi-text) sm:text-4xl">
+            Solicitud de membresía ASI
+          </h1>
+          <p className="mt-2 max-w-[48ch] text-base leading-7 text-(--asi-text-muted)">
+            Completa los datos requeridos para dejar listo tu expediente preliminar.
           </p>
         </div>
 
-        {/* Category indicator */}
-        <div className="mb-8">
-          <CategoryBadge category={token.category} dues={token.dues} />
-        </div>
-
-        {/* Category requirements reminder */}
-        {categoryInfo && (
-          <div className="mb-8 rounded-[1.5rem] border border-(--asi-outline) bg-(--asi-surface-raised) p-6">
-            <p className="text-sm font-semibold text-(--asi-text)">
-              {categoryInfo.name} — Requisitos
-            </p>
-            <ul className="mt-3 space-y-1.5">
-              {categoryInfo.requirements.map((req) => (
-                <li
-                  key={req}
-                  className="flex items-start gap-2 text-sm text-(--asi-text-muted)"
-                >
-                  <span className="mt-2 size-1.5 shrink-0 rounded-full bg-(--asi-primary)" />
-                  {req}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <MembershipApplicationForm token={token} categoryInfo={categoryInfo} />
+        <MembershipApplicationForm token={token} />
 
         {/* Info note */}
         <div className="mt-6 rounded-2xl border border-(--asi-outline) bg-(--asi-surface-raised) p-5">
