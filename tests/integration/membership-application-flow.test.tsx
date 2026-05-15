@@ -182,6 +182,11 @@ describe('institutional membership application flow', () => {
     expect(
       screen.getByRole('progressbar', { name: /progreso de solicitud 0%/i })
     ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /\+2 más/i }))
+    expect(screen.getByText('Requisitos adicionales')).toBeInTheDocument()
+    expect(
+      screen.getByText(/la organización no debe ser propiedad/i)
+    ).toBeInTheDocument()
 
     await completeContactStep()
 

@@ -10,6 +10,7 @@ import {
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -937,7 +938,10 @@ function LockedQualificationCard({
   requirements: string[]
 }) {
   const visibleRequirements = requirements.slice(0, 2)
+  const hiddenRequirements = requirements.slice(2)
   const hiddenRequirementCount = Math.max(requirements.length - visibleRequirements.length, 0)
+  const [showHiddenRequirements, setShowHiddenRequirements] = useState(false)
+  const shouldReduceMotion = useReducedMotion()
 
   return (
     <div className="rounded-2xl border border-(--asi-outline) bg-(--asi-primary)/5 px-4 py-3 sm:px-5">
@@ -981,8 +985,45 @@ function LockedQualificationCard({
             </span>
           ))}
           {hiddenRequirementCount > 0 ? (
-            <span className="font-medium text-(--asi-primary)">
-              +{hiddenRequirementCount} más
+            <span
+              className="relative inline-flex"
+              onMouseEnter={() => setShowHiddenRequirements(true)}
+              onMouseLeave={() => setShowHiddenRequirements(false)}
+            >
+              <button
+                type="button"
+                aria-expanded={showHiddenRequirements}
+                onClick={() => setShowHiddenRequirements(true)}
+                onFocus={() => setShowHiddenRequirements(true)}
+                onBlur={() => setShowHiddenRequirements(false)}
+                className="font-semibold text-(--asi-primary) underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--asi-primary)/30"
+              >
+                +{hiddenRequirementCount} más
+              </button>
+              <AnimatePresence>
+                {showHiddenRequirements ? (
+                  <motion.div
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={shouldReduceMotion ? undefined : { opacity: 0, y: 6, scale: 0.98 }}
+                    transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                    className="absolute left-0 top-full z-30 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-(--asi-outline) bg-white p-3 text-xs leading-5 text-(--asi-text-muted) shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
+                    role="tooltip"
+                  >
+                    <p className="font-semibold text-(--asi-text)">
+                      Requisitos adicionales
+                    </p>
+                    <ul className="mt-2 space-y-1.5">
+                      {hiddenRequirements.map((requirement) => (
+                        <li key={requirement} className="flex items-start gap-2">
+                          <span className="mt-2 size-1 shrink-0 rounded-full bg-(--asi-primary)" />
+                          <span>{requirement}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </span>
           ) : null}
         </div>
@@ -1050,7 +1091,7 @@ function ApplicationProgress({
             <li
               key={step.id}
               className={cn(
-                'flex min-w-[11rem] items-center gap-2 rounded-xl border px-3 py-2 text-sm',
+                'flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm',
                 isActive
                   ? 'border-(--asi-primary) bg-(--asi-primary)/8 text-(--asi-primary)'
                   : isCompleted
@@ -1071,7 +1112,7 @@ function ApplicationProgress({
                 {isCompleted ? <CheckCircle2 className="size-4" /> : index + 1}
               </span>
               <span className="min-w-0">
-                <span className="block truncate font-semibold">{step.title}</span>
+                <span className="block whitespace-nowrap font-semibold">{step.title}</span>
               </span>
             </li>
           )

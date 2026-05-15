@@ -121,8 +121,12 @@ export function MembershipApplyPage() {
   if (!token) return <RedirectNotice />;
 
   return (
-    <InstitutionalSection className="min-h-[70vh]" reveal="mount">
-      <div className="mx-auto max-w-5xl">
+    <InstitutionalSection
+      className="-mt-6 min-h-[70vh] pb-16 sm:-mt-8 lg:-mt-10"
+      reveal="mount"
+      spacing="none"
+    >
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-5">
           <p className="asi-kicker">Membresía</p>
