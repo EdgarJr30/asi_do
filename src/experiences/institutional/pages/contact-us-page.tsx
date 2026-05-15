@@ -3,9 +3,9 @@ import { useMemo, useState } from 'react';
 import { Mail, PhoneCall, Send, UsersRound } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 
-import { surfacePaths } from '@/app/router/surface-paths';
+// import { surfacePaths } from '@/app/router/surface-paths';
 import {
-  InstitutionalActionLink,
+  // InstitutionalActionLink,
   InstitutionalCard,
   InstitutionalLead,
   InstitutionalSection,
@@ -277,7 +277,7 @@ export function ContactUsPage() {
         </motion.div>
       </InstitutionalSection>
 
-      <InstitutionalSection tone="brand" reveal="mount">
+      {/* <InstitutionalSection tone="brand" reveal="mount">
         <motion.div
           className="grid gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-end"
           {...revealProps}
@@ -313,7 +313,7 @@ export function ContactUsPage() {
             </div>
           </div>
         </motion.div>
-      </InstitutionalSection>
+      </InstitutionalSection> */}
     </div>
   );
 }
