@@ -133,23 +133,52 @@
         }
       }
 
+      .solution-slide {
+        padding: 0 !important;
+      }
+
+      .solution-content {
+        box-sizing: border-box;
+        min-height: 700px;
+        width: min(960px, 100%);
+        margin: 0 auto;
+        padding: 44px 48px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .solution-content h2 {
+        margin: 8px auto 18px;
+      }
+
+      .solution-intro {
+        max-width: 640px;
+        margin: 0 auto;
+        font-size: 0.5em;
+      }
+
       /* Cards grid — compact 2x2 que cabe en 700px */
       .cards {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 12px;
-        margin-top: 14px;
+        width: 100%;
+        margin: 22px auto 0;
       }
       .card {
         background: var(--asi-bg-soft);
         border-radius: 10px;
-        padding: 12px 14px;
+        min-height: 86px;
+        padding: 14px 16px;
         text-align: left;
         border-left: 3px solid var(--asi-bg-pastel-mid);
         display: grid;
-        grid-template-columns: 28px 1fr;
-        gap: 10px;
-        align-items: start;
+        grid-template-columns: 46px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
       }
       .card h3 {
         margin: 0 0 4px 0;
@@ -164,12 +193,26 @@
         line-height: 1.4;
       }
       .card .icon {
-        font-size: 1.1em;
-        display: block;
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.86em;
         line-height: 1;
       }
       .card .body {
         min-width: 0;
+      }
+
+      @media (max-width: 720px) {
+        .solution-content {
+          padding: 32px 24px;
+        }
+
+        .cards {
+          grid-template-columns: 1fr;
+        }
       }
 
       /* Two-column layout — compacto */
@@ -434,41 +477,50 @@
         <!-- ============================================ -->
         <!-- SLIDE 3 — La Solución -->
         <!-- ============================================ -->
-        <section>
-          <span class="asi-badge">LA SOLUCIÓN</span>
-          <h2>Una plataforma para nuestra comunidad</h2>
-          <p style="max-width: 560px; margin: 4px auto 0; font-size: 0.5em">
-            Un ecosistema digital donde profesionales y empresarios adventistas
-            se conectan, colaboran y se fortalecen con un propósito
-            evangelístico.
-          </p>
-          <div class="cards">
-            <div class="card">
-              <span class="icon">🤝</span>
-              <div class="body">
-                <h3>Red Profesional</h3>
-                <p>Directorio de profesionales verificados con talento de confianza.</p>
+        <section class="solution-slide">
+          <div class="solution-content">
+            <span class="asi-badge">LA SOLUCIÓN</span>
+            <h2>Una plataforma para nuestra comunidad</h2>
+            <p class="solution-intro">
+              Un ecosistema digital donde profesionales y empresarios adventistas
+              se conectan, colaboran y se fortalecen con un propósito
+              evangelístico.
+            </p>
+            <div class="cards">
+              <div class="card">
+                <span class="icon">🤝</span>
+                <div class="body">
+                  <h3>Red Profesional</h3>
+                  <p>
+                    Directorio de profesionales verificados con talento de
+                    confianza.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div class="card">
-              <span class="icon">💼</span>
-              <div class="body">
-                <h3>Bolsa de Empleo</h3>
-                <p>Vacantes y aplicaciones dentro de nuestra comunidad de fe.</p>
+              <div class="card">
+                <span class="icon">💼</span>
+                <div class="body">
+                  <h3>Bolsa de Empleo</h3>
+                  <p>
+                    Vacantes y aplicaciones dentro de nuestra comunidad de fe.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div class="card">
-              <span class="icon">🎓</span>
-              <div class="body">
-                <h3>Formación Continua</h3>
-                <p>Eventos, mentoría y recursos para fortalecer el liderazgo.</p>
+              <div class="card">
+                <span class="icon">🎓</span>
+                <div class="body">
+                  <h3>Formación Continua</h3>
+                  <p>
+                    Eventos, mentoría y recursos para fortalecer el liderazgo.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div class="card">
-              <span class="icon">🌱</span>
-              <div class="body">
-                <h3>Impacto con Propósito</h3>
-                <p>Cada conexión sirve a través del mercado profesional.</p>
+              <div class="card">
+                <span class="icon">🌱</span>
+                <div class="body">
+                  <h3>Impacto con Propósito</h3>
+                  <p>Cada conexión sirve a través del mercado profesional.</p>
+                </div>
               </div>
             </div>
           </div>
