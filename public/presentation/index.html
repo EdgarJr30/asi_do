@@ -280,6 +280,75 @@
         text-align: left;
       }
 
+      .steps-slide {
+        padding: 0 !important;
+      }
+
+      .steps-content {
+        box-sizing: border-box;
+        min-height: 700px;
+        width: min(900px, 100%);
+        margin: 0 auto;
+        padding: 44px 48px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .steps-content .asi-badge {
+        background: #fff;
+        color: var(--asi-blue);
+      }
+
+      .steps-content h2 {
+        margin: 8px auto 18px;
+      }
+
+      .steps-intro {
+        max-width: 520px;
+        margin: 0 auto 28px;
+      }
+
+      .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 30px;
+        width: 100%;
+        align-items: start;
+      }
+
+      .step-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .step-icon {
+        width: 86px;
+        height: 86px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        font-size: 1.34em;
+        line-height: 1;
+      }
+
+      .reveal .step-card h3 {
+        margin: 0 0 10px;
+        font-size: 0.7em;
+        color: var(--asi-blue);
+      }
+
+      .step-card p {
+        max-width: 220px;
+        margin: 0 auto;
+        font-size: 0.5em;
+      }
+
       @media (max-width: 720px) {
         .challenge-content {
           padding: 32px 24px;
@@ -292,6 +361,15 @@
 
         .challenge-layout .text-side {
           text-align: center;
+        }
+
+        .steps-content {
+          padding: 32px 24px;
+        }
+
+        .steps-grid {
+          grid-template-columns: 1fr;
+          gap: 20px;
         }
       }
 
@@ -529,39 +607,36 @@
         <!-- ============================================ -->
         <!-- SLIDE 4 — Cómo Funciona -->
         <!-- ============================================ -->
-        <section data-background-color="#dfe7ff">
-          <span class="asi-badge" style="background: #fff; color: var(--asi-blue)">CÓMO FUNCIONA</span>
-          <h2>Tres pasos sencillos</h2>
-          <p style="max-width: 520px; margin: 6px auto 24px">
-            Para ser parte de algo más grande
-          </p>
-          <div style="display: flex; justify-content: center; gap: 30px; margin-top: 10px">
-            <div style="text-align: center; max-width: 200px">
-              <div style="font-size: 2em; margin-bottom: 8px">📝</div>
-              <h3 style="font-size: 0.7em; color: var(--asi-blue); margin-bottom: 6px">
-                1. Aplica
-              </h3>
-              <p style="font-size: 0.5em">
-                Completa tu solicitud de membresía según tu perfil profesional.
-              </p>
-            </div>
-            <div style="text-align: center; max-width: 200px">
-              <div style="font-size: 2em; margin-bottom: 8px">✅</div>
-              <h3 style="font-size: 0.7em; color: var(--asi-blue); margin-bottom: 6px">
-                2. Conéctate
-              </h3>
-              <p style="font-size: 0.5em">
-                Accede a la plataforma, crea tu perfil y explora la comunidad.
-              </p>
-            </div>
-            <div style="text-align: center; max-width: 200px">
-              <div style="font-size: 2em; margin-bottom: 8px">🚀</div>
-              <h3 style="font-size: 0.7em; color: var(--asi-blue); margin-bottom: 6px">
-                3. Crece
-              </h3>
-              <p style="font-size: 0.5em">
-                Publica empleos, aplica a vacantes y colabora con propósito.
-              </p>
+        <section class="steps-slide" data-background-color="#dfe7ff">
+          <div class="steps-content">
+            <span class="asi-badge">CÓMO FUNCIONA</span>
+            <h2>Tres pasos sencillos</h2>
+            <p class="steps-intro">
+              Para ser parte de algo más grande
+            </p>
+            <div class="steps-grid">
+              <div class="step-card">
+                <div class="step-icon">📝</div>
+                <h3>1. Aplica</h3>
+                <p>
+                  Completa tu solicitud de membresía según tu perfil profesional.
+                </p>
+              </div>
+              <div class="step-card">
+                <div class="step-icon">✅</div>
+                <h3>2. Conéctate</h3>
+                <p>
+                  Accede a la plataforma, crea tu perfil y explora la comunidad.
+                </p>
+              </div>
+              <div class="step-card">
+                <div class="step-icon">🚀</div>
+                <h3>3. Crece</h3>
+                <p>
+                  Publica empleos, aplica a vacantes y colabora con propósito
+                  evangelístico.
+                </p>
+              </div>
             </div>
           </div>
         </section>
