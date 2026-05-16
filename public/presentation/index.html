@@ -79,6 +79,60 @@
         padding: 30px 50px;
       }
 
+      .reveal .slides section.cover-slide {
+        padding: 0;
+      }
+
+      .cover-content {
+        box-sizing: border-box;
+        min-height: 700px;
+        width: min(980px, 100%);
+        margin: 0 auto;
+        padding: 48px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .cover-logo {
+        height: 70px;
+        width: auto;
+        margin: 0 0 24px;
+        opacity: 0.95;
+      }
+
+      .cover-title {
+        margin: 0 0 12px;
+        font-size: 1.7em;
+      }
+
+      .reveal .cover-subtitle {
+        margin: 0;
+        font-size: 0.78em;
+        font-weight: 400;
+        color: var(--asi-text-muted);
+      }
+
+      .cover-meta {
+        margin: 26px 0 0;
+        font-size: 0.5em;
+        color: var(--asi-text-muted);
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 720px) {
+        .cover-content {
+          padding: 32px 24px;
+        }
+
+        .cover-meta {
+          white-space: normal;
+        }
+      }
+
       /* Cards grid — compact 2x2 que cabe en 700px */
       .cards {
         display: grid;
@@ -256,21 +310,22 @@
         <!-- SLIDE 1 — Portada -->
         <!-- ============================================ -->
         <section
+          class="cover-slide"
           data-background-image="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80"
           data-background-size="cover"
           data-background-opacity="0.15"
         >
-          <div style="text-align: center">
+          <div class="cover-content">
             <img
               src="/brand/asi-logo-dark.png"
               alt="ASI Dominicana"
-              style="height: 70px; margin-bottom: 24px; opacity: 0.95"
+              class="cover-logo"
             />
-            <h1 style="margin-bottom: 12px; font-size: 1.7em">ASI Dominicana</h1>
-            <h3 style="font-weight: 400; color: var(--asi-text-muted); font-size: 0.78em">
+            <h1 class="cover-title">ASI Dominicana</h1>
+            <h3 class="cover-subtitle">
               Conectando profesionales y empresarios<br />con propósito
             </h3>
-            <p style="font-size: 0.5em; color: var(--asi-text-muted); margin-top: 26px; letter-spacing: 0.04em">
+            <p class="cover-meta">
               Adventist-Laymen's Services and Industries &bull; Rep. Dominicana
             </p>
           </div>
