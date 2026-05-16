@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASI Dominicana — Presentación</title>
+
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <!-- Reveal.js vía CDN (sin dependencia de node_modules) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" />
+
+    <!-- Manrope — fuente del proyecto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+
+    <style>
+      /* ===================================================
+       CONFIGURACIÓN — Cambia la URL del QR aquí:
+       =================================================== */
+      :root {
+        /* Pasteles base — paleta del proyecto src/styles/index.css */
+        --asi-bg: #f8f9fa;
+        --asi-bg-soft: #eff3ff;
+        --asi-bg-pastel: #dfe7ff;
+        --asi-bg-pastel-mid: #c6d4ff;
+
+        /* Acentos */
+        --asi-blue: #3955b8;
+        --asi-blue-soft: #6f8ef4;
+        --asi-blue-pastel: #9fb6ff;
+
+        /* Texto */
+        --asi-text: #191c1d;
+        --asi-text-muted: #4f5665;
+
+        /* Fuente */
+        --asi-font: 'Manrope', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      }
+
+      .reveal {
+        font-family: var(--asi-font);
+        color: var(--asi-text);
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        color: var(--asi-blue);
+        font-weight: 700;
+        text-transform: none;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+
+      .reveal h1 {
+        font-size: 1.7em;
+      }
+      .reveal h2 {
+        font-size: 1.2em;
+      }
+      .reveal h3 {
+        font-size: 0.8em;
+        color: var(--asi-blue-soft);
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.58em;
+        line-height: 1.5;
+        color: var(--asi-text-muted);
+      }
+
+      .reveal .slides section {
+        padding: 30px 50px;
+      }
+
+      /* Cards grid — compact 2x2 que cabe en 700px */
+      .cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 14px;
+      }
+      .card {
+        background: var(--asi-bg-soft);
+        border-radius: 10px;
+        padding: 12px 14px;
+        text-align: left;
+        border-left: 3px solid var(--asi-bg-pastel-mid);
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        gap: 10px;
+        align-items: start;
+      }
+      .card h3 {
+        margin: 0 0 4px 0;
+        font-size: 0.62em;
+        color: var(--asi-blue);
+        line-height: 1.2;
+      }
+      .card p {
+        margin: 0;
+        font-size: 0.42em;
+        color: var(--asi-text-muted);
+        line-height: 1.4;
+      }
+      .card .icon {
+        font-size: 1.1em;
+        display: block;
+        line-height: 1;
+      }
+      .card .body {
+        min-width: 0;
+      }
+
+      /* Two-column layout — compacto */
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        align-items: center;
+        margin-top: 14px;
+      }
+      .two-col img {
+        border-radius: 10px;
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        box-shadow: 0 4px 14px rgba(57, 85, 184, 0.08);
+      }
+      .two-col .text-side {
+        text-align: left;
+      }
+      .two-col .text-side p {
+        margin: 0 0 8px 0;
+      }
+
+      /* Badge ASI — pastel */
+      .asi-badge {
+        display: inline-block;
+        background: var(--asi-bg-pastel);
+        color: var(--asi-blue);
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.42em;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        margin-bottom: 10px;
+      }
+
+      /* CTA final — layout 2 columnas: texto + QR */
+      .cta-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 50px;
+        align-items: center;
+        margin-top: 18px;
+      }
+      .cta-text {
+        text-align: left;
+      }
+      .cta-text .asi-badge {
+        margin-bottom: 12px;
+      }
+      .cta-text h2 {
+        margin: 0 0 12px 0;
+        font-size: 1.5em;
+        line-height: 1.15;
+      }
+      .cta-text p {
+        margin: 0 0 10px 0;
+        font-size: 0.55em;
+        line-height: 1.55;
+      }
+      .cta-text .qr-url {
+        font-size: 0.62em;
+        color: var(--asi-blue);
+        font-weight: 700;
+        margin-top: 14px;
+        letter-spacing: 0.01em;
+      }
+      .cta-text .cta-contact {
+        font-size: 0.45em;
+        color: var(--asi-text-muted);
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid var(--asi-bg-pastel);
+      }
+      .cta-qr-side {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .qr-image {
+        display: block;
+        width: 300px;
+        height: auto;
+        padding: 14px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 6px 22px rgba(57, 85, 184, 0.16);
+      }
+
+      /* Highlight text */
+      .highlight {
+        color: var(--asi-blue);
+        font-weight: 700;
+      }
+
+      /* List styling */
+      .reveal ul {
+        list-style: none;
+        padding-left: 0;
+      }
+      .reveal ul li {
+        margin-bottom: 6px;
+      }
+      .reveal ul li::before {
+        content: '→ ';
+        color: var(--asi-blue-pastel);
+        font-weight: 700;
+      }
+
+      /* CTA final — pastel suave compacto */
+      .cta-box {
+        background: var(--asi-bg-soft);
+        border-left: 3px solid var(--asi-blue-soft);
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-top: 10px;
+      }
+      .cta-box p {
+        color: var(--asi-text) !important;
+        font-size: 0.45em;
+        margin: 0;
+        line-height: 1.45;
+      }
+
+      /* Slide number — soft */
+      .reveal .slide-number {
+        background: transparent;
+        color: var(--asi-blue-pastel);
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!-- ============================================ -->
+        <!-- SLIDE 1 — Portada -->
+        <!-- ============================================ -->
+        <section
+          data-background-image="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80"
+          data-background-size="cover"
+          data-background-opacity="0.15"
+        >
+          <div style="text-align: center">
+            <img
+              src="/brand/asi-logo-dark.png"
+              alt="ASI Dominicana"
+              style="height: 70px; margin-bottom: 24px; opacity: 0.95"
+            />
+            <h1 style="margin-bottom: 12px; font-size: 1.7em">ASI Dominicana</h1>
+            <h3 style="font-weight: 400; color: var(--asi-text-muted); font-size: 0.78em">
+              Conectando profesionales y empresarios<br />con propósito
+            </h3>
+            <p style="font-size: 0.5em; color: var(--asi-text-muted); margin-top: 26px; letter-spacing: 0.04em">
+              Adventist-Laymen's Services and Industries &bull; Rep. Dominicana
+            </p>
+          </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SLIDE 2 — El Desafío -->
+        <!-- ============================================ -->
+        <section>
+          <span class="asi-badge">EL DESAFÍO</span>
+          <h2>Talento con valores,<br />sin un lugar donde conectar</h2>
+          <div class="two-col">
+            <div>
+              <img
+                src="https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&q=80"
+                alt="Comunidad colaborando"
+              />
+            </div>
+            <div class="text-side">
+              <p>
+                Miles de
+                <span class="highlight">profesionales y empresarios adventistas</span>
+                en RD comparten valores, ética de trabajo y visión de servicio.
+              </p>
+              <p>
+                Sin embargo, <strong>no existe un espacio dedicado</strong> donde
+                puedan encontrarse, colaborar y crecer juntos profesionalmente.
+              </p>
+              <p style="color: var(--asi-blue); font-weight: 600; font-style: italic">
+                Hasta ahora.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SLIDE 3 — La Solución -->
+        <!-- ============================================ -->
+        <section>
+          <span class="asi-badge">LA SOLUCIÓN</span>
+          <h2>Una plataforma para nuestra comunidad</h2>
+          <p style="max-width: 560px; margin: 4px auto 0; font-size: 0.5em">
+            Un ecosistema digital donde profesionales y empresarios adventistas
+            se conectan, colaboran y se fortalecen.
+          </p>
+          <div class="cards">
+            <div class="card">
+              <span class="icon">🤝</span>
+              <div class="body">
+                <h3>Red Profesional</h3>
+                <p>Directorio de profesionales verificados con talento de confianza.</p>
+              </div>
+            </div>
+            <div class="card">
+              <span class="icon">💼</span>
+              <div class="body">
+                <h3>Bolsa de Empleo</h3>
+                <p>Vacantes y aplicaciones dentro de nuestra comunidad de fe.</p>
+              </div>
+            </div>
+            <div class="card">
+              <span class="icon">🎓</span>
+              <div class="body">
+                <h3>Formación Continua</h3>
+                <p>Eventos, mentoría y recursos para fortalecer el liderazgo.</p>
+              </div>
+            </div>
+            <div class="card">
+              <span class="icon">🌱</span>
+              <div class="body">
+                <h3>Impacto con Propósito</h3>
+                <p>Cada conexión sirve a través del mercado profesional.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SLIDE 4 — Cómo Funciona -->
+        <!-- ============================================ -->
+        <section data-background-color="#dfe7ff">
+          <span class="asi-badge" style="background: #fff; color: var(--asi-blue)">CÓMO FUNCIONA</span>
+          <h2>Tres pasos sencillos</h2>
+          <p style="max-width: 520px; margin: 6px auto 24px">
+            Para ser parte de algo más grande
+          </p>
+          <div style="display: flex; justify-content: center; gap: 30px; margin-top: 10px">
+            <div style="text-align: center; max-width: 200px">
+              <div style="font-size: 2em; margin-bottom: 8px">📝</div>
+              <h3 style="font-size: 0.7em; color: var(--asi-blue); margin-bottom: 6px">
+                1. Aplica
+              </h3>
+              <p style="font-size: 0.5em">
+                Completa tu solicitud de membresía según tu perfil profesional.
+              </p>
+            </div>
+            <div style="text-align: center; max-width: 200px">
+              <div style="font-size: 2em; margin-bottom: 8px">✅</div>
+              <h3 style="font-size: 0.7em; color: var(--asi-blue); margin-bottom: 6px">
+                2. Conéctate
+              </h3>
+              <p style="font-size: 0.5em">
+                Accede a la plataforma, crea tu perfil y explora la comunidad.
+              </p>
+            </div>
+            <div style="text-align: center; max-width: 200px">
+              <div style="font-size: 2em; margin-bottom: 8px">🚀</div>
+              <h3 style="font-size: 0.7em; color: var(--asi-blue); margin-bottom: 6px">
+                3. Crece
+              </h3>
+              <p style="font-size: 0.5em">
+                Publica empleos, aplica a vacantes y colabora con propósito.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SLIDE 5 — Visión / Impacto -->
+        <!-- ============================================ -->
+        <section>
+          <span class="asi-badge">NUESTRA VISIÓN</span>
+          <h2>Más que una plataforma,<br />una comunidad con propósito</h2>
+          <div class="two-col">
+            <div class="text-side">
+              <ul style="font-size: 0.5em; line-height: 1.5">
+                <li>Fortalecer el tejido empresarial adventista en RD</li>
+                <li>Crear oportunidades laborales en la comunidad</li>
+                <li>Mentoría a la próxima generación de líderes</li>
+                <li>Compartir a Cristo a través del mercado profesional</li>
+              </ul>
+              <div class="cta-box">
+                <p>
+                  <strong>Misión:</strong> que cada profesional y empresario
+                  adventista tenga un espacio donde su fe y su trabajo se
+                  encuentren para bendecir.
+                </p>
+              </div>
+            </div>
+            <div>
+              <img
+                src="https://images.unsplash.com/photo-1529390079861-591de354faf5?w=800&q=80"
+                alt="Comunidad unida"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SLIDE 6 — CTA + QR -->
+        <!-- ============================================ -->
+        <section
+          data-background-image="https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=1600&q=80"
+          data-background-size="cover"
+          data-background-opacity="0.08"
+        >
+          <div class="cta-grid">
+            <div class="cta-text">
+              <span class="asi-badge">CONÉCTATE</span>
+              <h2>Únete a ASI</h2>
+              <p>
+                Escanea el código QR para visitar nuestra plataforma y conocer
+                más sobre <strong>ASI Dominicana</strong>.
+              </p>
+              <p class="qr-url">asidominicana.do</p>
+              <p class="cta-contact">
+                ¿Preguntas? Contáctanos en nuestra página web.
+              </p>
+            </div>
+            <div class="cta-qr-side">
+              <img
+                src="/presentation/QRASI.png"
+                alt="QR ASI Dominicana"
+                class="qr-image"
+              />
+            </div>
+          </div>
+        </section>
+      </div>
+      <!-- .slides -->
+    </div>
+    <!-- .reveal -->
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        slideNumber: true,
+        transition: 'slide',
+        transitionSpeed: 'default',
+        backgroundTransition: 'fade',
+        center: true,
+        width: 1100,
+        height: 700,
+      });
+    </script>
+  </body>
+</html>

@@ -2,6 +2,31 @@
   command = "npm run build"
   publish = "dist"
 
+# =====================================================
+# QR de la presentación → home del app
+# El QR está quemado apuntando a /go; este redirect lo
+# manda al home. Si en el futuro quieres cambiar el destino,
+# solo edita el "to" de abajo.
+# =====================================================
+[[redirects]]
+  from = "/go"
+  to = "/"
+  status = 302
+  force = true
+
+# Presentation static page — must come before the SPA catch-all
+[[redirects]]
+  from = "/presentation"
+  to = "/presentation/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/presentation/*"
+  to = "/presentation/:splat"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
