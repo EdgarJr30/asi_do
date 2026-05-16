@@ -194,6 +194,64 @@
         margin: 0 0 8px 0;
       }
 
+      .challenge-slide {
+        padding: 0 !important;
+      }
+
+      .challenge-content {
+        box-sizing: border-box;
+        min-height: 700px;
+        width: min(1120px, 100%);
+        margin: 0 auto;
+        padding: 44px 48px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .challenge-content h2 {
+        margin: 8px auto 28px;
+      }
+
+      .challenge-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 36px;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      .challenge-layout img {
+        border-radius: 10px;
+        width: 100%;
+        height: 210px;
+        object-fit: cover;
+        box-shadow: 0 4px 14px rgba(57, 85, 184, 0.08);
+      }
+
+      .challenge-layout .text-side {
+        text-align: left;
+      }
+
+      @media (max-width: 720px) {
+        .challenge-content {
+          padding: 32px 24px;
+        }
+
+        .challenge-layout {
+          grid-template-columns: 1fr;
+          gap: 18px;
+        }
+
+        .challenge-layout .text-side {
+          text-align: center;
+        }
+      }
+
       /* Badge ASI — pastel */
       .asi-badge {
         display: inline-block;
@@ -334,29 +392,41 @@
         <!-- ============================================ -->
         <!-- SLIDE 2 — El Desafío -->
         <!-- ============================================ -->
-        <section>
-          <span class="asi-badge">EL DESAFÍO</span>
-          <h2>Talento con valores,<br />sin un lugar donde conectar</h2>
-          <div class="two-col">
-            <div>
-              <img
-                src="https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&q=80"
-                alt="Comunidad colaborando"
-              />
-            </div>
-            <div class="text-side">
-              <p>
-                Miles de
-                <span class="highlight">profesionales y empresarios adventistas</span>
-                en RD comparten valores, ética de trabajo y visión de servicio.
-              </p>
-              <p>
-                Sin embargo, <strong>no existe un espacio dedicado</strong> donde
-                puedan encontrarse, colaborar y crecer juntos profesionalmente.
-              </p>
-              <p style="color: var(--asi-blue); font-weight: 600; font-style: italic">
-                Hasta ahora.
-              </p>
+        <section class="challenge-slide">
+          <div class="challenge-content">
+            <span class="asi-badge">EL DESAFÍO</span>
+            <h2>Talento con valores,<br />sin un lugar para conectar</h2>
+            <div class="challenge-layout">
+              <div>
+                <img
+                  src="https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&q=80"
+                  alt="Comunidad colaborando"
+                />
+              </div>
+              <div class="text-side">
+                <p>
+                  Miles de
+                  <span class="highlight"
+                    >profesionales y empresarios adventistas</span
+                  >
+                  en República Dominicana comparten valores, ética de trabajo y
+                  visión de servicio.
+                </p>
+                <p>
+                  Sin embargo,
+                  <strong>no existe un espacio dedicado</strong> donde puedan
+                  encontrarse, colaborar y crecer juntos profesionalmente.
+                </p>
+                <p
+                  style="
+                    color: var(--asi-blue);
+                    font-weight: 600;
+                    font-style: italic;
+                  "
+                >
+                  Hasta ahora.
+                </p>
+              </div>
             </div>
           </div>
         </section>
