@@ -62,6 +62,10 @@ const asiMembershipAuthorityMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260415050000_asi_membership_and_authority_requests.sql'
 )
+const closedRegistrationIntakeMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260516090000_close_public_registration_intake.sql'
+)
 
 describe('supabase schema contract', () => {
   it('keeps the identity, notification, and push workflow migrations in place', () => {
@@ -81,6 +85,7 @@ describe('supabase schema contract', () => {
     expect(existsSync(asiAccessOpportunityKindsMigrationPath)).toBe(true)
     expect(existsSync(asiTypeRequirementsMigrationPath)).toBe(true)
     expect(existsSync(asiMembershipAuthorityMigrationPath)).toBe(true)
+    expect(existsSync(closedRegistrationIntakeMigrationPath)).toBe(true)
   })
 
   it('defines the core identity, approval, and storage foundations', () => {
@@ -210,6 +215,16 @@ describe('supabase schema contract', () => {
     expect(migration).toContain("create or replace function public.review_regional_authority_request(")
     expect(migration).toContain("create or replace function public.validate_job_posting_tenant_kind()")
     expect(migration).toContain('Only company tenants may create or publish employment opportunities')
+  })
+
+  it('keeps public membership application submission closed during demo mode', () => {
+    const migration = readFileSync(closedRegistrationIntakeMigrationPath, 'utf8')
+
+    expect(migration).toContain('drop policy if exists "institutional_membership_applications_insert_public"')
+    expect(migration).toContain('create policy "institutional_membership_applications_insert_closed"')
+    expect(migration).toContain('with check (false)')
+    expect(migration).toContain('revoke insert on public.institutional_membership_applications from anon')
+    expect(migration).toContain('revoke insert on public.institutional_membership_applications from authenticated')
   })
 
   it('keeps applications foundations aligned with the schema contract', () => {

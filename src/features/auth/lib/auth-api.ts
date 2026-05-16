@@ -5,6 +5,12 @@ import { MAX_UPLOAD_SIZE_BYTES, formatFileSize } from '@/lib/uploads/media'
 import { toErrorMessage } from '@/lib/errors/error-utils'
 import { supabase } from '@/lib/supabase/client'
 import { env } from '@/shared/config/env'
+import {
+  MEMBERSHIP_APPLICATIONS_LOCKED_MESSAGE,
+  MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED,
+  PLATFORM_REGISTRATION_LOCKED,
+  PLATFORM_REGISTRATION_LOCKED_MESSAGE,
+} from '@/shared/config/launch-access'
 import { isPermissionCode, type PermissionCode } from '@/shared/constants/permissions'
 import type { Json, Tables, TablesInsert } from '@/shared/types/database'
 
@@ -162,6 +168,10 @@ export async function signUpWithPassword(values: {
   password: string
   fullName: string
 }) {
+  if (PLATFORM_REGISTRATION_LOCKED) {
+    throw new Error(PLATFORM_REGISTRATION_LOCKED_MESSAGE)
+  }
+
   const client = requireSupabase()
 
   const response = await client.auth.signUp({
@@ -491,6 +501,10 @@ export async function submitInstitutionalMembershipApplication(values: {
   submittedFormSnapshot: Json
   eligibilitySnapshot: Json
 }) {
+  if (MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED) {
+    throw new Error(MEMBERSHIP_APPLICATIONS_LOCKED_MESSAGE)
+  }
+
   const client = requireSupabase()
   const submittedAt = new Date().toISOString()
   const payload = {

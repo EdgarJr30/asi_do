@@ -111,9 +111,9 @@ export function StorefrontShell() {
                 <Button
                   className="rounded-full px-5"
                   variant="outline"
-                  onClick={() => void navigate('/auth/sign-up')}
+                  disabled
                 >
-                  Crear cuenta
+                  Registro cerrado
                 </Button>
               ) : null}
               <Button
@@ -201,12 +201,9 @@ export function StorefrontShell() {
                 {showGuestAction ? (
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      void navigate('/auth/sign-up');
-                    }}
+                    disabled
                   >
-                    Crear cuenta
+                    Registro cerrado
                   </Button>
                 ) : null}
                 <Button

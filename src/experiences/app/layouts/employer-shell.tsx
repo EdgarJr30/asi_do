@@ -36,6 +36,7 @@ import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api
 import { fetchMyNotifications, markNotificationRead, type AppNotification } from '@/lib/notifications/api'
 import { filterNavigationItems } from '@/lib/permissions/guards'
 import { cn } from '@/lib/utils/cn'
+import { PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access'
 import { candidateNavigationItems, employerNavigationItems } from '@/shared/constants/navigation'
 import type { NavigationItem } from '@/shared/types/navigation'
 
@@ -49,6 +50,7 @@ type ShellGuestAction = {
   href: string
   label: string
   variant: 'ghost' | 'outline' | 'primary'
+  disabled?: boolean
 }
 type ShellConfig = {
   brand: string
@@ -144,8 +146,8 @@ const storefrontCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descripti
     description: 'Accede a tu cuenta para continuar en la plataforma'
   },
   [surfacePaths.auth.signUp]: {
-    title: 'Crear cuenta',
-    description: 'Comienza tu acceso a la plataforma con una cuenta nueva'
+    title: 'Registro cerrado',
+    description: 'El alta de cuentas nuevas esta deshabilitada temporalmente'
   },
   [surfacePaths.workspace.root]: {
     title: 'Workspace',
@@ -402,6 +404,8 @@ function SidebarFooter({
             <Button
               key={action.href}
               className="w-full"
+              disabled={action.disabled}
+              title={action.disabled ? PLATFORM_REGISTRATION_LOCKED_MESSAGE : undefined}
               variant={action.variant === 'primary' ? undefined : action.variant}
               onClick={() => onActionNavigate(action.href)}
             >
@@ -827,12 +831,6 @@ function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
           title: 'Iniciar sesión',
           description: 'Accede a tu cuenta para continuar en la plataforma',
           icon: UserRound
-        },
-        {
-          href: surfacePaths.auth.signUp,
-          title: 'Crear cuenta',
-          description: 'Comienza tu acceso a la plataforma',
-          icon: Building2
         }
       ]
 
@@ -857,7 +855,7 @@ function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
     footerCaption: 'Shell compartido de plataforma',
     guestActions: [
       { href: surfacePaths.institutional.home, label: 'ASI institucional', variant: 'ghost' },
-      { href: surfacePaths.auth.signUp, label: 'Crear cuenta', variant: 'outline' },
+      { href: surfacePaths.auth.signUp, label: 'Registro cerrado', variant: 'outline', disabled: true },
       { href: surfacePaths.auth.signIn, label: 'Iniciar sesion', variant: 'primary' }
     ],
     mobileSidebarLabel: 'plataforma',
@@ -1250,6 +1248,8 @@ export function PlatformAppShell({
                   <Button
                     key={action.href}
                     className="rounded-full px-5"
+                    disabled={action.disabled}
+                    title={action.disabled ? PLATFORM_REGISTRATION_LOCKED_MESSAGE : undefined}
                     variant={action.variant === 'primary' ? undefined : action.variant}
                     onClick={() => handleActionNavigate(action.href)}
                   >

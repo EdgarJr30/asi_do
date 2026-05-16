@@ -137,7 +137,7 @@ describe('route shells', () => {
     expect(await screen.findByRole('link', { name: /Plataforma ASI/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Jobs' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'ASI institucional' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Registro cerrado' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Iniciar sesion' })).toBeInTheDocument()
   })
 
@@ -220,7 +220,7 @@ describe('route shells', () => {
     expect(await screen.findByText('Plataforma ASI')).toBeInTheDocument()
     expect(screen.getAllByText('Jobs').length).toBeGreaterThan(0)
     expect(screen.getAllByRole('button', { name: 'ASI institucional' }).length).toBeGreaterThan(0)
-    expect(screen.getAllByRole('button', { name: 'Crear cuenta' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Registro cerrado' }).every((button) => button.hasAttribute('disabled'))).toBe(true)
     expect(screen.getAllByRole('button', { name: 'Iniciar sesion' }).length).toBeGreaterThan(0)
   })
 })

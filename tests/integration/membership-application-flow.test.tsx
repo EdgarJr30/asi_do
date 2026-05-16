@@ -182,6 +182,9 @@ describe('institutional membership application flow', () => {
     expect(
       screen.getByRole('progressbar', { name: /progreso de solicitud 0%/i })
     ).toBeInTheDocument()
+    expect(
+      screen.getByText(/La recepcion de solicitudes de membresia esta cerrada temporalmente/i)
+    ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /\+2 más/i }))
     expect(screen.getByText('Requisitos adicionales')).toBeInTheDocument()
     expect(

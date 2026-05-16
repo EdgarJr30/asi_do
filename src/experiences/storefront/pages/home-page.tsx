@@ -33,6 +33,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils/cn';
+import { PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access';
 
 type BillingFrequency = 'monthly' | 'annually';
 
@@ -331,7 +332,7 @@ const pricingPlans = [
       monthly: 'por mes',
       annually: 'por ano',
     },
-    cta: 'Crear cuenta',
+    cta: 'Registro cerrado',
     highlights: [
       '1 espacio de empresa',
       'Hasta 2 vacantes activas',
@@ -484,7 +485,7 @@ const footerNavigation = [
   { label: 'Pricing', section: 'pricing' },
   { label: 'FAQ', section: 'faq' },
   { label: 'Jobs', route: surfacePaths.public.jobs },
-  { label: 'Crear cuenta', route: '/auth/sign-up' },
+  { label: 'Registro cerrado', route: '/auth/sign-up', disabled: true },
 ] as const;
 
 const footerSignals = [
@@ -546,8 +547,13 @@ export function HomePage() {
         href: getAuthenticatedHomePath(
           session.permissions.includes('workspace:read')
         ),
+        disabled: false,
       }
-    : { label: 'Crear cuenta', href: surfacePaths.auth.signUp };
+    : {
+        label: 'Registro cerrado',
+        href: surfacePaths.auth.signUp,
+        disabled: true,
+      };
 
   const footerYear = new Date().getFullYear();
 
@@ -599,6 +605,8 @@ export function HomePage() {
                   <div className="mt-7 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap">
                     <Button
                       className="w-full sm:min-w-44 sm:w-auto hover:shadow-[0_24px_44px_rgba(43,69,143,0.34)]"
+                      disabled={primaryAction.disabled}
+                      title={primaryAction.disabled ? PLATFORM_REGISTRATION_LOCKED_MESSAGE : undefined}
                       onClick={() => void navigate(primaryAction.href)}
                     >
                       {primaryAction.label}
@@ -1332,6 +1340,8 @@ export function HomePage() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Button
               className="hover:shadow-[0_24px_44px_rgba(43,69,143,0.34)]"
+              disabled={primaryAction.disabled}
+              title={primaryAction.disabled ? PLATFORM_REGISTRATION_LOCKED_MESSAGE : undefined}
               onClick={() => void navigate(primaryAction.href)}
             >
               {primaryAction.label}
@@ -1598,6 +1608,8 @@ export function HomePage() {
                             : 'border-white/12 bg-white/10 text-white hover:border-white/36 hover:bg-white/22 hover:text-white hover:shadow-[0_22px_42px_rgba(8,15,34,0.24)]'
                         )}
                         variant={isSelected ? 'primary' : 'outline'}
+                        disabled={plan.name === 'Starter'}
+                        title={plan.name === 'Starter' ? PLATFORM_REGISTRATION_LOCKED_MESSAGE : undefined}
                         onClick={() =>
                           void navigate(
                             plan.name === 'Starter'
@@ -2235,6 +2247,8 @@ export function HomePage() {
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
                 <Button
                   className="hover:shadow-[0_24px_44px_rgba(43,69,143,0.34)]"
+                  disabled={primaryAction.disabled}
+                  title={primaryAction.disabled ? PLATFORM_REGISTRATION_LOCKED_MESSAGE : undefined}
                   onClick={() => void navigate(primaryAction.href)}
                 >
                   {primaryAction.label}
@@ -2277,7 +2291,14 @@ export function HomePage() {
               ) : (
                 <motion.button
                   key={item.label}
-                  className="cursor-pointer rounded-full px-3 py-1.5 text-(--app-text-muted) hover:bg-(--app-surface) hover:text-(--app-text) hover:shadow-(--app-shadow-card)"
+                  className={cn(
+                    'rounded-full px-3 py-1.5 text-(--app-text-muted)',
+                    'disabled:cursor-not-allowed disabled:opacity-65',
+                    !('disabled' in item && item.disabled) &&
+                      'cursor-pointer hover:bg-(--app-surface) hover:text-(--app-text) hover:shadow-(--app-shadow-card)'
+                  )}
+                  disabled={'disabled' in item ? item.disabled : false}
+                  title={'disabled' in item && item.disabled ? PLATFORM_REGISTRATION_LOCKED_MESSAGE : undefined}
                   transition={landingHoverSpring}
                   type="button"
                   whileHover={shouldReduceMotion ? undefined : { y: -2 }}

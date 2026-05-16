@@ -12,11 +12,12 @@
 6. Tenant staff access is tenant-scoped through memberships.
 7. Authentication does not equal authorization; permissions are checked separately.
 8. Viewing or applying to protected product opportunities requires approved user status, ASI membership, and an active subscription.
-9. Protected content access is granted only when `user_approval_status = approved`, `asi_membership_status in (active, grace_period)`, `user_subscription_status in (trialing, active, grace_period)`, the account itself is active, and any configured membership/subscription expiration has not passed, unless an auditable manual override is still active.
-10. Pastor and regional administrator authority is request-based, evidence-backed, scoped to church territory, and separate from final user license activation.
-11. Pastors may authorize standard professional users and provide scoped pastoral endorsement for company/operator requests only inside their approved district/church scope, but pastors may not activate licenses, finalize tenant onboarding, or approve other pastors/regional administrators.
-12. Regional administrators may authorize pastors, standard professional users, and provide scoped territorial endorsement for company/operator requests only inside their approved territory, but may not activate licenses or finalize tenant onboarding by themselves.
-13. Final license activation is permission-driven and is granted by default only to super administrators and platform support; any additional platform admin may activate final licenses only when a super administrator explicitly assigns `license:activate`.
+9. During demo-mode launch windows, public account registration and institutional membership application submission must be closed. Users may view the product and forms as samples, but no public intake may persist from the browser.
+10. Protected content access is granted only when `user_approval_status = approved`, `asi_membership_status in (active, grace_period)`, `user_subscription_status in (trialing, active, grace_period)`, the account itself is active, and any configured membership/subscription expiration has not passed, unless an auditable manual override is still active.
+11. Pastor and regional administrator authority is request-based, evidence-backed, scoped to church territory, and separate from final user license activation.
+12. Pastors may authorize standard professional users and provide scoped pastoral endorsement for company/operator requests only inside their approved district/church scope, but pastors may not activate licenses, finalize tenant onboarding, or approve other pastors/regional administrators.
+13. Regional administrators may authorize pastors, standard professional users, and provide scoped territorial endorsement for company/operator requests only inside their approved territory, but may not activate licenses or finalize tenant onboarding by themselves.
+14. Final license activation is permission-driven and is granted by default only to super administrators and platform support; any additional platform admin may activate final licenses only when a super administrator explicitly assigns `license:activate`.
 
 ---
 

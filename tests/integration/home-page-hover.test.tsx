@@ -25,7 +25,7 @@ vi.mock('@/lib/supabase/client', () => ({
 }))
 
 describe('home page hover affordances', () => {
-  it('keeps hover and pointer affordances on primary landing actions', async () => {
+  it('keeps locked registration and hover affordances on active landing actions', async () => {
     render(
       <MemoryRouter>
         <AppSessionProvider>
@@ -34,13 +34,11 @@ describe('home page hover affordances', () => {
       </MemoryRouter>
     )
 
-    const primaryCta = (await screen.findAllByRole('button', { name: 'Crear cuenta' }))[0]
+    const primaryCta = (await screen.findAllByRole('button', { name: 'Registro cerrado' }))[0]
     const comparisonTrigger = screen.getByRole('button', { name: /Comparar planes/i })
     const footerPricing = screen.getByRole('button', { name: 'Pricing' })
 
-    expect(primaryCta.className).toContain('cursor-pointer')
-    expect(primaryCta.className).toContain('hover:shadow-')
-    expect(primaryCta.className).toContain('hover:bg-primary-')
+    expect(primaryCta).toBeDisabled()
 
     expect(comparisonTrigger.className).toContain('cursor-pointer')
     expect(comparisonTrigger.className).toContain('hover:border-primary-200')

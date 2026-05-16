@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { signInWithPassword, toErrorMessage } from '@/features/auth/lib/auth-api'
 import { signInSchema, type SignInValues } from '@/features/auth/lib/auth-schemas'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
+import { PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access'
 
 function FieldError({ message }: { message?: string }) {
   if (!message) {
@@ -130,10 +131,7 @@ export function SignInPage() {
           </form>
 
           <div className="rounded-panel border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-sm leading-6 text-(--app-text-muted)">
-            Aun no tienes cuenta?{' '}
-            <Link className="font-semibold text-primary-700 transition hover:text-primary-800 hover:underline dark:hover:text-primary-200" to={surfacePaths.auth.signUp}>
-              Registrate
-            </Link>
+            {PLATFORM_REGISTRATION_LOCKED_MESSAGE}
           </div>
         </div>
       </Card>

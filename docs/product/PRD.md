@@ -233,6 +233,8 @@ The MVP should **not** initially include:
 ### FR-1 Authentication
 The system must support secure sign-up and sign-in for standard platform users, with account activation, content access, and tenant operator access granted only after the required administrative approvals.
 
+For demo-mode launches, public account registration must remain disabled in both visible CTAs and the client submission path until ASI explicitly reopens intake.
+
 ### FR-2 Tenant-operator approval and tenant creation
 A standard user must be able to submit a tenant operator request with company, ministry, project, field, or generic-profile data, and a platform admin must approve that request before the tenant workspace is created.
 

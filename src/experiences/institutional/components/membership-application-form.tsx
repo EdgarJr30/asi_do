@@ -45,6 +45,10 @@ import {
   submitInstitutionalMembershipApplication,
   toErrorMessage,
 } from '@/features/auth/lib/auth-api'
+import {
+  MEMBERSHIP_APPLICATIONS_LOCKED_MESSAGE,
+  MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED,
+} from '@/shared/config/launch-access'
 import type { Json } from '@/shared/types/database'
 import { cn } from '@/lib/utils/cn'
 
@@ -1442,6 +1446,13 @@ export function MembershipApplicationForm({
   }
 
   function handlePrepareSubmission(values: MembershipApplicationValues) {
+    if (MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED) {
+      toast.message('Envio cerrado', {
+        description: MEMBERSHIP_APPLICATIONS_LOCKED_MESSAGE,
+      })
+      return
+    }
+
     submitMutation.mutate(values)
   }
 
@@ -1506,6 +1517,12 @@ export function MembershipApplicationForm({
       {submitMutation.isError ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-700">
           No pudimos guardar la solicitud real. Revisa los datos o vuelve a intentar.
+        </div>
+      ) : null}
+
+      {MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-7 text-amber-900">
+          {MEMBERSHIP_APPLICATIONS_LOCKED_MESSAGE}
         </div>
       ) : null}
 
@@ -2483,10 +2500,14 @@ export function MembershipApplicationForm({
         {isLastStep ? (
           <button
             type="submit"
-            disabled={submitMutation.isPending}
+            disabled={submitMutation.isPending || MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED}
             className="asi-button asi-button-primary w-full justify-center disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
           >
-            {submitMutation.isPending ? 'Enviando solicitud...' : 'Enviar solicitud'}
+            {submitMutation.isPending
+              ? 'Enviando solicitud...'
+              : MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED
+                ? 'Envio cerrado'
+                : 'Enviar solicitud'}
           </button>
         ) : (
           <button
