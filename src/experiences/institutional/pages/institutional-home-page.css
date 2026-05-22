@@ -29,37 +29,9 @@
   );
 }
 
-.institutional-home__image-backdrop-fill {
-  filter: blur(28px);
-  opacity: 0.44;
-}
-
 .institutional-home__image-backdrop .institutional-home__image-frame {
   object-fit: contain;
-  object-position: center;
-}
-
-.institutional-home__image-overlay {
-  background-image: radial-gradient(
-      circle at 20% 32%,
-      rgba(255, 255, 255, 0.22) 0%,
-      rgba(255, 255, 255, 0) 28%
-    ),
-    linear-gradient(
-      90deg,
-      rgba(4, 17, 43, 0.8) 0%,
-      rgba(7, 32, 76, 0.3) 34%,
-      rgba(18, 88, 160, 0.2) 66%,
-      rgba(112, 189, 219, 0.3) 100%
-    );
-}
-
-.institutional-home__image-fade {
-  background-image: linear-gradient(
-    180deg,
-    rgba(3, 12, 28, 0) 0%,
-    rgba(3, 12, 28, 0.52) 100%
-  );
+  object-position: center top;
 }
 
 .institutional-home__hero-overlay {

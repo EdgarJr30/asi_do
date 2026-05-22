@@ -769,30 +769,31 @@ export function InstitutionalHomePage() {
                   {slide.contentMode === 'image-only' ? (
                     <>
                       <div className="institutional-home__image-backdrop absolute inset-0">
-                        <img
-                          aria-hidden="true"
-                          alt=""
-                          className="institutional-home__image-backdrop-fill absolute inset-0 h-full w-full scale-105 object-cover"
-                          loading="lazy"
-                          src={slide.image}
-                        />
-                        <img
-                          alt={slide.imageAlt}
-                          className="institutional-home__image-frame relative h-full w-full object-cover"
-                          loading="lazy"
-                          src={slide.image}
-                        />
-                        <div className="institutional-home__image-overlay absolute inset-0" />
-                        <div className="institutional-home__image-fade absolute inset-x-0 bottom-0 h-28 sm:h-32" />
+                        <picture className="relative block h-full w-full">
+                          {slide.mobileImage ? (
+                            <source media="(max-width: 640px)" srcSet={slide.mobileImage} />
+                          ) : null}
+                          <img
+                            alt={slide.imageAlt}
+                            className="institutional-home__image-frame h-full w-full object-cover"
+                            loading="lazy"
+                            src={slide.image}
+                          />
+                        </picture>
                       </div>
                     </>
                   ) : (
-                    <img
-                      alt={slide.imageAlt}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                      src={slide.image}
-                    />
+                    <picture className="block h-full w-full">
+                      {slide.mobileImage ? (
+                        <source media="(max-width: 640px)" srcSet={slide.mobileImage} />
+                      ) : null}
+                      <img
+                        alt={slide.imageAlt}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        src={slide.image}
+                      />
+                    </picture>
                   )}
                 </motion.div>
               ))}
