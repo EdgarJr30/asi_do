@@ -675,7 +675,13 @@ export function InstitutionalHomePage() {
     [activeTestimonialIndex]
   );
   const heroControls = (
-    <div className="absolute inset-x-0 bottom-0 z-20 px-4 pb-4 sm:px-8 sm:pb-8 lg:px-12 lg:pb-10 xl:px-16">
+    <div
+      className={cn(
+        isImageOnlyHero
+          ? 'relative z-20 bg-[#f8f9fa] px-4 py-4 sm:px-8 lg:px-12 xl:px-16'
+          : 'absolute inset-x-0 bottom-0 z-20 px-4 pb-4 sm:px-8 sm:pb-8 lg:px-12 lg:pb-10 xl:px-16'
+      )}
+    >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           {homeHeroSlides.map((slide, index) => (
@@ -685,8 +691,13 @@ export function InstitutionalHomePage() {
               className={cn(
                 'h-2.5 rounded-full transition-all',
                 index === activeHeroIndex
-                  ? 'w-9 bg-white'
-                  : 'w-2.5 bg-white/28 hover:bg-white/48'
+                  ? cn('w-9', isImageOnlyHero ? 'bg-(--asi-primary)' : 'bg-white')
+                  : cn(
+                      'w-2.5',
+                      isImageOnlyHero
+                        ? 'bg-(--asi-primary)/22 hover:bg-(--asi-primary)/42'
+                        : 'bg-white/28 hover:bg-white/48'
+                    )
               )}
               type="button"
               onClick={() => goToHeroSlide(index)}
@@ -776,11 +787,11 @@ export function InstitutionalHomePage() {
                       <div className="institutional-home__image-backdrop absolute inset-0">
                         <picture className="relative block h-full w-full">
                           {slide.mobileImage ? (
-                            <source media="(max-width: 640px)" srcSet={slide.mobileImage} />
+                            <source media="(max-width: 767px)" srcSet={slide.mobileImage} />
                           ) : null}
                           <img
                             alt={slide.imageAlt}
-                            className="institutional-home__image-frame h-full w-full object-cover"
+                            className="institutional-home__image-frame h-full w-full"
                             loading="lazy"
                             src={slide.image}
                           />
@@ -790,7 +801,7 @@ export function InstitutionalHomePage() {
                   ) : (
                     <picture className="block h-full w-full">
                       {slide.mobileImage ? (
-                        <source media="(max-width: 640px)" srcSet={slide.mobileImage} />
+                        <source media="(max-width: 767px)" srcSet={slide.mobileImage} />
                       ) : null}
                       <img
                         alt={slide.imageAlt}
@@ -935,8 +946,8 @@ export function InstitutionalHomePage() {
                   </>
                 ) : null}
               </div>
-              {heroControls}
             </div>
+            {heroControls}
           </motion.div>
 
           <motion.div
