@@ -750,7 +750,12 @@ export function InstitutionalHomePage() {
               }
             }}
           >
-            <div className="asi-hero-frame institutional-home__hero-frame relative">
+            <div
+              className={cn(
+                'asi-hero-frame institutional-home__hero-frame relative',
+                isImageOnlyHero && 'institutional-home__hero-frame--image-only'
+              )}
+            >
               {homeHeroSlides.map((slide, index) => (
                 <motion.div
                   key={slide.image}

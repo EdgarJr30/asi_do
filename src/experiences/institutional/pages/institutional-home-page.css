@@ -30,8 +30,22 @@
 }
 
 .institutional-home__image-backdrop .institutional-home__image-frame {
-  object-fit: contain;
-  object-position: center top;
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (max-width: 640px) {
+  .institutional-home__hero-frame--image-only {
+    height: calc(100vw * 1280 / 989);
+    min-height: 0;
+  }
+
+  .institutional-home__hero-frame--image-only
+    .institutional-home__image-backdrop
+    .institutional-home__image-frame {
+    object-fit: contain;
+    object-position: center top;
+  }
 }
 
 .institutional-home__hero-overlay {
