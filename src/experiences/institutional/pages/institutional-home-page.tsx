@@ -678,7 +678,7 @@ export function InstitutionalHomePage() {
     <div
       className={cn(
         isImageOnlyHero
-          ? 'relative z-20 bg-[#f8f9fa] px-4 py-4 sm:px-8 lg:px-12 xl:px-16'
+          ? 'absolute inset-x-0 bottom-0 z-20 px-4 pb-4 sm:px-8 sm:pb-6 lg:px-12 xl:px-16'
           : 'absolute inset-x-0 bottom-0 z-20 px-4 pb-4 sm:px-8 sm:pb-8 lg:px-12 lg:pb-10 xl:px-16'
       )}
     >
@@ -691,11 +691,11 @@ export function InstitutionalHomePage() {
               className={cn(
                 'h-2.5 rounded-full transition-all',
                 index === activeHeroIndex
-                  ? cn('w-9', isImageOnlyHero ? 'bg-(--asi-primary)' : 'bg-white')
+                  ? 'w-9 bg-white'
                   : cn(
                       'w-2.5',
                       isImageOnlyHero
-                        ? 'bg-(--asi-primary)/22 hover:bg-(--asi-primary)/42'
+                        ? 'bg-white/28 hover:bg-white/48'
                         : 'bg-white/28 hover:bg-white/48'
                     )
               )}
@@ -946,8 +946,8 @@ export function InstitutionalHomePage() {
                   </>
                 ) : null}
               </div>
+              {heroControls}
             </div>
-            {heroControls}
           </motion.div>
 
           <motion.div

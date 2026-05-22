@@ -29,10 +29,8 @@
   );
 }
 
-.institutional-home__hero-frame.institutional-home__hero-frame--image-only {
-  aspect-ratio: 1774 / 887;
-  height: auto;
-  min-height: 0;
+.institutional-home__hero-frame--image-only .institutional-home__image-backdrop {
+  bottom: 4.75rem;
 }
 
 .institutional-home__image-backdrop .institutional-home__image-frame {
@@ -40,9 +38,9 @@
   object-position: center top;
 }
 
-@media (max-width: 767px) {
-  .institutional-home__hero-frame.institutional-home__hero-frame--image-only {
-    aspect-ratio: 989 / 1280;
+@media (min-width: 640px) {
+  .institutional-home__hero-frame--image-only .institutional-home__image-backdrop {
+    bottom: 6.5rem;
   }
 }
 
@@ -372,5 +370,24 @@
   .institutional-home__carousel-card {
     width: clamp(18.5rem, 18vw, 20.5rem);
     flex-basis: clamp(18.5rem, 18vw, 20.5rem);
+  }
+}
+
+.institutional-home__hero-frame {
+  height: 42rem;
+  min-height: 42rem;
+}
+
+@media (min-width: 1024px) {
+  .institutional-home__hero-frame {
+    height: 48rem;
+    min-height: 48rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .institutional-home__hero-frame {
+    height: 52rem;
+    min-height: 52rem;
   }
 }
