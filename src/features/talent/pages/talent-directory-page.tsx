@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
+import { Search } from 'lucide-react'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { Badge } from '@/components/ui/badge'
@@ -52,57 +53,36 @@ export function TalentDirectoryPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[30px] border border-(--app-border) bg-white px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] sm:px-7">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
-              Reclutamiento
-            </div>
-            <h1 className="mt-4 text-[1.75rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2rem]">
-              Candidatos visibles para tu equipo
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-(--app-text-muted)">
-              Filtra rapido por rol, skill, idioma o pais, compara señales clave y abre el detalle solo cuando el perfil ya merece seguimiento.
-            </p>
-          </div>
-          <div className="rounded-[22px] border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-right">
-            <p className="text-[0.76rem] font-medium text-(--app-text-muted)">Resultados actuales</p>
-            <p className="mt-1 text-[1.55rem] font-bold tracking-[-0.03em] text-(--app-text)">
-              {searchQuery.data?.length ?? 0}
-            </p>
-          </div>
+      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">Candidatos</h1>
+          <p className="mt-1 text-sm text-(--app-text-muted)">
+            {searchQuery.data?.length ?? 0} {(searchQuery.data?.length ?? 0) === 1 ? 'perfil visible' : 'perfiles visibles'}
+          </p>
         </div>
       </section>
 
-      <Card className="border-(--app-border) bg-white shadow-[0_18px_44px_rgba(19,42,97,0.06)]">
-        <CardHeader>
-          <CardTitle>Filtros de búsqueda</CardTitle>
-          <CardDescription>Reduce ruido antes de revisar perfiles completos.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <label className="grid gap-2 text-sm">
-            <span className="text-[0.82rem] font-medium text-(--app-text-muted)">Keyword o rol</span>
-            <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Ej. Ingeniero electrico" />
-          </label>
-          <label className="grid gap-2 text-sm">
-            <span className="text-[0.82rem] font-medium text-(--app-text-muted)">Skill</span>
-            <Input value={skill} onChange={(event) => setSkill(event.target.value)} placeholder="Ej. AutoCAD, React" />
-          </label>
-          <label className="grid gap-2 text-sm">
-            <span className="text-[0.82rem] font-medium text-(--app-text-muted)">Idioma</span>
-            <Input value={language} onChange={(event) => setLanguage(event.target.value)} placeholder="Ej. Espanol, English" />
-          </label>
-          <label className="grid gap-2 text-sm">
-            <span className="text-[0.82rem] font-medium text-(--app-text-muted)">Pais</span>
-            <Input
-              value={countryCode}
-              onChange={(event) => setCountryCode(event.target.value.toUpperCase())}
-              maxLength={2}
-              placeholder="DO"
-            />
-          </label>
-        </CardContent>
-      </Card>
+      <div className="rounded-panel border border-(--app-border) bg-(--app-surface) p-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+        <div className="flex items-center gap-2.5 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-3.5">
+          <Search aria-hidden="true" className="size-4 text-(--app-text-subtle)" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Buscar por nombre o posición..."
+            className="h-11 w-full bg-transparent text-sm text-(--app-text) outline-none placeholder:text-(--app-text-subtle)"
+          />
+        </div>
+        <div className="mt-2.5 grid gap-2.5 sm:grid-cols-3">
+          <Input value={skill} onChange={(event) => setSkill(event.target.value)} placeholder="Skill (ej. AutoCAD)" />
+          <Input value={language} onChange={(event) => setLanguage(event.target.value)} placeholder="Idioma (ej. Español)" />
+          <Input
+            value={countryCode}
+            onChange={(event) => setCountryCode(event.target.value.toUpperCase())}
+            maxLength={2}
+            placeholder="País (ej. DO)"
+          />
+        </div>
+      </div>
 
       <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <Card className="overflow-hidden border-(--app-border) bg-white shadow-[0_18px_44px_rgba(19,42,97,0.06)]">

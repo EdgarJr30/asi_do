@@ -67,39 +67,76 @@ export const candidateNavigationItems: NavigationItem[] = [
 
 export const employerNavigationItems: NavigationItem[] = [
   {
-    title: 'Workspace',
-    href: surfacePaths.workspace.root,
-    description: 'Marca, equipo y presencia de empresa',
+    title: 'Resumen',
+    href: surfacePaths.workspace.dashboard,
+    description: 'Estado general del reclutamiento',
+    group: 'dashboard',
     requiresAuth: true,
     requiredPermission: 'workspace:read'
   },
   {
-    title: 'Jobs',
+    title: 'Mi actividad',
+    href: surfacePaths.workspace.activity,
+    description: 'Tu historial reciente en la plataforma',
+    group: 'dashboard',
+    requiresAuth: true,
+    requiredPermission: 'workspace:read'
+  },
+  {
+    title: 'Vacantes',
     href: surfacePaths.workspace.jobs,
     description: 'Publica y organiza vacantes',
+    group: 'recruitment',
     requiresAuth: true,
     requiredPermission: 'workspace:read'
   },
   {
-    title: 'Candidates',
-    href: surfacePaths.workspace.talent,
-    description: 'Descubre personas abiertas a oportunidades',
-    requiresAuth: true,
-    requiredPermission: 'candidate_directory:read'
-  },
-  {
-    title: 'Pipeline',
-    href: surfacePaths.workspace.pipeline,
-    description: 'Da seguimiento al proceso',
+    title: 'Aplicaciones',
+    href: surfacePaths.workspace.applications,
+    description: 'Todas las postulaciones en un solo lugar',
+    group: 'recruitment',
     requiresAuth: true,
     requiredPermission: 'application:read'
   },
   {
-    title: 'Access',
-    href: surfacePaths.workspace.access,
-    description: 'Accesos del equipo',
+    title: 'Candidatos',
+    href: surfacePaths.workspace.talent,
+    description: 'Descubre personas abiertas a oportunidades',
+    group: 'recruitment',
     requiresAuth: true,
-    requiredPermission: 'role:read'
+    requiredPermission: 'candidate_directory:read'
+  },
+  {
+    title: 'Banco de talento',
+    href: surfacePaths.workspace.talentPool,
+    description: 'Talento guardado y preseleccionado',
+    group: 'recruitment',
+    requiresAuth: true,
+    requiredPermission: 'candidate_directory:read'
+  },
+  {
+    title: 'Tablero Kanban',
+    href: surfacePaths.workspace.pipeline,
+    description: 'Da seguimiento al proceso por etapa',
+    group: 'pipeline',
+    requiresAuth: true,
+    requiredPermission: 'application:read'
+  },
+  {
+    title: 'Reportes',
+    href: surfacePaths.workspace.reports,
+    description: 'Métricas y desempeño del reclutamiento',
+    group: 'general',
+    requiresAuth: true,
+    requiredPermission: 'workspace:read'
+  },
+  {
+    title: 'Configuración',
+    href: surfacePaths.workspace.settings,
+    description: 'Empresa, equipo y accesos',
+    group: 'general',
+    requiresAuth: true,
+    requiredPermission: 'workspace:read'
   }
 ]
 

@@ -8,7 +8,12 @@ import { OnboardingPage } from '@/features/auth/pages/onboarding-page'
 import { SignInPage } from '@/features/auth/pages/sign-in-page'
 import { SignUpPage } from '@/features/auth/pages/sign-up-page'
 import { AuthorityRequestPage } from '@/features/authority-requests/pages/authority-request-page'
+import { WorkspaceApplicationsPage } from '@/features/applications/pages/workspace-applications-page'
 import { CandidateProfilePage } from '@/features/candidate-profile/pages/candidate-profile-page'
+import { ResumenDashboardPage } from '@/features/dashboard/pages/resumen-dashboard-page'
+import { WorkspaceActivityPage } from '@/features/dashboard/pages/workspace-activity-page'
+import { WorkspaceReportsPage } from '@/features/dashboard/pages/workspace-reports-page'
+import { WorkspaceSectionPlaceholderPage } from '@/features/dashboard/pages/workspace-section-placeholder-page'
 import { ErrorLogReviewPage } from '@/features/error-monitoring/pages/error-log-review-page'
 import { AdminConsolePage } from '@/features/internal/pages/admin-console-page'
 import { JobsOverviewPage } from '@/features/jobs/pages/jobs-overview-page'
@@ -115,11 +120,23 @@ export const applicationRoutes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <WorkspaceOverviewPage />
+        element: <ResumenDashboardPage />
+      },
+      {
+        path: 'activity',
+        element: <WorkspaceActivityPage />
       },
       {
         path: 'jobs',
         element: <JobsOverviewPage />
+      },
+      {
+        path: 'applications',
+        element: (
+          <RequirePermission permission="application:read" surface="workspace">
+            <WorkspaceApplicationsPage />
+          </RequirePermission>
+        )
       },
       {
         path: 'talent',
@@ -130,12 +147,32 @@ export const applicationRoutes: RouteObject[] = [
         )
       },
       {
+        path: 'talent-pool',
+        element: (
+          <RequirePermission permission="candidate_directory:read">
+            <WorkspaceSectionPlaceholderPage
+              eyebrow="Reclutamiento"
+              title="Banco de talento"
+              description="Talento guardado y preseleccionado para futuras vacantes."
+            />
+          </RequirePermission>
+        )
+      },
+      {
         path: 'pipeline',
         element: (
           <RequirePermission permission="application:read" surface="workspace">
             <PipelineBoardPage />
           </RequirePermission>
         )
+      },
+      {
+        path: 'reports',
+        element: <WorkspaceReportsPage />
+      },
+      {
+        path: 'settings',
+        element: <WorkspaceOverviewPage />
       },
       {
         path: 'settings/access',

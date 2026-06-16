@@ -3,18 +3,24 @@ import type { CSSProperties, ReactNode } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  Activity,
+  BarChart3,
   Bell,
   BriefcaseBusiness,
   Building2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Database,
+  FileStack,
   FileText,
-  Grid2x2,
+  KanbanSquare,
+  LayoutDashboard,
   Layers3,
   LogOut,
   Menu,
   Search,
+  Settings,
   Shield,
   Sparkles,
   UserRound,
@@ -55,6 +61,8 @@ type ShellGuestAction = {
 type ShellConfig = {
   brand: string
   footerCaption: string
+  hideFooterChrome?: boolean
+  userRole?: string
   guestActions: ShellGuestAction[]
   mobileSidebarLabel: string
   primaryNav: AppNavItem[]
@@ -71,10 +79,15 @@ type ShellConfig = {
 }
 
 const workspaceIconByHref: Partial<Record<string, LucideIcon>> = {
-  [surfacePaths.workspace.root]: Building2,
+  [surfacePaths.workspace.dashboard]: LayoutDashboard,
+  [surfacePaths.workspace.activity]: Activity,
   [surfacePaths.workspace.jobs]: BriefcaseBusiness,
+  [surfacePaths.workspace.applications]: FileStack,
   [surfacePaths.workspace.talent]: UsersRound,
-  [surfacePaths.workspace.pipeline]: Grid2x2,
+  [surfacePaths.workspace.talentPool]: Database,
+  [surfacePaths.workspace.pipeline]: KanbanSquare,
+  [surfacePaths.workspace.reports]: BarChart3,
+  [surfacePaths.workspace.settings]: Settings,
   [surfacePaths.workspace.access]: Shield
 }
 
@@ -87,21 +100,41 @@ const candidateIconByHref: Partial<Record<string, LucideIcon>> = {
 }
 
 const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'description'>> = {
-  [surfacePaths.workspace.root]: {
+  [surfacePaths.workspace.dashboard]: {
     title: 'Resumen',
-    description: 'Estado operativo del workspace, equipo e identidad de empresa'
+    description: 'Estado general del reclutamiento de tu empresa'
+  },
+  [surfacePaths.workspace.activity]: {
+    title: 'Mi actividad',
+    description: 'Tu historial reciente de acciones dentro del workspace'
   },
   [surfacePaths.workspace.jobs]: {
     title: 'Vacantes',
     description: 'Publicacion, estado y ritmo del frente de reclutamiento'
   },
+  [surfacePaths.workspace.applications]: {
+    title: 'Aplicaciones',
+    description: 'Todas las postulaciones del equipo en un solo lugar'
+  },
   [surfacePaths.workspace.talent]: {
     title: 'Candidatos',
     description: 'Talento visible para el equipo con contexto suficiente para decidir'
   },
+  [surfacePaths.workspace.talentPool]: {
+    title: 'Banco de talento',
+    description: 'Talento guardado y preseleccionado para futuras vacantes'
+  },
   [surfacePaths.workspace.pipeline]: {
     title: 'Pipeline',
     description: 'Seguimiento colaborativo de cada aplicacion por etapa'
+  },
+  [surfacePaths.workspace.reports]: {
+    title: 'Reportes',
+    description: 'Metricas y desempeno del reclutamiento'
+  },
+  [surfacePaths.workspace.settings]: {
+    title: 'Configuracion',
+    description: 'Empresa, equipo y accesos del workspace'
   },
   [surfacePaths.workspace.access]: {
     title: 'Accesos',
@@ -237,20 +270,30 @@ function getRouteMeta(
 }
 
 function getRouteBreadcrumbs(groups: AppNavGroup[], pathname: string, fallbackTitle: string) {
+  let best: { group: AppNavGroup; item: AppNavItem } | null = null
+
   for (const group of groups) {
-    const matchedItem = group.items
-      .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
-      .sort((left, right) => right.href.length - left.href.length)[0]
+    for (const item of group.items) {
+      const matches = pathname === item.href || pathname.startsWith(`${item.href}/`)
 
-    if (matchedItem) {
-      const breadcrumbs = group.title ? [group.title] : []
-
-      if (breadcrumbs.at(-1) !== matchedItem.title) {
-        breadcrumbs.push(matchedItem.title)
+      if (!matches) {
+        continue
       }
 
-      return breadcrumbs
+      if (!best || item.href.length > best.item.href.length) {
+        best = { group, item }
+      }
     }
+  }
+
+  if (best) {
+    const breadcrumbs = best.group.title ? [best.group.title] : []
+
+    if (breadcrumbs.at(-1) !== best.item.title) {
+      breadcrumbs.push(best.item.title)
+    }
+
+    return breadcrumbs
   }
 
   return [fallbackTitle]
@@ -426,21 +469,23 @@ function SidebarFooter({
 
   return (
     <div className="border-t border-white/10 px-2.5 py-3">
-      <button
-        className={cn(
-          'flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
-          showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
-          'text-white/78 hover:bg-white/6 hover:text-white'
-        )}
-        title={showCollapsedLabels ? config.publicActionLabel : undefined}
-        type="button"
-        onClick={() => onActionNavigate(config.publicActionHref)}
-      >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/8 text-white/78">
-          <BriefcaseBusiness className="size-4.5" />
-        </span>
-        {!showCollapsedLabels ? <span>{config.publicActionLabel}</span> : <span className="sr-only">{config.publicActionLabel}</span>}
-      </button>
+      {!config.hideFooterChrome ? (
+        <button
+          className={cn(
+            'flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
+            showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
+            'text-white/78 hover:bg-white/6 hover:text-white'
+          )}
+          title={showCollapsedLabels ? config.publicActionLabel : undefined}
+          type="button"
+          onClick={() => onActionNavigate(config.publicActionHref)}
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/8 text-white/78">
+            <BriefcaseBusiness className="size-4.5" />
+          </span>
+          {!showCollapsedLabels ? <span>{config.publicActionLabel}</span> : <span className="sr-only">{config.publicActionLabel}</span>}
+        </button>
+      ) : null}
 
       {!isDesktop ? (
         <div className="mt-3 rounded-2xl border border-white/10 bg-white/6 p-3">
@@ -476,18 +521,19 @@ function SidebarFooter({
 
       <div
         className={cn(
-          'mt-3 flex items-center',
-          showCollapsedLabels ? 'justify-center' : 'gap-3 px-1'
+          'mt-3 flex items-center rounded-2xl',
+          showCollapsedLabels ? 'justify-center' : 'gap-3 px-2 py-2',
+          !showCollapsedLabels && config.hideFooterChrome ? 'border border-white/10 bg-white/6' : ''
         )}
         title={showCollapsedLabels ? userName : undefined}
       >
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/12 text-[11px] font-semibold text-white">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/12 text-[11px] font-semibold text-white">
           {userInitials}
         </div>
         {!showCollapsedLabels ? (
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] font-semibold text-white">{userName}</p>
-            <p className="truncate text-[11px] text-white/44">{userEmail}</p>
+            <p className="truncate text-[11px] text-white/52">{config.userRole ?? userEmail}</p>
           </div>
         ) : (
           <span className="sr-only">{userName}</span>
@@ -497,7 +543,7 @@ function SidebarFooter({
       <button
         aria-label="Cerrar sesion"
         className={cn(
-          'mt-4 flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium text-rose-200 transition hover:bg-rose-400/10 hover:text-rose-100',
+          'mt-2 flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium text-rose-200 transition hover:bg-rose-400/10 hover:text-rose-100',
           showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3'
         )}
         title={showCollapsedLabels ? 'Cerrar sesion' : undefined}
@@ -508,7 +554,7 @@ function SidebarFooter({
         {!showCollapsedLabels ? <span>{signOutPending ? 'Cerrando...' : 'Cerrar sesion'}</span> : <span className="sr-only">Cerrar sesion</span>}
       </button>
 
-      {!showCollapsedLabels ? (
+      {!showCollapsedLabels && !config.hideFooterChrome ? (
         <div className="mt-4 border-t border-white/10 pt-4 text-center">
           <p className="text-xs leading-5 text-white/42">© {footerYear} {config.brand}</p>
           <p className="mt-1 text-xs font-medium text-white/42">{config.footerCaption}</p>
@@ -554,14 +600,26 @@ function WorkspaceSidebarContent({
   const activeItemHref = resolveActiveShellItemHref(config.sidebarGroups, activeHref)
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[linear-gradient(180deg,#132a61_0%,#163777_34%,#1a3b88_100%)] text-white">
-      <div className="border-b border-white/10 px-3 py-3.5">
-        <div className={cn('flex items-center', showCollapsedLabels ? 'justify-center' : 'gap-3')}>
+    <div
+      className={cn(
+        'flex h-full min-h-0 flex-col overflow-hidden text-white',
+        config.hideFooterChrome
+          ? 'bg-[linear-gradient(180deg,#1b3a78_0%,#1d3d80_100%)]'
+          : 'bg-[linear-gradient(180deg,#132a61_0%,#163777_34%,#1a3b88_100%)]'
+      )}
+    >
+      <div className="border-b border-white/10 px-3 py-3">
+        <div className={cn('flex', showCollapsedLabels ? 'justify-center' : 'items-center gap-2')}>
           {showCollapsedLabels ? (
             <BrandMark panelClassName="size-10 rounded-[14px] border-white/12 bg-white/10 p-2 shadow-none" />
           ) : (
-            <div className="min-w-0 flex-1 rounded-[18px] bg-white/6 px-3 py-2">
-              <BrandLockup className="w-28" surface="dark" />
+            <div
+              className={cn(
+                'flex min-w-0 flex-1 flex-col justify-center',
+                config.hideFooterChrome ? '' : 'rounded-[18px] bg-white/6 px-3 py-2'
+              )}
+            >
+              <BrandLockup className={config.hideFooterChrome ? 'w-20' : 'w-28'} surface="dark" />
               <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-white/48">{config.tenantName}</p>
             </div>
           )}
@@ -576,11 +634,11 @@ function WorkspaceSidebarContent({
                   : `Contraer sidebar de ${config.mobileSidebarLabel}`
                 : `Cerrar sidebar de ${config.mobileSidebarLabel}`
             }
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/6 text-white/76 transition hover:border-white/18 hover:bg-white/10 hover:text-white"
+            className="inline-flex size-8 shrink-0 items-center justify-center self-center rounded-lg border border-white/10 bg-white/6 text-white/70 transition hover:border-white/18 hover:bg-white/10 hover:text-white"
             type="button"
             onClick={onToggleSidebar}
           >
-            {isDesktop ? isCollapsed ? <ChevronRight className="size-4.5" /> : <ChevronLeft className="size-4.5" /> : <X className="size-4.5" />}
+            {isDesktop ? isCollapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" /> : <X className="size-4" />}
           </button>
         </div>
         {showCollapsedLabels ? <span className="sr-only">{config.tenantName}</span> : null}
@@ -660,10 +718,16 @@ function WorkspaceSidebarContent({
   )
 }
 
+const workspaceGroupOrder: Array<{ key: NonNullable<NavigationItem['group']>; title?: string }> = [
+  { key: 'dashboard', title: 'Dashboard' },
+  { key: 'recruitment', title: 'Reclutamiento' },
+  { key: 'pipeline', title: 'Pipeline' },
+  { key: 'general' }
+]
+
 function buildWorkspaceConfig(session: ReturnType<typeof useAppSession>) {
-  const visibleNavigation = filterNavigationItems(employerNavigationItems, session.permissions, session.isAuthenticated).map((item) =>
-    mapNavItem(item, 'workspace')
-  )
+  const visibleItems = filterNavigationItems(employerNavigationItems, session.permissions, session.isAuthenticated)
+  const visibleNavigation = visibleItems.map((item) => mapNavItem(item, 'workspace'))
   const candidateNavItem = session.isAuthenticated
     ? ({
         href: surfacePaths.candidate.profile,
@@ -674,27 +738,40 @@ function buildWorkspaceConfig(session: ReturnType<typeof useAppSession>) {
     : null
 
   const primaryNav: AppNavItem[] = [
+    surfacePaths.workspace.dashboard,
     surfacePaths.workspace.jobs,
     surfacePaths.workspace.talent,
     surfacePaths.workspace.pipeline,
-    surfacePaths.workspace.root,
     ...(candidateNavItem ? [surfacePaths.candidate.profile] : [])
   ]
     .map((href) => (href === surfacePaths.candidate.profile ? candidateNavItem : findNavItem(visibleNavigation, href)))
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
 
-  const secondaryNav: AppNavItem[] = [surfacePaths.workspace.access]
-    .map((href) => findNavItem(visibleNavigation, href))
-    .filter((item): item is NonNullable<typeof item> => Boolean(item))
+  const sidebarGroups: AppNavGroup[] = workspaceGroupOrder
+    .map(({ key, title }) => ({
+      title,
+      items: visibleItems
+        .filter((item) => (item.group ?? 'general') === key)
+        .map((item) => ({ ...mapNavItem(item, 'workspace'), description: undefined }))
+    }))
+    .filter((group) => group.items.length > 0)
+
+  if (candidateNavItem) {
+    sidebarGroups.push({ title: 'Mi cuenta', items: [{ ...candidateNavItem, description: undefined }] })
+  }
+
+  const settingsNavItem = findNavItem(visibleNavigation, surfacePaths.workspace.settings)
 
   return {
     brand: 'ASI para equipos',
     footerCaption: 'Shell compartido de plataforma',
+    hideFooterChrome: true,
+    userRole: session.activeMembership?.roleNames?.[0] ?? 'Miembro del equipo',
     guestActions: [],
     mobileSidebarLabel: 'workspace',
     primaryNav,
     profileHref: surfacePaths.candidate.profile,
-    profileMenuLinks: secondaryNav.map((item) => ({ href: item.href, label: item.title })),
+    profileMenuLinks: settingsNavItem ? [{ href: settingsNavItem.href, label: settingsNavItem.title }] : [],
     publicActionHref: surfacePaths.storefront.jobs,
     publicActionLabel: 'Ver oportunidades',
     routeMeta: workspaceCopyByHref,
@@ -702,33 +779,8 @@ function buildWorkspaceConfig(session: ReturnType<typeof useAppSession>) {
       title: 'Workspace',
       description: 'Centro operativo del equipo de reclutamiento.'
     },
-    searchPlaceholder: 'Buscar en el workspace (próximamente)',
-    sidebarGroups: [
-      {
-        title: 'Workspace',
-        items: [
-          ...[surfacePaths.workspace.root, surfacePaths.workspace.jobs, surfacePaths.workspace.talent, surfacePaths.workspace.pipeline]
-            .map((href) => findNavItem(visibleNavigation, href))
-            .filter((item): item is NonNullable<typeof item> => Boolean(item))
-        ]
-      },
-      ...(candidateNavItem
-        ? [
-            {
-              title: 'Mi cuenta',
-              items: [candidateNavItem]
-            }
-          ]
-        : []),
-      ...(secondaryNav.length
-        ? [
-            {
-              title: 'Administra',
-              items: secondaryNav
-            }
-          ]
-        : [])
-    ],
+    searchPlaceholder: 'Buscar candidatos, vacantes...',
+    sidebarGroups,
     tenantName: session.activeMembership?.tenantName ?? 'Tu espacio de empresa',
     topbarEyebrow: 'Workspace operativo'
   } satisfies ShellConfig
@@ -925,6 +977,7 @@ export function PlatformAppShell({
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
 
   const config = buildShellConfig(experience, session)
+  const isWorkspace = experience === 'workspace'
   const userIdentity = resolveUserIdentity(session)
   const routeMeta = getRouteMeta(location.pathname, config.topbarEyebrow, config.routeMeta, config.routeMetaDefault)
   const breadcrumbs = getRouteBreadcrumbs(config.sidebarGroups, location.pathname, routeMeta.title)
@@ -1108,9 +1161,11 @@ export function PlatformAppShell({
               <Menu className="size-5" />
             </button>
 
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{routeMeta.eyebrow}</p>
-              <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
+            <div className={cn('min-w-0', isWorkspace ? 'shrink-0' : 'flex-1')}>
+              {!isWorkspace ? (
+                <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{routeMeta.eyebrow}</p>
+              ) : null}
+              <div className={cn('flex min-w-0 flex-wrap items-center gap-2', isWorkspace ? '' : 'mt-0.5')}>
                 {breadcrumbs.map((crumb, index) => (
                   <div key={`${crumb}-${index}`} className="flex min-w-0 items-center gap-2">
                     {index > 0 ? <span className="text-sm text-slate-300">/</span> : null}
@@ -1124,13 +1179,22 @@ export function PlatformAppShell({
                     </span>
                   </div>
                 ))}
-                <span className="hidden h-5 w-px bg-slate-200 lg:block dark:bg-white/10" />
-                <p className="hidden truncate text-sm text-slate-500 lg:block dark:text-slate-400">{routeMeta.description}</p>
+                {!isWorkspace ? (
+                  <>
+                    <span className="hidden h-5 w-px bg-slate-200 lg:block dark:bg-white/10" />
+                    <p className="hidden truncate text-sm text-slate-500 lg:block dark:text-slate-400">{routeMeta.description}</p>
+                  </>
+                ) : null}
               </div>
             </div>
 
-            <div className="hidden max-w-sm flex-1 lg:block">
-              <div className="flex h-11 items-center gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+            <div className={cn('hidden lg:block', isWorkspace ? 'flex-1 px-2' : 'max-w-sm flex-1')}>
+              <div
+                className={cn(
+                  'flex h-11 items-center gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-white/10 dark:bg-white/5 dark:shadow-none',
+                  isWorkspace ? 'mx-auto max-w-xl' : ''
+                )}
+              >
                 <Search aria-hidden="true" className="size-4 text-slate-400" />
                 <input
                   aria-label={config.searchPlaceholder}
@@ -1261,7 +1325,14 @@ export function PlatformAppShell({
           </div>
         </header>
 
-        <main className="min-w-0 bg-[radial-gradient(circle_at_top_right,rgba(143,171,229,0.16),transparent_24%),linear-gradient(180deg,#f4f7fc_0%,#eef3fb_100%)] py-8 dark:bg-none">
+        <main
+          className={cn(
+            'min-w-0 py-8 dark:bg-none',
+            isWorkspace
+              ? 'bg-[#f7f9fc] dark:bg-transparent'
+              : 'bg-[radial-gradient(circle_at_top_right,rgba(143,171,229,0.16),transparent_24%),linear-gradient(180deg,#f4f7fc_0%,#eef3fb_100%)]'
+          )}
+        >
           <div className="min-w-0 px-4 sm:px-6 lg:px-8">{fallbackContent ?? <Outlet />}</div>
         </main>
       </div>

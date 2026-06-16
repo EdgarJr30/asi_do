@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm, useWatch } from 'react-hook-form'
-import { Link } from 'react-router-dom'
+import { Clock3, MapPin } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { surfacePaths } from '@/app/router/surface-paths'
@@ -43,12 +44,34 @@ import {
   getOpportunityTypeLabel,
   opportunityTypeOptions
 } from '@/features/opportunities/lib/opportunity-taxonomy'
+import { fetchPipelineBoard } from '@/features/pipeline/lib/pipeline-api'
 import { fetchWorkspaceBundle, type WorkspaceBundle } from '@/features/tenants/lib/workspace-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
 
 const PUBLIC_JOBS_QUERY_KEY = ['jobs', 'public'] as const
 const TENANT_JOBS_QUERY_KEY = ['jobs', 'tenant'] as const
+
+const JOB_STATUS_META: Record<string, { label: string; className: string }> = {
+  published: { label: 'Activa', className: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300' },
+  draft: { label: 'Borrador', className: 'bg-amber-50 text-amber-700 dark:bg-amber-500/12 dark:text-amber-300' },
+  closed: { label: 'Cerrada', className: 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300' },
+  archived: { label: 'Archivada', className: 'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400' }
+}
+
+function relativeDays(value: string | null | undefined) {
+  if (!value) {
+    return ''
+  }
+  const days = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 86_400_000))
+  if (days === 0) {
+    return 'hoy'
+  }
+  if (days === 1) {
+    return 'hace 1 día'
+  }
+  return `hace ${days} días`
+}
 
 const linkButtonClassName =
   'inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-px hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-primary-500 dark:hover:bg-primary-500/12 dark:hover:text-primary-300'
@@ -513,11 +536,14 @@ function JobEditor({
 export function JobsOverviewPage() {
   const session = useAppSession()
   const queryClient = useQueryClient()
+  const location = useLocation()
+  const isWorkspaceContext = location.pathname.startsWith('/workspace')
   const canManageJobs = session.permissions.includes('job:create') || session.permissions.includes('job:update')
   const [publicQuery, setPublicQuery] = useState('')
   const [workplaceFilter, setWorkplaceFilter] = useState('')
   const [countryFilter, setCountryFilter] = useState('')
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
+  const [isEditorOpen, setIsEditorOpen] = useState(false)
   const [alertLabel, setAlertLabel] = useState('')
   const [alertFrequency, setAlertFrequency] = useState('weekly')
 
@@ -557,8 +583,34 @@ export function JobsOverviewPage() {
     enabled: canManageJobs && Boolean(session.activeTenantId),
     queryFn: async () => listTenantJobs(session.activeTenantId!)
   })
+  const jobApplicationsQuery = useQuery({
+    queryKey: ['jobs', 'application-counts', session.activeTenantId ?? null],
+    enabled: canManageJobs && isWorkspaceContext && Boolean(session.activeTenantId),
+    queryFn: async () => {
+      const board = await fetchPipelineBoard(session.activeTenantId!)
+      const counts = new Map<string, number>()
+      for (const application of board.applications) {
+        const jobId = application.job_posting?.id
+        if (jobId) {
+          counts.set(jobId, (counts.get(jobId) ?? 0) + 1)
+        }
+      }
+      return counts
+    }
+  })
+  const applicationCounts = jobApplicationsQuery.data ?? new Map<string, number>()
 
-  const selectedJob = tenantJobsQuery.data?.find((job) => job.id === selectedJobId) ?? null
+  const tenantJobs = tenantJobsQuery.data ?? []
+  const activeJobsCount = tenantJobs.filter((job) => job.status === 'published').length
+  const selectedJob = tenantJobs.find((job) => job.id === selectedJobId) ?? null
+
+  function openJobEditor(jobId: string | null) {
+    setSelectedJobId(jobId)
+    setIsEditorOpen(true)
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
 
   const statusMutation = useMutation({
     mutationFn: updateJobPostingStatus,
@@ -713,31 +765,141 @@ export function JobsOverviewPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[30px] border border-(--app-border) bg-white px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] sm:px-7">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+      {isWorkspaceContext && canManageJobs ? (
+        <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
-              Reclutamiento
-            </div>
-            <h1 className="mt-4 text-[1.75rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2rem]">
-              {canManageJobs ? 'Vacantes y oportunidades desde una sola vista' : 'Explora oportunidades con filtros simples'}
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-(--app-text-muted)">
-              {canManageJobs
-                ? 'Crea borradores, publica cuando corresponda y mantén ordenado el frente de talento aprobado.'
-                : 'Explora oportunidades publicadas para miembros, guarda las más relevantes y vuelve a ellas con menos friccion.'}
+            <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">Vacantes</h1>
+            <p className="mt-1 text-sm text-(--app-text-muted)">
+              {activeJobsCount} {activeJobsCount === 1 ? 'activa' : 'activas'} · {tenantJobs.length} en total
             </p>
           </div>
-          {canManageJobs ? (
-            <div className="rounded-[22px] border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-right">
-              <p className="text-[0.76rem] font-medium text-(--app-text-muted)">Vacantes del workspace</p>
-              <p className="mt-1 text-[1.55rem] font-bold tracking-[-0.03em] text-(--app-text)">{tenantJobsQuery.data?.length ?? 0}</p>
+          <div className="flex flex-wrap gap-2.5">
+            <Button variant="outline" onClick={() => toast.info('Exportación próximamente')}>
+              Exportar
+            </Button>
+            <Button onClick={() => openJobEditor(null)}>Publicar vacante</Button>
+          </div>
+        </section>
+      ) : (
+        <section className="rounded-[30px] border border-(--app-border) bg-white px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] sm:px-7">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+                Reclutamiento
+              </div>
+              <h1 className="mt-4 text-[1.75rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2rem]">
+                {canManageJobs ? 'Vacantes y oportunidades desde una sola vista' : 'Explora oportunidades con filtros simples'}
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-(--app-text-muted)">
+                {canManageJobs
+                  ? 'Crea borradores, publica cuando corresponda y mantén ordenado el frente de talento aprobado.'
+                  : 'Explora oportunidades publicadas para miembros, guarda las más relevantes y vuelve a ellas con menos friccion.'}
+              </p>
             </div>
-          ) : null}
-        </div>
-      </section>
+            {canManageJobs ? (
+              <div className="rounded-[22px] border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-right">
+                <p className="text-[0.76rem] font-medium text-(--app-text-muted)">Vacantes del workspace</p>
+                <p className="mt-1 text-[1.55rem] font-bold tracking-[-0.03em] text-(--app-text)">{tenantJobs.length}</p>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      )}
 
-      {canManageJobs && workspaceQuery.data ? (
+      {canManageJobs && workspaceQuery.data && isWorkspaceContext ? (
+        <section className="space-y-4">
+          {isEditorOpen ? (
+            <JobEditor
+              key={selectedJob?.id ?? 'new-job'}
+              selectedJob={selectedJob}
+              session={session}
+              workspace={workspaceQuery.data}
+              onClear={() => {
+                setSelectedJobId(null)
+                setIsEditorOpen(false)
+              }}
+              onSaved={async () => {
+                await Promise.all([
+                  queryClient.invalidateQueries({ queryKey: PUBLIC_JOBS_QUERY_KEY }),
+                  queryClient.invalidateQueries({ queryKey: TENANT_JOBS_QUERY_KEY })
+                ])
+                setSelectedJobId(null)
+                setIsEditorOpen(false)
+              }}
+            />
+          ) : null}
+
+          {tenantJobs.length ? (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {tenantJobs.map((job) => {
+                const statusMeta = JOB_STATUS_META[job.status] ?? { label: job.status, className: 'bg-slate-100 text-slate-600' }
+                const count = applicationCounts.get(job.id) ?? 0
+                const place = [job.city_name, job.country_code].filter(Boolean).join(', ') || 'Sin ubicación'
+
+                return (
+                  <article
+                    key={job.id}
+                    className="flex flex-col rounded-panel border border-(--app-border) bg-(--app-surface) p-5 shadow-[0_8px_24px_rgba(15,23,42,0.05)] transition hover:shadow-[0_14px_32px_rgba(15,23,42,0.09)]"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.7rem] font-semibold', statusMeta.className)}>
+                        <span className="size-1.5 rounded-full bg-current" />
+                        {statusMeta.label}
+                      </span>
+                      <span className="text-xs text-(--app-text-subtle)">{relativeDays(job.updated_at)}</span>
+                    </div>
+
+                    <h3 className="mt-3 text-[1.05rem] font-semibold leading-tight text-(--app-text)">{job.title}</h3>
+                    <p className="mt-1 text-sm text-(--app-text-muted)">{getOpportunityTypeLabel(job.opportunity_type)}</p>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-(--app-text-subtle)">
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="size-3.5" /> {place}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock3 className="size-3.5" /> {job.employment_type}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex items-end justify-between border-t border-(--app-border) pt-4">
+                      <div>
+                        <p className="text-[1.6rem] font-semibold leading-none text-(--app-text)">{count}</p>
+                        <p className="mt-1 text-xs text-(--app-text-muted)">aplicaciones</p>
+                      </div>
+                      <div className="flex flex-wrap justify-end gap-1.5">
+                        <Button className="h-9 rounded-full px-3 text-xs" variant="outline" onClick={() => openJobEditor(job.id)}>
+                          Editar
+                        </Button>
+                        {job.status !== 'published' ? (
+                          <Button
+                            className="h-9 rounded-full px-3 text-xs"
+                            variant="ghost"
+                            onClick={() => statusMutation.mutate({ jobId: job.id, status: 'published' })}
+                          >
+                            Publicar
+                          </Button>
+                        ) : (
+                          <Button
+                            className="h-9 rounded-full px-3 text-xs"
+                            variant="ghost"
+                            onClick={() => statusMutation.mutate({ jobId: job.id, status: 'closed' })}
+                          >
+                            Cerrar
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-10 text-center text-sm text-(--app-text-muted)">
+              Todavía no hay vacantes en este espacio. Usa “Publicar vacante” para crear la primera.
+            </div>
+          )}
+        </section>
+      ) : canManageJobs && workspaceQuery.data ? (
         <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
           <JobEditor
             key={selectedJob?.id ?? 'new-job'}
@@ -760,8 +922,8 @@ export function JobsOverviewPage() {
               <CardDescription>Revisa el inventario actual, publica cuando toque y cierra vacantes sin perder trazabilidad.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {tenantJobsQuery.data?.length ? (
-                tenantJobsQuery.data.map((job) => (
+              {tenantJobs.length ? (
+                tenantJobs.map((job) => (
                   <div key={job.id} className="rounded-panel border border-(--app-border) bg-(--app-surface-muted) p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -806,6 +968,8 @@ export function JobsOverviewPage() {
         </section>
       ) : null}
 
+      {!isWorkspaceContext ? (
+      <>
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <Card>
           <CardHeader>
@@ -974,6 +1138,8 @@ export function JobsOverviewPage() {
           )}
         </CardContent>
       </Card>
+      </>
+      ) : null}
     </div>
   )
 }

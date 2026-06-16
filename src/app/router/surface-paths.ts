@@ -44,9 +44,16 @@ export const surfacePaths = {
   },
   workspace: {
     root: '/workspace',
+    dashboard: '/workspace',
+    activity: '/workspace/activity',
     jobs: '/workspace/jobs',
+    applications: '/workspace/applications',
     talent: '/workspace/talent',
+    talentPool: '/workspace/talent-pool',
     pipeline: '/workspace/pipeline',
+    pipelineStage: (stage: string) => `/workspace/pipeline/${stage}`,
+    reports: '/workspace/reports',
+    settings: '/workspace/settings',
     access: '/workspace/settings/access'
   },
   admin: {
