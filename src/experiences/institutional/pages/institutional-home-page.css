@@ -391,3 +391,36 @@
     min-height: 52rem;
   }
 }
+
+/* Single full-width convention hero: show the whole image at full bleed,
+   following its natural aspect ratio so the borders are never cropped. */
+.institutional-home__hero-frame--image-only {
+  width: 100%;
+  /* 56.28vw = full-width height at the poster ratio (941/1672).
+     Capped to the viewport so the whole poster is visible without scrolling. */
+  height: min(56.28vw, calc(100svh - 10rem));
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: auto;
+}
+
+.institutional-home__hero-frame--image-only .institutional-home__image-backdrop {
+  inset: 0;
+  background-image: none;
+  background-color: var(--app-canvas);
+}
+
+.institutional-home__hero-frame--image-only {
+  background-color: var(--app-canvas);
+}
+
+/* Force the whole hero container white for the single-image hero, so any
+   letterbox area always matches the page background (never the navy shell). */
+.institutional-home__hero-shell:has(.institutional-home__hero-frame--image-only) {
+  background-color: var(--app-canvas);
+}
+
+.institutional-home__hero-frame--image-only .institutional-home__image-frame {
+  object-fit: contain;
+  object-position: center;
+}

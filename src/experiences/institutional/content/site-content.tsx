@@ -178,8 +178,7 @@ export const homeHeroSlides: InstitutionalMediaSlide[] = [
   {
     title: 'Convención ASI 2026',
     description: '',
-    image: '/media/2026-asi-convention_desktop.png',
-    mobileImage: '/media/2026-asi-convention_movil.jpg',
+    image: '/media/2026-asi-convention2.jpg',
     imageAlt: 'Convención ASI 2026',
     primaryAction: {
       label: 'Únete ahora',
@@ -192,60 +191,6 @@ export const homeHeroSlides: InstitutionalMediaSlide[] = [
       variant: 'secondary',
     },
     contentMode: 'image-only',
-  },
-  {
-    title: 'Fe en el mercado, servicio en la misión.',
-    description:
-      'Uniendo a profesionales laicos para servir a la comunidad con integridad, propósito y visión compartida.',
-    image:
-      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1600&q=80',
-    imageAlt: 'Profesionales reunidos en oración y comunidad',
-    primaryAction: {
-      label: 'Únete ahora',
-      to: surfacePaths.institutional.membership,
-      variant: 'primary',
-    },
-    secondaryAction: {
-      label: 'Nuestra misión',
-      to: surfacePaths.institutional.whoWeAre,
-      variant: 'secondary',
-    },
-  },
-  {
-    title: 'Proyectos que convierten visión en impacto visible.',
-    description:
-      'Financiamos, acompañamos y contamos iniciativas que fortalecen iglesia, comunidad y liderazgo.',
-    image:
-      'https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1600&q=80',
-    imageAlt: 'Voluntariado comunitario empacando donaciones',
-    primaryAction: {
-      label: 'Explorar proyectos',
-      to: surfacePaths.institutional.projects,
-      variant: 'primary',
-    },
-    secondaryAction: {
-      label: 'Financiamiento',
-      to: surfacePaths.institutional.projectFunding,
-      variant: 'secondary',
-    },
-  },
-  {
-    title: 'Eventos, membresía y comunidad en una sola voz institucional.',
-    description:
-      'Una experiencia editorial diseñada para inspirar, informar y conectar a la red de ASI con elegancia.',
-    image:
-      'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1600&q=80',
-    imageAlt: 'Convención con audiencia levantando las manos',
-    primaryAction: {
-      label: 'Ver noticias',
-      to: surfacePaths.institutional.news,
-      variant: 'primary',
-    },
-    secondaryAction: {
-      label: 'Ver proyectos',
-      to: surfacePaths.institutional.projects,
-      variant: 'secondary',
-    },
   },
 ] as const;
 

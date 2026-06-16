@@ -674,7 +674,8 @@ export function InstitutionalHomePage() {
     () => getVisibleItems(homeTestimonials, activeTestimonialIndex, 3),
     [activeTestimonialIndex]
   );
-  const heroControls = (
+  const hasMultipleHeroSlides = homeHeroSlides.length > 1;
+  const heroControls = !hasMultipleHeroSlides ? null : (
     <div
       className={cn(
         isImageOnlyHero
