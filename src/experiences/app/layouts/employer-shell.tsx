@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Activity,
+  ArrowLeft,
   BarChart3,
   Bell,
   BriefcaseBusiness,
@@ -43,7 +44,7 @@ import { fetchMyNotifications, markNotificationRead, type AppNotification } from
 import { filterNavigationItems } from '@/lib/permissions/guards'
 import { cn } from '@/lib/utils/cn'
 import { PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access'
-import { candidateNavigationItems, employerNavigationItems } from '@/shared/constants/navigation'
+import { adminNavigationItems, candidateNavigationItems, employerNavigationItems } from '@/shared/constants/navigation'
 import type { NavigationItem } from '@/shared/types/navigation'
 
 const WORKSPACE_NOTIFICATION_QUERY_KEY = ['workspace-shell', 'notifications'] as const
@@ -51,7 +52,7 @@ const WORKSPACE_SIDEBAR_COLLAPSED_STORAGE_KEY = 'asi:workspace-sidebar-collapsed
 const DESKTOP_SIDEBAR_EXPANDED_WIDTH = 272
 const DESKTOP_SIDEBAR_COLLAPSED_WIDTH = 88
 
-type ShellExperience = 'workspace' | 'candidate' | 'storefront'
+type ShellExperience = 'workspace' | 'candidate' | 'storefront' | 'admin'
 type ShellGuestAction = {
   href: string
   label: string
@@ -394,6 +395,18 @@ function WorkspaceNotificationPanel({
   )
 }
 
+function SidebarTooltip({ label }: { label: string }) {
+  return (
+    <span
+      role="tooltip"
+      className="pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 z-50 -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-lg border border-white/10 bg-slate-900/95 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-[0_12px_28px_rgba(8,12,24,0.45)] backdrop-blur transition-[opacity,transform] duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+    >
+      <span className="absolute -left-1 top-1/2 size-2 -translate-y-1/2 rotate-45 border-b border-l border-white/10 bg-slate-900/95" />
+      {label}
+    </span>
+  )
+}
+
 function SidebarFooter({
   config,
   isDesktop,
@@ -519,39 +532,50 @@ function SidebarFooter({
         </div>
       ) : null}
 
-      <div
+      <button
+        type="button"
+        aria-label={`Abrir perfil de ${userName}`}
+        onClick={onOpenProfile}
         className={cn(
-          'mt-3 flex items-center rounded-2xl',
-          showCollapsedLabels ? 'justify-center' : 'gap-3 px-2 py-2',
-          !showCollapsedLabels && config.hideFooterChrome ? 'border border-white/10 bg-white/6' : ''
+          'group relative mt-3 flex w-full items-center rounded-2xl outline-none transition-[background-color,border-color] duration-150 focus-visible:ring-2 focus-visible:ring-white/40',
+          showCollapsedLabels ? 'justify-center py-1' : 'gap-3 px-2 py-2',
+          !showCollapsedLabels && config.hideFooterChrome ? 'border border-white/10 bg-white/6 hover:border-white/16 hover:bg-white/10' : ''
         )}
-        title={showCollapsedLabels ? userName : undefined}
       >
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/12 text-[11px] font-semibold text-white">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#3a63d6,#9fb6f0)] text-[11px] font-semibold text-white ring-2 ring-white/15">
           {userInitials}
-        </div>
+        </span>
         {!showCollapsedLabels ? (
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-semibold text-white">{userName}</p>
-            <p className="truncate text-[11px] text-white/52">{config.userRole ?? userEmail}</p>
-          </div>
+          <span className="min-w-0 flex-1 text-left">
+            <span className="block truncate text-[13px] font-semibold text-white">{userName}</span>
+            <span className="block truncate text-[11px] text-white/52">{config.userRole ?? userEmail}</span>
+          </span>
         ) : (
-          <span className="sr-only">{userName}</span>
+          <>
+            <span className="sr-only">{userName}</span>
+            <SidebarTooltip label={userName} />
+          </>
         )}
-      </div>
+      </button>
 
       <button
         aria-label="Cerrar sesion"
         className={cn(
-          'mt-2 flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium text-rose-200 transition hover:bg-rose-400/10 hover:text-rose-100',
-          showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3'
+          'group relative mt-1.5 flex w-full items-center rounded-xl text-left text-sm font-medium text-rose-200/90 outline-none transition-[background-color,color] duration-150 hover:bg-rose-400/12 hover:text-rose-100 focus-visible:ring-2 focus-visible:ring-rose-300/50',
+          showCollapsedLabels ? 'h-11 justify-center px-0' : 'min-h-10 gap-3 px-3 py-2'
         )}
-        title={showCollapsedLabels ? 'Cerrar sesion' : undefined}
         type="button"
         onClick={onSignOut}
       >
-        <LogOut className="size-4.5" />
-        {!showCollapsedLabels ? <span>{signOutPending ? 'Cerrando...' : 'Cerrar sesion'}</span> : <span className="sr-only">Cerrar sesion</span>}
+        <LogOut className="size-[1.15rem] shrink-0" />
+        {!showCollapsedLabels ? (
+          <span>{signOutPending ? 'Cerrando...' : 'Cerrar sesión'}</span>
+        ) : (
+          <>
+            <span className="sr-only">Cerrar sesión</span>
+            <SidebarTooltip label="Cerrar sesión" />
+          </>
+        )}
       </button>
 
       {!showCollapsedLabels && !config.hideFooterChrome ? (
@@ -602,14 +626,15 @@ function WorkspaceSidebarContent({
   return (
     <div
       className={cn(
-        'flex h-full min-h-0 flex-col overflow-hidden text-white',
+        'flex h-full min-h-0 flex-col text-white',
+        showCollapsedLabels ? 'overflow-visible' : 'overflow-hidden',
         config.hideFooterChrome
-          ? 'bg-[linear-gradient(180deg,#1b3a78_0%,#1d3d80_100%)]'
+          ? 'bg-[linear-gradient(180deg,#16336d_0%,#1b3a7a_55%,#1d3d80_100%)]'
           : 'bg-[linear-gradient(180deg,#132a61_0%,#163777_34%,#1a3b88_100%)]'
       )}
     >
       <div className="border-b border-white/10 px-3 py-3">
-        <div className={cn('flex', showCollapsedLabels ? 'justify-center' : 'items-center gap-2')}>
+        <div className={cn('flex', showCollapsedLabels ? 'flex-col items-center gap-2.5' : 'items-center gap-2')}>
           {showCollapsedLabels ? (
             <BrandMark panelClassName="size-10 rounded-[14px] border-white/12 bg-white/10 p-2 shadow-none" />
           ) : (
@@ -634,24 +659,33 @@ function WorkspaceSidebarContent({
                   : `Contraer sidebar de ${config.mobileSidebarLabel}`
                 : `Cerrar sidebar de ${config.mobileSidebarLabel}`
             }
-            className="inline-flex size-8 shrink-0 items-center justify-center self-center rounded-lg border border-white/10 bg-white/6 text-white/70 transition hover:border-white/18 hover:bg-white/10 hover:text-white"
+            className="group relative inline-flex size-8 shrink-0 items-center justify-center self-center rounded-lg border border-white/10 bg-white/6 text-white/70 outline-none transition-[background-color,border-color,color] duration-150 hover:border-white/20 hover:bg-white/12 hover:text-white focus-visible:ring-2 focus-visible:ring-white/40"
             type="button"
             onClick={onToggleSidebar}
           >
             {isDesktop ? isCollapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" /> : <X className="size-4" />}
+            {showCollapsedLabels ? <SidebarTooltip label="Expandir menú" /> : null}
           </button>
         </div>
         {showCollapsedLabels ? <span className="sr-only">{config.tenantName}</span> : null}
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <nav aria-label={`${config.brand} navigation`} className="flex-1 overflow-y-auto px-2.5 py-3">
+      <div className={cn('flex min-h-0 flex-1 flex-col', showCollapsedLabels ? 'overflow-visible' : 'overflow-hidden')}>
+        <nav
+          aria-label={`${config.brand} navigation`}
+          className={cn(
+            'flex-1 px-3 py-4 [scrollbar-color:rgba(255,255,255,0.18)_transparent] [scrollbar-width:thin]',
+            showCollapsedLabels ? 'overflow-visible' : 'overflow-y-auto'
+          )}
+        >
           {config.sidebarGroups.map((group, groupIndex) => (
-            <div key={group.title ?? `group-${groupIndex}`} className={cn(groupIndex === 0 ? '' : 'mt-3 border-t border-white/8 pt-3')}>
+            <div key={group.title ?? `group-${groupIndex}`} className={cn(groupIndex === 0 ? '' : showCollapsedLabels ? 'mt-4' : 'mt-6')}>
               {group.title && !showCollapsedLabels ? (
-                <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/40">{group.title}</p>
+                <p className="px-3 pb-2 text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-white/35">{group.title}</p>
+              ) : groupIndex > 0 && showCollapsedLabels ? (
+                <div className="mx-auto mb-2 h-px w-6 bg-white/10" />
               ) : null}
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const isActive = activeItemHref === item.href
                   const Icon = item.icon
@@ -662,34 +696,36 @@ function WorkspaceSidebarContent({
                       aria-label={item.title}
                       aria-current={isActive ? 'page' : undefined}
                       className={cn(
-                        'group flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
-                        showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
+                        'group relative flex w-full items-center rounded-xl text-left text-[0.875rem] font-medium outline-none transition-[background-color,color] duration-150',
+                        showCollapsedLabels ? 'h-11 justify-center px-0' : 'min-h-10 gap-3 px-3 py-2',
+                        'focus-visible:ring-2 focus-visible:ring-white/40',
                         isActive
-                          ? 'bg-white/10 text-white shadow-[0_14px_30px_rgba(11,19,45,0.26)]'
-                          : 'text-white/70 hover:bg-white/6 hover:text-white'
+                          ? 'bg-white/12 text-white'
+                          : 'text-white/60 hover:bg-white/8 hover:text-white'
                       )}
                       data-active={isActive ? 'true' : 'false'}
-                      title={showCollapsedLabels ? item.title : undefined}
                       type="button"
                       onClick={() => onActionNavigate(item.href)}
                     >
+                      {isActive && !showCollapsedLabels ? (
+                        <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.5)]" />
+                      ) : null}
                       <span
                         className={cn(
-                          'flex size-9 shrink-0 items-center justify-center rounded-lg transition',
-                          isActive
-                            ? 'bg-white/10 text-current'
-                            : 'bg-white/8 text-white/68 group-hover:bg-white/10 group-hover:text-white'
+                          'flex shrink-0 items-center justify-center transition-colors',
+                          showCollapsedLabels ? 'size-10 rounded-xl' : 'size-5',
+                          showCollapsedLabels && isActive ? 'bg-white/12' : ''
                         )}
                       >
-                        {Icon ? <Icon className="size-4.5" /> : null}
+                        {Icon ? <Icon className={cn(showCollapsedLabels ? 'size-[1.15rem]' : 'size-[1.15rem]', isActive ? 'text-white' : 'text-current')} strokeWidth={isActive ? 2.4 : 2} /> : null}
                       </span>
                       {!showCollapsedLabels ? (
-                        <span className="min-w-0">
-                          <span className="block truncate">{item.title}</span>
-                          {item.description ? <span className={cn('mt-0.5 block truncate text-[11px]', isActive ? 'text-white/68' : 'text-white/38')}>{item.description}</span> : null}
-                        </span>
+                        <span className="min-w-0 flex-1 truncate">{item.title}</span>
                       ) : (
-                        <span className="sr-only">{item.title}</span>
+                        <>
+                          <span className="sr-only">{item.title}</span>
+                          <SidebarTooltip label={item.title} />
+                        </>
                       )}
                     </button>
                   )
@@ -813,6 +849,8 @@ function buildCandidateConfig(session: ReturnType<typeof useAppSession>) {
   return {
     brand: 'ASI para talento',
     footerCaption: 'Shell compartido de plataforma',
+    hideFooterChrome: true,
+    userRole: 'Candidato',
     guestActions: [],
     mobileSidebarLabel: 'candidate',
     primaryNav,
@@ -851,7 +889,7 @@ function buildCandidateConfig(session: ReturnType<typeof useAppSession>) {
         ]
       }
     ],
-    tenantName: session.profile?.display_name ?? session.profile?.full_name ?? 'Tu espacio profesional',
+    tenantName: 'Espacio de talento',
     topbarEyebrow: 'Ruta de candidato'
   } satisfies ShellConfig
 }
@@ -905,6 +943,7 @@ function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
   return {
     brand: 'Plataforma ASI',
     footerCaption: 'Shell compartido de plataforma',
+    hideFooterChrome: true,
     guestActions: [
       { href: surfacePaths.institutional.home, label: 'ASI institucional', variant: 'ghost' },
       { href: surfacePaths.auth.signUp, label: 'Registro cerrado', variant: 'outline', disabled: true },
@@ -946,6 +985,57 @@ function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
   } satisfies ShellConfig
 }
 
+const adminIconByHref: Partial<Record<string, LucideIcon>> = {
+  [surfacePaths.admin.root]: LayoutDashboard,
+  [surfacePaths.admin.approvals]: Shield,
+  [surfacePaths.admin.platform]: Building2,
+  [surfacePaths.admin.moderation]: Layers3,
+  [surfacePaths.admin.errors]: FileText
+}
+
+function buildAdminConfig(session: ReturnType<typeof useAppSession>): ShellConfig {
+  const visibleItems = filterNavigationItems(adminNavigationItems, session.permissions, session.isAuthenticated)
+  const items: AppNavItem[] = visibleItems.map((item) => ({
+    href: item.href,
+    title: item.title,
+    icon: adminIconByHref[item.href] ?? Shield
+  }))
+
+  const backItem: AppNavItem = {
+    href: surfacePaths.storefront.home,
+    title: 'Volver al producto',
+    icon: ArrowLeft
+  }
+
+  return {
+    brand: 'ASI admin',
+    footerCaption: 'Consola interna de plataforma',
+    hideFooterChrome: true,
+    userRole: 'Plataforma',
+    guestActions: [],
+    mobileSidebarLabel: 'admin',
+    primaryNav: items,
+    profileHref: surfacePaths.candidate.profile,
+    profileMenuLinks: [{ href: surfacePaths.storefront.home, label: 'Volver al producto' }],
+    publicActionHref: surfacePaths.storefront.home,
+    publicActionLabel: 'Volver al producto',
+    routeMeta: Object.fromEntries(
+      adminNavigationItems.map((item) => [item.href, { title: item.title, description: item.description }])
+    ),
+    routeMetaDefault: {
+      title: 'Consola de plataforma',
+      description: 'Operaciones, aprobaciones, moderación y seguimiento técnico.'
+    },
+    searchPlaceholder: 'Buscar en la consola...',
+    sidebarGroups: [
+      { title: 'Administración', items },
+      { items: [backItem] }
+    ],
+    tenantName: 'Consola de plataforma',
+    topbarEyebrow: 'Superficie restringida'
+  }
+}
+
 function buildShellConfig(experience: ShellExperience, session: ReturnType<typeof useAppSession>) {
   if (experience === 'candidate') {
     return buildCandidateConfig(session)
@@ -953,6 +1043,10 @@ function buildShellConfig(experience: ShellExperience, session: ReturnType<typeo
 
   if (experience === 'storefront') {
     return buildStorefrontConfig(session)
+  }
+
+  if (experience === 'admin') {
+    return buildAdminConfig(session)
   }
 
   return buildWorkspaceConfig(session)
@@ -1096,7 +1190,7 @@ export function PlatformAppShell({
       <RouteScrollManager />
 
       <aside
-        className="fixed inset-y-0 left-0 z-50 hidden lg:block"
+        className="fixed inset-y-0 left-0 z-50 hidden transition-[width] duration-200 ease-out lg:block"
         style={{ width: isDesktopSidebarCollapsed ? DESKTOP_SIDEBAR_COLLAPSED_WIDTH : DESKTOP_SIDEBAR_EXPANDED_WIDTH }}
       >
         <WorkspaceSidebarContent
@@ -1149,7 +1243,7 @@ export function PlatformAppShell({
         </div>
       ) : null}
 
-      <div className="min-w-0 lg:pl-(--shell-sidebar-width)">
+      <div className="min-w-0 transition-[padding] duration-200 ease-out lg:pl-(--shell-sidebar-width)">
         <header className="sticky top-0 z-40 border-b border-(--app-border) bg-white/94 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
           <div className="flex min-h-18 items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
             <button
