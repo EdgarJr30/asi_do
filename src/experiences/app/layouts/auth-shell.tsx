@@ -51,12 +51,11 @@ export function AuthShell() {
                 <Button
                   className="px-4"
                   variant="outline"
-                  disabled={!isSignUp}
                   onClick={() =>
-                    isSignUp ? void navigate(surfacePaths.auth.signIn) : undefined
+                    void navigate(isSignUp ? surfacePaths.auth.signIn : surfacePaths.auth.signUp)
                   }
                 >
-                  {isSignUp ? 'Iniciar sesion' : 'Registro cerrado'}
+                  {isSignUp ? 'Iniciar sesion' : 'Crear cuenta'}
                 </Button>
               )}
             </div>

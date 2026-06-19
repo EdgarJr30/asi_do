@@ -183,96 +183,100 @@ export function OnboardingPage() {
     }
   }
 
+  const previewName = form.watch('displayName') || session.profile?.display_name || 'Nombre visible'
+  const previewCountry = form.watch('countryCode') || 'DO'
+
   return (
-    <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-      <Card className="bg-(--app-surface-muted)">
-        <CardHeader>
-          <Badge variant="soft">Tu perfil</Badge>
-          <CardTitle>Cuéntanos lo esencial para empezar con buena presencia</CardTitle>
-          <CardDescription>
-            Este paso deja tu cuenta lista para aplicar, presentarte mejor y más adelante sumar a tu empresa si hace falta.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form className="space-y-4" onSubmit={(event) => void form.handleSubmit(onSubmit)(event)}>
-            <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-              <span>Nombre completo</span>
-              <Input placeholder="Nombre legal o profesional" {...form.register('fullName')} />
-              <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.fullName?.message}</p>
-            </label>
+    <div className="space-y-6">
+      <div className="max-w-xl">
+        <Badge variant="soft">Paso final · Tu perfil</Badge>
+        <h1 className="mt-3 text-[1.7rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[1.95rem]">
+          Completa tu perfil
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+          Solo lo esencial para dejar tu cuenta lista: aplicar a vacantes, presentarte mejor y, mas adelante, sumar a tu empresa.
+        </p>
+      </div>
 
-            <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-              <span>Nombre visible</span>
-              <Input placeholder="Como quieres aparecer en la app" {...form.register('displayName')} />
-              <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.displayName?.message}</p>
-            </label>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>Idioma</span>
-                <Select {...form.register('locale')}>
-                  <option value="es">Espanol</option>
-                  <option value="en">English</option>
-                </Select>
+      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <Card className="bg-(--app-surface)">
+          <CardContent className="mt-0">
+            <form className="space-y-5" onSubmit={(event) => void form.handleSubmit(onSubmit)(event)}>
+              <label className="block space-y-1.5">
+                <span className="text-[13px] font-semibold text-(--app-text)">Nombre completo</span>
+                <Input className="h-12 rounded-[14px]" placeholder="Nombre legal o profesional" {...form.register('fullName')} />
+                <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.fullName?.message}</p>
               </label>
 
-              <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>Pais</span>
-                <Input maxLength={2} placeholder="DO" {...form.register('countryCode')} />
-                <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.countryCode?.message}</p>
+              <label className="block space-y-1.5">
+                <span className="text-[13px] font-semibold text-(--app-text)">Nombre visible</span>
+                <Input className="h-12 rounded-[14px]" placeholder="Como quieres aparecer en la app" {...form.register('displayName')} />
+                <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.displayName?.message}</p>
               </label>
-            </div>
 
-            <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-              <span>Avatar</span>
-              <Input
-                accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
-                type="file"
-                onChange={(event) => void handleAvatarChange(event.target.files?.[0] ?? null)}
-              />
-              <p className="text-xs text-zinc-500">
-                Acepta SVG, PNG, JPG y WEBP. Las imagenes raster se comprimen antes de subirlas y el limite es {MAX_UPLOAD_SIZE_LABEL}.
-              </p>
-              <p className="text-xs text-zinc-500">Tu avatar queda guardado de forma privada hasta que lo uses dentro de tu cuenta.</p>
-              {isPreparingAvatar ? (
-                <p className="text-xs text-zinc-500">Optimizando avatar antes de subir...</p>
-              ) : null}
-              {avatarFileError ? <p className="text-xs text-rose-600 dark:text-rose-300">{avatarFileError}</p> : null}
-            </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block space-y-1.5">
+                  <span className="text-[13px] font-semibold text-(--app-text)">Idioma</span>
+                  <Select className="h-12 rounded-[14px]" {...form.register('locale')}>
+                    <option value="es">Espanol</option>
+                    <option value="en">English</option>
+                  </Select>
+                </label>
 
-            <Button className="w-full" disabled={form.formState.isSubmitting} type="submit">
-              {form.formState.isSubmitting ? 'Guardando perfil...' : 'Guardar onboarding'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+                <label className="block space-y-1.5">
+                  <span className="text-[13px] font-semibold text-(--app-text)">Pais</span>
+                  <Input className="h-12 rounded-[14px]" maxLength={2} placeholder="DO" {...form.register('countryCode')} />
+                  <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.countryCode?.message}</p>
+                </label>
+              </div>
 
-      <div className="grid gap-4">
-        <Card>
+              <label className="block space-y-1.5">
+                <span className="text-[13px] font-semibold text-(--app-text)">Avatar</span>
+                <Input
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
+                  className="h-12 rounded-[14px] file:mr-3 file:rounded-lg file:border-0 file:bg-primary-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-primary-700"
+                  type="file"
+                  onChange={(event) => void handleAvatarChange(event.target.files?.[0] ?? null)}
+                />
+                <p className="text-xs text-(--app-text-subtle)">
+                  SVG, PNG, JPG o WEBP. Se comprime antes de subir (limite {MAX_UPLOAD_SIZE_LABEL}) y queda guardado de forma privada.
+                </p>
+                {isPreparingAvatar ? (
+                  <p className="text-xs text-(--app-text-subtle)">Optimizando avatar antes de subir...</p>
+                ) : null}
+                {avatarFileError ? <p className="text-xs text-rose-600 dark:text-rose-300">{avatarFileError}</p> : null}
+              </label>
+
+              <Button className="h-12 w-full rounded-[14px]" disabled={form.formState.isSubmitting} type="submit">
+                {form.formState.isSubmitting ? 'Guardando perfil...' : 'Guardar y continuar'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-(--app-surface-muted)">
           <CardHeader>
             <CardTitle>Vista previa</CardTitle>
-            <CardDescription>Lo que queda listo antes de solicitar validacion como operador.</CardDescription>
+            <CardDescription>Asi se vera tu cuenta antes de seguir con la solicitud de operador.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-4 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
-              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-3xl bg-primary-100 text-sm font-semibold text-primary-700">
+            <div className="flex items-center gap-4 rounded-[18px] border border-(--app-border) bg-(--app-surface) p-4">
+              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[18px] bg-primary-100 text-sm font-semibold text-primary-700">
                 {avatarPreviewUrl ? <img alt="Avatar preview" className="h-full w-full object-cover" src={avatarPreviewUrl} /> : 'Avatar'}
               </div>
-              <div>
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                  {form.getValues('displayName') || session.profile?.display_name || 'Nombre visible'}
-                </p>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  {session.authUser?.email ?? 'Sin correo'} · {form.getValues('countryCode') || 'DO'}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-(--app-text)">{previewName}</p>
+                <p className="truncate text-sm text-(--app-text-muted)">
+                  {session.authUser?.email ?? 'Sin correo'} · {previewCountry}
                 </p>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-400">
+            <div className="rounded-[18px] border border-(--app-border) bg-(--app-surface) p-4 text-sm leading-6 text-(--app-text-muted)">
               Cuando completes esta pantalla puedes pasar a la solicitud de operador o seguir como candidato global.
             </div>
 
-            <Button className="w-full" variant="outline" onClick={() => void navigate(surfacePaths.candidate.recruiterRequest)}>
+            <Button className="h-12 w-full rounded-[14px]" variant="outline" onClick={() => void navigate(surfacePaths.candidate.recruiterRequest)}>
               Ir a solicitud de operador
             </Button>
           </CardContent>

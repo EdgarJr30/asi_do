@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input'
 import { signInWithPassword, toErrorMessage } from '@/features/auth/lib/auth-api'
 import { signInSchema, type SignInValues } from '@/features/auth/lib/auth-schemas'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
-import { PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access'
 
 function FieldError({ message }: { message?: string }) {
   if (!message) {
@@ -27,6 +26,7 @@ export function SignInPage() {
   const navigate = useNavigate()
   const session = useAppSession()
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberSession, setRememberSession] = useState(true)
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -74,67 +74,94 @@ export function SignInPage() {
   }
 
   return (
-    <section>
+    <section className="w-full">
       <div className="mb-8">
         <h1 className="text-[1.9rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2.1rem]">
           Bienvenida de vuelta
         </h1>
         <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
-          Inicia sesion para gestionar tus procesos de contratacion desde una vista clara y operativa.
+          Inicia sesion para gestionar tus procesos de contratacion.
         </p>
       </div>
 
-      <Card className="border-(--app-border) bg-(--app-surface) shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
-        <CardHeader className="space-y-3 border-b border-(--app-border) pb-6">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-primary-700 uppercase">
-            Acceso seguro
+      <form className="space-y-5" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
+        <label className="block space-y-1.5">
+          <span className="text-[13px] font-semibold text-(--app-text)">Correo corporativo</span>
+          <Input
+            autoComplete="email"
+            className="h-12 rounded-[14px]"
+            placeholder="maria.reyes@empresa.com.do"
+            type="email"
+            {...form.register('email')}
+          />
+          <FieldError message={form.formState.errors.email?.message} />
+        </label>
+
+        <label className="block space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[13px] font-semibold text-(--app-text)">Contrasena</span>
+            <button
+              className="text-xs font-medium text-primary-600 transition hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
+              type="button"
+              onClick={() =>
+                toast('Recuperacion de contrasena', {
+                  description:
+                    'Escribenos a soporte@asi.do y te ayudamos a restablecer el acceso mientras habilitamos el flujo automatico.'
+                })
+              }
+            >
+              Olvidaste tu contrasena?
+            </button>
           </div>
-          <CardTitle className="text-2xl tracking-[-0.02em]">Entra a tu cuenta</CardTitle>
-          <CardDescription className="max-w-sm text-sm leading-6">
-            Usa tu correo y tu contrasena para volver a tu perfil o a tu espacio de trabajo.
-          </CardDescription>
-        </CardHeader>
-
-        <div className="space-y-6 p-6 sm:p-7">
-          <form className="space-y-4" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
-            <label className="block space-y-2">
-              <span className="text-xs font-semibold tracking-[-0.01em] text-(--app-text)">Correo corporativo</span>
-              <Input autoComplete="email" className="h-11.5 rounded-[18px]" placeholder="tu@empresa.com" type="email" {...form.register('email')} />
-              <FieldError message={form.formState.errors.email?.message} />
-            </label>
-
-            <label className="block space-y-2">
-              <span className="text-xs font-semibold tracking-[-0.01em] text-(--app-text)">Contrasena</span>
-              <div className="relative">
-                <Input
-                  autoComplete="current-password"
-                  className="h-11.5 rounded-[18px] pr-11"
-                  placeholder="Tu contrasena"
-                  type={showPassword ? 'text' : 'password'}
-                  {...form.register('password')}
-                />
-                <button
-                  aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
-                  className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-(--app-text-subtle) transition hover:text-(--app-text)"
-                  type="button"
-                  onClick={() => setShowPassword((value) => !value)}
-                >
-                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
-              <FieldError message={form.formState.errors.password?.message} />
-            </label>
-
-            <Button className="mt-2 h-11.5 w-full rounded-[18px] text-sm" disabled={form.formState.isSubmitting} type="submit">
-              {form.formState.isSubmitting ? 'Entrando...' : 'Iniciar sesion'}
-            </Button>
-          </form>
-
-          <div className="rounded-panel border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-sm leading-6 text-(--app-text-muted)">
-            {PLATFORM_REGISTRATION_LOCKED_MESSAGE}
+          <div className="relative">
+            <Input
+              autoComplete="current-password"
+              className="h-12 rounded-[14px] pr-11"
+              placeholder="Tu contrasena"
+              type={showPassword ? 'text' : 'password'}
+              {...form.register('password')}
+            />
+            <button
+              aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-(--app-text-subtle) transition hover:text-(--app-text)"
+              type="button"
+              onClick={() => setShowPassword((value) => !value)}
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
           </div>
-        </div>
-      </Card>
+          <FieldError message={form.formState.errors.password?.message} />
+        </label>
+
+        <label className="flex cursor-pointer items-center gap-2.5 text-sm text-(--app-text-muted) select-none">
+          <input
+            checked={rememberSession}
+            className="size-4 rounded-[6px] border-(--app-border) text-primary-600 accent-primary-600 focus-visible:ring-2 focus-visible:ring-(--app-ring)"
+            type="checkbox"
+            onChange={(event) => setRememberSession(event.target.checked)}
+          />
+          Mantener sesion iniciada
+        </label>
+
+        <Button
+          className="h-12 w-full rounded-[14px] text-sm"
+          disabled={form.formState.isSubmitting}
+          type="submit"
+        >
+          {form.formState.isSubmitting ? 'Entrando...' : 'Iniciar sesion'}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-(--app-text-muted)">
+        No tienes una cuenta?{' '}
+        <button
+          className="font-semibold text-primary-600 transition hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
+          type="button"
+          onClick={() => void navigate(surfacePaths.auth.signUp)}
+        >
+          Registrate
+        </button>
+      </p>
     </section>
   )
 }

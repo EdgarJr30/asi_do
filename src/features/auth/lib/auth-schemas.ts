@@ -15,6 +15,13 @@ export const signUpSchema = z.object({
   password: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres.')
 })
 
+export const signUpFormSchema = z.object({
+  firstName: z.string().trim().min(2, 'Escribe tu nombre.'),
+  lastName: z.string().trim().min(2, 'Escribe tu apellido.'),
+  email: z.email('Escribe un correo valido.'),
+  password: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres.')
+})
+
 export const onboardingSchema = z.object({
   fullName: z.string().trim().min(2, 'El nombre completo es obligatorio.'),
   displayName: z.string().trim().min(2, 'El nombre visible es obligatorio.'),
@@ -153,6 +160,7 @@ export const regionalAuthorityRequestSchema = z.object({
 
 export type SignInValues = z.infer<typeof signInSchema>
 export type SignUpValues = z.infer<typeof signUpSchema>
+export type SignUpFormValues = z.infer<typeof signUpFormSchema>
 export type OnboardingValues = z.infer<typeof onboardingSchema>
 export type RecruiterRequestValues = z.infer<typeof recruiterRequestSchema>
 export type RecruiterReviewValues = z.infer<typeof recruiterReviewSchema>
