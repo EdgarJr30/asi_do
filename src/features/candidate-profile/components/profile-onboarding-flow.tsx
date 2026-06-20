@@ -155,7 +155,7 @@ function OnboardingFrame({
   )
 }
 
-export function OnboardingPage() {
+export function ProfileOnboardingFlow() {
   const navigate = useNavigate()
   const session = useAppSession()
   const shouldReduceMotion = useReducedMotion()
@@ -301,8 +301,8 @@ export function OnboardingPage() {
         description: message
       })
       await captureClientError({
-        source: 'onboarding.avatar',
-        route: surfacePaths.candidate.onboarding,
+        source: 'profile.onboarding.avatar',
+        route: surfacePaths.candidate.profile,
         userId: session.authUser?.id ?? null,
         userMessage: message,
         error,
@@ -345,13 +345,13 @@ export function OnboardingPage() {
 
       await session.refresh()
       setIsComplete(true)
-      toast.success('Onboarding listo', {
-        description: 'Tu cuenta base quedo preparada.'
+      toast.success('Perfil listo', {
+        description: 'Tu perfil base quedo preparado.'
       })
     } catch (error) {
       await captureClientError({
-        source: 'onboarding.submit',
-        route: surfacePaths.candidate.onboarding,
+        source: 'profile.onboarding.submit',
+        route: surfacePaths.candidate.profile,
         userId: session.authUser.id,
         userMessage: 'No pudimos guardar tu perfil base.',
         error,
@@ -389,7 +389,7 @@ export function OnboardingPage() {
       <main className="min-w-0">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <Badge variant="soft">Onboarding</Badge>
+            <Badge variant="soft">Perfil inicial</Badge>
             <h1 className="mt-3 text-[1.85rem] font-bold leading-tight text-(--app-text) sm:text-[2.25rem]">
               Dejemos tu cuenta lista
             </h1>

@@ -37,7 +37,6 @@ const iconByHref: Record<string, LucideIcon> = {
   '/workspace/jobs': BriefcaseBusiness,
   '/candidate/profile': UserRound,
   '/candidate/applications': FileText,
-  '/candidate/onboarding': Layers3,
   '/candidate/recruiter-request': Building2,
   '/workspace': Building2,
   '/workspace/talent': UsersRound,

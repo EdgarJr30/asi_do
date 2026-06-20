@@ -122,7 +122,7 @@ function normalizeStorageUploadErrorMessage(file: File, errorMessage: string) {
   return errorMessage
 }
 
-export function getAuthRedirectUrl(nextPath = surfacePaths.candidate.onboarding) {
+export function getAuthRedirectUrl(nextPath = surfacePaths.candidate.profile) {
   const originCandidate = env.authSiteUrl || (typeof window !== 'undefined' ? window.location.origin : null)
 
   if (!originCandidate) {
@@ -131,7 +131,7 @@ export function getAuthRedirectUrl(nextPath = surfacePaths.candidate.onboarding)
 
   const redirectUrl = new URL(surfacePaths.auth.confirm, originCandidate)
 
-  if (nextPath !== surfacePaths.candidate.onboarding) {
+  if (nextPath !== surfacePaths.candidate.profile) {
     redirectUrl.searchParams.set('next', nextPath)
   }
 

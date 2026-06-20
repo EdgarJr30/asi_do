@@ -263,6 +263,9 @@ Do not model pastors or regional administrators as broad platform admins. Pastor
 ### R-082 — Only company tenants may create job postings
 Do not grant job creation or publishing to Joven Profesional users, other individual ASI members, pastors, regional administrators, platform support, or non-company tenants by default. Joven Profesional users and other individual ASI members may view and apply to opportunities after approval, membership, and license gates pass, but employment job posting belongs only to approved company tenants with the required tenant permission.
 
+### R-083 — First-run onboarding must resolve into the profile
+Do not reintroduce onboarding as a standalone product module, sidebar item, bottom-nav item, or persistent candidate destination. The first-run setup after registration/login must be a guided state inside `/candidate/profile`, and after the required base fields are completed the user should remain in the normal profile experience. Legacy `/candidate/onboarding` may exist only as a redirect alias to `/candidate/profile`.
+
 ### R-064 — Tailwind utility syntax and override strategy must stay canonical
 Do not reintroduce non-canonical Tailwind utility spellings when the framework already provides an exact built-in token. Do not rely on CSS important overrides or Tailwind important modifiers as the default fix for styling conflicts; prefer semantic component APIs, Tailwind layer order, or clearer selectors so overrides resolve through the normal cascade. Prefer scale-based height utilities such as `h-88`, `sm:h-96`, `xl:h-108`, `2xl:h-112`, or `min-h-96` over arbitrary `rem` values like `h-[22rem]`, `sm:h-[24rem]`, `xl:h-[27rem]`, or `min-h-[24rem]` whenever the values map exactly to the Tailwind spacing scale.
 

@@ -13,7 +13,6 @@ site_url = "https://asi-do.netlify.app"
 additional_redirect_urls = [
   "https://asi-do.netlify.app/auth/confirm",
   "https://asi-do.netlify.app/auth/sign-in",
-  "https://asi-do.netlify.app/candidate/onboarding",
   "https://asi-do.netlify.app/candidate/profile"
 ]
 jwt_expiry = 3600

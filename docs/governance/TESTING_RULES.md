@@ -53,7 +53,7 @@ Test the repo contract itself:
 ### E2E smoke tests
 E2E coverage becomes mandatory as soon as auth, job application, and ATS flows are interactive.
 These tests should prioritize mobile viewport coverage for the core hiring loop.
-Minimum smoke coverage now includes auth callback shell, onboarding, tenant-operator request, jobs discovery, applications, and pipeline surfaces.
+Minimum smoke coverage now includes auth callback shell, first-run profile setup, tenant-operator request, jobs discovery, applications, and pipeline surfaces.
 Institutional motion carousels that depend on looping, autoplay, or gesture negotiation must add browser coverage for the affected engines when their behavior changes, including WebKit desktop/mobile checks, Android-like mobile Chromium checks when touch behavior changes, and assertions that the visible viewport does not expose a blank edge while the loop advances.
 
 ### Manual QA

@@ -20,11 +20,11 @@ const supportedEmailOtpTypes = new Set<EmailOtpType>([
 
 export function sanitizeNextPath(value: string | null) {
   if (!value || !value.startsWith('/')) {
-    return surfacePaths.candidate.onboarding
+    return surfacePaths.candidate.profile
   }
 
   if (value.startsWith('//')) {
-    return surfacePaths.candidate.onboarding
+    return surfacePaths.candidate.profile
   }
 
   return value

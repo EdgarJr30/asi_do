@@ -42,7 +42,7 @@ export function SignInPage() {
         <CardHeader>
           <CardTitle>El acceso aun no esta disponible</CardTitle>
           <CardDescription>
-            Estamos terminando de preparar el servicio de autenticacion para habilitar acceso, onboarding y aprobaciones.
+            Estamos terminando de preparar el servicio de autenticacion para habilitar acceso, perfil inicial y aprobaciones.
           </CardDescription>
         </CardHeader>
       </Card>

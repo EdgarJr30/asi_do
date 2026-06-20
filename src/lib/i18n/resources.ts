@@ -90,7 +90,7 @@ export const resources = {
       home: {
         heroBadge: 'MVP identity',
         heroTitle:
-          'Autenticacion, onboarding estandar y aprobacion de operadores sobre una base multi-tenant real.',
+          'Autenticacion, perfil inicial guiado y aprobacion de operadores sobre una base multi-tenant real.',
         heroDescription:
           'Todos entran como usuario normal, los adjuntos sensibles viven en Supabase Storage y la creacion del workspace operativo queda controlada por aprobacion administrativa.',
         accountCardEyebrow: 'Cuenta actual',
@@ -101,7 +101,7 @@ export const resources = {
         statusRecruiterStandard: 'Usuario estandar pendiente de validacion como operador.',
         primaryGuestAction: 'Crear cuenta o iniciar sesion',
         secondaryGuestAction: 'Conocer el flujo de operador',
-        primaryAuthenticatedAction: 'Completar onboarding',
+        primaryAuthenticatedAction: 'Preparar perfil',
         secondaryAuthenticatedAction: 'Enviar solicitud de operador',
         moduleCardEyebrow: 'Regla de negocio activa',
         moduleCardTitle: 'No existe signup directo de operador',
@@ -114,7 +114,7 @@ export const resources = {
         journeyDescription: 'El home ahora sirve como tablero de entrada para los pasos base del MVP.',
         stepAccountTitle: 'Registro e inicio de sesion',
         stepAccountDescription: 'Email + contrasena con sesion real de Supabase Auth.',
-        stepProfileTitle: 'Onboarding estandar',
+        stepProfileTitle: 'Perfil inicial guiado',
         stepProfileDescription: 'Perfil base, locale, pais y avatar privado del usuario.',
         stepRequestTitle: 'Solicitud de operador',
         stepRequestDescription: 'Empresa, slug, logo temporal y documento de verificacion.',
@@ -137,17 +137,17 @@ export const resources = {
         accessStorageDescription:
           'Avatar, logo temporal y documentos sensibles viajan por buckets privados y signed URLs.',
         actionAccessTitle: 'Entrar a la plataforma',
-        actionAccessDescription: 'Crea tu cuenta base o inicia sesion para arrancar el onboarding.',
+        actionAccessDescription: 'Crea tu cuenta base o inicia sesion para preparar tu perfil.',
         actionAccessButton: 'Ir a Auth',
         actionProfileTitle: 'Preparar tu perfil',
         actionProfileDescription:
-          'El onboarding vive detras de auth y consolida los datos minimos del usuario.',
+          'El perfil inicial vive detras de auth y consolida los datos minimos del usuario.',
         actionProfileButton: 'Abrir Auth',
         actionReviewGuestTitle: 'Flujo de operador',
         actionReviewGuestDescription:
           'La validacion como operador se habilita despues del registro y no desde el signup.',
         actionReviewGuestButton: 'Ver acceso',
-        actionOnboardingTitle: 'Completar onboarding',
+        actionOnboardingTitle: 'Preparar perfil',
         actionOnboardingPending:
           'Todavia faltan datos del perfil base para dejar la cuenta lista.',
         actionOnboardingReady:
@@ -344,7 +344,7 @@ export const resources = {
       home: {
         heroBadge: 'MVP identity',
         heroTitle:
-          'Authentication, standard onboarding, and operator approval on top of a real multi-tenant foundation.',
+          'Authentication, guided profile setup, and operator approval on top of a real multi-tenant foundation.',
         heroDescription:
           'Every account starts as a standard user, sensitive attachments live in Supabase Storage, and operational workspace creation stays behind administrative approval.',
         accountCardEyebrow: 'Current account',
@@ -355,7 +355,7 @@ export const resources = {
         statusRecruiterStandard: 'Standard user still pending operator validation.',
         primaryGuestAction: 'Create account or sign in',
         secondaryGuestAction: 'Learn the operator flow',
-        primaryAuthenticatedAction: 'Complete onboarding',
+        primaryAuthenticatedAction: 'Prepare profile',
         secondaryAuthenticatedAction: 'Submit operator request',
         moduleCardEyebrow: 'Active business rule',
         moduleCardTitle: 'There is no direct operator signup',
@@ -368,7 +368,7 @@ export const resources = {
         journeyDescription: 'Home now acts as the entry dashboard for the MVP identity flow.',
         stepAccountTitle: 'Sign up and sign in',
         stepAccountDescription: 'Email + password backed by a real Supabase Auth session.',
-        stepProfileTitle: 'Standard onboarding',
+        stepProfileTitle: 'Guided profile setup',
         stepProfileDescription: 'Baseline profile, locale, country, and private user avatar.',
         stepRequestTitle: 'Operator request',
         stepRequestDescription: 'Company data, slug, temporary logo, and verification document.',
@@ -391,17 +391,17 @@ export const resources = {
         accessStorageDescription:
           'Avatar, temporary logo, and sensitive documents use private buckets and signed URLs.',
         actionAccessTitle: 'Enter the platform',
-        actionAccessDescription: 'Create your base account or sign in to start onboarding.',
+        actionAccessDescription: 'Create your base account or sign in to prepare your profile.',
         actionAccessButton: 'Open auth',
         actionProfileTitle: 'Prepare your profile',
         actionProfileDescription:
-          'Onboarding stays behind auth and consolidates the user baseline data.',
+          'Initial profile setup stays behind auth and consolidates the user baseline data.',
         actionProfileButton: 'Open auth',
         actionReviewGuestTitle: 'Operator flow',
         actionReviewGuestDescription:
           'Operator validation is enabled after signup, never directly from registration.',
         actionReviewGuestButton: 'See access',
-        actionOnboardingTitle: 'Complete onboarding',
+        actionOnboardingTitle: 'Prepare profile',
         actionOnboardingPending:
           'Some baseline profile data is still missing before the account is ready.',
         actionOnboardingReady:

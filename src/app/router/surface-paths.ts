@@ -69,7 +69,7 @@ export const surfacePaths = {
 
 export function getAuthenticatedHomePath(hasWorkspaceAccess: boolean, hasCompletedOnboarding = true) {
   if (!hasCompletedOnboarding) {
-    return surfacePaths.candidate.onboarding
+    return surfacePaths.candidate.profile
   }
 
   return hasWorkspaceAccess ? surfacePaths.workspace.root : surfacePaths.candidate.home

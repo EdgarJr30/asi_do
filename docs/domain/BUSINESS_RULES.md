@@ -215,7 +215,7 @@
 14. Candidate-owned authenticated workflows must live under `/candidate/*`; employer tenant workflows must live under `/workspace/*`.
 15. The restricted platform console must use `/admin/*` as the canonical route family.
 16. Historical aliases such as `/internal/*`, `/applications`, `/onboarding`, `/recruiter-request`, `/jobs/manage`, `/talent`, `/pipeline`, and `/rbac` are not part of the active route contract.
-17. Authenticated users with incomplete base onboarding must be redirected to `/candidate/onboarding` before candidate, workspace, or admin surfaces. Required base data is useful full name, useful display name, supported locale, and two-letter country code; avatar, CV, candidate depth, and company/operator requests are optional follow-up work.
+17. Authenticated users with incomplete base profile setup must be redirected to `/candidate/profile` before workspace, admin, or other candidate surfaces. The guided first-run setup is a profile state, not a standalone module. Required base data is useful full name, useful display name, supported locale, and two-letter country code; avatar, CV, candidate depth, and company/operator requests are optional follow-up work.
 18. Visible product language must use `Responsable de oportunidad`, `Coordinador de oportunidad`, and `Revisor de aplicaciones` for tenant-side opportunity workflows instead of `recruiter` or `hiring manager`.
 19. Legacy technical identifiers such as `recruiter_request`, `recruiter_request:review`, route names, table names, and migration history may remain until a deliberate schema/refactor task changes them safely; they must not leak into new user-facing copy.
 

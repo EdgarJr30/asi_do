@@ -30,17 +30,17 @@ export function RequireAuth({ children }: PropsWithChildren) {
 export function RequireCompletedBaseOnboarding({ children }: PropsWithChildren) {
   const location = useLocation()
   const session = useAppSession()
-  const isOnboardingRoute = location.pathname === surfacePaths.candidate.onboarding
+  const isProfileRoute = location.pathname === surfacePaths.candidate.profile
 
   if (session.isLoading) {
-    return <PageLoader fullScreen label="Preparando tu onboarding" hint="Revisando los datos mínimos de tu cuenta" />
+    return <PageLoader fullScreen label="Preparando tu perfil" hint="Revisando los datos mínimos de tu cuenta" />
   }
 
-  if (!session.isAuthenticated || isOnboardingRoute || hasCompletedBaseOnboarding(session.profile)) {
+  if (!session.isAuthenticated || isProfileRoute || hasCompletedBaseOnboarding(session.profile)) {
     return children
   }
 
-  return <Navigate replace state={{ from: location.pathname }} to={surfacePaths.candidate.onboarding} />
+  return <Navigate replace state={{ from: location.pathname }} to={surfacePaths.candidate.profile} />
 }
 
 export function RequireActiveAsiAccess({

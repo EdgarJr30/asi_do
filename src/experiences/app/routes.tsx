@@ -1,10 +1,10 @@
 import type { RouteObject } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 
 import { ApplicationsOverviewPage } from '@/features/applications/pages/applications-overview-page'
 import { AuthConfirmPage } from '@/features/auth/pages/auth-confirm-page'
 import { AuthPage } from '@/features/auth/pages/auth-page'
 import { BootstrapOwnerPage } from '@/features/auth/pages/bootstrap-owner-page'
-import { OnboardingPage } from '@/features/auth/pages/onboarding-page'
 import { SignInPage } from '@/features/auth/pages/sign-in-page'
 import { SignUpPage } from '@/features/auth/pages/sign-up-page'
 import { AuthorityRequestPage } from '@/features/authority-requests/pages/authority-request-page'
@@ -95,8 +95,9 @@ export const applicationRoutes: RouteObject[] = [
         element: <CandidateHomePage />
       },
       {
+        // Legacy alias only. First-run setup now lives inside the profile surface.
         path: 'onboarding',
-        element: <OnboardingPage />
+        element: <Navigate replace to={surfacePaths.candidate.profile} />
       },
       {
         path: 'recruiter-request',

@@ -227,7 +227,7 @@ describe('surface access states', () => {
     expect(await screen.findByRole('heading', { name: 'Entra a tu cuenta' })).toBeInTheDocument()
   })
 
-  it('redirects authenticated users with missing base profile data to onboarding', async () => {
+  it('redirects authenticated users with missing base profile data to profile setup', async () => {
     authState.session = { user: { id: 'user-5', email: 'new@example.com' } }
     authState.snapshot = {
       profile: {

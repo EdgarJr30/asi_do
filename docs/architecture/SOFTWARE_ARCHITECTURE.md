@@ -268,8 +268,7 @@ Every major business domain should live in its own feature folder, for example:
 ```txt
 src/features/
   auth/
-  onboarding/
-  candidates/
+  candidate-profile/
   companies/
   jobs/
   applications/

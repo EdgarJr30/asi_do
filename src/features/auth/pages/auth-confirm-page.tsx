@@ -53,7 +53,7 @@ export function AuthConfirmPage() {
         }
 
         toast.success('Correo confirmado', {
-          description: 'Tu cuenta ya puede iniciar sesion y continuar el onboarding.'
+          description: 'Tu cuenta ya puede iniciar sesion y preparar tu perfil.'
         })
         await navigate(callback.nextPath, { replace: true })
       } catch (error) {
@@ -111,7 +111,7 @@ export function AuthConfirmPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="text-sm text-zinc-600 dark:text-zinc-400">
-        Si todo sale bien te llevaremos al onboarding automaticamente.
+        Si todo sale bien te llevaremos a tu perfil automaticamente.
       </CardContent>
     </Card>
   )

@@ -28,17 +28,21 @@ describe('permission guards', () => {
     )
 
     expect(visibleItems.map((item) => item.title)).toEqual([
+      'Inicio',
       'Jobs',
       'Aplicaciones',
       'Perfil',
-      'Onboarding',
-      'Acceso operador',
+      'Reclutar con mi empresa',
       'Autorización territorial',
-      'Workspace',
-      'Jobs',
-      'Candidates',
-      'Pipeline',
-      'Access',
+      'Resumen',
+      'Mi actividad',
+      'Vacantes',
+      'Aplicaciones',
+      'Candidatos',
+      'Banco de talento',
+      'Tablero Kanban',
+      'Reportes',
+      'Configuración',
       'Overview',
       'Platform',
       'Errors'

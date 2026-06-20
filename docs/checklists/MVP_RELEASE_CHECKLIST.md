@@ -4,7 +4,7 @@
 - Registro de usuario base en `/auth`
 - Aprobacion administrativa de usuario, membresia ASI y suscripcion activa antes de acceder a contenido protegido
 - Callback de confirmacion de email en `/auth/confirm`
-- Onboarding base en `/candidate/onboarding`
+- Perfil inicial guiado en `/candidate/profile`
 - Solicitud de operador en `/candidate/recruiter-request`
 - Aprobacion admin en `/admin/approvals`
 - Workspace employer en `/workspace`

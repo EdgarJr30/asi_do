@@ -11,8 +11,8 @@ describe('surface paths', () => {
     expect(getAuthenticatedHomePath(true)).toBe(surfacePaths.workspace.root)
   })
 
-  it('routes incomplete users to onboarding before any authenticated home', () => {
-    expect(getAuthenticatedHomePath(false, false)).toBe(surfacePaths.candidate.onboarding)
-    expect(getAuthenticatedHomePath(true, false)).toBe(surfacePaths.candidate.onboarding)
+  it('routes incomplete users to profile setup before any authenticated home', () => {
+    expect(getAuthenticatedHomePath(false, false)).toBe(surfacePaths.candidate.profile)
+    expect(getAuthenticatedHomePath(true, false)).toBe(surfacePaths.candidate.profile)
   })
 })

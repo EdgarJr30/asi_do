@@ -76,12 +76,12 @@ export function SignUpPage() {
         toast.success('Cuenta creada', {
           description: 'Vamos a completar tu perfil para dejar tu espacio listo.'
         })
-        await navigate(surfacePaths.candidate.onboarding)
+        await navigate(surfacePaths.candidate.profile)
         return
       }
 
       toast.success('Revisa tu correo', {
-        description: 'Te enviamos un enlace para confirmar tu cuenta y continuar el onboarding.'
+        description: 'Te enviamos un enlace para confirmar tu cuenta y preparar tu perfil.'
       })
     } catch (error) {
       await reportErrorWithToast({

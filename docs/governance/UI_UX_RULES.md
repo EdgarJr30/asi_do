@@ -38,7 +38,7 @@ When a future redesign changes these rules, the new decision must still be bench
 8. **Apple-grade clarity is the visual bar.** Interfaces should favor calm hierarchy, generous spacing, obvious affordances, and polished restraint over busy dashboards.
 9. **Customer-facing entrypoints must look like product, not tooling.** Public landing and shell surfaces must avoid exposing QA or operations language by default.
 10. **Platform-internal surfaces must reuse one shared shell.** Candidate routes, workspace routes, and operational `/platform/*` routes such as jobs should share the same sidebar/navbar construction, adapting only navigation copy and allowed destinations instead of diverging into separate chrome patterns.
-11. **Onboarding must feel guided, not administrative.** Required account setup should use short staged disclosure, visible progress, concise copy, and one primary action per step. Optional profile depth must be deferred to follow-up screens.
+11. **First-run profile setup must feel guided, not administrative.** Required account setup should live inside the user's profile experience with short staged disclosure, visible progress, concise copy, and one primary action per step. Optional profile depth must be deferred to the normal profile editor.
 
 ## 3.1 Mandatory UI libraries
 The project must standardize on the same libraries for reusable UI building blocks.
@@ -360,7 +360,7 @@ Apple-inspired UI rules:
 2. Do not overload bottom navigation with rarely used admin or configuration destinations.
 3. Filters, secondary actions, and dense controls should move into sheets, drawers, or scoped toolbars on mobile.
 4. Important mobile actions should stay within easy thumb reach whenever possible.
-5. Candidate mobile navigation should center on `Jobs`, `Applications`, `Profile`, and a scoped secondary destination such as `More` or `Onboarding`.
+5. Candidate mobile navigation should center on `Jobs`, `Applications`, `Profile`, and a scoped secondary destination such as `More`; first-run profile setup must not appear as its own persistent navigation item.
 6. Employer mobile navigation should center on `Jobs`, `Candidates`, `Pipeline`, and `Company`.
 7. Internal-only utilities, advanced role controls, and bootstrap/configuration flows must never occupy customer-facing primary mobile navigation.
 
@@ -388,7 +388,7 @@ Apple-inspired UI rules:
 2. Long forms should be broken into sections or steps.
 3. Use progressive disclosure for advanced options, admin-only configuration, or rarely needed fields.
 4. Preserve draft state where users may invest significant effort.
-5. Account onboarding must separate required account readiness fields from optional professional depth so users can enter the product quickly.
+5. Account onboarding must separate required account readiness fields from optional professional depth so users can enter the product quickly, and it must resolve into the normal profile once complete instead of remaining as a standalone module.
 
 ### 10.2 Field rules
 1. Every field must have a permanently visible label above or adjacent to the control.

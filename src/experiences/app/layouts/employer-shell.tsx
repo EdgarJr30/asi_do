@@ -96,7 +96,6 @@ const candidateIconByHref: Partial<Record<string, LucideIcon>> = {
   [surfacePaths.storefront.jobs]: BriefcaseBusiness,
   [surfacePaths.candidate.applications]: FileText,
   [surfacePaths.candidate.profile]: UserRound,
-  [surfacePaths.candidate.onboarding]: Layers3,
   [surfacePaths.candidate.recruiterRequest]: Building2,
   [surfacePaths.candidate.authorityRequest]: Shield
 }
@@ -160,10 +159,6 @@ const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
   [surfacePaths.candidate.profile]: {
     title: 'Perfil',
     description: 'Tu presencia profesional, CV y datos clave en un mismo lugar'
-  },
-  [surfacePaths.candidate.onboarding]: {
-    title: 'Onboarding',
-    description: 'Ajustes esenciales para dejar tu cuenta lista'
   },
   [surfacePaths.candidate.recruiterRequest]: {
     title: 'Reclutar con mi empresa',
@@ -882,7 +877,6 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
   ]).map((item) => (item.href === surfacePaths.storefront.jobs ? { ...item, title: 'Empleos' } : item))
 
   const accountItems = pick(candidateItems, [
-    surfacePaths.candidate.onboarding,
     // "Reclutar con mi empresa" solo tiene sentido para quien aún no tiene empresa.
     ...(hasWorkspace ? [] : [surfacePaths.candidate.recruiterRequest]),
     surfacePaths.candidate.authorityRequest

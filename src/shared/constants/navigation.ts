@@ -52,12 +52,6 @@ export const candidateNavigationItems: NavigationItem[] = [
     requiresAuth: true
   },
   {
-    title: 'Onboarding',
-    href: '/candidate/onboarding',
-    description: 'Ajustes esenciales de tu cuenta',
-    requiresAuth: true
-  },
-  {
     title: 'Reclutar con mi empresa',
     href: '/candidate/recruiter-request',
     description: 'Lleva tu empresa a la plataforma y publica vacantes',

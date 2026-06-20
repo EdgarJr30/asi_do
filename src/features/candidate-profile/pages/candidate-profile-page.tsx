@@ -16,6 +16,8 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
+import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
+import { ProfileOnboardingFlow } from '@/features/candidate-profile/components/profile-onboarding-flow'
 import {
   createCandidateResumeUrl,
   deleteCandidateResume,
@@ -843,6 +845,7 @@ function CandidateProfileEditor({
 
 export function CandidateProfilePage() {
   const session = useAppSession()
+  const hasCompletedOnboarding = hasCompletedBaseOnboarding(session.profile)
   const profileQuery = useQuery({
     queryKey: CANDIDATE_PROFILE_QUERY_KEY,
     queryFn: async () => {
@@ -852,11 +855,15 @@ export function CandidateProfilePage() {
 
       return fetchMyCandidateProfile(session.authUser.id)
     },
-    enabled: session.authUser !== null
+    enabled: session.authUser !== null && hasCompletedOnboarding
   })
 
   if (!session.authUser) {
     return null
+  }
+
+  if (!hasCompletedOnboarding) {
+    return <ProfileOnboardingFlow />
   }
 
   if (profileQuery.isLoading) {
