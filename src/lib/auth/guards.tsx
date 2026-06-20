@@ -15,7 +15,7 @@ export function RequireAuth({ children }: PropsWithChildren) {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <PageLoader label="Recuperando tu sesión" hint="Validando tu acceso y permisos" />
+    return <PageLoader fullScreen label="Recuperando tu sesión" hint="Validando tu acceso y permisos" />
   }
 
   if (!session.isAuthenticated) {
@@ -34,7 +34,7 @@ export function RequireActiveAsiAccess({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <PageLoader label="Validando tu membresía" hint="Comprobando aprobación y suscripción ASI" />
+    return <PageLoader fullScreen label="Validando tu membresía" hint="Comprobando aprobación y suscripción ASI" />
   }
 
   if (!session.isAuthenticated) {
@@ -69,7 +69,7 @@ export function RequirePermission({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <PageLoader label="Validando permisos" hint="Comprobando tu acceso" />
+    return <PageLoader fullScreen label="Validando permisos" hint="Comprobando tu acceso" />
   }
 
   if (!session.isAuthenticated) {
@@ -104,7 +104,7 @@ export function RequireAnyPermission({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <PageLoader label="Validando permisos" hint="Comprobando tu acceso" />
+    return <PageLoader fullScreen label="Validando permisos" hint="Comprobando tu acceso" />
   }
 
   if (!session.isAuthenticated) {
@@ -132,7 +132,7 @@ export function RequireAdminAccess({ children }: PropsWithChildren) {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <PageLoader label="Validando acceso admin" hint="Comprobando tu acceso a la consola" />
+    return <PageLoader fullScreen label="Validando acceso admin" hint="Comprobando tu acceso a la consola" />
   }
 
   if (!session.isAuthenticated) {
