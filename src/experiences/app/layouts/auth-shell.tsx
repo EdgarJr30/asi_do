@@ -75,13 +75,15 @@ export function AuthShell() {
               >
                 Contacto
               </button>
-              <button
-                className="transition hover:text-(--app-text)"
-                type="button"
-                onClick={() => void navigate(surfacePaths.public.jobsRoot)}
-              >
-                Vacantes
-              </button>
+              {isSignUp ? (
+                <button
+                  className="transition hover:text-(--app-text)"
+                  type="button"
+                  onClick={() => void navigate(surfacePaths.public.jobsRoot)}
+                >
+                  Vacantes
+                </button>
+              ) : null}
             </div>
           </footer>
         </main>

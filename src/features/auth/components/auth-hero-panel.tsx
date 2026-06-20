@@ -8,7 +8,7 @@ const authPanelContent = {
     title: 'Talento que mueve a Republica Dominicana.',
     description:
       'La plataforma operativa para gestionar vacantes, candidatos y procesos de contratacion en una sola vista.',
-    footer: 'Disenado para equipos de RR.HH. en el Caribe.'
+    footer: 'Disenado con ❤️ conecta con quienes comparten tu fe.'
   },
   signUp: {
     badge: 'Cuenta base · ASI',
