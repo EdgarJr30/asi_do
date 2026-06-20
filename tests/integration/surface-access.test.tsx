@@ -115,8 +115,8 @@ describe('surface access states', () => {
 
     renderRoute(surfacePaths.app.home)
 
-    expect(await screen.findByText('Tu espacio profesional')).toBeInTheDocument()
-    expect(screen.getByText('Perfil candidato')).toBeInTheDocument()
+    expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
+    expect(screen.getByText('Inicio · Tu espacio')).toBeInTheDocument()
   })
 
   it('redirects /app to the workspace when the user has workspace access', async () => {
@@ -142,8 +142,7 @@ describe('surface access states', () => {
     renderRoute(surfacePaths.app.home)
 
     expect((await screen.findAllByText('Acme')).length).toBeGreaterThan(0)
-    expect(screen.getByText('ASI para equipos')).toBeInTheDocument()
-    expect(screen.queryByText('Publica vacantes, descubre talento y coordina contrataciones con una experiencia clara.')).not.toBeInTheDocument()
+    expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Cerrar sesion' })).toBeInTheDocument()
   })
 
@@ -159,7 +158,7 @@ describe('surface access states', () => {
 
     renderRoute('/candidate/nope')
 
-    expect(await screen.findByText('Tu espacio profesional')).toBeInTheDocument()
+    expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('No encontramos esa pantalla de talento').length).toBeGreaterThan(0)
   })
 
@@ -201,7 +200,7 @@ describe('surface access states', () => {
 
     renderRoute(surfacePaths.admin.root)
 
-    expect(await screen.findByText('Platform console')).toBeInTheDocument()
+    expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('No puedes abrir esta vista administrativa').length).toBeGreaterThan(0)
   })
 
@@ -217,14 +216,14 @@ describe('surface access states', () => {
 
     renderRoute('/admin/nope')
 
-    expect(await screen.findByText('Platform console')).toBeInTheDocument()
+    expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('No encontramos esa pantalla administrativa').length).toBeGreaterThan(0)
   })
 
   it('redirects unauthenticated workspace access to sign-in', async () => {
     renderRoute(surfacePaths.workspace.root)
 
-    expect(await screen.findByRole('heading', { name: 'Entra a tu cuenta' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Bienvenida de vuelta' })).toBeInTheDocument()
   })
 
   it('redirects authenticated users with missing base profile data to profile setup', async () => {

@@ -208,7 +208,7 @@ describe('route shells', () => {
 
     renderWithProviders(router)
 
-    expect(await screen.findByRole('heading', { name: 'Entra a tu cuenta' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Bienvenida de vuelta' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Plataforma ASI/i })).not.toBeInTheDocument()
     expect(screen.queryByText(/Hiring workspace para empresas y equipos de selección/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Ver pricing' })).not.toBeInTheDocument()

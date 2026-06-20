@@ -256,14 +256,15 @@ describe('workspace shell', () => {
     seedWorkspaceSession(['workspace:read', 'candidate_directory:read', 'application:read', 'role:read'])
     renderWorkspaceShell()
 
-    expect(await screen.findByText('ASI para equipos')).toBeInTheDocument()
-    expect(screen.queryByText('Publica vacantes, descubre talento y coordina contrataciones con una experiencia clara.')).not.toBeInTheDocument()
+    expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Acme').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Company').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Jobs').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Candidates').length).toBeGreaterThan(0)
+    // Base unificada (Tu espacio) + módulos de empresa (Mi empresa)
+    expect(screen.getAllByText('Inicio').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Perfil').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Resumen').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Vacantes').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Candidatos').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Pipeline').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Roles').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Abrir notificaciones' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Abrir menu de perfil' })).toBeInTheDocument()
   })
@@ -273,14 +274,14 @@ describe('workspace shell', () => {
     renderWorkspaceShell()
 
     expect(await screen.findByText('Resumen del workspace')).toBeInTheDocument()
-    expect(screen.getAllByText('Company').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Jobs').length).toBeGreaterThan(0)
+    // Visibles con solo workspace:read
+    expect(screen.getAllByText('Resumen').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Vacantes').length).toBeGreaterThan(0)
+    // Ocultos sin sus permisos (candidate_directory:read / application:read)
     expect(screen.queryByText('Candidates del workspace')).not.toBeInTheDocument()
     expect(screen.queryByText('Pipeline del workspace')).not.toBeInTheDocument()
-    expect(screen.queryByText('Roles del workspace')).not.toBeInTheDocument()
-    expect(screen.queryAllByText('Candidates')).toHaveLength(0)
+    expect(screen.queryAllByText('Candidatos')).toHaveLength(0)
     expect(screen.queryAllByText('Pipeline')).toHaveLength(0)
-    expect(screen.queryAllByText('Roles')).toHaveLength(0)
   })
 
   it('opens the notifications popover and marks unread items as read', async () => {
@@ -328,9 +329,9 @@ describe('workspace shell', () => {
     seedWorkspaceSession(['workspace:read', 'role:read'])
     renderWorkspaceShell()
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Contraer sidebar de workspace' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Contraer sidebar de plataforma' }))
 
-    expect(await screen.findByRole('button', { name: 'Expandir sidebar de workspace' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Expandir sidebar de plataforma' })).toBeInTheDocument()
     expect(window.localStorage.getItem('asi:workspace-sidebar-collapsed:v1')).toBe('1')
   })
 
@@ -350,25 +351,29 @@ describe('workspace shell', () => {
     seedWorkspaceSession([])
     renderCandidateShell()
 
-    expect(await screen.findByText('ASI para talento')).toBeInTheDocument()
+    expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Abrir notificaciones' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Abrir menu de perfil' })).toBeInTheDocument()
     expect(screen.getAllByText('Perfil').length).toBeGreaterThan(0)
-    expect(screen.getByRole('button', { name: 'Explorar jobs' })).toBeInTheDocument()
+    expect(screen.getAllByText('Empleos').length).toBeGreaterThan(0)
   })
 
-  it('keeps workspace visible in candidate navigation when the user has workspace access', async () => {
+  it('keeps workspace modules visible in the unified sidebar when the user has workspace access', async () => {
     seedWorkspaceSession(['workspace:read'])
     renderCandidateShell()
 
-    expect(await screen.findAllByText('Workspace')).not.toHaveLength(0)
+    // En el sidebar unificado los módulos de empresa aparecen también en el área de candidato.
+    expect(await screen.findAllByText('Resumen')).not.toHaveLength(0)
+    expect(screen.getAllByText('Vacantes').length).toBeGreaterThan(0)
   })
 
-  it('keeps candidate access visible in workspace navigation for authenticated users', async () => {
+  it('keeps the candidate base visible in the unified sidebar for authenticated users', async () => {
     seedWorkspaceSession(['workspace:read'])
     renderWorkspaceShell()
 
-    expect(await screen.findAllByText('Mi perfil')).not.toHaveLength(0)
+    // La base "Tu espacio" siempre está, incluso dentro del área de empresa.
+    expect(await screen.findAllByText('Perfil')).not.toHaveLength(0)
+    expect(screen.getAllByText('Inicio').length).toBeGreaterThan(0)
   })
 
   it('hides tenant role labels from non-admin users in the workspace chrome', async () => {
@@ -391,11 +396,11 @@ describe('workspace shell', () => {
     seedWorkspaceSession(['workspace:read', 'candidate_directory:read', 'application:read', 'role:read'])
     renderWorkspaceShell(surfacePaths.workspace.jobs)
 
-    const jobsButtons = await screen.findAllByRole('button', { name: 'Jobs' })
-    const companyButtons = screen.getAllByRole('button', { name: 'Company' })
+    const jobsButtons = await screen.findAllByRole('button', { name: 'Vacantes' })
+    const dashboardButtons = screen.getAllByRole('button', { name: 'Resumen' })
 
     expect(jobsButtons.some((button) => isActiveNavigationButton(button))).toBe(true)
-    expect(companyButtons.some((button) => isActiveNavigationButton(button))).toBe(false)
+    expect(dashboardButtons.some((button) => isActiveNavigationButton(button))).toBe(false)
   })
 
   it('keeps only the current candidate destination active when workspace access is also visible', async () => {
@@ -403,9 +408,9 @@ describe('workspace shell', () => {
     renderCandidateShell(surfacePaths.candidate.applications)
 
     const applicationsButtons = await screen.findAllByRole('button', { name: 'Aplicaciones' })
-    const workspaceButtons = screen.getAllByRole('button', { name: 'Workspace' })
+    const dashboardButtons = screen.getAllByRole('button', { name: 'Resumen' })
 
     expect(applicationsButtons.some((button) => isActiveNavigationButton(button))).toBe(true)
-    expect(workspaceButtons.some((button) => isActiveNavigationButton(button))).toBe(false)
+    expect(dashboardButtons.some((button) => isActiveNavigationButton(button))).toBe(false)
   })
 })

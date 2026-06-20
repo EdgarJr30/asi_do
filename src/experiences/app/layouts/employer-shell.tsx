@@ -907,7 +907,8 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
     brand: 'Plataforma ASI',
     footerCaption: 'Shell compartido de plataforma',
     hideFooterChrome: true,
-    userRole: hasWorkspace ? session.activeMembership?.roleNames?.[0] ?? 'Miembro del equipo' : 'Candidato',
+    // Etiqueta genérica: no exponemos el rol del tenant (p. ej. "Owner") en el chrome.
+    userRole: hasWorkspace ? 'Miembro del equipo' : 'Candidato',
     guestActions: [],
     mobileSidebarLabel: 'plataforma',
     primaryNav: baseItems,
