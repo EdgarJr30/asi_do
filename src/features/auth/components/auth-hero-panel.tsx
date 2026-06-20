@@ -1,6 +1,6 @@
-import { useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom';
 
-import { BrandLockup } from '@/components/ui/app-brand'
+import { BrandLockup } from '@/components/ui/app-brand';
 
 const authPanelContent = {
   signIn: {
@@ -8,27 +8,27 @@ const authPanelContent = {
     title: 'Talento que mueve a Republica Dominicana.',
     description:
       'La plataforma operativa para gestionar vacantes, candidatos y procesos de contratacion en una sola vista.',
-    footer: 'Disenado con ❤️ conecta con quienes comparten tu fe.'
+    footer: 'Diseñado con ❤️ conecta con quienes comparten tu fe.',
   },
   signUp: {
     badge: 'Cuenta base · ASI',
     title: 'Tu acceso personal es el punto de partida.',
     description:
       'Crea tu cuenta, completa tu perfil y conecta nuevos espacios de trabajo cuando tu empresa entre a la plataforma.',
-    footer: 'Pensado para crecimiento progresivo, sin friccion innecesaria.'
-  }
-} as const
+    footer: 'Pensado para crecimiento progresivo, sin friccion innecesaria.',
+  },
+} as const;
 
 const statTiles = [
   { value: '12,4k', label: 'Candidatos' },
   { value: '340', label: 'Empresas' },
-  { value: '98%', label: 'Uptime' }
-] as const
+  { value: '98%', label: 'Uptime' },
+] as const;
 
 export function AuthHeroPanel() {
-  const location = useLocation()
-  const isSignUp = location.pathname.includes('/sign-up')
-  const content = isSignUp ? authPanelContent.signUp : authPanelContent.signIn
+  const location = useLocation();
+  const isSignUp = location.pathname.includes('/sign-up');
+  const content = isSignUp ? authPanelContent.signUp : authPanelContent.signIn;
 
   return (
     <aside className="relative hidden min-h-screen overflow-hidden bg-[linear-gradient(135deg,#1a3b88_0%,#2d52a8_50%,#4869b6_100%)] px-10 py-12 text-white lg:flex lg:flex-col lg:justify-between xl:px-14 xl:py-14">
@@ -38,18 +38,24 @@ export function AuthHeroPanel() {
         style={{
           backgroundImage:
             'linear-gradient(rgba(255,255,255,0.55) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.55) 1px, transparent 1px)',
-          backgroundSize: '40px 40px'
+          backgroundSize: '40px 40px',
         }}
       />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -right-32 -top-32 size-[30rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(138,162,216,0.4), transparent 70%)' }}
+        style={{
+          background:
+            'radial-gradient(circle, rgba(138,162,216,0.4), transparent 70%)',
+        }}
       />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -bottom-24 -left-24 size-[24rem] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.14), transparent 70%)' }}
+        style={{
+          background:
+            'radial-gradient(circle, rgba(255,255,255,0.14), transparent 70%)',
+        }}
       />
 
       <div className="relative z-10 flex items-center justify-between gap-4">
@@ -78,7 +84,9 @@ export function AuthHeroPanel() {
               <div className="font-[var(--font-display)] text-[1.4rem] font-bold tracking-[-0.03em] text-white">
                 {item.value}
               </div>
-              <div className="mt-1 text-[0.72rem] text-white/70">{item.label}</div>
+              <div className="mt-1 text-[0.72rem] text-white/70">
+                {item.label}
+              </div>
             </div>
           ))}
         </div>
@@ -86,5 +94,5 @@ export function AuthHeroPanel() {
 
       <p className="relative z-10 text-xs text-white/55">{content.footer}</p>
     </aside>
-  )
+  );
 }
