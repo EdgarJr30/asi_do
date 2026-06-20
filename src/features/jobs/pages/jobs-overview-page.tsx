@@ -15,18 +15,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { toErrorMessage } from '@/features/auth/lib/auth-api'
-import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
+import { PublicJobBoard } from '@/features/jobs/components/public-job-board'
 import {
-  createJobAlert,
   createOrUpdateJobPosting,
-  deleteJobAlert,
-  listJobAlerts,
   listOpportunityStageTemplates,
-  listPublicJobs,
   listTenantJobs,
-  toggleSavedJob,
-  updateJobAlert,
   updateJobPostingStatus,
   type JobPostingBundle
 } from '@/features/jobs/lib/jobs-api'
@@ -40,7 +33,6 @@ import {
 } from '@/features/jobs/lib/job-schemas'
 import {
   compensationTypeOptions,
-  getCompensationTypeLabel,
   getOpportunityTypeLabel,
   opportunityTypeOptions
 } from '@/features/opportunities/lib/opportunity-taxonomy'
@@ -80,29 +72,6 @@ function JobStatusBadge({ status }: { status: string }) {
   const variant = status === 'published' ? 'soft' : status === 'draft' ? 'outline' : 'default'
 
   return <Badge variant={variant}>{status}</Badge>
-}
-
-function formatCompensation(job: JobPostingBundle['jobs'][number]) {
-  if (
-    job.compensation_type === 'unpaid' ||
-    job.compensation_type === 'donation_based' ||
-    job.compensation_type === 'not_disclosed'
-  ) {
-    return getCompensationTypeLabel(job.compensation_type)
-  }
-
-  if (!job.compensation_min_amount && !job.compensation_max_amount) {
-    return getCompensationTypeLabel(job.compensation_type)
-  }
-
-  const currency = job.compensation_currency || 'USD'
-  const label = getCompensationTypeLabel(job.compensation_type)
-
-  if (job.compensation_min_amount && job.compensation_max_amount) {
-    return `${label}: ${currency} ${job.compensation_min_amount.toLocaleString()} - ${job.compensation_max_amount.toLocaleString()}`
-  }
-
-  return `${label}: ${currency} ${(job.compensation_min_amount || job.compensation_max_amount || 0).toLocaleString()}`
 }
 
 function parseOpportunityMetadata(value: JobPostingBundle['jobs'][number]['opportunity_metadata']) {
@@ -533,50 +502,19 @@ function JobEditor({
   )
 }
 
-export function JobsOverviewPage() {
+function WorkspaceJobsManager() {
   const session = useAppSession()
   const queryClient = useQueryClient()
   const location = useLocation()
   const isWorkspaceContext = location.pathname.startsWith('/workspace')
   const canManageJobs = session.permissions.includes('job:create') || session.permissions.includes('job:update')
-  const [publicQuery, setPublicQuery] = useState('')
-  const [workplaceFilter, setWorkplaceFilter] = useState('')
-  const [countryFilter, setCountryFilter] = useState('')
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [isEditorOpen, setIsEditorOpen] = useState(false)
-  const [alertLabel, setAlertLabel] = useState('')
-  const [alertFrequency, setAlertFrequency] = useState('weekly')
 
-  const candidateProfileQuery = useQuery({
-    queryKey: ['candidate-profile', 'mine', 'jobs-page'],
-    enabled: session.isAuthenticated,
-    queryFn: async () => fetchMyCandidateProfile(session.authUser!.id)
-  })
   const workspaceQuery = useQuery({
     queryKey: ['workspace', 'jobs-page', session.activeTenantId],
     enabled: canManageJobs && Boolean(session.activeTenantId),
     queryFn: async () => fetchWorkspaceBundle(session.activeTenantId!)
-  })
-  const jobAlertsQuery = useQuery({
-    queryKey: ['job-alerts', candidateProfileQuery.data?.profile?.id ?? null],
-    enabled: Boolean(candidateProfileQuery.data?.profile?.id),
-    queryFn: async () => listJobAlerts(candidateProfileQuery.data!.profile!.id)
-  })
-  const publicJobsQuery = useQuery({
-    queryKey: [
-      ...PUBLIC_JOBS_QUERY_KEY,
-      publicQuery,
-      workplaceFilter,
-      countryFilter,
-      candidateProfileQuery.data?.profile?.id ?? null
-    ],
-    queryFn: async () =>
-      listPublicJobs({
-        query: publicQuery,
-        workplaceType: workplaceFilter ? (workplaceFilter as JobPostingBundle['jobs'][number]['workplace_type']) : undefined,
-        countryCode: countryFilter || undefined,
-        candidateProfileId: candidateProfileQuery.data?.profile?.id ?? null
-      })
   })
   const tenantJobsQuery = useQuery({
     queryKey: [...TENANT_JOBS_QUERY_KEY, session.activeTenantId ?? null],
@@ -627,135 +565,6 @@ export function JobsOverviewPage() {
       await reportErrorWithToast({
         title: 'No pudimos actualizar el estado de la vacante',
         source: 'jobs.update-status',
-        route: surfacePaths.public.jobs,
-        userId: session.authUser?.id ?? null,
-        error
-      })
-    }
-  })
-
-  const saveJobMutation = useMutation({
-    mutationFn: async (input: { jobId: string; shouldSave: boolean }) => {
-      const candidateProfileId = candidateProfileQuery.data?.profile?.id
-
-      if (!candidateProfileId) {
-        throw new Error('Necesitas un perfil candidato para guardar vacantes.')
-      }
-
-      return toggleSavedJob({
-        candidateProfileId,
-        jobPostingId: input.jobId,
-        shouldSave: input.shouldSave
-      })
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: PUBLIC_JOBS_QUERY_KEY })
-    },
-    onError: async (error) => {
-      await reportErrorWithToast({
-        title: 'No pudimos actualizar tus vacantes guardadas',
-        source: 'jobs.toggle-saved',
-        route: surfacePaths.public.jobs,
-        userId: session.authUser?.id ?? null,
-        error,
-        userMessage: session.isAuthenticated
-          ? 'No pudimos guardar o quitar esta vacante.'
-          : 'Inicia sesion y completa tu perfil candidato para guardar vacantes.'
-      })
-    }
-  })
-
-  const createJobAlertMutation = useMutation({
-    mutationFn: async () => {
-      const candidateProfileId = candidateProfileQuery.data?.profile?.id
-
-      if (!candidateProfileId) {
-        throw new Error('Necesitas un perfil candidato para crear alertas de jobs.')
-      }
-
-      return createJobAlert({
-        candidateProfileId,
-        alert: {
-          label: alertLabel,
-          frequency: alertFrequency,
-          query: publicQuery,
-          workplaceType: workplaceFilter,
-          countryCode: countryFilter
-        }
-      })
-    },
-    onSuccess: async () => {
-      setAlertLabel('')
-      setAlertFrequency('weekly')
-      await queryClient.invalidateQueries({ queryKey: ['job-alerts'] })
-      toast.success('Alerta guardada', {
-        description: 'Tus filtros quedaron guardados para reutilizarlos cuando quieras.'
-      })
-    },
-    onError: async (error) => {
-      await reportErrorWithToast({
-        title: 'No pudimos crear la alerta',
-        source: 'jobs.create-alert',
-        route: surfacePaths.public.jobs,
-        userId: session.authUser?.id ?? null,
-        error
-      })
-    }
-  })
-
-  const toggleJobAlertMutation = useMutation({
-    mutationFn: async (input: { alertId: string; isActive: boolean }) => {
-      const candidateProfileId = candidateProfileQuery.data?.profile?.id
-
-      if (!candidateProfileId) {
-        throw new Error('Necesitas un perfil candidato para actualizar alertas.')
-      }
-
-      return updateJobAlert({
-        jobAlertId: input.alertId,
-        candidateProfileId,
-        patch: {
-          isActive: input.isActive
-        }
-      })
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['job-alerts'] })
-    },
-    onError: async (error) => {
-      await reportErrorWithToast({
-        title: 'No pudimos actualizar la alerta',
-        source: 'jobs.toggle-alert',
-        route: surfacePaths.public.jobs,
-        userId: session.authUser?.id ?? null,
-        error
-      })
-    }
-  })
-
-  const deleteJobAlertMutation = useMutation({
-    mutationFn: async (alertId: string) => {
-      const candidateProfileId = candidateProfileQuery.data?.profile?.id
-
-      if (!candidateProfileId) {
-        throw new Error('Necesitas un perfil candidato para eliminar alertas.')
-      }
-
-      return deleteJobAlert({
-        jobAlertId: alertId,
-        candidateProfileId
-      })
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['job-alerts'] })
-      toast.success('Alerta eliminada', {
-        description: 'La alerta ya no seguira activa para este perfil candidato.'
-      })
-    },
-    onError: async (error) => {
-      await reportErrorWithToast({
-        title: 'No pudimos eliminar la alerta',
-        source: 'jobs.delete-alert',
         route: surfacePaths.public.jobs,
         userId: session.authUser?.id ?? null,
         error
@@ -967,179 +776,17 @@ export function JobsOverviewPage() {
           </Card>
         </section>
       ) : null}
-
-      {!isWorkspaceContext ? (
-      <>
-      <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Oportunidades para miembros</CardTitle>
-            <CardDescription>Busca oportunidades activas, filtra por modalidad o país y guarda las más relevantes.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-[1.2fr_0.8fr_0.55fr]">
-              <Input placeholder="Buscar por título o palabra clave" value={publicQuery} onChange={(event) => setPublicQuery(event.target.value)} />
-              <Select value={workplaceFilter} onChange={(event) => setWorkplaceFilter(event.target.value)}>
-                <option value="">Cualquier modalidad</option>
-                <option value="remote">Remote</option>
-                <option value="hybrid">Hybrid</option>
-                <option value="on_site">On-site</option>
-              </Select>
-              <Input placeholder="País" maxLength={2} value={countryFilter} onChange={(event) => setCountryFilter(event.target.value.toUpperCase())} />
-            </div>
-
-            <div className="space-y-3">
-              {publicJobsQuery.isLoading ? (
-                <p className="text-sm text-(--app-text-muted)">Cargando oportunidades...</p>
-              ) : publicJobsQuery.error ? (
-                <p className="text-sm text-rose-600 dark:text-rose-300">{toErrorMessage(publicJobsQuery.error)}</p>
-              ) : publicJobsQuery.data?.jobs.length ? (
-                publicJobsQuery.data.jobs.map((job) => {
-                  const isSaved = publicJobsQuery.data.savedJobIds.includes(job.id)
-
-                  return (
-                    <div key={job.id} className="rounded-panel border border-(--app-border) bg-(--app-surface-muted) p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-lg font-semibold text-(--app-text)">{job.title}</p>
-                          <p className="mt-1 text-sm text-(--app-text-muted)">
-                            {job.company_profile?.display_name || 'Company'} · {getOpportunityTypeLabel(job.opportunity_type)} · {job.workplace_type}
-                          </p>
-                        </div>
-                        <JobStatusBadge status={job.status} />
-                      </div>
-                      <p className="mt-3 text-sm leading-6 text-(--app-text-muted)">{job.summary}</p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <Badge variant="outline">{formatCompensation(job)}</Badge>
-                        {job.country_code ? <Badge variant="outline">{job.country_code}</Badge> : null}
-                        {job.experience_level ? <Badge variant="outline">{job.experience_level}</Badge> : null}
-                      </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <Link className={cn(linkButtonClassName, 'bg-primary-500 text-white hover:bg-primary-400 hover:text-white border-transparent')} to={surfacePaths.public.jobDetail(job.slug)}>
-                          Ver detalle
-                        </Link>
-                        {session.isAuthenticated ? (
-                          <Button
-                            variant="outline"
-                            onClick={() => saveJobMutation.mutate({ jobId: job.id, shouldSave: !isSaved })}
-                            disabled={saveJobMutation.isPending || !candidateProfileQuery.data?.profile}
-                          >
-                            {isSaved ? 'Quitar guardado' : 'Guardar vacante'}
-                          </Button>
-                        ) : null}
-                      </div>
-                    </div>
-                  )
-                })
-              ) : (
-                <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-6 text-sm text-(--app-text-muted)">
-                  No hay oportunidades publicadas que coincidan con estos filtros.
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-      </section>
-
-      <Card>
-          <CardHeader>
-            <CardTitle>Alertas guardadas</CardTitle>
-            <CardDescription>
-            Guarda búsquedas útiles para reutilizarlas sin reconstruir filtros cada vez.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-          {!candidateProfileQuery.data?.profile ? (
-            <div className="rounded-[24px] border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-6 text-sm text-(--app-text-muted)">
-              Completa tu perfil para crear alertas y guardar búsquedas que quieras repetir más adelante.
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-3 md:grid-cols-[1fr_0.55fr_auto] md:items-end">
-                <label className="grid gap-2 text-sm">
-                  <span>Etiqueta</span>
-                  <Input
-                    value={alertLabel}
-                    onChange={(event) => setAlertLabel(event.target.value)}
-                    placeholder="Ej. Ingeniero eléctrico remoto"
-                  />
-                </label>
-                <label className="grid gap-2 text-sm">
-                  <span>Frecuencia</span>
-                  <Select value={alertFrequency} onChange={(event) => setAlertFrequency(event.target.value)}>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                  </Select>
-                </label>
-                <Button
-                  onClick={() => createJobAlertMutation.mutate()}
-                  disabled={createJobAlertMutation.isPending || alertLabel.trim().length === 0}
-                >
-                  {createJobAlertMutation.isPending ? 'Guardando...' : 'Guardar alerta actual'}
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                {jobAlertsQuery.isLoading ? (
-                  <p className="text-sm text-(--app-text-muted)">Cargando alertas...</p>
-                ) : jobAlertsQuery.error ? (
-                  <p className="text-sm text-rose-600 dark:text-rose-300">{toErrorMessage(jobAlertsQuery.error)}</p>
-                ) : jobAlertsQuery.data?.length ? (
-                  jobAlertsQuery.data.map((alert) => {
-                    const criteria = (alert.criteria_json ?? {}) as Record<string, unknown>
-
-                    return (
-                      <div key={alert.id} className="rounded-panel border border-(--app-border) bg-(--app-surface-muted) p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-semibold text-(--app-text)">{alert.label}</p>
-                            <p className="mt-1 text-sm text-(--app-text-muted)">
-                              {alert.frequency} · {(criteria.query as string | null) || 'sin keyword'} ·{' '}
-                              {(criteria.workplaceType as string | null) || 'cualquier modalidad'} ·{' '}
-                              {(criteria.countryCode as string | null) || 'cualquier pais'}
-                            </p>
-                          </div>
-                          <Badge variant={alert.is_active ? 'soft' : 'outline'}>
-                            {alert.is_active ? 'Activa' : 'Pausada'}
-                          </Badge>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <Button
-                            variant="outline"
-                            onClick={() =>
-                              toggleJobAlertMutation.mutate({
-                                alertId: alert.id,
-                                isActive: !alert.is_active
-                              })
-                            }
-                            disabled={toggleJobAlertMutation.isPending}
-                          >
-                            {alert.is_active ? 'Pausar' : 'Activar'}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => deleteJobAlertMutation.mutate(alert.id)}
-                            disabled={deleteJobAlertMutation.isPending}
-                          >
-                            Eliminar
-                          </Button>
-                        </div>
-                      </div>
-                    )
-                  })
-                ) : (
-                  <div className="rounded-[24px] border border-dashed border-zinc-300 px-4 py-6 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-                    Todavia no has guardado job alerts para este perfil.
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-      </>
-      ) : null}
     </div>
   )
+}
+
+/**
+ * `/platform/jobs` muestra solo el board del candidato (buscar y aplicar).
+ * La gestión de vacantes del empleador vive en `/workspace/jobs`.
+ */
+export function JobsOverviewPage() {
+  const location = useLocation()
+  const isWorkspaceContext = location.pathname.startsWith('/workspace')
+
+  return isWorkspaceContext ? <WorkspaceJobsManager /> : <PublicJobBoard />
 }
