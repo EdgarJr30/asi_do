@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Activity,
-  ArrowLeft,
   BarChart3,
   Bell,
   BriefcaseBusiness,
@@ -98,7 +97,8 @@ const candidateIconByHref: Partial<Record<string, LucideIcon>> = {
   [surfacePaths.candidate.applications]: FileText,
   [surfacePaths.candidate.profile]: UserRound,
   [surfacePaths.candidate.onboarding]: Layers3,
-  [surfacePaths.candidate.recruiterRequest]: Building2
+  [surfacePaths.candidate.recruiterRequest]: Building2,
+  [surfacePaths.candidate.authorityRequest]: Shield
 }
 
 const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'description'>> = {
@@ -759,152 +759,6 @@ function WorkspaceSidebarContent({
   )
 }
 
-const workspaceGroupOrder: Array<{ key: NonNullable<NavigationItem['group']>; title?: string }> = [
-  { key: 'dashboard', title: 'Dashboard' },
-  { key: 'recruitment', title: 'Reclutamiento' },
-  { key: 'pipeline', title: 'Pipeline' },
-  { key: 'general' }
-]
-
-function buildWorkspaceConfig(session: ReturnType<typeof useAppSession>) {
-  const visibleItems = filterNavigationItems(employerNavigationItems, session.permissions, session.isAuthenticated)
-  const visibleNavigation = visibleItems.map((item) => mapNavItem(item, 'workspace'))
-  const candidateNavItem = session.isAuthenticated
-    ? ({
-        href: surfacePaths.candidate.profile,
-        title: 'Mi perfil',
-        description: 'Abre tu espacio de candidato sin salir de la plataforma',
-        icon: UserRound
-      } satisfies AppNavItem)
-    : null
-
-  const primaryNav: AppNavItem[] = [
-    surfacePaths.workspace.dashboard,
-    surfacePaths.workspace.jobs,
-    surfacePaths.workspace.talent,
-    surfacePaths.workspace.pipeline,
-    ...(candidateNavItem ? [surfacePaths.candidate.profile] : [])
-  ]
-    .map((href) => (href === surfacePaths.candidate.profile ? candidateNavItem : findNavItem(visibleNavigation, href)))
-    .filter((item): item is NonNullable<typeof item> => Boolean(item))
-
-  const sidebarGroups: AppNavGroup[] = workspaceGroupOrder
-    .map(({ key, title }) => ({
-      title,
-      items: visibleItems
-        .filter((item) => (item.group ?? 'general') === key)
-        .map((item) => ({ ...mapNavItem(item, 'workspace'), description: undefined }))
-    }))
-    .filter((group) => group.items.length > 0)
-
-  if (candidateNavItem) {
-    sidebarGroups.push({ title: 'Mi cuenta', items: [{ ...candidateNavItem, description: undefined }] })
-  }
-
-  const settingsNavItem = findNavItem(visibleNavigation, surfacePaths.workspace.settings)
-
-  return {
-    brand: 'ASI para equipos',
-    footerCaption: 'Shell compartido de plataforma',
-    hideFooterChrome: true,
-    userRole: session.activeMembership?.roleNames?.[0] ?? 'Miembro del equipo',
-    guestActions: [],
-    mobileSidebarLabel: 'workspace',
-    primaryNav,
-    profileHref: surfacePaths.candidate.profile,
-    profileMenuLinks: settingsNavItem ? [{ href: settingsNavItem.href, label: settingsNavItem.title }] : [],
-    publicActionHref: surfacePaths.storefront.jobs,
-    publicActionLabel: 'Ver oportunidades',
-    routeMeta: workspaceCopyByHref,
-    routeMetaDefault: {
-      title: 'Workspace',
-      description: 'Centro operativo del equipo de reclutamiento.'
-    },
-    searchPlaceholder: 'Buscar candidatos, vacantes...',
-    sidebarGroups,
-    tenantName: session.activeMembership?.tenantName ?? 'Tu espacio de empresa',
-    topbarEyebrow: 'Workspace operativo'
-  } satisfies ShellConfig
-}
-
-function buildCandidateConfig(session: ReturnType<typeof useAppSession>) {
-  const visibleNavigation = filterNavigationItems(candidateNavigationItems, session.permissions, session.isAuthenticated).map((item) =>
-    mapNavItem(item, 'candidate')
-  )
-  const hasWorkspaceAccess = session.permissions.includes('workspace:read')
-  const workspaceNavItem = hasWorkspaceAccess
-    ? ({
-        href: surfacePaths.workspace.root,
-        title: 'Workspace',
-        description: 'Entra al espacio operativo de tu empresa',
-        icon: Building2
-      } satisfies AppNavItem)
-    : null
-
-  const primaryNav: AppNavItem[] = [
-    surfacePaths.candidate.home,
-    surfacePaths.storefront.jobs,
-    surfacePaths.candidate.applications,
-    surfacePaths.candidate.profile,
-    surfacePaths.candidate.onboarding,
-    ...(hasWorkspaceAccess ? [surfacePaths.workspace.root] : [])
-  ]
-    .map((href) => (href === surfacePaths.workspace.root ? workspaceNavItem : findNavItem(visibleNavigation, href)))
-    .filter((item): item is NonNullable<typeof item> => Boolean(item))
-
-  return {
-    brand: 'ASI para talento',
-    footerCaption: 'Shell compartido de plataforma',
-    hideFooterChrome: true,
-    userRole: 'Candidato',
-    guestActions: [],
-    mobileSidebarLabel: 'candidate',
-    primaryNav,
-    profileHref: surfacePaths.candidate.profile,
-    profileMenuLinks: [
-      ...(hasWorkspaceAccess && workspaceNavItem ? [{ href: workspaceNavItem.href, label: workspaceNavItem.title }] : []),
-      ...[surfacePaths.candidate.applications, surfacePaths.candidate.onboarding]
-        .map((href) => findNavItem(visibleNavigation, href))
-        .filter((item): item is NonNullable<typeof item> => Boolean(item))
-        .map((item) => ({ href: item.href, label: item.title }))
-    ],
-    publicActionHref: surfacePaths.storefront.jobs,
-    publicActionLabel: 'Explorar jobs',
-    routeMeta: candidateCopyByHref,
-    routeMetaDefault: {
-      title: 'Tu espacio',
-      description: 'Tu perfil, oportunidades y progreso en un solo lugar.'
-    },
-    searchPlaceholder: 'Buscar oportunidades (próximamente)',
-    sidebarGroups: [
-      {
-        title: 'Candidato',
-        items: [
-          ...[
-            surfacePaths.candidate.home,
-            surfacePaths.storefront.jobs,
-            surfacePaths.candidate.applications,
-            surfacePaths.candidate.profile
-          ]
-            .map((href) => findNavItem(visibleNavigation, href))
-            .filter((item): item is NonNullable<typeof item> => Boolean(item)),
-          ...(workspaceNavItem ? [workspaceNavItem] : [])
-        ]
-      },
-      {
-        title: 'Cuenta',
-        items: [
-          ...[surfacePaths.candidate.onboarding, surfacePaths.candidate.recruiterRequest]
-            .map((href) => findNavItem(visibleNavigation, href))
-            .filter((item): item is NonNullable<typeof item> => Boolean(item))
-        ]
-      }
-    ],
-    tenantName: 'Espacio de talento',
-    topbarEyebrow: 'Ruta de candidato'
-  } satisfies ShellConfig
-}
-
 function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
   const hasWorkspaceAccess = session.permissions.includes('workspace:read')
   const accountItems: AppNavItem[] = session.isAuthenticated
@@ -1004,63 +858,98 @@ const adminIconByHref: Partial<Record<string, LucideIcon>> = {
   [surfacePaths.admin.errors]: FileText
 }
 
-function buildAdminConfig(session: ReturnType<typeof useAppSession>): ShellConfig {
-  const visibleItems = filterNavigationItems(adminNavigationItems, session.permissions, session.isAuthenticated)
-  const items: AppNavItem[] = visibleItems.map((item) => ({
-    href: item.href,
-    title: item.title,
-    icon: adminIconByHref[item.href] ?? Shield
-  }))
+/**
+ * Sidebar unificado: una sola navegación para todos los usuarios autenticados.
+ * La base ("Tu espacio") la ve todo el mundo; las secciones "Mi empresa" y
+ * "Administración" se SUMAN según permisos, en lugar de reemplazar el sidebar.
+ * Así la navegación nunca cambia al moverse entre módulos.
+ */
+function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellConfig {
+  const { permissions, isAuthenticated } = session
+  const hasWorkspace = permissions.includes('workspace:read')
 
-  const backItem: AppNavItem = {
-    href: surfacePaths.storefront.home,
-    title: 'Volver al producto',
-    icon: ArrowLeft
-  }
+  const candidateItems = filterNavigationItems(candidateNavigationItems, permissions, isAuthenticated).map((item) =>
+    mapNavItem(item, 'candidate')
+  )
+  const pick = (items: AppNavItem[], hrefs: string[]) =>
+    hrefs.map((href) => findNavItem(items, href)).filter((item): item is AppNavItem => Boolean(item))
+
+  const baseItems = pick(candidateItems, [
+    surfacePaths.candidate.home,
+    surfacePaths.storefront.jobs,
+    surfacePaths.candidate.applications,
+    surfacePaths.candidate.profile
+  ]).map((item) => (item.href === surfacePaths.storefront.jobs ? { ...item, title: 'Empleos' } : item))
+
+  const accountItems = pick(candidateItems, [
+    surfacePaths.candidate.onboarding,
+    // "Reclutar con mi empresa" solo tiene sentido para quien aún no tiene empresa.
+    ...(hasWorkspace ? [] : [surfacePaths.candidate.recruiterRequest]),
+    surfacePaths.candidate.authorityRequest
+  ])
+
+  const workspaceItems = hasWorkspace
+    ? filterNavigationItems(employerNavigationItems, permissions, isAuthenticated).map((item) => mapNavItem(item, 'workspace'))
+    : []
+
+  const adminItems: AppNavItem[] = session.canAccessAdminConsole
+    ? filterNavigationItems(adminNavigationItems, permissions, isAuthenticated).map((item) => ({
+        href: item.href,
+        title: item.title,
+        icon: adminIconByHref[item.href] ?? Shield
+      }))
+    : []
+
+  const sidebarGroups: AppNavGroup[] = [
+    { title: 'Tu espacio', items: baseItems },
+    ...(workspaceItems.length ? [{ title: 'Mi empresa', items: workspaceItems }] : []),
+    ...(adminItems.length ? [{ title: 'Administración', items: adminItems }] : []),
+    ...(accountItems.length ? [{ title: 'Cuenta', items: accountItems }] : [])
+  ].filter((group) => group.items.length > 0)
+
+  const settingsItem = workspaceItems.find((item) => item.href === surfacePaths.workspace.settings)
 
   return {
-    brand: 'ASI admin',
-    footerCaption: 'Consola interna de plataforma',
+    brand: 'Plataforma ASI',
+    footerCaption: 'Shell compartido de plataforma',
     hideFooterChrome: true,
-    userRole: 'Plataforma',
+    userRole: hasWorkspace ? session.activeMembership?.roleNames?.[0] ?? 'Miembro del equipo' : 'Candidato',
     guestActions: [],
-    mobileSidebarLabel: 'admin',
-    primaryNav: items,
+    mobileSidebarLabel: 'plataforma',
+    primaryNav: baseItems,
     profileHref: surfacePaths.candidate.profile,
-    profileMenuLinks: [{ href: surfacePaths.storefront.home, label: 'Volver al producto' }],
-    publicActionHref: surfacePaths.storefront.home,
-    publicActionLabel: 'Volver al producto',
-    routeMeta: Object.fromEntries(
-      adminNavigationItems.map((item) => [item.href, { title: item.title, description: item.description }])
-    ),
-    routeMetaDefault: {
-      title: 'Consola de plataforma',
-      description: 'Operaciones, aprobaciones, moderación y seguimiento técnico.'
-    },
-    searchPlaceholder: 'Buscar en la consola...',
-    sidebarGroups: [
-      { title: 'Administración', items },
-      { items: [backItem] }
+    profileMenuLinks: [
+      { href: surfacePaths.candidate.profile, label: 'Mi perfil' },
+      { href: surfacePaths.candidate.applications, label: 'Aplicaciones' },
+      ...(settingsItem ? [{ href: settingsItem.href, label: settingsItem.title }] : [])
     ],
-    tenantName: 'Consola de plataforma',
-    topbarEyebrow: 'Superficie restringida'
+    publicActionHref: surfacePaths.storefront.jobs,
+    publicActionLabel: 'Ver empleos',
+    routeMeta: {
+      ...candidateCopyByHref,
+      ...workspaceCopyByHref,
+      ...storefrontCopyByHref,
+      ...Object.fromEntries(adminNavigationItems.map((item) => [item.href, { title: item.title, description: item.description }]))
+    },
+    routeMetaDefault: {
+      title: 'Tu espacio',
+      description: 'Tu perfil, oportunidades y módulos en un solo lugar.'
+    },
+    searchPlaceholder: 'Buscar en la plataforma...',
+    sidebarGroups,
+    tenantName: hasWorkspace ? session.activeMembership?.tenantName ?? 'Tu empresa' : 'Tu espacio',
+    topbarEyebrow: 'Plataforma ASI'
   }
 }
 
 function buildShellConfig(experience: ShellExperience, session: ReturnType<typeof useAppSession>) {
-  if (experience === 'candidate') {
-    return buildCandidateConfig(session)
-  }
-
-  if (experience === 'storefront') {
+  // Usuarios no autenticados en la vitrina pública conservan su navegación comercial.
+  if (experience === 'storefront' && !session.isAuthenticated) {
     return buildStorefrontConfig(session)
   }
 
-  if (experience === 'admin') {
-    return buildAdminConfig(session)
-  }
-
-  return buildWorkspaceConfig(session)
+  // Todos los usuarios autenticados comparten el mismo sidebar unificado.
+  return buildUnifiedConfig(session)
 }
 
 export function PlatformAppShell({
