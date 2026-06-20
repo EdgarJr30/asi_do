@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { ArrowRight, BriefcaseBusiness, Settings, UsersRound } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
@@ -8,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Spinner } from '@/components/ui/loader'
 import { StatCard } from '@/components/ui/stat-card'
 import {
   fetchWorkspaceDashboardMetrics,
@@ -101,6 +104,11 @@ export function ResumenDashboardPage() {
 
   const stats = metrics?.stats
   const greeting = greetingForNow()
+  const isFirstRun =
+    Boolean(metrics) &&
+    (stats?.openJobs ?? 0) === 0 &&
+    (stats?.activeCandidates ?? 0) === 0 &&
+    (metrics?.recentApplications.length ?? 0) === 0
 
   return (
     <div className="space-y-6">
@@ -127,6 +135,38 @@ export function ResumenDashboardPage() {
         <StatCard label="Ofertas enviadas" value={stats?.offers ?? '—'} helper="Esperando respuesta del candidato" />
       </div>
 
+      {isFirstRun ? (
+        <Card className="border-primary-200/70 bg-primary-50/50 dark:border-primary-500/25 dark:bg-primary-500/10">
+          <CardHeader>
+            <CardTitle>Primeros pasos</CardTitle>
+            <CardDescription>Configura tu reclutamiento en minutos. Empieza por aquí.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-3">
+            <FirstStepCard
+              icon={BriefcaseBusiness}
+              title="Publica tu primera vacante"
+              description="Crea una vacante y empieza a recibir postulaciones."
+              cta="Publicar vacante"
+              onClick={() => void navigate(surfacePaths.workspace.jobs)}
+            />
+            <FirstStepCard
+              icon={UsersRound}
+              title="Explora el banco de talento"
+              description="Descubre personas abiertas a nuevas oportunidades."
+              cta="Ver talento"
+              onClick={() => void navigate(surfacePaths.workspace.talent)}
+            />
+            <FirstStepCard
+              icon={Settings}
+              title="Invita a tu equipo"
+              description="Configura accesos y roles para colaborar."
+              cta="Abrir configuración"
+              onClick={() => void navigate(surfacePaths.workspace.settings)}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
         <Card>
           <CardHeader>
@@ -142,7 +182,7 @@ export function ResumenDashboardPage() {
           </CardHeader>
           <CardContent>
             {metricsQuery.isLoading ? (
-              <p className="text-sm text-(--app-text-muted)">Cargando embudo…</p>
+              <LoadingRow label="Cargando embudo…" />
             ) : metrics && metrics.funnel.length > 0 ? (
               <div className="space-y-3.5">
                 {metrics.funnel.map((stage) => (
@@ -175,7 +215,7 @@ export function ResumenDashboardPage() {
           </CardHeader>
           <CardContent>
             {metricsQuery.isLoading ? (
-              <p className="text-sm text-(--app-text-muted)">Cargando actividad…</p>
+              <LoadingRow label="Cargando actividad…" />
             ) : metrics && metrics.recentActivity.length > 0 ? (
               <ul className="space-y-3.5">
                 {metrics.recentActivity.map((item) => (
@@ -203,7 +243,7 @@ export function ResumenDashboardPage() {
         </CardHeader>
         <CardContent>
           {metricsQuery.isLoading ? (
-            <p className="text-sm text-(--app-text-muted)">Cargando aplicaciones…</p>
+            <LoadingRow label="Cargando aplicaciones…" />
           ) : metrics && metrics.recentApplications.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[34rem] border-collapse text-sm">
@@ -228,6 +268,48 @@ export function ResumenDashboardPage() {
           )}
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+function LoadingRow({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2.5 text-sm text-(--app-text-muted)">
+      <Spinner size="sm" /> {label}
+    </div>
+  )
+}
+
+function FirstStepCard({
+  icon: Icon,
+  title,
+  description,
+  cta,
+  onClick
+}: {
+  icon: LucideIcon
+  title: string
+  description: string
+  cta: string
+  onClick: () => void
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface) p-4">
+      <span className="flex size-10 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+        <Icon className="size-5" />
+      </span>
+      <div className="space-y-1">
+        <p className="text-sm font-semibold text-(--app-text)">{title}</p>
+        <p className="text-xs leading-5 text-(--app-text-muted)">{description}</p>
+      </div>
+      <Button
+        variant="ghost"
+        className="mt-auto h-9 justify-start px-0 text-sm text-primary-600 hover:bg-transparent hover:text-primary-700 dark:text-primary-300"
+        onClick={onClick}
+      >
+        {cta}
+        <ArrowRight className="size-4" />
+      </Button>
     </div>
   )
 }

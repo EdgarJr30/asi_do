@@ -5,37 +5,17 @@ import { Navigate } from 'react-router-dom'
 import { AdminShell } from '@/experiences/app/layouts/admin-shell'
 import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
 import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageLoader } from '@/components/ui/loader'
 import { SurfaceStatusPage, type AppSurface } from '@/app/router/routes/surface-status-page'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { hasAnyPermission } from '@/lib/permissions/guards'
 import type { PermissionCode } from '@/shared/constants/permissions'
 
-function GuardFeedback({
-  title,
-  description
-}: {
-  title: string
-  description: string
-}) {
-  return (
-    <Card className="mx-auto max-w-2xl">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="text-sm text-zinc-600 dark:text-zinc-400">
-        Las rutas protegidas usan estado de sesion real y permisos derivados de Supabase.
-      </CardContent>
-    </Card>
-  )
-}
-
 export function RequireAuth({ children }: PropsWithChildren) {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <GuardFeedback title="Cargando sesion" description="Estamos recuperando tu acceso y permisos." />
+    return <PageLoader label="Recuperando tu sesión" hint="Validando tu acceso y permisos" />
   }
 
   if (!session.isAuthenticated) {
@@ -54,7 +34,7 @@ export function RequireActiveAsiAccess({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <GuardFeedback title="Validando membresia" description="Estamos comprobando tu aprobacion, membresia y suscripcion ASI." />
+    return <PageLoader label="Validando tu membresía" hint="Comprobando aprobación y suscripción ASI" />
   }
 
   if (!session.isAuthenticated) {
@@ -89,7 +69,7 @@ export function RequirePermission({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <GuardFeedback title="Validando permisos" description="Estamos comprobando tu acceso." />
+    return <PageLoader label="Validando permisos" hint="Comprobando tu acceso" />
   }
 
   if (!session.isAuthenticated) {
@@ -124,7 +104,7 @@ export function RequireAnyPermission({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <GuardFeedback title="Validando permisos" description="Estamos comprobando tu acceso." />
+    return <PageLoader label="Validando permisos" hint="Comprobando tu acceso" />
   }
 
   if (!session.isAuthenticated) {
@@ -152,7 +132,7 @@ export function RequireAdminAccess({ children }: PropsWithChildren) {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <GuardFeedback title="Validando acceso admin" description="Estamos comprobando tu acceso a la consola de plataforma." />
+    return <PageLoader label="Validando acceso admin" hint="Comprobando tu acceso a la consola" />
   }
 
   if (!session.isAuthenticated) {

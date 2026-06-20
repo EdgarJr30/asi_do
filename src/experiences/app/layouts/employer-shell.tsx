@@ -93,6 +93,7 @@ const workspaceIconByHref: Partial<Record<string, LucideIcon>> = {
 }
 
 const candidateIconByHref: Partial<Record<string, LucideIcon>> = {
+  [surfacePaths.candidate.home]: LayoutDashboard,
   [surfacePaths.storefront.jobs]: BriefcaseBusiness,
   [surfacePaths.candidate.applications]: FileText,
   [surfacePaths.candidate.profile]: UserRound,
@@ -144,6 +145,10 @@ const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
 }
 
 const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'description'>> = {
+  [surfacePaths.candidate.home]: {
+    title: 'Inicio',
+    description: 'Tu panel con perfil, vacantes y aplicaciones en un vistazo'
+  },
   [surfacePaths.storefront.jobs]: {
     title: 'Vacantes',
     description: 'Explora oportunidades abiertas y aplica con mas contexto'
@@ -161,8 +166,8 @@ const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
     description: 'Ajustes esenciales para dejar tu cuenta lista'
   },
   [surfacePaths.candidate.recruiterRequest]: {
-    title: 'Acceso operador',
-    description: 'Solicita llevar tu empresa a la plataforma'
+    title: 'Reclutar con mi empresa',
+    description: 'Lleva tu empresa a la plataforma y publica vacantes'
   }
 }
 
@@ -837,6 +842,7 @@ function buildCandidateConfig(session: ReturnType<typeof useAppSession>) {
     : null
 
   const primaryNav: AppNavItem[] = [
+    surfacePaths.candidate.home,
     surfacePaths.storefront.jobs,
     surfacePaths.candidate.applications,
     surfacePaths.candidate.profile,
@@ -874,10 +880,15 @@ function buildCandidateConfig(session: ReturnType<typeof useAppSession>) {
       {
         title: 'Candidato',
         items: [
-          ...(workspaceNavItem ? [workspaceNavItem] : []),
-          ...[surfacePaths.candidate.profile, surfacePaths.candidate.applications, surfacePaths.storefront.jobs]
+          ...[
+            surfacePaths.candidate.home,
+            surfacePaths.storefront.jobs,
+            surfacePaths.candidate.applications,
+            surfacePaths.candidate.profile
+          ]
             .map((href) => findNavItem(visibleNavigation, href))
-            .filter((item): item is NonNullable<typeof item> => Boolean(item))
+            .filter((item): item is NonNullable<typeof item> => Boolean(item)),
+          ...(workspaceNavItem ? [workspaceNavItem] : [])
         ]
       },
       {

@@ -10,6 +10,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageLoader } from '@/components/ui/loader'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/ui/page-header'
 import { Select } from '@/components/ui/select'
@@ -859,14 +860,7 @@ export function CandidateProfilePage() {
   }
 
   if (profileQuery.isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Perfil candidato</CardTitle>
-          <CardDescription>Cargando tu informacion profesional reusable...</CardDescription>
-        </CardHeader>
-      </Card>
-    )
+    return <PageLoader label="Cargando tu perfil" hint="Recuperando tu información profesional" />
   }
 
   if (profileQuery.error) {

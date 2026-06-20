@@ -10,6 +10,7 @@ import { SignUpPage } from '@/features/auth/pages/sign-up-page'
 import { AuthorityRequestPage } from '@/features/authority-requests/pages/authority-request-page'
 import { WorkspaceApplicationsPage } from '@/features/applications/pages/workspace-applications-page'
 import { CandidateProfilePage } from '@/features/candidate-profile/pages/candidate-profile-page'
+import { CandidateHomePage } from '@/features/dashboard/pages/candidate-home-page'
 import { ResumenDashboardPage } from '@/features/dashboard/pages/resumen-dashboard-page'
 import { WorkspaceActivityPage } from '@/features/dashboard/pages/workspace-activity-page'
 import { WorkspaceReportsPage } from '@/features/dashboard/pages/workspace-reports-page'
@@ -78,6 +79,10 @@ export const applicationRoutes: RouteObject[] = [
       </RequireAuth>
     ),
     children: [
+      {
+        index: true,
+        element: <CandidateHomePage />
+      },
       {
         path: 'onboarding',
         element: <OnboardingPage />

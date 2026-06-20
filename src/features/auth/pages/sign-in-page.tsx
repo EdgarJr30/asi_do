@@ -59,7 +59,8 @@ export function SignInPage() {
         description: 'Ya puedes continuar tu perfil o entrar al espacio que te corresponda.'
       })
       await session.refresh()
-      await navigate(surfacePaths.candidate.onboarding)
+      // Tras el refresh, `isAuthenticated` pasa a true y el <Navigate> de arriba
+      // redirige al home correcto (workspace o candidato) según permisos.
     } catch (error) {
       await reportErrorWithToast({
         title: 'No pudimos iniciar sesion',

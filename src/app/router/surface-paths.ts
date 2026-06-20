@@ -36,6 +36,7 @@ export const surfacePaths = {
   },
   candidate: {
     root: '/candidate',
+    home: '/candidate',
     profile: '/candidate/profile',
     applications: '/candidate/applications',
     onboarding: '/candidate/onboarding',
@@ -67,5 +68,5 @@ export const surfacePaths = {
 } as const
 
 export function getAuthenticatedHomePath(hasWorkspaceAccess: boolean) {
-  return hasWorkspaceAccess ? surfacePaths.workspace.root : surfacePaths.candidate.profile
+  return hasWorkspaceAccess ? surfacePaths.workspace.root : surfacePaths.candidate.home
 }

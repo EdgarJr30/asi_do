@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Spinner } from '@/components/ui/loader'
 import { PageHeader } from '@/components/ui/page-header'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
@@ -38,7 +39,9 @@ export function ApplicationsOverviewPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {myApplicationsQuery.isLoading ? (
-            <p className="text-sm text-(--app-text-muted)">Cargando historial...</p>
+            <div className="flex items-center gap-2.5 text-sm text-(--app-text-muted)">
+              <Spinner size="sm" /> Cargando historial…
+            </div>
           ) : myApplicationsQuery.error ? (
             <p className="text-sm text-rose-600">{toErrorMessage(myApplicationsQuery.error)}</p>
           ) : applications.length ? (

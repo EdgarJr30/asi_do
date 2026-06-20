@@ -29,6 +29,12 @@ export const publicNavigationItems: NavigationItem[] = [
 
 export const candidateNavigationItems: NavigationItem[] = [
   {
+    title: 'Inicio',
+    href: surfacePaths.candidate.home,
+    description: 'Tu panel con todo en un vistazo',
+    requiresAuth: true
+  },
+  {
     title: 'Jobs',
     href: surfacePaths.public.jobsRoot,
     description: 'Explora oportunidades abiertas'
@@ -52,9 +58,9 @@ export const candidateNavigationItems: NavigationItem[] = [
     requiresAuth: true
   },
   {
-    title: 'Acceso operador',
+    title: 'Reclutar con mi empresa',
     href: '/candidate/recruiter-request',
-    description: 'Lleva tu empresa a la plataforma',
+    description: 'Lleva tu empresa a la plataforma y publica vacantes',
     requiresAuth: true
   },
   {
