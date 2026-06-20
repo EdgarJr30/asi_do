@@ -27,7 +27,6 @@ export function SignInPage() {
   const navigate = useNavigate()
   const session = useAppSession()
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberSession, setRememberSession] = useState(true)
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -141,16 +140,6 @@ export function SignInPage() {
             </button>
           </div>
           <FieldError message={form.formState.errors.password?.message} />
-        </label>
-
-        <label className="flex cursor-pointer items-center gap-2.5 text-sm text-(--app-text-muted) select-none">
-          <input
-            checked={rememberSession}
-            className="size-4 rounded-[6px] border-(--app-border) text-primary-600 accent-primary-600 focus-visible:ring-2 focus-visible:ring-(--app-ring)"
-            type="checkbox"
-            onChange={(event) => setRememberSession(event.target.checked)}
-          />
-          Mantener sesion iniciada
         </label>
 
         <Button

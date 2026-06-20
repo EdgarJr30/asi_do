@@ -266,6 +266,9 @@ Do not grant job creation or publishing to Joven Profesional users, other indivi
 ### R-083 — First-run onboarding must resolve into the profile
 Do not reintroduce onboarding as a standalone product module, sidebar item, bottom-nav item, or persistent candidate destination. The first-run setup after registration/login must be a guided state inside `/candidate/profile`, and after the required base fields are completed the user should remain in the normal profile experience. Legacy `/candidate/onboarding` may exist only as a redirect alias to `/candidate/profile`.
 
+### R-084 — Sign-in must not show fake session persistence controls
+Do not reintroduce a "mantener sesion iniciada", "remember me", or equivalent checkbox in sign-in unless the product implements a real, documented session-duration choice behind it. Supabase session persistence is platform behavior, not a user-facing toggle, so the sign-in form should stay focused on credentials and recovery.
+
 ### R-064 — Tailwind utility syntax and override strategy must stay canonical
 Do not reintroduce non-canonical Tailwind utility spellings when the framework already provides an exact built-in token. Do not rely on CSS important overrides or Tailwind important modifiers as the default fix for styling conflicts; prefer semantic component APIs, Tailwind layer order, or clearer selectors so overrides resolve through the normal cascade. Prefer scale-based height utilities such as `h-88`, `sm:h-96`, `xl:h-108`, `2xl:h-112`, or `min-h-96` over arbitrary `rem` values like `h-[22rem]`, `sm:h-[24rem]`, `xl:h-[27rem]`, or `min-h-[24rem]` whenever the values map exactly to the Tailwind spacing scale.
 
