@@ -26,7 +26,14 @@ import { RecruiterRequestPage } from '@/features/recruiter-requests/pages/recrui
 import { RecruiterReviewPage } from '@/features/recruiter-requests/pages/recruiter-review-page'
 import { TalentDirectoryPage } from '@/features/talent/pages/talent-directory-page'
 import { WorkspaceOverviewPage } from '@/features/tenants/pages/workspace-overview-page'
-import { RequireActiveAsiAccess, RequireAdminAccess, RequireAnyPermission, RequireAuth, RequirePermission } from '@/lib/auth/guards'
+import {
+  RequireActiveAsiAccess,
+  RequireAdminAccess,
+  RequireAnyPermission,
+  RequireAuth,
+  RequireCompletedBaseOnboarding,
+  RequirePermission
+} from '@/lib/auth/guards'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { SurfaceStatusPage } from '@/app/router/routes/surface-status-page'
 import { AdminShell } from '@/experiences/app/layouts/admin-shell'
@@ -67,7 +74,9 @@ export const applicationRoutes: RouteObject[] = [
     path: surfacePaths.app.home,
     element: (
       <RequireAuth>
-        <AppEntryRedirect />
+        <RequireCompletedBaseOnboarding>
+          <AppEntryRedirect />
+        </RequireCompletedBaseOnboarding>
       </RequireAuth>
     )
   },
@@ -75,7 +84,9 @@ export const applicationRoutes: RouteObject[] = [
     path: surfacePaths.candidate.root,
     element: (
       <RequireAuth>
-        <CandidateShell />
+        <RequireCompletedBaseOnboarding>
+          <CandidateShell />
+        </RequireCompletedBaseOnboarding>
       </RequireAuth>
     ),
     children: [
@@ -116,11 +127,13 @@ export const applicationRoutes: RouteObject[] = [
   {
     path: surfacePaths.workspace.root,
     element: (
-      <RequireActiveAsiAccess surface="workspace">
-        <RequirePermission permission="workspace:read">
-          <EmployerShell />
-        </RequirePermission>
-      </RequireActiveAsiAccess>
+      <RequireCompletedBaseOnboarding>
+        <RequireActiveAsiAccess surface="workspace">
+          <RequirePermission permission="workspace:read">
+            <EmployerShell />
+          </RequirePermission>
+        </RequireActiveAsiAccess>
+      </RequireCompletedBaseOnboarding>
     ),
     children: [
       {
@@ -196,9 +209,11 @@ export const applicationRoutes: RouteObject[] = [
   {
     path: surfacePaths.admin.root,
     element: (
-      <RequireAdminAccess>
-        <AdminShell />
-      </RequireAdminAccess>
+      <RequireCompletedBaseOnboarding>
+        <RequireAdminAccess>
+          <AdminShell />
+        </RequireAdminAccess>
+      </RequireCompletedBaseOnboarding>
     ),
     children: [
       {

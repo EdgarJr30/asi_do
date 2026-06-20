@@ -12,6 +12,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 import { Input } from '@/components/ui/input'
 import { signInWithPassword, toErrorMessage } from '@/features/auth/lib/auth-api'
 import { signInSchema, type SignInValues } from '@/features/auth/lib/auth-schemas'
+import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 
 function FieldError({ message }: { message?: string }) {
@@ -49,14 +50,22 @@ export function SignInPage() {
   }
 
   if (session.isAuthenticated) {
-    return <Navigate replace to={getAuthenticatedHomePath(session.permissions.includes('workspace:read'))} />
+    return (
+      <Navigate
+        replace
+        to={getAuthenticatedHomePath(
+          session.permissions.includes('workspace:read'),
+          hasCompletedBaseOnboarding(session.profile)
+        )}
+      />
+    )
   }
 
   async function handleSubmit(values: SignInValues) {
     try {
       await signInWithPassword(values)
       toast.success('Sesion iniciada', {
-        description: 'Ya puedes continuar tu perfil o entrar al espacio que te corresponda.'
+        description: 'Te llevaremos al siguiente paso para dejar tu cuenta lista.'
       })
       await session.refresh()
       // Tras el refresh, `isAuthenticated` pasa a true y el <Navigate> de arriba

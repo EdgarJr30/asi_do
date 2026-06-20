@@ -15,7 +15,15 @@ const authState = {
     platformPermissions: [],
     isPlatformAdmin: false
   } as {
-    profile: { id: string; email: string; is_internal_developer: boolean } | null
+    profile: {
+      id: string
+      email: string
+      full_name: string
+      display_name: string
+      locale: string
+      country_code: string
+      is_internal_developer: boolean
+    } | null
     memberships: Array<{
       id: string
       tenantId: string
@@ -28,6 +36,18 @@ const authState = {
     permissions: string[]
     platformPermissions: string[]
     isPlatformAdmin: boolean
+  }
+}
+
+function completeProfile(input: { id: string; email: string; isInternalDeveloper?: boolean }) {
+  return {
+    id: input.id,
+    email: input.email,
+    full_name: 'Maria Reyes',
+    display_name: 'Maria Reyes',
+    locale: 'es',
+    country_code: 'DO',
+    is_internal_developer: input.isInternalDeveloper ?? false
   }
 }
 
@@ -86,11 +106,7 @@ describe('surface access states', () => {
   it('redirects /app to the candidate home when the user has no workspace access', async () => {
     authState.session = { user: { id: 'user-0', email: 'candidate@example.com' } }
     authState.snapshot = {
-      profile: {
-        id: 'user-0',
-        email: 'candidate@example.com',
-        is_internal_developer: false
-      },
+      profile: completeProfile({ id: 'user-0', email: 'candidate@example.com' }),
       memberships: [],
       permissions: [],
       platformPermissions: [],
@@ -106,11 +122,7 @@ describe('surface access states', () => {
   it('redirects /app to the workspace when the user has workspace access', async () => {
     authState.session = { user: { id: 'user-1b', email: 'recruiter@example.com' } }
     authState.snapshot = {
-      profile: {
-        id: 'user-1b',
-        email: 'recruiter@example.com',
-        is_internal_developer: false
-      },
+      profile: completeProfile({ id: 'user-1b', email: 'recruiter@example.com' }),
       memberships: [
         {
           id: 'membership-1b',
@@ -138,11 +150,7 @@ describe('surface access states', () => {
   it('renders candidate not-found inside the candidate shell', async () => {
     authState.session = { user: { id: 'user-1', email: 'candidate@example.com' } }
     authState.snapshot = {
-      profile: {
-        id: 'user-1',
-        email: 'candidate@example.com',
-        is_internal_developer: false
-      },
+      profile: completeProfile({ id: 'user-1', email: 'candidate@example.com' }),
       memberships: [],
       permissions: [],
       platformPermissions: [],
@@ -158,11 +166,7 @@ describe('surface access states', () => {
   it('renders workspace forbidden inside the workspace shell', async () => {
     authState.session = { user: { id: 'user-2', email: 'recruiter@example.com' } }
     authState.snapshot = {
-      profile: {
-        id: 'user-2',
-        email: 'recruiter@example.com',
-        is_internal_developer: false
-      },
+      profile: completeProfile({ id: 'user-2', email: 'recruiter@example.com' }),
       memberships: [
         {
           id: 'membership-1',
@@ -188,11 +192,7 @@ describe('surface access states', () => {
   it('renders admin forbidden inside the admin shell', async () => {
     authState.session = { user: { id: 'user-3', email: 'user@example.com' } }
     authState.snapshot = {
-      profile: {
-        id: 'user-3',
-        email: 'user@example.com',
-        is_internal_developer: false
-      },
+      profile: completeProfile({ id: 'user-3', email: 'user@example.com' }),
       memberships: [],
       permissions: [],
       platformPermissions: [],
@@ -208,11 +208,7 @@ describe('surface access states', () => {
   it('renders admin not-found inside the admin shell', async () => {
     authState.session = { user: { id: 'user-4', email: 'admin@example.com' } }
     authState.snapshot = {
-      profile: {
-        id: 'user-4',
-        email: 'admin@example.com',
-        is_internal_developer: true
-      },
+      profile: completeProfile({ id: 'user-4', email: 'admin@example.com', isInternalDeveloper: true }),
       memberships: [],
       permissions: [],
       platformPermissions: [],
@@ -229,5 +225,25 @@ describe('surface access states', () => {
     renderRoute(surfacePaths.workspace.root)
 
     expect(await screen.findByRole('heading', { name: 'Entra a tu cuenta' })).toBeInTheDocument()
+  })
+
+  it('redirects authenticated users with missing base profile data to onboarding', async () => {
+    authState.session = { user: { id: 'user-5', email: 'new@example.com' } }
+    authState.snapshot = {
+      profile: {
+        ...completeProfile({ id: 'user-5', email: 'new@example.com' }),
+        display_name: 'New user',
+        locale: '',
+        country_code: ''
+      },
+      memberships: [],
+      permissions: [],
+      platformPermissions: [],
+      isPlatformAdmin: false
+    }
+
+    renderRoute(surfacePaths.candidate.profile)
+
+    expect(await screen.findByRole('heading', { name: 'Dejemos tu cuenta lista' })).toBeInTheDocument()
   })
 })

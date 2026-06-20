@@ -38,6 +38,7 @@ When a future redesign changes these rules, the new decision must still be bench
 8. **Apple-grade clarity is the visual bar.** Interfaces should favor calm hierarchy, generous spacing, obvious affordances, and polished restraint over busy dashboards.
 9. **Customer-facing entrypoints must look like product, not tooling.** Public landing and shell surfaces must avoid exposing QA or operations language by default.
 10. **Platform-internal surfaces must reuse one shared shell.** Candidate routes, workspace routes, and operational `/platform/*` routes such as jobs should share the same sidebar/navbar construction, adapting only navigation copy and allowed destinations instead of diverging into separate chrome patterns.
+11. **Onboarding must feel guided, not administrative.** Required account setup should use short staged disclosure, visible progress, concise copy, and one primary action per step. Optional profile depth must be deferred to follow-up screens.
 
 ## 3.1 Mandatory UI libraries
 The project must standardize on the same libraries for reusable UI building blocks.
@@ -387,6 +388,7 @@ Apple-inspired UI rules:
 2. Long forms should be broken into sections or steps.
 3. Use progressive disclosure for advanced options, admin-only configuration, or rarely needed fields.
 4. Preserve draft state where users may invest significant effort.
+5. Account onboarding must separate required account readiness fields from optional professional depth so users can enter the product quickly.
 
 ### 10.2 Field rules
 1. Every field must have a permanently visible label above or adjacent to the control.

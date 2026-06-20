@@ -1,13 +1,15 @@
 import type { PropsWithChildren } from 'react'
 
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 
+import { surfacePaths } from '@/app/router/surface-paths'
 import { AdminShell } from '@/experiences/app/layouts/admin-shell'
 import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
 import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
 import { PageLoader } from '@/components/ui/loader'
 import { SurfaceStatusPage, type AppSurface } from '@/app/router/routes/surface-status-page'
 import { useAppSession } from '@/app/providers/app-session-provider'
+import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
 import { hasAnyPermission } from '@/lib/permissions/guards'
 import type { PermissionCode } from '@/shared/constants/permissions'
 
@@ -23,6 +25,22 @@ export function RequireAuth({ children }: PropsWithChildren) {
   }
 
   return children
+}
+
+export function RequireCompletedBaseOnboarding({ children }: PropsWithChildren) {
+  const location = useLocation()
+  const session = useAppSession()
+  const isOnboardingRoute = location.pathname === surfacePaths.candidate.onboarding
+
+  if (session.isLoading) {
+    return <PageLoader fullScreen label="Preparando tu onboarding" hint="Revisando los datos mínimos de tu cuenta" />
+  }
+
+  if (!session.isAuthenticated || isOnboardingRoute || hasCompletedBaseOnboarding(session.profile)) {
+    return children
+  }
+
+  return <Navigate replace state={{ from: location.pathname }} to={surfacePaths.candidate.onboarding} />
 }
 
 export function RequireActiveAsiAccess({
