@@ -27,6 +27,7 @@ import { useAppSession } from '@/app/providers/app-session-provider'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
+import { PageLoader } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { listMyApplications } from '@/features/applications/lib/applications-api'
@@ -357,7 +358,7 @@ export function PublicJobBoard() {
 
       {/* Contenido */}
       {jobsQuery.isLoading ? (
-        <BoardSkeleton />
+        <PageLoader label="Buscando empleos" hint="Cargando las oportunidades disponibles" />
       ) : jobsQuery.error ? (
         <div className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-6 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
           {toErrorMessage(jobsQuery.error)}
@@ -629,30 +630,3 @@ function Pager({ page, totalPages, onGo }: { page: number; totalPages: number; o
   )
 }
 
-function BoardSkeleton() {
-  return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
-      <div className="space-y-3">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <div key={index} className="flex gap-3.5 rounded-panel border border-(--app-border) bg-(--app-surface) p-4">
-            <div className="size-12 shrink-0 animate-pulse rounded-2xl bg-(--app-surface-muted)" />
-            <div className="flex-1 space-y-2.5">
-              <div className="h-4 w-2/3 animate-pulse rounded bg-(--app-surface-muted)" />
-              <div className="h-3 w-1/3 animate-pulse rounded bg-(--app-surface-muted)" />
-              <div className="h-3 w-1/2 animate-pulse rounded bg-(--app-surface-muted)" />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="hidden rounded-panel border border-(--app-border) bg-(--app-surface) p-6 lg:block">
-        <div className="h-6 w-1/2 animate-pulse rounded bg-(--app-surface-muted)" />
-        <div className="mt-4 h-4 w-1/3 animate-pulse rounded bg-(--app-surface-muted)" />
-        <div className="mt-6 space-y-2.5">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="h-3 w-full animate-pulse rounded bg-(--app-surface-muted)" />
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
