@@ -41,6 +41,7 @@ import { AuthShell } from '@/experiences/app/layouts/auth-shell'
 import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
 import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
 import { AppEntryRedirect } from '@/experiences/app/routes/app-entry-redirect'
+import { MembershipStatusPage } from '@/features/membership/pages/membership-status-page'
 import { approvalReviewPermissions } from '@/shared/constants/navigation'
 
 export const applicationRoutes: RouteObject[] = [
@@ -76,6 +77,18 @@ export const applicationRoutes: RouteObject[] = [
       <RequireAuth>
         <RequireCompletedBaseOnboarding>
           <AppEntryRedirect />
+        </RequireCompletedBaseOnboarding>
+      </RequireAuth>
+    )
+  },
+  {
+    // Panel de membresía: destino de los usuarios autenticados aún no activos.
+    // No exige membresía activa (evita el loop con RequireActiveAsiAccess).
+    path: surfacePaths.account.membership,
+    element: (
+      <RequireAuth>
+        <RequireCompletedBaseOnboarding>
+          <MembershipStatusPage />
         </RequireCompletedBaseOnboarding>
       </RequireAuth>
     )

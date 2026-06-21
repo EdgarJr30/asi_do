@@ -44,9 +44,9 @@ export function RequireCompletedBaseOnboarding({ children }: PropsWithChildren) 
 }
 
 export function RequireActiveAsiAccess({
-  children,
-  surface = 'storefront'
+  children
 }: PropsWithChildren<{
+  // Aceptado por compatibilidad con los call-sites; el redirect ya no depende de la superficie.
   surface?: Extract<AppSurface, 'storefront' | 'candidate' | 'workspace'>
 }>) {
   const session = useAppSession()
@@ -59,18 +59,10 @@ export function RequireActiveAsiAccess({
     return <Navigate replace to="/auth/sign-in" />
   }
 
+  // Autenticado pero sin membresía activa: lo guiamos al panel de membresía
+  // (solicitud → pago → aprobación → activación) en vez de bloquearlo en seco.
   if (!session.hasActiveAsiAccess) {
-    const content = <SurfaceStatusPage kind="forbidden" surface={surface} />
-
-    if (surface === 'candidate') {
-      return <CandidateShell fallbackContent={content} />
-    }
-
-    if (surface === 'workspace') {
-      return <EmployerShell fallbackContent={content} />
-    }
-
-    return content
+    return <Navigate replace to={surfacePaths.account.membership} />
   }
 
   return children

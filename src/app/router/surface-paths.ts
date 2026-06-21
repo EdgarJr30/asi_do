@@ -34,6 +34,9 @@ export const surfacePaths = {
   app: {
     home: '/app'
   },
+  account: {
+    membership: '/account/membership'
+  },
   candidate: {
     root: '/candidate',
     home: '/candidate',
