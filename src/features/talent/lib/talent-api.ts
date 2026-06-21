@@ -133,5 +133,5 @@ export async function fetchCandidateDirectoryDetail(tenantId: string, candidateP
     throw response.error
   }
 
-  return response.data as CandidateDirectoryDetail
+  return response.data as unknown as CandidateDirectoryDetail
 }
