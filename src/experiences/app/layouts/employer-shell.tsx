@@ -135,7 +135,7 @@ const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
     description: 'Metricas y desempeno del reclutamiento'
   },
   [surfacePaths.workspace.settings]: {
-    title: 'Configuracion',
+    title: 'Configuración',
     description: 'Empresa, equipo y accesos del workspace'
   },
   [surfacePaths.workspace.access]: {
@@ -151,7 +151,7 @@ const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
   },
   [surfacePaths.storefront.jobs]: {
     title: 'Vacantes',
-    description: 'Explora oportunidades abiertas y aplica con mas contexto'
+    description: 'Explora oportunidades abiertas y aplica con más contexto'
   },
   [surfacePaths.candidate.applications]: {
     title: 'Aplicaciones',
@@ -560,7 +560,7 @@ function SidebarFooter({
       </button>
 
       <button
-        aria-label="Cerrar sesion"
+        aria-label="Cerrar sesión"
         className={cn(
           'group relative mt-1.5 flex w-full items-center rounded-xl text-left text-sm font-medium text-rose-200/90 outline-none transition-[background-color,color] duration-150 hover:bg-rose-400/12 hover:text-rose-100 focus-visible:ring-2 focus-visible:ring-rose-300/50',
           showCollapsedLabels ? 'h-11 justify-center px-0' : 'min-h-10 gap-3 px-3 py-2'
@@ -808,7 +808,7 @@ function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
     guestActions: [
       { href: surfacePaths.institutional.home, label: 'ASI institucional', variant: 'ghost' },
       { href: surfacePaths.auth.signUp, label: 'Registro cerrado', variant: 'outline', disabled: true },
-      { href: surfacePaths.auth.signIn, label: 'Iniciar sesion', variant: 'primary' }
+      { href: surfacePaths.auth.signIn, label: 'Iniciar sesión', variant: 'primary' }
     ],
     mobileSidebarLabel: 'plataforma',
     primaryNav: [surfacePaths.storefront.home, surfacePaths.storefront.jobs, accountItems[0]?.href]
@@ -1001,11 +1001,11 @@ export function PlatformAppShell({
     onSuccess: () => {
       setProfileMenuOpen(false)
       setNotificationPanelOpen(false)
-      toast.success('Sesion cerrada')
+      toast.success('Sesión cerrada')
       void navigate(surfacePaths.storefront.home)
     },
     onError: (error) => {
-      toast.error('No se pudo cerrar la sesion', {
+      toast.error('No se pudo cerrar la sesión', {
         description: toErrorMessage(error)
       })
     }
@@ -1287,7 +1287,7 @@ export function PlatformAppShell({
                         type="button"
                         onClick={handleSignOut}
                       >
-                        {signOutMutation.isPending ? 'Cerrando...' : 'Cerrar sesion'}
+                        {signOutMutation.isPending ? 'Cerrando...' : 'Cerrar sesión'}
                       </button>
                     </div>
                   ) : null}

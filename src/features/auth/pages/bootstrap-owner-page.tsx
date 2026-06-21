@@ -52,17 +52,17 @@ export function BootstrapOwnerPage() {
 
     try {
       await signOutCurrentUser()
-      toast.success('Sesion cerrada')
+      toast.success('Sesión cerrada')
       await navigate('/auth/sign-in')
     } catch (error) {
       await reportErrorWithToast({
-        title: 'No se pudo cerrar la sesion',
+        title: 'No se pudo cerrar la sesión',
         source: 'auth.bootstrap.sign-out',
         route: surfacePaths.admin.bootstrapOwner,
         userId: session.authUser?.id ?? null,
         error,
         description: toErrorMessage(error),
-        userMessage: 'No pudimos cerrar tu sesion actual.'
+        userMessage: 'No pudimos cerrar tu sesión actual.'
       })
     } finally {
       setIsSigningOut(false)
@@ -80,14 +80,14 @@ export function BootstrapOwnerPage() {
         </CardHeader>
         <CardContent className="space-y-4 text-sm leading-7 text-zinc-600">
           <p>
-            Si ya existe un owner activo, Supabase rechazara la operacion. Esta ruta se conserva solo como acceso controlado de arranque y no forma parte de la UX comercial.
+            Si ya existe un owner activo, Supabase rechazará la operación. Esta ruta se conserva solo como acceso controlado de arranque y no forma parte de la UX comercial.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button onClick={() => void handleBootstrapOwner()} disabled={isBootstrapping}>
               {isBootstrapping ? 'Inicializando...' : 'Reclamar primer admin'}
             </Button>
             <Button variant="outline" onClick={() => void handleSignOut()} disabled={isSigningOut}>
-              {isSigningOut ? 'Cerrando...' : 'Cerrar sesion'}
+              {isSigningOut ? 'Cerrando...' : 'Cerrar sesión'}
             </Button>
           </div>
         </CardContent>

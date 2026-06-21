@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars, no-undef */
 /* global React */
-// Mock data for the ASI ATS — Spanish, Dominican Republic context
+// Mock data for ASI — Spanish, Dominican Republic context
 
 const POSITIONS = [
   { id: "p1", title: "Desarrollador Full-Stack Senior", dept: "Tecnología", location: "Santo Domingo", type: "Tiempo completo", applicants: 47, openSince: "Hace 12 días", status: "Activa" },

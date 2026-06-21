@@ -419,7 +419,7 @@ export function AuthorityRequestPage() {
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-3xl border border-zinc-200 bg-white/85 px-4 py-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-300">
-              Cedula y nombramientos quedan en storage privado.
+              Cédula y nombramientos quedan en storage privado.
             </div>
             <div className="rounded-3xl border border-zinc-200 bg-white/85 px-4 py-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-300">
               El alcance aprobado se asigna por unión, asociación, distrito o iglesias.

@@ -76,7 +76,7 @@ export function PipelineBoardPage() {
         queryClient.invalidateQueries({ queryKey: ['pipeline-activity', selectedApplicationId] })
       ])
       toast.success('Stage actualizado', {
-        description: 'El applicant ya se movio en el pipeline y el historial quedo auditado.'
+        description: 'El applicant ya se movio en el pipeline y el historial quedó auditado.'
       })
     },
     onError: async (error) => {
@@ -93,7 +93,7 @@ export function PipelineBoardPage() {
   const noteMutation = useMutation({
     mutationFn: async () => {
       if (!selectedApplicationId || !session.authUser) {
-        throw new Error('Debes seleccionar una application y tener sesion activa para agregar notas.')
+        throw new Error('Debes seleccionar una application y tener sesión activa para agregar notas.')
       }
 
       return addApplicationNote({
@@ -109,7 +109,7 @@ export function PipelineBoardPage() {
         queryClient.invalidateQueries({ queryKey: ['pipeline-activity', selectedApplicationId] })
       ])
       toast.success('Nota agregada', {
-        description: 'La colaboracion del equipo ya quedo asociada al applicant.'
+        description: 'La colaboracion del equipo ya quedó asociada al applicant.'
       })
     },
     onError: async (error) => {
@@ -126,7 +126,7 @@ export function PipelineBoardPage() {
   const ratingMutation = useMutation({
     mutationFn: async () => {
       if (!selectedApplicationId || !session.authUser) {
-        throw new Error('Debes seleccionar una application y tener sesion activa para calificar.')
+        throw new Error('Debes seleccionar una application y tener sesión activa para calificar.')
       }
 
       return upsertApplicationRating({
@@ -141,7 +141,7 @@ export function PipelineBoardPage() {
         queryClient.invalidateQueries({ queryKey: ['pipeline-activity', selectedApplicationId] })
       ])
       toast.success('Rating actualizado', {
-        description: 'La evaluacion del applicant ya quedo guardada.'
+        description: 'La evaluación del applicant ya quedó guardada.'
       })
     },
     onError: async (error) => {
@@ -160,7 +160,7 @@ export function PipelineBoardPage() {
       <Card>
         <CardHeader>
           <CardTitle>No tienes un workspace operativo activo</CardTitle>
-          <CardDescription>El pipeline ATS-lite se habilita para tenants aprobados con acceso de coordinador.</CardDescription>
+          <CardDescription>El pipeline se habilita para tenants aprobados con acceso de coordinador.</CardDescription>
         </CardHeader>
       </Card>
     )

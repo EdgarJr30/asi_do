@@ -6,9 +6,9 @@ const shotDir = process.env.E2E_SHOT_DIR ?? 'test-results/tmp'
 
 test('candidate first login lands on /candidate home, not the profile form', async ({ page }, testInfo) => {
   await page.goto('/auth/sign-in')
-  await page.getByPlaceholder('maria.reyes@empresa.com.do').fill(email)
-  await page.getByPlaceholder('Tu contrasena').fill(password)
-  await page.getByRole('button', { name: /Iniciar sesion/i }).click()
+  await page.getByPlaceholder('john.doe@empresa.com.do').fill(email)
+  await page.getByPlaceholder('Tu contraseña').fill(password)
+  await page.getByRole('button', { name: /Iniciar sesión/i }).click()
 
   // Debe aterrizar en el home del candidato (/candidate), NO en /candidate/profile.
   await page.waitForURL('**/candidate', { timeout: 20_000 })
@@ -28,9 +28,9 @@ test('candidate first login lands on /candidate home, not the profile form', asy
 
 test('sidebar copy: Inicio present, "Acceso operador" gone', async ({ page }, testInfo) => {
   await page.goto('/auth/sign-in')
-  await page.getByPlaceholder('maria.reyes@empresa.com.do').fill(email)
-  await page.getByPlaceholder('Tu contrasena').fill(password)
-  await page.getByRole('button', { name: /Iniciar sesion/i }).click()
+  await page.getByPlaceholder('john.doe@empresa.com.do').fill(email)
+  await page.getByPlaceholder('Tu contraseña').fill(password)
+  await page.getByRole('button', { name: /Iniciar sesión/i }).click()
   await page.waitForURL('**/candidate', { timeout: 20_000 })
 
   // El texto críptico anterior no debe existir en ninguna parte.

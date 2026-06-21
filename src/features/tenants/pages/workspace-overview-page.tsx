@@ -112,7 +112,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
   const uploadLogoMutation = useMutation({
     mutationFn: async (file: File) => {
       if (!session.authUser) {
-        throw new Error('Necesitas una sesion activa para subir el logo.');
+        throw new Error('Necesitas una sesión activa para subir el logo.');
       }
 
       const logoPath = await uploadWorkspaceLogo({
@@ -162,7 +162,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
   const replaceRoleMutation = useMutation({
     mutationFn: async (input: { membershipId: string; roleId: string }) => {
       if (!session.authUser) {
-        throw new Error('Necesitas una sesion activa para administrar roles.');
+        throw new Error('Necesitas una sesión activa para administrar roles.');
       }
 
       return replaceMembershipPrimaryRole({

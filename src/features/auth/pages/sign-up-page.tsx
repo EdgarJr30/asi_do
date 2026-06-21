@@ -24,22 +24,24 @@ function FieldError({ message }: { message?: string }) {
 }
 
 const passwordRules = [
-  { label: 'Minimo 8 caracteres', test: (value: string) => value.length >= 8 },
-  { label: 'Una letra mayuscula', test: (value: string) => /[A-Z]/.test(value) },
-  { label: 'Un numero', test: (value: string) => /\d/.test(value) }
+  { label: 'Mínimo 8 caracteres', test: (value: string) => value.length >= 8 },
+  { label: 'Una letra mayúscula', test: (value: string) => /[A-Z]/.test(value) },
+  { label: 'Un número', test: (value: string) => /\d/.test(value) }
 ] as const
 
 export function SignUpPage() {
   const navigate = useNavigate()
   const session = useAppSession()
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpFormSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
       email: '',
-      password: ''
+      password: '',
+      confirmPassword: ''
     }
   })
 
@@ -47,9 +49,9 @@ export function SignUpPage() {
     return (
       <Card className="mx-auto max-w-3xl">
         <CardHeader>
-          <CardTitle>El registro aun no esta disponible</CardTitle>
+          <CardTitle>El registro aún no está disponible</CardTitle>
           <CardDescription>
-            Estamos terminando de preparar el servicio de autenticacion para habilitar la creacion de cuentas.
+            Estamos terminando de preparar el servicio de autenticación para habilitar la creación de cuentas.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -103,7 +105,7 @@ export function SignUpPage() {
           Crea tu espacio
         </h1>
         <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
-          Configura tu cuenta de ASI ATS en menos de un minuto.
+          Configura tu cuenta de ASI en menos de un minuto.
         </p>
       </div>
 
@@ -111,19 +113,19 @@ export function SignUpPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block space-y-1.5">
             <span className="text-[13px] font-semibold text-(--app-text)">Nombre</span>
-            <Input className="h-12 rounded-[14px]" placeholder="Maria" {...form.register('firstName')} />
+            <Input className="h-12 rounded-[14px]" placeholder="John" {...form.register('firstName')} />
             <FieldError message={form.formState.errors.firstName?.message} />
           </label>
 
           <label className="block space-y-1.5">
             <span className="text-[13px] font-semibold text-(--app-text)">Apellido</span>
-            <Input className="h-12 rounded-[14px]" placeholder="Reyes" {...form.register('lastName')} />
+            <Input className="h-12 rounded-[14px]" placeholder="Doe" {...form.register('lastName')} />
             <FieldError message={form.formState.errors.lastName?.message} />
           </label>
         </div>
 
         <label className="block space-y-1.5">
-          <span className="text-[13px] font-semibold text-(--app-text)">Correo corporativo</span>
+          <span className="text-[13px] font-semibold text-(--app-text)">Correo</span>
           <Input
             autoComplete="email"
             className="h-12 rounded-[14px]"
@@ -135,17 +137,17 @@ export function SignUpPage() {
         </label>
 
         <label className="block space-y-1.5">
-          <span className="text-[13px] font-semibold text-(--app-text)">Contrasena</span>
+          <span className="text-[13px] font-semibold text-(--app-text)">Contraseña</span>
           <div className="relative">
             <Input
               autoComplete="new-password"
               className="h-12 rounded-[14px] pr-11"
-              placeholder="Crea una contrasena segura"
+              placeholder="Crea una contraseña segura"
               type={showPassword ? 'text' : 'password'}
               {...form.register('password')}
             />
             <button
-              aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-(--app-text-subtle) transition hover:text-(--app-text)"
               type="button"
               onClick={() => setShowPassword((value) => !value)}
@@ -153,6 +155,7 @@ export function SignUpPage() {
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
           </div>
+          <FieldError message={form.formState.errors.password?.message} />
           <ul className="grid gap-1.5 pt-1 sm:grid-cols-2">
             {passwordRules.map((rule) => {
               const passed = rule.test(passwordValue)
@@ -182,6 +185,28 @@ export function SignUpPage() {
           </ul>
         </label>
 
+        <label className="block space-y-1.5">
+          <span className="text-[13px] font-semibold text-(--app-text)">Confirmar contraseña</span>
+          <div className="relative">
+            <Input
+              autoComplete="new-password"
+              className="h-12 rounded-[14px] pr-11"
+              placeholder="Repite tu contraseña"
+              type={showConfirmPassword ? 'text' : 'password'}
+              {...form.register('confirmPassword')}
+            />
+            <button
+              aria-label={showConfirmPassword ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-(--app-text-subtle) transition hover:text-(--app-text)"
+              type="button"
+              onClick={() => setShowConfirmPassword((value) => !value)}
+            >
+              {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
+          <FieldError message={form.formState.errors.confirmPassword?.message} />
+        </label>
+
         <Button
           className="h-12 w-full rounded-[14px] text-sm"
           disabled={form.formState.isSubmitting}
@@ -199,7 +224,7 @@ export function SignUpPage() {
           type="button"
           onClick={() => void navigate(surfacePaths.auth.signIn)}
         >
-          Inicia sesion
+          Inicia sesión
         </button>
       </p>
 

@@ -53,7 +53,7 @@ const AuthShell = ({ children, title, subtitle }) => (
       <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px", background: "rgba(255,255,255,0.10)", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.02em", border: "1px solid rgba(255,255,255,0.16)" }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#65d99e" }}></span>
-          ATS · Edición 2026
+          ASI · Edición 2026
         </div>
         <img src="assets/asi-logo-white.png" alt="ASI" style={{ height: 56, width: "auto", objectFit: "contain", opacity: 0.95 }} />
       </div>
@@ -93,7 +93,7 @@ const FieldLabel = ({ children }) => (
 );
 
 const Login = ({ onLogin, onGoToRegister }) => {
-  const [email, setEmail] = useStateAuth("maria.reyes@asi.com.do");
+  const [email, setEmail] = useStateAuth("john.doe@asi.com.do");
   const [password, setPassword] = useStateAuth("••••••••");
   const [showPw, setShowPw] = useStateAuth(false);
   const [remember, setRemember] = useStateAuth(true);
@@ -149,7 +149,7 @@ const Login = ({ onLogin, onGoToRegister }) => {
 const Register = ({ onRegister, onGoToLogin }) => {
   const [step, setStep] = useStateAuth(1);
   return (
-    <AuthShell title="Crea tu espacio" subtitle="Configura tu cuenta de ASI ATS en menos de un minuto.">
+    <AuthShell title="Crea tu espacio" subtitle="Configura tu cuenta de ASI en menos de un minuto.">
       <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
         {[1, 2].map(s => (
           <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: s <= step ? "var(--brand-core)" : "var(--border)", transition: "background 200ms" }}></div>
@@ -161,15 +161,15 @@ const Register = ({ onRegister, onGoToLogin }) => {
           <div className="auth-form-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
               <FieldLabel>Nombre</FieldLabel>
-              <input className="input" placeholder="María" style={{ height: 44 }} defaultValue="María" />
+              <input className="input" placeholder="John" style={{ height: 44 }} defaultValue="John" />
             </div>
             <div>
               <FieldLabel>Apellido</FieldLabel>
-              <input className="input" placeholder="Reyes" style={{ height: 44 }} defaultValue="Reyes" />
+              <input className="input" placeholder="Doe" style={{ height: 44 }} defaultValue="Doe" />
             </div>
           </div>
           <div>
-            <FieldLabel>Correo corporativo</FieldLabel>
+            <FieldLabel>Correo</FieldLabel>
             <input className="input" type="email" placeholder="tu@empresa.com" style={{ height: 44 }} />
           </div>
           <div>

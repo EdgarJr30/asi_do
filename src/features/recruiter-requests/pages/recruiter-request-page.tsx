@@ -103,7 +103,7 @@ export function RecruiterRequestPage() {
   const submitMutation = useMutation({
     mutationFn: async (values: RecruiterRequestValues) => {
       if (!session.authUser) {
-        throw new Error('Debes iniciar sesion para enviar esta solicitud.')
+        throw new Error('Debes iniciar sesión para enviar esta solicitud.')
       }
 
       if (!verificationDocumentFile) {
@@ -150,7 +150,7 @@ export function RecruiterRequestPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: MY_REQUESTS_QUERY_KEY })
       toast.success('Solicitud enviada', {
-        description: 'Tu empresa ya quedo en cola de revision administrativa.'
+        description: 'Tu empresa ya quedó en cola de revisión administrativa.'
       })
       setCompanyLogoFile(null)
       setVerificationDocumentFile(null)
@@ -378,12 +378,12 @@ export function RecruiterRequestPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Telefono</span>
+                  <span>Teléfono</span>
                   <Input placeholder="+1 809 000 0000" {...form.register('companyPhone')} />
                 </label>
 
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Pais</span>
+                  <span>País</span>
                   <Input maxLength={2} placeholder="DO" {...form.register('companyCountryCode')} />
                   <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.companyCountryCode?.message}</p>
                 </label>
@@ -435,7 +435,7 @@ export function RecruiterRequestPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Logo temporal para revision</span>
+                  <span>Logo temporal para revisión</span>
                   <Input
                     accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
                     type="file"
@@ -444,7 +444,7 @@ export function RecruiterRequestPage() {
                   <p className="text-xs text-zinc-500">
                     Opcional. Acepta SVG, PNG, JPG y WEBP. Las imagenes raster se comprimen antes de subirlas y el limite es {MAX_UPLOAD_SIZE_LABEL}.
                   </p>
-                  <p className="text-xs text-zinc-500">Se guarda privado durante la revision.</p>
+                  <p className="text-xs text-zinc-500">Se guarda privado durante la revisión.</p>
                   {isPreparingCompanyLogo ? (
                     <p className="text-xs text-zinc-500">Optimizando logo antes de subir...</p>
                   ) : null}
@@ -547,7 +547,7 @@ export function RecruiterRequestPage() {
               <Badge>Aprobada</Badge>
               <CardTitle>Tu tenant ya fue creado</CardTitle>
               <CardDescription>
-                La aprobacion activa tu primer workspace y te asigna como `tenant_owner`.
+                La aprobación activa tu primer workspace y te asigna como `tenant_owner`.
               </CardDescription>
             </CardHeader>
             <CardContent>

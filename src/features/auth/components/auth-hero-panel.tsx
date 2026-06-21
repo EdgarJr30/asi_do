@@ -4,10 +4,10 @@ import { BrandLockup } from '@/components/ui/app-brand';
 
 const authPanelContent = {
   signIn: {
-    badge: 'ATS · Edicion 2026',
+    badge: 'ASI · Edicion 2026',
     title: 'Talento que mueve a Republica Dominicana.',
     description:
-      'La plataforma operativa para gestionar vacantes, candidatos y procesos de contratacion en una sola vista.',
+      'La plataforma operativa para gestionar vacantes, candidatos y procesos de contratación en una sola vista.',
     footer: 'Diseñado con ❤️ conecta con quienes comparten tu fe.',
   },
   signUp: {

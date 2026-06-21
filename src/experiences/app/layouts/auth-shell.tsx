@@ -55,7 +55,7 @@ export function AuthShell() {
                     void navigate(isSignUp ? surfacePaths.auth.signIn : surfacePaths.auth.signUp)
                   }
                 >
-                  {isSignUp ? 'Iniciar sesion' : 'Crear cuenta'}
+                  {isSignUp ? 'Iniciar sesión' : 'Crear cuenta'}
                 </Button>
               )}
             </div>

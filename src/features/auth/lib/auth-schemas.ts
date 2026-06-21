@@ -5,22 +5,33 @@ import { tenantKindValues } from '@/features/opportunities/lib/opportunity-taxon
 const authorityScopeTypeValues = ['union', 'association'] as const
 
 export const signInSchema = z.object({
-  email: z.email('Escribe un correo valido.'),
-  password: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres.')
+  email: z.email('Escribe un correo válido.'),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.')
 })
 
 export const signUpSchema = z.object({
   fullName: z.string().trim().min(2, 'Escribe tu nombre completo.'),
-  email: z.email('Escribe un correo valido.'),
-  password: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres.')
+  email: z.email('Escribe un correo válido.'),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.')
 })
 
-export const signUpFormSchema = z.object({
-  firstName: z.string().trim().min(2, 'Escribe tu nombre.'),
-  lastName: z.string().trim().min(2, 'Escribe tu apellido.'),
-  email: z.email('Escribe un correo valido.'),
-  password: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres.')
-})
+export const signUpFormSchema = z
+  .object({
+    firstName: z.string().trim().min(2, 'Escribe tu nombre.'),
+    lastName: z.string().trim().min(2, 'Escribe tu apellido.'),
+    email: z.email('Escribe un correo válido.'),
+    password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.'),
+    confirmPassword: z.string().min(1, 'Confirma tu contraseña.')
+  })
+  .superRefine((values, context) => {
+    if (values.password !== values.confirmPassword) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['confirmPassword'],
+        message: 'Las contraseñas deben coincidir.'
+      })
+    }
+  })
 
 export const onboardingSchema = z.object({
   fullName: z.string().trim().min(2, 'El nombre completo es obligatorio.'),
@@ -29,7 +40,7 @@ export const onboardingSchema = z.object({
   countryCode: z
     .string()
     .trim()
-    .length(2, 'Usa el codigo ISO de 2 letras.')
+    .length(2, 'Usa el código ISO de 2 letras.')
     .transform((value) => value.toUpperCase())
 })
 
@@ -42,16 +53,16 @@ export const recruiterRequestSchema = z
       .string()
       .trim()
       .min(3, 'El slug debe tener al menos 3 caracteres.')
-      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Usa minusculas, numeros y guiones.'),
-    companyWebsiteUrl: z.union([z.url('Escribe una URL valida.'), z.literal('')]).optional(),
-    companyEmail: z.union([z.email('Escribe un correo valido.'), z.literal('')]).optional(),
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Usa minúsculas, números y guiones.'),
+    companyWebsiteUrl: z.union([z.url('Escribe una URL válida.'), z.literal('')]).optional(),
+    companyEmail: z.union([z.email('Escribe un correo válido.'), z.literal('')]).optional(),
     companyPhone: z.string().trim().optional(),
     companyCountryCode: z
       .string()
       .trim()
-      .min(2, 'Usa un codigo de pais.')
-      .max(2, 'Usa un codigo ISO de 2 letras.'),
-    companyDescription: z.string().trim().min(20, 'Describe brevemente el contexto y la operacion.'),
+      .min(2, 'Usa un código de país.')
+      .max(2, 'Usa un código ISO de 2 letras.'),
+    companyDescription: z.string().trim().min(20, 'Describe brevemente el contexto y la operación.'),
     operatingScope: z.string().trim().optional(),
     sponsoringEntity: z.string().trim().optional(),
     fieldRegion: z.string().trim().optional(),
@@ -71,7 +82,7 @@ export const recruiterRequestSchema = z
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['requestedCompanyLegalName'],
-          message: 'Este tipo de tenant requiere razon social o nombre legal.'
+          message: 'Este tipo de tenant requiere razón social o nombre legal.'
         })
       }
     }
@@ -100,7 +111,7 @@ export const recruiterRequestSchema = z
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['fieldRegion'],
-        message: 'Indica el campo o region que representara este tenant.'
+        message: 'Indica el campo o región que representará este tenant.'
       })
     }
 
@@ -108,7 +119,7 @@ export const recruiterRequestSchema = z
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['conversionIntent'],
-        message: 'Explica como este perfil podria convertirse luego en tenant formal.'
+        message: 'Explica cómo este perfil podría convertirse luego en tenant formal.'
       })
     }
   })

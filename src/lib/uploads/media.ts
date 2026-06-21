@@ -120,7 +120,7 @@ export function validateUploadFile(file: File, options: FileValidationOptions) {
     throw new UploadConstraintError(
       'file_too_large',
       `${options.fieldLabel} exceeds the maximum upload size.`,
-      `${options.fieldLabel} pesa ${formatFileSize(file.size)} y supera el maximo de ${formatFileSize(maxSizeBytes)}. Comprime el archivo o carga uno de ${MAX_UPLOAD_SIZE_LABEL} o menos.`,
+      `${options.fieldLabel} pesa ${formatFileSize(file.size)} y supera el máximo de ${formatFileSize(maxSizeBytes)}. Comprime el archivo o carga uno de ${MAX_UPLOAD_SIZE_LABEL} o menos.`,
       {
         fieldLabel: options.fieldLabel,
         fileName: file.name,

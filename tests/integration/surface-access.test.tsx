@@ -143,7 +143,7 @@ describe('surface access states', () => {
 
     expect((await screen.findAllByText('Acme')).length).toBeGreaterThan(0)
     expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
-    expect(screen.getByRole('button', { name: 'Cerrar sesion' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
   })
 
   it('renders candidate not-found inside the candidate shell', async () => {

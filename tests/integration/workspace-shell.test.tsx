@@ -144,7 +144,7 @@ function renderWorkspaceShell(initialEntry: string = surfacePaths.workspace.root
       },
       {
         path: surfacePaths.public.home,
-        element: <div>Landing publica</div>
+        element: <div>Landing pública</div>
       }
     ],
     {
@@ -339,15 +339,15 @@ describe('workspace shell', () => {
     seedWorkspaceSession(['workspace:read', 'role:read'])
     renderWorkspaceShell()
 
-    fireEvent.click((await screen.findAllByRole('button', { name: 'Cerrar sesion' }))[0])
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Cerrar sesión' }))[0])
 
     await waitFor(() => {
       expect(signOutCurrentUser).toHaveBeenCalled()
     })
-    expect(await screen.findByText('Landing publica')).toBeInTheDocument()
+    expect(await screen.findByText('Landing pública')).toBeInTheDocument()
   })
 
-  it('reuses the shared platform chrome for the candidate area', async () => {
+  it('reuses the shared platform chrome for the candidate área', async () => {
     seedWorkspaceSession([])
     renderCandidateShell()
 

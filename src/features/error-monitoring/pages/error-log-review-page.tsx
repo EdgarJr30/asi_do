@@ -59,7 +59,7 @@ export function ErrorLogReviewPage() {
   const resolutionMutation = useMutation({
     mutationFn: async (values: { errorId: string; isResolved: boolean }) => {
       if (!session.authUser) {
-        throw new Error('Debes iniciar sesion para administrar errores.')
+        throw new Error('Debes iniciar sesión para administrar errores.')
       }
 
       return updateAppErrorResolution({
@@ -71,7 +71,7 @@ export function ErrorLogReviewPage() {
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: APP_ERROR_LOGS_QUERY_KEY })
       const description = variables.isResolved
-        ? 'El error quedo marcado como corregido.'
+        ? 'El error quedó marcado como corregido.'
         : 'El error se reabrio para seguimiento.'
 
       toast.success(variables.isResolved ? 'Error corregido' : 'Error reabierto', {
@@ -112,7 +112,7 @@ export function ErrorLogReviewPage() {
           <Badge variant="soft">Admin errors</Badge>
           <CardTitle>Bandeja administrativa de errores</CardTitle>
           <CardDescription>
-            Todos los errores visibles para el usuario deben llegar a `app_error_logs`, y desde aqui el admin puede revisarlos, marcarlos como corregidos o reabrirlos.
+            Todos los errores visibles para el usuario deben llegar a `app_error_logs`, y desde aquí el admin puede revisarlos, marcarlos como corregidos o reabrirlos.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-3">
@@ -125,7 +125,7 @@ export function ErrorLogReviewPage() {
             <p className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{resolvedCount}</p>
           </div>
           <div className="rounded-3xl border border-zinc-200 bg-white/85 px-4 py-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-400">
-            La bandeja muestra tambien el usuario afectado para que soporte sepa a quien contactar cuando el error viene de una sesion autenticada.
+            La bandeja muestra también el usuario afectado para que soporte sepa a quién contactar cuando el error viene de una sesión autenticada.
           </div>
         </CardContent>
       </Card>
@@ -156,7 +156,7 @@ export function ErrorLogReviewPage() {
       ) : filteredLogs.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-sm text-zinc-500">
-            No hay errores para este filtro. Si aparece un fallo visible en la app, debe terminar registrado aqui.
+            No hay errores para este filtro. Si aparece un fallo visible en la app, debe terminar registrado aquí.
           </CardContent>
         </Card>
       ) : (
@@ -200,7 +200,7 @@ export function ErrorLogReviewPage() {
                   <p className="font-semibold text-zinc-900 dark:text-zinc-50">Contexto</p>
                   <p className="mt-1">Ruta: {formatValue(errorLog.route)}</p>
                   <p>Origen: {errorLog.source}</p>
-                  <p>Codigo: {formatValue(errorLog.error_code)}</p>
+                  <p>Código: {formatValue(errorLog.error_code)}</p>
                 </div>
               </div>
 

@@ -53,7 +53,7 @@ export function AuthConfirmPage() {
         }
 
         toast.success('Correo confirmado', {
-          description: 'Tu cuenta ya puede iniciar sesion y preparar tu perfil.'
+          description: 'Tu cuenta ya puede iniciar sesión y preparar tu perfil.'
         })
         await navigate(callback.nextPath, { replace: true })
       } catch (error) {

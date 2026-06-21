@@ -138,7 +138,7 @@ describe('route shells', () => {
     expect(screen.getByRole('link', { name: 'Jobs' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'ASI institucional' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Registro cerrado' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Iniciar sesion' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
 
   it('shows only workspace access for authenticated users with workspace permissions, including mobile menu', async () => {
@@ -221,6 +221,6 @@ describe('route shells', () => {
     expect(screen.getAllByText('Jobs').length).toBeGreaterThan(0)
     expect(screen.getAllByRole('button', { name: 'ASI institucional' }).length).toBeGreaterThan(0)
     expect(screen.getAllByRole('button', { name: 'Registro cerrado' }).every((button) => button.hasAttribute('disabled'))).toBe(true)
-    expect(screen.getAllByRole('button', { name: 'Iniciar sesion' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Iniciar sesión' }).length).toBeGreaterThan(0)
   })
 })

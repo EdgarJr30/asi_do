@@ -246,7 +246,7 @@ function InstitutionalCarouselCard({
               className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 bg-white/12 px-4 text-sm font-semibold text-white transition hover:bg-white/20"
               type="button"
             >
-              Leer mas
+              Leer más
             </button>
           </div>
         </div>

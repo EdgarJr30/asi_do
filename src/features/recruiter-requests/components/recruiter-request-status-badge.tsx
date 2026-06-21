@@ -15,7 +15,7 @@ const statusMap: Record<
     variant: 'soft'
   },
   under_review: {
-    label: 'En revision',
+    label: 'En revisión',
     variant: 'soft'
   },
   approved: {

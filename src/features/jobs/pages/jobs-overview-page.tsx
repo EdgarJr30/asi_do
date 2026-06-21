@@ -470,7 +470,7 @@ function JobEditor({
                 </div>
                 {question.answerType === 'single_select' ? (
                   <label className="grid gap-2 text-sm">
-                    <span>Opciones, una por linea</span>
+                    <span>Opciones, una por línea</span>
                     <Textarea
                       rows={3}
                       value={question.optionList}

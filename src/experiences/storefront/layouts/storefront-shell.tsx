@@ -37,7 +37,7 @@ export function StorefrontShell() {
           session.permissions.includes('workspace:read')
         ),
       }
-    : { label: 'Iniciar sesion', href: '/auth/sign-in' };
+    : { label: 'Iniciar sesión', href: '/auth/sign-in' };
 
   return (
     <div className="tm-shell overflow-x-clip">

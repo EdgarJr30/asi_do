@@ -42,7 +42,7 @@ if (hasLiveAuth) {
       await expect(page.getByText(/Dejemos tu cuenta lista|Perfil candidato/i)).toBeVisible()
 
       await page.goto(candidateRecruiterRequestPath)
-      await expect(page.getByText(/Solicitud recruiter|validacion/i)).toBeVisible()
+      await expect(page.getByText(/Solicitud recruiter|validación/i)).toBeVisible()
 
       await page.goto(candidateApplicationsPath)
       await expect(page.getByText(/Revisa tu avance|Applications/i)).toBeVisible()
@@ -69,7 +69,7 @@ if (hasLiveAuth) {
     await expect(page.getByText(/Dejemos tu cuenta lista|Perfil candidato/i)).toBeVisible()
 
     await page.goto(candidateRecruiterRequestPath)
-    await expect(page.getByText(/Solicitud recruiter|validacion/i)).toBeVisible()
+    await expect(page.getByText(/Solicitud recruiter|validación/i)).toBeVisible()
 
     await page.goto(candidateApplicationsPath)
     await expect(page.getByText(/Revisa tu avance|Applications/i)).toBeVisible()

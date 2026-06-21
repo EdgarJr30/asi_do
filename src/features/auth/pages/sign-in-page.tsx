@@ -39,9 +39,9 @@ export function SignInPage() {
     return (
       <Card className="mx-auto max-w-3xl">
         <CardHeader>
-          <CardTitle>El acceso aun no esta disponible</CardTitle>
+          <CardTitle>El acceso aún no está disponible</CardTitle>
           <CardDescription>
-            Estamos terminando de preparar el servicio de autenticacion para habilitar acceso, perfil inicial y aprobaciones.
+            Estamos terminando de preparar el servicio de autenticación para habilitar acceso, perfil inicial y aprobaciones.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -63,7 +63,7 @@ export function SignInPage() {
   async function handleSubmit(values: SignInValues) {
     try {
       await signInWithPassword(values)
-      toast.success('Sesion iniciada', {
+      toast.success('Sesión iniciada', {
         description: 'Te llevaremos al siguiente paso para dejar tu cuenta lista.'
       })
       await session.refresh()
@@ -71,13 +71,13 @@ export function SignInPage() {
       // redirige al home correcto (workspace o candidato) según permisos.
     } catch (error) {
       await reportErrorWithToast({
-        title: 'No pudimos iniciar sesion',
+        title: 'No pudimos iniciar sesión',
         source: 'auth.sign-in',
         route: '/auth/sign-in',
         userId: session.authUser?.id ?? null,
         error,
         description: toErrorMessage(error),
-        userMessage: 'No pudimos iniciar sesion con esas credenciales.'
+        userMessage: 'No pudimos iniciar sesión con esas credenciales.'
       })
     }
   }
@@ -89,17 +89,17 @@ export function SignInPage() {
           Bienvenida de vuelta
         </h1>
         <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
-          Inicia sesion para gestionar tus procesos de contratacion.
+          Inicia sesión para gestionar tus procesos de contratación.
         </p>
       </div>
 
       <form className="space-y-5" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
         <label className="block space-y-1.5">
-          <span className="text-[13px] font-semibold text-(--app-text)">Correo corporativo</span>
+          <span className="text-[13px] font-semibold text-(--app-text)">Correo</span>
           <Input
             autoComplete="email"
             className="h-12 rounded-[14px]"
-            placeholder="maria.reyes@empresa.com.do"
+            placeholder="john.doe@empresa.com.do"
             type="email"
             {...form.register('email')}
           />
@@ -108,30 +108,30 @@ export function SignInPage() {
 
         <label className="block space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-(--app-text)">Contrasena</span>
+            <span className="text-[13px] font-semibold text-(--app-text)">Contraseña</span>
             <button
               className="text-xs font-medium text-primary-600 transition hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
               type="button"
               onClick={() =>
-                toast('Recuperacion de contrasena', {
+                toast('Recuperación de contraseña', {
                   description:
-                    'Escribenos a soporte@asi.do y te ayudamos a restablecer el acceso mientras habilitamos el flujo automatico.'
+                    'Escríbenos a soporte@asi.do y te ayudamos a restablecer el acceso mientras habilitamos el flujo automático.'
                 })
               }
             >
-              Olvidaste tu contrasena?
+              ¿Olvidaste tu contraseña?
             </button>
           </div>
           <div className="relative">
             <Input
               autoComplete="current-password"
               className="h-12 rounded-[14px] pr-11"
-              placeholder="Tu contrasena"
+              placeholder="Tu contraseña"
               type={showPassword ? 'text' : 'password'}
               {...form.register('password')}
             />
             <button
-              aria-label={showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-(--app-text-subtle) transition hover:text-(--app-text)"
               type="button"
               onClick={() => setShowPassword((value) => !value)}
@@ -147,18 +147,18 @@ export function SignInPage() {
           disabled={form.formState.isSubmitting}
           type="submit"
         >
-          {form.formState.isSubmitting ? 'Entrando...' : 'Iniciar sesion'}
+          {form.formState.isSubmitting ? 'Entrando...' : 'Iniciar sesión'}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-(--app-text-muted)">
-        No tienes una cuenta?{' '}
+        ¿No tienes una cuenta?{' '}
         <button
           className="font-semibold text-primary-600 transition hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
           type="button"
           onClick={() => void navigate(surfacePaths.auth.signUp)}
         >
-          Registrate
+          Regístrate
         </button>
       </p>
     </section>

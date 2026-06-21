@@ -200,7 +200,7 @@ const StepCompany = ({ accountType, copy }) => {
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <div>
           <FieldLabel required>{isIndividual ? "Nombre profesional" : "Nombre de la empresa"}</FieldLabel>
-          <input className="input" defaultValue={isIndividual ? "" : ""} placeholder={isIndividual ? "Ej: María Reyes Headhunter" : "Ej: Constructora Caribe"} style={{ width: "100%", height: 44, fontSize: 15 }} />
+          <input className="input" defaultValue={isIndividual ? "" : ""} placeholder={isIndividual ? "Ej: John Doe Headhunter" : "Ej: Constructora Caribe"} style={{ width: "100%", height: 44, fontSize: 15 }} />
         </div>
 
         {!isIndividual && (
@@ -422,11 +422,11 @@ const StepProfile = ({ copy }) => {
         <div className="onb-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <div>
             <FieldLabel required>Nombre</FieldLabel>
-            <input className="input" defaultValue="María" style={{ width: "100%", height: 44, fontSize: 15 }} />
+            <input className="input" defaultValue="John" style={{ width: "100%", height: 44, fontSize: 15 }} />
           </div>
           <div>
             <FieldLabel required>Apellido</FieldLabel>
-            <input className="input" defaultValue="Reyes" style={{ width: "100%", height: 44, fontSize: 15 }} />
+            <input className="input" defaultValue="Doe" style={{ width: "100%", height: 44, fontSize: 15 }} />
           </div>
         </div>
 
@@ -562,7 +562,7 @@ const StepEmail = ({ copy }) => {
               }}>{p.logo}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14.5, fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>{p.title}</div>
-                <div style={{ fontSize: 12.5, color: "var(--text-muted)", lineHeight: 1.4 }}>{isConnected ? "Conectado como maria@constructora.com.do" : p.desc}</div>
+                <div style={{ fontSize: 12.5, color: "var(--text-muted)", lineHeight: 1.4 }}>{isConnected ? "Conectado como john.doe@constructora.com.do" : p.desc}</div>
               </div>
               {isConnected ? (
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#1f8a5a", fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
@@ -660,7 +660,7 @@ const StepDone = ({ copy, onFinish }) => {
 const COPY = {
   warm: {
     welcomeEyebrow: "¡Hola!",
-    welcomeTitle: "Bienvenida a ASI ATS, María 👋",
+    welcomeTitle: "Bienvenida a ASI, John Doe 👋",
     welcomeSubtitle: "Antes de empezar a contratar, vamos a configurar tu cuenta. Toma 3 minutos y la mayoría de los pasos son opcionales.",
     companyEyebrow: "Sobre tu organización",
     companyTitle: "Cuéntanos de tu empresa",
@@ -679,7 +679,7 @@ const COPY = {
     emailEyebrow: "Comunicación",
     emailTitle: "Conecta tu correo (opcional)",
     emailSubtitle: "Para que los correos a candidatos lleguen desde tu dirección y tengas hilos sincronizados.",
-    doneTitle: "¡Todo listo, María!",
+    doneTitle: "¡Todo listo, John Doe!",
     doneSubtitle: "Tu cuenta está configurada. Te dejamos algunos lugares populares por donde empezar.",
   },
   formal: {

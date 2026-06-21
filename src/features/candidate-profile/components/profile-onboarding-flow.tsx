@@ -47,14 +47,14 @@ const steps = [
     id: 'identity',
     label: 'Identidad',
     title: 'Como te presentamos',
-    description: 'Dos nombres claros. Nada mas.',
+    description: 'Dos nombres claros. Nada más.',
     icon: UserRound,
     fields: ['fullName', 'displayName'] satisfies FieldPath<OnboardingValues>[]
   },
   {
     id: 'context',
     label: 'Contexto',
-    title: 'Idioma y pais',
+    title: 'Idioma y país',
     description: 'ASI ajusta la experiencia inicial con estos datos.',
     icon: Globe2,
     fields: ['locale', 'countryCode'] satisfies FieldPath<OnboardingValues>[]
@@ -251,7 +251,7 @@ export function ProfileOnboardingFlow() {
       },
       {
         title: session.permissions.includes('workspace:read') ? 'Ir al workspace' : 'Solicitar empresa',
-        description: session.permissions.includes('workspace:read') ? 'Abre tu espacio operativo.' : 'Pide revision para reclutar.',
+        description: session.permissions.includes('workspace:read') ? 'Abre tu espacio operativo.' : 'Pide revisión para reclutar.',
         icon: BriefcaseBusiness,
         action: () =>
           void navigate(
@@ -346,7 +346,7 @@ export function ProfileOnboardingFlow() {
       await session.refresh()
       setIsComplete(true)
       toast.success('Perfil listo', {
-        description: 'Tu perfil base quedo preparado.'
+        description: 'Tu perfil base quedó preparado.'
       })
     } catch (error) {
       await captureClientError({
@@ -488,7 +488,7 @@ export function ProfileOnboardingFlow() {
                               <Input
                                 autoComplete="name"
                                 className="h-13 rounded-2xl"
-                                placeholder="Ej. Maria Reyes"
+                                placeholder="Ej. John Doe"
                                 {...form.register('fullName')}
                               />
                               <FieldError message={form.formState.errors.fullName?.message} />
@@ -498,7 +498,7 @@ export function ProfileOnboardingFlow() {
                               <span className="text-[13px] font-semibold text-(--app-text)">Nombre visible</span>
                               <Input
                                 className="h-13 rounded-2xl"
-                                placeholder="Ej. Maria R."
+                                placeholder="Ej. John D."
                                 {...form.register('displayName')}
                               />
                               <FieldError message={form.formState.errors.displayName?.message} />
@@ -517,7 +517,7 @@ export function ProfileOnboardingFlow() {
                             </label>
 
                             <label className="block space-y-1.5">
-                              <span className="text-[13px] font-semibold text-(--app-text)">Pais</span>
+                              <span className="text-[13px] font-semibold text-(--app-text)">País</span>
                               <Input
                                 className="h-13 rounded-2xl uppercase"
                                 inputMode="text"
@@ -602,7 +602,7 @@ export function ProfileOnboardingFlow() {
                         <strong className="mt-1 block text-(--app-text)">{previewLocale}</strong>
                       </div>
                       <div className="rounded-[14px] bg-(--app-surface) p-3">
-                        <span className="block text-(--app-text-subtle)">Pais</span>
+                        <span className="block text-(--app-text-subtle)">País</span>
                         <strong className="mt-1 block text-(--app-text)">{previewCountry.toUpperCase()}</strong>
                       </div>
                     </div>

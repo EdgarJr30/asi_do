@@ -49,7 +49,7 @@ const Dashboard = ({ onCandidateClick, onNavigate, onPostJob }) => {
       {/* Greeting */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Buenos días, María</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Buenos días, John Doe</h1>
           <p style={{ fontSize: 14, color: "var(--text-muted)", margin: 0 }}>Lunes, 26 de abril · Tienes 3 entrevistas programadas hoy.</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>

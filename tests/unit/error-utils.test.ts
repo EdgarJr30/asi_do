@@ -21,7 +21,7 @@ describe('error utils', () => {
       toBootstrapFirstPlatformOwnerErrorMessage({
         message: 'A platform owner already exists'
       })
-    ).toBe('Ya existe un primer admin activo. Este boton solo funciona una vez por plataforma.')
+    ).toBe('Ya existe un primer admin activo. Este botón solo funciona una vez por plataforma.')
   })
 
   it('falls back to a generic message for unknown values', () => {

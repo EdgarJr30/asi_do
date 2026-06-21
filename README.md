@@ -2,7 +2,7 @@
 
 ## Espanol
 
-Plataforma SaaS multi-tenant de reclutamiento, proyectos, voluntariado y servicios profesionales para miembros ASI aprobados, con perfiles profesionales reutilizables, CV precargado, aplicacion a oportunidades, colaboracion ATS-lite (gestión básica de candidatos) y experiencia PWA mobile-first.
+Plataforma SaaS multi-tenant de reclutamiento, proyectos, voluntariado y servicios profesionales para miembros ASI aprobados, con perfiles profesionales reutilizables, CV precargado, aplicación a oportunidades, colaboración de pipeline y experiencia PWA mobile-first.
 
 ### Objetivo
 
@@ -82,7 +82,7 @@ Dentro de `app`, las superficies activas siguen siendo `auth`, `candidate`, `wor
 - `docs/governance/TESTING_RULES.md` define como el proyecto se verifica a si mismo.
 - `docs/governance/SECURITY_RULES.md` fija la postura de seguridad web, OSINT y proteccion de reglas de negocio/arquitectura.
 - La base PWA evita dependencias con vulnerabilidades conocidas y usa integracion propia de `manifest` + `service worker`.
-- La base `database-first` arranca con una migracion inicial de identidad/RBAC, aprobacion de operadores de tenant y buckets privados de Supabase Storage.
+- La base `database-first` arranca con una migracion inicial de identidad/RBAC, aprobación de operadores de tenant y buckets privados de Supabase Storage.
 
 ### Flujo de trabajo de bajo consumo
 
@@ -91,7 +91,7 @@ Para gastar menos creditos por tarea:
 - pide una sola meta concreta por solicitud
 - menciona archivos o features exactos cuando los conozcas
 - si solo quieres diagnostico, dilo explicitamente
-- pide validacion minima cuando no haga falta correr todo el proyecto
+- pide validación mínima cuando no haga falta correr todo el proyecto
 - evita pedir revisiones globales del repo salvo que de verdad quieras una auditoria amplia
 
 Plantilla rapida:
@@ -100,14 +100,14 @@ Plantilla rapida:
 Objetivo:
 Alcance:
 Restricciones:
-Validacion esperada:
+Validación esperada:
 ```
 
 Referencia corta: `docs/checklists/CODEX_TASK_BRIEF.md`
 
 ### Comandos
 
-Este repo usa `npm` como gestor de paquetes oficial y conserva `package-lock.json` como lockfile canonico. No uses `pnpm` ni `yarn` para instalar dependencias o correr scripts salvo que la configuracion del repositorio cambie de forma explicita.
+Este repo usa `npm` como gestor de paquetes oficial y conserva `package-lock.json` como lockfile canónico. No uses `pnpm` ni `yarn` para instalar dependencias o correr scripts salvo que la configuración del repositorio cambie de forma explícita.
 
 ```bash
 npm install
@@ -152,7 +152,7 @@ VITE_SUPABASE_ANON_KEY=
 VITE_WEB_PUSH_PUBLIC_KEY=
 ```
 
-Configurar tambien en Supabase Edge Functions:
+Configurar también en Supabase Edge Functions:
 
 ```bash
 WEB_PUSH_VAPID_PUBLIC_KEY=
@@ -166,7 +166,7 @@ La primera base del MVP ya define en Supabase:
 
 - `public.users` sincronizado desde `auth.users`
 - RBAC de plataforma y tenant
-- `recruiter_requests` para aprobacion administrativa de operadores antes de crear tenants
+- `recruiter_requests` para aprobación administrativa de operadores antes de crear tenants
 - `tenants`, `company_profiles`, `memberships`, `audit_logs`
 - `notification_preferences`, `notifications`, `push_subscriptions`, `notification_deliveries`, `notification_delivery_logs`
 - buckets privados `user-media`, `company-assets` y `verification-documents`
@@ -178,15 +178,15 @@ La primera base del MVP ya define en Supabase:
 El flujo por defecto queda en **local + preview + production** usando **GitHub Actions + Netlify**:
 
 - `CI`: corre `npm run verify` en cada PR y en cada push a `main`.
-- `Preview`: Netlify crea `Deploy Previews` automaticamente para cada PR al conectar el repo.
-- `Production`: Netlify publica automaticamente desde la rama `main`.
+- `Preview`: Netlify crea `Deploy Previews` automáticamente para cada PR al conectar el repo.
+- `Production`: Netlify publica automáticamente desde la rama `main`.
 
 Archivos clave:
 
 - `.github/workflows/ci.yml`
 - `netlify.toml`
 
-Configuracion recomendada:
+Configuración recomendada:
 
 - conectar el repositorio a Netlify con `main` como production branch
 - configurar en Netlify las variables `VITE_APP_NAME`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`
@@ -196,7 +196,7 @@ Configuracion recomendada:
 
 ## English
 
-Multi-tenant recruiting and jobs SaaS with reusable professional profiles, preloaded CVs, job applications, ATS-lite collaboration, and a mobile-first PWA experience.
+Multi-tenant recruiting and jobs SaaS with reusable professional profiles, preloaded CVs, job applications, pipeline collaboration, and a mobile-first PWA experience.
 
 ### Goal
 

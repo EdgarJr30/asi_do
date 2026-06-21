@@ -11,7 +11,7 @@ describe('job schemas', () => {
     const result = jobPostingSchema.safeParse({
       title: 'Frontend engineer',
       slug: 'frontend-engineer',
-      summary: 'Vacante enfocada en producto digital con ownership tecnico.',
+      summary: 'Vacante enfocada en producto digital con ownership técnico.',
       description:
         'Buscamos una persona que pueda construir experiencias web robustas, colaborar con producto y dejar componentes reutilizables en una base React moderna.',
       workplaceType: 'remote',

@@ -186,7 +186,7 @@ function CandidateProfileEditor({
   const saveMutation = useMutation({
     mutationFn: async (values: CandidateProfileFormValues) => {
       if (!session.authUser) {
-        throw new Error('Necesitas una sesion activa para guardar tu perfil candidato.')
+        throw new Error('Necesitas una sesión activa para guardar tu perfil candidato.')
       }
 
       return saveCandidateProfileBundle({
@@ -237,7 +237,7 @@ function CandidateProfileEditor({
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: CANDIDATE_PROFILE_QUERY_KEY })
       toast.success('Perfil candidato actualizado', {
-        description: 'Tu identidad profesional reusable ya quedo guardada.'
+        description: 'Tu identidad profesional reusable ya quedó guardada.'
       })
     },
     onError: async (error) => {
@@ -255,7 +255,7 @@ function CandidateProfileEditor({
   const uploadResumeMutation = useMutation({
     mutationFn: async (file: File) => {
       if (!session.authUser) {
-        throw new Error('Necesitas una sesion activa para subir un CV.')
+        throw new Error('Necesitas una sesión activa para subir un CV.')
       }
 
       const preparedFile = await prepareUploadFile(file, {
@@ -273,7 +273,7 @@ function CandidateProfileEditor({
       setResumeFileError(null)
       await queryClient.invalidateQueries({ queryKey: CANDIDATE_PROFILE_QUERY_KEY })
       toast.success('CV cargado', {
-        description: 'El archivo privado ya quedo listo para reusar en futuras aplicaciones.'
+        description: 'El archivo privado ya quedó listo para reusar en futuras aplicaciones.'
       })
     },
     onError: async (error) => {
@@ -334,7 +334,7 @@ function CandidateProfileEditor({
   const visibilityMutation = useMutation({
     mutationFn: async (nextValue: boolean) => {
       if (!session.authUser) {
-        throw new Error('Necesitas una sesion activa para cambiar tu visibilidad.')
+        throw new Error('Necesitas una sesión activa para cambiar tu visibilidad.')
       }
 
       return updateCandidateVisibility({
@@ -452,7 +452,7 @@ function CandidateProfileEditor({
                   <Input placeholder="Santo Domingo" {...form.register('cityName')} />
                 </label>
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Pais</span>
+                  <span>País</span>
                   <Input maxLength={2} placeholder="DO" {...form.register('countryCode')} />
                   <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.countryCode?.message}</p>
                 </label>
@@ -499,7 +499,7 @@ function CandidateProfileEditor({
                 }}
               />
               <p className="text-xs text-zinc-500">
-                Acepta PDF, DOC y DOCX. Si pesa mas de {MAX_UPLOAD_SIZE_LABEL}, se rechazara con el peso detectado.
+                Acepta PDF, DOC y DOCX. Si pesa más de {MAX_UPLOAD_SIZE_LABEL}, se rechazará con el peso detectado.
               </p>
               {resumeFileError ? <p className="text-xs text-rose-600 dark:text-rose-300">{resumeFileError}</p> : null}
             </label>
@@ -588,7 +588,7 @@ function CandidateProfileEditor({
                         onChange={(event) => updateCollectionItem(setExperiences, experience.id, { employmentType: event.target.value })}
                       />
                       <Input
-                        placeholder="Ciudad / pais"
+                        placeholder="Ciudad / país"
                         value={experience.cityName}
                         onChange={(event) => updateCollectionItem(setExperiences, experience.id, { cityName: event.target.value })}
                       />
@@ -657,12 +657,12 @@ function CandidateProfileEditor({
                         onChange={(event) => updateCollectionItem(setEducations, education.id, { institutionName: event.target.value })}
                       />
                       <Input
-                        placeholder="Titulo o grado"
+                        placeholder="Título o grado"
                         value={education.degreeName}
                         onChange={(event) => updateCollectionItem(setEducations, education.id, { degreeName: event.target.value })}
                       />
                       <Input
-                        placeholder="Area de estudio"
+                        placeholder="Área de estudio"
                         value={education.fieldOfStudy}
                         onChange={(event) => updateCollectionItem(setEducations, education.id, { fieldOfStudy: event.target.value })}
                       />
@@ -850,7 +850,7 @@ export function CandidateProfilePage() {
     queryKey: CANDIDATE_PROFILE_QUERY_KEY,
     queryFn: async () => {
       if (!session.authUser) {
-        throw new Error('Necesitas una sesion activa para editar tu perfil candidato.')
+        throw new Error('Necesitas una sesión activa para editar tu perfil candidato.')
       }
 
       return fetchMyCandidateProfile(session.authUser.id)

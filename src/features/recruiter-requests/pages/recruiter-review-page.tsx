@@ -235,7 +235,7 @@ export function RecruiterReviewPage() {
     <div className="space-y-4">
       <Card className="bg-(--app-surface-muted)">
         <CardHeader>
-          <Badge variant="soft">Revision admin</Badge>
+          <Badge variant="soft">Revisión admin</Badge>
           <CardTitle>Cola unificada de aprobaciones</CardTitle>
           <CardDescription>
             Esta vista consolida solicitudes de operador, expedientes institucionales y validaciones pastorales/regionales según tus permisos activos.

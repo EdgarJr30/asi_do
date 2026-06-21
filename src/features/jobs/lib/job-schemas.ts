@@ -5,7 +5,7 @@ import { compensationTypeValues, opportunityTypeValues } from '@/features/opport
 export const jobPostingSchema = z
   .object({
     opportunityType: z.enum(opportunityTypeValues),
-    title: z.string().trim().min(3, 'Usa un titulo de al menos 3 caracteres.').max(120),
+    title: z.string().trim().min(3, 'Usa un título de al menos 3 caracteres.').max(120),
     slug: z
       .string()
       .trim()
@@ -39,7 +39,7 @@ export const jobPostingSchema = z
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['compensationMinAmount'],
-          message: 'El monto minimo debe ser numerico.'
+          message: 'El monto mínimo debe ser numerico.'
         })
       }
 
@@ -47,7 +47,7 @@ export const jobPostingSchema = z
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['compensationMaxAmount'],
-          message: 'El monto maximo debe ser numerico.'
+          message: 'El monto máximo debe ser numerico.'
         })
       }
 
@@ -55,7 +55,7 @@ export const jobPostingSchema = z
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['compensationMaxAmount'],
-          message: 'El monto maximo debe ser mayor o igual al minimo.'
+          message: 'El monto máximo debe ser mayor o igual al mínimo.'
         })
       }
     }

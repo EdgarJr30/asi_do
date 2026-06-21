@@ -16,7 +16,7 @@ import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 
 const moderationGuardrails = [
   'OSINT solo con fuentes publicas y proposito legitimo.',
-  'No usar atributos protegidos para decisiones de contratacion.',
+  'No usar atributos protegidos para decisiones de contratación.',
   'Las acciones de riesgo deben ser auditables.',
   'Seguridad web, RLS y reglas de negocio son capas inseparables.'
 ] as const
@@ -63,13 +63,13 @@ export function ModerationOverviewPage() {
     mutationFn: applyModerationAction,
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['moderation-cases'] })
-      toast.success('Accion aplicada', {
-        description: `La accion ${variables.actionType} ya quedo auditada en el caso.`
+      toast.success('Acción aplicada', {
+        description: `La acción ${variables.actionType} ya quedó auditada en el caso.`
       })
     },
     onError: async (error) => {
       await reportErrorWithToast({
-        title: 'No pudimos aplicar la accion',
+        title: 'No pudimos aplicar la acción',
         source: 'moderation.case-action',
         route: surfacePaths.admin.moderation,
         userId: session.authUser?.id ?? null,
@@ -101,7 +101,7 @@ export function ModerationOverviewPage() {
         <Card>
           <CardHeader>
             <CardTitle>Abrir caso</CardTitle>
-            <CardDescription>Usa entity type + id para registrar una investigacion o accion operativa.</CardDescription>
+            <CardDescription>Usa entity type + id para registrar una investigación o acción operativa.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Select value={entityType} onChange={(event) => setEntityType(event.target.value)}>
@@ -167,7 +167,7 @@ export function ModerationOverviewPage() {
                 <Textarea
                   className="mt-3"
                   rows={3}
-                  placeholder="Nota operativa para la accion"
+                  placeholder="Nota operativa para la acción"
                   value={actionNotes[caseItem.id] ?? ''}
                   onChange={(event) =>
                     setActionNotes((previous) => ({

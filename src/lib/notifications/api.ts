@@ -73,7 +73,7 @@ function getSubscriptionKey(subscription: PushSubscription, keyName: 'p256dh' | 
   const key = subscription.getKey(keyName)
 
   if (!key) {
-    throw new Error(`La suscripcion push no incluye la clave ${keyName}.`)
+    throw new Error(`La suscripción push no incluye la clave ${keyName}.`)
   }
 
   return btoa(String.fromCharCode(...new Uint8Array(key)))
@@ -174,7 +174,7 @@ export async function sendNotification(values: SendNotificationInput): Promise<S
   const accessToken = sessionResponse.data.session?.access_token ?? null
 
   if (!accessToken) {
-    throw new Error('No encontramos una sesion valida para invocar la notificacion push.')
+    throw new Error('No encontramos una sesión valida para invocar la notificación push.')
   }
 
   const response = await client.functions.invoke('send-notification', {

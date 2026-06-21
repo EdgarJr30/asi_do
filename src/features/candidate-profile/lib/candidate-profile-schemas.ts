@@ -7,7 +7,7 @@ export const candidateProfileSchema = z.object({
   countryCode: z
     .string()
     .trim()
-    .max(2, 'Usa el codigo de pais de 2 letras.')
+    .max(2, 'Usa el código de país de 2 letras.')
     .transform((value) => value.toUpperCase())
     .optional()
     .or(z.literal('')),

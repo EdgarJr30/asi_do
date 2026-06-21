@@ -89,7 +89,7 @@ export function AdminConsolePage() {
               </CardHeader>
               <CardContent>
                 <Button className="w-full" variant="outline" onClick={() => void navigate(tool.href)}>
-                  Abrir modulo
+                  Abrir módulo
                 </Button>
               </CardContent>
             </Card>

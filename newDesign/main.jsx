@@ -53,7 +53,7 @@ const App = ({ initialView = "dashboard", initialAuth = "app", forceCollapsed = 
   };
 
   if (auth === "login") {
-    return <Login onLogin={() => { setAuth("app"); push("Sesión iniciada como María Reyes", "success"); }} onGoToRegister={() => setAuth("register")} />;
+    return <Login onLogin={() => { setAuth("app"); push("Sesión iniciada como John Doe", "success"); }} onGoToRegister={() => setAuth("register")} />;
   }
   if (auth === "register") {
     return <Register onRegister={() => { setAuth("app"); push("¡Cuenta creada con éxito!", "success"); }} onGoToLogin={() => setAuth("login")} />;

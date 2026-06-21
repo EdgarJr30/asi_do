@@ -390,7 +390,7 @@ export async function uploadPrivateFile(options: {
 
   if (options.file.size > MAX_UPLOAD_SIZE_BYTES) {
     throw new Error(
-      `El archivo pesa ${formatFileSize(options.file.size)} y supera el maximo de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)}. Comprime el archivo o carga uno de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)} o menos.`
+      `El archivo pesa ${formatFileSize(options.file.size)} y supera el máximo de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)}. Comprime el archivo o carga uno de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)} o menos.`
     )
   }
 
@@ -873,15 +873,15 @@ export function toBootstrapFirstPlatformOwnerErrorMessage(error: unknown) {
   const message = toErrorMessage(error)
 
   if (/a platform owner already exists/i.test(message)) {
-    return 'Ya existe un primer admin activo. Este boton solo funciona una vez por plataforma.'
+    return 'Ya existe un primer admin activo. Este botón solo funciona una vez por plataforma.'
   }
 
   if (/authentication required/i.test(message)) {
-    return 'Debes iniciar sesion antes de reclamar el rol inicial.'
+    return 'Debes iniciar sesión antes de reclamar el rol inicial.'
   }
 
   if (/platform owner role not found/i.test(message)) {
-    return 'La configuracion del rol inicial no esta disponible. Revisa la configuracion de RBAC.'
+    return 'La configuración del rol inicial no está disponible. Revisa la configuración de RBAC.'
   }
 
   return message

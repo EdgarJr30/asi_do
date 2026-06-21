@@ -47,10 +47,10 @@ function SessionStatus() {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <div>Cargando sesion</div>
+    return <div>Cargando sesión</div>
   }
 
-  return <div>Sesion lista: {session.authUser?.id ?? 'anon'}</div>
+  return <div>Sesión lista: {session.authUser?.id ?? 'anon'}</div>
 }
 
 beforeEach(() => {
@@ -83,7 +83,7 @@ describe('AppSessionProvider auth refresh behavior', () => {
       </AppSessionProvider>
     )
 
-    expect(await screen.findByText('Sesion lista: user-1')).toBeInTheDocument()
+    expect(await screen.findByText('Sesión lista: user-1')).toBeInTheDocument()
     expect(authState.fetchSessionSnapshot).toHaveBeenCalledTimes(1)
 
     act(() => {
@@ -95,8 +95,8 @@ describe('AppSessionProvider auth refresh behavior', () => {
       })
     })
 
-    expect(screen.queryByText('Cargando sesion')).not.toBeInTheDocument()
-    expect(screen.getByText('Sesion lista: user-1')).toBeInTheDocument()
+    expect(screen.queryByText('Cargando sesión')).not.toBeInTheDocument()
+    expect(screen.getByText('Sesión lista: user-1')).toBeInTheDocument()
     expect(authState.fetchSessionSnapshot).toHaveBeenCalledTimes(1)
   })
 })

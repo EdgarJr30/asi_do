@@ -175,7 +175,7 @@ const Sidebar = ({ collapsed, onToggle, currentView, currentItem, onNavigate, mo
           <div className="avatar avatar-sm" style={{ background: "linear-gradient(135deg, #4869b6, #8aa2d8)" }}>MR</div>
           {!collapsed && (
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "white" }}>María Reyes</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "white" }}>John Doe</div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>Reclutadora Senior</div>
             </div>
           )}
@@ -250,7 +250,7 @@ const Navbar = ({ breadcrumb, onMobileMenu, onNotifBell }) => {
 
       <button style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px 4px 4px", borderRadius: 999, transition: "background 120ms ease" }} onMouseEnter={e => e.currentTarget.style.background = "var(--bg-wash)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
         <div className="avatar avatar-sm" style={{ background: "linear-gradient(135deg, #4869b6, #8aa2d8)" }}>MR</div>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }} className="navbar-user-name">María R.</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }} className="navbar-user-name">John D.</span>
         <span style={{ color: "var(--text-subtle)" }}><Icon name="chevron-down" size={14} /></span>
       </button>
     </header>

@@ -91,7 +91,7 @@ export function TalentDirectoryPage() {
             <CardDescription>
               {searchQuery.data
                 ? `${searchQuery.data.length} perfiles visibles encontrados con este criterio.`
-                : 'Usa los filtros para comenzar una busqueda mas precisa.'}
+                : 'Usa los filtros para comenzar una búsqueda más precisa.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">

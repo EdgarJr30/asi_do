@@ -1,7 +1,7 @@
 {
   "name": "ASI Rep. Dominicana",
   "short_name": "ASI",
-  "description": "Plataforma SaaS de reclutamiento y empleo con perfiles profesionales, CV reutilizable y ATS-lite.",
+  "description": "Plataforma SaaS de reclutamiento y empleo con perfiles profesionales y CV reutilizable.",
   "theme_color": "#3955B8",
   "background_color": "#ffffff",
   "display": "standalone",
@@ -19,7 +19,7 @@
       "src": "/icons/app-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any máskable"
     }
   ]
 }

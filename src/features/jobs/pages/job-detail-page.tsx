@@ -131,7 +131,7 @@ export function JobDetailPage() {
                 </Button>
               ) : (
                 <Link className={linkButtonClassName} to="/auth/sign-in">
-                  Inicia sesion para guardar
+                  Inicia sesión para guardar
                 </Link>
               )}
               <Link className={cn(linkButtonClassName, 'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-900')} to={surfacePaths.public.jobs}>
