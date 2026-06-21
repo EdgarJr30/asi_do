@@ -1,5 +1,6 @@
+import { uploadPrivateFile } from '@/features/auth/lib/auth-api'
 import { supabase } from '@/lib/supabase/client'
-import type { Tables } from '@/shared/types/database'
+import type { Tables, TablesInsert } from '@/shared/types/database'
 
 export type MembershipApplication = Tables<'institutional_membership_applications'>
 export type MembershipPayment = Tables<'membership_payments'>
@@ -124,6 +125,57 @@ export async function updateMembershipPaymentSettings(
     .eq('id', id)
     .select('*')
     .single()
+
+  if (error) {
+    throw error
+  }
+  return data
+}
+
+export interface SubmitMembershipPaymentInput {
+  applicationId: string
+  memberUserId: string
+  categorySlug: string
+  amount: number | null
+  currency: string
+  file: File
+  referenceNote?: string
+}
+
+/**
+ * Sube el comprobante de transferencia al bucket privado y registra el pago
+ * (`status='submitted'`) para que un admin lo verifique. Cubre el período anual.
+ */
+export async function submitMembershipPaymentReceipt(input: SubmitMembershipPaymentInput): Promise<MembershipPayment> {
+  const client = requireSupabase()
+
+  const receiptPath = await uploadPrivateFile({
+    bucket: 'membership-receipts',
+    ownerUserId: input.memberUserId,
+    file: input.file,
+    prefix: 'receipt'
+  })
+
+  const periodStart = new Date()
+  const periodEnd = new Date(periodStart)
+  periodEnd.setFullYear(periodEnd.getFullYear() + 1)
+
+  const payload: TablesInsert<'membership_payments'> = {
+    application_id: input.applicationId,
+    member_user_id: input.memberUserId,
+    category_slug: input.categorySlug,
+    amount: input.amount,
+    currency: input.currency,
+    method: 'bank_transfer',
+    period_start: periodStart.toISOString().slice(0, 10),
+    period_end: periodEnd.toISOString().slice(0, 10),
+    receipt_path: receiptPath,
+    reference_note: input.referenceNote?.trim() || null,
+    status: 'submitted',
+    uploaded_by_user_id: input.memberUserId
+  }
+
+  const { data, error } = await client.from('membership_payments').insert(payload).select('*').single()
 
   if (error) {
     throw error

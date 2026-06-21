@@ -14,7 +14,7 @@ import {
 import { isPermissionCode, type PermissionCode } from '@/shared/constants/permissions'
 import type { Json, Tables, TablesInsert } from '@/shared/types/database'
 
-export type PrivateStorageBucket = 'candidate-resumes' | 'user-media' | 'verification-documents'
+export type PrivateStorageBucket = 'candidate-resumes' | 'user-media' | 'verification-documents' | 'membership-receipts'
 
 export interface AppMembership {
   id: string
@@ -494,6 +494,7 @@ export async function submitInstitutionalMembershipApplication(values: {
   pastorName: string
   pastorEmail: string
   pastorPhone: string
+  churchId?: string | null
   homeChurchName: string
   churchCity: string
   churchStateProvince: string
@@ -519,6 +520,7 @@ export async function submitInstitutionalMembershipApplication(values: {
     pastor_name: values.pastorName,
     pastor_email: values.pastorEmail,
     pastor_phone: values.pastorPhone,
+    church_id: values.churchId ?? null,
     home_church_name: values.homeChurchName,
     church_city: values.churchCity,
     church_state_province: values.churchStateProvince,

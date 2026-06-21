@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertCircle,
   ArrowRight,
@@ -11,7 +11,8 @@ import {
   FileText,
   LogOut,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  UploadCloud
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -21,7 +22,12 @@ import { BrandLockup } from '@/components/ui/app-brand'
 import { Button } from '@/components/ui/button'
 import { PageLoader } from '@/components/ui/loader'
 import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api'
-import { fetchMyMembershipStatus, getCategoryDue, type MembershipStatusBundle } from '@/features/membership/lib/membership-api'
+import {
+  fetchMyMembershipStatus,
+  getCategoryDue,
+  submitMembershipPaymentReceipt,
+  type MembershipStatusBundle
+} from '@/features/membership/lib/membership-api'
 import { cn } from '@/lib/utils/cn'
 
 type StepState = 'done' | 'current' | 'pending' | 'blocked'
@@ -140,6 +146,7 @@ const stateMeta: Record<StepState, { label: string; dot: string; badge: string }
 export function MembershipStatusPage() {
   const session = useAppSession()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const userId = session.authUser?.id ?? null
   const displayName = session.profile?.display_name ?? session.profile?.full_name ?? session.authUser?.email ?? 'miembro'
 
@@ -162,6 +169,10 @@ export function MembershipStatusPage() {
   const due = getCategoryDue(bundle.settings, bundle.application?.category_slug)
   const paymentStep = steps.find((step) => step.key === 'payment')
   const showTransferDetails = paymentStep?.state === 'current' && Boolean(bundle.settings)
+  const canUploadReceipt =
+    paymentStep?.state === 'current' &&
+    Boolean(bundle.application) &&
+    (!bundle.payment || bundle.payment.status === 'rejected')
 
   return (
     <div className="min-h-dvh bg-(--app-canvas-strong) px-4 py-8 sm:py-12">
@@ -236,6 +247,18 @@ export function MembershipStatusPage() {
                         {step.key === 'payment' && showTransferDetails ? (
                           <TransferDetails settings={bundle.settings!} dueAmount={due?.amount ?? null} categoryLabel={due?.label ?? bundle.application?.category_name ?? null} />
                         ) : null}
+
+                        {/* Subida de comprobante */}
+                        {step.key === 'payment' && canUploadReceipt && bundle.application ? (
+                          <ReceiptUpload
+                            applicationId={bundle.application.id}
+                            memberUserId={userId!}
+                            categorySlug={bundle.application.category_slug}
+                            amount={due?.amount ?? null}
+                            currency={bundle.settings?.currency ?? 'USD'}
+                            onUploaded={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
+                          />
+                        ) : null}
                       </div>
                     </li>
                   )
@@ -302,8 +325,92 @@ function TransferDetails({
       {settings.instructions ? <p className="mt-3 text-xs leading-5 text-(--app-text-muted)">{settings.instructions}</p> : null}
 
       <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-(--app-surface) px-3 py-2 text-xs text-(--app-text-muted)">
-        <Clock className="size-3.5" /> La carga del comprobante estará disponible en breve. También un pastor o administrador puede subirlo por ti.
+        <Clock className="size-3.5" /> Después de transferir, sube tu comprobante abajo. También un pastor o administrador puede subirlo por ti.
       </p>
+    </div>
+  )
+}
+
+const ACCEPTED_RECEIPT_TYPES = 'application/pdf,image/png,image/jpeg,image/webp'
+
+function ReceiptUpload({
+  applicationId,
+  memberUserId,
+  categorySlug,
+  amount,
+  currency,
+  onUploaded
+}: {
+  applicationId: string
+  memberUserId: string
+  categorySlug: string
+  amount: number | null
+  currency: string
+  onUploaded: () => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [referenceNote, setReferenceNote] = useState('')
+
+  const uploadMutation = useMutation({
+    mutationFn: async () => {
+      if (!file) {
+        throw new Error('Selecciona el archivo del comprobante.')
+      }
+      return submitMembershipPaymentReceipt({
+        applicationId,
+        memberUserId,
+        categorySlug,
+        amount,
+        currency,
+        file,
+        referenceNote
+      })
+    },
+    onSuccess: () => {
+      setFile(null)
+      setReferenceNote('')
+      if (inputRef.current) {
+        inputRef.current.value = ''
+      }
+      onUploaded()
+    }
+  })
+
+  return (
+    <div className="mt-3 rounded-2xl border border-(--app-border) bg-(--app-surface) p-4">
+      <p className="text-sm font-semibold text-(--app-text)">Sube tu comprobante</p>
+      <p className="mt-0.5 text-xs text-(--app-text-muted)">PDF o imagen (PNG, JPG, WebP), máximo 10 MB.</p>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ACCEPTED_RECEIPT_TYPES}
+        onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+        disabled={uploadMutation.isPending}
+        className="mt-3 block w-full text-sm text-(--app-text-muted) file:mr-3 file:rounded-lg file:border-0 file:bg-(--app-surface-muted) file:px-3 file:py-2 file:text-sm file:font-semibold file:text-(--app-text) hover:file:bg-(--app-border)"
+      />
+
+      <input
+        type="text"
+        value={referenceNote}
+        onChange={(event) => setReferenceNote(event.target.value)}
+        disabled={uploadMutation.isPending}
+        placeholder="Referencia o número de transferencia (opcional)"
+        className="mt-3 block w-full rounded-lg border border-(--app-border) bg-(--app-surface) px-3 py-2 text-sm text-(--app-text) placeholder:text-(--app-text-subtle) focus:border-primary-500 focus:outline-none"
+      />
+
+      {uploadMutation.error ? (
+        <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">{toErrorMessage(uploadMutation.error)}</p>
+      ) : null}
+
+      <Button
+        className="mt-3 h-10"
+        disabled={!file || uploadMutation.isPending}
+        onClick={() => uploadMutation.mutate()}
+      >
+        <UploadCloud className="size-4" /> {uploadMutation.isPending ? 'Subiendo…' : 'Enviar comprobante'}
+      </Button>
     </div>
   )
 }
