@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Activity,
+  Banknote,
   BarChart3,
   Bell,
   BriefcaseBusiness,
@@ -850,7 +851,8 @@ const adminIconByHref: Partial<Record<string, LucideIcon>> = {
   [surfacePaths.admin.approvals]: Shield,
   [surfacePaths.admin.platform]: Building2,
   [surfacePaths.admin.moderation]: Layers3,
-  [surfacePaths.admin.errors]: FileText
+  [surfacePaths.admin.errors]: FileText,
+  [surfacePaths.admin.payments]: Banknote
 }
 
 /**

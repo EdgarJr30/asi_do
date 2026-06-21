@@ -73,6 +73,64 @@ export async function fetchMyMembershipStatus(userId: string): Promise<Membershi
   return { application, payment, settings: settingsResponse.data ?? null }
 }
 
+/** Configuración de pago activa (datos bancarios + cuotas). Null si no hay. */
+export async function fetchMembershipPaymentSettings(): Promise<MembershipPaymentSettings | null> {
+  const client = requireSupabase()
+  const { data, error } = await client
+    .from('membership_payment_settings')
+    .select('*')
+    .eq('is_active', true)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+  return data ?? null
+}
+
+export interface MembershipPaymentSettingsInput {
+  bankName: string
+  accountHolder: string
+  accountNumber: string
+  accountType: string
+  routingOrSwift: string
+  currency: string
+  instructions: string
+  duesByCategory: Record<string, { amount: number | null; label: string }>
+}
+
+/** Actualiza (admin) la configuración de pago. RLS exige is_platform_admin(). */
+export async function updateMembershipPaymentSettings(
+  id: string,
+  input: MembershipPaymentSettingsInput,
+  actorUserId: string | null
+): Promise<MembershipPaymentSettings> {
+  const client = requireSupabase()
+  const { data, error } = await client
+    .from('membership_payment_settings')
+    .update({
+      bank_name: input.bankName.trim(),
+      account_holder: input.accountHolder.trim(),
+      account_number: input.accountNumber.trim(),
+      account_type: input.accountType.trim(),
+      routing_or_swift: input.routingOrSwift.trim(),
+      currency: input.currency.trim() || 'USD',
+      instructions: input.instructions.trim(),
+      dues_by_category: input.duesByCategory,
+      updated_by_user_id: actorUserId
+    })
+    .eq('id', id)
+    .select('*')
+    .single()
+
+  if (error) {
+    throw error
+  }
+  return data
+}
+
 /** Extrae la cuota de una categoría desde la configuración (jsonb dues_by_category). */
 export function getCategoryDue(settings: MembershipPaymentSettings | null, categorySlug: string | null | undefined): CategoryDue | null {
   if (!settings || !categorySlug) {

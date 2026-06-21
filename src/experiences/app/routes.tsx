@@ -41,6 +41,7 @@ import { AuthShell } from '@/experiences/app/layouts/auth-shell'
 import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
 import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
 import { AppEntryRedirect } from '@/experiences/app/routes/app-entry-redirect'
+import { MembershipPaymentsSettingsPage } from '@/features/membership/pages/membership-payments-settings-page'
 import { MembershipStatusPage } from '@/features/membership/pages/membership-status-page'
 import { approvalReviewPermissions } from '@/shared/constants/navigation'
 
@@ -263,6 +264,14 @@ export const applicationRoutes: RouteObject[] = [
         element: (
           <RequirePermission permission="audit_log:read" surface="admin">
             <ErrorLogReviewPage />
+          </RequirePermission>
+        )
+      },
+      {
+        path: 'payments',
+        element: (
+          <RequirePermission permission="platform_dashboard:read" surface="admin">
+            <MembershipPaymentsSettingsPage />
           </RequirePermission>
         )
       },

@@ -174,5 +174,12 @@ export const adminNavigationItems: NavigationItem[] = [
     description: 'Error review',
     requiresAuth: true,
     requiredPermission: 'audit_log:read'
+  },
+  {
+    title: 'Datos de pago',
+    href: surfacePaths.admin.payments,
+    description: 'Datos bancarios y cuotas de membresía',
+    requiresAuth: true,
+    requiredPermission: 'platform_dashboard:read'
   }
 ]
