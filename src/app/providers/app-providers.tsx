@@ -10,7 +10,7 @@ import { ThemeProvider } from '@/app/providers/theme-provider'
 
 function AppToaster() {
   const { resolvedTheme, theme } = useTheme()
-  return <Toaster position="top-center" richColors theme={(resolvedTheme ?? theme) === 'dark' ? 'dark' : 'light'} />
+  return <Toaster closeButton position="top-center" richColors theme={(resolvedTheme ?? theme) === 'dark' ? 'dark' : 'light'} />
 }
 
 export function AppProviders({ children }: PropsWithChildren) {
