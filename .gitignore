@@ -8,3 +8,8 @@ coverage
 *.tsbuildinfo
 vite.config.d.ts
 supabase/.temp/
+
+# Test artifacts (Playwright screenshots/traces)
+tmp/
+test-results/
+playwright-report/
