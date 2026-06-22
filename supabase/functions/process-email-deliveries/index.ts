@@ -129,6 +129,96 @@ function getEmailTheme(type: string) {
     }
   }
 
+  if (type === 'membership.application_submitted') {
+    return {
+      eyebrow: 'Pipeline de membresía',
+      accent: '#2b418f',
+      accentSoft: '#f4f7ff',
+      accentBorder: '#dfe7ff',
+      badgeLabel: 'Solicitud por revisar',
+      actionLabel: 'Revisar solicitud',
+      summaryTitle: 'Qué sucede ahora',
+      summaryItems: [
+        'Abre la cola de membresía para revisar la categoría, la iglesia y los datos del solicitante.',
+        'Aprueba, pide más información o rechaza; tu decisión avanza el pipeline automáticamente.'
+      ],
+      supportTitle: 'Separación de funciones',
+      supportBody: 'La aprobación de la referencia pastoral y la verificación del pago se gestionan en pasos distintos para conservar control y trazabilidad.'
+    }
+  }
+
+  if (type === 'membership.payment_submitted') {
+    return {
+      eyebrow: 'Pipeline de membresía',
+      accent: '#3955b8',
+      accentSoft: '#eef4ff',
+      accentBorder: '#d5e0ff',
+      badgeLabel: 'Pago por verificar',
+      actionLabel: 'Verificar pago',
+      summaryTitle: 'Tu siguiente paso',
+      summaryItems: [
+        'Abre la consola de membresía para revisar el comprobante de transferencia.',
+        'Verifica o rechaza el pago; la activación de la cuenta queda habilitada con el pago verificado.'
+      ],
+      supportTitle: 'Validación admin-only',
+      supportBody: 'Solo los administradores validan pagos, lo que mantiene la separación de funciones del pipeline de membresía.'
+    }
+  }
+
+  if (type === 'membership.reviewed') {
+    return {
+      eyebrow: 'Tu solicitud de membresía',
+      accent: '#3955b8',
+      accentSoft: '#eef4ff',
+      accentBorder: '#d5e0ff',
+      badgeLabel: 'Solicitud revisada',
+      actionLabel: 'Ver mi panel de membresía',
+      summaryTitle: 'Tu siguiente paso',
+      summaryItems: [
+        'Abre tu panel de membresía para ver el detalle de la decisión y las notas del revisor.',
+        'Si te pidieron más información, podrás responder y reenviar tu solicitud desde el mismo panel.'
+      ],
+      supportTitle: 'Seguimiento centralizado',
+      supportBody: 'Tu progreso se actualiza en vivo en el panel de membresía y en tu centro de notificaciones.'
+    }
+  }
+
+  if (type === 'membership.payment_reviewed') {
+    return {
+      eyebrow: 'Tu pago de membresía',
+      accent: '#2b418f',
+      accentSoft: '#f4f7ff',
+      accentBorder: '#dfe7ff',
+      badgeLabel: 'Pago revisado',
+      actionLabel: 'Ver mi panel de membresía',
+      summaryTitle: 'Tu siguiente paso',
+      summaryItems: [
+        'Revisa el estado de tu pago en el panel de membresía.',
+        'Si fue rechazado, podrás subir un nuevo comprobante desde el mismo panel.'
+      ],
+      supportTitle: 'Activación gobernada',
+      supportBody: 'Con tu solicitud aprobada y tu pago verificado, un administrador habilitará tu acceso completo a la plataforma.'
+    }
+  }
+
+  if (type === 'membership.activated') {
+    return {
+      eyebrow: 'Bienvenido a ASI Rep. Dominicana',
+      accent: '#4f6ed8',
+      accentSoft: '#eef3ff',
+      accentBorder: '#dfe7ff',
+      badgeLabel: 'Membresía activa',
+      actionLabel: 'Entrar a la plataforma',
+      summaryTitle: 'Ya tienes acceso',
+      summaryItems: [
+        'Tu cuenta está activa y tu membresía es válida por un año.',
+        'Ingresa a la plataforma para completar tu perfil y aprovechar todas las herramientas.'
+      ],
+      supportTitle: 'Renovación',
+      supportBody: 'Te avisaremos antes del vencimiento para que renueves tu membresía sin interrupciones.'
+    }
+  }
+
   return {
     eyebrow: 'Notificación oficial',
     accent: '#4f6ed8',

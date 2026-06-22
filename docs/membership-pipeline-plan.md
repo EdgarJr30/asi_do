@@ -1,7 +1,7 @@
 # Plan: Membresía → Pago → Aprobación → Activación (gate del ATS)
 
 > Pipeline manual (tipo SaaS de membresía) que controla el acceso a la plataforma/ATS.
-> Estado: **Fases 1-4 ✅ completas** (registro→pago→aprobación→verificación→activación, validado e2e). Sigue Fase 5 (notificaciones). Decisiones acordadas el 2026-06-20.
+> Estado: **Fases 1-5 ✅ completas** (registro→pago→aprobación→verificación→activación + notificaciones por email con envío automático, validado e2e). Pendiente solo: recordatorios de renovación. Decisiones acordadas el 2026-06-20.
 
 ## 1. Máquina de estados (un solo carril)
 
@@ -95,7 +95,11 @@ autoridad a pastores.
    - ✅ Acciones por solicitud: revisar (aprobar/más-info/rechazar) vía RPC `review_membership_application`; verificar/rechazar pago vía `verify_membership_payment`; ver comprobante (URL firmada); **Activar cuenta** vía `activate_member` (habilitado solo con solicitud aprobada + pago verificado; flip de flags + `+1 año`). Todo audita.
    - ✅ Consolidación: se retiró la sección de membresía de `RecruiterReviewPage` (`/admin/approvals`) que usaba un UPDATE directo sin auditoría; se eliminaron las funciones muertas `reviewInstitutionalMembershipApplication`/`listPendingInstitutionalMembershipApplications`. El módulo de datos bancarios ya existía en `/admin/payments`.
    - ✅ **Validado e2e** (`tests/e2e/membership-admin-console.spec.ts`): un admin de plataforma aprueba → verifica pago → activa; confirmado en BD (flags del miembro a `active`/`approved`, `+1 año`) y en `audit_logs` (`membership_payment.verified`, `member.activated`, actor=admin).
-5. **Notificaciones + pulido** — eventos por transición; recordatorios de renovación (después).
+5. **Notificaciones + pulido** — eventos por transición; recordatorios de renovación (después). **✅ COMPLETA (envío automático)**
+   - ✅ Migración `20260622150000_membership_notifications.sql`: cablea los 5 eventos de §6 a `system_create_notification` (inbox in-app + cola de email + push). Helper `notify_membership_admins` (fan-out a admins, excluye al actor); triggers `AFTER INSERT` para *solicitud enviada* (`membership.application_submitted` → pastor o admins) y *comprobante subido* (`membership.payment_submitted` → admins); RPCs `review_membership_application`/`verify_membership_payment`/`activate_member` recreadas con notificación al miembro (`membership.reviewed`, `membership.payment_reviewed`, `membership.activated`). Temas de email con estilo para los 5 tipos en `process-email-deliveries`.
+   - ✅ **Resend**: key específica del proyecto ASI + remitente `ASI Rep. Dominicana <noreply@mooncode.website>` (dominio verificado) en `.env.local` y en secretos de Supabase; función redesplegada. Camino real verificado (POST directo + invocación de la Edge Function → enviados).
+   - ✅ **Scheduler** (migración `20260622160000_email_dispatch_cron.sql`): job pg_cron cada minuto + pg_net que invoca el procesador cuando hay pendientes (antes no existía cron → emails atascados desde 2026-03-15). Config (URL/anon/secret) en `private.runtime_secrets`, fuera de git. **Verificado e2e**: notificación encolada → enviada sola en <60s (`sent`, resend HTTP 200).
+   - Pendiente: recordatorios de renovación (after).
 
 ## 8. Pendiente de contenido/config
 - **Cuotas (dues)** por categoría (las 3) + moneda → se cargan desde el módulo admin de settings.
