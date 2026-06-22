@@ -7,8 +7,10 @@ import {
   Banknote,
   BarChart3,
   Bell,
+  BellOff,
   BriefcaseBusiness,
   Building2,
+  CheckCheck,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -41,7 +43,7 @@ import { AppBottomNav, type AppNavGroup, type AppNavItem } from '@/components/ui
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api'
-import { fetchMyNotifications, markNotificationRead, type AppNotification } from '@/lib/notifications/api'
+import { fetchMyNotifications, markAllNotificationsRead, markNotificationRead, type AppNotification } from '@/lib/notifications/api'
 import { filterNavigationItems } from '@/lib/permissions/guards'
 import { cn } from '@/lib/utils/cn'
 import { PLATFORM_REGISTRATION_LOCKED, PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access'
@@ -237,10 +239,30 @@ function resolveUserIdentity(session: ReturnType<typeof useAppSession>) {
 }
 
 function formatNotificationTimestamp(value: string) {
-  return new Date(value).toLocaleString('es-DO', {
-    dateStyle: 'short',
-    timeStyle: 'short'
-  })
+  const created = new Date(value).getTime()
+  const diffMs = Date.now() - created
+
+  if (Number.isNaN(created)) {
+    return ''
+  }
+  const minutes = Math.round(diffMs / 60000)
+  if (minutes < 1) return 'ahora'
+  if (minutes < 60) return `hace ${minutes} min`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `hace ${hours} h`
+  const days = Math.round(hours / 24)
+  if (days < 7) return `hace ${days} d`
+  return new Date(value).toLocaleDateString('es-DO', { day: '2-digit', month: 'short' })
+}
+
+/** Icono representativo según el prefijo del tipo de notificación. */
+function NotificationTypeIcon({ type, className }: { type: string; className?: string }) {
+  if (type.startsWith('application')) return <FileText className={className} />
+  if (type.startsWith('recruiter')) return <BriefcaseBusiness className={className} />
+  if (type.includes('payment')) return <Banknote className={className} />
+  if (type.startsWith('member')) return <Sparkles className={className} />
+  if (type.includes('authority') || type.startsWith('pastor')) return <Shield className={className} />
+  return <Bell className={className} />
 }
 
 function isExternalUrl(value: string) {
@@ -326,79 +348,138 @@ function resolveActiveShellItemHref(groups: AppNavGroup[], pathname: string) {
     .sort((left, right) => right.href.length - left.href.length)[0]?.href
 }
 
+function NotificationRow({
+  notification,
+  onMarkRead,
+  onOpenNotification
+}: {
+  notification: AppNotification
+  onMarkRead: (notificationId: string) => void
+  onOpenNotification: (notification: AppNotification) => void
+}) {
+  const isUnread = !notification.read_at
+  const hasAction = Boolean(notification.action_url)
+
+  function handleActivate() {
+    if (hasAction) {
+      onOpenNotification(notification)
+    } else if (isUnread) {
+      onMarkRead(notification.id)
+    }
+  }
+
+  return (
+    <li className="relative">
+      {isUnread ? <span aria-hidden className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-primary-500" /> : null}
+      <button
+        type="button"
+        onClick={handleActivate}
+        className={cn(
+          'flex w-full items-start gap-3 px-4 py-3 text-left transition-colors',
+          'hover:bg-(--app-surface-muted) focus-visible:bg-(--app-surface-muted) focus-visible:outline-none',
+          isUnread && 'bg-primary-50/45 dark:bg-primary-500/8'
+        )}
+      >
+        <span
+          className={cn(
+            'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl',
+            isUnread
+              ? 'bg-primary-100 text-primary-600 dark:bg-primary-500/16 dark:text-primary-300'
+              : 'bg-(--app-surface-muted) text-(--app-text-muted)'
+          )}
+        >
+          <NotificationTypeIcon type={notification.type} className="size-4.5" />
+        </span>
+
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2">
+            <span className={cn('min-w-0 flex-1 truncate text-sm', isUnread ? 'font-semibold text-(--app-text)' : 'font-medium text-(--app-text)')}>
+              {notification.title}
+            </span>
+            {isUnread ? <span className="size-2 shrink-0 rounded-full bg-primary-500" /> : null}
+          </span>
+          <span className="mt-0.5 line-clamp-2 block text-[0.82rem] leading-5 text-(--app-text-muted)">{notification.body}</span>
+          <span className="mt-1 flex items-center gap-1.5 text-[0.72rem] text-(--app-text-subtle)">
+            {formatNotificationTimestamp(notification.created_at)}
+            {hasAction ? <span className="text-(--app-text-subtle)">· abrir →</span> : null}
+          </span>
+        </span>
+      </button>
+    </li>
+  )
+}
+
 function WorkspaceNotificationPanel({
   isLoading,
   notifications,
   onMarkRead,
-  onOpenNotification
+  onMarkAllRead,
+  onOpenNotification,
+  isMarkingAll
 }: {
   isLoading: boolean
   notifications: AppNotification[]
   onMarkRead: (notificationId: string) => void
+  onMarkAllRead: () => void
   onOpenNotification: (notification: AppNotification) => void
+  isMarkingAll: boolean
 }) {
+  const unreadCount = notifications.filter((notification) => !notification.read_at).length
+
   return (
-    <div className="w-[min(24rem,calc(100vw-2rem))] rounded-[26px] border border-(--app-border) bg-(--app-surface-elevated) p-3 shadow-[0_28px_72px_rgba(8,12,24,0.22)]">
-      <div className="flex items-center justify-between gap-3 px-2 pb-3 pt-1">
-        <div>
+    <div className="flex max-h-[min(32rem,75vh)] w-[min(23rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_28px_72px_rgba(8,12,24,0.22)]">
+      <div className="flex items-center justify-between gap-3 border-b border-(--app-border) px-4 py-3">
+        <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-(--app-text)">Notificaciones</p>
-          <p className="text-xs text-(--app-text-muted)">Últimos eventos relevantes para tu cuenta.</p>
+          {unreadCount > 0 ? (
+            <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary-500 px-1.5 text-[0.68rem] font-bold text-white">
+              {unreadCount}
+            </span>
+          ) : null}
         </div>
-        <span className="rounded-full border border-(--app-border) bg-(--app-surface) px-2.5 py-1 text-[0.72rem] font-semibold text-(--app-text-muted)">
-          {notifications.filter((notification) => !notification.read_at).length} sin leer
-        </span>
+        {unreadCount > 0 ? (
+          <button
+            type="button"
+            onClick={onMarkAllRead}
+            disabled={isMarkingAll}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50 disabled:opacity-60 dark:text-primary-300 dark:hover:bg-primary-500/12"
+          >
+            <CheckCheck className="size-3.5" /> {isMarkingAll ? 'Marcando…' : 'Marcar todas'}
+          </button>
+        ) : null}
       </div>
 
       {isLoading ? (
-        <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface) px-4 py-6 text-sm text-(--app-text-muted)">
-          Cargando notificaciones...
-        </div>
-      ) : notifications.length === 0 ? (
-        <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface) px-4 py-6 text-sm text-(--app-text-muted)">
-          Aún no tienes notificaciones recientes.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {notifications.map((notification) => (
-            <article
-              key={notification.id}
-              className={cn(
-                'rounded-[22px] border px-3.5 py-3 transition-colors',
-                notification.read_at
-                  ? 'border-(--app-border) bg-(--app-surface)'
-                  : 'border-primary-200 bg-primary-50/80 dark:border-primary-500/24 dark:bg-primary-500/10'
-              )}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-(--app-text)">{notification.title}</p>
-                  <p className="mt-1 text-sm leading-6 text-(--app-text-muted)">{notification.body}</p>
-                </div>
-                {!notification.read_at ? (
-                  <span className="mt-1 size-2.5 shrink-0 rounded-full bg-primary-500 shadow-[0_0_0_4px_rgba(74,99,211,0.14)]" />
-                ) : null}
+        <div className="space-y-3 px-4 py-4">
+          {[0, 1, 2].map((row) => (
+            <div key={row} className="flex items-start gap-3">
+              <div className="size-9 shrink-0 animate-pulse rounded-xl bg-(--app-surface-muted)" />
+              <div className="flex-1 space-y-2 py-1">
+                <div className="h-3 w-2/3 animate-pulse rounded bg-(--app-surface-muted)" />
+                <div className="h-3 w-full animate-pulse rounded bg-(--app-surface-muted)" />
               </div>
-
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-[0.72rem] font-medium uppercase tracking-[0.18em] text-(--app-text-subtle)">
-                  {formatNotificationTimestamp(notification.created_at)}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {notification.action_url ? (
-                    <Button className="h-9 rounded-full px-3 text-xs" variant="outline" onClick={() => onOpenNotification(notification)}>
-                      Abrir
-                    </Button>
-                  ) : null}
-                  {!notification.read_at ? (
-                    <Button className="h-9 rounded-full px-3 text-xs" variant="ghost" onClick={() => onMarkRead(notification.id)}>
-                      Marcar leida
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
-            </article>
+            </div>
           ))}
         </div>
+      ) : notifications.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">
+          <span className="flex size-11 items-center justify-center rounded-full bg-(--app-surface-muted) text-(--app-text-muted)">
+            <BellOff className="size-5" />
+          </span>
+          <p className="text-sm font-medium text-(--app-text)">Sin notificaciones</p>
+          <p className="text-xs text-(--app-text-muted)">Te avisaremos aquí cuando haya novedades en tu cuenta.</p>
+        </div>
+      ) : (
+        <ul className="flex-1 divide-y divide-(--app-border) overflow-y-auto overscroll-contain">
+          {notifications.map((notification) => (
+            <NotificationRow
+              key={notification.id}
+              notification={notification}
+              onMarkRead={onMarkRead}
+              onOpenNotification={onOpenNotification}
+            />
+          ))}
+        </ul>
       )}
     </div>
   )
@@ -1006,16 +1087,29 @@ export function PlatformAppShell({
 
   const notificationsQuery = useQuery({
     queryKey: [...WORKSPACE_NOTIFICATION_QUERY_KEY, experience, session.authUser?.id],
-    queryFn: () => fetchMyNotifications(6),
+    queryFn: () => fetchMyNotifications(12),
     enabled: session.isAuthenticated
   })
+
+  const invalidateNotifications = () =>
+    queryClient.invalidateQueries({
+      queryKey: [...WORKSPACE_NOTIFICATION_QUERY_KEY, experience, session.authUser?.id]
+    })
 
   const markReadMutation = useMutation({
     mutationFn: (notificationId: string) => markNotificationRead(notificationId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: [...WORKSPACE_NOTIFICATION_QUERY_KEY, experience, session.authUser?.id]
-      })
+      await invalidateNotifications()
+    }
+  })
+
+  const markAllReadMutation = useMutation({
+    mutationFn: (ids: string[]) => markAllNotificationsRead(ids),
+    onSuccess: async () => {
+      await invalidateNotifications()
+    },
+    onError: (error) => {
+      toast.error('No se pudieron marcar las notificaciones', { description: toErrorMessage(error) })
     }
   })
 
@@ -1092,6 +1186,13 @@ export function PlatformAppShell({
 
   function handleMarkRead(notificationId: string) {
     markReadMutation.mutate(notificationId)
+  }
+
+  function handleMarkAllRead() {
+    const unreadIds = (notificationsQuery.data ?? []).filter((item) => !item.read_at).map((item) => item.id)
+    if (unreadIds.length > 0) {
+      markAllReadMutation.mutate(unreadIds)
+    }
   }
 
   function handleActionNavigate(href: string) {
@@ -1245,7 +1346,9 @@ export function PlatformAppShell({
                         isLoading={notificationsQuery.isLoading}
                         notifications={notificationsQuery.data ?? []}
                         onMarkRead={handleMarkRead}
+                        onMarkAllRead={handleMarkAllRead}
                         onOpenNotification={(notification) => void handleOpenNotification(notification)}
+                        isMarkingAll={markAllReadMutation.isPending}
                       />
                     </div>
                   ) : null}
