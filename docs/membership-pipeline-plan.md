@@ -77,6 +77,7 @@ autoridad a pastores.
    - ✅ Subida de comprobante: upload al bucket privado `membership-receipts` + `insert` en `membership_payments` (status=submitted), reflejado en el panel; re-subida tras rechazo soportada.
    - ✅ Entrada del flujo: panel → "Iniciar mi solicitud" va a elegibilidad (categoría) → formulario; tras enviar, CTA "Ir a mi panel de membresía" regresa al panel de pago.
    - ✅ El miembro puede ver/descargar su comprobante subido (URL firmada) desde el panel.
+   - ✅ **Envío habilitado + validado e2e de punta a punta** (`tests/e2e/membership-full-submission.spec.ts`): flag `MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED=false`; un miembro logueado completa el formulario real de 6 pasos (categoría `retired`) y lo envía → se crea la solicitud con `requester_user_id` correcto (RLS insert_self), `church_id` del picker y **auto-ruteo al pastor** (`assigned_queue=pastor`). Los CTAs de registro del storefront/app derivan de `PLATFORM_REGISTRATION_LOCKED`.
 3. **Cola del pastor** — bandeja scoped, aprobar/más-info/rechazar, subir comprobante. **✅ COMPLETA**
    - ✅ Detección del pastor en sesión: `activePastorScopeCount` en `SessionSnapshot` (cuenta de `user_authority_scopes` activos `pastor_administrator`) → `session.isMembershipReviewerPastor`.
    - ✅ Página `PastorMembershipQueuePage` en `/candidate/membership-queue` (dentro del shell; sin requerir ATS activo). Item de nav "Solicitudes de mi iglesia" (grupo Pastoral) solo visible para pastores.
