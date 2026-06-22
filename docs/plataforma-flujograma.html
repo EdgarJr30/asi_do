@@ -1,40 +1,22 @@
 <!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Flujograma de la plataforma ASI</title>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Flujograma de la plataforma ASI</title>
 <style>
   :root { --bg:#0d1117; --panel:#161b22; --text:#e6edf3; --muted:#9aa7b4; --border:#30363d; --accent:#58a6ff; }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; scroll-behavior:smooth; }
-  header { position:sticky; top:0; z-index:10; background:rgba(13,17,23,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
-  header h1 { font-size:16px; margin:0; }
-  header .hint { color:var(--muted); font-size:13px; }
-  header a.nav { color:var(--accent); text-decoration:none; border:1px solid var(--border); border-radius:8px; padding:6px 12px; font-size:13px; }
-  header a.nav:hover { border-color:var(--accent); }
-  .wrap { max-width:1180px; margin:0 auto; padding:28px 24px 140px; }
-  h1,h2,h3 { line-height:1.25; scroll-margin-top:64px; }
-  h2 { margin-top:40px; padding-top:18px; border-top:1px solid var(--border); }
-  a { color:var(--accent); }
-  table { border-collapse:collapse; width:100%; margin:14px 0; font-size:13.5px; }
-  th,td { border:1px solid var(--border); padding:7px 10px; text-align:left; vertical-align:top; }
-  th { background:var(--panel); position:sticky; }
-  code { background:#1f2630; padding:2px 6px; border-radius:6px; font-size:13px; }
-  pre.mermaid { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; margin:18px 0; overflow:auto; text-align:center; }
-  blockquote { border-left:4px solid var(--accent); margin:16px 0; padding:6px 16px; color:var(--muted); background:var(--panel); border-radius:0 8px 8px 0; }
-  .toolbar button { background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px; }
-  .toolbar button:hover { border-color:var(--accent); }
-</style>
-</head>
-<body>
-<header>
-  <h1>🗺️ Flujograma de la plataforma ASI</h1>
-  <span class="hint">Clic en un diagrama para ampliarlo · 🗂️ enlaza a la arquitectura de BD</span>
-  <span style="margin-left:auto; display:flex; gap:10px;"><a class="nav" href="arquitectura-db.html">🗂️ Arquitectura BD</a><span class="toolbar"><button onclick="window.print()">🖨️ PDF</button></span></span>
-</header>
+  *{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;scroll-behavior:smooth;}
+  header{position:sticky;top:0;z-index:10;background:rgba(13,17,23,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;}
+  header h1{font-size:16px;margin:0;} header .hint{color:var(--muted);font-size:13px;}
+  header a.nav{color:var(--accent);text-decoration:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:13px;} header a.nav:hover{border-color:var(--accent);}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 140px;}
+  h1,h2,h3{line-height:1.25;scroll-margin-top:64px;} h2{margin-top:40px;padding-top:18px;border-top:1px solid var(--border);}
+  a{color:var(--accent);}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px;} th,td{border:1px solid var(--border);padding:7px 10px;text-align:left;vertical-align:top;} th{background:var(--panel);}
+  code{background:#1f2630;padding:2px 6px;border-radius:6px;font-size:13px;}
+  pre.mermaid{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;margin:18px 0;overflow:auto;text-align:center;}
+  blockquote{border-left:4px solid var(--accent);margin:16px 0;padding:6px 16px;color:var(--muted);background:var(--panel);border-radius:0 8px 8px 0;}
+  .toolbar button{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;} .toolbar button:hover{border-color:var(--accent);}
+</style></head><body>
+<header><h1>🗺️ Flujograma de la plataforma ASI</h1><span class="hint">Clic en un diagrama para ampliarlo · 🗂️ enlaza a la arquitectura de BD</span><span style="margin-left:auto;display:flex;gap:10px;"><a class="nav" href="arquitectura-db.html">🗂️ Arquitectura BD</a><span class="toolbar"><button onclick="window.print()">🖨️ PDF</button></span></span></header>
 <div class="wrap" id="content"></div>
-
 <script type="text/markdown" id="src"># Flujograma integral de la plataforma ASI
 
 > Mapa completo de procesos, lógica y pipelines de la plataforma: superficies, sesión/permisos,
@@ -659,39 +641,12 @@ flowchart TB
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-  const md = document.getElementById('src').textContent;
-  marked.setOptions({ gfm:true, breaks:false });
-  const root = document.getElementById('content');
-  root.innerHTML = marked.parse(md);
-
-  // Slug estilo GitHub para que la TOC y los back-links funcionen
-  const slug = (s) => s.toLowerCase().trim()
-    .replace(/[`*_~]/g,'')
-    .replace(/[^\p{L}\p{N}\s-]/gu,'')
-    .replace(/\s+/g,'-');
-  const seen = {};
-  root.querySelectorAll('h1,h2,h3,h4').forEach((h) => {
-    let id = slug(h.textContent);
-    if (seen[id] != null) { seen[id]++; id = id+'-'+seen[id]; } else { seen[id]=0; }
-    if (!h.id) h.id = id;
-  });
-
-  // Render de mermaid
-  root.querySelectorAll('code.language-mermaid').forEach((code) => {
-    const pre = document.createElement('pre');
-    pre.className = 'mermaid';
-    pre.textContent = code.textContent;
-    code.closest('pre').replaceWith(pre);
-  });
-  mermaid.initialize({ startOnLoad:false, theme:'default', securityLevel:'loose', flowchart:{ useMaxWidth:true }, themeVariables:{ fontSize:'14px' } });
-  await mermaid.run({ querySelector:'pre.mermaid' });
-  root.querySelectorAll('pre.mermaid svg').forEach((svg) => {
-    svg.style.cursor='zoom-in';
-    svg.addEventListener('click', () => {
-      const blob = new Blob([svg.outerHTML], {type:'image/svg+xml'});
-      window.open(URL.createObjectURL(blob), '_blank');
-    });
-  });
-</script>
-</body>
-</html>
+  const md=document.getElementById('src').textContent; marked.setOptions({gfm:true,breaks:false});
+  const root=document.getElementById('content'); root.innerHTML=marked.parse(md);
+  const slug=(s)=>s.toLowerCase().trim().replace(/[`*_~]/g,'').replace(/[^\p{L}\p{N}\s-]/gu,'').replace(/\s+/g,'-');
+  const seen={}; root.querySelectorAll('h1,h2,h3,h4').forEach((h)=>{let id=slug(h.textContent); if(seen[id]!=null){seen[id]++;id=id+'-'+seen[id];}else{seen[id]=0;} if(!h.id)h.id=id;});
+  root.querySelectorAll('code.language-mermaid').forEach((code)=>{const pre=document.createElement('pre');pre.className='mermaid';pre.textContent=code.textContent;code.closest('pre').replaceWith(pre);});
+  mermaid.initialize({startOnLoad:false,theme:'default',securityLevel:'loose',flowchart:{useMaxWidth:true},themeVariables:{fontSize:'14px'}});
+  await mermaid.run({querySelector:'pre.mermaid'});
+  root.querySelectorAll('pre.mermaid svg').forEach((svg)=>{svg.style.cursor='zoom-in';svg.addEventListener('click',()=>{const b=new Blob([svg.outerHTML],{type:'image/svg+xml'});window.open(URL.createObjectURL(b),'_blank');});});
+</script></body></html>

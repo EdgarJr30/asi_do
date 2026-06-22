@@ -17,6 +17,86 @@ Tipos: `string`, `number`, `boolean`, `Json`, `string[]`, `enum <nombre>`, ` | n
 - **Moderación y auditoría**: [`moderation_cases`](#moderation_cases) · [`moderation_actions`](#moderation_actions) · [`audit_logs`](#audit_logs) · [`app_error_logs`](#app_error_logs)
 
 
+## 🔗 Diagrama ER (relaciones)
+
+> Relaciones (foreign keys) entre tablas, por dominio. `||--o{` = uno-a-muchos (padre→hijos).
+> Se omiten las FK auto-referenciales (p. ej. `reviewed_by_user_id`) para legibilidad.
+
+### Pipeline de membresía (core)
+
+```mermaid
+erDiagram
+    church_unions ||--o{ church_associations : "union_id"
+    church_associations ||--o{ church_districts : "association_id"
+    church_districts ||--o{ churches : "district_id"
+    churches ||--o{ institutional_membership_applications : "church_id"
+    users ||--o{ institutional_membership_applications : "assigned_pastor_user_id, requester_user_id, reviewed_by_user_id"
+    users ||--o{ membership_payment_settings : "updated_by_user_id"
+    institutional_membership_applications ||--o{ membership_payments : "application_id"
+    users ||--o{ membership_payments : "member_user_id, uploaded_by_user_id, verified_by_user_id"
+    church_associations ||--o{ pastor_authority_requests : "association_id"
+    church_districts ||--o{ pastor_authority_requests : "district_id"
+    church_unions ||--o{ pastor_authority_requests : "union_id"
+    users ||--o{ pastor_authority_requests : "requester_user_id, reviewed_by_user_id"
+    users ||--o{ recruiter_requests : "requester_user_id, reviewed_by_user_id"
+    church_associations ||--o{ regional_administrator_authority_requests : "association_id"
+    church_unions ||--o{ regional_administrator_authority_requests : "union_id"
+    users ||--o{ regional_administrator_authority_requests : "requester_user_id, reviewed_by_user_id"
+    church_associations ||--o{ user_authority_scopes : "association_id"
+    church_districts ||--o{ user_authority_scopes : "district_id"
+    church_unions ||--o{ user_authority_scopes : "union_id"
+    users ||--o{ user_authority_scopes : "granted_by_user_id, revoked_by_user_id, user_id"
+```
+
+### Identidad y acceso
+
+```mermaid
+erDiagram
+    tenants ||--o{ company_profiles : "tenant_id"
+    memberships ||--o{ membership_roles : "membership_id"
+    tenant_roles ||--o{ membership_roles : "role_id"
+    users ||--o{ membership_roles : "assigned_by_user_id, revoked_by_user_id"
+    tenants ||--o{ memberships : "tenant_id"
+    users ||--o{ memberships : "invited_by_user_id, user_id"
+    permissions ||--o{ platform_role_permissions : "permission_id"
+    platform_roles ||--o{ platform_role_permissions : "role_id"
+    permissions ||--o{ tenant_role_permissions : "permission_id"
+    tenant_roles ||--o{ tenant_role_permissions : "role_id"
+    tenants ||--o{ tenant_roles : "tenant_id"
+    users ||--o{ tenants : "created_by_user_id"
+    platform_roles ||--o{ user_platform_roles : "role_id"
+    users ||--o{ user_platform_roles : "assigned_by_user_id, revoked_by_user_id, user_id"
+```
+
+### Empleo (jobs & aplicaciones)
+
+```mermaid
+erDiagram
+    applications ||--o{ application_answers : "application_id"
+    job_screening_questions ||--o{ application_answers : "screening_question_id"
+    applications ||--o{ application_notes : "application_id"
+    applications ||--o{ application_ratings : "application_id"
+    applications ||--o{ application_stage_history : "application_id"
+    pipeline_stages ||--o{ application_stage_history : "from_stage_id, to_stage_id"
+    candidate_profiles ||--o{ applications : "candidate_profile_id"
+    job_postings ||--o{ applications : "job_posting_id"
+    pipeline_stages ||--o{ applications : "current_stage_id"
+    candidate_profiles ||--o{ job_alerts : "candidate_profile_id"
+    job_postings ||--o{ job_screening_questions : "job_posting_id"
+    candidate_profiles ||--o{ saved_jobs : "candidate_profile_id"
+    job_postings ||--o{ saved_jobs : "job_posting_id"
+```
+
+### Notificaciones
+
+```mermaid
+erDiagram
+    notifications ||--o{ notification_deliveries : "notification_id"
+    push_subscriptions ||--o{ notification_deliveries : "push_subscription_id"
+    notification_deliveries ||--o{ notification_delivery_logs : "delivery_id"
+```
+
+
 ## Identidad y acceso
 
 ### <a id="users"></a>`users`
