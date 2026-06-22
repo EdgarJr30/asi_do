@@ -21,9 +21,11 @@ import {
   PencilLine,
 } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
+import { surfacePaths } from '@/app/router/surface-paths'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import {
   membershipCategories,
@@ -1339,6 +1341,9 @@ function SubmissionSuccess({
   onEdit: () => void
 }) {
   const summary = submission.snapshot
+  const session = useAppSession()
+  const navigate = useNavigate()
+  const isAuthenticated = Boolean(session.authUser?.id)
 
   return (
     <div className="space-y-6 rounded-[1.75rem] border border-(--asi-outline) bg-(--asi-surface-raised) p-6 shadow-(--asi-shadow-soft) sm:p-8">
@@ -1429,6 +1434,22 @@ function SubmissionSuccess({
           Este paso organiza el expediente digital de la solicitud. El capítulo local seguirá con la autorización pastoral y la gestión de la membresía anual.
         </p>
       </div>
+
+      {isAuthenticated ? (
+        <div className="flex flex-col gap-3 border-t border-(--asi-outline) pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-(--asi-text-muted)">
+            Continúa en tu panel para realizar el pago y subir tu comprobante.
+          </p>
+          <button
+            type="button"
+            onClick={() => void navigate(surfacePaths.account.membership)}
+            className="asi-button asi-button-primary w-full justify-center sm:w-auto"
+          >
+            Ir a mi panel de membresía
+            <ArrowRight className="size-4" />
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -1513,6 +1534,10 @@ export function MembershipApplicationForm({
   const selectedGender = useWatch({
     control: form.control,
     name: 'gender',
+  })
+  const selectedChurchId = useWatch({
+    control: form.control,
+    name: 'churchId',
   })
   const certificatePreference = useWatch({
     control: form.control,
@@ -2283,7 +2308,7 @@ export function MembershipApplicationForm({
           description="La referencia pastoral forma parte obligatoria del expediente. El pastor recibirá seguimiento adicional cuando corresponda."
         >
         <ChurchHierarchyPicker
-          value={form.watch('churchId')}
+          value={selectedChurchId}
           error={errors.churchId?.message}
           onSelect={(church) => {
             form.setValue('churchId', church?.id ?? '', { shouldValidate: true, shouldDirty: true })

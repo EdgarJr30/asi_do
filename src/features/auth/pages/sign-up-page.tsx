@@ -9,6 +9,7 @@ import { useAppSession } from '@/app/providers/app-session-provider'
 import { getAuthenticatedHomePath, surfacePaths } from '@/app/router/surface-paths'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageLoader } from '@/components/ui/loader'
 import { signUpFormSchema, type SignUpFormValues } from '@/features/auth/lib/auth-schemas'
 import { Input } from '@/components/ui/input'
 import { signUpWithPassword, toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -56,6 +57,10 @@ export function SignUpPage() {
         </CardHeader>
       </Card>
     )
+  }
+
+  if (session.isLoading) {
+    return <PageLoader fullScreen label="Preparando tu plataforma" hint="Cargando tu menú y tu cuenta" />
   }
 
   if (session.isAuthenticated) {

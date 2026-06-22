@@ -107,8 +107,19 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     }
   }
 
-  function refresh() {
-    return hydrateSession(session?.user ?? null)
+  async function refresh() {
+    // Leemos la sesión viva del SDK en lugar del estado del closure (que puede
+    // estar desfasado justo después de iniciar sesión). Así evitamos hidratar con
+    // un usuario nulo y dejar `isLoading=false` con `profile=null`, lo que causaba
+    // un redirect prematuro a /candidate/profile antes de cargar el perfil real.
+    if (!supabase) {
+      await hydrateSession(null)
+      return
+    }
+
+    const { data } = await supabase.auth.getSession()
+    setSession(data.session)
+    await hydrateSession(data.session?.user ?? null)
   }
 
   useEffect(() => {

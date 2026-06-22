@@ -1,4 +1,4 @@
-import { uploadPrivateFile } from '@/features/auth/lib/auth-api'
+import { createPrivateFileUrl, uploadPrivateFile } from '@/features/auth/lib/auth-api'
 import { supabase } from '@/lib/supabase/client'
 import type { Tables, TablesInsert } from '@/shared/types/database'
 
@@ -181,6 +181,11 @@ export async function submitMembershipPaymentReceipt(input: SubmitMembershipPaym
     throw error
   }
   return data
+}
+
+/** URL firmada (10 min) para que el miembro vea/descargue su comprobante subido. */
+export async function createMembershipReceiptUrl(receiptPath: string): Promise<string> {
+  return createPrivateFileUrl('membership-receipts', receiptPath)
 }
 
 /** Extrae la cuota de una categoría desde la configuración (jsonb dues_by_category). */

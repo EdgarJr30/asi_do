@@ -10,6 +10,7 @@ import { getAuthenticatedHomePath, surfacePaths } from '@/app/router/surface-pat
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { PageLoader } from '@/components/ui/loader'
 import { signInWithPassword, toErrorMessage } from '@/features/auth/lib/auth-api'
 import { signInSchema, type SignInValues } from '@/features/auth/lib/auth-schemas'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
@@ -46,6 +47,14 @@ export function SignInPage() {
         </CardHeader>
       </Card>
     )
+  }
+
+  // Mientras se determina/hidrata la sesión, mostramos el loader a pantalla
+  // completa. No decidimos el destino hasta que el perfil y los permisos estén
+  // listos: así un usuario ya registrado entra a su home (no a /candidate/profile)
+  // y el sidebar/menú llega cargado antes de darle entrada.
+  if (session.isLoading) {
+    return <PageLoader fullScreen label="Preparando tu plataforma" hint="Cargando tu menú y tu cuenta" />
   }
 
   if (session.isAuthenticated) {

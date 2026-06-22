@@ -10,6 +10,7 @@ import {
   Clock,
   FileText,
   LogOut,
+  Paperclip,
   ShieldCheck,
   Sparkles,
   UploadCloud
@@ -23,6 +24,7 @@ import { Button } from '@/components/ui/button'
 import { PageLoader } from '@/components/ui/loader'
 import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api'
 import {
+  createMembershipReceiptUrl,
   fetchMyMembershipStatus,
   getCategoryDue,
   submitMembershipPaymentReceipt,
@@ -238,7 +240,7 @@ export function MembershipStatusPage() {
 
                         {/* Acción del paso de solicitud */}
                         {step.key === 'application' && step.state === 'current' ? (
-                          <Button className="mt-3 h-10" onClick={() => void navigate(surfacePaths.institutional.membershipApply)}>
+                          <Button className="mt-3 h-10" onClick={() => void navigate(surfacePaths.institutional.eligibility)}>
                             Iniciar mi solicitud <ArrowRight className="size-4" />
                           </Button>
                         ) : null}
@@ -258,6 +260,11 @@ export function MembershipStatusPage() {
                             currency={bundle.settings?.currency ?? 'USD'}
                             onUploaded={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
                           />
+                        ) : null}
+
+                        {/* Ver el comprobante ya subido */}
+                        {step.key === 'payment' && bundle.payment?.receipt_path ? (
+                          <ReceiptViewLink receiptPath={bundle.payment.receipt_path} />
                         ) : null}
                       </div>
                     </li>
@@ -327,6 +334,29 @@ function TransferDetails({
       <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-(--app-surface) px-3 py-2 text-xs text-(--app-text-muted)">
         <Clock className="size-3.5" /> Después de transferir, sube tu comprobante abajo. También un pastor o administrador puede subirlo por ti.
       </p>
+    </div>
+  )
+}
+
+function ReceiptViewLink({ receiptPath }: { receiptPath: string }) {
+  const openMutation = useMutation({
+    mutationFn: async () => createMembershipReceiptUrl(receiptPath),
+    onSuccess: (url) => window.open(url, '_blank', 'noopener,noreferrer')
+  })
+
+  return (
+    <div className="mt-3">
+      <Button
+        variant="outline"
+        className="h-9"
+        disabled={openMutation.isPending}
+        onClick={() => openMutation.mutate()}
+      >
+        <Paperclip className="size-4" /> {openMutation.isPending ? 'Abriendo…' : 'Ver mi comprobante'}
+      </Button>
+      {openMutation.error ? (
+        <p className="mt-1.5 text-xs text-rose-600 dark:text-rose-400">{toErrorMessage(openMutation.error)}</p>
+      ) : null}
     </div>
   )
 }

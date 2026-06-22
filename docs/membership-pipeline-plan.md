@@ -41,7 +41,7 @@ notificaciones, audit log, RPCs de revisión de autoridad, `hasActiveAsiAccess()
 3. **Vínculo a jerarquía real** en `institutional_membership_applications`: `church_id` (FK), `assigned_pastor_user_id`, `assigned_queue` (`pastor`/`admin`).
 4. **Bucket de storage privado** para comprobantes (RLS: dueño + pastor asignado + admin).
 5. **RPCs** (RLS/scope + audit): `review_membership_application` (pastor/admin), `verify_membership_payment` (admin), `activate_member` (admin; exige aprobado + pago verificado).
-6. **Permisos**: `membership_application:review` (pastor+admin), `membership_payment:verify` (admin), `user:activate` (admin).
+6. **Permisos**: `membership_application:review` (pastor+admin), `membership_payment:verify` (admin), `user:activate` (admin). ✅ creados y otorgados a `platform_owner`/`platform_admin`; el pastor autoriza por `user_authority_scope` (no por estos permisos).
 
 ## 4. Flujos (pipelines)
 
@@ -67,8 +67,16 @@ autoridad a pastores.
 
 ## 7. Fases de implementación
 1. **Datos & gating** — migración (settings de pago, pagos, `church_id`+ruteo, RPCs, RLS, bucket), wiring de flags,
-   reabrir registro, guard de redirección a "pendiente". **← EN PROGRESO**
-2. **Flujo del miembro** — formulario (categoría + iglesia), panel de progreso, subida de comprobante.
+   reabrir registro, guard de redirección a "pendiente". **✅ COMPLETA (migración aplicada)**
+   - ✅ Permisos §3.6 creados + otorgados a roles admin (`20260621130000`).
+   - ✅ RLS de lectura scoped del pastor en `institutional_membership_applications` (guardada contra `church_id null`).
+   - ✅ Fix de seguridad en `review_membership_application`: el camino del pastor exige `church_id not null` (sin iglesia → solo admin).
+2. **Flujo del miembro** — formulario (categoría + iglesia), panel de progreso, subida de comprobante. **✅ COMPLETA**
+   - ✅ Selector jerárquico de iglesia (unión→asociación→distrito→iglesia) → escribe `church_id` y dispara auto-ruteo.
+   - ✅ Jerarquía de prueba sembrada (Unión Dominicana: 4 asociaciones, 8 distritos, 16 iglesias).
+   - ✅ Subida de comprobante: upload al bucket privado `membership-receipts` + `insert` en `membership_payments` (status=submitted), reflejado en el panel; re-subida tras rechazo soportada.
+   - ✅ Entrada del flujo: panel → "Iniciar mi solicitud" va a elegibilidad (categoría) → formulario; tras enviar, CTA "Ir a mi panel de membresía" regresa al panel de pago.
+   - ✅ El miembro puede ver/descargar su comprobante subido (URL firmada) desde el panel.
 3. **Cola del pastor** — bandeja scoped, aprobar/más-info/rechazar, subir comprobante.
 4. **Consola admin** — solicitudes + pagos, validar pago, botón Activar, módulo de datos bancarios, audit.
 5. **Notificaciones + pulido** — eventos por transición; recordatorios de renovación (después).

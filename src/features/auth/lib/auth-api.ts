@@ -85,7 +85,10 @@ const platformPermissionChecks = [
   'feature_flag:read',
   'feature_flag:update',
   'app_error_log:read',
-  'audit_log:read'
+  'audit_log:read',
+  'membership_application:review',
+  'membership_payment:verify',
+  'user:activate'
 ] as const satisfies readonly PermissionCode[]
 
 function requireSupabase() {
