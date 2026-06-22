@@ -29,7 +29,7 @@ export function AuthShell() {
               type="button"
               onClick={() => void navigate(surfacePaths.institutional.home)}
             >
-              <BrandLockup className="h-10 w-auto sm:h-11" />
+              <BrandLockup className="h-14 w-auto sm:h-16" />
             </button>
 
             <div className="flex items-center gap-2 sm:gap-3">

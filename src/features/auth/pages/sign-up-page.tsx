@@ -114,7 +114,7 @@ export function SignUpPage() {
       </div>
 
       <form className="space-y-2.5" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
-        <div className="grid gap-2.5 sm:grid-cols-3">
+        <div className="grid gap-2.5 sm:grid-cols-2">
           <label className="block space-y-0.5">
             <span className="text-xs font-semibold text-(--app-text)">Nombre</span>
             <Input className="h-9 rounded-[12px]" placeholder="John" {...form.register('firstName')} />
@@ -126,90 +126,92 @@ export function SignUpPage() {
             <Input className="h-9 rounded-[12px]" placeholder="Doe" {...form.register('lastName')} />
             <FieldError message={form.formState.errors.lastName?.message} />
           </label>
-
-          <label className="block space-y-0.5">
-            <span className="text-xs font-semibold text-(--app-text)">Correo</span>
-            <Input
-              autoComplete="email"
-              className="h-9 rounded-[12px] px-2.5 text-xs"
-              placeholder="tu@empresa.com.do"
-              type="email"
-              {...form.register('email')}
-            />
-            <FieldError message={form.formState.errors.email?.message} />
-          </label>
         </div>
 
         <label className="block space-y-0.5">
-          <span className="text-xs font-semibold text-(--app-text)">Contraseña</span>
-          <div className="relative">
-            <Input
-              autoComplete="new-password"
-              className="h-9 rounded-[12px] pr-10"
-              placeholder="Crea una contraseña segura"
-              type={showPassword ? 'text' : 'password'}
-              {...form.register('password')}
-            />
-            <button
-              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-              className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-(--app-text-subtle) transition hover:text-(--app-text)"
-              type="button"
-              onClick={() => setShowPassword((value) => !value)}
-            >
-              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </button>
-          </div>
-          <FieldError message={form.formState.errors.password?.message} />
-          <ul className="grid gap-1 pt-0.5 sm:grid-cols-3">
-            {passwordRules.map((rule) => {
-              const passed = rule.test(passwordValue)
+          <span className="text-xs font-semibold text-(--app-text)">Correo</span>
+          <Input
+            autoComplete="email"
+            className="h-9 rounded-[12px]"
+            placeholder="tu@empresa.com.do"
+            type="email"
+            {...form.register('email')}
+          />
+          <FieldError message={form.formState.errors.email?.message} />
+        </label>
 
-              return (
-                <li
-                  key={rule.label}
-                  className={
-                    passed
-                      ? 'flex items-center gap-1 text-[11px] leading-4 text-emerald-600 dark:text-emerald-400'
-                      : 'flex items-center gap-1 text-[11px] leading-4 text-(--app-text-subtle)'
-                  }
-                >
-                  <span
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          <label className="block space-y-0.5">
+            <span className="text-xs font-semibold text-(--app-text)">Contraseña</span>
+            <div className="relative">
+              <Input
+                autoComplete="new-password"
+                className="h-9 rounded-[12px] pr-10"
+                placeholder="Crea una contraseña segura"
+                type={showPassword ? 'text' : 'password'}
+                {...form.register('password')}
+              />
+              <button
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-(--app-text-subtle) transition hover:text-(--app-text)"
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
+            <FieldError message={form.formState.errors.password?.message} />
+            <ul className="grid gap-1 pt-0.5">
+              {passwordRules.map((rule) => {
+                const passed = rule.test(passwordValue)
+
+                return (
+                  <li
+                    key={rule.label}
                     className={
                       passed
-                        ? 'flex size-3.5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300'
-                        : 'flex size-3.5 items-center justify-center rounded-full border border-(--app-border)'
+                        ? 'flex items-center gap-1 text-[11px] leading-4 text-emerald-600 dark:text-emerald-400'
+                        : 'flex items-center gap-1 text-[11px] leading-4 text-(--app-text-subtle)'
                     }
                   >
-                    {passed ? <Check className="size-2.5" strokeWidth={3} /> : null}
-                  </span>
-                  {rule.label}
-                </li>
-              )
-            })}
-          </ul>
-        </label>
+                    <span
+                      className={
+                        passed
+                          ? 'flex size-3.5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300'
+                          : 'flex size-3.5 items-center justify-center rounded-full border border-(--app-border)'
+                      }
+                    >
+                      {passed ? <Check className="size-2.5" strokeWidth={3} /> : null}
+                    </span>
+                    {rule.label}
+                  </li>
+                )
+              })}
+            </ul>
+          </label>
 
-        <label className="block space-y-0.5">
-          <span className="text-xs font-semibold text-(--app-text)">Confirmar contraseña</span>
-          <div className="relative">
-            <Input
-              autoComplete="new-password"
-              className="h-9 rounded-[12px] pr-10"
-              placeholder="Repite tu contraseña"
-              type={showConfirmPassword ? 'text' : 'password'}
-              {...form.register('confirmPassword')}
-            />
-            <button
-              aria-label={showConfirmPassword ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
-              className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-(--app-text-subtle) transition hover:text-(--app-text)"
-              type="button"
-              onClick={() => setShowConfirmPassword((value) => !value)}
-            >
-              {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </button>
-          </div>
-          <FieldError message={form.formState.errors.confirmPassword?.message} />
-        </label>
+          <label className="block space-y-0.5">
+            <span className="text-xs font-semibold text-(--app-text)">Confirmar contraseña</span>
+            <div className="relative">
+              <Input
+                autoComplete="new-password"
+                className="h-9 rounded-[12px] pr-10"
+                placeholder="Repite tu contraseña"
+                type={showConfirmPassword ? 'text' : 'password'}
+                {...form.register('confirmPassword')}
+              />
+              <button
+                aria-label={showConfirmPassword ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
+                className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-(--app-text-subtle) transition hover:text-(--app-text)"
+                type="button"
+                onClick={() => setShowConfirmPassword((value) => !value)}
+              >
+                {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
+            <FieldError message={form.formState.errors.confirmPassword?.message} />
+          </label>
+        </div>
 
         <Button
           className="h-9 w-full rounded-[12px] text-sm"
