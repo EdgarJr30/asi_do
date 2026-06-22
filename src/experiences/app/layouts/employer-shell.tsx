@@ -1212,8 +1212,13 @@ export function PlatformAppShell({
 
   const notificationsQuery = useQuery({
     queryKey: [...WORKSPACE_NOTIFICATION_QUERY_KEY, experience, session.authUser?.id, notificationPage],
-    queryFn: () => fetchMyNotificationsPage({ page: notificationPage, pageSize: NOTIFICATION_PAGE_SIZE }),
-    enabled: session.isAuthenticated
+    queryFn: () =>
+      fetchMyNotificationsPage({
+        page: notificationPage,
+        pageSize: NOTIFICATION_PAGE_SIZE,
+        recipientUserId: session.authUser?.id
+      }),
+    enabled: session.isAuthenticated && Boolean(session.authUser?.id)
   })
   const notificationPageData = notificationsQuery.data
   const notifications = notificationPageData?.notifications ?? []

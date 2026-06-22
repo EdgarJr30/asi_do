@@ -87,16 +87,19 @@ vi.mock('@/lib/notifications/api', async () => {
 
   return {
     ...actual,
-    fetchMyNotifications: vi.fn((limit: number = 6) => Promise.resolve(notificationState.items.slice(0, limit))),
-    fetchMyNotificationsPage: vi.fn((options: { page?: number; pageSize?: number } = {}) => {
+    fetchMyNotifications: vi.fn((limit: number = 6, recipientUserId?: string | null) =>
+      Promise.resolve(notificationState.items.filter((item) => !recipientUserId || item.recipient_user_id === recipientUserId).slice(0, limit))
+    ),
+    fetchMyNotificationsPage: vi.fn((options: { page?: number; pageSize?: number; recipientUserId?: string | null } = {}) => {
       const pageSize = options.pageSize ?? 6
       const page = options.page ?? 1
       const from = (page - 1) * pageSize
+      const items = notificationState.items.filter((item) => !options.recipientUserId || item.recipient_user_id === options.recipientUserId)
 
       return Promise.resolve({
-        notifications: notificationState.items.slice(from, from + pageSize),
-        totalCount: notificationState.items.length,
-        unreadCount: notificationState.items.filter((item) => !item.read_at).length
+        notifications: items.slice(from, from + pageSize),
+        totalCount: items.length,
+        unreadCount: items.filter((item) => !item.read_at).length
       })
     }),
     markNotificationRead: vi.fn((notificationId: string) =>
@@ -375,6 +378,52 @@ describe('workspace shell', () => {
     })
   })
 
+  it('only lists notifications addressed to the authenticated user', async () => {
+    seedWorkspaceSession(['workspace:read', 'notification:manage'])
+    notificationState.items = [
+      {
+        id: 'notification-own',
+        recipient_user_id: 'user-1',
+        tenant_id: 'tenant-1',
+        type: 'system.test',
+        title: 'Tu notificación',
+        body: 'Esta sí se puede marcar desde la campana personal.',
+        action_url: null,
+        payload: {},
+        read_at: null,
+        clicked_at: null,
+        created_at: '2026-03-19T12:00:00.000Z',
+        updated_at: '2026-03-19T12:00:00.000Z'
+      },
+      {
+        id: 'notification-other',
+        recipient_user_id: 'user-2',
+        tenant_id: 'tenant-1',
+        type: 'system.test',
+        title: 'Notificación de otro usuario',
+        body: 'Un manager podría verla por RLS, pero no debe aparecer aquí.',
+        action_url: null,
+        payload: {},
+        read_at: null,
+        clicked_at: null,
+        created_at: '2026-03-19T12:01:00.000Z',
+        updated_at: '2026-03-19T12:01:00.000Z'
+      }
+    ]
+
+    renderWorkspaceShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir notificaciones' }))
+
+    expect(await screen.findByText('Tu notificación')).toBeInTheDocument()
+    expect(screen.queryByText('Notificación de otro usuario')).not.toBeInTheDocument()
+    expect(vi.mocked(fetchMyNotificationsPage)).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 8,
+      recipientUserId: 'user-1'
+    })
+  })
+
   it('paginates the notification popover', async () => {
     seedWorkspaceSession(['workspace:read'])
     notificationState.items = Array.from({ length: 10 }, (_, index) => ({
@@ -403,7 +452,11 @@ describe('workspace shell', () => {
 
     expect(await screen.findByText('Notificación 9')).toBeInTheDocument()
     expect(screen.getByText('9-10 de 10')).toBeInTheDocument()
-    expect(vi.mocked(fetchMyNotificationsPage)).toHaveBeenCalledWith({ page: 2, pageSize: 8 })
+    expect(vi.mocked(fetchMyNotificationsPage)).toHaveBeenCalledWith({
+      page: 2,
+      pageSize: 8,
+      recipientUserId: 'user-1'
+    })
   })
 
   it('opens the profile menu and navigates to candidate profile', async () => {

@@ -54,6 +54,7 @@ export interface AppNotificationPage {
 export interface FetchMyNotificationsPageOptions {
   page?: number
   pageSize?: number
+  recipientUserId?: string | null
 }
 
 interface PushSubscriptionRegistrationOptions {
@@ -143,21 +144,34 @@ export async function fetchMyNotificationsPage(options: FetchMyNotificationsPage
   const page = Math.max(1, options.page ?? 1)
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
+  const recipientUserId = options.recipientUserId?.trim() || null
 
-  const response = await client
+  let query = client
     .from('notifications' as never)
     .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
+
+  if (recipientUserId) {
+    query = query.eq('recipient_user_id', recipientUserId)
+  }
+
+  const response = await query
     .range(from, to)
 
   if (response.error) {
     throw toControlledError(response.error)
   }
 
-  const unreadResponse = await client
+  let unreadQuery = client
     .from('notifications' as never)
     .select('id', { count: 'exact', head: true })
     .is('read_at', null)
+
+  if (recipientUserId) {
+    unreadQuery = unreadQuery.eq('recipient_user_id', recipientUserId)
+  }
+
+  const unreadResponse = await unreadQuery
 
   if (unreadResponse.error) {
     throw toControlledError(unreadResponse.error)
@@ -170,9 +184,21 @@ export async function fetchMyNotificationsPage(options: FetchMyNotificationsPage
   }
 }
 
-export async function fetchMyNotifications(limit = 6): Promise<AppNotification[]> {
-  const page = await fetchMyNotificationsPage({ pageSize: limit })
+export async function fetchMyNotifications(limit = 6, recipientUserId?: string | null): Promise<AppNotification[]> {
+  const page = await fetchMyNotificationsPage({ pageSize: limit, recipientUserId })
   return page.notifications
+}
+
+function isMissingRpcFunctionError(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return false
+  }
+
+  const record = error as { code?: unknown; message?: unknown }
+  return (
+    record.code === 'PGRST202' ||
+    (typeof record.message === 'string' && record.message.includes('Could not find the function public.mark_notification_unread'))
+  )
 }
 
 export async function markNotificationRead(notificationId: string) {
@@ -195,6 +221,24 @@ export async function markNotificationUnread(notificationId: string) {
   } as never)
 
   if (response.error) {
+    if (isMissingRpcFunctionError(response.error)) {
+      const fallbackResponse = await client
+        .from('notifications' as never)
+        .update({
+          read_at: null,
+          updated_at: new Date().toISOString()
+        } as never)
+        .eq('id', notificationId)
+        .select('*')
+        .single()
+
+      if (fallbackResponse.error) {
+        throw toControlledError(fallbackResponse.error)
+      }
+
+      return fallbackResponse.data as AppNotification
+    }
+
     throw toControlledError(response.error)
   }
 

@@ -30,8 +30,8 @@ export function NotificationCenter() {
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', session.authUser?.id],
-    queryFn: () => fetchMyNotifications(6),
-    enabled: session.isAuthenticated
+    queryFn: () => fetchMyNotifications(6, session.authUser?.id),
+    enabled: session.isAuthenticated && Boolean(session.authUser?.id)
   })
 
   const { handleSubmit, register, reset } = useForm<NotificationValues>({
