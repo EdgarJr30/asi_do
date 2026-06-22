@@ -1,7 +1,7 @@
 # Plan: Membresía → Pago → Aprobación → Activación (gate del ATS)
 
 > Pipeline manual (tipo SaaS de membresía) que controla el acceso a la plataforma/ATS.
-> Estado: **Fase 1 en progreso**. Decisiones acordadas el 2026-06-20.
+> Estado: **Fases 1-3 ✅ completas**. Siguen Fase 4 (consola admin) y Fase 5 (notificaciones). Decisiones acordadas el 2026-06-20.
 
 ## 1. Máquina de estados (un solo carril)
 
@@ -77,7 +77,12 @@ autoridad a pastores.
    - ✅ Subida de comprobante: upload al bucket privado `membership-receipts` + `insert` en `membership_payments` (status=submitted), reflejado en el panel; re-subida tras rechazo soportada.
    - ✅ Entrada del flujo: panel → "Iniciar mi solicitud" va a elegibilidad (categoría) → formulario; tras enviar, CTA "Ir a mi panel de membresía" regresa al panel de pago.
    - ✅ El miembro puede ver/descargar su comprobante subido (URL firmada) desde el panel.
-3. **Cola del pastor** — bandeja scoped, aprobar/más-info/rechazar, subir comprobante.
+3. **Cola del pastor** — bandeja scoped, aprobar/más-info/rechazar, subir comprobante. **✅ COMPLETA**
+   - ✅ Detección del pastor en sesión: `activePastorScopeCount` en `SessionSnapshot` (cuenta de `user_authority_scopes` activos `pastor_administrator`) → `session.isMembershipReviewerPastor`.
+   - ✅ Página `PastorMembershipQueuePage` en `/candidate/membership-queue` (dentro del shell; sin requerir ATS activo). Item de nav "Solicitudes de mi iglesia" (grupo Pastoral) solo visible para pastores.
+   - ✅ Bandeja scoped: `fetchPastorMembershipQueue()` (pendientes + `church_id not null`; RLS limita a sus iglesias) con último pago por solicitud.
+   - ✅ Acciones aprobar/más-info/rechazar vía RPC `review_membership_application` (autoriza por scope + audita); aprobar fija referencia pastoral `endorsed`, rechazar `declined`.
+   - ✅ Pastor puede ver el comprobante (URL firmada) y subirlo por el miembro (RLS de pago/bucket lo permite por `has_active_authority_scope`).
 4. **Consola admin** — solicitudes + pagos, validar pago, botón Activar, módulo de datos bancarios, audit.
 5. **Notificaciones + pulido** — eventos por transición; recordatorios de renovación (después).
 

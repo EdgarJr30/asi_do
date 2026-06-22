@@ -28,6 +28,8 @@ interface AppSessionContextValue {
   canAccessAdminConsole: boolean
   canReviewRecruiterRequests: boolean
   canReviewAppErrors: boolean
+  /** El usuario tiene autoridad pastoral activa ⇒ ve la cola de solicitudes de su iglesia. */
+  isMembershipReviewerPastor: boolean
   refresh: () => Promise<void>
 }
 
@@ -58,6 +60,7 @@ function emptyState(session: Session | null): AppSessionContextValue {
     canAccessAdminConsole: false,
     canReviewRecruiterRequests: false,
     canReviewAppErrors: false,
+    isMembershipReviewerPastor: false,
     refresh: () => Promise.resolve()
   }
 }
@@ -70,6 +73,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
   const [platformPermissions, setPlatformPermissions] = useState<PermissionCode[]>([])
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
   const [isInternalDeveloper, setIsInternalDeveloper] = useState(false)
+  const [activePastorScopeCount, setActivePastorScopeCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const hydratedUserIdRef = useRef<string | null>(null)
 
@@ -84,6 +88,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
       setPlatformPermissions([])
       setIsPlatformAdmin(false)
       setIsInternalDeveloper(false)
+      setActivePastorScopeCount(0)
       setIsLoading(false)
       return
     }
@@ -102,6 +107,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
       setPlatformPermissions(snapshot.platformPermissions)
       setIsPlatformAdmin(snapshot.isPlatformAdmin)
       setIsInternalDeveloper(Boolean(snapshot.profile?.is_internal_developer))
+      setActivePastorScopeCount(snapshot.activePastorScopeCount)
     } finally {
       setIsLoading(false)
     }
@@ -205,6 +211,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     canAccessAdminConsole: isPlatformAdmin || isInternalDeveloper || hasAdminConsolePermission,
     canReviewRecruiterRequests: permissions.includes('recruiter_request:review'),
     canReviewAppErrors: permissions.includes('audit_log:read'),
+    isMembershipReviewerPastor: activePastorScopeCount > 0,
     refresh
   }
 

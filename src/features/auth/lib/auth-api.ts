@@ -32,6 +32,8 @@ export interface SessionSnapshot {
   permissions: PermissionCode[]
   platformPermissions: PermissionCode[]
   isPlatformAdmin: boolean
+  /** Nº de alcances de autoridad pastoral activos del usuario (>0 ⇒ tiene cola de revisión). */
+  activePastorScopeCount: number
 }
 
 interface MembershipQueryRow {
@@ -340,6 +342,19 @@ export async function fetchSessionSnapshot(authUser: User): Promise<SessionSnaps
     throw platformAdminResponse.error
   }
 
+  // Alcances de autoridad pastoral activos: habilitan la cola de revisión del
+  // pastor (lectura propia permitida por RLS user_authority_scopes_read_self).
+  const pastorScopeResponse = await client
+    .from('user_authority_scopes')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', authUser.id)
+    .eq('authority_role', 'pastor_administrator')
+    .eq('status', 'active')
+
+  if (pastorScopeResponse.error) {
+    throw pastorScopeResponse.error
+  }
+
   const platformPermissions = platformPermissionResults.flatMap((permissionCode) =>
     permissionCode ? [permissionCode] : []
   )
@@ -350,7 +365,8 @@ export async function fetchSessionSnapshot(authUser: User): Promise<SessionSnaps
     memberships,
     permissions,
     platformPermissions,
-    isPlatformAdmin: platformAdminResponse.data === true
+    isPlatformAdmin: platformAdminResponse.data === true,
+    activePastorScopeCount: pastorScopeResponse.count ?? 0
   }
 }
 

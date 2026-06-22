@@ -43,6 +43,7 @@ import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
 import { AppEntryRedirect } from '@/experiences/app/routes/app-entry-redirect'
 import { MembershipPaymentsSettingsPage } from '@/features/membership/pages/membership-payments-settings-page'
 import { MembershipStatusPage } from '@/features/membership/pages/membership-status-page'
+import { PastorMembershipQueuePage } from '@/features/membership/pages/pastor-membership-queue-page'
 import { approvalReviewPermissions } from '@/shared/constants/navigation'
 
 export const applicationRoutes: RouteObject[] = [
@@ -120,6 +121,12 @@ export const applicationRoutes: RouteObject[] = [
       {
         path: 'authority-request',
         element: <AuthorityRequestPage />
+      },
+      {
+        // Cola del pastor: visible para usuarios con autoridad pastoral activa.
+        // La RLS limita las filas a sus iglesias; no requiere acceso ATS activo.
+        path: 'membership-queue',
+        element: <PastorMembershipQueuePage />
       },
       {
         path: 'profile',

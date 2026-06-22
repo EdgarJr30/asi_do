@@ -44,7 +44,8 @@ export const surfacePaths = {
     applications: '/candidate/applications',
     onboarding: '/candidate/onboarding',
     recruiterRequest: '/candidate/recruiter-request',
-    authorityRequest: '/candidate/authority-request'
+    authorityRequest: '/candidate/authority-request',
+    membershipQueue: '/candidate/membership-queue'
   },
   workspace: {
     root: '/workspace',

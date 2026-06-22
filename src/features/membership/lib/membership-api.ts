@@ -132,6 +132,90 @@ export async function updateMembershipPaymentSettings(
   return data
 }
 
+export type MembershipReviewDecision = Extract<
+  MembershipApplication['status'],
+  'under_review' | 'needs_more_info' | 'approved' | 'rejected'
+>
+export type PastoralReferenceStatus = MembershipApplication['pastoral_reference_status']
+
+/** Una solicitud de la cola del pastor con su último pago asociado (si existe). */
+export interface PastorQueueItem {
+  application: MembershipApplication
+  payment: MembershipPayment | null
+}
+
+/**
+ * Cola scoped del pastor: solicitudes pendientes de las iglesias sobre las que
+ * tiene alcance. La RLS de `institutional_membership_applications` ya limita las
+ * filas a las iglesias del pastor; aquí solo filtramos por estado y `church_id`.
+ */
+export async function fetchPastorMembershipQueue(): Promise<PastorQueueItem[]> {
+  const client = requireSupabase()
+
+  const { data: applications, error } = await client
+    .from('institutional_membership_applications')
+    .select('*')
+    .in('status', ['submitted', 'under_review', 'needs_more_info'])
+    .not('church_id', 'is', null)
+    .order('submitted_at', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  const rows = applications ?? []
+  if (rows.length === 0) {
+    return []
+  }
+
+  const { data: payments, error: paymentsError } = await client
+    .from('membership_payments')
+    .select('*')
+    .in('application_id', rows.map((application) => application.id))
+    .order('created_at', { ascending: false })
+
+  if (paymentsError) {
+    throw paymentsError
+  }
+
+  // Primer pago por solicitud (ya vienen ordenados desc por created_at).
+  const latestPaymentByApplication = new Map<string, MembershipPayment>()
+  for (const payment of payments ?? []) {
+    if (!latestPaymentByApplication.has(payment.application_id)) {
+      latestPaymentByApplication.set(payment.application_id, payment)
+    }
+  }
+
+  return rows.map((application) => ({
+    application,
+    payment: latestPaymentByApplication.get(application.id) ?? null
+  }))
+}
+
+/**
+ * Revisión de una solicitud por el pastor (o admin) vía RPC `review_membership_application`:
+ * autoriza por alcance pastoral, registra la referencia pastoral y audita la transición.
+ */
+export async function reviewMembershipApplication(input: {
+  applicationId: string
+  decision: MembershipReviewDecision
+  pastoralReference?: PastoralReferenceStatus | null
+  reviewNotes?: string
+}): Promise<MembershipApplication> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('review_membership_application', {
+    p_application_id: input.applicationId,
+    p_decision: input.decision,
+    p_pastoral_reference: input.pastoralReference ?? undefined,
+    p_review_notes: input.reviewNotes?.trim() || undefined
+  })
+
+  if (error) {
+    throw error
+  }
+  return data
+}
+
 export interface SubmitMembershipPaymentInput {
   applicationId: string
   memberUserId: string
@@ -140,6 +224,8 @@ export interface SubmitMembershipPaymentInput {
   currency: string
   file: File
   referenceNote?: string
+  /** Quién sube el comprobante: el propio miembro por defecto, o el pastor por él. */
+  uploadedByUserId?: string
 }
 
 /**
@@ -172,7 +258,7 @@ export async function submitMembershipPaymentReceipt(input: SubmitMembershipPaym
     receipt_path: receiptPath,
     reference_note: input.referenceNote?.trim() || null,
     status: 'submitted',
-    uploaded_by_user_id: input.memberUserId
+    uploaded_by_user_id: input.uploadedByUserId ?? input.memberUserId
   }
 
   const { data, error } = await client.from('membership_payments').insert(payload).select('*').single()

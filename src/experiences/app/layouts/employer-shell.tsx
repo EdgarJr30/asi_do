@@ -15,6 +15,7 @@ import {
   Database,
   FileStack,
   FileText,
+  Inbox,
   KanbanSquare,
   LayoutDashboard,
   Layers3,
@@ -896,8 +897,21 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
       }))
     : []
 
+  // Cola del pastor: solo para usuarios con autoridad pastoral activa.
+  const pastorItems: AppNavItem[] = session.isMembershipReviewerPastor
+    ? [
+        {
+          href: surfacePaths.candidate.membershipQueue,
+          title: 'Solicitudes de mi iglesia',
+          description: 'Revisa y aprueba la membresía de tus iglesias',
+          icon: Inbox
+        }
+      ]
+    : []
+
   const sidebarGroups: AppNavGroup[] = [
     { title: 'Tu espacio', items: baseItems },
+    ...(pastorItems.length ? [{ title: 'Pastoral', items: pastorItems }] : []),
     ...(workspaceItems.length ? [{ title: 'Mi empresa', items: workspaceItems }] : []),
     ...(adminItems.length ? [{ title: 'Administración', items: adminItems }] : []),
     ...(accountItems.length ? [{ title: 'Cuenta', items: accountItems }] : [])
