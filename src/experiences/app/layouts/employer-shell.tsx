@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { CSSProperties, FocusEvent, MouseEvent as ReactMouseEvent, ReactNode } from 'react'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -497,6 +497,22 @@ function SidebarTooltip({ label }: { label: string }) {
   )
 }
 
+function FloatingSidebarTooltip({ label, top }: { label: string; top: number }) {
+  return (
+    <span
+      role="tooltip"
+      className="pointer-events-none fixed z-[60] -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-slate-900/95 px-2.5 py-1.5 text-xs font-medium text-white opacity-100 shadow-[0_12px_28px_rgba(8,12,24,0.45)] backdrop-blur"
+      style={{
+        left: DESKTOP_SIDEBAR_COLLAPSED_WIDTH + 12,
+        top
+      }}
+    >
+      <span className="absolute -left-1 top-1/2 size-2 -translate-y-1/2 rotate-45 border-b border-l border-white/10 bg-slate-900/95" />
+      {label}
+    </span>
+  )
+}
+
 function SidebarFooter({
   config,
   isDesktop,
@@ -712,6 +728,27 @@ function WorkspaceSidebarContent({
   const isDesktop = mode === 'desktop'
   const showCollapsedLabels = isDesktop && isCollapsed
   const activeItemHref = resolveActiveShellItemHref(config.sidebarGroups, activeHref)
+  const [collapsedTooltip, setCollapsedTooltip] = useState<{ label: string; top: number } | null>(null)
+
+  function showCollapsedTooltip(label: string, target: HTMLElement) {
+    const rect = target.getBoundingClientRect()
+    setCollapsedTooltip({
+      label,
+      top: rect.top + rect.height / 2
+    })
+  }
+
+  function handleCollapsedTooltipMouseEnter(label: string, event: ReactMouseEvent<HTMLElement>) {
+    showCollapsedTooltip(label, event.currentTarget)
+  }
+
+  function handleCollapsedTooltipFocus(label: string, event: FocusEvent<HTMLElement>) {
+    showCollapsedTooltip(label, event.currentTarget)
+  }
+
+  function hideCollapsedTooltip() {
+    setCollapsedTooltip(null)
+  }
 
   return (
     <div
@@ -763,9 +800,10 @@ function WorkspaceSidebarContent({
       <div className={cn('flex min-h-0 flex-1 flex-col', showCollapsedLabels ? 'overflow-visible' : 'overflow-hidden')}>
         <nav
           aria-label={`${config.brand} navigation`}
+          onScroll={hideCollapsedTooltip}
           className={cn(
-            'flex-1 px-3 py-4 [scrollbar-color:rgba(255,255,255,0.18)_transparent] [scrollbar-width:thin]',
-            showCollapsedLabels ? 'overflow-visible' : 'overflow-y-auto'
+            'flex-1 overflow-y-auto px-3 py-4 [scrollbar-color:rgba(255,255,255,0.18)_transparent] [scrollbar-width:thin]',
+            showCollapsedLabels ? 'overflow-x-hidden overscroll-contain' : ''
           )}
         >
           {config.sidebarGroups.map((group, groupIndex) => (
@@ -795,7 +833,14 @@ function WorkspaceSidebarContent({
                       )}
                       data-active={isActive ? 'true' : 'false'}
                       type="button"
-                      onClick={() => onActionNavigate(item.href)}
+                      onBlur={showCollapsedLabels ? hideCollapsedTooltip : undefined}
+                      onClick={() => {
+                        hideCollapsedTooltip()
+                        onActionNavigate(item.href)
+                      }}
+                      onFocus={showCollapsedLabels ? (event) => handleCollapsedTooltipFocus(item.title, event) : undefined}
+                      onMouseEnter={showCollapsedLabels ? (event) => handleCollapsedTooltipMouseEnter(item.title, event) : undefined}
+                      onMouseLeave={showCollapsedLabels ? hideCollapsedTooltip : undefined}
                     >
                       {isActive && !showCollapsedLabels ? (
                         <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.5)]" />
@@ -812,10 +857,7 @@ function WorkspaceSidebarContent({
                       {!showCollapsedLabels ? (
                         <span className="min-w-0 flex-1 truncate">{item.title}</span>
                       ) : (
-                        <>
-                          <span className="sr-only">{item.title}</span>
-                          <SidebarTooltip label={item.title} />
-                        </>
+                        <span className="sr-only">{item.title}</span>
                       )}
                     </button>
                   )
@@ -840,6 +882,10 @@ function WorkspaceSidebarContent({
           onSignOut={onSignOut}
         />
       </div>
+
+      {showCollapsedLabels && collapsedTooltip ? (
+        <FloatingSidebarTooltip label={collapsedTooltip.label} top={collapsedTooltip.top} />
+      ) : null}
     </div>
   )
 }
