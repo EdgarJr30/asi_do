@@ -1,7 +1,7 @@
 # Plan: Membresía → Pago → Aprobación → Activación (gate del ATS)
 
 > Pipeline manual (tipo SaaS de membresía) que controla el acceso a la plataforma/ATS.
-> Estado: **Fases 1-3 ✅ completas**. Siguen Fase 4 (consola admin) y Fase 5 (notificaciones). Decisiones acordadas el 2026-06-20.
+> Estado: **Fases 1-4 ✅ completas** (registro→pago→aprobación→verificación→activación, validado e2e). Sigue Fase 5 (notificaciones). Decisiones acordadas el 2026-06-20.
 
 ## 1. Máquina de estados (un solo carril)
 
@@ -90,7 +90,11 @@ autoridad a pastores.
    - ✅ **RLS verificada a nivel de datos** (JWT real por pastor vía PostgREST): pastor A ve el pago y la solicitud de su miembro (1/1); pastor B (otra iglesia) ve **0/0**. Confirma `pastor_has_scope_over_member` en `membership_payments` e `institutional_membership_applications`.
    - ✅ **RLS del bucket (signed URL) verificada**: con un comprobante real subido, firmar la URL (`POST /storage/v1/object/sign/...`) da **HTTP 200** para el pastor de la iglesia y **HTTP 404 (oculto por RLS)** para un pastor de otra iglesia.
    - Nota: el helper se refactorizó en `20260622140000` (join directo contra `user_authority_scopes`, equivalente; no corrige bug — un falso negativo en pruebas se debió a un usuario sembrado que fue eliminado, lo que dejó la solicitud sin `requester` y borró su pago en cascada).
-4. **Consola admin** — solicitudes + pagos, validar pago, botón Activar, módulo de datos bancarios, audit.
+4. **Consola admin** — solicitudes + pagos, validar pago, botón Activar, módulo de datos bancarios, audit. **✅ COMPLETA**
+   - ✅ Página `MembershipConsolePage` en `/admin/membership` (gateada por `membership_payment:verify`); nav admin "Membresía". Lista cada solicitud accionable con su último pago y el estado de la cuenta del miembro.
+   - ✅ Acciones por solicitud: revisar (aprobar/más-info/rechazar) vía RPC `review_membership_application`; verificar/rechazar pago vía `verify_membership_payment`; ver comprobante (URL firmada); **Activar cuenta** vía `activate_member` (habilitado solo con solicitud aprobada + pago verificado; flip de flags + `+1 año`). Todo audita.
+   - ✅ Consolidación: se retiró la sección de membresía de `RecruiterReviewPage` (`/admin/approvals`) que usaba un UPDATE directo sin auditoría; se eliminaron las funciones muertas `reviewInstitutionalMembershipApplication`/`listPendingInstitutionalMembershipApplications`. El módulo de datos bancarios ya existía en `/admin/payments`.
+   - ✅ **Validado e2e** (`tests/e2e/membership-admin-console.spec.ts`): un admin de plataforma aprueba → verifica pago → activa; confirmado en BD (flags del miembro a `active`/`approved`, `+1 año`) y en `audit_logs` (`membership_payment.verified`, `member.activated`, actor=admin).
 5. **Notificaciones + pulido** — eventos por transición; recordatorios de renovación (después).
 
 ## 8. Pendiente de contenido/config

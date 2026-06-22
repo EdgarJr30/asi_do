@@ -67,6 +67,7 @@ export const surfacePaths = {
     platform: '/admin/platform',
     moderation: '/admin/moderation',
     errors: '/admin/errors',
+    membership: '/admin/membership',
     payments: '/admin/payments',
     bootstrapOwner: '/admin/bootstrap-owner'
   }

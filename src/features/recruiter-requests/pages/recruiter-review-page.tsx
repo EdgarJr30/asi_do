@@ -11,11 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea'
 import {
   createPrivateFileUrl,
-  listPendingInstitutionalMembershipApplications,
   listPendingPastorAuthorityRequests,
   listPendingRecruiterRequests,
   listPendingRegionalAuthorityRequests,
-  reviewInstitutionalMembershipApplication,
   reviewPastorAuthorityRequest,
   reviewRecruiterRequest,
   reviewRegionalAuthorityRequest,
@@ -26,7 +24,6 @@ import { RecruiterRequestStatusBadge } from '@/features/recruiter-requests/compo
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 
 const PENDING_RECRUITER_REQUESTS_QUERY_KEY = ['recruiter-requests', 'pending'] as const
-const PENDING_MEMBERSHIP_APPLICATIONS_QUERY_KEY = ['membership-applications', 'pending'] as const
 const PENDING_PASTOR_REQUESTS_QUERY_KEY = ['pastor-authority-requests', 'pending'] as const
 const PENDING_REGIONAL_REQUESTS_QUERY_KEY = ['regional-authority-requests', 'pending'] as const
 
@@ -96,7 +93,6 @@ export function RecruiterReviewPage() {
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({})
 
   const canReviewRecruiterRequests = session.permissions.includes('recruiter_request:review')
-  const canReviewMembershipApplications = session.permissions.includes('user:approve')
   const canReviewPastorRequests = session.permissions.includes('pastor_authority_request:review')
   const canReviewRegionalRequests = session.permissions.includes('regional_authority_request:review')
 
@@ -104,12 +100,6 @@ export function RecruiterReviewPage() {
     queryKey: PENDING_RECRUITER_REQUESTS_QUERY_KEY,
     queryFn: listPendingRecruiterRequests,
     enabled: canReviewRecruiterRequests,
-  })
-
-  const membershipApplicationsQuery = useQuery({
-    queryKey: PENDING_MEMBERSHIP_APPLICATIONS_QUERY_KEY,
-    queryFn: listPendingInstitutionalMembershipApplications,
-    enabled: canReviewMembershipApplications,
   })
 
   const pastorRequestsQuery = useQuery({
@@ -147,27 +137,6 @@ export function RecruiterReviewPage() {
         description: toErrorMessage(error),
         userMessage: 'No pudimos actualizar la solicitud de operador.',
       })
-    },
-  })
-
-  const membershipReviewMutation = useMutation({
-    mutationFn: async (values: {
-      applicationId: string
-      decision: 'under_review' | 'needs_more_info' | 'approved' | 'rejected'
-      reviewNotes: string
-    }) =>
-      reviewInstitutionalMembershipApplication({
-        applicationId: values.applicationId,
-        decision: values.decision,
-        reviewNotes: values.reviewNotes,
-        reviewerUserId: session.authUser?.id ?? null,
-      }),
-    onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: PENDING_MEMBERSHIP_APPLICATIONS_QUERY_KEY })
-      toast.success('Expediente actualizado', {
-        description: `La solicitud institucional quedó en estado ${getWorkflowLabel(variables.decision).toLowerCase()}.`,
-      })
-      setReviewNotes((previous) => ({ ...previous, [variables.applicationId]: '' }))
     },
   })
 
@@ -222,12 +191,10 @@ export function RecruiterReviewPage() {
   }
 
   const pendingRecruiterRequests = recruiterRequestsQuery.data ?? []
-  const pendingMembershipApplications = membershipApplicationsQuery.data ?? []
   const pendingPastorRequests = pastorRequestsQuery.data ?? []
   const pendingRegionalRequests = regionalRequestsQuery.data ?? []
   const totalQueues =
     pendingRecruiterRequests.length +
-    pendingMembershipApplications.length +
     pendingPastorRequests.length +
     pendingRegionalRequests.length
 
@@ -241,16 +208,13 @@ export function RecruiterReviewPage() {
             Esta vista consolida solicitudes de operador, expedientes institucionales y validaciones pastorales/regionales según tus permisos activos.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-4">
+        <CardContent className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-3xl border border-zinc-200 bg-white/85 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-950/80">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Total pendientes</p>
             <p className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{totalQueues}</p>
           </div>
           <div className="rounded-3xl border border-zinc-200 bg-white/85 px-4 py-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-400">
             Operador: {pendingRecruiterRequests.length}
-          </div>
-          <div className="rounded-3xl border border-zinc-200 bg-white/85 px-4 py-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-400">
-            Membresía: {pendingMembershipApplications.length}
           </div>
           <div className="rounded-3xl border border-zinc-200 bg-white/85 px-4 py-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-400">
             Autoridad: {pendingPastorRequests.length + pendingRegionalRequests.length}
@@ -360,93 +324,6 @@ export function RecruiterReviewPage() {
                   </div>
                 )
               })
-            )}
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {canReviewMembershipApplications ? (
-        <Card>
-          <CardHeader>
-            <Badge variant="outline">Membresía</Badge>
-            <CardTitle>Expedientes institucionales</CardTitle>
-            <CardDescription>Gestiona el estado real del expediente preliminar y su referencia pastoral vinculada.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {membershipApplicationsQuery.isLoading ? (
-              <p className="text-sm text-zinc-500">Cargando expedientes...</p>
-            ) : pendingMembershipApplications.length === 0 ? (
-              <p className="text-sm text-zinc-500">No hay expedientes institucionales pendientes.</p>
-            ) : (
-              pendingMembershipApplications.map((application) => (
-                <div key={application.id} className="space-y-4 rounded-3xl border border-zinc-200 px-4 py-4 dark:border-zinc-800">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                        {application.applicant_first_name} {application.applicant_last_name}
-                      </p>
-                      <p className="text-sm text-zinc-500">
-                        {application.category_name} · {application.applicant_email} · {application.applicant_phone}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className={getWorkflowBadgeClassName(application.status)}>
-                      {getWorkflowLabel(application.status)}
-                    </Badge>
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div className="rounded-3xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300">
-                      <p className="font-semibold text-zinc-900 dark:text-zinc-50">Referencia pastoral</p>
-                      <p className="mt-1">{application.pastor_name}</p>
-                      <p>{application.pastor_email}</p>
-                      <p>{application.pastor_phone}</p>
-                    </div>
-                    <div className="rounded-3xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300">
-                      <p className="font-semibold text-zinc-900 dark:text-zinc-50">Territorio base</p>
-                      <p className="mt-1">{application.home_church_name}</p>
-                      <p>
-                        {application.church_city}, {application.church_state_province}
-                      </p>
-                      <p>{application.conference_name}</p>
-                    </div>
-                  </div>
-
-                  <label className="block space-y-2">
-                    <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">Notas de revisión</span>
-                    <Textarea
-                      placeholder="Próximo paso, dudas con referencia pastoral o aclaraciones pendientes."
-                      value={reviewNotes[application.id] ?? ''}
-                      onChange={(event) => setReviewNotes((previous) => ({ ...previous, [application.id]: event.target.value }))}
-                    />
-                  </label>
-
-                  <ApprovalActionRow
-                    disabled={membershipReviewMutation.isPending}
-                    approveLabel="Aprobar expediente"
-                    onApprove={() =>
-                      membershipReviewMutation.mutate({
-                        applicationId: application.id,
-                        decision: 'approved',
-                        reviewNotes: reviewNotes[application.id] ?? '',
-                      })
-                    }
-                    onNeedsMoreInfo={() =>
-                      membershipReviewMutation.mutate({
-                        applicationId: application.id,
-                        decision: 'needs_more_info',
-                        reviewNotes: reviewNotes[application.id] ?? '',
-                      })
-                    }
-                    onReject={() =>
-                      membershipReviewMutation.mutate({
-                        applicationId: application.id,
-                        decision: 'rejected',
-                        reviewNotes: reviewNotes[application.id] ?? '',
-                      })
-                    }
-                  />
-                </div>
-              ))
             )}
           </CardContent>
         </Card>
@@ -606,7 +483,6 @@ export function RecruiterReviewPage() {
       ) : null}
 
       {!canReviewRecruiterRequests &&
-      !canReviewMembershipApplications &&
       !canReviewPastorRequests &&
       !canReviewRegionalRequests ? (
         <Card>

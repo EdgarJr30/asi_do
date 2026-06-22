@@ -176,6 +176,13 @@ export const adminNavigationItems: NavigationItem[] = [
     requiredPermission: 'audit_log:read'
   },
   {
+    title: 'Membresía',
+    href: surfacePaths.admin.membership,
+    description: 'Revisar solicitudes, validar pagos y activar cuentas',
+    requiresAuth: true,
+    requiredPermission: 'membership_payment:verify'
+  },
+  {
     title: 'Datos de pago',
     href: surfacePaths.admin.payments,
     description: 'Datos bancarios y cuotas de membresía',

@@ -137,6 +137,109 @@ export type MembershipReviewDecision = Extract<
   'under_review' | 'needs_more_info' | 'approved' | 'rejected'
 >
 export type PastoralReferenceStatus = MembershipApplication['pastoral_reference_status']
+export type MembershipPaymentDecision = Extract<MembershipPayment['status'], 'verified' | 'rejected'>
+
+/** Vista admin: solicitud + su último pago + el estado de la cuenta del miembro. */
+export interface AdminMembershipRow {
+  application: MembershipApplication
+  payment: MembershipPayment | null
+  member: Pick<Tables<'users'>, 'id' | 'full_name' | 'email' | 'asi_membership_status' | 'status'> | null
+}
+
+/**
+ * Consola admin: solicitudes accionables (no canceladas) con su último pago y el
+ * estado de la cuenta del miembro. RLS exige permiso admin para ver todo.
+ */
+export async function fetchAdminMembershipApplications(): Promise<AdminMembershipRow[]> {
+  const client = requireSupabase()
+
+  const { data: applications, error } = await client
+    .from('institutional_membership_applications')
+    .select('*')
+    .in('status', ['submitted', 'under_review', 'needs_more_info', 'approved'])
+    .order('submitted_at', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  const rows = applications ?? []
+  if (rows.length === 0) {
+    return []
+  }
+
+  const applicationIds = rows.map((application) => application.id)
+  const memberIds = [...new Set(rows.flatMap((application) => (application.requester_user_id ? [application.requester_user_id] : [])))]
+
+  const [paymentsResponse, membersResponse] = await Promise.all([
+    client.from('membership_payments').select('*').in('application_id', applicationIds).order('created_at', { ascending: false }),
+    memberIds.length
+      ? client.from('users').select('id, full_name, email, asi_membership_status, status').in('id', memberIds)
+      : Promise.resolve({ data: [], error: null })
+  ])
+
+  if (paymentsResponse.error) {
+    throw paymentsResponse.error
+  }
+  if (membersResponse.error) {
+    throw membersResponse.error
+  }
+
+  const latestPaymentByApplication = new Map<string, MembershipPayment>()
+  for (const payment of paymentsResponse.data ?? []) {
+    if (!latestPaymentByApplication.has(payment.application_id)) {
+      latestPaymentByApplication.set(payment.application_id, payment)
+    }
+  }
+  const memberById = new Map((membersResponse.data ?? []).map((member) => [member.id, member]))
+
+  return rows.map((application) => ({
+    application,
+    payment: latestPaymentByApplication.get(application.id) ?? null,
+    member: application.requester_user_id ? memberById.get(application.requester_user_id) ?? null : null
+  }))
+}
+
+/** Admin valida (o rechaza) un pago de membresía vía RPC `verify_membership_payment`. */
+export async function verifyMembershipPayment(input: {
+  paymentId: string
+  decision: MembershipPaymentDecision
+  notes?: string
+}): Promise<MembershipPayment> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('verify_membership_payment', {
+    p_payment_id: input.paymentId,
+    p_decision: input.decision,
+    p_notes: input.notes?.trim() || undefined
+  })
+
+  if (error) {
+    throw error
+  }
+  return data
+}
+
+/**
+ * Admin activa la cuenta del miembro vía RPC `activate_member` (exige solicitud
+ * aprobada + pago verificado; flip de flags + expira en +N meses).
+ */
+export async function activateMember(input: {
+  applicationId: string
+  notes?: string
+  membershipMonths?: number
+}): Promise<Tables<'users'>> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('activate_member', {
+    p_application_id: input.applicationId,
+    p_notes: input.notes?.trim() || undefined,
+    p_membership_months: input.membershipMonths ?? undefined
+  })
+
+  if (error) {
+    throw error
+  }
+  return data
+}
 
 /** Una solicitud de la cola del pastor con su último pago asociado (si existe). */
 export interface PastorQueueItem {

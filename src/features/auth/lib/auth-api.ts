@@ -561,47 +561,6 @@ export async function submitInstitutionalMembershipApplication(values: {
   } satisfies MembershipApplicationSubmissionResult
 }
 
-export async function listPendingInstitutionalMembershipApplications() {
-  const client = requireSupabase()
-  const response = await client
-    .from('institutional_membership_applications')
-    .select('*')
-    .in('status', ['submitted', 'under_review', 'needs_more_info'])
-    .order('submitted_at', { ascending: true })
-
-  if (response.error) {
-    throw response.error
-  }
-
-  return response.data
-}
-
-export async function reviewInstitutionalMembershipApplication(values: {
-  applicationId: string
-  decision: Extract<Tables<'institutional_membership_applications'>['status'], 'under_review' | 'needs_more_info' | 'approved' | 'rejected'>
-  reviewerUserId?: string | null
-  reviewNotes?: string
-}) {
-  const client = requireSupabase()
-  const response = await client
-    .from('institutional_membership_applications')
-    .update({
-      status: values.decision,
-      review_notes: values.reviewNotes?.trim() || null,
-      reviewed_at: new Date().toISOString(),
-      reviewed_by_user_id: values.reviewerUserId ?? null
-    })
-    .eq('id', values.applicationId)
-    .select('*')
-    .single()
-
-  if (response.error) {
-    throw response.error
-  }
-
-  return response.data
-}
-
 export async function listMyRecruiterRequests(userId: string) {
   const client = requireSupabase()
   const response = await client

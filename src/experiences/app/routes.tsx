@@ -41,6 +41,7 @@ import { AuthShell } from '@/experiences/app/layouts/auth-shell'
 import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
 import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
 import { AppEntryRedirect } from '@/experiences/app/routes/app-entry-redirect'
+import { MembershipConsolePage } from '@/features/membership/pages/membership-console-page'
 import { MembershipPaymentsSettingsPage } from '@/features/membership/pages/membership-payments-settings-page'
 import { MembershipStatusPage } from '@/features/membership/pages/membership-status-page'
 import { PastorMembershipQueuePage } from '@/features/membership/pages/pastor-membership-queue-page'
@@ -271,6 +272,14 @@ export const applicationRoutes: RouteObject[] = [
         element: (
           <RequirePermission permission="audit_log:read" surface="admin">
             <ErrorLogReviewPage />
+          </RequirePermission>
+        )
+      },
+      {
+        path: 'membership',
+        element: (
+          <RequirePermission permission="membership_payment:verify" surface="admin">
+            <MembershipConsolePage />
           </RequirePermission>
         )
       },
