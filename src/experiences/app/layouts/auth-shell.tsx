@@ -10,7 +10,6 @@ import { BrandLockup } from '@/components/ui/app-brand'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { AuthHeroPanel } from '@/features/auth/components/auth-hero-panel'
-import { cn } from '@/lib/utils/cn'
 
 export function AuthShell() {
   const navigate = useNavigate()
@@ -23,19 +22,14 @@ export function AuthShell() {
     <div className="min-h-screen bg-[linear-gradient(180deg,color-mix(in_srgb,var(--app-canvas)_88%,white)_0%,var(--app-canvas)_100%)]">
       <RouteScrollManager />
       <div className="lg:grid lg:min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.96fr)] xl:grid-cols-[minmax(0,1fr)_minmax(30rem,0.94fr)]">
-        <main
-          className={cn(
-            'flex min-h-screen flex-col px-5 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10 xl:px-14',
-            isSignUp && 'py-4 sm:py-4 lg:py-4'
-          )}
-        >
+        <main className="flex min-h-screen flex-col px-5 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10 xl:px-14">
           <div className="flex items-start justify-between gap-4">
             <button
               className="rounded-[24px] p-1 transition hover:opacity-90"
               type="button"
               onClick={() => void navigate(surfacePaths.institutional.home)}
             >
-              <BrandLockup className="w-26 sm:w-30" />
+              <BrandLockup className="h-10 w-auto sm:h-11" />
             </button>
 
             <div className="flex items-center gap-2 sm:gap-3">
@@ -67,21 +61,11 @@ export function AuthShell() {
             </div>
           </div>
 
-          <div
-            className={cn(
-              'mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-10 lg:py-14',
-              isSignUp && 'max-w-lg py-3 lg:py-4'
-            )}
-          >
+          <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-10 lg:py-14">
             <Outlet />
           </div>
 
-          <footer
-            className={cn(
-              'mt-8 flex flex-col items-center justify-between gap-3 border-t border-(--app-border) pt-6 text-center text-xs text-(--app-text-subtle) sm:flex-row sm:text-left',
-              isSignUp && 'mt-4 pt-4'
-            )}
-          >
+          <footer className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-(--app-border) pt-6 text-center text-xs text-(--app-text-subtle) sm:flex-row sm:text-left">
             <p>© 2026 ASI Rep. Dominicana</p>
             <div className="flex items-center gap-4">
               <button
@@ -91,15 +75,6 @@ export function AuthShell() {
               >
                 Contacto
               </button>
-              {isSignUp ? (
-                <button
-                  className="transition hover:text-(--app-text)"
-                  type="button"
-                  onClick={() => void navigate(surfacePaths.public.jobsRoot)}
-                >
-                  Vacantes
-                </button>
-              ) : null}
             </div>
           </footer>
         </main>
