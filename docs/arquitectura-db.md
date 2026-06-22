@@ -1,0 +1,1194 @@
+# Arquitectura de base de datos (estructura de tablas)
+
+> Referencia de campos por tabla, extraída del esquema real (`src/shared/types/database.ts`).
+> Enlazada desde el flujograma (`plataforma-flujograma.md`). Generado el 2026-06-22.
+
+Tipos: `string`, `number`, `boolean`, `Json`, `string[]`, `enum <nombre>`, ` | null` = nullable.
+
+## Índice de tablas
+
+- **Identidad y acceso**: [`users`](#users) · [`tenants`](#tenants) · [`company_profiles`](#company_profiles) · [`memberships`](#memberships) · [`membership_roles`](#membership_roles) · [`tenant_roles`](#tenant_roles) · [`tenant_role_permissions`](#tenant_role_permissions) · [`permissions`](#permissions) · [`platform_roles`](#platform_roles) · [`platform_role_permissions`](#platform_role_permissions) · [`user_platform_roles`](#user_platform_roles)
+- **Membresía ASI**: [`institutional_membership_applications`](#institutional_membership_applications) · [`membership_payments`](#membership_payments) · [`membership_payment_settings`](#membership_payment_settings) · [`user_authority_scopes`](#user_authority_scopes) · [`pastor_authority_requests`](#pastor_authority_requests) · [`regional_administrator_authority_requests`](#regional_administrator_authority_requests) · [`recruiter_requests`](#recruiter_requests)
+- **Jerarquía de iglesias**: [`church_unions`](#church_unions) · [`church_associations`](#church_associations) · [`church_districts`](#church_districts) · [`churches`](#churches)
+- **Empleo (jobs & aplicaciones)**: [`job_postings`](#job_postings) · [`job_screening_questions`](#job_screening_questions) · [`applications`](#applications) · [`application_answers`](#application_answers) · [`application_notes`](#application_notes) · [`application_ratings`](#application_ratings) · [`application_stage_history`](#application_stage_history) · [`pipeline_stages`](#pipeline_stages) · [`opportunity_stage_templates`](#opportunity_stage_templates) · [`saved_jobs`](#saved_jobs) · [`job_alerts`](#job_alerts)
+- **Perfil del candidato**: [`candidate_profiles`](#candidate_profiles) · [`candidate_educations`](#candidate_educations) · [`candidate_experiences`](#candidate_experiences) · [`candidate_languages`](#candidate_languages) · [`candidate_links`](#candidate_links) · [`candidate_resumes`](#candidate_resumes) · [`candidate_skills`](#candidate_skills)
+- **Notificaciones**: [`notifications`](#notifications) · [`notification_deliveries`](#notification_deliveries) · [`notification_delivery_logs`](#notification_delivery_logs) · [`notification_preferences`](#notification_preferences) · [`push_subscriptions`](#push_subscriptions)
+- **Suscripciones y planes**: [`subscription_plans`](#subscription_plans) · [`tenant_subscriptions`](#tenant_subscriptions) · [`feature_flags`](#feature_flags)
+- **Moderación y auditoría**: [`moderation_cases`](#moderation_cases) · [`moderation_actions`](#moderation_actions) · [`audit_logs`](#audit_logs) · [`app_error_logs`](#app_error_logs)
+
+
+## Identidad y acceso
+
+### <a id="users"></a>`users`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `approval_reviewed_at` | `string` | ✓ |
+| `approval_reviewed_by_user_id` | `string` | ✓ |
+| `asi_membership_status` | `enum asi_membership_status` |  |
+| `avatar_path` | `string` | ✓ |
+| `country_code` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `display_name` | `string` |  |
+| `email` | `string` | ✓ |
+| `full_name` | `string` |  |
+| `id` | `string` |  |
+| `is_internal_developer` | `boolean` |  |
+| `last_sign_in_at` | `string` | ✓ |
+| `locale` | `string` | ✓ |
+| `manual_access_override_by_user_id` | `string` | ✓ |
+| `manual_access_override_reason` | `string` | ✓ |
+| `manual_access_override_until` | `string` | ✓ |
+| `membership_expires_at` | `string` | ✓ |
+| `phone` | `string` | ✓ |
+| `status` | `enum user_status` |  |
+| `subscription_expires_at` | `string` | ✓ |
+| `updated_at` | `string` |  |
+| `user_approval_status` | `enum user_approval_status` |  |
+| `user_subscription_status` | `enum user_subscription_status` |  |
+
+**Foreign keys:**
+- `approval_reviewed_by_user_id` → [`users`](#users).`id`
+- `manual_access_override_by_user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="tenants"></a>`tenants`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `created_at` | `string` |  |
+| `created_by_user_id` | `string` | ✓ |
+| `id` | `string` |  |
+| `name` | `string` |  |
+| `slug` | `string` |  |
+| `status` | `enum tenant_status` |  |
+| `tenant_kind` | `enum tenant_kind` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `created_by_user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="company_profiles"></a>`company_profiles`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `company_email` | `string` | ✓ |
+| `company_phone` | `string` | ✓ |
+| `country_code` | `string` | ✓ |
+| `cover_image_path` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `description` | `string` | ✓ |
+| `display_name` | `string` |  |
+| `id` | `string` |  |
+| `industry` | `string` | ✓ |
+| `is_public` | `boolean` |  |
+| `legal_name` | `string` |  |
+| `logo_path` | `string` | ✓ |
+| `profile_kind` | `enum tenant_kind` |  |
+| `profile_metadata` | `Json` |  |
+| `size_range` | `string` | ✓ |
+| `tenant_id` | `string` |  |
+| `updated_at` | `string` |  |
+| `website_url` | `string` | ✓ |
+
+**Foreign keys:**
+- `tenant_id` → [`tenants`](#tenants).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="memberships"></a>`memberships`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `invited_by_user_id` | `string` | ✓ |
+| `joined_at` | `string` |  |
+| `status` | `enum membership_status` |  |
+| `tenant_id` | `string` |  |
+| `updated_at` | `string` |  |
+| `user_id` | `string` |  |
+
+**Foreign keys:**
+- `invited_by_user_id` → [`users`](#users).`id`
+- `tenant_id` → [`tenants`](#tenants).`id`
+- `user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="membership_roles"></a>`membership_roles`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `assigned_at` | `string` |  |
+| `assigned_by_user_id` | `string` | ✓ |
+| `id` | `string` |  |
+| `membership_id` | `string` |  |
+| `revoked_at` | `string` | ✓ |
+| `revoked_by_user_id` | `string` | ✓ |
+| `role_id` | `string` |  |
+
+**Foreign keys:**
+- `assigned_by_user_id` → [`users`](#users).`id`
+- `membership_id` → [`memberships`](#memberships).`id`
+- `revoked_by_user_id` → [`users`](#users).`id`
+- `role_id` → [`tenant_roles`](#tenant_roles).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="tenant_roles"></a>`tenant_roles`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `code` | `string` |  |
+| `created_at` | `string` |  |
+| `description` | `string` |  |
+| `id` | `string` |  |
+| `is_locked` | `boolean` |  |
+| `is_system` | `boolean` |  |
+| `name` | `string` |  |
+| `tenant_id` | `string` | ✓ |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `tenant_id` → [`tenants`](#tenants).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="tenant_role_permissions"></a>`tenant_role_permissions`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `created_at` | `string` |  |
+| `permission_id` | `string` |  |
+| `role_id` | `string` |  |
+
+**Foreign keys:**
+- `permission_id` → [`permissions`](#permissions).`id`
+- `role_id` → [`tenant_roles`](#tenant_roles).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="permissions"></a>`permissions`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `action` | `string` |  |
+| `code` | `string` |  |
+| `created_at` | `string` |  |
+| `description` | `string` |  |
+| `id` | `string` |  |
+| `resource` | `string` |  |
+| `scope` | `enum permission_scope` |  |
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="platform_roles"></a>`platform_roles`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `code` | `string` |  |
+| `created_at` | `string` |  |
+| `description` | `string` |  |
+| `id` | `string` |  |
+| `is_locked` | `boolean` |  |
+| `is_system` | `boolean` |  |
+| `name` | `string` |  |
+| `updated_at` | `string` |  |
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="platform_role_permissions"></a>`platform_role_permissions`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `created_at` | `string` |  |
+| `permission_id` | `string` |  |
+| `role_id` | `string` |  |
+
+**Foreign keys:**
+- `permission_id` → [`permissions`](#permissions).`id`
+- `role_id` → [`platform_roles`](#platform_roles).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="user_platform_roles"></a>`user_platform_roles`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `assigned_at` | `string` |  |
+| `assigned_by_user_id` | `string` | ✓ |
+| `id` | `string` |  |
+| `revoked_at` | `string` | ✓ |
+| `revoked_by_user_id` | `string` | ✓ |
+| `role_id` | `string` |  |
+| `user_id` | `string` |  |
+
+**Foreign keys:**
+- `assigned_by_user_id` → [`users`](#users).`id`
+- `revoked_by_user_id` → [`users`](#users).`id`
+- `role_id` → [`platform_roles`](#platform_roles).`id`
+- `user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+
+## Membresía ASI
+
+### <a id="institutional_membership_applications"></a>`institutional_membership_applications`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `applicant_email` | `string` |  |
+| `applicant_first_name` | `string` |  |
+| `applicant_last_name` | `string` |  |
+| `applicant_phone` | `string` |  |
+| `assigned_pastor_user_id` | `string` | ✓ |
+| `assigned_queue` | `enum membership_application_queue` |  |
+| `category_name` | `string` |  |
+| `category_slug` | `string` |  |
+| `church_city` | `string` |  |
+| `church_id` | `string` | ✓ |
+| `church_state_province` | `string` |  |
+| `conference_name` | `string` |  |
+| `created_at` | `string` |  |
+| `dues` | `string` |  |
+| `eligibility_snapshot` | `Json` |  |
+| `home_church_name` | `string` |  |
+| `id` | `string` |  |
+| `pastor_email` | `string` |  |
+| `pastor_name` | `string` |  |
+| `pastor_phone` | `string` |  |
+| `pastoral_reference_status` | `enum pastoral_reference_status` |  |
+| `requester_user_id` | `string` | ✓ |
+| `review_notes` | `string` | ✓ |
+| `reviewed_at` | `string` | ✓ |
+| `reviewed_by_user_id` | `string` | ✓ |
+| `status` | `enum review_workflow_status` |  |
+| `submitted_at` | `string` |  |
+| `submitted_form_snapshot` | `Json` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `assigned_pastor_user_id` → [`users`](#users).`id`
+- `church_id` → [`churches`](#churches).`id`
+- `requester_user_id` → [`users`](#users).`id`
+- `reviewed_by_user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="membership_payments"></a>`membership_payments`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `amount` | `number` | ✓ |
+| `application_id` | `string` |  |
+| `category_slug` | `string` |  |
+| `created_at` | `string` |  |
+| `currency` | `string` |  |
+| `id` | `string` |  |
+| `member_user_id` | `string` |  |
+| `method` | `string` |  |
+| `notes` | `string` | ✓ |
+| `period_end` | `string` | ✓ |
+| `period_start` | `string` | ✓ |
+| `receipt_path` | `string` | ✓ |
+| `reference_note` | `string` | ✓ |
+| `status` | `enum membership_payment_status` |  |
+| `updated_at` | `string` |  |
+| `uploaded_by_user_id` | `string` | ✓ |
+| `verified_at` | `string` | ✓ |
+| `verified_by_user_id` | `string` | ✓ |
+
+**Foreign keys:**
+- `application_id` → [`institutional_membership_applications`](#institutional_membership_applications).`id`
+- `member_user_id` → [`users`](#users).`id`
+- `uploaded_by_user_id` → [`users`](#users).`id`
+- `verified_by_user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="membership_payment_settings"></a>`membership_payment_settings`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `account_holder` | `string` |  |
+| `account_number` | `string` |  |
+| `account_type` | `string` |  |
+| `bank_name` | `string` |  |
+| `created_at` | `string` |  |
+| `currency` | `string` |  |
+| `dues_by_category` | `Json` |  |
+| `id` | `string` |  |
+| `instructions` | `string` |  |
+| `is_active` | `boolean` |  |
+| `routing_or_swift` | `string` |  |
+| `updated_at` | `string` |  |
+| `updated_by_user_id` | `string` | ✓ |
+
+**Foreign keys:**
+- `updated_by_user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="user_authority_scopes"></a>`user_authority_scopes`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `association_id` | `string` | ✓ |
+| `authority_role` | `enum authority_role_type` |  |
+| `church_ids` | `string[]` |  |
+| `created_at` | `string` |  |
+| `district_id` | `string` | ✓ |
+| `granted_at` | `string` |  |
+| `granted_by_user_id` | `string` | ✓ |
+| `id` | `string` |  |
+| `notes` | `string` | ✓ |
+| `revoked_at` | `string` | ✓ |
+| `revoked_by_user_id` | `string` | ✓ |
+| `scope_type` | `enum authority_scope_type` |  |
+| `source_request_id` | `string` |  |
+| `source_request_type` | `string` |  |
+| `status` | `enum authority_scope_status` |  |
+| `union_id` | `string` | ✓ |
+| `updated_at` | `string` |  |
+| `user_id` | `string` |  |
+
+**Foreign keys:**
+- `association_id` → [`church_associations`](#church_associations).`id`
+- `district_id` → [`church_districts`](#church_districts).`id`
+- `granted_by_user_id` → [`users`](#users).`id`
+- `revoked_by_user_id` → [`users`](#users).`id`
+- `union_id` → [`church_unions`](#church_unions).`id`
+- `user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="pastor_authority_requests"></a>`pastor_authority_requests`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `approved_scope_id` | `string` | ✓ |
+| `association_id` | `string` | ✓ |
+| `church_ids` | `string[]` |  |
+| `created_at` | `string` |  |
+| `district_id` | `string` | ✓ |
+| `first_names` | `string` |  |
+| `id` | `string` |  |
+| `identity_document_file_path` | `string` |  |
+| `identity_document_number` | `string` |  |
+| `last_names` | `string` |  |
+| `notes` | `string` | ✓ |
+| `pastor_status_attestation` | `boolean` |  |
+| `phone_number` | `string` |  |
+| `requester_user_id` | `string` |  |
+| `review_notes` | `string` | ✓ |
+| `reviewed_at` | `string` | ✓ |
+| `reviewed_by_user_id` | `string` | ✓ |
+| `status` | `enum review_workflow_status` |  |
+| `submitted_at` | `string` |  |
+| `submitted_form_snapshot` | `Json` |  |
+| `union_id` | `string` | ✓ |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `association_id` → [`church_associations`](#church_associations).`id`
+- `district_id` → [`church_districts`](#church_districts).`id`
+- `requester_user_id` → [`users`](#users).`id`
+- `reviewed_by_user_id` → [`users`](#users).`id`
+- `union_id` → [`church_unions`](#church_unions).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="regional_administrator_authority_requests"></a>`regional_administrator_authority_requests`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `admin_scope_type` | `enum authority_scope_type` |  |
+| `appointment_document_file_path` | `string` |  |
+| `approved_scope_id` | `string` | ✓ |
+| `association_id` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `first_names` | `string` |  |
+| `id` | `string` |  |
+| `identity_document_file_path` | `string` |  |
+| `identity_document_number` | `string` |  |
+| `last_names` | `string` |  |
+| `notes` | `string` | ✓ |
+| `phone_number` | `string` |  |
+| `position_title` | `string` |  |
+| `requester_user_id` | `string` |  |
+| `review_notes` | `string` | ✓ |
+| `reviewed_at` | `string` | ✓ |
+| `reviewed_by_user_id` | `string` | ✓ |
+| `status` | `enum review_workflow_status` |  |
+| `submitted_at` | `string` |  |
+| `submitted_form_snapshot` | `Json` |  |
+| `union_id` | `string` | ✓ |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `reviewed_by_user_id` → [`users`](#users).`id`
+- `requester_user_id` → [`users`](#users).`id`
+- `association_id` → [`church_associations`](#church_associations).`id`
+- `union_id` → [`church_unions`](#church_unions).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="recruiter_requests"></a>`recruiter_requests`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `approved_tenant_id` | `string` | ✓ |
+| `company_country_code` | `string` | ✓ |
+| `company_description` | `string` | ✓ |
+| `company_email` | `string` | ✓ |
+| `company_logo_path` | `string` | ✓ |
+| `company_phone` | `string` | ✓ |
+| `company_website_url` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `request_metadata` | `Json` |  |
+| `requested_company_legal_name` | `string` | ✓ |
+| `requested_company_name` | `string` |  |
+| `requested_tenant_kind` | `enum tenant_kind` |  |
+| `requested_tenant_slug` | `string` |  |
+| `requester_user_id` | `string` |  |
+| `review_notes` | `string` | ✓ |
+| `reviewed_at` | `string` | ✓ |
+| `reviewed_by_user_id` | `string` | ✓ |
+| `status` | `enum recruiter_request_status` |  |
+| `submitted_at` | `string` |  |
+| `updated_at` | `string` |  |
+| `verification_document_path` | `string` | ✓ |
+
+**Foreign keys:**
+- `approved_tenant_id` → [`tenants`](#tenants).`id`
+- `requester_user_id` → [`users`](#users).`id`
+- `reviewed_by_user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+
+## Jerarquía de iglesias
+
+### <a id="church_unions"></a>`church_unions`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `code` | `string` |  |
+| `country_code` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `name` | `string` |  |
+| `updated_at` | `string` |  |
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="church_associations"></a>`church_associations`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `code` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `name` | `string` |  |
+| `union_id` | `string` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `union_id` → [`church_unions`](#church_unions).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="church_districts"></a>`church_districts`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `association_id` | `string` |  |
+| `code` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `name` | `string` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `association_id` → [`church_associations`](#church_associations).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="churches"></a>`churches`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `city` | `string` | ✓ |
+| `code` | `string` |  |
+| `created_at` | `string` |  |
+| `district_id` | `string` |  |
+| `id` | `string` |  |
+| `name` | `string` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `district_id` → [`church_districts`](#church_districts).`id`
+
+[↑ índice](#índice-de-tablas)
+
+
+## Empleo (jobs & aplicaciones)
+
+### <a id="job_postings"></a>`job_postings`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `archived_at` | `string` | ✓ |
+| `city_name` | `string` | ✓ |
+| `closed_at` | `string` | ✓ |
+| `company_profile_id` | `string` |  |
+| `compensation_currency` | `string` | ✓ |
+| `compensation_max_amount` | `number` | ✓ |
+| `compensation_min_amount` | `number` | ✓ |
+| `compensation_type` | `enum opportunity_compensation_type` |  |
+| `country_code` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `created_by_user_id` | `string` | ✓ |
+| `description` | `string` |  |
+| `employment_type` | `enum job_employment_type` |  |
+| `experience_level` | `string` | ✓ |
+| `expires_at` | `string` | ✓ |
+| `id` | `string` |  |
+| `is_featured` | `boolean` |  |
+| `opportunity_metadata` | `Json` |  |
+| `opportunity_type` | `enum opportunity_type` |  |
+| `published_at` | `string` | ✓ |
+| `salary_currency` | `string` | ✓ |
+| `salary_max_amount` | `number` | ✓ |
+| `salary_min_amount` | `number` | ✓ |
+| `salary_visible` | `boolean` |  |
+| `slug` | `string` |  |
+| `status` | `enum job_posting_status` |  |
+| `summary` | `string` |  |
+| `tenant_id` | `string` |  |
+| `title` | `string` |  |
+| `updated_at` | `string` |  |
+| `workplace_type` | `enum job_workplace_type` |  |
+
+**Foreign keys:**
+- `company_profile_id` → [`company_profiles`](#company_profiles).`id`
+- `created_by_user_id` → [`users`](#users).`id`
+- `tenant_id` → [`tenants`](#tenants).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="job_screening_questions"></a>`job_screening_questions`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `answer_type` | `enum job_screening_answer_type` |  |
+| `created_at` | `string` |  |
+| `helper_text` | `string` | ✓ |
+| `id` | `string` |  |
+| `is_required` | `boolean` |  |
+| `job_posting_id` | `string` |  |
+| `options_json` | `Json` |  |
+| `question_text` | `string` |  |
+| `sort_order` | `number` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `job_posting_id` → [`job_postings`](#job_postings).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="applications"></a>`applications`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `candidate_display_name_snapshot` | `string` |  |
+| `candidate_email_snapshot` | `string` | ✓ |
+| `candidate_headline_snapshot` | `string` | ✓ |
+| `candidate_profile_id` | `string` |  |
+| `candidate_summary_snapshot` | `string` | ✓ |
+| `cover_letter` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `current_stage_id` | `string` | ✓ |
+| `id` | `string` |  |
+| `job_posting_id` | `string` |  |
+| `status_public` | `enum application_public_status` |  |
+| `submitted_at` | `string` |  |
+| `submitted_resume_filename` | `string` | ✓ |
+| `submitted_resume_id` | `string` | ✓ |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `candidate_profile_id` → [`candidate_profiles`](#candidate_profiles).`id`
+- `current_stage_id` → [`pipeline_stages`](#pipeline_stages).`id`
+- `job_posting_id` → [`job_postings`](#job_postings).`id`
+- `submitted_resume_id` → [`candidate_resumes`](#candidate_resumes).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="application_answers"></a>`application_answers`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `answer_json` | `Json` | ✓ |
+| `answer_text` | `string` | ✓ |
+| `application_id` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `screening_question_id` | `string` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `application_id` → [`applications`](#applications).`id`
+- `screening_question_id` → [`job_screening_questions`](#job_screening_questions).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="application_notes"></a>`application_notes`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `application_id` | `string` |  |
+| `author_user_id` | `string` |  |
+| `body` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `updated_at` | `string` |  |
+| `visibility` | `string` |  |
+
+**Foreign keys:**
+- `application_id` → [`applications`](#applications).`id`
+- `author_user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="application_ratings"></a>`application_ratings`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `application_id` | `string` |  |
+| `author_user_id` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `rubric_json` | `Json` |  |
+| `score` | `number` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `application_id` → [`applications`](#applications).`id`
+- `author_user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="application_stage_history"></a>`application_stage_history`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `application_id` | `string` |  |
+| `changed_at` | `string` |  |
+| `changed_by_user_id` | `string` |  |
+| `from_stage_id` | `string` | ✓ |
+| `id` | `string` |  |
+| `note` | `string` | ✓ |
+| `to_stage_id` | `string` |  |
+
+**Foreign keys:**
+- `application_id` → [`applications`](#applications).`id`
+- `changed_by_user_id` → [`users`](#users).`id`
+- `from_stage_id` → [`pipeline_stages`](#pipeline_stages).`id`
+- `to_stage_id` → [`pipeline_stages`](#pipeline_stages).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="pipeline_stages"></a>`pipeline_stages`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `code` | `string` |  |
+| `color_token` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `is_system` | `boolean` |  |
+| `name` | `string` |  |
+| `position` | `number` |  |
+| `tenant_id` | `string` | ✓ |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `tenant_id` → [`tenants`](#tenants).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="opportunity_stage_templates"></a>`opportunity_stage_templates`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `code` | `string` |  |
+| `color_token` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `is_default` | `boolean` |  |
+| `name` | `string` |  |
+| `opportunity_type` | `enum opportunity_type` |  |
+| `position` | `number` |  |
+| `updated_at` | `string` |  |
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="saved_jobs"></a>`saved_jobs`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `candidate_profile_id` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `job_posting_id` | `string` |  |
+
+**Foreign keys:**
+- `candidate_profile_id` → [`candidate_profiles`](#candidate_profiles).`id`
+- `job_posting_id` → [`job_postings`](#job_postings).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="job_alerts"></a>`job_alerts`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `candidate_profile_id` | `string` |  |
+| `created_at` | `string` |  |
+| `criteria_json` | `Json` |  |
+| `frequency` | `string` |  |
+| `id` | `string` |  |
+| `is_active` | `boolean` |  |
+| `label` | `string` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `candidate_profile_id` → [`candidate_profiles`](#candidate_profiles).`id`
+
+[↑ índice](#índice-de-tablas)
+
+
+## Perfil del candidato
+
+### <a id="candidate_profiles"></a>`candidate_profiles`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `city_name` | `string` | ✓ |
+| `completeness_score` | `number` |  |
+| `country_code` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `desired_role` | `string` | ✓ |
+| `headline` | `string` | ✓ |
+| `id` | `string` |  |
+| `is_visible_to_recruiters` | `boolean` |  |
+| `summary` | `string` | ✓ |
+| `updated_at` | `string` |  |
+| `user_id` | `string` |  |
+| `visibility` | `string` |  |
+| `visibility_updated_at` | `string` |  |
+
+**Foreign keys:**
+- `user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="candidate_educations"></a>`candidate_educations`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `candidate_profile_id` | `string` |  |
+| `created_at` | `string` |  |
+| `degree_name` | `string` |  |
+| `end_date` | `string` | ✓ |
+| `field_of_study` | `string` | ✓ |
+| `id` | `string` |  |
+| `institution_name` | `string` |  |
+| `is_current` | `boolean` |  |
+| `sort_order` | `number` |  |
+| `start_date` | `string` | ✓ |
+| `summary` | `string` | ✓ |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `candidate_profile_id` → [`candidate_profiles`](#candidate_profiles).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="candidate_experiences"></a>`candidate_experiences`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `candidate_profile_id` | `string` |  |
+| `city_name` | `string` | ✓ |
+| `company_name` | `string` |  |
+| `country_code` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `employment_type` | `string` | ✓ |
+| `end_date` | `string` | ✓ |
+| `id` | `string` |  |
+| `is_current` | `boolean` |  |
+| `role_title` | `string` |  |
+| `sort_order` | `number` |  |
+| `start_date` | `string` |  |
+| `summary` | `string` | ✓ |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `candidate_profile_id` → [`candidate_profiles`](#candidate_profiles).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="candidate_languages"></a>`candidate_languages`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `candidate_profile_id` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `language_name` | `string` |  |
+| `proficiency_label` | `string` |  |
+| `sort_order` | `number` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `candidate_profile_id` → [`candidate_profiles`](#candidate_profiles).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="candidate_links"></a>`candidate_links`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `candidate_profile_id` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `label` | `string` | ✓ |
+| `link_type` | `string` |  |
+| `sort_order` | `number` |  |
+| `updated_at` | `string` |  |
+| `url` | `string` |  |
+
+**Foreign keys:**
+- `candidate_profile_id` → [`candidate_profiles`](#candidate_profiles).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="candidate_resumes"></a>`candidate_resumes`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `candidate_profile_id` | `string` |  |
+| `created_at` | `string` |  |
+| `file_size_bytes` | `number` |  |
+| `filename` | `string` |  |
+| `id` | `string` |  |
+| `is_default` | `boolean` |  |
+| `mime_type` | `string` |  |
+| `storage_path` | `string` |  |
+| `updated_at` | `string` |  |
+| `uploaded_at` | `string` |  |
+
+**Foreign keys:**
+- `candidate_profile_id` → [`candidate_profiles`](#candidate_profiles).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="candidate_skills"></a>`candidate_skills`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `candidate_profile_id` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `proficiency_label` | `string` | ✓ |
+| `skill_name` | `string` |  |
+| `sort_order` | `number` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `candidate_profile_id` → [`candidate_profiles`](#candidate_profiles).`id`
+
+[↑ índice](#índice-de-tablas)
+
+
+## Notificaciones
+
+### <a id="notifications"></a>`notifications`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `action_url` | `string` | ✓ |
+| `body` | `string` |  |
+| `clicked_at` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `payload` | `Json` |  |
+| `read_at` | `string` | ✓ |
+| `recipient_user_id` | `string` |  |
+| `tenant_id` | `string` | ✓ |
+| `title` | `string` |  |
+| `type` | `string` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `recipient_user_id` → [`users`](#users).`id`
+- `tenant_id` → [`tenants`](#tenants).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="notification_deliveries"></a>`notification_deliveries`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `attempt_count` | `number` |  |
+| `channel` | `string` |  |
+| `created_at` | `string` |  |
+| `delivered_at` | `string` | ✓ |
+| `delivery_status` | `string` |  |
+| `failed_at` | `string` | ✓ |
+| `id` | `string` |  |
+| `last_attempt_at` | `string` | ✓ |
+| `notification_id` | `string` |  |
+| `provider_message_id` | `string` | ✓ |
+| `provider_name` | `string` |  |
+| `push_subscription_id` | `string` | ✓ |
+| `response_code` | `number` | ✓ |
+| `response_payload` | `Json` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `notification_id` → [`notifications`](#notifications).`id`
+- `push_subscription_id` → [`push_subscriptions`](#push_subscriptions).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="notification_delivery_logs"></a>`notification_delivery_logs`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `created_at` | `string` |  |
+| `delivery_id` | `string` |  |
+| `id` | `string` |  |
+| `log_level` | `string` |  |
+| `message` | `string` |  |
+| `metadata` | `Json` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `delivery_id` → [`notification_deliveries`](#notification_deliveries).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="notification_preferences"></a>`notification_preferences`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `created_at` | `string` |  |
+| `email_enabled` | `boolean` |  |
+| `id` | `string` |  |
+| `in_app_enabled` | `boolean` |  |
+| `locale` | `string` |  |
+| `push_enabled` | `boolean` |  |
+| `quiet_hours_json` | `Json` |  |
+| `tenant_id` | `string` | ✓ |
+| `updated_at` | `string` |  |
+| `user_id` | `string` |  |
+
+**Foreign keys:**
+- `tenant_id` → [`tenants`](#tenants).`id`
+- `user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="push_subscriptions"></a>`push_subscriptions`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `auth_key` | `string` |  |
+| `created_at` | `string` |  |
+| `device_kind` | `string` | ✓ |
+| `device_label` | `string` | ✓ |
+| `endpoint` | `string` |  |
+| `id` | `string` |  |
+| `is_active` | `boolean` |  |
+| `last_seen_at` | `string` |  |
+| `locale` | `string` |  |
+| `permission_state` | `string` |  |
+| `tenant_id` | `string` | ✓ |
+| `updated_at` | `string` |  |
+| `user_agent` | `string` | ✓ |
+| `user_id` | `string` |  |
+
+**Foreign keys:**
+- `tenant_id` → [`tenants`](#tenants).`id`
+- `user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+
+## Suscripciones y planes
+
+### <a id="subscription_plans"></a>`subscription_plans`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `code` | `string` |  |
+| `created_at` | `string` |  |
+| `currency_code` | `string` |  |
+| `description` | `string` |  |
+| `id` | `string` |  |
+| `limits_json` | `Json` |  |
+| `monthly_price_amount` | `number` |  |
+| `name` | `string` |  |
+| `status` | `enum subscription_plan_status` |  |
+| `updated_at` | `string` |  |
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="tenant_subscriptions"></a>`tenant_subscriptions`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `created_at` | `string` |  |
+| `ends_at` | `string` | ✓ |
+| `id` | `string` |  |
+| `plan_id` | `string` |  |
+| `seat_count` | `number` |  |
+| `starts_at` | `string` |  |
+| `status` | `enum tenant_subscription_status` |  |
+| `tenant_id` | `string` |  |
+| `updated_at` | `string` |  |
+| `usage_snapshot` | `Json` |  |
+
+**Foreign keys:**
+- `plan_id` → [`subscription_plans`](#subscription_plans).`id`
+- `tenant_id` → [`tenants`](#tenants).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="feature_flags"></a>`feature_flags`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `code` | `string` |  |
+| `created_at` | `string` |  |
+| `description` | `string` |  |
+| `id` | `string` |  |
+| `is_enabled` | `boolean` |  |
+| `metadata` | `Json` |  |
+| `scope_id` | `string` | ✓ |
+| `scope_type` | `enum feature_scope_type` |  |
+| `updated_at` | `string` |  |
+
+[↑ índice](#índice-de-tablas)
+
+
+## Moderación y auditoría
+
+### <a id="moderation_cases"></a>`moderation_cases`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `assigned_to_user_id` | `string` | ✓ |
+| `created_at` | `string` |  |
+| `entity_id` | `string` |  |
+| `entity_type` | `string` |  |
+| `id` | `string` |  |
+| `metadata` | `Json` |  |
+| `opened_by_user_id` | `string` |  |
+| `reason` | `string` |  |
+| `resolved_at` | `string` | ✓ |
+| `resolved_by_user_id` | `string` | ✓ |
+| `severity` | `string` |  |
+| `status` | `enum moderation_case_status` |  |
+| `tenant_id` | `string` | ✓ |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `assigned_to_user_id` → [`users`](#users).`id`
+- `opened_by_user_id` → [`users`](#users).`id`
+- `resolved_by_user_id` → [`users`](#users).`id`
+- `tenant_id` → [`tenants`](#tenants).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="moderation_actions"></a>`moderation_actions`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `action_type` | `enum moderation_action_type` |  |
+| `actor_user_id` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `moderation_case_id` | `string` |  |
+| `note` | `string` | ✓ |
+| `payload` | `Json` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `actor_user_id` → [`users`](#users).`id`
+- `moderation_case_id` → [`moderation_cases`](#moderation_cases).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="audit_logs"></a>`audit_logs`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `actor_membership_id` | `string` | ✓ |
+| `actor_user_id` | `string` | ✓ |
+| `changed_fields` | `string[]` |  |
+| `created_at` | `string` |  |
+| `entity_id` | `string` |  |
+| `entity_type` | `string` |  |
+| `event_type` | `string` |  |
+| `id` | `string` |  |
+| `jwt_claims` | `Json` |  |
+| `new_record` | `Json` | ✓ |
+| `old_record` | `Json` | ✓ |
+| `payload` | `Json` |  |
+| `record_id` | `string` | ✓ |
+| `request_headers` | `Json` |  |
+| `schema_name` | `string` | ✓ |
+| `source` | `string` |  |
+| `tenant_id` | `string` | ✓ |
+| `transaction_id` | `number` | ✓ |
+
+**Foreign keys:**
+- `actor_membership_id` → [`memberships`](#memberships).`id`
+- `actor_user_id` → [`users`](#users).`id`
+- `tenant_id` → [`tenants`](#tenants).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="app_error_logs"></a>`app_error_logs`
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `created_at` | `string` |  |
+| `error_code` | `string` | ✓ |
+| `error_message` | `string` |  |
+| `id` | `string` |  |
+| `is_resolved` | `boolean` |  |
+| `metadata` | `Json` |  |
+| `resolved_at` | `string` | ✓ |
+| `resolved_by_user_id` | `string` | ✓ |
+| `route` | `string` | ✓ |
+| `severity` | `string` |  |
+| `source` | `string` |  |
+| `updated_at` | `string` |  |
+| `user_id` | `string` | ✓ |
+| `user_message` | `string` |  |
+
+**Foreign keys:**
+- `resolved_by_user_id` → [`users`](#users).`id`
+- `user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)

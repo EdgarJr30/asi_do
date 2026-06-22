@@ -1,4 +1,41 @@
-# Flujograma integral de la plataforma ASI
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flujograma de la plataforma ASI</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --text:#e6edf3; --muted:#9aa7b4; --border:#30363d; --accent:#58a6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; scroll-behavior:smooth; }
+  header { position:sticky; top:0; z-index:10; background:rgba(13,17,23,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; }
+  header .hint { color:var(--muted); font-size:13px; }
+  header a.nav { color:var(--accent); text-decoration:none; border:1px solid var(--border); border-radius:8px; padding:6px 12px; font-size:13px; }
+  header a.nav:hover { border-color:var(--accent); }
+  .wrap { max-width:1180px; margin:0 auto; padding:28px 24px 140px; }
+  h1,h2,h3 { line-height:1.25; scroll-margin-top:64px; }
+  h2 { margin-top:40px; padding-top:18px; border-top:1px solid var(--border); }
+  a { color:var(--accent); }
+  table { border-collapse:collapse; width:100%; margin:14px 0; font-size:13.5px; }
+  th,td { border:1px solid var(--border); padding:7px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--panel); position:sticky; }
+  code { background:#1f2630; padding:2px 6px; border-radius:6px; font-size:13px; }
+  pre.mermaid { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; margin:18px 0; overflow:auto; text-align:center; }
+  blockquote { border-left:4px solid var(--accent); margin:16px 0; padding:6px 16px; color:var(--muted); background:var(--panel); border-radius:0 8px 8px 0; }
+  .toolbar button { background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px; }
+  .toolbar button:hover { border-color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>🗺️ Flujograma de la plataforma ASI</h1>
+  <span class="hint">Clic en un diagrama para ampliarlo · 🗂️ enlaza a la arquitectura de BD</span>
+  <span style="margin-left:auto; display:flex; gap:10px;"><a class="nav" href="arquitectura-db.html">🗂️ Arquitectura BD</a><span class="toolbar"><button onclick="window.print()">🖨️ PDF</button></span></span>
+</header>
+<div class="wrap" id="content"></div>
+
+<script type="text/markdown" id="src"># Flujograma integral de la plataforma ASI
 
 > Mapa completo de procesos, lógica y pipelines de la plataforma: superficies, sesión/permisos,
 > gating, y los recorridos de **miembro/candidato**, **pastor**, **admin** y **empleador**, desde el
@@ -8,7 +45,7 @@
 > mayoría de visores de Markdown). Generado el 2026-06-22 a partir del código real.
 >
 > 🗂️ **Validar arquitectura:** cada sección enlaza a la estructura real de sus tablas en
-> **[Arquitectura de base de datos →](arquitectura-db.md)** (campos, tipos, FKs de las 52 tablas).
+> **[Arquitectura de base de datos →](arquitectura-db.html)** (campos, tipos, FKs de las 52 tablas).
 
 ---
 
@@ -136,7 +173,7 @@ flowchart LR
 > **Clave**: el pastor **no** usa permisos para revisar; autoriza por `user_authority_scope` sobre la
 > iglesia (validado dentro de los RPCs security-definer). El admin sí usa permisos de plataforma.
 
-🗂️ **Estructura de tablas:** [`users`](arquitectura-db.md#users) · [`user_platform_roles`](arquitectura-db.md#user_platform_roles) · [`platform_roles`](arquitectura-db.md#platform_roles) · [`platform_role_permissions`](arquitectura-db.md#platform_role_permissions) · [`permissions`](arquitectura-db.md#permissions) · [`memberships`](arquitectura-db.md#memberships) · [`membership_roles`](arquitectura-db.md#membership_roles) · [`tenant_roles`](arquitectura-db.md#tenant_roles) · [`tenant_role_permissions`](arquitectura-db.md#tenant_role_permissions) · [`user_authority_scopes`](arquitectura-db.md#user_authority_scopes)
+🗂️ **Estructura de tablas:** [`users`](arquitectura-db.html#users) · [`user_platform_roles`](arquitectura-db.html#user_platform_roles) · [`platform_roles`](arquitectura-db.html#platform_roles) · [`platform_role_permissions`](arquitectura-db.html#platform_role_permissions) · [`permissions`](arquitectura-db.html#permissions) · [`memberships`](arquitectura-db.html#memberships) · [`membership_roles`](arquitectura-db.html#membership_roles) · [`tenant_roles`](arquitectura-db.html#tenant_roles) · [`tenant_role_permissions`](arquitectura-db.html#tenant_role_permissions) · [`user_authority_scopes`](arquitectura-db.html#user_authority_scopes)
 
 ---
 
@@ -244,7 +281,7 @@ sequenceDiagram
 **Onboarding base** = `full_name` + `display_name` + `locale ∈ {es,en}` + `country_code` (2 letras).
 Mientras falte, `RequireCompletedBaseOnboarding` fuerza `/candidate/profile`.
 
-🗂️ **Estructura de tablas:** [`users`](arquitectura-db.md#users)
+🗂️ **Estructura de tablas:** [`users`](arquitectura-db.html#users)
 
 ---
 
@@ -272,7 +309,7 @@ stateDiagram-v2
 `hasActiveAsiAccess(profile)` = (approval=approved **y** asi_membership=active **y** subscription=active
 **y** no vencido) **o** `manual_access_override_until` vigente.
 
-🗂️ **Estructura de tablas:** [`users`](arquitectura-db.md#users) (flags `user_approval_status`, `asi_membership_status`, `user_subscription_status`, `membership_expires_at`, `manual_access_override_until`)
+🗂️ **Estructura de tablas:** [`users`](arquitectura-db.html#users) (flags `user_approval_status`, `asi_membership_status`, `user_subscription_status`, `membership_expires_at`, `manual_access_override_until`)
 
 ---
 
@@ -328,7 +365,7 @@ flowchart LR
     ACT -->|"approved + verified"| ON["✅ Cuenta activa (ATS ON)"]
 ```
 
-🗂️ **Estructura de tablas:** [`institutional_membership_applications`](arquitectura-db.md#institutional_membership_applications) · [`membership_payments`](arquitectura-db.md#membership_payments) · [`user_authority_scopes`](arquitectura-db.md#user_authority_scopes) · [`churches`](arquitectura-db.md#churches) · [`audit_logs`](arquitectura-db.md#audit_logs)
+🗂️ **Estructura de tablas:** [`institutional_membership_applications`](arquitectura-db.html#institutional_membership_applications) · [`membership_payments`](arquitectura-db.html#membership_payments) · [`user_authority_scopes`](arquitectura-db.html#user_authority_scopes) · [`churches`](arquitectura-db.html#churches) · [`audit_logs`](arquitectura-db.html#audit_logs)
 
 ---
 
@@ -364,7 +401,7 @@ flowchart TD
 Estados que ve el miembro por paso: `Enviada / En revisión / Falta información / Aprobada / Rechazada`
 (solicitud) y `Comprobante recibido / Pago verificado / Comprobante rechazado` (pago).
 
-🗂️ **Estructura de tablas:** [`institutional_membership_applications`](arquitectura-db.md#institutional_membership_applications) · [`membership_payments`](arquitectura-db.md#membership_payments) · [`membership_payment_settings`](arquitectura-db.md#membership_payment_settings)
+🗂️ **Estructura de tablas:** [`institutional_membership_applications`](arquitectura-db.html#institutional_membership_applications) · [`membership_payments`](arquitectura-db.html#membership_payments) · [`membership_payment_settings`](arquitectura-db.html#membership_payment_settings)
 
 ---
 
@@ -399,7 +436,7 @@ flowchart TD
 > El pastor **no** puede verificar pagos ni activar (eso es admin). Solo aprueba la **referencia
 > pastoral**.
 
-🗂️ **Estructura de tablas:** [`pastor_authority_requests`](arquitectura-db.md#pastor_authority_requests) · [`user_authority_scopes`](arquitectura-db.md#user_authority_scopes) · [`institutional_membership_applications`](arquitectura-db.md#institutional_membership_applications) · [`membership_payments`](arquitectura-db.md#membership_payments)
+🗂️ **Estructura de tablas:** [`pastor_authority_requests`](arquitectura-db.html#pastor_authority_requests) · [`user_authority_scopes`](arquitectura-db.html#user_authority_scopes) · [`institutional_membership_applications`](arquitectura-db.html#institutional_membership_applications) · [`membership_payments`](arquitectura-db.html#membership_payments)
 
 ---
 
@@ -432,7 +469,7 @@ flowchart TB
     end
 ```
 
-🗂️ **Estructura de tablas:** [`institutional_membership_applications`](arquitectura-db.md#institutional_membership_applications) · [`membership_payments`](arquitectura-db.md#membership_payments) · [`membership_payment_settings`](arquitectura-db.md#membership_payment_settings) · [`recruiter_requests`](arquitectura-db.md#recruiter_requests) · [`pastor_authority_requests`](arquitectura-db.md#pastor_authority_requests) · [`regional_administrator_authority_requests`](arquitectura-db.md#regional_administrator_authority_requests) · [`audit_logs`](arquitectura-db.md#audit_logs)
+🗂️ **Estructura de tablas:** [`institutional_membership_applications`](arquitectura-db.html#institutional_membership_applications) · [`membership_payments`](arquitectura-db.html#membership_payments) · [`membership_payment_settings`](arquitectura-db.html#membership_payment_settings) · [`recruiter_requests`](arquitectura-db.html#recruiter_requests) · [`pastor_authority_requests`](arquitectura-db.html#pastor_authority_requests) · [`regional_administrator_authority_requests`](arquitectura-db.html#regional_administrator_authority_requests) · [`audit_logs`](arquitectura-db.html#audit_logs)
 
 ---
 
@@ -466,7 +503,7 @@ stateDiagram-v2
     approved --> [*]
 ```
 
-🗂️ **Estructura de tablas:** [`recruiter_requests`](arquitectura-db.md#recruiter_requests) · [`tenants`](arquitectura-db.md#tenants) · [`company_profiles`](arquitectura-db.md#company_profiles) · [`memberships`](arquitectura-db.md#memberships) · [`tenant_roles`](arquitectura-db.md#tenant_roles)
+🗂️ **Estructura de tablas:** [`recruiter_requests`](arquitectura-db.html#recruiter_requests) · [`tenants`](arquitectura-db.html#tenants) · [`company_profiles`](arquitectura-db.html#company_profiles) · [`memberships`](arquitectura-db.html#memberships) · [`tenant_roles`](arquitectura-db.html#tenant_roles)
 
 ---
 
@@ -497,7 +534,7 @@ flowchart LR
 Etapas del pipeline: definidas en `pipeline_stages`; el movimiento se registra en
 `application_stage_history` vía `move_application_stage`.
 
-🗂️ **Estructura de tablas:** [`job_postings`](arquitectura-db.md#job_postings) · [`applications`](arquitectura-db.md#applications) · [`pipeline_stages`](arquitectura-db.md#pipeline_stages) · [`application_stage_history`](arquitectura-db.md#application_stage_history) · [`saved_jobs`](arquitectura-db.md#saved_jobs) · [`candidate_profiles`](arquitectura-db.md#candidate_profiles)
+🗂️ **Estructura de tablas:** [`job_postings`](arquitectura-db.html#job_postings) · [`applications`](arquitectura-db.html#applications) · [`pipeline_stages`](arquitectura-db.html#pipeline_stages) · [`application_stage_history`](arquitectura-db.html#application_stage_history) · [`saved_jobs`](arquitectura-db.html#saved_jobs) · [`candidate_profiles`](arquitectura-db.html#candidate_profiles)
 
 ---
 
@@ -558,7 +595,7 @@ stateDiagram-v2
     active --> revoked: admin revoca
 ```
 
-🗂️ **Estructura de tablas:** [`institutional_membership_applications`](arquitectura-db.md#institutional_membership_applications) · [`membership_payments`](arquitectura-db.md#membership_payments) · [`user_authority_scopes`](arquitectura-db.md#user_authority_scopes) · [`recruiter_requests`](arquitectura-db.md#recruiter_requests) · [`users`](arquitectura-db.md#users)
+🗂️ **Estructura de tablas:** [`institutional_membership_applications`](arquitectura-db.html#institutional_membership_applications) · [`membership_payments`](arquitectura-db.html#membership_payments) · [`user_authority_scopes`](arquitectura-db.html#user_authority_scopes) · [`recruiter_requests`](arquitectura-db.html#recruiter_requests) · [`users`](arquitectura-db.html#users)
 
 ---
 
@@ -602,7 +639,7 @@ flowchart TB
 | Editar datos bancarios/cuotas | Admin | `is_platform_admin` (RLS) | `updateMembershipPaymentSettings` | — |
 | Mover etapa de aplicación | Empleador | `application:read`/tenant | `move_application_stage` | ✅ |
 
-🗂️ **Estructura de tablas:** ver todas en **[Arquitectura de base de datos](arquitectura-db.md)** — [`institutional_membership_applications`](arquitectura-db.md#institutional_membership_applications) · [`membership_payments`](arquitectura-db.md#membership_payments) · [`membership_payment_settings`](arquitectura-db.md#membership_payment_settings) · [`user_authority_scopes`](arquitectura-db.md#user_authority_scopes) · [`recruiter_requests`](arquitectura-db.md#recruiter_requests) · [`audit_logs`](arquitectura-db.md#audit_logs)
+🗂️ **Estructura de tablas:** ver todas en **[Arquitectura de base de datos](arquitectura-db.html)** — [`institutional_membership_applications`](arquitectura-db.html#institutional_membership_applications) · [`membership_payments`](arquitectura-db.html#membership_payments) · [`membership_payment_settings`](arquitectura-db.html#membership_payment_settings) · [`user_authority_scopes`](arquitectura-db.html#user_authority_scopes) · [`recruiter_requests`](arquitectura-db.html#recruiter_requests) · [`audit_logs`](arquitectura-db.html#audit_logs)
 
 ---
 
@@ -618,3 +655,43 @@ flowchart TB
 
 > Diagramas generados desde el código real (rutas, guards, RPCs, RLS y migraciones).
 > Para el detalle del pipeline de membresía ver `docs/membership-pipeline-plan.md`.
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  const md = document.getElementById('src').textContent;
+  marked.setOptions({ gfm:true, breaks:false });
+  const root = document.getElementById('content');
+  root.innerHTML = marked.parse(md);
+
+  // Slug estilo GitHub para que la TOC y los back-links funcionen
+  const slug = (s) => s.toLowerCase().trim()
+    .replace(/[`*_~]/g,'')
+    .replace(/[^\p{L}\p{N}\s-]/gu,'')
+    .replace(/\s+/g,'-');
+  const seen = {};
+  root.querySelectorAll('h1,h2,h3,h4').forEach((h) => {
+    let id = slug(h.textContent);
+    if (seen[id] != null) { seen[id]++; id = id+'-'+seen[id]; } else { seen[id]=0; }
+    if (!h.id) h.id = id;
+  });
+
+  // Render de mermaid
+  root.querySelectorAll('code.language-mermaid').forEach((code) => {
+    const pre = document.createElement('pre');
+    pre.className = 'mermaid';
+    pre.textContent = code.textContent;
+    code.closest('pre').replaceWith(pre);
+  });
+  mermaid.initialize({ startOnLoad:false, theme:'default', securityLevel:'loose', flowchart:{ useMaxWidth:true }, themeVariables:{ fontSize:'14px' } });
+  await mermaid.run({ querySelector:'pre.mermaid' });
+  root.querySelectorAll('pre.mermaid svg').forEach((svg) => {
+    svg.style.cursor='zoom-in';
+    svg.addEventListener('click', () => {
+      const blob = new Blob([svg.outerHTML], {type:'image/svg+xml'});
+      window.open(URL.createObjectURL(blob), '_blank');
+    });
+  });
+</script>
+</body>
+</html>
