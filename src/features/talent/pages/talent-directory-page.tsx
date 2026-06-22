@@ -85,7 +85,7 @@ export function TalentDirectoryPage() {
       </div>
 
       <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="overflow-hidden border-(--app-border) bg-white shadow-[0_18px_44px_rgba(19,42,97,0.06)]">
+        <Card className="overflow-hidden border-(--app-border) bg-(--app-surface-elevated) shadow-[0_18px_44px_rgba(19,42,97,0.06)]">
           <CardHeader className="border-b border-(--app-border)">
             <CardTitle>Resultados</CardTitle>
             <CardDescription>
@@ -121,7 +121,11 @@ export function TalentDirectoryPage() {
                       return (
                         <tr
                           key={candidate.candidate_profile_id}
-                          className={isSelected ? 'bg-primary-50/70' : 'bg-white'}
+                          className={
+                            isSelected
+                              ? 'bg-primary-50/70 dark:bg-primary-500/12'
+                              : 'bg-(--app-surface-elevated)'
+                          }
                         >
                           <td className="border-b border-(--app-border) px-4 py-3">
                             <button
@@ -172,7 +176,7 @@ export function TalentDirectoryPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-(--app-border) bg-white shadow-[0_18px_44px_rgba(19,42,97,0.06)]">
+        <Card className="border-(--app-border) bg-(--app-surface-elevated) shadow-[0_18px_44px_rgba(19,42,97,0.06)]">
           <CardHeader className="border-b border-(--app-border)">
             <CardTitle>Perfil completo</CardTitle>
             <CardDescription>Detalle operativo para decidir si vale la pena avanzar.</CardDescription>
@@ -206,7 +210,7 @@ export function TalentDirectoryPage() {
                 </div>
 
                 <div className="grid gap-4">
-                  <div className="rounded-[24px] border border-(--app-border) bg-white p-4">
+                  <div className="rounded-[24px] border border-(--app-border) bg-(--app-surface) p-4">
                     <p className="text-sm font-semibold text-(--app-text)">Experiencia</p>
                     <div className="mt-3 space-y-3">
                       {detailQuery.data.experiences.length > 0 ? (
@@ -222,7 +226,7 @@ export function TalentDirectoryPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-[24px] border border-(--app-border) bg-white p-4">
+                  <div className="rounded-[24px] border border-(--app-border) bg-(--app-surface) p-4">
                     <p className="text-sm font-semibold text-(--app-text)">Educacion</p>
                     <div className="mt-3 space-y-3">
                       {detailQuery.data.educations.length > 0 ? (
@@ -238,7 +242,7 @@ export function TalentDirectoryPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-[24px] border border-(--app-border) bg-white p-4">
+                  <div className="rounded-[24px] border border-(--app-border) bg-(--app-surface) p-4">
                     <p className="text-sm font-semibold text-(--app-text)">Habilidades e idiomas</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {detailQuery.data.skills.map((skillItem) => (
