@@ -6,7 +6,7 @@ import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
 import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
 import { AppProviders } from '@/app/providers/app-providers'
 import { surfacePaths } from '@/app/router/surface-paths'
-import { fetchMyNotifications, markNotificationRead } from '@/lib/notifications/api'
+import { fetchMyNotifications, fetchMyNotificationsPage, markNotificationRead } from '@/lib/notifications/api'
 import { signOutCurrentUser } from '@/features/auth/lib/auth-api'
 
 const authState = {
@@ -87,7 +87,18 @@ vi.mock('@/lib/notifications/api', async () => {
 
   return {
     ...actual,
-    fetchMyNotifications: vi.fn(() => Promise.resolve(notificationState.items)),
+    fetchMyNotifications: vi.fn((limit: number = 6) => Promise.resolve(notificationState.items.slice(0, limit))),
+    fetchMyNotificationsPage: vi.fn((options: { page?: number; pageSize?: number } = {}) => {
+      const pageSize = options.pageSize ?? 6
+      const page = options.page ?? 1
+      const from = (page - 1) * pageSize
+
+      return Promise.resolve({
+        notifications: notificationState.items.slice(from, from + pageSize),
+        totalCount: notificationState.items.length,
+        unreadCount: notificationState.items.filter((item) => !item.read_at).length
+      })
+    }),
     markNotificationRead: vi.fn((notificationId: string) =>
       Promise.resolve(
         notificationState.items.find((item) => item.id === notificationId) ?? {
@@ -247,6 +258,7 @@ beforeEach(() => {
   }
   notificationState.items = []
   vi.mocked(fetchMyNotifications).mockClear()
+  vi.mocked(fetchMyNotificationsPage).mockClear()
   vi.mocked(markNotificationRead).mockClear()
   vi.mocked(signOutCurrentUser).mockClear()
 })
@@ -313,6 +325,37 @@ describe('workspace shell', () => {
     await waitFor(() => {
       expect(markNotificationRead).toHaveBeenCalledWith('notification-1')
     })
+  })
+
+  it('paginates the notification popover', async () => {
+    seedWorkspaceSession(['workspace:read'])
+    notificationState.items = Array.from({ length: 10 }, (_, index) => ({
+      id: `notification-${index + 1}`,
+      recipient_user_id: 'user-1',
+      tenant_id: 'tenant-1',
+      type: 'system.test',
+      title: `Notificación ${index + 1}`,
+      body: `Detalle ${index + 1}`,
+      action_url: null,
+      payload: {},
+      read_at: new Date().toISOString(),
+      clicked_at: null,
+      created_at: `2026-03-${String(20 - index).padStart(2, '0')}T12:00:00.000Z`,
+      updated_at: `2026-03-${String(20 - index).padStart(2, '0')}T12:00:00.000Z`
+    }))
+
+    renderWorkspaceShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir notificaciones' }))
+
+    expect(await screen.findByText('Notificación 1')).toBeInTheDocument()
+    expect(screen.getByText('1-8 de 10')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Notificaciones siguientes' }))
+
+    expect(await screen.findByText('Notificación 9')).toBeInTheDocument()
+    expect(screen.getByText('9-10 de 10')).toBeInTheDocument()
+    expect(vi.mocked(fetchMyNotificationsPage)).toHaveBeenCalledWith({ page: 2, pageSize: 8 })
   })
 
   it('opens the profile menu and navigates to candidate profile', async () => {

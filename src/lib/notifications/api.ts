@@ -45,6 +45,17 @@ export interface SendNotificationResult {
   skippedPush: boolean
 }
 
+export interface AppNotificationPage {
+  notifications: AppNotification[]
+  totalCount: number
+  unreadCount: number
+}
+
+export interface FetchMyNotificationsPageOptions {
+  page?: number
+  pageSize?: number
+}
+
 interface PushSubscriptionRegistrationOptions {
   locale: 'es' | 'en'
   tenantId?: string | null
@@ -126,19 +137,42 @@ export async function registerBrowserPushSubscription(
   return response.data
 }
 
-export async function fetchMyNotifications(limit = 6): Promise<AppNotification[]> {
+export async function fetchMyNotificationsPage(options: FetchMyNotificationsPageOptions = {}): Promise<AppNotificationPage> {
   const client = requireSupabase()
+  const pageSize = Math.max(1, options.pageSize ?? 6)
+  const page = Math.max(1, options.page ?? 1)
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+
   const response = await client
     .from('notifications' as never)
-    .select('*')
+    .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
-    .limit(limit)
+    .range(from, to)
 
   if (response.error) {
     throw toControlledError(response.error)
   }
 
-  return (response.data ?? []) as AppNotification[]
+  const unreadResponse = await client
+    .from('notifications' as never)
+    .select('id', { count: 'exact', head: true })
+    .is('read_at', null)
+
+  if (unreadResponse.error) {
+    throw toControlledError(unreadResponse.error)
+  }
+
+  return {
+    notifications: (response.data ?? []) as AppNotification[],
+    totalCount: response.count ?? 0,
+    unreadCount: unreadResponse.count ?? 0
+  }
+}
+
+export async function fetchMyNotifications(limit = 6): Promise<AppNotification[]> {
+  const page = await fetchMyNotificationsPage({ pageSize: limit })
+  return page.notifications
 }
 
 export async function markNotificationRead(notificationId: string) {
