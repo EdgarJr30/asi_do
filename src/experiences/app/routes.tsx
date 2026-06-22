@@ -90,7 +90,7 @@ export const applicationRoutes: RouteObject[] = [
     element: (
       <RequireAuth>
         <RequireCompletedBaseOnboarding>
-          <MembershipStatusPage />
+          <CandidateShell fallbackContent={<MembershipStatusPage />} />
         </RequireCompletedBaseOnboarding>
       </RequireAuth>
     )

@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -9,7 +10,6 @@ import {
   Circle,
   Clock,
   FileText,
-  LogOut,
   Paperclip,
   ShieldCheck,
   Sparkles,
@@ -19,11 +19,14 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { surfacePaths } from '@/app/router/surface-paths'
 import { useAppSession } from '@/app/providers/app-session-provider'
-import { BrandLockup } from '@/components/ui/app-brand'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/loader'
+import { PageHeader } from '@/components/ui/page-header'
+import { StatCard } from '@/components/ui/stat-card'
 import { Textarea } from '@/components/ui/textarea'
-import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api'
+import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import {
   createMembershipReceiptUrl,
   fetchMyMembershipStatus,
@@ -43,6 +46,12 @@ const applicationStatusLabels: Record<string, string> = {
   approved: 'Aprobada',
   rejected: 'Rechazada',
   cancelled: 'Cancelada'
+}
+
+const paymentStatusLabels: Record<string, string> = {
+  submitted: 'En verificación',
+  verified: 'Verificado',
+  rejected: 'Rechazado'
 }
 
 interface StepView {
@@ -150,12 +159,22 @@ const stateMeta: Record<StepState, { label: string; dot: string; badge: string }
   }
 }
 
+function getCurrentStep(steps: StepView[]) {
+  return steps.find((step) => step.state === 'blocked') ?? steps.find((step) => step.state === 'current') ?? steps.at(-1)
+}
+
+function getProgressSummary(steps: StepView[]) {
+  const completed = steps.filter((step) => step.state === 'done').length
+  return { completed, total: steps.length, percent: Math.round((completed / steps.length) * 100) }
+}
+
 export function MembershipStatusPage() {
   const session = useAppSession()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const userId = session.authUser?.id ?? null
   const displayName = session.profile?.display_name ?? session.profile?.full_name ?? session.authUser?.email ?? 'miembro'
+  const firstName = displayName.trim().split(/\s+/)[0] ?? displayName
 
   const statusQuery = useQuery({
     queryKey: ['membership', 'status', userId],
@@ -163,17 +182,16 @@ export function MembershipStatusPage() {
     queryFn: async () => fetchMyMembershipStatus(userId!)
   })
 
-  const signOutMutation = useMutation({
-    mutationFn: async () => signOutCurrentUser(),
-    onSuccess: () => navigate('/auth/sign-in', { replace: true })
-  })
-
   const bundle = useMemo<MembershipStatusBundle>(
     () => statusQuery.data ?? { application: null, payment: null, settings: null },
     [statusQuery.data]
   )
   const steps = useMemo(() => computeSteps(bundle, session.hasActiveAsiAccess), [bundle, session.hasActiveAsiAccess])
+  const progress = useMemo(() => getProgressSummary(steps), [steps])
+  const currentStep = getCurrentStep(steps)
   const due = getCategoryDue(bundle.settings, bundle.application?.category_slug)
+  const dueAmountLabel = due?.amount != null ? `${bundle.settings?.currency ?? 'USD'} ${due.amount.toLocaleString()}` : null
+  const dueSummaryLabel = due ? [dueAmountLabel, due.label].filter(Boolean).join(' · ') : null
   const paymentStep = steps.find((step) => step.key === 'payment')
   const showTransferDetails = paymentStep?.state === 'current' && Boolean(bundle.settings)
   const canUploadReceipt =
@@ -182,133 +200,247 @@ export function MembershipStatusPage() {
     (!bundle.payment || bundle.payment.status === 'rejected')
 
   return (
-    <div className="min-h-dvh bg-(--app-canvas-strong) px-4 py-8 sm:py-12">
-      <div className="mx-auto w-full max-w-2xl">
-        <header className="mb-6 flex items-center justify-between">
-          <BrandLockup />
-          <Button variant="ghost" className="h-9" onClick={() => signOutMutation.mutate()} disabled={signOutMutation.isPending}>
-            <LogOut className="size-4" /> Salir
-          </Button>
-        </header>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Cuenta · Membresía"
+        title={`Hola, ${firstName}`}
+        description={
+          session.hasActiveAsiAccess
+            ? 'Tu membresía está activa. Ya puedes usar la plataforma y mantener tu información al día.'
+            : 'Revisa el avance de tu solicitud, completa el pago y da seguimiento a la activación de tu cuenta.'
+        }
+        actions={
+          session.hasActiveAsiAccess ? (
+            <Button className="h-10" onClick={() => void navigate(surfacePaths.candidate.home)}>
+              Entrar a la plataforma <ArrowRight className="size-4" />
+            </Button>
+          ) : (
+            <Button className="h-10" onClick={() => void navigate(surfacePaths.institutional.eligibility)}>
+              Completar solicitud <ArrowRight className="size-4" />
+            </Button>
+          )
+        }
+      >
+        <StatCard
+          label="Progreso"
+          value={`${progress.percent}%`}
+          helper={`${progress.completed} de ${progress.total} pasos completados`}
+        />
+        <StatCard
+          label="Solicitud"
+          value={bundle.application ? applicationStatusLabels[bundle.application.status] ?? bundle.application.status : 'Pendiente'}
+          helper={bundle.application?.category_name ?? 'Selecciona tu categoría para iniciar'}
+        />
+        <StatCard
+          label="Pago"
+          value={bundle.payment ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status : 'Sin comprobante'}
+          helper={dueSummaryLabel ?? 'Cuota pendiente por categoría'}
+        />
+        <StatCard
+          label="Siguiente paso"
+          value={currentStep?.title ?? 'Membresía'}
+          helper={currentStep?.description ?? 'Revisa el estado de tu membresía'}
+        />
+      </PageHeader>
 
-        <div className="overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface) shadow-[0_18px_44px_rgba(19,42,97,0.08)]">
-          <div className="border-b border-(--app-border) bg-(--app-surface-muted) px-6 py-6 sm:px-8">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-(--app-text-subtle)">Membresía</p>
-            <h1 className="mt-1.5 text-[1.5rem] font-semibold tracking-tight text-(--app-text) sm:text-[1.8rem]">
-              Hola, {displayName.split(/\s+/)[0]}
-            </h1>
-            <p className="mt-1 text-sm text-(--app-text-muted)">
-              {session.hasActiveAsiAccess
-                ? 'Tu membresía está activa. Ya puedes entrar a la plataforma.'
-                : 'Completa estos pasos para activar tu membresía y desbloquear la plataforma.'}
-            </p>
-          </div>
-
-          <div className="px-6 py-6 sm:px-8">
-            {statusQuery.isLoading ? (
-              <PageLoader label="Cargando tu estado" hint="Revisando tu solicitud y pago" />
-            ) : statusQuery.error ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
-                {toErrorMessage(statusQuery.error)}
+      {statusQuery.isLoading ? (
+        <Card>
+          <CardContent className="mt-0">
+            <PageLoader label="Cargando tu estado" hint="Revisando tu solicitud y pago" />
+          </CardContent>
+        </Card>
+      ) : statusQuery.error ? (
+        <Card className="border-rose-200 bg-rose-50/70 dark:border-rose-500/30 dark:bg-rose-500/10">
+          <CardContent className="mt-0 flex items-start gap-3 text-sm text-rose-700 dark:text-rose-300">
+            <AlertCircle className="mt-0.5 size-5 shrink-0" />
+            <div>
+              <p className="font-semibold">No pudimos cargar tu membresía.</p>
+              <p className="mt-1">{toErrorMessage(statusQuery.error)}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <Card>
+            <CardHeader className="sm:flex sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:space-y-0">
+              <div className="space-y-2">
+                <CardTitle>Ruta de activación</CardTitle>
+                <CardDescription>
+                  Mantén cada etapa al día para que tu membresía avance sin perder contexto.
+                </CardDescription>
               </div>
-            ) : (
-              <ol className="space-y-1">
-                {steps.map((step, index) => {
-                  const Icon = step.icon
-                  const meta = stateMeta[step.state]
-                  const isLast = index === steps.length - 1
-                  return (
-                    <li key={step.key} className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-full', meta.dot)}>
-                          {step.state === 'done' ? (
-                            <CheckCircle2 className="size-5" />
-                          ) : step.state === 'blocked' ? (
-                            <AlertCircle className="size-5" />
-                          ) : step.state === 'current' ? (
-                            <Clock className="size-4.5" />
-                          ) : (
-                            <Circle className="size-4" />
-                          )}
-                        </span>
-                        {!isLast ? <span className="my-1 w-px flex-1 bg-(--app-border)" /> : null}
-                      </div>
+              <Badge variant="soft" className="w-fit">
+                {session.hasActiveAsiAccess ? 'Activa' : 'En proceso'}
+              </Badge>
+            </CardHeader>
 
-                      <div className={cn('min-w-0 flex-1', isLast ? 'pb-1' : 'pb-6')}>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="inline-flex items-center gap-2 text-sm font-semibold text-(--app-text)">
-                            <Icon className="size-4 text-(--app-text-muted)" /> {step.title}
-                          </h3>
-                          <span className={cn('rounded-full px-2 py-0.5 text-[0.7rem] font-semibold', meta.badge)}>{meta.label}</span>
-                        </div>
-                        <p className="mt-1 text-sm leading-6 text-(--app-text-muted)">{step.description}</p>
+            <CardContent>
+              <ol className="space-y-4">
+                {steps.map((step, index) => (
+                  <MembershipStep
+                    key={step.key}
+                    step={step}
+                    isLast={index === steps.length - 1}
+                    onStartApplication={() => void navigate(surfacePaths.institutional.eligibility)}
+                  >
+                    {step.key === 'application' && bundle.application?.status === 'needs_more_info' ? (
+                      <NeedsMoreInfoResponse
+                        applicationId={bundle.application.id}
+                        reviewNote={bundle.application.review_notes}
+                        onResponded={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
+                      />
+                    ) : null}
 
-                        {/* Acción del paso de solicitud */}
-                        {step.key === 'application' && step.state === 'current' ? (
-                          <Button className="mt-3 h-10" onClick={() => void navigate(surfacePaths.institutional.eligibility)}>
-                            Iniciar mi solicitud <ArrowRight className="size-4" />
-                          </Button>
-                        ) : null}
+                    {step.key === 'payment' && showTransferDetails ? (
+                      <TransferDetails
+                        settings={bundle.settings!}
+                        dueAmount={due?.amount ?? null}
+                        categoryLabel={due?.label ?? bundle.application?.category_name ?? null}
+                      />
+                    ) : null}
 
-                        {/* Loop "falta información": el miembro responde y reenvía */}
-                        {step.key === 'application' && bundle.application?.status === 'needs_more_info' ? (
-                          <NeedsMoreInfoResponse
-                            applicationId={bundle.application.id}
-                            reviewNote={bundle.application.review_notes}
-                            onResponded={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
-                          />
-                        ) : null}
+                    {step.key === 'payment' && canUploadReceipt && bundle.application ? (
+                      <ReceiptUpload
+                        applicationId={bundle.application.id}
+                        memberUserId={userId!}
+                        categorySlug={bundle.application.category_slug}
+                        amount={due?.amount ?? null}
+                        currency={bundle.settings?.currency ?? 'USD'}
+                        onUploaded={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
+                      />
+                    ) : null}
 
-                        {/* Datos de transferencia en el paso de pago */}
-                        {step.key === 'payment' && showTransferDetails ? (
-                          <TransferDetails settings={bundle.settings!} dueAmount={due?.amount ?? null} categoryLabel={due?.label ?? bundle.application?.category_name ?? null} />
-                        ) : null}
-
-                        {/* Subida de comprobante */}
-                        {step.key === 'payment' && canUploadReceipt && bundle.application ? (
-                          <ReceiptUpload
-                            applicationId={bundle.application.id}
-                            memberUserId={userId!}
-                            categorySlug={bundle.application.category_slug}
-                            amount={due?.amount ?? null}
-                            currency={bundle.settings?.currency ?? 'USD'}
-                            onUploaded={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
-                          />
-                        ) : null}
-
-                        {/* Ver el comprobante ya subido */}
-                        {step.key === 'payment' && bundle.payment?.receipt_path ? (
-                          <ReceiptViewLink receiptPath={bundle.payment.receipt_path} />
-                        ) : null}
-                      </div>
-                    </li>
-                  )
-                })}
+                    {step.key === 'payment' && bundle.payment?.receipt_path ? (
+                      <ReceiptViewLink receiptPath={bundle.payment.receipt_path} />
+                    ) : null}
+                  </MembershipStep>
+                ))}
               </ol>
-            )}
+            </CardContent>
+          </Card>
 
-            {session.hasActiveAsiAccess ? (
-              <div className="mt-4 border-t border-(--app-border) pt-5">
-                <Button className="h-11 w-full sm:w-auto" onClick={() => void navigate(surfacePaths.candidate.home)}>
-                  Entrar a la plataforma <ArrowRight className="size-4" />
-                </Button>
-              </div>
-            ) : null}
+          <aside className="space-y-5">
+            <Card>
+              <CardHeader>
+                <CardTitle>Estado actual</CardTitle>
+                <CardDescription>Resumen operativo de tu membresía.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+                    <span className="font-medium text-(--app-text)">Avance</span>
+                    <span className="font-semibold text-(--app-text)">{progress.percent}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-(--app-surface-muted)">
+                    <div className="h-full rounded-full bg-primary-600" style={{ width: `${progress.percent}%` }} />
+                  </div>
+                </div>
+
+                <StatusSummaryRow
+                  label="Solicitud"
+                  value={bundle.application ? applicationStatusLabels[bundle.application.status] ?? bundle.application.status : 'No enviada'}
+                />
+                <StatusSummaryRow
+                  label="Pago"
+                  value={bundle.payment ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status : 'Pendiente'}
+                />
+                <StatusSummaryRow
+                  label="Acceso"
+                  value={session.hasActiveAsiAccess ? 'Activo' : 'Pendiente de activación'}
+                />
+                <StatusSummaryRow
+                  label="Cuota"
+                  value={dueAmountLabel ?? due?.label ?? 'Por definir'}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Soporte</CardTitle>
+                <CardDescription>
+                  ¿Dudas con tu membresía? Escríbenos y con gusto te ayudamos.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link
+                  to={surfacePaths.institutional.contactUs}
+                  className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl border border-(--app-border) bg-(--app-surface) px-3.5 text-sm font-semibold text-(--app-text) shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+                >
+                  Ir a contacto <ArrowRight className="size-4" />
+                </Link>
+              </CardContent>
+            </Card>
+          </aside>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StatusSummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-t border-(--app-border) pt-3 first:border-t-0 first:pt-0">
+      <span className="text-sm text-(--app-text-muted)">{label}</span>
+      <span className="text-right text-sm font-semibold text-(--app-text)">{value}</span>
+    </div>
+  )
+}
+
+function MembershipStep({
+  step,
+  isLast,
+  onStartApplication,
+  children
+}: {
+  step: StepView
+  isLast: boolean
+  onStartApplication: () => void
+  children?: ReactNode
+}) {
+  const Icon = step.icon
+  const meta = stateMeta[step.state]
+
+  return (
+    <li className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 sm:grid-cols-[2.5rem_minmax(0,1fr)] sm:gap-4">
+      <div className="flex flex-col items-center">
+        <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-full', meta.dot)}>
+          {step.state === 'done' ? (
+            <CheckCircle2 className="size-5" />
+          ) : step.state === 'blocked' ? (
+            <AlertCircle className="size-5" />
+          ) : step.state === 'current' ? (
+            <Clock className="size-4.5" />
+          ) : (
+            <Circle className="size-4" />
+          )}
+        </span>
+        {!isLast ? <span className="my-2 w-px flex-1 bg-(--app-border)" /> : null}
+      </div>
+
+      <div className="min-w-0 rounded-[18px] border border-(--app-border) bg-(--app-surface) p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-1.5">
+            <h3 className="inline-flex items-center gap-2 text-sm font-semibold text-(--app-text)">
+              <Icon className="size-4 shrink-0 text-(--app-text-muted)" />
+              {step.title}
+            </h3>
+            <p className="text-sm leading-6 text-(--app-text-muted)">{step.description}</p>
           </div>
+          <Badge variant="outline" className={cn('w-fit shrink-0 border-transparent', meta.badge)}>
+            {meta.label}
+          </Badge>
         </div>
 
-        <p className="mt-5 text-center text-xs text-(--app-text-subtle)">
-          ¿Dudas con tu membresía?{' '}
-          <Link
-            className="font-semibold text-primary-600 underline-offset-4 transition hover:text-primary-700 hover:underline dark:text-primary-300 dark:hover:text-primary-200"
-            to={surfacePaths.institutional.contactUs}
-          >
-            Escríbenos
-          </Link>{' '}
-          y con gusto te ayudamos.
-        </p>
+        {step.key === 'application' && step.state === 'current' ? (
+          <Button className="mt-4 h-10" onClick={onStartApplication}>
+            Iniciar mi solicitud <ArrowRight className="size-4" />
+          </Button>
+        ) : null}
+
+        {children ? <div className="mt-4">{children}</div> : null}
       </div>
-    </div>
+    </li>
   )
 }
 

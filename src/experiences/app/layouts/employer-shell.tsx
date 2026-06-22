@@ -95,6 +95,7 @@ const workspaceIconByHref: Partial<Record<string, LucideIcon>> = {
 
 const candidateIconByHref: Partial<Record<string, LucideIcon>> = {
   [surfacePaths.candidate.home]: LayoutDashboard,
+  [surfacePaths.account.membership]: Sparkles,
   [surfacePaths.storefront.jobs]: BriefcaseBusiness,
   [surfacePaths.candidate.applications]: FileText,
   [surfacePaths.candidate.profile]: UserRound,
@@ -146,6 +147,10 @@ const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
 }
 
 const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'description'>> = {
+  [surfacePaths.account.membership]: {
+    title: 'Membresía',
+    description: 'Estado de solicitud, pago y activación de tu cuenta'
+  },
   [surfacePaths.candidate.home]: {
     title: 'Inicio',
     description: 'Tu panel con perfil, vacantes y aplicaciones en un vistazo'
@@ -930,6 +935,7 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
     primaryNav: baseItems,
     profileHref: surfacePaths.candidate.profile,
     profileMenuLinks: [
+      { href: surfacePaths.account.membership, label: 'Mi membresía' },
       { href: surfacePaths.candidate.profile, label: 'Mi perfil' },
       { href: surfacePaths.candidate.applications, label: 'Aplicaciones' },
       ...(settingsItem ? [{ href: settingsItem.href, label: settingsItem.title }] : [])
