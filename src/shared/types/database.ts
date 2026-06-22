@@ -3171,6 +3171,31 @@ export type Database = {
         Args: { p_tenant_id: string }
         Returns: boolean
       }
+      email_test_send: {
+        Args: {
+          p_to: string
+          p_subject: string
+          p_message: string
+          p_simulate?: string
+        }
+        Returns: string
+      }
+      email_test_force_status: {
+        Args: { p_delivery_id: string; p_status: string }
+        Returns: undefined
+      }
+      email_test_clear: {
+        Args: Record<string, never>
+        Returns: number
+      }
+      email_resend_delivery: {
+        Args: { p_delivery_id: string }
+        Returns: undefined
+      }
+      trigger_email_dispatch: {
+        Args: Record<string, never>
+        Returns: undefined
+      }
       has_platform_permission: {
         Args: { permission_code: string }
         Returns: boolean

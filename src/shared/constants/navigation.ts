@@ -188,5 +188,12 @@ export const adminNavigationItems: NavigationItem[] = [
     description: 'Datos bancarios y cuotas de membresía',
     requiresAuth: true,
     requiredPermission: 'platform_dashboard:read'
+  },
+  {
+    title: 'Correos',
+    href: surfacePaths.admin.correos,
+    description: 'Pipeline de correos y modo de prueba',
+    requiresAuth: true,
+    requiredPermission: 'email:read'
   }
 ]

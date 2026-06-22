@@ -577,7 +577,13 @@ Deno.serve(async (req) => {
     let failedCount = 0
 
     for (const delivery of deliveries) {
-      const recipientEmail = delivery.notification?.recipient_user?.email?.trim() ?? ''
+      // Override del destinatario (lo usa el módulo de prueba de /admin/correos para
+      // enviar a una dirección arbitraria). El pipeline real no setea payload.to.
+      const overrideTo =
+        typeof delivery.notification?.payload?.to === 'string'
+          ? (delivery.notification.payload.to as string).trim()
+          : ''
+      const recipientEmail = overrideTo || (delivery.notification?.recipient_user?.email?.trim() ?? '')
       const recipientName =
         delivery.notification?.recipient_user?.display_name?.trim() ||
         delivery.notification?.recipient_user?.full_name?.trim() ||

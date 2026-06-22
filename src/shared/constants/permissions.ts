@@ -30,6 +30,8 @@ export const permissionCatalog = [
   'membership_application:review',
   'membership_payment:verify',
   'user:activate',
+  'email:read',
+  'email:resend',
   'workspace:read',
   'workspace:update',
   'company_profile:read',

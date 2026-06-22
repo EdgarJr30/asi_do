@@ -41,6 +41,7 @@ import { AuthShell } from '@/experiences/app/layouts/auth-shell'
 import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
 import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
 import { AppEntryRedirect } from '@/experiences/app/routes/app-entry-redirect'
+import { EmailPipelinePage } from '@/features/internal/pages/email-pipeline-page'
 import { MembershipConsolePage } from '@/features/membership/pages/membership-console-page'
 import { MembershipPaymentsSettingsPage } from '@/features/membership/pages/membership-payments-settings-page'
 import { MembershipStatusPage } from '@/features/membership/pages/membership-status-page'
@@ -288,6 +289,14 @@ export const applicationRoutes: RouteObject[] = [
         element: (
           <RequirePermission permission="platform_dashboard:read" surface="admin">
             <MembershipPaymentsSettingsPage />
+          </RequirePermission>
+        )
+      },
+      {
+        path: 'correos',
+        element: (
+          <RequirePermission permission="email:read" surface="admin">
+            <EmailPipelinePage />
           </RequirePermission>
         )
       },
