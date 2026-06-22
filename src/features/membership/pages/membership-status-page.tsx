@@ -15,7 +15,7 @@ import {
   Sparkles,
   UploadCloud
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { surfacePaths } from '@/app/router/surface-paths'
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -298,7 +298,14 @@ export function MembershipStatusPage() {
         </div>
 
         <p className="mt-5 text-center text-xs text-(--app-text-subtle)">
-          ¿Dudas con tu membresía? Escríbenos y con gusto te ayudamos.
+          ¿Dudas con tu membresía?{' '}
+          <Link
+            className="font-semibold text-primary-600 underline-offset-4 transition hover:text-primary-700 hover:underline dark:text-primary-300 dark:hover:text-primary-200"
+            to={surfacePaths.institutional.contactUs}
+          >
+            Escríbenos
+          </Link>{' '}
+          y con gusto te ayudamos.
         </p>
       </div>
     </div>
