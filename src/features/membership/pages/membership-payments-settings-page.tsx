@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Banknote, Save } from 'lucide-react'
 import { toast } from 'sonner'
@@ -73,6 +73,7 @@ export function MembershipPaymentsSettingsPage() {
   const form = useForm<PaymentSettingsForm>({
     values: settings ? toFormValues(settings) : undefined
   })
+  const watchedCurrency = useWatch({ control: form.control, name: 'currency' })
 
   const saveMutation = useMutation({
     mutationFn: async (values: PaymentSettingsForm) => {
@@ -130,7 +131,7 @@ export function MembershipPaymentsSettingsPage() {
     )
   }
 
-  const currency = form.watch('currency') || settings?.currency || 'USD'
+  const currency = watchedCurrency || settings?.currency || 'USD'
 
   return (
     <form className="space-y-6" onSubmit={(event) => void form.handleSubmit((values) => saveMutation.mutate(values))(event)}>
