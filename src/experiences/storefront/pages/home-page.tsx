@@ -33,7 +33,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils/cn';
-import { PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access';
+import { PLATFORM_REGISTRATION_LOCKED, PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access';
 
 type BillingFrequency = 'monthly' | 'annually';
 
@@ -332,7 +332,7 @@ const pricingPlans = [
       monthly: 'por mes',
       annually: 'por ano',
     },
-    cta: 'Registro cerrado',
+    cta: PLATFORM_REGISTRATION_LOCKED ? 'Registro cerrado' : 'Crear cuenta',
     highlights: [
       '1 espacio de empresa',
       'Hasta 2 vacantes activas',
@@ -485,7 +485,7 @@ const footerNavigation = [
   { label: 'Pricing', section: 'pricing' },
   { label: 'FAQ', section: 'faq' },
   { label: 'Jobs', route: surfacePaths.public.jobs },
-  { label: 'Registro cerrado', route: '/auth/sign-up', disabled: true },
+  { label: PLATFORM_REGISTRATION_LOCKED ? 'Registro cerrado' : 'Crear cuenta', route: '/auth/sign-up', disabled: PLATFORM_REGISTRATION_LOCKED },
 ] as const;
 
 const footerSignals = [
@@ -550,9 +550,9 @@ export function HomePage() {
         disabled: false,
       }
     : {
-        label: 'Registro cerrado',
+        label: PLATFORM_REGISTRATION_LOCKED ? 'Registro cerrado' : 'Crear cuenta',
         href: surfacePaths.auth.signUp,
-        disabled: true,
+        disabled: PLATFORM_REGISTRATION_LOCKED,
       };
 
   const footerYear = new Date().getFullYear();

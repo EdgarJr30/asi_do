@@ -12,6 +12,7 @@ import { BrandLockup } from '@/components/ui/app-brand';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils/cn';
+import { PLATFORM_REGISTRATION_LOCKED } from '@/shared/config/launch-access';
 
 const storefrontNavigation = [
   { label: 'Como funciona', to: `${surfacePaths.storefront.home}#features` },
@@ -111,9 +112,10 @@ export function StorefrontShell() {
                 <Button
                   className="rounded-full px-5"
                   variant="outline"
-                  disabled
+                  disabled={PLATFORM_REGISTRATION_LOCKED}
+                  onClick={() => void navigate(surfacePaths.auth.signUp)}
                 >
-                  Registro cerrado
+                  {PLATFORM_REGISTRATION_LOCKED ? 'Registro cerrado' : 'Crear cuenta'}
                 </Button>
               ) : null}
               <Button
@@ -201,9 +203,13 @@ export function StorefrontShell() {
                 {showGuestAction ? (
                   <Button
                     variant="outline"
-                    disabled
+                    disabled={PLATFORM_REGISTRATION_LOCKED}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      void navigate(surfacePaths.auth.signUp);
+                    }}
                   >
-                    Registro cerrado
+                    {PLATFORM_REGISTRATION_LOCKED ? 'Registro cerrado' : 'Crear cuenta'}
                   </Button>
                 ) : null}
                 <Button

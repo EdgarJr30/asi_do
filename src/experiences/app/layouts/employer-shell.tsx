@@ -44,7 +44,7 @@ import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api
 import { fetchMyNotifications, markNotificationRead, type AppNotification } from '@/lib/notifications/api'
 import { filterNavigationItems } from '@/lib/permissions/guards'
 import { cn } from '@/lib/utils/cn'
-import { PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access'
+import { PLATFORM_REGISTRATION_LOCKED, PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access'
 import { adminNavigationItems, candidateNavigationItems, employerNavigationItems } from '@/shared/constants/navigation'
 import type { NavigationItem } from '@/shared/types/navigation'
 
@@ -187,8 +187,10 @@ const storefrontCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descripti
     description: 'Accede a tu cuenta para continuar en la plataforma'
   },
   [surfacePaths.auth.signUp]: {
-    title: 'Registro cerrado',
-    description: 'El alta de cuentas nuevas esta deshabilitada temporalmente'
+    title: PLATFORM_REGISTRATION_LOCKED ? 'Registro cerrado' : 'Crear cuenta',
+    description: PLATFORM_REGISTRATION_LOCKED
+      ? 'El alta de cuentas nuevas esta deshabilitada temporalmente'
+      : 'Crea tu cuenta para iniciar tu proceso de membresía'
   },
   [surfacePaths.workspace.root]: {
     title: 'Workspace',
@@ -813,7 +815,7 @@ function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
     hideFooterChrome: true,
     guestActions: [
       { href: surfacePaths.institutional.home, label: 'ASI institucional', variant: 'ghost' },
-      { href: surfacePaths.auth.signUp, label: 'Registro cerrado', variant: 'outline', disabled: true },
+      { href: surfacePaths.auth.signUp, label: PLATFORM_REGISTRATION_LOCKED ? 'Registro cerrado' : 'Crear cuenta', variant: 'outline', disabled: PLATFORM_REGISTRATION_LOCKED },
       { href: surfacePaths.auth.signIn, label: 'Iniciar sesión', variant: 'primary' }
     ],
     mobileSidebarLabel: 'plataforma',

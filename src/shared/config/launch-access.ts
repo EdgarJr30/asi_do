@@ -1,5 +1,5 @@
 export const PLATFORM_REGISTRATION_LOCKED = false
-export const MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED = true
+export const MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED = false
 
 export const PLATFORM_REGISTRATION_LOCKED_MESSAGE =
   'El registro de nuevas cuentas esta cerrado temporalmente. La plataforma queda disponible solo en modo muestra mientras ASI habilita el acceso.'
