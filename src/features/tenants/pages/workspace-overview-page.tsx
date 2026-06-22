@@ -299,10 +299,10 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[30px] border border-(--app-border) bg-white px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] sm:px-7">
+      <section className="rounded-[30px] border border-(--app-border) bg-(--app-surface-elevated) px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] dark:shadow-[0_18px_44px_rgba(0,0,0,0.2)] sm:px-7">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700 dark:border-primary-500/25 dark:bg-primary-500/12 dark:text-primary-200">
               Dashboard
             </div>
             <h1 className="mt-4 text-[1.75rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2rem]">
@@ -314,7 +314,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
-              className="inline-flex h-11 items-center justify-center rounded-2xl border border-(--app-border) bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-(--app-border) bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:border-primary-500/40 dark:hover:bg-primary-500/12 dark:hover:text-primary-200"
               to={surfacePaths.workspace.jobs}
             >
               Ver vacantes
@@ -332,7 +332,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
           {workspaceStats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-[22px] border border-(--app-border) bg-(--app-surface-muted) px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
+              className="rounded-[22px] border border-(--app-border) bg-(--app-surface-muted) px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
             >
               <p className="text-[0.8rem] font-medium text-(--app-text-muted)">{stat.label}</p>
               <p className="mt-2 text-[1.7rem] font-bold tracking-[-0.03em] text-(--app-text)">
