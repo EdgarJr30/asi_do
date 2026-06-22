@@ -1,27 +1,26 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
   BriefcaseBusiness,
   Building2,
-  CheckCircle2,
-  Circle,
+  Clock,
   FileText,
   LayoutDashboard,
-  Sparkles,
+  MoreVertical,
   UserRound
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Spinner } from '@/components/ui/loader'
-import { StatCard } from '@/components/ui/stat-card'
+import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 import { listMyApplications } from '@/features/applications/lib/applications-api'
 import { fetchMyCandidateProfile, type CandidateProfileBundle } from '@/features/candidate-profile/lib/candidate-profile-api'
 import type { Database } from '@/shared/types/database'
@@ -98,6 +97,7 @@ interface ModuleCard {
 export function CandidateHomePage() {
   const session = useAppSession()
   const navigate = useNavigate()
+  const shouldReduceMotion = useReducedMotion()
   const userId = session.authUser?.id ?? null
   const displayName = session.profile?.display_name ?? session.profile?.full_name ?? session.authUser?.email ?? 'candidato'
   const hasWorkspaceAccess = session.permissions.includes('workspace:read')
@@ -171,11 +171,18 @@ export function CandidateHomePage() {
   ]
 
   const greeting = greetingForNow()
-  const showProfileBanner = completeness !== null && completeness.percent < 100
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <motion.div
+      className="space-y-4"
+      variants={pageStagger}
+      initial={shouldReduceMotion ? false : 'hidden'}
+      animate="show"
+    >
+      <motion.div
+        variants={cardReveal}
+        className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+      >
         <div className="space-y-1">
           <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">Inicio · Tu espacio</p>
           <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">
@@ -189,143 +196,211 @@ export function CandidateHomePage() {
           </Button>
           <Button className="h-9 text-[0.8rem]" onClick={() => void navigate(surfacePaths.storefront.jobs)}>Explorar vacantes</Button>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="grid gap-2.5 sm:grid-cols-3">
-        <StatCard
-          label="Perfil completo"
-          value={completeness ? `${completeness.percent}%` : '—'}
-          helper={
-            completeness && completeness.percent < 100
-              ? `${completeness.total - completeness.completed} cosas por completar`
-              : 'Tu perfil está listo'
-          }
-        />
-        <StatCard label="Aplicaciones activas" value={applicationsQuery.isLoading ? '—' : activeApplications} helper="Procesos abiertos en este momento" />
-        <StatCard label="CV cargados" value={profileQuery.isLoading ? '—' : resumeCount} helper="Documentos listos para postular" />
-      </div>
+      <motion.div variants={gridStagger} className="grid gap-3 sm:grid-cols-3">
+        <motion.div variants={cardReveal} className="h-full">
+          <HomeStatCard
+            icon={UserRound}
+            label="Perfil completo"
+            value={completeness ? `${completeness.percent}%` : '—'}
+            progress={completeness?.percent ?? null}
+            helper={
+              completeness && completeness.percent < 100
+                ? `${completeness.total - completeness.completed} cosas por completar`
+                : 'Tu perfil está listo'
+            }
+          />
+        </motion.div>
+        <motion.div variants={cardReveal} className="h-full">
+          <HomeStatCard
+            icon={BriefcaseBusiness}
+            label="Aplicaciones activas"
+            value={applicationsQuery.isLoading ? '—' : activeApplications}
+            helper="Procesos abiertos en este momento"
+          />
+        </motion.div>
+        <motion.div variants={cardReveal} className="h-full">
+          <HomeStatCard
+            icon={FileText}
+            label="CV cargados"
+            value={profileQuery.isLoading ? '—' : resumeCount}
+            helper="Documentos listos para postular"
+          />
+        </motion.div>
+      </motion.div>
 
-      {showProfileBanner ? (
-        <Card className="border-primary-200/70 bg-primary-50/60 dark:border-primary-500/25 dark:bg-primary-500/10">
-          <CardContent className="mt-0 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex-1 space-y-2.5">
-              <div className="flex items-center gap-2">
-                <Sparkles className="size-3.5 text-primary-600 dark:text-primary-300" />
-                <p className="text-[0.8rem] font-semibold text-(--app-text)">Completa tu perfil para destacar ante los reclutadores</p>
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[0.7rem] text-(--app-text-muted)">
-                  <span>{completeness.completed} de {completeness.total} completado</span>
-                  <span className="tabular-nums font-semibold text-primary-600 dark:text-primary-300">{completeness.percent}%</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-(--app-surface-muted)">
-                  <div
-                    className="h-full rounded-full bg-primary-500 transition-[width] duration-500"
-                    style={{ width: `${Math.max(4, completeness.percent)}%` }}
-                  />
-                </div>
-              </div>
-              <ul className="flex flex-wrap gap-x-4 gap-y-1.5">
-                {completeness.items.map((item) => (
-                  <li
-                    key={item.key}
-                    className={cnStatus(item.done)}
-                  >
-                    {item.done ? <CheckCircle2 className="size-3.5" /> : <Circle className="size-3.5" />}
-                    {item.label}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="shrink-0">
-              <Button className="h-9 text-[0.8rem]" onClick={() => void navigate(surfacePaths.candidate.profile)}>Completar perfil</Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+      <motion.div variants={gridStagger} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {moduleCards.map((module) => {
           const Icon = module.icon
           return (
-            <Card key={module.key} className="flex flex-col">
-              <CardHeader>
-                <span className="flex size-9 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+            <motion.div key={module.key} variants={cardReveal} className="h-full">
+            <Card className="flex h-full flex-col">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
                   <Icon className="size-4" />
                 </span>
-                <CardTitle className="mt-2.5">{module.title}</CardTitle>
-                <CardDescription>{module.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="mt-auto pt-3">
-                <Button
-                  variant="ghost"
-                  className="h-9 px-0 text-sm text-primary-600 hover:bg-transparent hover:text-primary-700 dark:text-primary-300"
-                  onClick={module.onClick}
-                >
-                  {module.cta}
-                  <ArrowRight className="size-4" />
-                </Button>
-              </CardContent>
+                <h3 className="text-[0.9rem] font-semibold tracking-tight text-(--app-text)">{module.title}</h3>
+              </div>
+              <p className="mt-2.5 flex-1 text-[0.78rem] leading-4.5 text-(--app-text-muted)">{module.description}</p>
+              <button
+                type="button"
+                onClick={module.onClick}
+                className="mt-3 inline-flex items-center gap-1 self-start text-[0.8rem] font-semibold text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
+              >
+                {module.cta}
+                <ArrowRight className="size-4" />
+              </button>
             </Card>
+            </motion.div>
           )
         })}
-      </div>
+      </motion.div>
 
+      <motion.div variants={cardReveal}>
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-(--app-surface-muted) text-(--app-text-subtle)">
+              <Clock className="size-4" />
+            </span>
             <div>
-              <CardTitle>Aplicaciones recientes</CardTitle>
-              <CardDescription>El estado más nuevo de cada proceso.</CardDescription>
+              <h3 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Aplicaciones recientes</h3>
+              <p className="text-[0.78rem] text-(--app-text-muted)">El estado más nuevo de cada proceso.</p>
             </div>
-            <Button className="h-9 rounded-full px-3 text-xs" variant="ghost" onClick={() => void navigate(surfacePaths.candidate.applications)}>
-              Ver todas
-            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          {applicationsQuery.isLoading ? (
-            <div className="flex items-center gap-2.5 text-sm text-(--app-text-muted)">
-              <Spinner size="sm" /> Cargando aplicaciones…
+          <button
+            type="button"
+            onClick={() => void navigate(surfacePaths.candidate.applications)}
+            className="shrink-0 text-[0.78rem] font-semibold text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
+          >
+            Ver todas
+          </button>
+        </div>
+
+        {applicationsQuery.isLoading ? (
+          <div className="mt-4 flex items-center gap-2.5 text-[0.8rem] text-(--app-text-muted)">
+            <Spinner size="sm" /> Cargando aplicaciones…
+          </div>
+        ) : recentApplications.length > 0 ? (
+          <div className="mt-4">
+            <div className="hidden grid-cols-[1.7fr_1fr_0.8fr_1fr_auto] items-center gap-4 border-b border-(--app-border) px-2 pb-2 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle) sm:grid">
+              <span>Título de la vacante</span>
+              <span>Empresa</span>
+              <span>Postulado</span>
+              <span>Etapa actual</span>
+              <span className="sr-only">Acciones</span>
             </div>
-          ) : recentApplications.length > 0 ? (
-            <ul className="space-y-2">
+            <ul className="divide-y divide-(--app-border)">
               {recentApplications.map((application) => {
                 const status = statusCopy[application.status_public]
                 return (
                   <li
                     key={application.id}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3.5 py-2.5"
+                    className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl px-2 py-2.5 transition-colors hover:bg-(--app-surface-muted) sm:grid sm:grid-cols-[1.7fr_1fr_0.8fr_1fr_auto]"
                   >
-                    <div className="min-w-0">
-                      <p className="truncate text-[0.8rem] font-semibold text-(--app-text)">
+                    <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:flex-none">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-(--app-surface-muted) text-(--app-text-subtle)">
+                        <Building2 className="size-4" />
+                      </span>
+                      <p className="truncate text-[0.82rem] font-semibold text-(--app-text)">
                         {application.job_posting?.title || 'Vacante'}
                       </p>
-                      <p className="truncate text-[0.7rem] text-(--app-text-muted)">
-                        {application.job_posting?.company_profile?.display_name || 'Empresa'}
-                      </p>
                     </div>
-                    <Badge variant={status?.variant ?? 'outline'}>{status?.label ?? application.status_public}</Badge>
+                    <p className="truncate text-[0.78rem] text-(--app-text-muted)">
+                      {application.job_posting?.company_profile?.display_name || '—'}
+                    </p>
+                    <p className="hidden text-[0.78rem] text-(--app-text-muted) sm:block">
+                      {formatApplicationDate(application.submitted_at)}
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 text-[0.78rem] text-(--app-text)">
+                      <span className={`size-1.5 rounded-full ${statusDotClass(application.status_public)}`} />
+                      {status?.label ?? application.status_public}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => void navigate(surfacePaths.candidate.applications)}
+                      className="inline-flex h-8 items-center gap-1 rounded-full border border-(--app-border) bg-(--app-surface) px-3 text-[0.74rem] font-semibold text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 dark:hover:border-primary-400 dark:hover:text-primary-200"
+                    >
+                      Ver detalle
+                      <ArrowRight className="size-3.5" />
+                    </button>
                   </li>
                 )
               })}
             </ul>
-          ) : (
+          </div>
+        ) : (
+          <div className="mt-4">
             <EmptyState
               title="Aún no tienes aplicaciones"
               description="Explora oportunidades abiertas y postúlate cuando tu perfil esté listo."
               actionLabel="Explorar vacantes"
               onAction={() => void navigate(surfacePaths.storefront.jobs)}
             />
-          )}
-        </CardContent>
+          </div>
+        )}
       </Card>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+interface HomeStatCardProps {
+  icon: LucideIcon
+  label: string
+  value: ReactNode
+  helper?: ReactNode
+  progress?: number | null
+}
+
+function HomeStatCard({ icon: Icon, label, value, helper, progress = null }: HomeStatCardProps) {
+  return (
+    <div className="h-full rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) p-4 shadow-[0_10px_26px_rgba(10,18,36,0.06)] dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]">
+      <div className="flex items-start justify-between">
+        <span className="flex size-9 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+          <Icon className="size-4" />
+        </span>
+        <span className="-mr-1 -mt-1 flex size-7 items-center justify-center rounded-lg text-(--app-text-subtle)">
+          <MoreVertical className="size-4" />
+        </span>
+      </div>
+      <p className="mt-2.5 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">{label}</p>
+      <p className="mt-1 text-[1.4rem] font-semibold tracking-tight text-(--app-text)">{value}</p>
+      {progress !== null ? (
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-(--app-surface-muted)">
+          <div
+            className="h-full rounded-full bg-primary-500 transition-[width] duration-500"
+            style={{ width: `${Math.max(4, progress)}%` }}
+          />
+        </div>
+      ) : null}
+      {helper ? <p className="mt-2 text-[0.72rem] leading-4 text-(--app-text-muted)">{helper}</p> : null}
     </div>
   )
 }
 
-function cnStatus(done: boolean) {
-  return done
-    ? 'inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400'
-    : 'inline-flex items-center gap-1.5 text-xs text-(--app-text-subtle)'
+const applicationDateFormatter = new Intl.DateTimeFormat('es', { day: '2-digit', month: 'short', year: 'numeric' })
+
+function formatApplicationDate(value?: string | null) {
+  if (!value) {
+    return '—'
+  }
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '—' : applicationDateFormatter.format(date)
+}
+
+function statusDotClass(status: PublicStatus) {
+  switch (status) {
+    case 'interviewing':
+    case 'offer':
+      return 'bg-primary-500'
+    case 'hired':
+      return 'bg-emerald-500'
+    case 'rejected':
+    case 'withdrawn':
+      return 'bg-(--app-text-subtle)'
+    default:
+      return 'bg-amber-500'
+  }
 }

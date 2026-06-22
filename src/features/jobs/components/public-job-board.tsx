@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { motion, useReducedMotion } from 'motion/react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,6 +14,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  FileText,
   Globe,
   MapPin,
   Search,
@@ -37,6 +39,7 @@ import { classifySector, getSectorLabel, sectorDefinitions } from '@/features/jo
 import { getCompensationTypeLabel, getOpportunityTypeLabel, opportunityTypeOptions } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
+import { cardReveal, gridStagger } from '@/shared/ui/card-motion'
 
 type JobRow = JobPostingBundle['jobs'][number]
 
@@ -53,7 +56,10 @@ const employmentLabels: Record<string, string> = {
 }
 
 const primaryLinkClass =
-  'inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border border-primary-600 bg-primary-600 px-7 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(43,69,143,0.2)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2'
+  'inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-primary-600 bg-primary-600 px-6 text-[0.85rem] font-semibold text-white shadow-[0_12px_24px_rgba(43,69,143,0.2)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2'
+
+const metaChipClass =
+  'inline-flex items-center gap-1.5 rounded-full border border-(--app-border) bg-(--app-surface) px-3 py-1 text-[0.74rem] text-(--app-text-muted)'
 
 function workplaceLabel(value: string | null | undefined) {
   return value ? workplaceLabels[value] ?? value : ''
@@ -95,13 +101,15 @@ function salaryText(job: Pick<JobRow, 'compensation_type' | 'compensation_min_am
   return `${currency} ${(min || max || 0).toLocaleString()}`
 }
 
-function CompanyAvatar({ name, size = 'md' }: { name: string | null | undefined; size?: 'md' | 'lg' }) {
+function CompanyAvatar({ name, size = 'md' }: { name: string | null | undefined; size?: 'sm' | 'md' | 'lg' }) {
   return (
     <span
       aria-hidden
       className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-2xl bg-primary-50 font-semibold text-primary-700 dark:bg-primary-500/12 dark:text-primary-300',
-        size === 'lg' ? 'size-14 text-lg' : 'size-12 text-sm'
+        'inline-flex shrink-0 items-center justify-center rounded-xl bg-primary-50 font-semibold text-primary-700 dark:bg-primary-500/12 dark:text-primary-300',
+        size === 'lg' && 'size-12 text-base',
+        size === 'md' && 'size-11 text-sm',
+        size === 'sm' && 'size-10 text-[0.8rem]'
       )}
     >
       {companyInitials(name)}
@@ -121,6 +129,7 @@ const emptyFilters: Filters = { search: '', location: '', sector: '', workplace:
 export function PublicJobBoard() {
   const session = useAppSession()
   const queryClient = useQueryClient()
+  const shouldReduceMotion = useReducedMotion()
 
   const [filters, setFilters] = useState<Filters>(emptyFilters)
   const [sort, setSort] = useState<'recent' | 'salary'>('recent')
@@ -238,22 +247,22 @@ export function PublicJobBoard() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <header className="space-y-1">
-        <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">Empleos</h1>
-        <p className="text-sm text-(--app-text-muted)">Encuentra tu próxima oportunidad. Busca, abre una vacante y aplica en un clic.</p>
+        <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Empleos</h1>
+        <p className="text-[0.8rem] text-(--app-text-muted)">Encuentra tu próxima oportunidad. Busca, abre una vacante y aplica en un clic.</p>
       </header>
 
       {/* Búsqueda */}
       <form
-        className="flex flex-col gap-2.5 rounded-panel border border-(--app-border) bg-(--app-surface) p-2.5 shadow-[0_10px_30px_rgba(16,25,58,0.06)] sm:flex-row sm:items-center"
+        className="flex flex-col gap-2 rounded-panel border border-(--app-border) bg-(--app-surface) p-2 shadow-[0_8px_24px_rgba(16,25,58,0.05)] sm:flex-row sm:items-center"
         onSubmit={(event) => event.preventDefault()}
         role="search"
       >
         <div className="relative flex-1">
           <Search aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
           <Input
-            className="h-12 border-transparent bg-transparent pl-10 shadow-none focus:bg-(--app-surface-muted)"
+            className="h-11 border-transparent bg-transparent pl-10 text-[0.85rem] shadow-none focus:bg-(--app-surface-muted)"
             placeholder="Cargo, empresa o palabra clave"
             aria-label="Buscar por cargo, empresa o palabra clave"
             value={filters.search}
@@ -263,14 +272,14 @@ export function PublicJobBoard() {
         <div className="relative sm:w-56">
           <MapPin aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
           <Input
-            className="h-12 border-transparent bg-transparent pl-10 shadow-none focus:bg-(--app-surface-muted) sm:border-l sm:border-l-(--app-border) sm:rounded-l-none"
+            className="h-11 border-transparent bg-transparent pl-10 text-[0.85rem] shadow-none focus:bg-(--app-surface-muted) sm:border-l sm:border-l-(--app-border) sm:rounded-l-none"
             placeholder="Ciudad o país"
             aria-label="Filtrar por ubicación"
             value={filters.location}
             onChange={(event) => patchFilters({ location: event.target.value })}
           />
         </div>
-        <Button type="submit" className="h-12">
+        <Button type="submit" className="h-11 text-[0.85rem]">
           <Search className="size-4" /> Buscar
         </Button>
       </form>
@@ -281,19 +290,19 @@ export function PublicJobBoard() {
           type="button"
           onClick={() => setFiltersOpen((value) => !value)}
           aria-expanded={filtersOpen}
-          className="inline-flex h-10 items-center gap-2 rounded-full border border-(--app-border) bg-(--app-surface) px-4 text-sm font-medium text-(--app-text) transition hover:border-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)"
+          className="inline-flex h-9 items-center gap-2 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 text-[0.82rem] font-medium text-(--app-text) transition hover:border-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)"
         >
           <SlidersHorizontal className="size-4 text-(--app-text-muted)" /> Filtros
           {activeChips.length > 0 ? (
             <span className="rounded-full bg-primary-600 px-1.5 text-xs font-bold text-white">{activeChips.length}</span>
           ) : null}
         </button>
-        <span className="text-sm text-(--app-text-muted)">
+        <span className="text-[0.82rem] text-(--app-text-muted)">
           {jobsQuery.isLoading ? 'Cargando…' : `${filteredJobs.length} ${filteredJobs.length === 1 ? 'empleo' : 'empleos'}`}
         </span>
-        <label className="ml-auto flex items-center gap-2 text-sm text-(--app-text-muted)">
+        <label className="ml-auto flex items-center gap-2 text-[0.82rem] text-(--app-text-muted)">
           Ordenar por
-          <Select className="h-9 w-auto" value={sort} onChange={(event) => setSort(event.target.value as 'recent' | 'salary')} aria-label="Ordenar resultados">
+          <Select className="h-9 w-auto text-[0.82rem]" value={sort} onChange={(event) => setSort(event.target.value as 'recent' | 'salary')} aria-label="Ordenar resultados">
             <option value="recent">Más recientes</option>
             <option value="salary">Mejor salario</option>
           </Select>
@@ -371,12 +380,17 @@ export function PublicJobBoard() {
           onAction={activeChips.length > 0 ? () => { setFilters(emptyFilters); setPage(0) } : undefined}
         />
       ) : (
-        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
           {/* Lista */}
           <div className={cn(detailOpen ? 'hidden lg:block' : 'block')}>
-            <ul className="space-y-3">
+            <motion.ul
+              className="space-y-2.5"
+              variants={gridStagger}
+              initial={shouldReduceMotion ? false : 'hidden'}
+              animate="show"
+            >
               {pageJobs.map((job) => (
-                <li key={job.id}>
+                <motion.li key={job.id} variants={cardReveal}>
                   <JobListCard
                     job={job}
                     active={job.id === detailJob?.id}
@@ -384,26 +398,32 @@ export function PublicJobBoard() {
                     applied={appliedJobIds.has(job.id)}
                     onSelect={() => openJob(job.id)}
                   />
-                </li>
+                </motion.li>
               ))}
-            </ul>
+            </motion.ul>
             {totalPages > 1 ? <Pager page={safePage} totalPages={totalPages} onGo={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }} /> : null}
           </div>
 
           {/* Detalle */}
           <div className={cn(detailOpen ? 'block' : 'hidden lg:block')}>
             {detailJob ? (
-              <JobDetailPanel
+              <motion.div
                 key={detailJob.id}
-                job={detailJob}
-                saved={savedJobIds.includes(detailJob.id)}
-                applied={appliedJobIds.has(detailJob.id)}
-                canSave={Boolean(candidateProfileId)}
-                isAuthenticated={session.isAuthenticated}
-                onBack={() => setDetailOpen(false)}
-                onToggleSave={(shouldSave) => saveJobMutation.mutate({ jobId: detailJob.id, shouldSave })}
-                savePending={saveJobMutation.isPending}
-              />
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <JobDetailPanel
+                  job={detailJob}
+                  saved={savedJobIds.includes(detailJob.id)}
+                  applied={appliedJobIds.has(detailJob.id)}
+                  canSave={Boolean(candidateProfileId)}
+                  isAuthenticated={session.isAuthenticated}
+                  onBack={() => setDetailOpen(false)}
+                  onToggleSave={(shouldSave) => saveJobMutation.mutate({ jobId: detailJob.id, shouldSave })}
+                  savePending={saveJobMutation.isPending}
+                />
+              </motion.div>
             ) : null}
           </div>
         </div>
@@ -431,20 +451,22 @@ function JobListCard({
       onClick={onSelect}
       aria-current={active ? 'true' : undefined}
       className={cn(
-        'flex w-full gap-3.5 rounded-panel border bg-(--app-surface) p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
+        'flex w-full gap-3 rounded-xl border bg-(--app-surface) p-3.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
         active
           ? 'border-primary-400 ring-1 ring-primary-300 dark:border-primary-500/50 dark:ring-primary-500/25'
           : 'border-(--app-border) hover:border-primary-200'
       )}
     >
-      <CompanyAvatar name={job.company_profile?.display_name} />
+      <CompanyAvatar name={job.company_profile?.display_name} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="truncate text-[0.98rem] font-semibold text-(--app-text)">{job.title}</h3>
+          <h3 className="truncate text-[0.88rem] font-semibold text-(--app-text)">{job.title}</h3>
           {saved ? <BookmarkCheck aria-label="Guardada" className="size-4 shrink-0 text-primary-600 dark:text-primary-300" /> : null}
         </div>
-        <p className="mt-0.5 truncate text-sm text-(--app-text-muted)">{job.company_profile?.display_name || 'Empresa'}</p>
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-(--app-text-muted)">
+        <p className="mt-0.5 inline-flex items-center gap-1 truncate text-[0.78rem] text-(--app-text-muted)">
+          <Building2 aria-hidden className="size-3.5 shrink-0" /> {job.company_profile?.display_name || 'Empresa'}
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.72rem] text-(--app-text-muted)">
           <span className="inline-flex items-center gap-1">
             <MapPin aria-hidden className="size-3.5" /> {locationLabel(job)}
           </span>
@@ -455,18 +477,15 @@ function JobListCard({
           ) : null}
         </div>
         <div className="mt-2.5 flex items-center justify-between gap-2">
-          {hasSalary(job) ? (
-            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{salaryText(job)}</span>
+          {applied ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[0.68rem] font-semibold text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
+              <CheckCircle2 className="size-3" /> Ya aplicaste
+            </span>
           ) : (
-            <span className="text-xs text-(--app-text-subtle)">Salario no divulgado</span>
+            <span />
           )}
-          <span className="text-xs text-(--app-text-subtle)">{relativeDays(job.published_at ?? job.updated_at)}</span>
+          <span className="shrink-0 text-[0.7rem] text-(--app-text-subtle)">{relativeDays(job.published_at ?? job.updated_at)}</span>
         </div>
-        {applied ? (
-          <span className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[0.7rem] font-semibold text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
-            <CheckCircle2 className="size-3" /> Ya aplicaste
-          </span>
-        ) : null}
       </div>
     </button>
   )
@@ -502,33 +521,33 @@ function JobDetailPanel({
   const applyHint = questionsCount > 0 ? `Postulación rápida · ${questionsCount} ${questionsCount === 1 ? 'pregunta' : 'preguntas'}` : 'Aplica con tu perfil en un paso'
 
   return (
-    <article className="overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface) shadow-[0_8px_24px_rgba(15,23,42,0.05)] lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
-      <div className="border-b border-(--app-border) bg-(--app-surface-muted) p-5 sm:p-6">
-        <button type="button" onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-(--app-text-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) lg:hidden">
+    <article className="overflow-hidden rounded-xl border border-(--app-border) bg-(--app-surface) shadow-[0_8px_24px_rgba(15,23,42,0.05)] lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+      <div className="border-b border-(--app-border) p-4 sm:p-5">
+        <button type="button" onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-(--app-text-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) lg:hidden">
           <ArrowLeft aria-hidden className="size-4" /> Volver a resultados
         </button>
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-3">
           <CompanyAvatar name={job.company_profile?.display_name} size="lg" />
           <div className="min-w-0 flex-1">
-            <h2 className="text-xl font-semibold leading-tight tracking-tight text-(--app-text) sm:text-2xl">{job.title}</h2>
-            <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-(--app-text-muted)">
-              <Building2 aria-hidden className="size-4" /> {job.company_profile?.display_name || 'Empresa'}
+            <h2 className="text-lg font-semibold leading-tight tracking-tight text-(--app-text) sm:text-xl">{job.title}</h2>
+            <p className="mt-1 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-(--app-text-muted)">
+              <Building2 aria-hidden className="size-3.5" /> {job.company_profile?.display_name || 'Empresa'}
             </p>
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-(--app-text-muted)">
-          <span className="inline-flex items-center gap-1.5"><MapPin aria-hidden className="size-4" /> {locationLabel(job)}</span>
-          {job.workplace_type ? <span className="inline-flex items-center gap-1.5"><Globe aria-hidden className="size-4" /> {workplaceLabel(job.workplace_type)}</span> : null}
-          <span className="inline-flex items-center gap-1.5"><Briefcase aria-hidden className="size-4" /> {employmentLabel(job.employment_type) || getOpportunityTypeLabel(job.opportunity_type)}</span>
-          {job.experience_level ? <span className="inline-flex items-center gap-1.5"><Sparkles aria-hidden className="size-4" /> {job.experience_level}</span> : null}
-          <span className={cn('inline-flex items-center gap-1.5', hasSalary(job) && 'font-semibold text-emerald-600 dark:text-emerald-400')}>
-            <Banknote aria-hidden className="size-4" /> {salaryText(job)}
+        <div className="mt-3.5 flex flex-wrap items-center gap-2">
+          <span className={metaChipClass}><MapPin aria-hidden className="size-3.5" /> {locationLabel(job)}</span>
+          {job.workplace_type ? <span className={metaChipClass}><Globe aria-hidden className="size-3.5" /> {workplaceLabel(job.workplace_type)}</span> : null}
+          <span className={metaChipClass}><Briefcase aria-hidden className="size-3.5" /> {employmentLabel(job.employment_type) || getOpportunityTypeLabel(job.opportunity_type)}</span>
+          {job.experience_level ? <span className={metaChipClass}><Sparkles aria-hidden className="size-3.5" /> {job.experience_level}</span> : null}
+          <span className={cn(metaChipClass, hasSalary(job) && 'border-emerald-200 font-semibold text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300')}>
+            <Banknote aria-hidden className="size-3.5" /> {salaryText(job)}
           </span>
-          <span className="inline-flex items-center gap-1.5"><CalendarClock aria-hidden className="size-4" /> {relativeDays(job.published_at ?? job.updated_at)}</span>
+          <span className={metaChipClass}><CalendarClock aria-hidden className="size-3.5" /> {relativeDays(job.published_at ?? job.updated_at)}</span>
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           {applied ? (
             <span className="inline-flex h-12 items-center gap-2 rounded-2xl bg-emerald-50 px-6 text-sm font-semibold text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
               <CheckCircle2 className="size-5" /> Ya aplicaste
@@ -543,36 +562,36 @@ function JobDetailPanel({
             </Link>
           )}
           {isAuthenticated && !applied ? (
-            <Button variant="outline" className="h-12 w-12 p-0" aria-label={saved ? 'Quitar de guardadas' : 'Guardar vacante'} onClick={() => onToggleSave(!saved)} disabled={savePending || !canSave}>
+            <Button variant="outline" className="size-11 p-0" aria-label={saved ? 'Quitar de guardadas' : 'Guardar vacante'} onClick={() => onToggleSave(!saved)} disabled={savePending || !canSave}>
               {saved ? <BookmarkCheck className="size-5" /> : <Bookmark className="size-5" />}
             </Button>
           ) : null}
-          {!applied ? <p className="text-xs text-(--app-text-subtle)">{detailQuery.isLoading ? 'Cargando detalles…' : applyHint}</p> : null}
+          {!applied ? <p className="text-[0.72rem] text-(--app-text-subtle)">{detailQuery.isLoading ? 'Cargando detalles…' : applyHint}</p> : null}
         </div>
       </div>
 
-      <div className="space-y-6 p-5 sm:p-6">
-        {job.summary ? <p className="text-sm leading-7 text-(--app-text-muted)">{job.summary}</p> : null}
-
+      <div className="space-y-5 p-4 sm:p-5">
         <section>
-          <h3 className="text-sm font-semibold text-(--app-text)">Sobre el rol</h3>
-          <div className="mt-2 whitespace-pre-wrap text-sm leading-7 text-(--app-text-muted)">
+          <h3 className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle)">Resumen de la vacante</h3>
+          {job.summary ? <p className="mt-2 text-[0.82rem] leading-6 text-(--app-text-muted)">{job.summary}</p> : null}
+          <h4 className="mt-3 text-[0.85rem] font-semibold text-(--app-text)">Sobre el rol</h4>
+          <div className="mt-1.5 whitespace-pre-wrap text-[0.82rem] leading-6 text-(--app-text-muted)">
             {job.description || 'La empresa aún no agregó una descripción detallada.'}
           </div>
         </section>
 
-        <section className="rounded-2xl border border-(--app-border) bg-(--app-surface-muted) p-4">
-          <h3 className="inline-flex items-center gap-2 text-sm font-semibold text-(--app-text)"><Building2 aria-hidden className="size-4" /> Sobre la empresa</h3>
+        <section className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) p-3.5">
+          <h3 className="inline-flex items-center gap-2 text-[0.85rem] font-semibold text-(--app-text)"><Building2 aria-hidden className="size-4" /> Sobre la empresa</h3>
           {sector ? (
-            <span className="mt-2 inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 dark:bg-primary-500/12 dark:text-primary-300">
+            <span className="mt-2 inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-[0.7rem] font-semibold text-primary-700 dark:bg-primary-500/12 dark:text-primary-300">
               {getSectorLabel(sector)}
             </span>
           ) : null}
-          <p className="mt-2 text-sm font-medium text-(--app-text)">{job.company_profile?.display_name || 'Empresa'}</p>
-          {job.company_profile?.industry ? <p className="mt-0.5 text-sm text-(--app-text-muted)">{job.company_profile.industry}</p> : null}
-          {detail?.company_profile?.description ? <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">{detail.company_profile.description}</p> : null}
+          <p className="mt-2 text-[0.82rem] font-medium text-(--app-text)">{job.company_profile?.display_name || 'Empresa'}</p>
+          {job.company_profile?.industry ? <p className="mt-0.5 text-[0.78rem] text-(--app-text-muted)">{job.company_profile.industry}</p> : null}
+          {detail?.company_profile?.description ? <p className="mt-2 text-[0.8rem] leading-6 text-(--app-text-muted)">{detail.company_profile.description}</p> : null}
           {detail?.company_profile?.website_url ? (
-            <a className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:underline dark:text-primary-300" href={detail.company_profile.website_url} rel="noreferrer" target="_blank">
+            <a className="mt-3 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-primary-600 hover:underline dark:text-primary-300" href={detail.company_profile.website_url} rel="noreferrer" target="_blank">
               <Globe aria-hidden className="size-4" /> Visitar sitio web
             </a>
           ) : null}
@@ -580,12 +599,15 @@ function JobDetailPanel({
 
         {questionsCount > 0 ? (
           <section>
-            <h3 className="text-sm font-semibold text-(--app-text)">Qué te preguntarán al aplicar</h3>
+            <h3 className="text-[0.85rem] font-semibold text-(--app-text)">Qué te preguntarán al aplicar</h3>
             <ul className="mt-2 space-y-2">
               {detail!.job_screening_questions!.map((question) => (
-                <li key={question.id} className="rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-sm">
-                  <p className="font-medium text-(--app-text)">{question.question_text}</p>
-                  <p className="mt-0.5 text-xs text-(--app-text-subtle)">{question.is_required ? 'Requerida' : 'Opcional'}</p>
+                <li key={question.id} className="inline-flex w-full items-start gap-2 rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3.5 py-2.5 text-[0.82rem]">
+                  <FileText aria-hidden className="mt-0.5 size-4 shrink-0 text-(--app-text-subtle)" />
+                  <span>
+                    <span className="block font-medium text-(--app-text)">{question.question_text}</span>
+                    <span className="mt-0.5 block text-[0.72rem] text-(--app-text-subtle)">{question.is_required ? 'Requerida' : 'Opcional'}</span>
+                  </span>
                 </li>
               ))}
             </ul>

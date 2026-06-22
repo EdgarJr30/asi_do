@@ -1435,10 +1435,7 @@ export function PlatformAppShell({
             </button>
 
             <div className={cn('min-w-0', isWorkspace ? 'shrink-0' : 'flex-1')}>
-              {!isWorkspace ? (
-                <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{routeMeta.eyebrow}</p>
-              ) : null}
-              <div className={cn('flex min-w-0 flex-wrap items-center gap-2', isWorkspace ? '' : 'mt-0.5')}>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
                 {breadcrumbs.map((crumb, index) => (
                   <div key={`${crumb}-${index}`} className="flex min-w-0 items-center gap-2">
                     {index > 0 ? <span className="text-sm text-slate-300">/</span> : null}
