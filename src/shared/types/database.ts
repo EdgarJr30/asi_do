@@ -3275,6 +3275,29 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      mark_notification_unread: {
+        Args: { p_notification_id: string }
+        Returns: {
+          action_url: string | null
+          body: string
+          clicked_at: string | null
+          created_at: string
+          id: string
+          payload: Json
+          read_at: string | null
+          recipient_user_id: string
+          tenant_id: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "notifications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       move_application_stage: {
         Args: {
           p_application_id: string

@@ -43,7 +43,7 @@ import { AppBottomNav, type AppNavGroup, type AppNavItem } from '@/components/ui
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api'
-import { fetchMyNotificationsPage, markAllNotificationsRead, markNotificationRead, type AppNotification } from '@/lib/notifications/api'
+import { fetchMyNotificationsPage, markAllNotificationsRead, markNotificationRead, markNotificationUnread, type AppNotification } from '@/lib/notifications/api'
 import { filterNavigationItems } from '@/lib/permissions/guards'
 import { cn } from '@/lib/utils/cn'
 import { PLATFORM_REGISTRATION_LOCKED, PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access'
@@ -350,12 +350,16 @@ function resolveActiveShellItemHref(groups: AppNavGroup[], pathname: string) {
 }
 
 function NotificationRow({
+  isUpdatingReadState,
   notification,
   onMarkRead,
+  onMarkUnread,
   onOpenNotification
 }: {
+  isUpdatingReadState: boolean
   notification: AppNotification
   onMarkRead: (notificationId: string) => void
+  onMarkUnread: (notificationId: string) => void
   onOpenNotification: (notification: AppNotification) => void
 }) {
   const isUnread = !notification.read_at
@@ -372,40 +376,56 @@ function NotificationRow({
   return (
     <li className="relative">
       {isUnread ? <span aria-hidden className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-primary-500" /> : null}
-      <button
-        type="button"
-        onClick={handleActivate}
+      <div
         className={cn(
-          'flex w-full items-start gap-3 px-4 py-3 text-left transition-colors',
-          'hover:bg-(--app-surface-muted) focus-visible:bg-(--app-surface-muted) focus-visible:outline-none',
+          'flex items-start gap-2 px-4 py-3 transition-colors',
           isUnread && 'bg-primary-50/45 dark:bg-primary-500/8'
         )}
       >
-        <span
+        <button
+          type="button"
+          onClick={handleActivate}
           className={cn(
-            'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl',
-            isUnread
-              ? 'bg-primary-100 text-primary-600 dark:bg-primary-500/16 dark:text-primary-300'
-              : 'bg-(--app-surface-muted) text-(--app-text-muted)'
+            'flex min-w-0 flex-1 items-start gap-3 rounded-xl text-left transition-colors',
+            'hover:bg-(--app-surface-muted) focus-visible:bg-(--app-surface-muted) focus-visible:outline-none',
+            isUnread ? 'p-0' : '-m-1 p-1'
           )}
         >
-          <NotificationTypeIcon type={notification.type} className="size-4.5" />
-        </span>
+          <span
+            className={cn(
+              'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl',
+              isUnread
+                ? 'bg-primary-100 text-primary-600 dark:bg-primary-500/16 dark:text-primary-300'
+                : 'bg-(--app-surface-muted) text-(--app-text-muted)'
+            )}
+          >
+            <NotificationTypeIcon type={notification.type} className="size-4.5" />
+          </span>
 
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2">
-            <span className={cn('min-w-0 flex-1 truncate text-sm', isUnread ? 'font-semibold text-(--app-text)' : 'font-medium text-(--app-text)')}>
-              {notification.title}
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2">
+              <span className={cn('min-w-0 flex-1 truncate text-sm', isUnread ? 'font-semibold text-(--app-text)' : 'font-medium text-(--app-text)')}>
+                {notification.title}
+              </span>
+              {isUnread ? <span className="size-2 shrink-0 rounded-full bg-primary-500" /> : null}
             </span>
-            {isUnread ? <span className="size-2 shrink-0 rounded-full bg-primary-500" /> : null}
+            <span className="mt-0.5 line-clamp-2 block text-[0.82rem] leading-5 text-(--app-text-muted)">{notification.body}</span>
+            <span className="mt-1 flex items-center gap-1.5 text-[0.72rem] text-(--app-text-subtle)">
+              {formatNotificationTimestamp(notification.created_at)}
+              {hasAction ? <span className="text-(--app-text-subtle)">· abrir →</span> : null}
+            </span>
           </span>
-          <span className="mt-0.5 line-clamp-2 block text-[0.82rem] leading-5 text-(--app-text-muted)">{notification.body}</span>
-          <span className="mt-1 flex items-center gap-1.5 text-[0.72rem] text-(--app-text-subtle)">
-            {formatNotificationTimestamp(notification.created_at)}
-            {hasAction ? <span className="text-(--app-text-subtle)">· abrir →</span> : null}
-          </span>
-        </span>
-      </button>
+        </button>
+        <button
+          type="button"
+          aria-label={isUnread ? 'Marcar leida' : 'Marcar no leida'}
+          disabled={isUpdatingReadState}
+          onClick={() => (isUnread ? onMarkRead(notification.id) : onMarkUnread(notification.id))}
+          className="mt-0.5 shrink-0 rounded-lg px-2 py-1 text-[0.68rem] font-semibold text-primary-600 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-primary-300 dark:hover:bg-primary-500/12"
+        >
+          {isUnread ? 'Leída' : 'No leída'}
+        </button>
+      </div>
     </li>
   )
 }
@@ -413,6 +433,7 @@ function NotificationRow({
 function WorkspaceNotificationPanel({
   isLoading,
   isPaging,
+  isUpdatingReadState,
   notifications,
   page,
   pageSize,
@@ -421,6 +442,7 @@ function WorkspaceNotificationPanel({
   unreadCount,
   onMarkRead,
   onMarkAllRead,
+  onMarkUnread,
   onNextPage,
   onOpenNotification,
   onPreviousPage,
@@ -428,6 +450,7 @@ function WorkspaceNotificationPanel({
 }: {
   isLoading: boolean
   isPaging: boolean
+  isUpdatingReadState: boolean
   notifications: AppNotification[]
   page: number
   pageSize: number
@@ -436,6 +459,7 @@ function WorkspaceNotificationPanel({
   unreadCount: number
   onMarkRead: (notificationId: string) => void
   onMarkAllRead: () => void
+  onMarkUnread: (notificationId: string) => void
   onNextPage: () => void
   onOpenNotification: (notification: AppNotification) => void
   onPreviousPage: () => void
@@ -496,8 +520,10 @@ function WorkspaceNotificationPanel({
             {notifications.map((notification) => (
               <NotificationRow
                 key={notification.id}
+                isUpdatingReadState={isPaging || isUpdatingReadState}
                 notification={notification}
                 onMarkRead={onMarkRead}
+                onMarkUnread={onMarkUnread}
                 onOpenNotification={onOpenNotification}
               />
             ))}
@@ -1206,6 +1232,19 @@ export function PlatformAppShell({
     mutationFn: (notificationId: string) => markNotificationRead(notificationId),
     onSuccess: async () => {
       await invalidateNotifications()
+    },
+    onError: (error) => {
+      toast.error('No se pudo actualizar la notificación', { description: toErrorMessage(error) })
+    }
+  })
+
+  const markUnreadMutation = useMutation({
+    mutationFn: (notificationId: string) => markNotificationUnread(notificationId),
+    onSuccess: async () => {
+      await invalidateNotifications()
+    },
+    onError: (error) => {
+      toast.error('No se pudo actualizar la notificación', { description: toErrorMessage(error) })
     }
   })
 
@@ -1292,6 +1331,10 @@ export function PlatformAppShell({
 
   function handleMarkRead(notificationId: string) {
     markReadMutation.mutate(notificationId)
+  }
+
+  function handleMarkUnread(notificationId: string) {
+    markUnreadMutation.mutate(notificationId)
   }
 
   function handleMarkAllRead() {
@@ -1461,6 +1504,7 @@ export function PlatformAppShell({
                       <WorkspaceNotificationPanel
                         isLoading={notificationsQuery.isLoading}
                         isPaging={notificationsQuery.isFetching}
+                        isUpdatingReadState={markReadMutation.isPending || markUnreadMutation.isPending}
                         notifications={notifications}
                         page={notificationPage}
                         pageSize={NOTIFICATION_PAGE_SIZE}
@@ -1469,6 +1513,7 @@ export function PlatformAppShell({
                         unreadCount={notificationUnreadCount}
                         onMarkRead={handleMarkRead}
                         onMarkAllRead={handleMarkAllRead}
+                        onMarkUnread={handleMarkUnread}
                         onNextPage={() => setNotificationPage((current) => Math.min(notificationTotalPages, current + 1))}
                         onOpenNotification={(notification) => void handleOpenNotification(notification)}
                         onPreviousPage={() => setNotificationPage((current) => Math.max(1, current - 1))}

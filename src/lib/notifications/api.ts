@@ -188,6 +188,19 @@ export async function markNotificationRead(notificationId: string) {
   return response.data as AppNotification
 }
 
+export async function markNotificationUnread(notificationId: string) {
+  const client = requireSupabase()
+  const response = await client.rpc('mark_notification_unread' as never, {
+    p_notification_id: notificationId
+  } as never)
+
+  if (response.error) {
+    throw toControlledError(response.error)
+  }
+
+  return response.data as AppNotification
+}
+
 /** Marca como leídas varias notificaciones (reutiliza el RPC por id, en paralelo). */
 export async function markAllNotificationsRead(notificationIds: string[]) {
   if (notificationIds.length === 0) {

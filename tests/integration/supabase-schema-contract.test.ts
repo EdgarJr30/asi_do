@@ -14,6 +14,10 @@ const pushWorkflowMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260314130000_push_delivery_workflow.sql'
 )
+const notificationUnreadToggleMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260622190000_notification_unread_toggle.sql'
+)
 const storageAlignmentMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260315023000_align_storage_mime_support_and_limits.sql'
@@ -127,6 +131,14 @@ describe('supabase schema contract', () => {
     expect(migration).toContain("create or replace function public.queue_push_notification(")
     expect(migration).toContain("create or replace function public.update_push_delivery_status(")
     expect(migration).toContain("create or replace function public.mark_notification_clicked(")
+  })
+
+  it('keeps notification read state reversible by the recipient', () => {
+    const migration = readFileSync(notificationUnreadToggleMigrationPath, 'utf8')
+
+    expect(migration).toContain('create or replace function public.mark_notification_unread(')
+    expect(migration).toContain('and recipient_user_id = v_current_user_id')
+    expect(migration).toContain('grant execute on function public.mark_notification_unread(uuid) to authenticated;')
   })
 
   it('keeps storage bucket limits and mime support aligned with upload rules', () => {

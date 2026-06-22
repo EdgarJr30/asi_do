@@ -6,7 +6,7 @@ import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
 import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
 import { AppProviders } from '@/app/providers/app-providers'
 import { surfacePaths } from '@/app/router/surface-paths'
-import { fetchMyNotifications, fetchMyNotificationsPage, markNotificationRead } from '@/lib/notifications/api'
+import { fetchMyNotifications, fetchMyNotificationsPage, markNotificationRead, markNotificationUnread } from '@/lib/notifications/api'
 import { signOutCurrentUser } from '@/features/auth/lib/auth-api'
 
 const authState = {
@@ -107,6 +107,24 @@ vi.mock('@/lib/notifications/api', async () => {
           body: '',
           action_url: null,
           read_at: new Date().toISOString(),
+          clicked_at: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          recipient_user_id: 'user-1',
+          tenant_id: null,
+          type: 'system.test',
+          payload: {}
+        }
+      )
+    ),
+    markNotificationUnread: vi.fn((notificationId: string) =>
+      Promise.resolve(
+        notificationState.items.find((item) => item.id === notificationId) ?? {
+          id: notificationId,
+          title: '',
+          body: '',
+          action_url: null,
+          read_at: null,
           clicked_at: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -260,6 +278,7 @@ beforeEach(() => {
   vi.mocked(fetchMyNotifications).mockClear()
   vi.mocked(fetchMyNotificationsPage).mockClear()
   vi.mocked(markNotificationRead).mockClear()
+  vi.mocked(markNotificationUnread).mockClear()
   vi.mocked(signOutCurrentUser).mockClear()
 })
 
@@ -324,6 +343,35 @@ describe('workspace shell', () => {
 
     await waitFor(() => {
       expect(markNotificationRead).toHaveBeenCalledWith('notification-1')
+    })
+  })
+
+  it('toggles a notification from read to unread', async () => {
+    seedWorkspaceSession(['workspace:read'])
+    notificationState.items = [
+      {
+        id: 'notification-read',
+        recipient_user_id: 'user-1',
+        tenant_id: 'tenant-1',
+        type: 'system.test',
+        title: 'Actividad revisada',
+        body: 'Esta notificación ya fue leída.',
+        action_url: null,
+        payload: {},
+        read_at: '2026-03-19T12:10:00.000Z',
+        clicked_at: null,
+        created_at: '2026-03-19T12:00:00.000Z',
+        updated_at: '2026-03-19T12:10:00.000Z'
+      }
+    ]
+
+    renderWorkspaceShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir notificaciones' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Marcar no leida' }))
+
+    await waitFor(() => {
+      expect(markNotificationUnread).toHaveBeenCalledWith('notification-read')
     })
   })
 
