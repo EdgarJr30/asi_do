@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Check, Eye, EyeOff } from 'lucide-react'
@@ -45,6 +45,7 @@ export function SignUpPage() {
       confirmPassword: ''
     }
   })
+  const passwordValue = useWatch({ control: form.control, name: 'password' }) ?? ''
 
   if (!session.isSupabaseConfigured) {
     return (
@@ -66,8 +67,6 @@ export function SignUpPage() {
   if (session.isAuthenticated) {
     return <Navigate replace to={getAuthenticatedHomePath(session.permissions.includes('workspace:read'))} />
   }
-
-  const passwordValue = form.watch('password') ?? ''
 
   async function handleSubmit(values: SignUpFormValues) {
     try {
@@ -105,35 +104,35 @@ export function SignUpPage() {
 
   return (
     <section className="w-full">
-      <div className="mb-8">
-        <h1 className="text-[1.9rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2.1rem]">
+      <div className="mb-4">
+        <h1 className="text-[1.65rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[1.85rem]">
           Crea tu espacio
         </h1>
-        <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+        <p className="mt-1.5 text-sm leading-6 text-(--app-text-muted)">
           Configura tu cuenta de ASI en menos de un minuto.
         </p>
       </div>
 
-      <form className="space-y-5" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block space-y-1.5">
+      <form className="space-y-3" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block space-y-1">
             <span className="text-[13px] font-semibold text-(--app-text)">Nombre</span>
-            <Input className="h-12 rounded-[14px]" placeholder="John" {...form.register('firstName')} />
+            <Input className="h-10 rounded-[14px]" placeholder="John" {...form.register('firstName')} />
             <FieldError message={form.formState.errors.firstName?.message} />
           </label>
 
-          <label className="block space-y-1.5">
+          <label className="block space-y-1">
             <span className="text-[13px] font-semibold text-(--app-text)">Apellido</span>
-            <Input className="h-12 rounded-[14px]" placeholder="Doe" {...form.register('lastName')} />
+            <Input className="h-10 rounded-[14px]" placeholder="Doe" {...form.register('lastName')} />
             <FieldError message={form.formState.errors.lastName?.message} />
           </label>
         </div>
 
-        <label className="block space-y-1.5">
+        <label className="block space-y-1">
           <span className="text-[13px] font-semibold text-(--app-text)">Correo</span>
           <Input
             autoComplete="email"
-            className="h-12 rounded-[14px]"
+            className="h-10 rounded-[14px]"
             placeholder="tu@empresa.com.do"
             type="email"
             {...form.register('email')}
@@ -141,12 +140,12 @@ export function SignUpPage() {
           <FieldError message={form.formState.errors.email?.message} />
         </label>
 
-        <label className="block space-y-1.5">
+        <label className="block space-y-1">
           <span className="text-[13px] font-semibold text-(--app-text)">Contraseña</span>
           <div className="relative">
             <Input
               autoComplete="new-password"
-              className="h-12 rounded-[14px] pr-11"
+              className="h-10 rounded-[14px] pr-11"
               placeholder="Crea una contraseña segura"
               type={showPassword ? 'text' : 'password'}
               {...form.register('password')}
@@ -161,7 +160,7 @@ export function SignUpPage() {
             </button>
           </div>
           <FieldError message={form.formState.errors.password?.message} />
-          <ul className="grid gap-1.5 pt-1 sm:grid-cols-2">
+          <ul className="grid gap-1 pt-0.5 sm:grid-cols-3">
             {passwordRules.map((rule) => {
               const passed = rule.test(passwordValue)
 
@@ -190,12 +189,12 @@ export function SignUpPage() {
           </ul>
         </label>
 
-        <label className="block space-y-1.5">
+        <label className="block space-y-1">
           <span className="text-[13px] font-semibold text-(--app-text)">Confirmar contraseña</span>
           <div className="relative">
             <Input
               autoComplete="new-password"
-              className="h-12 rounded-[14px] pr-11"
+              className="h-10 rounded-[14px] pr-11"
               placeholder="Repite tu contraseña"
               type={showConfirmPassword ? 'text' : 'password'}
               {...form.register('confirmPassword')}
@@ -213,7 +212,7 @@ export function SignUpPage() {
         </label>
 
         <Button
-          className="h-12 w-full rounded-[14px] text-sm"
+          className="h-10 w-full rounded-[14px] text-sm"
           disabled={form.formState.isSubmitting}
           type="submit"
         >
@@ -222,8 +221,8 @@ export function SignUpPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-(--app-text-muted)">
-        Ya tienes cuenta?{' '}
+      <p className="mt-4 text-center text-sm text-(--app-text-muted)">
+        ¿Ya tienes cuenta?{' '}
         <button
           className="font-semibold text-primary-600 transition hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
           type="button"
@@ -234,7 +233,7 @@ export function SignUpPage() {
       </p>
 
       {PLATFORM_REGISTRATION_LOCKED ? (
-        <div className="mt-6 rounded-[14px] border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-xs leading-5 text-(--app-text-subtle)">
+        <div className="mt-4 rounded-[14px] border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-xs leading-5 text-(--app-text-subtle)">
           {PLATFORM_REGISTRATION_LOCKED_MESSAGE}
         </div>
       ) : null}
