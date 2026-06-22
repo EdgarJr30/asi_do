@@ -117,13 +117,13 @@ export function SignUpPage() {
         <div className="grid gap-2.5 sm:grid-cols-2">
           <label className="block space-y-0.5">
             <span className="text-xs font-semibold text-(--app-text)">Nombre</span>
-            <Input className="h-9 rounded-[12px]" placeholder="John" {...form.register('firstName')} />
+            <Input className="h-[2.375rem] rounded-[12px]" placeholder="John" {...form.register('firstName')} />
             <FieldError message={form.formState.errors.firstName?.message} />
           </label>
 
           <label className="block space-y-0.5">
             <span className="text-xs font-semibold text-(--app-text)">Apellido</span>
-            <Input className="h-9 rounded-[12px]" placeholder="Doe" {...form.register('lastName')} />
+            <Input className="h-[2.375rem] rounded-[12px]" placeholder="Doe" {...form.register('lastName')} />
             <FieldError message={form.formState.errors.lastName?.message} />
           </label>
         </div>
@@ -132,7 +132,7 @@ export function SignUpPage() {
           <span className="text-xs font-semibold text-(--app-text)">Correo</span>
           <Input
             autoComplete="email"
-            className="h-9 rounded-[12px]"
+            className="h-[2.375rem] rounded-[12px]"
             placeholder="tu@empresa.com.do"
             type="email"
             {...form.register('email')}
@@ -146,7 +146,7 @@ export function SignUpPage() {
             <div className="relative">
               <Input
                 autoComplete="new-password"
-                className="h-9 rounded-[12px] pr-10"
+                className="h-[2.375rem] rounded-[12px] pr-10"
                 placeholder="Crea una contraseña segura"
                 type={showPassword ? 'text' : 'password'}
                 {...form.register('password')}
@@ -195,7 +195,7 @@ export function SignUpPage() {
             <div className="relative">
               <Input
                 autoComplete="new-password"
-                className="h-9 rounded-[12px] pr-10"
+                className="h-[2.375rem] rounded-[12px] pr-10"
                 placeholder="Repite tu contraseña"
                 type={showConfirmPassword ? 'text' : 'password'}
                 {...form.register('confirmPassword')}
