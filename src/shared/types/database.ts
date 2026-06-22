@@ -3419,6 +3419,49 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      respond_membership_application: {
+        Args: {
+          p_application_id: string
+          p_response_note?: string
+        }
+        Returns: {
+          applicant_email: string
+          applicant_first_name: string
+          applicant_last_name: string
+          applicant_phone: string
+          assigned_pastor_user_id: string | null
+          assigned_queue: Database["public"]["Enums"]["membership_application_queue"]
+          category_name: string
+          category_slug: string
+          church_city: string
+          church_id: string | null
+          church_state_province: string
+          conference_name: string
+          created_at: string
+          dues: string
+          eligibility_snapshot: Json
+          home_church_name: string
+          id: string
+          pastor_email: string
+          pastor_name: string
+          pastor_phone: string
+          pastoral_reference_status: Database["public"]["Enums"]["pastoral_reference_status"]
+          requester_user_id: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by_user_id: string | null
+          status: Database["public"]["Enums"]["review_workflow_status"]
+          submitted_at: string
+          submitted_form_snapshot: Json
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "institutional_membership_applications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       review_pastor_authority_request: {
         Args: {
           p_decision: Database["public"]["Enums"]["review_workflow_status"]

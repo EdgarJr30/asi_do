@@ -82,7 +82,10 @@ autoridad a pastores.
    - ✅ Página `PastorMembershipQueuePage` en `/candidate/membership-queue` (dentro del shell; sin requerir ATS activo). Item de nav "Solicitudes de mi iglesia" (grupo Pastoral) solo visible para pastores.
    - ✅ Bandeja scoped: `fetchPastorMembershipQueue()` (pendientes + `church_id not null`; RLS limita a sus iglesias) con último pago por solicitud.
    - ✅ Acciones aprobar/más-info/rechazar vía RPC `review_membership_application` (autoriza por scope + audita); aprobar fija referencia pastoral `endorsed`, rechazar `declined`.
-   - ✅ Pastor puede ver el comprobante (URL firmada) y subirlo por el miembro (RLS de pago/bucket lo permite por `has_active_authority_scope`).
+   - ✅ Pastor puede ver el comprobante (URL firmada) y subirlo por el miembro.
+   - ✅ **Loop "falta información"**: el panel del miembro muestra la nota del pastor (estado `needs_more_info`) y permite responder y reenviar a revisión vía RPC `respond_membership_application` (`needs_more_info`→`under_review`, conserva la nota del revisor + anexa la respuesta del miembro, audita).
+   - ✅ **Endurecimiento RLS** (migración `20260622130000`): la lectura/carga de pagos y de comprobantes del bucket se acotó al **pastor de la iglesia del miembro** vía `pastor_has_scope_over_member(member)` (antes lo permitía a *cualquier* pastor con scope activo). Ahora coincide con §3.4 ("dueño + pastor asignado + admin").
+   - ✅ **Validado e2e (Playwright)**: `tests/e2e/pastor-membership-queue.spec.ts` (login del pastor → cola scoped → aprobar vía RPC, con confirmación en `audit_logs`) y `tests/e2e/membership-needs-more-info.spec.ts` (miembro ve la nota y reenvía). Sembrados de prueba: pastor con scope sobre *Iglesia Central de Santo Domingo* + solicitudes de prueba. Los tests hacen `skip` salvo que se definan `E2E_PASTOR_EMAIL`/`E2E_MEMBER_EMAIL`.
 4. **Consola admin** — solicitudes + pagos, validar pago, botón Activar, módulo de datos bancarios, audit.
 5. **Notificaciones + pulido** — eventos por transición; recordatorios de renovación (después).
 

@@ -22,11 +22,13 @@ import { useAppSession } from '@/app/providers/app-session-provider'
 import { BrandLockup } from '@/components/ui/app-brand'
 import { Button } from '@/components/ui/button'
 import { PageLoader } from '@/components/ui/loader'
+import { Textarea } from '@/components/ui/textarea'
 import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api'
 import {
   createMembershipReceiptUrl,
   fetchMyMembershipStatus,
   getCategoryDue,
+  respondMembershipApplication,
   submitMembershipPaymentReceipt,
   type MembershipStatusBundle
 } from '@/features/membership/lib/membership-api'
@@ -56,6 +58,7 @@ function computeSteps(bundle: MembershipStatusBundle, isActive: boolean): StepVi
   const appExists = Boolean(application)
   const appRejected = application?.status === 'rejected' || application?.status === 'cancelled'
   const appApproved = application?.status === 'approved'
+  const appNeedsInfo = application?.status === 'needs_more_info'
   const paymentVerified = payment?.status === 'verified'
   const paymentSubmitted = payment?.status === 'submitted'
 
@@ -64,6 +67,8 @@ function computeSteps(bundle: MembershipStatusBundle, isActive: boolean): StepVi
     applicationDescription = 'Aún no has enviado tu solicitud. Elige tu categoría y tu iglesia para empezar.'
   } else if (appRejected) {
     applicationDescription = `Tu solicitud fue ${applicationStatusLabels[application.status] ?? application.status}. Contacta a un administrador.`
+  } else if (appNeedsInfo) {
+    applicationDescription = 'Tu pastor solicitó más información. Revisa su nota, responde y reenvía tu solicitud a revisión.'
   } else {
     applicationDescription = `Categoría: ${application.category_name}. Estado: ${applicationStatusLabels[application.status] ?? application.status}.`
   }
@@ -73,7 +78,7 @@ function computeSteps(bundle: MembershipStatusBundle, isActive: boolean): StepVi
       key: 'application',
       title: 'Solicitud de membresía',
       icon: FileText,
-      state: appRejected ? 'blocked' : appExists ? 'done' : 'current',
+      state: appRejected ? 'blocked' : appNeedsInfo ? 'blocked' : appExists ? 'done' : 'current',
       description: applicationDescription
     },
     {
@@ -245,6 +250,15 @@ export function MembershipStatusPage() {
                           </Button>
                         ) : null}
 
+                        {/* Loop "falta información": el miembro responde y reenvía */}
+                        {step.key === 'application' && bundle.application?.status === 'needs_more_info' ? (
+                          <NeedsMoreInfoResponse
+                            applicationId={bundle.application.id}
+                            reviewNote={bundle.application.review_notes}
+                            onResponded={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
+                          />
+                        ) : null}
+
                         {/* Datos de transferencia en el paso de pago */}
                         {step.key === 'payment' && showTransferDetails ? (
                           <TransferDetails settings={bundle.settings!} dueAmount={due?.amount ?? null} categoryLabel={due?.label ?? bundle.application?.category_name ?? null} />
@@ -334,6 +348,59 @@ function TransferDetails({
       <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-(--app-surface) px-3 py-2 text-xs text-(--app-text-muted)">
         <Clock className="size-3.5" /> Después de transferir, sube tu comprobante abajo. También un pastor o administrador puede subirlo por ti.
       </p>
+    </div>
+  )
+}
+
+function NeedsMoreInfoResponse({
+  applicationId,
+  reviewNote,
+  onResponded
+}: {
+  applicationId: string
+  reviewNote: string | null
+  onResponded: () => void
+}) {
+  const [note, setNote] = useState('')
+
+  const respondMutation = useMutation({
+    mutationFn: async () => respondMembershipApplication({ applicationId, responseNote: note }),
+    onSuccess: () => {
+      setNote('')
+      onResponded()
+    }
+  })
+
+  return (
+    <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+      {reviewNote ? (
+        <div className="mb-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Nota de tu pastor</p>
+          <p className="mt-1 whitespace-pre-line text-sm text-(--app-text)">{reviewNote}</p>
+        </div>
+      ) : null}
+
+      <label className="text-sm font-medium text-(--app-text)">Tu respuesta</label>
+      <Textarea
+        value={note}
+        onChange={(event) => setNote(event.target.value)}
+        disabled={respondMutation.isPending}
+        rows={3}
+        placeholder="Responde lo que tu pastor solicitó para continuar con tu solicitud."
+        className="mt-1.5"
+      />
+
+      {respondMutation.error ? (
+        <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">{toErrorMessage(respondMutation.error)}</p>
+      ) : null}
+
+      <Button
+        className="mt-3 h-10"
+        disabled={respondMutation.isPending}
+        onClick={() => respondMutation.mutate()}
+      >
+        {respondMutation.isPending ? 'Enviando…' : 'Reenviar a revisión'} <ArrowRight className="size-4" />
+      </Button>
     </div>
   )
 }

@@ -216,6 +216,27 @@ export async function reviewMembershipApplication(input: {
   return data
 }
 
+/**
+ * El miembro responde a una solicitud marcada como "necesita más información" y la
+ * reenvía a revisión (`needs_more_info` → `under_review`) vía RPC, conservando la
+ * nota del revisor. Autoriza por `requester_user_id = auth.uid()`.
+ */
+export async function respondMembershipApplication(input: {
+  applicationId: string
+  responseNote?: string
+}): Promise<MembershipApplication> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('respond_membership_application', {
+    p_application_id: input.applicationId,
+    p_response_note: input.responseNote?.trim() || undefined
+  })
+
+  if (error) {
+    throw error
+  }
+  return data
+}
+
 export interface SubmitMembershipPaymentInput {
   applicationId: string
   memberUserId: string

@@ -33,10 +33,12 @@ test('el pastor ve su cola scoped y aprueba la solicitud de su iglesia', async (
     page.getByRole('heading', { name: /Solicitudes de membres[ií]a de tus iglesias/i })
   ).toBeVisible({ timeout: 15_000 })
 
-  // 3. La solicitud sembrada (scoped a su iglesia) aparece
-  await expect(page.getByText('María Miembro')).toBeVisible()
-  await expect(page.getByText('Iglesia Central de Santo Domingo')).toBeVisible()
-  await expect(page.getByText(/Profesional joven/)).toBeVisible()
+  // 3. La solicitud sembrada (scoped a su iglesia) aparece. Acotamos a su tarjeta:
+  // la cola puede tener varias solicitudes de la misma iglesia.
+  const card = page.locator('[class*="rounded"]').filter({ hasText: 'María Miembro' }).first()
+  await expect(card).toBeVisible()
+  await expect(card.getByText('Iglesia Central de Santo Domingo')).toBeVisible()
+  await expect(card.getByText(/Profesional joven/)).toBeVisible()
 
   await page.screenshot({ path: 'tmp/pastor-queue-before.png', fullPage: true })
 
@@ -44,7 +46,7 @@ test('el pastor ve su cola scoped y aprueba la solicitud de su iglesia', async (
   await expect(page.getByRole('button', { name: /Solicitudes de mi iglesia/i }).first()).toBeVisible()
 
   // 4. Aprueba la referencia (RPC review_membership_application autoriza por scope)
-  await page.getByRole('button', { name: /Aprobar referencia/i }).click()
+  await card.getByRole('button', { name: /Aprobar referencia/i }).click()
 
   // Tras aprobar, la solicitud sale del filtro de pendientes y desaparece de la cola.
   await expect(page.getByText('María Miembro')).toBeHidden({ timeout: 15_000 })
