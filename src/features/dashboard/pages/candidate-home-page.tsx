@@ -174,24 +174,24 @@ export function CandidateHomePage() {
   const showProfileBanner = completeness !== null && completeness.percent < 100
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-1.5">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-(--app-text-subtle)">Inicio · Tu espacio</p>
-          <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-1">
+          <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">Inicio · Tu espacio</p>
+          <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">
             {greeting}, {firstName(displayName)}
           </h1>
-          <p className="text-sm text-(--app-text-muted)">Todo lo que necesitas para avanzar en tu búsqueda, en un solo lugar.</p>
+          <p className="text-[0.8rem] text-(--app-text-muted)">Todo lo que necesitas para avanzar en tu búsqueda, en un solo lugar.</p>
         </div>
-        <div className="flex flex-wrap gap-2.5">
-          <Button variant="outline" onClick={() => void navigate(surfacePaths.candidate.profile)}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="h-9 text-[0.8rem]" onClick={() => void navigate(surfacePaths.candidate.profile)}>
             Editar perfil
           </Button>
-          <Button onClick={() => void navigate(surfacePaths.storefront.jobs)}>Explorar vacantes</Button>
+          <Button className="h-9 text-[0.8rem]" onClick={() => void navigate(surfacePaths.storefront.jobs)}>Explorar vacantes</Button>
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-2.5 sm:grid-cols-3">
         <StatCard
           label="Perfil completo"
           value={completeness ? `${completeness.percent}%` : '—'}
@@ -207,18 +207,18 @@ export function CandidateHomePage() {
 
       {showProfileBanner ? (
         <Card className="border-primary-200/70 bg-primary-50/60 dark:border-primary-500/25 dark:bg-primary-500/10">
-          <CardContent className="mt-0 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex-1 space-y-3">
+          <CardContent className="mt-0 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex-1 space-y-2.5">
               <div className="flex items-center gap-2">
-                <Sparkles className="size-4 text-primary-600 dark:text-primary-300" />
-                <p className="text-sm font-semibold text-(--app-text)">Completa tu perfil para destacar ante los reclutadores</p>
+                <Sparkles className="size-3.5 text-primary-600 dark:text-primary-300" />
+                <p className="text-[0.8rem] font-semibold text-(--app-text)">Completa tu perfil para destacar ante los reclutadores</p>
               </div>
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs text-(--app-text-muted)">
+                <div className="flex items-center justify-between text-[0.7rem] text-(--app-text-muted)">
                   <span>{completeness.completed} de {completeness.total} completado</span>
                   <span className="tabular-nums font-semibold text-primary-600 dark:text-primary-300">{completeness.percent}%</span>
                 </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-(--app-surface-muted)">
+                <div className="h-2 overflow-hidden rounded-full bg-(--app-surface-muted)">
                   <div
                     className="h-full rounded-full bg-primary-500 transition-[width] duration-500"
                     style={{ width: `${Math.max(4, completeness.percent)}%` }}
@@ -238,25 +238,25 @@ export function CandidateHomePage() {
               </ul>
             </div>
             <div className="shrink-0">
-              <Button onClick={() => void navigate(surfacePaths.candidate.profile)}>Completar perfil</Button>
+              <Button className="h-9 text-[0.8rem]" onClick={() => void navigate(surfacePaths.candidate.profile)}>Completar perfil</Button>
             </div>
           </CardContent>
         </Card>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
         {moduleCards.map((module) => {
           const Icon = module.icon
           return (
             <Card key={module.key} className="flex flex-col">
               <CardHeader>
-                <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
-                  <Icon className="size-5" />
+                <span className="flex size-9 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+                  <Icon className="size-4" />
                 </span>
-                <CardTitle className="mt-3">{module.title}</CardTitle>
+                <CardTitle className="mt-2.5">{module.title}</CardTitle>
                 <CardDescription>{module.description}</CardDescription>
               </CardHeader>
-              <CardContent className="mt-auto pt-4">
+              <CardContent className="mt-auto pt-3">
                 <Button
                   variant="ghost"
                   className="h-9 px-0 text-sm text-primary-600 hover:bg-transparent hover:text-primary-700 dark:text-primary-300"
@@ -289,19 +289,19 @@ export function CandidateHomePage() {
               <Spinner size="sm" /> Cargando aplicaciones…
             </div>
           ) : recentApplications.length > 0 ? (
-            <ul className="space-y-2.5">
+            <ul className="space-y-2">
               {recentApplications.map((application) => {
                 const status = statusCopy[application.status_public]
                 return (
                   <li
                     key={application.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-4 py-3"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3.5 py-2.5"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-(--app-text)">
+                      <p className="truncate text-[0.8rem] font-semibold text-(--app-text)">
                         {application.job_posting?.title || 'Vacante'}
                       </p>
-                      <p className="truncate text-xs text-(--app-text-muted)">
+                      <p className="truncate text-[0.7rem] text-(--app-text-muted)">
                         {application.job_posting?.company_profile?.display_name || 'Empresa'}
                       </p>
                     </div>
