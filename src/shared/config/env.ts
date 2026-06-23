@@ -28,6 +28,7 @@ export const env = {
   supabaseUrl: readEnvValue(import.meta.env.VITE_SUPABASE_URL, readProcessEnv('VITE_SUPABASE_URL')),
   supabaseAnonKey: readEnvValue(import.meta.env.VITE_SUPABASE_ANON_KEY, readProcessEnv('VITE_SUPABASE_ANON_KEY')),
   webPushPublicKey: readEnvValue(import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY, readProcessEnv('VITE_WEB_PUSH_PUBLIC_KEY')),
+  azulPaymentsUrl: readEnvValue(import.meta.env.VITE_AZUL_PAYMENTS_URL, readProcessEnv('VITE_AZUL_PAYMENTS_URL')),
   mode: readEnvValue(import.meta.env.MODE, readProcessEnv('MODE'))
 }
 

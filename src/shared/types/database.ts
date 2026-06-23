@@ -467,6 +467,69 @@ export type Database = {
           },
         ]
       }
+      authority_request_invitations: {
+        Row: {
+          authority_type: string
+          created_at: string
+          created_by_user_id: string | null
+          expires_at: string
+          id: string
+          notes: string | null
+          status: string
+          target_email: string
+          target_user_id: string | null
+          token: string
+          updated_at: string
+          used_at: string | null
+          used_request_id: string | null
+        }
+        Insert: {
+          authority_type: string
+          created_at?: string
+          created_by_user_id?: string | null
+          expires_at: string
+          id?: string
+          notes?: string | null
+          status?: string
+          target_email: string
+          target_user_id?: string | null
+          token: string
+          updated_at?: string
+          used_at?: string | null
+          used_request_id?: string | null
+        }
+        Update: {
+          authority_type?: string
+          created_at?: string
+          created_by_user_id?: string | null
+          expires_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          target_email?: string
+          target_user_id?: string | null
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+          used_request_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authority_request_invitations_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "authority_request_invitations_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_educations: {
         Row: {
           candidate_profile_id: string
@@ -1005,6 +1068,144 @@ export type Database = {
           },
         ]
       }
+      donation_amount_options: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          display_order: number
+          id: string
+          is_active: boolean
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      donations: {
+        Row: {
+          amount: number
+          amount_option_id: string | null
+          authorization_code: string | null
+          azul_date_time: string | null
+          azul_iso_code: string | null
+          azul_order_id: string | null
+          azul_response_code: string | null
+          azul_response_message: string | null
+          azul_rrn: string | null
+          campaign_slug: string
+          created_at: string
+          currency: string
+          custom_amount: boolean
+          designation: string | null
+          donor_email: string | null
+          donor_name: string | null
+          donor_phone: string | null
+          donor_user_id: string | null
+          gateway: string
+          gateway_payload: Json
+          id: string
+          initiated_at: string
+          method: string
+          order_number: string
+          settled_at: string | null
+          status: Database["public"]["Enums"]["donation_payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          amount_option_id?: string | null
+          authorization_code?: string | null
+          azul_date_time?: string | null
+          azul_iso_code?: string | null
+          azul_order_id?: string | null
+          azul_response_code?: string | null
+          azul_response_message?: string | null
+          azul_rrn?: string | null
+          campaign_slug?: string
+          created_at?: string
+          currency?: string
+          custom_amount?: boolean
+          designation?: string | null
+          donor_email?: string | null
+          donor_name?: string | null
+          donor_phone?: string | null
+          donor_user_id?: string | null
+          gateway?: string
+          gateway_payload?: Json
+          id?: string
+          initiated_at?: string
+          method?: string
+          order_number: string
+          settled_at?: string | null
+          status?: Database["public"]["Enums"]["donation_payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          amount_option_id?: string | null
+          authorization_code?: string | null
+          azul_date_time?: string | null
+          azul_iso_code?: string | null
+          azul_order_id?: string | null
+          azul_response_code?: string | null
+          azul_response_message?: string | null
+          azul_rrn?: string | null
+          campaign_slug?: string
+          created_at?: string
+          currency?: string
+          custom_amount?: boolean
+          designation?: string | null
+          donor_email?: string | null
+          donor_name?: string | null
+          donor_phone?: string | null
+          donor_user_id?: string | null
+          gateway?: string
+          gateway_payload?: Json
+          id?: string
+          initiated_at?: string
+          method?: string
+          order_number?: string
+          settled_at?: string | null
+          status?: Database["public"]["Enums"]["donation_payment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_amount_option_id_fkey"
+            columns: ["amount_option_id"]
+            isOneToOne: false
+            referencedRelation: "donation_amount_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donations_donor_user_id_fkey"
+            columns: ["donor_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
           code: string
@@ -1383,6 +1584,9 @@ export type Database = {
           account_holder: string
           account_number: string
           account_type: string
+          azul_currency_code: string
+          azul_enabled: boolean
+          azul_environment: string
           bank_name: string
           created_at: string
           currency: string
@@ -1398,6 +1602,9 @@ export type Database = {
           account_holder?: string
           account_number?: string
           account_type?: string
+          azul_currency_code?: string
+          azul_enabled?: boolean
+          azul_environment?: string
           bank_name?: string
           created_at?: string
           currency?: string
@@ -1413,6 +1620,9 @@ export type Database = {
           account_holder?: string
           account_number?: string
           account_type?: string
+          azul_currency_code?: string
+          azul_enabled?: boolean
+          azul_environment?: string
           bank_name?: string
           created_at?: string
           currency?: string
@@ -1438,18 +1648,30 @@ export type Database = {
         Row: {
           amount: number | null
           application_id: string
+          authorization_code: string | null
+          azul_date_time: string | null
+          azul_iso_code: string | null
+          azul_order_id: string | null
+          azul_response_code: string | null
+          azul_response_message: string | null
+          azul_rrn: string | null
           category_slug: string
           created_at: string
           currency: string
+          gateway: string | null
+          gateway_payload: Json | null
           id: string
+          intent: string
           member_user_id: string
           method: string
           notes: string | null
+          order_number: string | null
           period_end: string | null
           period_start: string | null
           receipt_path: string | null
           reference_note: string | null
           status: Database["public"]["Enums"]["membership_payment_status"]
+          term_months: number
           updated_at: string
           uploaded_by_user_id: string | null
           verified_at: string | null
@@ -1458,18 +1680,30 @@ export type Database = {
         Insert: {
           amount?: number | null
           application_id: string
+          authorization_code?: string | null
+          azul_date_time?: string | null
+          azul_iso_code?: string | null
+          azul_order_id?: string | null
+          azul_response_code?: string | null
+          azul_response_message?: string | null
+          azul_rrn?: string | null
           category_slug: string
           created_at?: string
           currency?: string
+          gateway?: string | null
+          gateway_payload?: Json | null
           id?: string
+          intent?: string
           member_user_id: string
           method?: string
           notes?: string | null
+          order_number?: string | null
           period_end?: string | null
           period_start?: string | null
           receipt_path?: string | null
           reference_note?: string | null
           status?: Database["public"]["Enums"]["membership_payment_status"]
+          term_months?: number
           updated_at?: string
           uploaded_by_user_id?: string | null
           verified_at?: string | null
@@ -1478,18 +1712,30 @@ export type Database = {
         Update: {
           amount?: number | null
           application_id?: string
+          authorization_code?: string | null
+          azul_date_time?: string | null
+          azul_iso_code?: string | null
+          azul_order_id?: string | null
+          azul_response_code?: string | null
+          azul_response_message?: string | null
+          azul_rrn?: string | null
           category_slug?: string
           created_at?: string
           currency?: string
+          gateway?: string | null
+          gateway_payload?: Json | null
           id?: string
+          intent?: string
           member_user_id?: string
           method?: string
           notes?: string | null
+          order_number?: string | null
           period_end?: string | null
           period_start?: string | null
           receipt_path?: string | null
           reference_note?: string | null
           status?: Database["public"]["Enums"]["membership_payment_status"]
+          term_months?: number
           updated_at?: string
           uploaded_by_user_id?: string | null
           verified_at?: string | null
@@ -1777,6 +2023,7 @@ export type Database = {
           delivery_status: string
           failed_at: string | null
           id: string
+          is_test: boolean
           last_attempt_at: string | null
           notification_id: string
           provider_message_id: string | null
@@ -1794,6 +2041,7 @@ export type Database = {
           delivery_status?: string
           failed_at?: string | null
           id?: string
+          is_test?: boolean
           last_attempt_at?: string | null
           notification_id: string
           provider_message_id?: string | null
@@ -1811,6 +2059,7 @@ export type Database = {
           delivery_status?: string
           failed_at?: string | null
           id?: string
+          is_test?: boolean
           last_attempt_at?: string | null
           notification_id?: string
           provider_message_id?: string | null
@@ -1936,6 +2185,7 @@ export type Database = {
           clicked_at: string | null
           created_at: string
           id: string
+          is_test: boolean
           payload: Json
           read_at: string | null
           recipient_user_id: string
@@ -1950,6 +2200,7 @@ export type Database = {
           clicked_at?: string | null
           created_at?: string
           id?: string
+          is_test?: boolean
           payload?: Json
           read_at?: string | null
           recipient_user_id: string
@@ -1964,6 +2215,7 @@ export type Database = {
           clicked_at?: string | null
           created_at?: string
           id?: string
+          is_test?: boolean
           payload?: Json
           read_at?: string | null
           recipient_user_id?: string
@@ -2976,6 +3228,7 @@ export type Database = {
           manual_access_override_by_user_id: string | null
           manual_access_override_reason: string | null
           manual_access_override_until: string | null
+          membership_activated_at: string | null
           membership_expires_at: string | null
           phone: string | null
           status: Database["public"]["Enums"]["user_status"]
@@ -3001,6 +3254,7 @@ export type Database = {
           manual_access_override_by_user_id?: string | null
           manual_access_override_reason?: string | null
           manual_access_override_until?: string | null
+          membership_activated_at?: string | null
           membership_expires_at?: string | null
           phone?: string | null
           status?: Database["public"]["Enums"]["user_status"]
@@ -3026,6 +3280,7 @@ export type Database = {
           manual_access_override_by_user_id?: string | null
           manual_access_override_reason?: string | null
           manual_access_override_until?: string | null
+          membership_activated_at?: string | null
           membership_expires_at?: string | null
           phone?: string | null
           status?: Database["public"]["Enums"]["user_status"]
@@ -3079,6 +3334,7 @@ export type Database = {
           manual_access_override_by_user_id: string | null
           manual_access_override_reason: string | null
           manual_access_override_until: string | null
+          membership_activated_at: string | null
           membership_expires_at: string | null
           phone: string | null
           status: Database["public"]["Enums"]["user_status"]
@@ -3090,6 +3346,35 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "users"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_create_authority_invitation: {
+        Args: {
+          p_authority_type: string
+          p_email: string
+          p_expires_in_days?: number
+          p_notes?: string
+        }
+        Returns: {
+          authority_type: string
+          created_at: string
+          created_by_user_id: string | null
+          expires_at: string
+          id: string
+          notes: string | null
+          status: string
+          target_email: string
+          target_user_id: string | null
+          token: string
+          updated_at: string
+          used_at: string | null
+          used_request_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "authority_request_invitations"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -3123,6 +3408,51 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      azul_begin_donation: {
+        Args: {
+          p_amount_option_id?: string
+          p_campaign_slug?: string
+          p_custom_amount?: number
+          p_designation?: string
+          p_donor_email?: string
+          p_donor_name?: string
+          p_donor_phone?: string
+          p_donor_user_id?: string
+        }
+        Returns: {
+          amount: number
+          currency: string
+          donation_id: string
+          label: string
+          order_number: string
+        }[]
+      }
+      azul_begin_membership_payment: {
+        Args: { p_application_id: string; p_intent?: string; p_years?: number }
+        Returns: {
+          amount: number
+          category_label: string
+          currency: string
+          order_number: string
+          payment_id: string
+        }[]
+      }
+      azul_settle_donation_payment: {
+        Args: { p_approved: boolean; p_order_number: string; p_response?: Json }
+        Returns: {
+          donation_id: string
+          donor_user_id: string
+          status: string
+        }[]
+      }
+      azul_settle_membership_payment: {
+        Args: { p_approved: boolean; p_order_number: string; p_response?: Json }
+        Returns: {
+          application_id: string
+          member_user_id: string
+          status: string
+        }[]
+      }
       bootstrap_first_platform_owner: {
         Args: never
         Returns: {
@@ -3150,9 +3480,78 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: boolean
       }
+      consume_authority_invitation: {
+        Args: { p_request_id: string; p_token: string }
+        Returns: {
+          authority_type: string
+          created_at: string
+          created_by_user_id: string | null
+          expires_at: string
+          id: string
+          notes: string | null
+          status: string
+          target_email: string
+          target_user_id: string | null
+          token: string
+          updated_at: string
+          used_at: string | null
+          used_request_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "authority_request_invitations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      email_resend_delivery: {
+        Args: { p_delivery_id: string }
+        Returns: undefined
+      }
+      email_test_clear: { Args: never; Returns: number }
+      email_test_force_status: {
+        Args: { p_delivery_id: string; p_status: string }
+        Returns: undefined
+      }
+      email_test_send: {
+        Args: {
+          p_message: string
+          p_simulate?: string
+          p_subject: string
+          p_to: string
+        }
+        Returns: string
+      }
+      get_authority_invitation: {
+        Args: { p_token: string }
+        Returns: {
+          authority_type: string
+          expires_at: string
+          id: string
+          notes: string
+          target_email: string
+        }[]
+      }
       get_candidate_profile_for_tenant: {
         Args: { p_candidate_profile_id: string; p_tenant_id: string }
         Returns: Json
+      }
+      get_donation_receipt: {
+        Args: { p_order_number: string }
+        Returns: {
+          amount: number
+          authorization_code: string
+          azul_date_time: string
+          azul_rrn: string
+          campaign_slug: string
+          created_at: string
+          currency: string
+          designation: string
+          donor_name: string
+          order_number: string
+          settled_at: string
+          status: string
+        }[]
       }
       get_plan_limit_json: { Args: { p_tenant_id: string }; Returns: Json }
       get_tenant_plan_snapshot: { Args: { p_tenant_id: string }; Returns: Json }
@@ -3170,31 +3569,6 @@ export type Database = {
       has_active_tenant_subscription: {
         Args: { p_tenant_id: string }
         Returns: boolean
-      }
-      email_test_send: {
-        Args: {
-          p_to: string
-          p_subject: string
-          p_message: string
-          p_simulate?: string
-        }
-        Returns: string
-      }
-      email_test_force_status: {
-        Args: { p_delivery_id: string; p_status: string }
-        Returns: undefined
-      }
-      email_test_clear: {
-        Args: Record<string, never>
-        Returns: number
-      }
-      email_resend_delivery: {
-        Args: { p_delivery_id: string }
-        Returns: undefined
-      }
-      trigger_email_dispatch: {
-        Args: Record<string, never>
-        Returns: undefined
       }
       has_platform_permission: {
         Args: { permission_code: string }
@@ -3229,6 +3603,16 @@ export type Database = {
       }
       is_platform_admin: { Args: never; Returns: boolean }
       is_tenant_member: { Args: { p_tenant_id: string }; Returns: boolean }
+      list_active_donation_amount_options: {
+        Args: never
+        Returns: {
+          amount: number
+          currency: string
+          display_order: number
+          id: string
+          label: string
+        }[]
+      }
       mark_notification_clicked: {
         Args: { p_delivery_id?: string; p_notification_id: string }
         Returns: {
@@ -3237,6 +3621,7 @@ export type Database = {
           clicked_at: string | null
           created_at: string
           id: string
+          is_test: boolean
           payload: Json
           read_at: string | null
           recipient_user_id: string
@@ -3260,6 +3645,7 @@ export type Database = {
           clicked_at: string | null
           created_at: string
           id: string
+          is_test: boolean
           payload: Json
           read_at: string | null
           recipient_user_id: string
@@ -3283,6 +3669,7 @@ export type Database = {
           clicked_at: string | null
           created_at: string
           id: string
+          is_test: boolean
           payload: Json
           read_at: string | null
           recipient_user_id: string
@@ -3329,6 +3716,16 @@ export type Database = {
         }
       }
       my_tenant_ids: { Args: never; Returns: string[] }
+      notify_membership_admins: {
+        Args: {
+          p_action_url?: string
+          p_body: string
+          p_payload?: Json
+          p_title: string
+          p_type: string
+        }
+        Returns: undefined
+      }
       open_moderation_case: {
         Args: {
           p_entity_id: string
@@ -3360,6 +3757,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      pastor_has_scope_over_member: {
+        Args: { p_member_user_id: string }
+        Returns: boolean
       }
       pastor_user_for_church: { Args: { p_church_id: string }; Returns: string }
       platform_ops_snapshot: { Args: never; Returns: Json }
@@ -3422,13 +3823,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      review_membership_application: {
-        Args: {
-          p_application_id: string
-          p_decision: Database["public"]["Enums"]["review_workflow_status"]
-          p_pastoral_reference?: Database["public"]["Enums"]["pastoral_reference_status"]
-          p_review_notes?: string
-        }
+      respond_membership_application: {
+        Args: { p_application_id: string; p_response_note?: string }
         Returns: {
           applicant_email: string
           applicant_first_name: string
@@ -3467,10 +3863,12 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      respond_membership_application: {
+      review_membership_application: {
         Args: {
           p_application_id: string
-          p_response_note?: string
+          p_decision: Database["public"]["Enums"]["review_workflow_status"]
+          p_pastoral_reference?: Database["public"]["Enums"]["pastoral_reference_status"]
+          p_review_notes?: string
         }
         Returns: {
           applicant_email: string
@@ -3621,6 +4019,30 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      revoke_authority_invitation: {
+        Args: { p_id: string }
+        Returns: {
+          authority_type: string
+          created_at: string
+          created_by_user_id: string | null
+          expires_at: string
+          id: string
+          notes: string | null
+          status: string
+          target_email: string
+          target_user_id: string | null
+          token: string
+          updated_at: string
+          used_at: string | null
+          used_request_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "authority_request_invitations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       revoke_membership_invite: {
         Args: { p_membership_id: string }
         Returns: {
@@ -3666,6 +4088,10 @@ export type Database = {
           total_experiences: number
           user_id: string
         }[]
+      }
+      set_runtime_secret: {
+        Args: { p_key: string; p_value: string }
+        Returns: undefined
       }
       submit_application: {
         Args: {
@@ -3714,6 +4140,7 @@ export type Database = {
         }
         Returns: string
       }
+      trigger_email_dispatch: { Args: never; Returns: undefined }
       update_push_delivery_status: {
         Args: {
           p_deactivate_subscription?: boolean
@@ -3734,6 +4161,7 @@ export type Database = {
           delivery_status: string
           failed_at: string | null
           id: string
+          is_test: boolean
           last_attempt_at: string | null
           notification_id: string
           provider_message_id: string | null
@@ -3787,18 +4215,30 @@ export type Database = {
         Returns: {
           amount: number | null
           application_id: string
+          authorization_code: string | null
+          azul_date_time: string | null
+          azul_iso_code: string | null
+          azul_order_id: string | null
+          azul_response_code: string | null
+          azul_response_message: string | null
+          azul_rrn: string | null
           category_slug: string
           created_at: string
           currency: string
+          gateway: string | null
+          gateway_payload: Json | null
           id: string
+          intent: string
           member_user_id: string
           method: string
           notes: string | null
+          order_number: string | null
           period_end: string | null
           period_start: string | null
           receipt_path: string | null
           reference_note: string | null
           status: Database["public"]["Enums"]["membership_payment_status"]
+          term_months: number
           updated_at: string
           uploaded_by_user_id: string | null
           verified_at: string | null
@@ -3832,6 +4272,7 @@ export type Database = {
       authority_role_type: "pastor_administrator" | "regional_administrator"
       authority_scope_status: "active" | "revoked"
       authority_scope_type: "union" | "association" | "district" | "church"
+      donation_payment_status: "initiated" | "verified" | "failed" | "cancelled"
       feature_scope_type: "global" | "plan" | "tenant"
       job_employment_type:
         | "full_time"
@@ -3847,7 +4288,12 @@ export type Database = {
         | "single_select"
       job_workplace_type: "on_site" | "hybrid" | "remote"
       membership_application_queue: "pastor" | "admin"
-      membership_payment_status: "submitted" | "verified" | "rejected"
+      membership_payment_status:
+        | "submitted"
+        | "verified"
+        | "rejected"
+        | "initiated"
+        | "failed"
       membership_status: "active" | "invited" | "suspended" | "revoked"
       moderation_action_type:
         | "note"
@@ -4028,8 +4474,6 @@ export type Enums<
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    // Supabase generates this union even when the default schema has no composite types.
-    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
@@ -4072,6 +4516,7 @@ export const Constants = {
       authority_role_type: ["pastor_administrator", "regional_administrator"],
       authority_scope_status: ["active", "revoked"],
       authority_scope_type: ["union", "association", "district", "church"],
+      donation_payment_status: ["initiated", "verified", "failed", "cancelled"],
       feature_scope_type: ["global", "plan", "tenant"],
       job_employment_type: [
         "full_time",
@@ -4089,7 +4534,13 @@ export const Constants = {
       ],
       job_workplace_type: ["on_site", "hybrid", "remote"],
       membership_application_queue: ["pastor", "admin"],
-      membership_payment_status: ["submitted", "verified", "rejected"],
+      membership_payment_status: [
+        "submitted",
+        "verified",
+        "rejected",
+        "initiated",
+        "failed",
+      ],
       membership_status: ["active", "invited", "suspended", "revoked"],
       moderation_action_type: [
         "note",

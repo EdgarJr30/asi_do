@@ -1087,6 +1087,7 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
 
   const baseItems = pick(candidateItems, [
     surfacePaths.candidate.home,
+    surfacePaths.account.membership,
     surfacePaths.storefront.jobs,
     surfacePaths.candidate.applications,
     surfacePaths.candidate.profile
@@ -1094,8 +1095,8 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
 
   const accountItems = pick(candidateItems, [
     // "Reclutar con mi empresa" solo tiene sentido para quien aún no tiene empresa.
-    ...(hasWorkspace ? [] : [surfacePaths.candidate.recruiterRequest]),
-    surfacePaths.candidate.authorityRequest
+    ...(hasWorkspace ? [] : [surfacePaths.candidate.recruiterRequest])
+    // La autorización territorial ya no es auto-servicio: es por invitación de un admin.
   ])
 
   const workspaceItems = hasWorkspace

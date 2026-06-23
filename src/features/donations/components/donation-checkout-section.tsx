@@ -6,14 +6,140 @@ import { CheckCircle2, CreditCard, HeartHandshake, ShieldCheck } from 'lucide-re
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
+import { useAppSession } from '@/app/providers/app-session-provider'
 import {
+  getDonationReceipt,
   listDonationAmountOptions,
+  listMyDonations,
   payDonationWithAzul,
-  type DonationAmountOption
+  type DonationAmountOption,
+  type DonationReceipt,
+  type DonationRow
 } from '@/features/donations/lib/donation-api'
 import { InstitutionalCard, InstitutionalSection } from '@/experiences/institutional/components/institutional-ui'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
+import { printReceipt, receiptPlainText, shareReceipt, type ReceiptLine } from '@/shared/ui/receipt'
 import { cn } from '@/lib/utils/cn'
+
+const DONATION_RECEIPT_TITLE = 'Comprobante de donación'
+
+function donationReceiptLines(receipt: DonationReceipt): ReceiptLine[] {
+  return [
+    ['Comercio', 'ASI Rep. Dominicana'],
+    ['No. de orden', receipt.orderNumber],
+    ['Donante', receipt.donorName ?? '—'],
+    ['Monto', `${receipt.currency} ${receipt.amount.toLocaleString('es-DO')}`],
+    ['Resultado', receipt.status === 'verified' ? 'Aprobado' : receipt.status],
+    ['No. de autorización', receipt.authorizationCode ?? '—'],
+    ['Referencia', receipt.azulRrn ?? '—'],
+    ['Fecha', new Date(receipt.settledAt ?? receipt.createdAt).toLocaleString('es-DO')]
+  ]
+}
+
+function donationRowReceiptLines(row: DonationRow): ReceiptLine[] {
+  return [
+    ['Comercio', 'ASI Rep. Dominicana'],
+    ['No. de orden', row.order_number],
+    ['Donante', row.donor_name ?? '—'],
+    ['Monto', `${row.currency} ${Number(row.amount).toLocaleString('es-DO')}`],
+    ['Resultado', 'Aprobado'],
+    ['No. de autorización', row.authorization_code ?? '—'],
+    ['Referencia', row.azul_rrn ?? '—'],
+    ['Fecha', new Date(row.settled_at ?? row.created_at).toLocaleString('es-DO')]
+  ]
+}
+
+function donationStatusLabel(status: string) {
+  switch (status) {
+    case 'verified':
+      return { label: 'Aprobada', className: 'bg-emerald-50 text-emerald-700' }
+    case 'failed':
+      return { label: 'Fallida', className: 'bg-rose-50 text-rose-700' }
+    case 'cancelled':
+      return { label: 'Cancelada', className: 'bg-zinc-100 text-zinc-600' }
+    default:
+      return { label: 'En proceso', className: 'bg-sky-50 text-sky-700' }
+  }
+}
+
+function MyDonationsHistory({ userId }: { userId: string }) {
+  const donationsQuery = useQuery({
+    queryKey: ['donations', 'mine', userId],
+    queryFn: () => listMyDonations(userId)
+  })
+  const donations = donationsQuery.data ?? []
+
+  if (donationsQuery.isLoading || donations.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-white px-5 py-4">
+      <p className="text-sm font-semibold text-(--asi-text)">Mis donaciones</p>
+      <p className="mt-0.5 text-xs text-slate-500">Historial de tus aportes. Descarga el comprobante de las aprobadas.</p>
+      <ul className="mt-3 space-y-2">
+        {donations.map((donation) => {
+          const meta = donationStatusLabel(donation.status)
+          return (
+            <li key={donation.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-2 first:border-t-0 first:pt-0">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-(--asi-text)">{formatDop(Number(donation.amount))}</p>
+                <p className="text-xs text-slate-500">
+                  {new Date(donation.created_at).toLocaleDateString('es-DO')} · {donation.order_number}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={cn('rounded-full px-2.5 py-1 text-xs font-semibold', meta.className)}>{meta.label}</span>
+                {donation.status === 'verified' ? (
+                  <button
+                    type="button"
+                    onClick={() => printReceipt(DONATION_RECEIPT_TITLE, donationRowReceiptLines(donation))}
+                    className="inline-flex h-8 items-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Descargar
+                  </button>
+                ) : null}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+function DonationReceiptCard({ receipt }: { receipt: DonationReceipt }) {
+  const lines = donationReceiptLines(receipt)
+  return (
+    <div className="mt-4 rounded-[1.5rem] border border-emerald-200 bg-white px-5 py-4 text-sm">
+      <p className="font-semibold text-emerald-900">Comprobante de tu donación</p>
+      <dl className="mt-3 space-y-1.5">
+        {lines.map(([key, value]) => (
+          <div key={key} className="flex items-start justify-between gap-4 border-t border-zinc-100 pt-1.5 first:border-t-0 first:pt-0">
+            <dt className="text-zinc-500">{key}</dt>
+            <dd className="text-right font-medium text-zinc-900">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="mt-4 flex gap-2">
+        <button
+          type="button"
+          onClick={() => printReceipt(DONATION_RECEIPT_TITLE, lines)}
+          className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+        >
+          Descargar
+        </button>
+        <button
+          type="button"
+          onClick={() => void shareReceipt(DONATION_RECEIPT_TITLE, receiptPlainText(DONATION_RECEIPT_TITLE, lines))}
+          className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+        >
+          Compartir
+        </button>
+      </div>
+    </div>
+  )
+}
 
 const customSelection = 'custom'
 
@@ -73,6 +199,7 @@ function resolveSelectedAmount(option: DonationAmountOption | null, customAmount
 export function DonationCheckoutSection() {
   const [searchParams] = useSearchParams()
   const shouldReduceMotion = useReducedMotion()
+  const session = useAppSession()
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [customAmount, setCustomAmount] = useState('')
   const [donorName, setDonorName] = useState('')
@@ -93,6 +220,13 @@ export function DonationCheckoutSection() {
   const isCustom = effectiveSelectedOptionId === customSelection
   const selectedAmount = resolveSelectedAmount(selectedOption, customAmount)
   const statusMessage = paymentMessage(searchParams.get('payment'))
+  const receiptOrder = searchParams.get('order')
+  const receiptQuery = useQuery({
+    queryKey: ['donation-receipt', receiptOrder],
+    queryFn: async () => getDonationReceipt(receiptOrder!),
+    enabled: Boolean(receiptOrder),
+  })
+  const receipt = receiptQuery.data ?? null
 
   const canDonate = useMemo(() => {
     if (!donorName.trim() || !donorEmail.trim()) {
@@ -155,6 +289,10 @@ export function DonationCheckoutSection() {
               <p className="mt-1 leading-6">{statusMessage.body}</p>
             </div>
           ) : null}
+
+          {receipt && receipt.status === 'verified' ? <DonationReceiptCard receipt={receipt} /> : null}
+
+          {session.authUser ? <MyDonationsHistory userId={session.authUser.id} /> : null}
 
           <motion.div variants={gridStagger} className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {options.map((option) => (

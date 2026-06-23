@@ -1,21 +1,22 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertCircle,
   ArrowRight,
-  Banknote,
   CheckCircle2,
   Circle,
   Clock,
+  CreditCard,
+  Download,
   FileText,
-  Paperclip,
+  Share2,
   ShieldCheck,
-  Sparkles,
-  UploadCloud
+  Sparkles
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { surfacePaths } from '@/app/router/surface-paths'
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -27,12 +28,14 @@ import { PageHeader } from '@/components/ui/page-header'
 import { StatCard } from '@/components/ui/stat-card'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
+import { payMembershipWithAzul, type AzulPaymentIntent } from '@/features/membership/lib/azul-api'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
+import { printReceipt, receiptPlainText, shareReceipt, type ReceiptLine } from '@/shared/ui/receipt'
 import {
-  createMembershipReceiptUrl,
   fetchMyMembershipStatus,
   getCategoryDue,
   respondMembershipApplication,
-  submitMembershipPaymentReceipt,
+  type MembershipPayment,
   type MembershipStatusBundle
 } from '@/features/membership/lib/membership-api'
 import { cn } from '@/lib/utils/cn'
@@ -48,9 +51,22 @@ const applicationStatusLabels: Record<string, string> = {
   cancelled: 'Cancelada'
 }
 
+function formatDate(value: string | null | undefined): string {
+  if (!value) {
+    return '—'
+  }
+  const date = new Date(value)
+  if (!Number.isFinite(date.getTime())) {
+    return '—'
+  }
+  return date.toLocaleDateString('es-DO', { day: '2-digit', month: 'long', year: 'numeric' })
+}
+
 const paymentStatusLabels: Record<string, string> = {
+  initiated: 'Procesando pago',
   submitted: 'En verificación',
   verified: 'Verificado',
+  failed: 'Pago rechazado',
   rejected: 'Rechazado'
 }
 
@@ -69,7 +85,8 @@ function computeSteps(bundle: MembershipStatusBundle, isActive: boolean): StepVi
   const appApproved = application?.status === 'approved'
   const appNeedsInfo = application?.status === 'needs_more_info'
   const paymentVerified = payment?.status === 'verified'
-  const paymentSubmitted = payment?.status === 'submitted'
+  const paymentInitiated = payment?.status === 'initiated'
+  const paymentFailed = payment?.status === 'failed' || payment?.status === 'rejected'
 
   let applicationDescription: string
   if (!application) {
@@ -93,28 +110,29 @@ function computeSteps(bundle: MembershipStatusBundle, isActive: boolean): StepVi
     {
       key: 'payment',
       title: 'Pago de la membresía',
-      icon: Banknote,
+      icon: CreditCard,
+      // Un miembro activo ya pagó: una renovación en curso/fallida NO debe degradarlo.
       state: !appExists
         ? 'pending'
-        : paymentVerified
+        : isActive || paymentVerified
           ? 'done'
           : 'current',
       description: !appExists
         ? 'Disponible cuando envíes tu solicitud.'
-        : paymentVerified
-          ? 'Tu pago fue verificado por un administrador.'
-          : paymentSubmitted
-            ? 'Recibimos tu comprobante. Un administrador lo está verificando.'
-            : payment?.status === 'rejected'
-              ? 'Tu comprobante fue rechazado. Vuelve a transferir y súbelo de nuevo.'
-              : 'Transfiere la cuota de tu categoría y sube el comprobante.'
+        : isActive || paymentVerified
+          ? 'Tu pago con tarjeta fue confirmado.'
+          : paymentInitiated
+            ? 'Estamos procesando tu pago. Si ya pagaste, esta página se actualizará en breve.'
+            : paymentFailed
+              ? 'Tu pago no se completó. Puedes intentarlo de nuevo con tarjeta.'
+              : 'Paga la cuota de tu categoría con tarjeta de crédito o débito de forma segura.'
     },
     {
       key: 'approval',
       title: 'Aprobación pastoral / administrativa',
       icon: ShieldCheck,
-      state: appApproved ? 'done' : appRejected ? 'blocked' : appExists ? 'current' : 'pending',
-      description: appApproved
+      state: isActive || appApproved ? 'done' : appRejected ? 'blocked' : appExists ? 'current' : 'pending',
+      description: isActive || appApproved
         ? 'Tu solicitud fue aprobada.'
         : appRejected
           ? 'Tu solicitud no fue aprobada.'
@@ -182,22 +200,75 @@ export function MembershipStatusPage() {
     queryFn: async () => fetchMyMembershipStatus(userId!)
   })
 
+  // Actualización EN VIVO (Supabase Realtime → React Query): el pago liquidado por
+  // AZUL, la revisión de la solicitud y la activación de la cuenta se reflejan sin
+  // recargar. RLS limita los eventos a las filas del propio usuario.
+  useRealtimeSync(
+    userId ? `membership-status-${userId}` : 'membership-status',
+    [
+      {
+        table: 'membership_payments',
+        filter: userId ? `member_user_id=eq.${userId}` : undefined,
+        invalidate: [['membership', 'status', userId]]
+      },
+      {
+        table: 'institutional_membership_applications',
+        filter: userId ? `requester_user_id=eq.${userId}` : undefined,
+        invalidate: [['membership', 'status', userId]]
+      },
+      {
+        // Activación de la cuenta: re-hidrata la sesión para que hasActiveAsiAccess
+        // (y el resto del chrome) cambie a "activa" en vivo.
+        table: 'users',
+        filter: userId ? `id=eq.${userId}` : undefined,
+        onChange: () => {
+          void session.refresh()
+          void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })
+        }
+      }
+    ],
+    { enabled: Boolean(userId) }
+  )
+
   const bundle = useMemo<MembershipStatusBundle>(
-    () => statusQuery.data ?? { application: null, payment: null, settings: null },
+    () => statusQuery.data ?? { application: null, payment: null, verifiedPayment: null, settings: null },
     [statusQuery.data]
   )
   const steps = useMemo(() => computeSteps(bundle, session.hasActiveAsiAccess), [bundle, session.hasActiveAsiAccess])
   const progress = useMemo(() => getProgressSummary(steps), [steps])
   const currentStep = getCurrentStep(steps)
   const due = getCategoryDue(bundle.settings, bundle.application?.category_slug)
-  const dueAmountLabel = due?.amount != null ? `${bundle.settings?.currency ?? 'USD'} ${due.amount.toLocaleString()}` : null
+  const dueAmountLabel = due?.amount != null ? `${bundle.settings?.currency ?? 'DOP'} ${due.amount.toLocaleString()}` : null
   const dueSummaryLabel = due ? [dueAmountLabel, due.label].filter(Boolean).join(' · ') : null
   const paymentStep = steps.find((step) => step.key === 'payment')
-  const showTransferDetails = paymentStep?.state === 'current' && Boolean(bundle.settings)
-  const canUploadReceipt =
-    paymentStep?.state === 'current' &&
-    Boolean(bundle.application) &&
-    (!bundle.payment || bundle.payment.status === 'rejected')
+  const azulEnabled = Boolean(bundle.settings?.azul_enabled)
+  const showPayStep = paymentStep?.state === 'current' && Boolean(bundle.application)
+  const canRenew = session.hasActiveAsiAccess && bundle.application?.status === 'approved' && azulEnabled
+
+  // Resultado del retorno de AZUL (?payment=approved|declined|cancelled|error): avisa y refresca.
+  const [searchParams, setSearchParams] = useSearchParams()
+  useEffect(() => {
+    const result = searchParams.get('payment')
+    if (!result) {
+      return
+    }
+    const notices: Record<string, { kind: 'success' | 'error' | 'info'; text: string }> = {
+      approved: { kind: 'success', text: '¡Pago confirmado! Un administrador activará tu cuenta en breve.' },
+      declined: { kind: 'error', text: 'Tu pago fue declinado. Revisa los datos de tu tarjeta e inténtalo de nuevo.' },
+      cancelled: { kind: 'info', text: 'Cancelaste el pago. Puedes intentarlo cuando quieras.' },
+      error: { kind: 'error', text: 'Hubo un problema validando tu pago. Si se te realizó el cargo, contáctanos.' }
+    }
+    const notice = notices[result]
+    if (notice) {
+      if (notice.kind === 'success') toast.success(notice.text)
+      else if (notice.kind === 'error') toast.error(notice.text)
+      else toast.info(notice.text)
+    }
+    void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })
+    const next = new URLSearchParams(searchParams)
+    next.delete('payment')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams, queryClient, userId])
 
   return (
     <div className="space-y-6">
@@ -233,7 +304,13 @@ export function MembershipStatusPage() {
         />
         <StatCard
           label="Pago"
-          value={bundle.payment ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status : 'Sin comprobante'}
+          value={
+            session.hasActiveAsiAccess
+              ? 'Verificado'
+              : bundle.payment
+                ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status
+                : 'Sin comprobante'
+          }
           helper={dueSummaryLabel ?? 'Cuota pendiente por categoría'}
         />
         <StatCard
@@ -291,27 +368,17 @@ export function MembershipStatusPage() {
                       />
                     ) : null}
 
-                    {step.key === 'payment' && showTransferDetails ? (
-                      <TransferDetails
-                        settings={bundle.settings!}
-                        dueAmount={due?.amount ?? null}
-                        categoryLabel={due?.label ?? bundle.application?.category_name ?? null}
-                      />
-                    ) : null}
-
-                    {step.key === 'payment' && canUploadReceipt && bundle.application ? (
-                      <ReceiptUpload
+                    {step.key === 'payment' && showPayStep && bundle.application ? (
+                      <AzulPayCard
                         applicationId={bundle.application.id}
-                        memberUserId={userId!}
-                        categorySlug={bundle.application.category_slug}
-                        amount={due?.amount ?? null}
-                        currency={bundle.settings?.currency ?? 'USD'}
-                        onUploaded={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
+                        intent="initial"
+                        annualAmount={due?.amount ?? null}
+                        currency={bundle.settings?.currency ?? 'DOP'}
+                        categoryLabel={due?.label ?? bundle.application.category_name ?? null}
+                        paymentStatus={bundle.payment?.status ?? null}
+                        azulEnabled={azulEnabled}
+                        onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
                       />
-                    ) : null}
-
-                    {step.key === 'payment' && bundle.payment?.receipt_path ? (
-                      <ReceiptViewLink receiptPath={bundle.payment.receipt_path} />
                     ) : null}
                   </MembershipStep>
                 ))}
@@ -342,7 +409,13 @@ export function MembershipStatusPage() {
                 />
                 <StatusSummaryRow
                   label="Pago"
-                  value={bundle.payment ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status : 'Pendiente'}
+                  value={
+                    session.hasActiveAsiAccess
+                      ? 'Verificado'
+                      : bundle.payment
+                        ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status
+                        : 'Pendiente'
+                  }
                 />
                 <StatusSummaryRow
                   label="Acceso"
@@ -352,8 +425,50 @@ export function MembershipStatusPage() {
                   label="Cuota"
                   value={dueAmountLabel ?? due?.label ?? 'Por definir'}
                 />
+
+                {canRenew && bundle.application ? (
+                  <div className="border-t border-(--app-border) pt-4">
+                    <p className="text-sm font-medium text-(--app-text)">Renovar membresía</p>
+                    <p className="mt-0.5 text-xs text-(--app-text-muted)">
+                      Renueva por 1 a 5 años; el monto se calcula automáticamente. Tu membresía actual se conserva.
+                    </p>
+                    <AzulPayCard
+                      applicationId={bundle.application.id}
+                      intent="renewal"
+                      annualAmount={due?.amount ?? null}
+                      currency={bundle.settings?.currency ?? 'DOP'}
+                      categoryLabel={due?.label ?? bundle.application.category_name ?? null}
+                      paymentStatus={bundle.payment?.status === 'initiated' ? 'initiated' : null}
+                      azulEnabled={azulEnabled}
+                      compact
+                      onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
+                    />
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
+
+            {session.hasActiveAsiAccess ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tu membresía</CardTitle>
+                  <CardDescription>Fechas clave de tu membresía activa.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-1">
+                  <StatusSummaryRow label="Fecha de pago" value={formatDate(bundle.verifiedPayment?.verified_at ?? null)} />
+                  <StatusSummaryRow label="Activación" value={formatDate(session.profile?.membership_activated_at ?? null)} />
+                  <StatusSummaryRow label="Vencimiento" value={formatDate(session.profile?.membership_expires_at ?? null)} />
+                </CardContent>
+              </Card>
+            ) : null}
+
+            {bundle.verifiedPayment ? (
+              <MembershipReceiptCard
+                payment={bundle.verifiedPayment}
+                currency={bundle.settings?.currency ?? 'DOP'}
+                categoryLabel={due?.label ?? bundle.application?.category_name ?? null}
+              />
+            ) : null}
 
             <Card>
               <CardHeader>
@@ -444,50 +559,199 @@ function MembershipStep({
   )
 }
 
-function TransferDetails({
-  settings,
-  dueAmount,
-  categoryLabel
+const YEAR_OPTIONS = [1, 2, 3, 4, 5] as const
+
+function formatMoney(amount: number, currency: string) {
+  return `${currency} ${amount.toLocaleString('es-DO')}`
+}
+
+function AzulPayCard({
+  applicationId,
+  intent,
+  annualAmount,
+  currency,
+  categoryLabel,
+  paymentStatus,
+  azulEnabled,
+  compact = false,
+  onRefresh
 }: {
-  settings: NonNullable<MembershipStatusBundle['settings']>
-  dueAmount: number | null
+  applicationId: string
+  intent: AzulPaymentIntent
+  annualAmount: number | null
+  currency: string
   categoryLabel: string | null
+  paymentStatus: string | null
+  azulEnabled: boolean
+  compact?: boolean
+  onRefresh: () => void
 }) {
-  const rows: Array<{ label: string; value: string }> = [
-    { label: 'Banco', value: settings.bank_name },
-    { label: 'Titular', value: settings.account_holder },
-    { label: 'No. de cuenta', value: settings.account_number },
-    { label: 'Tipo', value: settings.account_type },
-    { label: 'SWIFT / ABA', value: settings.routing_or_swift }
-  ].filter((row) => row.value && row.value.trim().length > 0)
+  const [years, setYears] = useState(1)
+  const processing = paymentStatus === 'initiated'
+  const total = annualAmount != null ? annualAmount * years : null
+  const totalLabel = total != null ? formatMoney(total, currency) : null
+
+  const payMutation = useMutation({
+    mutationFn: async () => payMembershipWithAzul({ applicationId, intent, years }),
+    onError: (error) => toast.error(toErrorMessage(error))
+    // En éxito, el browser navega a AZUL (no hay onSuccess que renderizar).
+  })
+
+  if (!azulEnabled) {
+    return (
+      <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+        El pago en línea aún no está disponible. Inténtalo más tarde o contacta a un administrador.
+      </div>
+    )
+  }
+
+  if (processing) {
+    return (
+      <div className="mt-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) p-4">
+        <p className="inline-flex items-center gap-2 text-sm font-semibold text-(--app-text)">
+          <Clock className="size-4" /> Estamos confirmando tu pago…
+        </p>
+        <p className="mt-1 text-xs text-(--app-text-muted)">
+          Si ya completaste el pago en AZUL, la confirmación puede tardar unos minutos.
+        </p>
+        <Button variant="outline" className="mt-3 h-9" onClick={onRefresh}>
+          Actualizar estado
+        </Button>
+      </div>
+    )
+  }
+
+  const yearSelector = (
+    <label className="mt-3 flex items-center justify-between gap-3 text-sm">
+      <span className="font-medium text-(--app-text)">Años de membresía</span>
+      <select
+        value={years}
+        onChange={(event) => setYears(Number(event.target.value))}
+        disabled={payMutation.isPending}
+        className="h-9 rounded-lg border border-(--app-border) bg-(--app-surface) px-2 text-sm text-(--app-text) focus:border-primary-500 focus:outline-none"
+      >
+        {YEAR_OPTIONS.map((option) => (
+          <option key={option} value={option}>
+            {option} {option === 1 ? 'año' : 'años'}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+
+  const button = (
+    <Button
+      className={compact ? 'mt-3 h-9 w-full' : 'mt-3 h-10'}
+      disabled={payMutation.isPending}
+      onClick={() => payMutation.mutate()}
+    >
+      <CreditCard className="size-4" />
+      {payMutation.isPending
+        ? 'Redirigiendo…'
+        : intent === 'renewal'
+          ? `Renovar${totalLabel ? ` · ${totalLabel}` : ''}`
+          : `Pagar con tarjeta${totalLabel ? ` · ${totalLabel}` : ''}`}
+    </Button>
+  )
+
+  if (compact) {
+    return (
+      <div className="mt-2">
+        {yearSelector}
+        {button}
+      </div>
+    )
+  }
 
   return (
     <div className="mt-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) p-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-(--app-text)">Datos para tu transferencia</p>
-        {dueAmount != null ? (
-          <span className="rounded-full bg-primary-600 px-3 py-1 text-sm font-bold text-white">
-            {settings.currency} {dueAmount.toLocaleString()}
-          </span>
+        <p className="text-sm font-semibold text-(--app-text)">Pago seguro con tarjeta</p>
+        {totalLabel ? (
+          <span className="rounded-full bg-primary-600 px-3 py-1 text-sm font-bold text-white">{totalLabel}</span>
         ) : null}
       </div>
-      {categoryLabel ? <p className="mt-0.5 text-xs text-(--app-text-muted)">Cuota anual · {categoryLabel}</p> : null}
+      {categoryLabel ? (
+        <p className="mt-0.5 text-xs text-(--app-text-muted)">
+          {annualAmount != null ? `${formatMoney(annualAmount, currency)} / año` : 'Cuota anual'} · {categoryLabel}
+        </p>
+      ) : null}
 
-      <dl className="mt-3 grid gap-x-4 gap-y-2 sm:grid-cols-2">
-        {rows.map((row) => (
-          <div key={row.label}>
-            <dt className="text-[0.7rem] font-medium uppercase tracking-wide text-(--app-text-subtle)">{row.label}</dt>
-            <dd className="text-sm font-medium text-(--app-text)">{row.value}</dd>
-          </div>
-        ))}
-      </dl>
+      {yearSelector}
+      {total != null && annualAmount != null ? (
+        <p className="mt-1 text-xs text-(--app-text-muted)">
+          {years} {years === 1 ? 'año' : 'años'} × {formatMoney(annualAmount, currency)} ={' '}
+          <span className="font-semibold text-(--app-text)">{formatMoney(total, currency)}</span>
+        </p>
+      ) : null}
 
-      {settings.instructions ? <p className="mt-3 text-xs leading-5 text-(--app-text-muted)">{settings.instructions}</p> : null}
-
+      <p className="mt-2 text-xs leading-5 text-(--app-text-muted)">
+        Serás redirigido a la página de pago de AZUL para completar la transacción con tu tarjeta de crédito o
+        débito. Al terminar, volverás aquí automáticamente.
+      </p>
+      {paymentStatus === 'failed' || paymentStatus === 'rejected' ? (
+        <p className="mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">
+          Tu intento anterior no se completó. Puedes intentarlo de nuevo.
+        </p>
+      ) : null}
+      {button}
       <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-(--app-surface) px-3 py-2 text-xs text-(--app-text-muted)">
-        <Clock className="size-3.5" /> Después de transferir, sube tu comprobante abajo. También un pastor o administrador puede subirlo por ti.
+        <ShieldCheck className="size-3.5" /> Transacción procesada por AZUL. No almacenamos los datos de tu tarjeta.
       </p>
     </div>
+  )
+}
+
+const RECEIPT_TITLE = 'Comprobante de pago de membresía'
+
+function buildReceiptLines(payment: MembershipPayment, currency: string, categoryLabel: string | null): ReceiptLine[] {
+  return [
+    ['Comercio', 'ASI Rep. Dominicana'],
+    ['No. de orden', payment.order_number ?? '—'],
+    ['Categoría', categoryLabel ?? payment.category_slug],
+    ['Monto', formatMoney(Number(payment.amount ?? 0), currency)],
+    ['Resultado', 'Aprobado'],
+    ['No. de autorización', payment.authorization_code ?? '—'],
+    ['Referencia', payment.azul_rrn ?? '—'],
+    ['Fecha', formatDate(payment.verified_at)]
+  ]
+}
+
+function MembershipReceiptCard({
+  payment,
+  currency,
+  categoryLabel
+}: {
+  payment: MembershipPayment
+  currency: string
+  categoryLabel: string | null
+}) {
+  const lines = buildReceiptLines(payment, currency, categoryLabel)
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Comprobante de pago</CardTitle>
+        <CardDescription>Descárgalo o compártelo cuando lo necesites.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-1">
+        {lines.map(([key, value]) => (
+          <StatusSummaryRow key={key} label={key} value={value} />
+        ))}
+        <div className="flex gap-2 pt-3">
+          <Button variant="outline" className="h-9 flex-1" onClick={() => printReceipt(RECEIPT_TITLE, lines)}>
+            <Download className="size-4" /> Descargar
+          </Button>
+          <Button
+            variant="outline"
+            className="h-9 flex-1"
+            onClick={() => void shareReceipt(RECEIPT_TITLE, receiptPlainText(RECEIPT_TITLE, lines))}
+          >
+            <Share2 className="size-4" /> Compartir
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -544,109 +808,3 @@ function NeedsMoreInfoResponse({
   )
 }
 
-function ReceiptViewLink({ receiptPath }: { receiptPath: string }) {
-  const openMutation = useMutation({
-    mutationFn: async () => createMembershipReceiptUrl(receiptPath),
-    onSuccess: (url) => window.open(url, '_blank', 'noopener,noreferrer')
-  })
-
-  return (
-    <div className="mt-3">
-      <Button
-        variant="outline"
-        className="h-9"
-        disabled={openMutation.isPending}
-        onClick={() => openMutation.mutate()}
-      >
-        <Paperclip className="size-4" /> {openMutation.isPending ? 'Abriendo…' : 'Ver mi comprobante'}
-      </Button>
-      {openMutation.error ? (
-        <p className="mt-1.5 text-xs text-rose-600 dark:text-rose-400">{toErrorMessage(openMutation.error)}</p>
-      ) : null}
-    </div>
-  )
-}
-
-const ACCEPTED_RECEIPT_TYPES = 'application/pdf,image/png,image/jpeg,image/webp'
-
-function ReceiptUpload({
-  applicationId,
-  memberUserId,
-  categorySlug,
-  amount,
-  currency,
-  onUploaded
-}: {
-  applicationId: string
-  memberUserId: string
-  categorySlug: string
-  amount: number | null
-  currency: string
-  onUploaded: () => void
-}) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [file, setFile] = useState<File | null>(null)
-  const [referenceNote, setReferenceNote] = useState('')
-
-  const uploadMutation = useMutation({
-    mutationFn: async () => {
-      if (!file) {
-        throw new Error('Selecciona el archivo del comprobante.')
-      }
-      return submitMembershipPaymentReceipt({
-        applicationId,
-        memberUserId,
-        categorySlug,
-        amount,
-        currency,
-        file,
-        referenceNote
-      })
-    },
-    onSuccess: () => {
-      setFile(null)
-      setReferenceNote('')
-      if (inputRef.current) {
-        inputRef.current.value = ''
-      }
-      onUploaded()
-    }
-  })
-
-  return (
-    <div className="mt-3 rounded-2xl border border-(--app-border) bg-(--app-surface) p-4">
-      <p className="text-sm font-semibold text-(--app-text)">Sube tu comprobante</p>
-      <p className="mt-0.5 text-xs text-(--app-text-muted)">PDF o imagen (PNG, JPG, WebP), máximo 10 MB.</p>
-
-      <input
-        ref={inputRef}
-        type="file"
-        accept={ACCEPTED_RECEIPT_TYPES}
-        onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-        disabled={uploadMutation.isPending}
-        className="mt-3 block w-full text-sm text-(--app-text-muted) file:mr-3 file:rounded-lg file:border-0 file:bg-(--app-surface-muted) file:px-3 file:py-2 file:text-sm file:font-semibold file:text-(--app-text) hover:file:bg-(--app-border)"
-      />
-
-      <input
-        type="text"
-        value={referenceNote}
-        onChange={(event) => setReferenceNote(event.target.value)}
-        disabled={uploadMutation.isPending}
-        placeholder="Referencia o número de transferencia (opcional)"
-        className="mt-3 block w-full rounded-lg border border-(--app-border) bg-(--app-surface) px-3 py-2 text-sm text-(--app-text) placeholder:text-(--app-text-subtle) focus:border-primary-500 focus:outline-none"
-      />
-
-      {uploadMutation.error ? (
-        <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">{toErrorMessage(uploadMutation.error)}</p>
-      ) : null}
-
-      <Button
-        className="mt-3 h-10"
-        disabled={!file || uploadMutation.isPending}
-        onClick={() => uploadMutation.mutate()}
-      >
-        <UploadCloud className="size-4" /> {uploadMutation.isPending ? 'Subiendo…' : 'Enviar comprobante'}
-      </Button>
-    </div>
-  )
-}

@@ -8,7 +8,10 @@ export type MembershipPaymentSettings = Tables<'membership_payment_settings'>
 
 export interface MembershipStatusBundle {
   application: MembershipApplication | null
+  /** Último pago (cualquier estado), p. ej. una renovación en curso o fallida. */
   payment: MembershipPayment | null
+  /** Último pago VERIFICADO; respalda la membresía activa y la "fecha de pago". */
+  verifiedPayment: MembershipPayment | null
   settings: MembershipPaymentSettings | null
 }
 
@@ -55,23 +58,38 @@ export async function fetchMyMembershipStatus(userId: string): Promise<Membershi
 
   const application = applicationResponse.data ?? null
   let payment: MembershipPayment | null = null
+  let verifiedPayment: MembershipPayment | null = null
 
   if (application) {
-    const paymentResponse = await client
-      .from('membership_payments')
-      .select('*')
-      .eq('application_id', application.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const [latestResponse, verifiedResponse] = await Promise.all([
+      client
+        .from('membership_payments')
+        .select('*')
+        .eq('application_id', application.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      client
+        .from('membership_payments')
+        .select('*')
+        .eq('application_id', application.id)
+        .eq('status', 'verified')
+        .order('verified_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    ])
 
-    if (paymentResponse.error) {
-      throw paymentResponse.error
+    if (latestResponse.error) {
+      throw latestResponse.error
     }
-    payment = paymentResponse.data ?? null
+    if (verifiedResponse.error) {
+      throw verifiedResponse.error
+    }
+    payment = latestResponse.data ?? null
+    verifiedPayment = verifiedResponse.data ?? null
   }
 
-  return { application, payment, settings: settingsResponse.data ?? null }
+  return { application, payment, verifiedPayment, settings: settingsResponse.data ?? null }
 }
 
 /** Configuración de pago activa (datos bancarios + cuotas). Null si no hay. */
@@ -100,6 +118,9 @@ export interface MembershipPaymentSettingsInput {
   currency: string
   instructions: string
   duesByCategory: Record<string, { amount: number | null; label: string }>
+  azulEnabled: boolean
+  azulCurrencyCode: string
+  azulEnvironment: string
 }
 
 /** Actualiza (admin) la configuración de pago. RLS exige is_platform_admin(). */
@@ -117,9 +138,12 @@ export async function updateMembershipPaymentSettings(
       account_number: input.accountNumber.trim(),
       account_type: input.accountType.trim(),
       routing_or_swift: input.routingOrSwift.trim(),
-      currency: input.currency.trim() || 'USD',
+      currency: input.currency.trim() || 'DOP',
       instructions: input.instructions.trim(),
       dues_by_category: input.duesByCategory,
+      azul_enabled: input.azulEnabled,
+      azul_currency_code: input.azulCurrencyCode.trim() || '$',
+      azul_environment: input.azulEnvironment.trim() || 'test',
       updated_by_user_id: actorUserId
     })
     .eq('id', id)

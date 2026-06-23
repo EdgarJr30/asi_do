@@ -14,9 +14,14 @@ type Outcome = 'approved' | 'declined' | 'cancelled' | 'error'
 type PaymentFlow = 'membership' | 'donation'
 
 /** Destino final tras el pago: la SPA lee el estado real desde la DB con este flag. */
-function redirectTo(config: AppConfig, flow: PaymentFlow, outcome: Outcome): string {
+function redirectTo(config: AppConfig, flow: PaymentFlow, outcome: Outcome, orderNumber?: string): string {
   const path = flow === 'donation' ? '/donate' : '/account/membership'
-  return `${config.appUrl}${path}?payment=${outcome}`
+  const params = new URLSearchParams({ payment: outcome })
+  // El número de orden permite a /donate mostrar el comprobante (incluye al donante anónimo).
+  if (flow === 'donation' && orderNumber) {
+    params.set('order', orderNumber)
+  }
+  return `${config.appUrl}${path}?${params.toString()}`
 }
 
 function resolveFlow(orderNumber: string): PaymentFlow {
@@ -59,7 +64,7 @@ export function registerCallbackRoute(app: FastifyInstance, config: AppConfig): 
       } catch (error) {
         request.log.error({ err: error, orderNumber }, 'Error al liquidar cancelación')
       }
-      return reply.redirect(redirectTo(config, declaredFlow, 'cancelled'))
+      return reply.redirect(redirectTo(config, declaredFlow, 'cancelled', orderNumber))
     }
 
     const response = parseAzulResponse(query)
@@ -72,7 +77,7 @@ export function registerCallbackRoute(app: FastifyInstance, config: AppConfig): 
         { orderNumber: effectiveOrder, responseCode: response.ResponseCode },
         'AuthHash de respuesta inválido — posible manipulación; no se liquida el pago'
       )
-      return reply.redirect(redirectTo(config, effectiveFlow, 'error'))
+      return reply.redirect(redirectTo(config, effectiveFlow, 'error', effectiveOrder))
     }
 
     const approved = isApproved(response)
@@ -89,9 +94,9 @@ export function registerCallbackRoute(app: FastifyInstance, config: AppConfig): 
       )
     } catch (error) {
       request.log.error({ err: error, orderNumber: effectiveOrder }, 'Error al liquidar pago AZUL')
-      return reply.redirect(redirectTo(config, effectiveFlow, 'error'))
+      return reply.redirect(redirectTo(config, effectiveFlow, 'error', effectiveOrder))
     }
 
-    return reply.redirect(redirectTo(config, effectiveFlow, approved ? 'approved' : 'declined'))
+    return reply.redirect(redirectTo(config, effectiveFlow, approved ? 'approved' : 'declined', effectiveOrder))
   })
 }

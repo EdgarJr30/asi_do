@@ -31,6 +31,9 @@ interface PaymentSettingsForm {
   currency: string
   instructions: string
   dues: Record<string, string>
+  azulEnabled: boolean
+  azulCurrencyCode: string
+  azulEnvironment: string
 }
 
 function toFormValues(settings: MembershipPaymentSettings): PaymentSettingsForm {
@@ -47,7 +50,10 @@ function toFormValues(settings: MembershipPaymentSettings): PaymentSettingsForm 
         const due = getCategoryDue(settings, category.slug)
         return [category.slug, due?.amount != null ? String(due.amount) : '']
       })
-    )
+    ),
+    azulEnabled: settings.azul_enabled,
+    azulCurrencyCode: settings.azul_currency_code,
+    azulEnvironment: settings.azul_environment
   }
 }
 
@@ -57,7 +63,7 @@ const bankFields: Array<{ name: keyof PaymentSettingsForm; label: string; placeh
   { name: 'accountNumber', label: 'Número de cuenta' },
   { name: 'accountType', label: 'Tipo de cuenta', placeholder: 'Corriente / Ahorros' },
   { name: 'routingOrSwift', label: 'SWIFT / ABA / Routing' },
-  { name: 'currency', label: 'Moneda', placeholder: 'USD' }
+  { name: 'currency', label: 'Moneda', placeholder: 'DOP' }
 ]
 
 export function MembershipPaymentsSettingsPage() {
@@ -96,7 +102,10 @@ export function MembershipPaymentsSettingsPage() {
               const amount = raw.trim() === '' ? null : Number(raw)
               return [category.slug, { amount: Number.isFinite(amount as number) ? (amount as number) : null, label: category.name }]
             })
-          )
+          ),
+          azulEnabled: values.azulEnabled,
+          azulCurrencyCode: values.azulCurrencyCode,
+          azulEnvironment: values.azulEnvironment
         },
         session.authUser?.id ?? null
       )
@@ -131,7 +140,7 @@ export function MembershipPaymentsSettingsPage() {
     )
   }
 
-  const currency = watchedCurrency || settings?.currency || 'USD'
+  const currency = watchedCurrency || settings?.currency || 'DOP'
 
   return (
     <form className="space-y-6" onSubmit={(event) => void form.handleSubmit((values) => saveMutation.mutate(values))(event)}>
@@ -151,8 +160,47 @@ export function MembershipPaymentsSettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Datos bancarios</CardTitle>
-          <CardDescription>Cuenta destino para las transferencias de membresía.</CardDescription>
+          <CardTitle>Pasarela de pagos AZUL</CardTitle>
+          <CardDescription>
+            Pago con tarjeta vía la Página de Pago de AZUL. El MerchantID y la AuthKey se configuran como
+            secretos en el microservicio de pagos (no se guardan aquí).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <label className="flex items-start gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-4 py-3">
+            <input type="checkbox" className="mt-1 size-4 accent-primary-600" {...form.register('azulEnabled')} />
+            <span>
+              <span className="block text-sm font-medium text-(--app-text)">Habilitar pago con tarjeta (AZUL)</span>
+              <span className="mt-0.5 block text-xs text-(--app-text-muted)">
+                Cuando está activo, los miembros pagan su cuota con tarjeta desde su panel de membresía.
+              </span>
+            </span>
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-sm">
+              <span className="font-medium text-(--app-text-muted)">CurrencyCode de AZUL</span>
+              <Input placeholder="$" {...form.register('azulCurrencyCode')} />
+              <span className="text-xs text-(--app-text-subtle)">Valor provisto por AZUL para tu MID (DOP suele ser “$”).</span>
+            </label>
+            <label className="grid gap-1.5 text-sm">
+              <span className="font-medium text-(--app-text-muted)">Ambiente</span>
+              <select
+                className="h-10 rounded-lg border border-(--app-border) bg-(--app-surface) px-3 text-sm text-(--app-text) focus:border-primary-500 focus:outline-none"
+                {...form.register('azulEnvironment')}
+              >
+                <option value="test">Pruebas</option>
+                <option value="production">Producción</option>
+              </select>
+              <span className="text-xs text-(--app-text-subtle)">Debe coincidir con las URLs/llaves configuradas en el microservicio.</span>
+            </label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Datos bancarios (referencia)</CardTitle>
+          <CardDescription>Cuenta destino para transferencias manuales (respaldo / histórico).</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2">

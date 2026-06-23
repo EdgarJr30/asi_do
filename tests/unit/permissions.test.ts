@@ -29,11 +29,11 @@ describe('permission guards', () => {
 
     expect(visibleItems.map((item) => item.title)).toEqual([
       'Inicio',
+      'Membresía',
       'Jobs',
       'Aplicaciones',
       'Perfil',
       'Reclutar con mi empresa',
-      'Autorización territorial',
       'Resumen',
       'Mi actividad',
       'Vacantes',
@@ -45,7 +45,9 @@ describe('permission guards', () => {
       'Configuración',
       'Overview',
       'Platform',
-      'Errors'
+      'Errors',
+      'Datos de pago',
+      'Donaciones'
     ])
   })
 
@@ -70,7 +72,8 @@ describe('permission guards', () => {
 
     expect(visibleInternal.map((item) => item.title)).toEqual([
       'Overview',
-      'Approvals'
+      'Approvals',
+      'Autorización territorial'
     ])
   })
 })

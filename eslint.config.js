@@ -238,7 +238,7 @@ const canonicalTailwindPlugin = {
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'coverage', 'node_modules', 'supabase/functions']
+    ignores: ['dist', 'coverage', 'node_modules', 'supabase/functions', 'services', 'src/shared/types/database.ts']
   },
   js.configs.recommended,
   {

@@ -35,6 +35,12 @@ export const candidateNavigationItems: NavigationItem[] = [
     requiresAuth: true
   },
   {
+    title: 'Membresía',
+    href: surfacePaths.account.membership,
+    description: 'Estado de tu solicitud, pago y activación',
+    requiresAuth: true
+  },
+  {
     title: 'Jobs',
     href: surfacePaths.public.jobsRoot,
     description: 'Explora oportunidades abiertas'
@@ -55,12 +61,6 @@ export const candidateNavigationItems: NavigationItem[] = [
     title: 'Reclutar con mi empresa',
     href: '/candidate/recruiter-request',
     description: 'Lleva tu empresa a la plataforma y publica vacantes',
-    requiresAuth: true
-  },
-  {
-    title: 'Autorización territorial',
-    href: '/candidate/authority-request',
-    description: 'Solicita validación pastoral o regional',
     requiresAuth: true
   }
 ]
@@ -183,9 +183,23 @@ export const adminNavigationItems: NavigationItem[] = [
     requiredPermission: 'membership_payment:verify'
   },
   {
+    title: 'Autorización territorial',
+    href: surfacePaths.admin.authority,
+    description: 'Genera invitaciones por link para validar autoridad pastoral o regional',
+    requiresAuth: true,
+    requiredAnyPermission: approvalReviewPermissions
+  },
+  {
     title: 'Datos de pago',
     href: surfacePaths.admin.payments,
     description: 'Datos bancarios y cuotas de membresía',
+    requiresAuth: true,
+    requiredPermission: 'platform_dashboard:read'
+  },
+  {
+    title: 'Donaciones',
+    href: surfacePaths.admin.donations,
+    description: 'Montos sugeridos de donación',
     requiresAuth: true,
     requiredPermission: 'platform_dashboard:read'
   },

@@ -8,6 +8,8 @@ import { BootstrapOwnerPage } from '@/features/auth/pages/bootstrap-owner-page'
 import { SignInPage } from '@/features/auth/pages/sign-in-page'
 import { SignUpPage } from '@/features/auth/pages/sign-up-page'
 import { AuthorityRequestPage } from '@/features/authority-requests/pages/authority-request-page'
+import { AdminAuthorityInvitationsPage } from '@/features/authority-requests/pages/admin-authority-invitations-page'
+import { AdminDonationAmountsPage } from '@/features/donations/pages/admin-donation-amounts-page'
 import { WorkspaceApplicationsPage } from '@/features/applications/pages/workspace-applications-page'
 import { CandidateProfilePage } from '@/features/candidate-profile/pages/candidate-profile-page'
 import { CandidateHomePage } from '@/features/dashboard/pages/candidate-home-page'
@@ -121,7 +123,8 @@ export const applicationRoutes: RouteObject[] = [
         element: <RecruiterRequestPage />
       },
       {
-        path: 'authority-request',
+        // Solo accesible con un token de invitación generado por un admin.
+        path: 'authority-request/:token',
         element: <AuthorityRequestPage />
       },
       {
@@ -285,10 +288,26 @@ export const applicationRoutes: RouteObject[] = [
         )
       },
       {
+        path: 'authority',
+        element: (
+          <RequireAnyPermission permissions={approvalReviewPermissions} surface="admin">
+            <AdminAuthorityInvitationsPage />
+          </RequireAnyPermission>
+        )
+      },
+      {
         path: 'payments',
         element: (
           <RequirePermission permission="platform_dashboard:read" surface="admin">
             <MembershipPaymentsSettingsPage />
+          </RequirePermission>
+        )
+      },
+      {
+        path: 'donations',
+        element: (
+          <RequirePermission permission="platform_dashboard:read" surface="admin">
+            <AdminDonationAmountsPage />
           </RequirePermission>
         )
       },

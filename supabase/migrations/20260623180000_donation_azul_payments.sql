@@ -32,7 +32,7 @@ create index if not exists donation_amount_options_active_order_idx
 drop trigger if exists donation_amount_options_set_updated_at on public.donation_amount_options;
 create trigger donation_amount_options_set_updated_at
 before update on public.donation_amount_options
-for each row execute function public.set_updated_at();
+for each row execute function public.set_row_updated_at();
 
 insert into public.donation_amount_options (label, amount, currency, display_order, is_active)
 values
@@ -93,7 +93,7 @@ create index if not exists donations_campaign_created_idx
 drop trigger if exists donations_set_updated_at on public.donations;
 create trigger donations_set_updated_at
 before update on public.donations
-for each row execute function public.set_updated_at();
+for each row execute function public.set_row_updated_at();
 
 alter table public.donation_amount_options enable row level security;
 alter table public.donations enable row level security;

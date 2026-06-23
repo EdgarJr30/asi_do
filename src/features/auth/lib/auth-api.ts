@@ -870,3 +870,90 @@ export function toBootstrapFirstPlatformOwnerErrorMessage(error: unknown) {
 }
 
 export { toErrorMessage }
+
+// ── Invitaciones de autorización territorial ──────────────────────────────────
+
+export type AuthorityInvitation = Tables<'authority_request_invitations'>
+export type AuthorityInvitationType = 'pastoral' | 'regional'
+
+export interface CreateAuthorityInvitationInput {
+  email: string
+  authorityType: AuthorityInvitationType
+  expiresInDays?: number
+  notes?: string
+}
+
+/** Admin: genera una invitación con token (notifica al usuario in-app + email). */
+export async function createAuthorityInvitation(input: CreateAuthorityInvitationInput): Promise<AuthorityInvitation> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('admin_create_authority_invitation', {
+    p_email: input.email.trim(),
+    p_authority_type: input.authorityType,
+    p_expires_in_days: input.expiresInDays ?? 14,
+    p_notes: input.notes?.trim() || undefined,
+  })
+  if (error) {
+    throw error
+  }
+  return data as AuthorityInvitation
+}
+
+/** Admin: lista todas las invitaciones (RLS exige admin para ver todo). */
+export async function listAuthorityInvitations(): Promise<AuthorityInvitation[]> {
+  const client = requireSupabase()
+  const { data, error } = await client
+    .from('authority_request_invitations')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) {
+    throw error
+  }
+  return data ?? []
+}
+
+/** Admin: revoca una invitación pendiente. */
+export async function revokeAuthorityInvitation(id: string): Promise<AuthorityInvitation> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('revoke_authority_invitation', { p_id: id })
+  if (error) {
+    throw error
+  }
+  return data as AuthorityInvitation
+}
+
+export interface ValidAuthorityInvitation {
+  id: string
+  authorityType: AuthorityInvitationType
+  targetEmail: string
+  notes: string | null
+  expiresAt: string
+}
+
+/** Invitado: valida el token contra su sesión. Null si no es válido/venció. */
+export async function getAuthorityInvitation(token: string): Promise<ValidAuthorityInvitation | null> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('get_authority_invitation', { p_token: token })
+  if (error) {
+    throw error
+  }
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) {
+    return null
+  }
+  return {
+    id: row.id,
+    authorityType: row.authority_type as AuthorityInvitationType,
+    targetEmail: row.target_email,
+    notes: row.notes,
+    expiresAt: row.expires_at,
+  }
+}
+
+/** Invitado: marca la invitación como usada tras enviar la solicitud. */
+export async function consumeAuthorityInvitation(token: string, requestId: string): Promise<void> {
+  const client = requireSupabase()
+  const { error } = await client.rpc('consume_authority_invitation', { p_token: token, p_request_id: requestId })
+  if (error) {
+    throw error
+  }
+}

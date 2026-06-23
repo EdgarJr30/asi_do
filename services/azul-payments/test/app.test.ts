@@ -79,7 +79,7 @@ describe('rutas del servicio', () => {
       url: '/payments/azul/callback?outcome=approved&order=DON-1&OrderNumber=DON-1&Amount=1000000&ResponseCode=Approved&IsoCode=00&AuthHash=deadbeef'
     })
     expect(res.statusCode).toBe(302)
-    expect(res.headers.location).toBe('https://asi-do.netlify.app/donate?payment=error')
+    expect(res.headers.location).toBe('https://asi-do.netlify.app/donate?payment=error&order=DON-1')
   })
 
   it('GET /callback cancelado sin order → redirect a payment=cancelled', async () => {

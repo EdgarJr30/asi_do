@@ -45,6 +45,7 @@ export const surfacePaths = {
     onboarding: '/candidate/onboarding',
     recruiterRequest: '/candidate/recruiter-request',
     authorityRequest: '/candidate/authority-request',
+    authorityRequestLink: (token: string) => `/candidate/authority-request/${token}`,
     membershipQueue: '/candidate/membership-queue'
   },
   workspace: {
@@ -68,8 +69,10 @@ export const surfacePaths = {
     moderation: '/admin/moderation',
     errors: '/admin/errors',
     membership: '/admin/membership',
+    authority: '/admin/authority',
     correos: '/admin/correos',
     payments: '/admin/payments',
+    donations: '/admin/donations',
     bootstrapOwner: '/admin/bootstrap-owner'
   }
 } as const
