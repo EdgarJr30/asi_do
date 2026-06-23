@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { motion, useReducedMotion } from 'motion/react'
 import { Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -23,6 +24,7 @@ import {
 import { cn } from '@/lib/utils/cn'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
+import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 
 const STAGE_DOT_COLORS = ['bg-sky-500', 'bg-violet-500', 'bg-amber-500', 'bg-emerald-500', 'bg-rose-500', 'bg-indigo-500']
 
@@ -41,6 +43,7 @@ function initialsFrom(value: string) {
 export function PipelineBoardPage() {
   const session = useAppSession()
   const queryClient = useQueryClient()
+  const shouldReduceMotion = useReducedMotion()
   const tenantId = session.activeTenantId
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null)
   const [stageNote, setStageNote] = useState('')
@@ -235,8 +238,13 @@ export function PipelineBoardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <motion.div
+      className="space-y-6"
+      variants={pageStagger}
+      initial={shouldReduceMotion ? false : 'hidden'}
+      animate="show"
+    >
+      <motion.section variants={cardReveal} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">Pipeline</h1>
           <p className="mt-1 text-sm text-(--app-text-muted)">{filteredApplications.length} candidatos en proceso</p>
@@ -253,9 +261,9 @@ export function PipelineBoardPage() {
           ) : null}
           <Button onClick={() => toast.info('Agregar candidato próximamente')}>Agregar candidato</Button>
         </div>
-      </section>
+      </motion.section>
 
-      <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
+      <motion.div variants={cardReveal} className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
         <div className="flex flex-1 items-center gap-2.5 rounded-2xl border border-(--app-border) bg-(--app-surface) px-3.5">
           <Search aria-hidden="true" className="size-4 text-(--app-text-subtle)" />
           <input
@@ -281,15 +289,16 @@ export function PipelineBoardPage() {
             </option>
           ))}
         </Select>
-      </div>
+      </motion.div>
 
-      <div className="flex gap-4 overflow-x-auto pb-2">
+      <motion.div variants={gridStagger} className="flex gap-4 overflow-x-auto pb-2">
         {boardQuery.data.stages.map((stage, stageIndex) => {
           const stageApplications = filteredApplications.filter((application) => application.current_stage_id === stage.id)
           const isDropTarget = dragOverStageId === stage.id
 
           return (
-            <div
+            <motion.div
+              variants={cardReveal}
               key={stage.id}
               onDragOver={(event) => {
                 event.preventDefault()
@@ -355,10 +364,10 @@ export function PipelineBoardPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           )
         })}
-      </div>
+      </motion.div>
 
       {visibleSelectedApplication ? (
         <div className="fixed inset-0 z-50">
@@ -476,6 +485,6 @@ export function PipelineBoardPage() {
           </div>
         </div>
       ) : null}
-    </div>
+    </motion.div>
   )
 }

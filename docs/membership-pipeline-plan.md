@@ -1,7 +1,7 @@
 # Plan: Membresía → Pago → Aprobación → Activación (gate del ATS)
 
 > Pipeline manual (tipo SaaS de membresía) que controla el acceso a la plataforma/ATS.
-> Estado: **Fases 1-5 ✅ completas** (registro→pago→aprobación→verificación→activación + notificaciones por email con envío automático, validado e2e). Pendiente solo: recordatorios de renovación. Decisiones acordadas el 2026-06-20.
+> Estado: **Fases 1-4 ✅ completas** (registro→pago→aprobación→verificación→activación, validado e2e). Sigue Fase 5 (notificaciones). Decisiones acordadas el 2026-06-20.
 
 ## 1. Máquina de estados (un solo carril)
 
@@ -114,4 +114,3 @@ autoridad a pastores.
 - Gate aplica a **todos** los usuarios (candidatos y empresas).
 - Registro reabierto: cuenta nueva = 'pendiente'; solo ve el flujo de membresía hasta activación.
 - Panel de progreso guiado para el miembro pendiente.
-0
