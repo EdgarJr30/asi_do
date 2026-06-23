@@ -1,10 +1,10 @@
-import { useMemo, useState, type MouseEvent } from 'react'
+import { useMemo, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { useForm, useWatch } from 'react-hook-form'
-import { Banknote, ChevronLeft, ChevronRight, Clock3, Eye, MapPin, MoreVertical, Pencil, Plus, Search } from 'lucide-react'
+import { Banknote, ChevronLeft, ChevronRight, Clock3, Eye, MapPin, Pencil, Plus, Search } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -14,7 +14,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { KebabMenu, KebabMenuItem } from '@/components/ui/kebab-menu'
 import { Select } from '@/components/ui/select'
+import { SideSheet } from '@/components/ui/side-sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { PublicJobBoard } from '@/features/jobs/components/public-job-board'
 import {
@@ -87,14 +89,6 @@ type TenantJobRow = JobPostingBundle['jobs'][number]
 
 function jobLocationLabel(job: Pick<TenantJobRow, 'city_name' | 'country_code'>) {
   return [job.city_name, job.country_code].filter(Boolean).join(', ') || 'Sin ubicación'
-}
-
-const jobMenuItemClass =
-  'flex w-full items-center rounded-lg px-2.5 py-1.5 text-left text-[0.8rem] text-(--app-text-muted) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)'
-
-function closeMenu(event: MouseEvent<HTMLButtonElement>, action: () => void) {
-  event.currentTarget.closest('details')?.removeAttribute('open')
-  action()
 }
 
 function jobSalaryLabel(job: TenantJobRow) {
@@ -187,13 +181,16 @@ function JobEditor({
   session,
   workspace,
   onSaved,
-  onClear
+  onClear,
+  bare = false
 }: {
   selectedJob: JobPostingBundle['jobs'][number] | null
   session: ReturnType<typeof useAppSession>
   workspace: WorkspaceBundle
   onSaved: () => Promise<void>
   onClear: () => void
+  /** Renderiza solo el formulario, sin el Card/encabezado (p. ej. dentro de un SideSheet). */
+  bare?: boolean
 }) {
   const [questions, setQuestions] = useState<JobScreeningQuestionDraft[]>([createEmptyScreeningQuestion()])
   const form = useForm<JobPostingFormValues>({
@@ -273,16 +270,8 @@ function JobEditor({
     }
   })
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{selectedJob ? 'Editar oportunidad' : 'Nueva oportunidad'}</CardTitle>
-        <CardDescription>
-          Define el tipo, la compensación y el flujo esperado antes de publicarla al talento aprobado.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-4" onSubmit={(event) => void form.handleSubmit((values) => saveMutation.mutate(values))(event)}>
+  const formBody = (
+    <form className="space-y-4" onSubmit={(event) => void form.handleSubmit((values) => saveMutation.mutate(values))(event)}>
           <div className="grid gap-4 sm:grid-cols-[0.8fr_1.2fr]">
             <label className="grid gap-2 text-sm">
               <span>Tipo de oportunidad</span>
@@ -541,8 +530,22 @@ function JobEditor({
               </Button>
             ) : null}
           </div>
-        </form>
-      </CardContent>
+    </form>
+  )
+
+  if (bare) {
+    return formBody
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{selectedJob ? 'Editar oportunidad' : 'Nueva oportunidad'}</CardTitle>
+        <CardDescription>
+          Define el tipo, la compensación y el flujo esperado antes de publicarla al talento aprobado.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>{formBody}</CardContent>
     </Card>
   )
 }
@@ -770,9 +773,22 @@ function WorkspaceJobsManager() {
 
       {canManageJobs && workspaceQuery.data && isWorkspaceContext ? (
         <motion.section variants={cardReveal} className="space-y-4">
-          {isEditorOpen ? (
+          <SideSheet
+            open={isEditorOpen}
+            onClose={() => {
+              setSelectedJobId(null)
+              setIsEditorOpen(false)
+            }}
+            title={selectedJob ? 'Editar vacante' : 'Publicar vacante'}
+            description={
+              selectedJob
+                ? 'Actualiza los detalles de esta posición.'
+                : 'Crea una posición y publícala cuando esté lista.'
+            }
+          >
             <JobEditor
               key={selectedJob?.id ?? 'new-job'}
+              bare
               selectedJob={selectedJob}
               session={session}
               workspace={workspaceQuery.data}
@@ -789,7 +805,7 @@ function WorkspaceJobsManager() {
                 setIsEditorOpen(false)
               }}
             />
-          ) : null}
+          </SideSheet>
 
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-1 flex-wrap gap-2">
@@ -865,33 +881,20 @@ function WorkspaceJobsManager() {
                       <span className="size-1.5 rounded-full bg-current" />
                       {statusMeta.label}
                     </span>
-                    <details className="relative">
-                      <summary className="flex size-7 cursor-pointer list-none items-center justify-center rounded-lg text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text) [&::-webkit-details-marker]:hidden">
-                        <MoreVertical className="size-4" />
-                      </summary>
-                      <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-(--app-border) bg-(--app-surface-elevated) p-1 shadow-[0_18px_40px_rgba(15,23,42,0.16)]">
-                        <button type="button" className={jobMenuItemClass} onClick={(event) => closeMenu(event, () => openJobEditor(job.id))}>
-                          Editar
-                        </button>
-                        <Link className={jobMenuItemClass} to={surfacePaths.public.jobDetail(job.slug)}>
-                          Ver oportunidad
-                        </Link>
-                        {isPublished ? (
-                          <button type="button" className={jobMenuItemClass} onClick={(event) => closeMenu(event, () => statusMutation.mutate({ jobId: job.id, status: 'closed' }))}>
-                            Cerrar
-                          </button>
-                        ) : (
-                          <button type="button" className={jobMenuItemClass} onClick={(event) => closeMenu(event, () => statusMutation.mutate({ jobId: job.id, status: 'published' }))}>
-                            Publicar
-                          </button>
-                        )}
-                        {job.status !== 'archived' ? (
-                          <button type="button" className={jobMenuItemClass} onClick={(event) => closeMenu(event, () => statusMutation.mutate({ jobId: job.id, status: 'archived' }))}>
-                            Archivar
-                          </button>
-                        ) : null}
-                      </div>
-                    </details>
+                    <KebabMenu>
+                      <KebabMenuItem onClick={() => openJobEditor(job.id)}>Editar</KebabMenuItem>
+                      <KebabMenuItem to={surfacePaths.public.jobDetail(job.slug)}>Ver oportunidad</KebabMenuItem>
+                      {isPublished ? (
+                        <KebabMenuItem onClick={() => statusMutation.mutate({ jobId: job.id, status: 'closed' })}>Cerrar</KebabMenuItem>
+                      ) : (
+                        <KebabMenuItem onClick={() => statusMutation.mutate({ jobId: job.id, status: 'published' })}>Publicar</KebabMenuItem>
+                      )}
+                      {job.status !== 'archived' ? (
+                        <KebabMenuItem danger onClick={() => statusMutation.mutate({ jobId: job.id, status: 'archived' })}>
+                          Archivar
+                        </KebabMenuItem>
+                      ) : null}
+                    </KebabMenu>
                   </div>
 
                   <h3 className="mt-3 line-clamp-2 text-[1rem] font-semibold leading-tight text-(--app-text)">{job.title}</h3>
