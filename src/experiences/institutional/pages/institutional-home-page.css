@@ -397,7 +397,7 @@
 .institutional-home__hero-frame--image-only {
   width: 100%;
   /* 129.42vw = full-width height at the mobile poster ratio (1280/989). */
-  height: min(129.42vw, calc(100svh - 5.75rem));
+  height: 129.42vw;
   min-height: 0;
   max-height: none;
   aspect-ratio: auto;
@@ -427,6 +427,6 @@
 @media (min-width: 768px) {
   .institutional-home__hero-frame--image-only {
     /* 50.00vw = full-width height at the desktop poster ratio (887/1774). */
-    height: min(50vw, calc(100svh - 7rem));
+    height: 50vw;
   }
 }
