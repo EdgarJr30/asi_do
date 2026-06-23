@@ -114,3 +114,4 @@ autoridad a pastores.
 - Gate aplica a **todos** los usuarios (candidatos y empresas).
 - Registro reabierto: cuenta nueva = 'pendiente'; solo ve el flujo de membresía hasta activación.
 - Panel de progreso guiado para el miembro pendiente.
+0
