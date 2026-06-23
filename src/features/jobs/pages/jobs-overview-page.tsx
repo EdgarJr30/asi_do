@@ -39,6 +39,7 @@ import {
 import { fetchPipelineBoard } from '@/features/pipeline/lib/pipeline-api'
 import { fetchWorkspaceBundle, type WorkspaceBundle } from '@/features/tenants/lib/workspace-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cn } from '@/lib/utils/cn'
 
 const PUBLIC_JOBS_QUERY_KEY = ['jobs', 'public'] as const
@@ -521,6 +522,17 @@ function WorkspaceJobsManager() {
     enabled: canManageJobs && Boolean(session.activeTenantId),
     queryFn: async () => listTenantJobs(session.activeTenantId!)
   })
+  // En vivo: la lista de vacantes y sus contadores de postulaciones se mantienen
+  // al día cuando el equipo publica/edita vacantes o entran nuevas aplicaciones.
+  useRealtimeSync(
+    'workspace-jobs',
+    [
+      { table: 'job_postings', invalidate: [TENANT_JOBS_QUERY_KEY, PUBLIC_JOBS_QUERY_KEY] },
+      { table: 'applications', invalidate: [['jobs', 'application-counts', session.activeTenantId ?? null]] }
+    ],
+    { enabled: canManageJobs && Boolean(session.activeTenantId) }
+  )
+
   const jobApplicationsQuery = useQuery({
     queryKey: ['jobs', 'application-counts', session.activeTenantId ?? null],
     enabled: canManageJobs && isWorkspaceContext && Boolean(session.activeTenantId),

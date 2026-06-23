@@ -1,25 +1,45 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { motion, useReducedMotion } from 'motion/react'
+import {
+  Banknote,
+  Bookmark,
+  BookmarkCheck,
+  Building2,
+  Eye,
+  FileText,
+  Globe,
+  HelpCircle,
+  MapPin,
+  SendHorizontal,
+  Sparkles
+} from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
 import { getPublicJobBySlug, toggleSavedJob } from '@/features/jobs/lib/jobs-api'
 import { getCompensationTypeLabel, getOpportunityTypeLabel } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
+import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 
-const linkButtonClassName =
-  'inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-px hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-primary-500 dark:hover:bg-primary-500/12 dark:hover:text-primary-300'
+const workplaceLabels: Record<string, string> = { remote: 'remoto', hybrid: 'híbrido', on_site: 'presencial' }
+
+const metaChip =
+  'inline-flex items-center gap-1.5 rounded-full border border-(--app-border) bg-(--app-surface) px-3 py-1 text-[0.74rem] text-(--app-text-muted)'
+const actionPrimary =
+  'inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-primary-600 bg-primary-600 px-4 text-[0.85rem] font-semibold text-white shadow-[0_12px_24px_rgba(43,69,143,0.2)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2'
+const actionOutline =
+  'inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-(--app-border) bg-(--app-surface) px-4 text-[0.82rem] font-medium text-(--app-text) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) disabled:cursor-not-allowed disabled:opacity-60 dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200'
 
 export function JobDetailPage() {
   const { jobSlug = '' } = useParams()
   const session = useAppSession()
   const queryClient = useQueryClient()
+  const shouldReduceMotion = useReducedMotion()
   const candidateProfileQuery = useQuery({
     queryKey: ['candidate-profile', 'mine', 'job-detail'],
     enabled: session.isAuthenticated,
@@ -77,120 +97,148 @@ export function JobDetailPage() {
           <CardTitle>No encontramos esta vacante</CardTitle>
           <CardDescription>{toErrorMessage(jobQuery.error) || 'El slug no corresponde a una vacante publicada.'}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Link className={linkButtonClassName} to={surfacePaths.public.jobs}>
-            Volver a jobs
+        <div className="mt-4">
+          <Link className={actionOutline} to={surfacePaths.public.jobs}>
+            Volver a empleos
           </Link>
-        </CardContent>
+        </div>
       </Card>
     )
   }
 
   const job = jobQuery.data
-  const compensationLabel =
-    job.compensation_min_amount || job.compensation_max_amount
-      ? `${getCompensationTypeLabel(job.compensation_type)}: ${job.compensation_currency || 'USD'} ${(job.compensation_min_amount || job.compensation_max_amount || 0).toLocaleString()}${job.compensation_min_amount && job.compensation_max_amount ? ` - ${job.compensation_max_amount.toLocaleString()}` : ''}`
-      : getCompensationTypeLabel(job.compensation_type)
+  const hasSalaryAmount = Boolean(job.compensation_min_amount || job.compensation_max_amount)
+  const compensationLabel = hasSalaryAmount
+    ? `${getCompensationTypeLabel(job.compensation_type)}: ${job.compensation_currency || 'USD'} ${(job.compensation_min_amount || job.compensation_max_amount || 0).toLocaleString()}${job.compensation_min_amount && job.compensation_max_amount ? ` - ${job.compensation_max_amount.toLocaleString()}` : ''}`
+    : getCompensationTypeLabel(job.compensation_type)
+  const locationLabel = [job.city_name, job.country_code].filter(Boolean).join(', ') || 'Ubicación flexible'
+  const workplaceLabel = job.workplace_type ? workplaceLabels[job.workplace_type] ?? job.workplace_type : ''
 
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden bg-(--app-surface-muted)">
-        <CardHeader className="space-y-3">
-          <Badge variant="soft">Oportunidad ASI</Badge>
-          <CardTitle className="max-w-3xl text-2xl sm:text-3xl">{job.title}</CardTitle>
-          <CardDescription>
-            {job.company_profile?.display_name || 'Company'} · {getOpportunityTypeLabel(job.opportunity_type)} · {job.workplace_type}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-4">
-            <p className="text-base leading-7 text-(--app-text-muted)">{job.summary}</p>
-            <div className="flex flex-wrap gap-2">
-              {job.country_code ? <Badge variant="outline">{job.country_code}</Badge> : null}
-              {job.experience_level ? <Badge variant="outline">{job.experience_level}</Badge> : null}
-              <Badge variant="outline">{compensationLabel}</Badge>
-            </div>
-          </div>
-
-          <div className="rounded-[28px] border border-(--app-border) bg-(--app-surface-elevated) p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--app-text-subtle)">Acciones</p>
-            <div className="mt-4 flex flex-col gap-3">
-              <Button disabled>Apply llega en la siguiente fase</Button>
-              {session.isAuthenticated ? (
-                <Link className={cn(linkButtonClassName, 'bg-primary-500 text-white hover:bg-primary-400 hover:text-white border-transparent')} to={surfacePaths.public.jobApply(jobSlug)}>
-                  Apply now
-                </Link>
-              ) : null}
-              {session.isAuthenticated ? (
-                <Button
-                  variant="outline"
-                  onClick={() => saveMutation.mutate(!job.isSaved)}
-                  disabled={saveMutation.isPending || !candidateProfileQuery.data?.profile}
-                >
-                  {job.isSaved ? 'Quitar guardado' : 'Guardar vacante'}
-                </Button>
-              ) : (
-                <Link className={linkButtonClassName} to="/auth/sign-in">
-                  Inicia sesión para guardar
-                </Link>
-              )}
-              <Link className={cn(linkButtonClassName, 'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-900')} to={surfacePaths.public.jobs}>
-                Volver al discovery
-              </Link>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <section className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
+    <motion.div
+      className="space-y-5"
+      variants={pageStagger}
+      initial={shouldReduceMotion ? false : 'hidden'}
+      animate="show"
+    >
+      <motion.div variants={cardReveal}>
         <Card>
-          <CardHeader>
-            <CardTitle>Descripcion completa</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="whitespace-pre-wrap text-sm leading-7 text-(--app-text-muted)">{job.description}</div>
-          </CardContent>
-        </Card>
+          <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+            {/* Información */}
+            <div className="space-y-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-[0.7rem] font-semibold text-primary-700 dark:border-primary-500/30 dark:bg-primary-500/12 dark:text-primary-300">
+                <Sparkles className="size-3.5" /> Oportunidad ASI
+              </span>
+              <h1 className="max-w-2xl text-2xl font-semibold leading-tight tracking-tight text-(--app-text) sm:text-[1.7rem]">
+                {job.title}
+              </h1>
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[0.82rem] text-(--app-text-muted)">
+                <span className="inline-flex items-center gap-1.5">
+                  <Building2 className="size-4" /> {job.company_profile?.display_name || 'Empresa'}
+                </span>
+                <span className="text-(--app-text-subtle)">·</span>
+                <span>{getOpportunityTypeLabel(job.opportunity_type)}{workplaceLabel ? ` ${workplaceLabel}` : ''}</span>
+              </div>
+              {job.summary ? <p className="max-w-2xl text-[0.85rem] leading-6 text-(--app-text-muted)">{job.summary}</p> : null}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className={metaChip}><MapPin className="size-3.5" /> {locationLabel}</span>
+                {job.experience_level ? <span className={metaChip}><Sparkles className="size-3.5" /> {job.experience_level}</span> : null}
+                <span className={cn(metaChip, hasSalaryAmount && 'border-emerald-200 font-semibold text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300')}>
+                  <Banknote className="size-3.5" /> {compensationLabel}
+                </span>
+              </div>
+            </div>
 
-        <div className="space-y-4">
+            {/* Acciones */}
+            <div className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) p-4">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">Acciones</p>
+              <div className="mt-3 flex flex-col gap-2.5">
+                <p className="rounded-xl bg-primary-50 px-3 py-2 text-[0.78rem] font-medium text-primary-700 dark:bg-primary-500/12 dark:text-primary-300">
+                  Apply llega en la siguiente fase
+                </p>
+                {session.isAuthenticated ? (
+                  <Link className={actionPrimary} to={surfacePaths.public.jobApply(jobSlug)}>
+                    <SendHorizontal className="size-4" /> Apply now
+                  </Link>
+                ) : (
+                  <Link className={actionPrimary} to="/auth/sign-in">
+                    <SendHorizontal className="size-4" /> Inicia sesión para aplicar
+                  </Link>
+                )}
+                {session.isAuthenticated ? (
+                  <button
+                    type="button"
+                    className={actionOutline}
+                    onClick={() => saveMutation.mutate(!job.isSaved)}
+                    disabled={saveMutation.isPending || !candidateProfileQuery.data?.profile}
+                  >
+                    {job.isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
+                    {job.isSaved ? 'Quitar guardado' : 'Guardar vacante'}
+                  </button>
+                ) : null}
+                <Link className={actionOutline} to={surfacePaths.public.jobs}>
+                  <Eye className="size-4" /> Volver al discovery
+                </Link>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+
+      <motion.section variants={gridStagger} className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
+        <motion.div variants={cardReveal}>
           <Card>
-            <CardHeader>
-              <CardTitle>Company snapshot</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-(--app-text-muted)">
-              <p className="font-semibold text-(--app-text)">{job.company_profile?.display_name || 'Company'}</p>
-              {job.company_profile?.industry ? <p>{job.company_profile.industry}</p> : null}
-              {job.company_profile?.description ? <p>{job.company_profile.description}</p> : null}
+            <h2 className="inline-flex items-center gap-2 text-[0.95rem] font-semibold tracking-tight text-(--app-text)">
+              <FileText className="size-4 text-(--app-text-subtle)" /> Descripción completa
+            </h2>
+            <div className="mt-3 whitespace-pre-wrap text-[0.82rem] leading-6 text-(--app-text-muted)">
+              {job.description || 'La empresa aún no agregó una descripción detallada.'}
+            </div>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={gridStagger} className="space-y-4">
+          <motion.div variants={cardReveal}>
+            <Card>
+              <h2 className="inline-flex items-center gap-2 text-[0.95rem] font-semibold tracking-tight text-(--app-text)">
+                <Building2 className="size-4 text-(--app-text-subtle)" /> Resumen de la empresa
+              </h2>
+              <p className="mt-3 text-[0.85rem] font-semibold text-(--app-text)">{job.company_profile?.display_name || 'Empresa'}</p>
+              {job.company_profile?.industry ? <p className="mt-0.5 text-[0.78rem] text-(--app-text-muted)">{job.company_profile.industry}</p> : null}
+              {job.company_profile?.description ? <p className="mt-2 text-[0.8rem] leading-6 text-(--app-text-muted)">{job.company_profile.description}</p> : null}
               {job.company_profile?.website_url ? (
-                <a className={linkButtonClassName} href={job.company_profile.website_url} rel="noreferrer" target="_blank">
-                  Visitar website
+                <a className={cn(actionOutline, 'mt-3 w-auto px-3.5')} href={job.company_profile.website_url} rel="noreferrer" target="_blank">
+                  <Globe className="size-4" /> Visitar website
                 </a>
               ) : null}
-            </CardContent>
-          </Card>
+            </Card>
+          </motion.div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Preguntas screening</CardTitle>
-              <CardDescription>Quedan visibles desde ya, aunque el apply flow se active en la fase siguiente.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {job.job_screening_questions?.length ? (
-                job.job_screening_questions.map((question) => (
-                  <div key={question.id} className="rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-sm">
-                    <p className="font-semibold text-(--app-text)">{question.question_text}</p>
-                    <p className="mt-1 text-(--app-text-muted)">
-                      {question.answer_type} {question.is_required ? '· requerida' : '· opcional'}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-(--app-text-muted)">Esta vacante no tiene screening configurado todavia.</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-    </div>
+          <motion.div variants={cardReveal}>
+            <Card>
+              <h2 className="inline-flex items-center gap-2 text-[0.95rem] font-semibold tracking-tight text-(--app-text)">
+                <HelpCircle className="size-4 text-(--app-text-subtle)" /> Preguntas de filtrado
+              </h2>
+              <p className="mt-1 text-[0.78rem] text-(--app-text-muted)">Visibles desde ya; las responderás al aplicar a la vacante.</p>
+              <div className="mt-3 space-y-2">
+                {job.job_screening_questions?.length ? (
+                  job.job_screening_questions.map((question) => (
+                    <div key={question.id} className="flex items-start gap-2 rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3.5 py-2.5 text-[0.82rem]">
+                      <FileText className="mt-0.5 size-4 shrink-0 text-(--app-text-subtle)" />
+                      <span>
+                        <span className="block font-medium text-(--app-text)">{question.question_text}</span>
+                        <span className="mt-0.5 block text-[0.72rem] text-(--app-text-subtle)">{question.is_required ? 'Requerida' : 'Opcional'}</span>
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-[0.8rem] text-(--app-text-muted)">Esta vacante no tiene preguntas de filtrado.</p>
+                )}
+              </div>
+            </Card>
+          </motion.div>
+        </motion.div>
+      </motion.section>
+    </motion.div>
   )
 }

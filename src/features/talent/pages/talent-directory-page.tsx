@@ -13,6 +13,7 @@ import {
   searchCandidateDirectory,
   type CandidateDirectoryRow
 } from '@/features/talent/lib/talent-api'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 
 function candidateInitials(candidate: CandidateDirectoryRow) {
   return candidate.display_name
@@ -44,6 +45,15 @@ export function TalentDirectoryPage() {
         countryCode
       })
   })
+
+  // En vivo: cuando un candidato activa su visibilidad o actualiza su perfil, el
+  // directorio se refresca solo para las empresas autorizadas. El prefijo de la
+  // key invalida todas las combinaciones de filtros activas.
+  useRealtimeSync(
+    'talent-directory',
+    [{ table: 'candidate_profiles', invalidate: [['talent-directory']] }],
+    { enabled: Boolean(tenantId) }
+  )
 
   const detailQuery = useQuery({
     queryKey: ['talent-directory-detail', tenantId, selectedCandidateProfileId],

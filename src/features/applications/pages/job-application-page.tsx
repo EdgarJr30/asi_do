@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -21,6 +21,7 @@ export function JobApplicationPage() {
   const { jobSlug = '' } = useParams()
   const navigate = useNavigate()
   const session = useAppSession()
+  const queryClient = useQueryClient()
   const [selectedResumeId, setSelectedResumeId] = useState('')
   const [coverLetter, setCoverLetter] = useState('')
   const [answers, setAnswers] = useState<Record<string, string>>({})
@@ -57,6 +58,8 @@ export function JobApplicationPage() {
       toast.success('Postulacion enviada', {
         description: 'Tu perfil y respuestas ya quedaron registradas para esta vacante.'
       })
+      // Refresca todas las listas de "mis aplicaciones" (overview, home, board) y el badge "Ya aplicaste".
+      await queryClient.invalidateQueries({ queryKey: ['applications', 'mine'] })
       await navigate(surfacePaths.candidate.applications)
     },
     onError: async (error) => {

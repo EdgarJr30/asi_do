@@ -21,6 +21,7 @@ import {
   upsertApplicationRating
 } from '@/features/pipeline/lib/pipeline-api'
 import { cn } from '@/lib/utils/cn'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 
 const STAGE_DOT_COLORS = ['bg-sky-500', 'bg-violet-500', 'bg-amber-500', 'bg-emerald-500', 'bg-rose-500', 'bg-indigo-500']
@@ -56,6 +57,17 @@ export function PipelineBoardPage() {
     enabled: Boolean(tenantId),
     queryFn: async () => fetchPipelineBoard(tenantId!)
   })
+
+  // En vivo: el tablero refleja al instante nuevas postulaciones o movimientos de
+  // etapa hechos por otra persona del equipo. RLS acota los eventos al tenant.
+  useRealtimeSync(
+    'pipeline-board',
+    [
+      { table: 'applications', invalidate: [['pipeline-board', tenantId]] },
+      { table: 'application_stage_history', invalidate: [['pipeline-board', tenantId]] }
+    ],
+    { enabled: Boolean(tenantId) }
+  )
 
   const activityQuery = useQuery({
     queryKey: ['pipeline-activity', selectedApplicationId],

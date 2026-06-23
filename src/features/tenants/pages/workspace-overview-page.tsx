@@ -40,9 +40,13 @@ const mutedPanelClassName =
   'rounded-[24px] border border-(--app-border) bg-(--app-surface-muted) p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]';
 
 function createEditorKey(bundle: WorkspaceBundle) {
+  // Clave de identidad estable: NO incluimos `updated_at` a propósito. Incluirlo
+  // hacía que cada guardado (perfil, logo, toggle "perfil público") cambiara la
+  // key y React remontara todo el editor, sintiéndose como recargar la app.
+  // Solo remontamos cuando cambia la cantidad de miembros o roles.
   return [
-    bundle.tenant.updated_at,
-    bundle.companyProfile?.updated_at ?? 'no-company-profile',
+    bundle.tenant.id,
+    bundle.companyProfile?.id ?? 'no-company-profile',
     bundle.memberships.length,
     bundle.roles.length,
   ].join(':');

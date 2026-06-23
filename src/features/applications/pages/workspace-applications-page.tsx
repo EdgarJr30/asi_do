@@ -9,6 +9,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { EmptyState } from '@/components/ui/empty-state'
 import { Select } from '@/components/ui/select'
 import { fetchPipelineBoard } from '@/features/pipeline/lib/pipeline-api'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 
 const STATUS_META: Record<string, { label: string; variant: 'default' | 'soft' | 'outline' }> = {
   submitted: { label: 'Aplicó', variant: 'outline' },
@@ -54,6 +55,16 @@ export function WorkspaceApplicationsPage() {
     enabled: Boolean(tenantId),
     queryFn: async () => fetchPipelineBoard(tenantId!)
   })
+
+  // En vivo: nuevas postulaciones y cambios de etapa aparecen sin recargar.
+  useRealtimeSync(
+    'workspace-applications',
+    [
+      { table: 'applications', invalidate: [['pipeline-board', tenantId]] },
+      { table: 'application_stage_history', invalidate: [['pipeline-board', tenantId]] }
+    ],
+    { enabled: Boolean(tenantId) }
+  )
 
   const stageNameById = useMemo(
     () => new Map((boardQuery.data?.stages ?? []).map((stage) => [stage.id, stage.name])),

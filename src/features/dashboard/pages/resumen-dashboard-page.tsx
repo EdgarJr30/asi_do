@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, BriefcaseBusiness, Settings, UsersRound } from 'lucide-react'
+import { ArrowRight, BriefcaseBusiness, CalendarClock, Send, Settings, UsersRound } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -11,12 +12,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Spinner } from '@/components/ui/loader'
-import { StatCard } from '@/components/ui/stat-card'
 import {
   fetchWorkspaceDashboardMetrics,
   type DashboardActivityItem,
   type DashboardRecentApplication
 } from '@/features/dashboard/lib/dashboard-api'
+import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cn } from '@/lib/utils/cn'
 
 function greetingForNow(date = new Date()) {
@@ -76,14 +78,29 @@ function scoreVariant(score: number) {
 export function ResumenDashboardPage() {
   const session = useAppSession()
   const navigate = useNavigate()
+  const shouldReduceMotion = useReducedMotion()
   const tenantId = session.activeTenantId
   const displayName = session.profile?.display_name ?? session.profile?.full_name ?? session.authUser?.email ?? 'equipo'
 
+  const dashboardKey = ['workspace', 'dashboard', tenantId] as const
   const metricsQuery = useQuery({
-    queryKey: ['workspace', 'dashboard', tenantId],
+    queryKey: dashboardKey,
     enabled: Boolean(tenantId),
     queryFn: async () => fetchWorkspaceDashboardMetrics(tenantId!)
   })
+
+  // En vivo: el panel se actualiza solo cuando entran postulaciones, cambian de
+  // etapa o se publican vacantes. RLS asegura que solo lleguen los cambios del
+  // tenant. Sin recargas manuales.
+  useRealtimeSync(
+    'workspace-dashboard',
+    [
+      { table: 'applications', invalidate: [dashboardKey] },
+      { table: 'application_stage_history', invalidate: [dashboardKey] },
+      { table: 'job_postings', invalidate: [dashboardKey] }
+    ],
+    { enabled: Boolean(tenantId) }
+  )
 
   const metrics = metricsQuery.data
   const maxFunnelCount = useMemo(
@@ -111,8 +128,16 @@ export function ResumenDashboardPage() {
     (metrics?.recentApplications.length ?? 0) === 0
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <motion.div
+      className="space-y-6"
+      variants={pageStagger}
+      initial={shouldReduceMotion ? false : 'hidden'}
+      animate="show"
+    >
+      <motion.div
+        variants={cardReveal}
+        className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
+      >
         <div className="space-y-1.5">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-(--app-text-subtle)">Dashboard · Resumen</p>
           <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">
@@ -126,148 +151,224 @@ export function ResumenDashboardPage() {
           </Button>
           <Button onClick={() => void navigate(surfacePaths.workspace.jobs)}>Publicar vacante</Button>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
-        <StatCard label="Vacantes abiertas" value={stats?.openJobs ?? '—'} helper="Publicadas y recibiendo aplicaciones" />
-        <StatCard label="Candidatos activos" value={stats?.activeCandidates ?? '—'} helper="En proceso, sin descartar ni contratar" />
-        <StatCard label="Entrevistas" value={stats?.interviews ?? '—'} helper="Candidatos en etapa de entrevista" />
-        <StatCard label="Ofertas enviadas" value={stats?.offers ?? '—'} helper="Esperando respuesta del candidato" />
-      </div>
+      <motion.div variants={gridStagger} className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
+        <motion.div variants={cardReveal} className="h-full">
+          <AccentStatCard
+            icon={BriefcaseBusiness}
+            accent="emerald"
+            label="Vacantes abiertas"
+            value={stats?.openJobs ?? '—'}
+            helper="Publicadas y recibiendo aplicaciones"
+          />
+        </motion.div>
+        <motion.div variants={cardReveal} className="h-full">
+          <AccentStatCard
+            icon={UsersRound}
+            accent="sky"
+            label="Candidatos activos"
+            value={stats?.activeCandidates ?? '—'}
+            helper="En proceso, sin descartar ni contratar"
+          />
+        </motion.div>
+        <motion.div variants={cardReveal} className="h-full">
+          <AccentStatCard
+            icon={CalendarClock}
+            accent="violet"
+            label="Entrevistas"
+            value={stats?.interviews ?? '—'}
+            helper="Candidatos en etapa de entrevista"
+          />
+        </motion.div>
+        <motion.div variants={cardReveal} className="h-full">
+          <AccentStatCard
+            icon={Send}
+            accent="amber"
+            label="Ofertas enviadas"
+            value={stats?.offers ?? '—'}
+            helper="Esperando respuesta del candidato"
+          />
+        </motion.div>
+      </motion.div>
 
       {isFirstRun ? (
-        <Card className="border-primary-200/70 bg-primary-50/50 dark:border-primary-500/25 dark:bg-primary-500/10">
-          <CardHeader>
-            <CardTitle>Primeros pasos</CardTitle>
-            <CardDescription>Configura tu reclutamiento en minutos. Empieza por aquí.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-3">
-            <FirstStepCard
-              icon={BriefcaseBusiness}
-              title="Publica tu primera vacante"
-              description="Crea una vacante y empieza a recibir postulaciones."
-              cta="Publicar vacante"
-              onClick={() => void navigate(surfacePaths.workspace.jobs)}
-            />
-            <FirstStepCard
-              icon={UsersRound}
-              title="Explora el banco de talento"
-              description="Descubre personas abiertas a nuevas oportunidades."
-              cta="Ver talento"
-              onClick={() => void navigate(surfacePaths.workspace.talent)}
-            />
-            <FirstStepCard
-              icon={Settings}
-              title="Invita a tu equipo"
-              description="Configura accesos y roles para colaborar."
-              cta="Abrir configuración"
-              onClick={() => void navigate(surfacePaths.workspace.settings)}
-            />
-          </CardContent>
-        </Card>
+        <motion.div variants={cardReveal}>
+          <Card className="border-primary-200/70 bg-primary-50/50 dark:border-primary-500/25 dark:bg-primary-500/10">
+            <CardHeader>
+              <CardTitle>Primeros pasos</CardTitle>
+              <CardDescription>Configura tu reclutamiento en minutos. Empieza por aquí.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 md:grid-cols-3">
+              <FirstStepCard
+                icon={BriefcaseBusiness}
+                title="Publica tu primera vacante"
+                description="Crea una vacante y empieza a recibir postulaciones."
+                cta="Publicar vacante"
+                onClick={() => void navigate(surfacePaths.workspace.jobs)}
+              />
+              <FirstStepCard
+                icon={UsersRound}
+                title="Explora el banco de talento"
+                description="Descubre personas abiertas a nuevas oportunidades."
+                cta="Ver talento"
+                onClick={() => void navigate(surfacePaths.workspace.talent)}
+              />
+              <FirstStepCard
+                icon={Settings}
+                title="Invita a tu equipo"
+                description="Configura accesos y roles para colaborar."
+                cta="Abrir configuración"
+                onClick={() => void navigate(surfacePaths.workspace.settings)}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+      <motion.div variants={gridStagger} className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+        <motion.div variants={cardReveal} className="h-full">
+          <Card className="h-full">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <CardTitle>Embudo de contratación</CardTitle>
+                  <CardDescription>Distribución de candidatos por etapa del pipeline.</CardDescription>
+                </div>
+                <Button className="h-9 rounded-full px-3 text-xs" variant="ghost" onClick={() => void navigate(surfacePaths.workspace.pipeline)}>
+                  Ver detalles
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {metricsQuery.isLoading ? (
+                <LoadingRow label="Cargando embudo…" />
+              ) : metrics && metrics.funnel.length > 0 ? (
+                <div className="space-y-3.5">
+                  {metrics.funnel.map((stage) => (
+                    <div key={stage.stageId} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-(--app-text)">{stage.name}</span>
+                        <span className="tabular-nums text-(--app-text-muted)">
+                          {stage.count} · {stage.percent}%
+                        </span>
+                      </div>
+                      <div className="h-2.5 overflow-hidden rounded-full bg-(--app-surface-muted)">
+                        <motion.div
+                          className="h-full rounded-full bg-primary-500"
+                          initial={shouldReduceMotion ? false : { width: 0 }}
+                          animate={{ width: `${Math.max(2, Math.round((stage.count / maxFunnelCount) * 100))}%` }}
+                          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState title="Sin datos del embudo" description="Aún no hay aplicaciones para mostrar la distribución por etapa." />
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={cardReveal} className="h-full">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle>Actividad reciente</CardTitle>
+              <CardDescription>Últimos eventos relevantes de tu pipeline.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {metricsQuery.isLoading ? (
+                <LoadingRow label="Cargando actividad…" />
+              ) : metrics && metrics.recentActivity.length > 0 ? (
+                <ul className="space-y-3.5">
+                  {metrics.recentActivity.map((item) => (
+                    <ActivityRow key={item.id} item={item} />
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState title="Sin actividad" description="Cuando tu equipo trabaje el pipeline, lo verás aquí." />
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
+
+      <motion.div variants={cardReveal}>
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <CardTitle>Embudo de contratación</CardTitle>
-                <CardDescription>Distribución de candidatos por etapa del pipeline.</CardDescription>
+                <CardTitle>Aplicaciones recientes</CardTitle>
+                <CardDescription>Las postulaciones más nuevas de tu empresa.</CardDescription>
               </div>
-              <Button className="h-9 rounded-full px-3 text-xs" variant="ghost" onClick={() => void navigate(surfacePaths.workspace.pipeline)}>
-                Ver detalles
+              <Button className="h-9 rounded-full px-3 text-xs" variant="ghost" onClick={() => void navigate(surfacePaths.workspace.applications)}>
+                Ver todas
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {metricsQuery.isLoading ? (
-              <LoadingRow label="Cargando embudo…" />
-            ) : metrics && metrics.funnel.length > 0 ? (
-              <div className="space-y-3.5">
-                {metrics.funnel.map((stage) => (
-                  <div key={stage.stageId} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-(--app-text)">{stage.name}</span>
-                      <span className="tabular-nums text-(--app-text-muted)">
-                        {stage.count} · {stage.percent}%
-                      </span>
-                    </div>
-                    <div className="h-2.5 overflow-hidden rounded-full bg-(--app-surface-muted)">
-                      <div
-                        className="h-full rounded-full bg-primary-500 transition-[width] duration-500"
-                        style={{ width: `${Math.max(2, Math.round((stage.count / maxFunnelCount) * 100))}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+              <LoadingRow label="Cargando aplicaciones…" />
+            ) : metrics && metrics.recentApplications.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[34rem] border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-(--app-border) text-left text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle)">
+                      <th className="py-2.5 pr-3 font-semibold">Candidato</th>
+                      <th className="px-3 py-2.5 font-semibold">Posición</th>
+                      <th className="px-3 py-2.5 font-semibold">Etapa</th>
+                      <th className="px-3 py-2.5 font-semibold">Score</th>
+                      <th className="py-2.5 pl-3 text-right font-semibold">Aplicó</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {metrics.recentApplications.map((application) => (
+                      <ApplicationRow key={application.applicationId} application={application} />
+                    ))}
+                  </tbody>
+                </table>
               </div>
             ) : (
-              <EmptyState title="Sin datos del embudo" description="Aún no hay aplicaciones para mostrar la distribución por etapa." />
+              <EmptyState title="Sin aplicaciones" description="Aún no hay postulaciones recientes en tus vacantes." />
             )}
           </CardContent>
         </Card>
+      </motion.div>
+    </motion.div>
+  )
+}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Actividad reciente</CardTitle>
-            <CardDescription>Últimos eventos relevantes de tu pipeline.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {metricsQuery.isLoading ? (
-              <LoadingRow label="Cargando actividad…" />
-            ) : metrics && metrics.recentActivity.length > 0 ? (
-              <ul className="space-y-3.5">
-                {metrics.recentActivity.map((item) => (
-                  <ActivityRow key={item.id} item={item} />
-                ))}
-              </ul>
-            ) : (
-              <EmptyState title="Sin actividad" description="Cuando tu equipo trabaje el pipeline, lo verás aquí." />
-            )}
-          </CardContent>
-        </Card>
+const accentClassName = {
+  emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/12 dark:text-emerald-300',
+  sky: 'bg-sky-50 text-sky-600 dark:bg-sky-500/12 dark:text-sky-300',
+  violet: 'bg-violet-50 text-violet-600 dark:bg-violet-500/12 dark:text-violet-300',
+  amber: 'bg-amber-50 text-amber-600 dark:bg-amber-500/12 dark:text-amber-300'
+} as const
+
+function AccentStatCard({
+  icon: Icon,
+  accent,
+  label,
+  value,
+  helper
+}: {
+  icon: LucideIcon
+  accent: keyof typeof accentClassName
+  label: ReactNode
+  value: ReactNode
+  helper?: ReactNode
+}) {
+  return (
+    <div className="h-full rounded-panel border border-(--app-border) bg-(--app-surface-elevated) px-3.5 py-3 shadow-[0_10px_26px_rgba(10,18,36,0.06)] dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">{label}</p>
+        <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-full', accentClassName[accent])}>
+          <Icon className="size-4" />
+        </span>
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <CardTitle>Aplicaciones recientes</CardTitle>
-              <CardDescription>Las postulaciones más nuevas de tu empresa.</CardDescription>
-            </div>
-            <Button className="h-9 rounded-full px-3 text-xs" variant="ghost" onClick={() => void navigate(surfacePaths.workspace.applications)}>
-              Ver todas
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {metricsQuery.isLoading ? (
-            <LoadingRow label="Cargando aplicaciones…" />
-          ) : metrics && metrics.recentApplications.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[34rem] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-(--app-border) text-left text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle)">
-                    <th className="py-2.5 pr-3 font-semibold">Candidato</th>
-                    <th className="px-3 py-2.5 font-semibold">Posición</th>
-                    <th className="px-3 py-2.5 font-semibold">Etapa</th>
-                    <th className="px-3 py-2.5 font-semibold">Score</th>
-                    <th className="py-2.5 pl-3 text-right font-semibold">Aplicó</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {metrics.recentApplications.map((application) => (
-                    <ApplicationRow key={application.applicationId} application={application} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <EmptyState title="Sin aplicaciones" description="Aún no hay postulaciones recientes en tus vacantes." />
-          )}
-        </CardContent>
-      </Card>
+      <p className="mt-2 text-[1.15rem] font-semibold tracking-tight text-(--app-text) sm:text-[1.3rem]">{value}</p>
+      {helper ? <p className="mt-1.5 text-[0.8rem] leading-4.5 text-(--app-text-muted)">{helper}</p> : null}
     </div>
   )
 }

@@ -38,6 +38,7 @@ import { getPublicJobBySlug, listPublicJobs, toggleSavedJob, type JobPostingBund
 import { classifySector, getSectorLabel, sectorDefinitions } from '@/features/jobs/lib/sectors'
 import { getCompensationTypeLabel, getOpportunityTypeLabel, opportunityTypeOptions } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cn } from '@/lib/utils/cn'
 import { cardReveal, gridStagger } from '@/shared/ui/card-motion'
 
@@ -155,6 +156,12 @@ export function PublicJobBoard() {
     queryFn: async () => listPublicJobs({ candidateProfileId })
   })
 
+  // En vivo: cuando una empresa publica/edita una vacante, el board se refresca
+  // solo, sin que el candidato tenga que recargar. RLS acota qué filas llegan.
+  useRealtimeSync('public-job-board', [
+    { table: 'job_postings', invalidate: [PUBLIC_JOBS_QUERY_KEY] }
+  ])
+
   const applicationsQuery = useQuery({
     queryKey: ['applications', 'mine', 'jobs-board', session.authUser?.id ?? null],
     enabled: session.isAuthenticated,
@@ -210,7 +217,7 @@ export function PublicJobBoard() {
   const totalPages = Math.max(1, Math.ceil(filteredJobs.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
   const pageJobs = filteredJobs.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
-  const detailJob = filteredJobs.find((job) => job.id === selectedJobId) ?? pageJobs[0] ?? null
+  const detailJob = selectedJobId ? filteredJobs.find((job) => job.id === selectedJobId) ?? null : null
 
   const activeChips = [
     filters.search ? { key: 'search', label: `"${filters.search}"`, clear: () => patchFilters({ search: '' }) } : null,
@@ -424,7 +431,17 @@ export function PublicJobBoard() {
                   savePending={saveJobMutation.isPending}
                 />
               </motion.div>
-            ) : null}
+            ) : (
+              <div className="hidden min-h-[320px] flex-col items-center justify-center rounded-xl border border-dashed border-(--app-border) bg-(--app-surface) px-6 py-12 text-center lg:flex">
+                <span className="flex size-11 items-center justify-center rounded-full bg-(--app-surface-muted) text-(--app-text-subtle)">
+                  <Briefcase aria-hidden className="size-5" />
+                </span>
+                <p className="mt-3 text-[0.9rem] font-semibold text-(--app-text)">Selecciona una vacante</p>
+                <p className="mt-1 max-w-xs text-[0.8rem] text-(--app-text-muted)">
+                  Elige una oferta del listado para ver los detalles, la empresa y aplicar.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

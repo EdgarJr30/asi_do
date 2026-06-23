@@ -1,8 +1,26 @@
-import { type Dispatch, type SetStateAction, useState } from 'react'
+import { type Dispatch, type ReactNode, type SetStateAction, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { motion, useReducedMotion } from 'motion/react'
+import {
+  Briefcase,
+  ChevronDown,
+  Download,
+  Eye,
+  FileText,
+  GraduationCap,
+  Languages as LanguagesIcon,
+  Lightbulb,
+  Link2,
+  Plus,
+  Sparkles,
+  Upload,
+  UserRound
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -12,9 +30,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/loader'
 import { Input } from '@/components/ui/input'
-import { PageHeader } from '@/components/ui/page-header'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { cardReveal, pageStagger } from '@/shared/ui/card-motion'
+import { cn } from '@/lib/utils/cn'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
 import { ProfileOnboardingFlow } from '@/features/candidate-profile/components/profile-onboarding-flow'
@@ -137,8 +156,14 @@ function toLinkDrafts(bundle: CandidateProfileBundle) {
 }
 
 function createEditorKey(bundle: CandidateProfileBundle) {
+  // Clave de identidad estable: NO incluimos `updated_at` a propósito. Si lo
+  // incluyéramos, cada guardado (p. ej. el toggle de visibilidad) cambiaría la
+  // key y React remontaría todo el editor, lo que se siente como recargar la app
+  // (resetea formulario, pestaña activa, scroll y animaciones). Solo remontamos
+  // cuando cambia la cantidad de elementos de una colección, para resembrar el
+  // estado local de esos arrays tras agregar/eliminar.
   return [
-    bundle.profile?.updated_at ?? 'no-profile',
+    bundle.profile?.id ?? 'no-profile',
     bundle.resumes.length,
     bundle.experiences.length,
     bundle.educations.length,
@@ -156,6 +181,141 @@ function updateCollectionItem<T extends { id: string }>(
   setter((current) => current.map((item) => (item.id === itemId ? { ...item, ...patch } : item)))
 }
 
+const updatedAtFormatter = new Intl.DateTimeFormat('es', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+})
+
+function formatUpdatedAt(value?: string | null) {
+  if (!value) {
+    return 'Sin guardar todavía'
+  }
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? 'Sin guardar todavía' : updatedAtFormatter.format(date)
+}
+
+type ProfileTab = 'general' | 'cv' | 'experience' | 'skills'
+
+const PROFILE_TABS: Array<{ id: ProfileTab; label: string }> = [
+  { id: 'general', label: 'Perfil general' },
+  { id: 'cv', label: 'CV y visibilidad' },
+  { id: 'experience', label: 'Experiencia y educación' },
+  { id: 'skills', label: 'Skills, idiomas y links' }
+]
+
+function CircularProgress({ value }: { value: number }) {
+  const radius = 26
+  const circumference = 2 * Math.PI * radius
+  const clamped = Math.max(0, Math.min(100, value))
+  const offset = circumference - (clamped / 100) * circumference
+  return (
+    <div className="relative size-16 shrink-0">
+      <svg className="size-16 -rotate-90" viewBox="0 0 64 64" aria-hidden>
+        <circle cx="32" cy="32" r={radius} fill="none" strokeWidth="6" className="stroke-(--app-surface-muted)" />
+        <circle
+          cx="32"
+          cy="32"
+          r={radius}
+          fill="none"
+          strokeWidth="6"
+          strokeLinecap="round"
+          className="stroke-primary-500 transition-[stroke-dashoffset] duration-700"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[0.82rem] font-semibold text-(--app-text)">{clamped}%</span>
+    </div>
+  )
+}
+
+function ProfileStatTile({ icon: Icon, value, label }: { icon: LucideIcon; value: ReactNode; label: string }) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface) px-3 py-2.5">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-(--app-surface-muted) text-(--app-text-subtle)">
+        <Icon className="size-4" />
+      </span>
+      <div className="leading-tight">
+        <p className="text-[0.95rem] font-semibold text-(--app-text)">{value}</p>
+        <p className="text-[0.66rem] text-(--app-text-muted)">{label}</p>
+      </div>
+    </div>
+  )
+}
+
+function AccordionSection({
+  icon: Icon,
+  title,
+  description,
+  actionLabel,
+  onAdd,
+  defaultOpen = false,
+  children
+}: {
+  icon: LucideIcon
+  title: string
+  description: string
+  actionLabel: string
+  onAdd: () => void
+  defaultOpen?: boolean
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div className="overflow-hidden rounded-xl border border-(--app-border)">
+      <div className="flex items-center gap-3 px-3.5 py-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+          <Icon className="size-4" />
+        </span>
+        <button type="button" onClick={() => setOpen((value) => !value)} className="min-w-0 flex-1 text-left">
+          <h3 className="text-[0.9rem] font-semibold tracking-tight text-(--app-text)">{title}</h3>
+          <p className="truncate text-[0.74rem] text-(--app-text-muted)">{description}</p>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onAdd()
+            setOpen(true)
+          }}
+          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-(--app-border) bg-(--app-surface) px-3 text-[0.74rem] font-semibold text-primary-600 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:text-primary-300 dark:hover:border-primary-400"
+        >
+          <Plus className="size-3.5" /> {actionLabel}
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          aria-label={open ? 'Contraer' : 'Expandir'}
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted)"
+        >
+          <ChevronDown className={cn('size-4 transition-transform', open && 'rotate-180')} />
+        </button>
+      </div>
+      {open ? <div className="space-y-4 border-t border-(--app-border) p-3.5">{children}</div> : null}
+    </div>
+  )
+}
+
+function QuickAction({ icon: Icon, title, description, onClick }: { icon: LucideIcon; title: string; description: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-start gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface) px-3 py-2.5 text-left transition-colors hover:border-primary-200 hover:bg-(--app-surface-muted)"
+    >
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-(--app-surface-muted) text-(--app-text-subtle)">
+        <Icon className="size-4" />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[0.82rem] font-semibold text-(--app-text)">{title}</span>
+        <span className="block text-[0.72rem] text-(--app-text-muted)">{description}</span>
+      </span>
+    </button>
+  )
+}
+
 function CandidateProfileEditor({
   bundle,
   session
@@ -164,6 +324,9 @@ function CandidateProfileEditor({
   session: ReturnType<typeof useAppSession>
 }) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const shouldReduceMotion = useReducedMotion()
+  const [activeTab, setActiveTab] = useState<ProfileTab>('general')
   const [experiences, setExperiences] = useState<CandidateExperienceDraft[]>(() => toExperienceDrafts(bundle))
   const [educations, setEducations] = useState<CandidateEducationDraft[]>(() => toEducationDrafts(bundle))
   const [skills, setSkills] = useState<CandidateSkillDraft[]>(() => toSkillDrafts(bundle))
@@ -380,197 +543,276 @@ function CandidateProfileEditor({
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Candidate profile"
-        title="Mantén un perfil profesional listo para aplicar y para ser encontrado"
-        description="Tu historial, CV y visibilidad viven aquí para que postularte o compartir tu perfil requiera menos esfuerzo."
-      />
+  const watched = form.watch()
+  const skillCount = sanitizeCandidateSkillList(skills).length
+  const languageCount = sanitizeCandidateLanguageList(languages).length
+  const experienceCount = sanitizeCandidateExperienceList(experiences).length
+  const completionItems = [
+    Boolean(watched.headline?.trim()),
+    Boolean(watched.summary?.trim()),
+    Boolean(watched.cityName?.trim() || watched.countryCode?.trim()),
+    resumes.length > 0,
+    experienceCount > 0,
+    skillCount > 0,
+    isVisibleToRecruiters
+  ]
+  const completionPercent = Math.round((completionItems.filter(Boolean).length / completionItems.length) * 100)
+  const saveAll = form.handleSubmit((values) => saveMutation.mutate(values))
 
-      <Card>
-          <CardHeader>
-            <CardTitle>Estado del perfil</CardTitle>
-            <CardDescription>Revisa en un vistazo qué tan completo está tu perfil y si hoy puede aparecer en el directorio.</CardDescription>
-          </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">{resumes.length > 0 ? `${resumes.length} CVs` : 'Sin CV'}</Badge>
-            <Badge variant="outline">{sanitizeCandidateSkillList(skills).length} skills</Badge>
-            <Badge variant="outline">{sanitizeCandidateLanguageList(languages).length} idiomas</Badge>
-            <Badge variant="outline">{sanitizeCandidateExperienceList(experiences).length} experiencias</Badge>
-            <Badge variant={isVisibleToRecruiters ? 'soft' : 'outline'}>
-              {isVisibleToRecruiters ? 'Visible para empresas' : 'No visible en directorio'}
-            </Badge>
-          </div>
-          <div className="mt-4 rounded-[24px] border px-4 py-4">
-            <label className="flex items-start gap-3 text-sm text-(--app-text-muted)">
-              <input
-                type="checkbox"
-                checked={isVisibleToRecruiters}
+  return (
+    <motion.div
+      className="space-y-5"
+      variants={pageStagger}
+      initial={shouldReduceMotion ? false : 'hidden'}
+      animate="show"
+    >
+      <motion.header variants={cardReveal} className="space-y-3">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-[0.7rem] font-semibold text-primary-700 dark:border-primary-500/30 dark:bg-primary-500/12 dark:text-primary-300">
+          <UserRound className="size-3.5" /> Candidate profile
+        </span>
+        <div className="space-y-1.5">
+          <h1 className="max-w-2xl text-xl font-semibold leading-tight tracking-tight text-(--app-text) sm:text-[1.7rem]">
+            Mantén un perfil profesional listo para aplicar
+          </h1>
+          <p className="max-w-2xl text-[0.85rem] text-(--app-text-muted)">
+            Tu historial, CV y visibilidad viven aquí para que postularte o compartir tu perfil requiera menos esfuerzo.
+          </p>
+        </div>
+      </motion.header>
+
+      {/* Estado del perfil */}
+      <motion.div variants={cardReveal}>
+        <Card>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+                <UserRound className="size-5" />
+              </span>
+              <div>
+                <h2 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Estado del perfil</h2>
+                <p className="text-[0.78rem] text-(--app-text-muted)">Revisa tu información y controla cómo te ven las empresas.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 py-2.5">
+              <div className="text-right">
+                <p className="text-[0.82rem] font-semibold text-(--app-text)">Visible para empresas</p>
+                <p className="text-[0.7rem] text-(--app-text-muted)">
+                  {isVisibleToRecruiters ? 'Tu perfil es visible en el directorio.' : 'Tu perfil está oculto del directorio.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isVisibleToRecruiters}
+                aria-label="Visible para empresas"
                 disabled={visibilityMutation.isPending}
-                onChange={(event) => {
-                  const nextValue = event.target.checked
+                onClick={() => {
+                  const nextValue = !isVisibleToRecruiters
                   setIsVisibleToRecruiters(nextValue)
                   visibilityMutation.mutate(nextValue)
                 }}
-              />
-              <span>
-                Permitir que empresas autorizadas encuentren este perfil en el directorio de talento.
-                <span className="mt-1 block text-xs text-(--app-text-subtle)">
-                  Esto no afecta tu capacidad de aplicar a vacantes si prefieres mantener el perfil oculto.
-                </span>
-              </span>
-            </label>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Perfil profesional</CardTitle>
-            <CardDescription>Resumen reutilizable para futuras aplicaciones y nuevas oportunidades.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form className="space-y-4" onSubmit={(event) => void form.handleSubmit((values) => saveMutation.mutate(values))(event)}>
-              <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>Titular profesional</span>
-                <Input placeholder="Ej. Coordinador de proyectos" {...form.register('headline')} />
-                <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.headline?.message}</p>
-              </label>
-
-              <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>Rol objetivo</span>
-                <Input placeholder="Ej. Talent Acquisition Lead" {...form.register('desiredRole')} />
-                <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.desiredRole?.message}</p>
-              </label>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Ciudad</span>
-                  <Input placeholder="Santo Domingo" {...form.register('cityName')} />
-                </label>
-                <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>País</span>
-                  <Input maxLength={2} placeholder="DO" {...form.register('countryCode')} />
-                  <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.countryCode?.message}</p>
-                </label>
-              </div>
-
-              <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>Resumen profesional</span>
-                <Textarea
-                  placeholder="Resume experiencia, fortalezas, logros y el tipo de oportunidad que quieres atraer."
-                  {...form.register('summary')}
+                className={cn(
+                  'relative h-6 w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) disabled:opacity-60',
+                  isVisibleToRecruiters ? 'bg-primary-500' : 'bg-(--app-surface-muted)'
+                )}
+              >
+                <span
+                  className={cn(
+                    'absolute top-0.5 size-5 rounded-full bg-white shadow transition-all',
+                    isVisibleToRecruiters ? 'left-[22px]' : 'left-0.5'
+                  )}
                 />
-                <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.summary?.message}</p>
-              </label>
-
-              <Button disabled={saveMutation.isPending} type="submit">
-                {saveMutation.isPending ? 'Guardando perfil candidato...' : 'Guardar perfil profesional'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>CV privado</CardTitle>
-            <CardDescription>
-              Sube versiones reutilizables. Cada archivo se guarda de forma privada y mantiene un límite de {MAX_UPLOAD_SIZE_LABEL}.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-              <span>Subir nuevo CV</span>
-              <Input
-                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                type="file"
-                onChange={(event) => {
-                  const file = event.target.files?.[0]
-
-                  if (file) {
-                    setResumeFileError(null)
-                    uploadResumeMutation.mutate(file)
-                  }
-
-                  event.currentTarget.value = ''
-                }}
-              />
-              <p className="text-xs text-zinc-500">
-                Acepta PDF, DOC y DOCX. Si pesa más de {MAX_UPLOAD_SIZE_LABEL}, se rechazará con el peso detectado.
-              </p>
-              {resumeFileError ? <p className="text-xs text-rose-600 dark:text-rose-300">{resumeFileError}</p> : null}
-            </label>
-
-            <div className="space-y-3">
-              {resumes.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-zinc-300 px-4 py-6 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                  Todavia no has subido CVs. El primero quedara como principal.
-                </div>
-              ) : (
-                resumes.map((resume) => (
-                  <div
-                    key={resume.id}
-                    className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/80"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{resume.filename}</p>
-                        <p className="mt-1 text-xs text-zinc-500">
-                          {normalizeCandidateResumeLabel(resume.mime_type)} · {(resume.file_size_bytes / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </div>
-                      {resume.is_default ? <Badge variant="soft">Principal</Badge> : <Badge variant="outline">Secundario</Badge>}
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button variant="outline" onClick={() => void openResume(resume.storage_path)}>
-                        Abrir
-                      </Button>
-                      {!resume.is_default ? (
-                        <Button
-                          variant="outline"
-                          onClick={() => setDefaultResumeMutation.mutate(resume.id)}
-                          disabled={setDefaultResumeMutation.isPending}
-                        >
-                          Usar como principal
-                        </Button>
-                      ) : null}
-                      <Button
-                        variant="ghost"
-                        onClick={() => deleteResumeMutation.mutate(resume)}
-                        disabled={deleteResumeMutation.isPending}
-                      >
-                        Eliminar
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              )}
+              </button>
             </div>
-          </CardContent>
+          </div>
+          <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+            <ProfileStatTile icon={FileText} value={resumes.length} label="CV" />
+            <ProfileStatTile icon={Sparkles} value={skillCount} label="Skills" />
+            <ProfileStatTile icon={LanguagesIcon} value={languageCount} label="Idiomas" />
+            <ProfileStatTile icon={Briefcase} value={experienceCount} label="Experiencia" />
+          </div>
         </Card>
-      </div>
+      </motion.div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Experiencia y educacion</CardTitle>
-            <CardDescription>Organiza antecedentes laborales y académicos en bloques cortos y fáciles de actualizar.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Experiencia</h3>
-                <Button variant="outline" onClick={() => setExperiences((current) => [...current, createEmptyCandidateExperience()])}>
-                  Agregar experiencia
-                </Button>
+      {/* Tabs */}
+      <motion.div variants={cardReveal} className="flex flex-wrap gap-1.5 rounded-xl border border-(--app-border) bg-(--app-surface) p-1.5">
+        {PROFILE_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            aria-current={activeTab === tab.id ? 'page' : undefined}
+            className={cn(
+              'rounded-lg px-3 py-1.5 text-[0.8rem] font-semibold transition-colors',
+              activeTab === tab.id
+                ? 'bg-primary-600 text-white'
+                : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </motion.div>
+
+      <div className="grid items-start gap-4 xl:grid-cols-[1.6fr_0.9fr]">
+        {/* Panel principal */}
+        <motion.div variants={cardReveal} className="space-y-4">
+          {activeTab === 'general' ? (
+            <Card>
+              <h2 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Perfil general</h2>
+              <p className="text-[0.78rem] text-(--app-text-muted)">Resumen reutilizable para futuras aplicaciones y nuevas oportunidades.</p>
+              <div className="mt-4 space-y-4">
+                <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
+                  <span>Titular profesional</span>
+                  <Input placeholder="Ej. Coordinador de proyectos" {...form.register('headline')} />
+                  <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{form.formState.errors.headline?.message}</p>
+                </label>
+
+                <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
+                  <span>Rol objetivo</span>
+                  <Input placeholder="Ej. Talent Acquisition Lead" {...form.register('desiredRole')} />
+                  <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{form.formState.errors.desiredRole?.message}</p>
+                </label>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
+                    <span>Ciudad</span>
+                    <Input placeholder="Santo Domingo" {...form.register('cityName')} />
+                  </label>
+                  <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
+                    <span>País</span>
+                    <Input maxLength={2} placeholder="DO" {...form.register('countryCode')} />
+                    <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{form.formState.errors.countryCode?.message}</p>
+                  </label>
+                </div>
+
+                <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
+                  <span>Resumen profesional</span>
+                  <Textarea
+                    placeholder="Resume experiencia, fortalezas, logros y el tipo de oportunidad que quieres atraer."
+                    {...form.register('summary')}
+                  />
+                  <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{form.formState.errors.summary?.message}</p>
+                </label>
               </div>
-              <div className="space-y-4">
+            </Card>
+          ) : null}
+
+          {activeTab === 'cv' ? (
+            <Card>
+              <h2 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">CV y visibilidad</h2>
+              <p className="text-[0.78rem] text-(--app-text-muted)">
+                Sube versiones reutilizables (privadas, límite de {MAX_UPLOAD_SIZE_LABEL}) y controla si apareces en el directorio.
+              </p>
+              <div className="mt-4 space-y-4">
+                <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
+                  <span>Subir nuevo CV</span>
+                  <Input
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    type="file"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0]
+
+                      if (file) {
+                        setResumeFileError(null)
+                        uploadResumeMutation.mutate(file)
+                      }
+
+                      event.currentTarget.value = ''
+                    }}
+                  />
+                  <p className="text-[0.72rem] text-(--app-text-subtle)">
+                    Acepta PDF, DOC y DOCX. Si pesa más de {MAX_UPLOAD_SIZE_LABEL}, se rechazará con el peso detectado.
+                  </p>
+                  {resumeFileError ? <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{resumeFileError}</p> : null}
+                </label>
+
+                <div className="space-y-2.5">
+                  {resumes.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-(--app-border) px-4 py-6 text-[0.8rem] text-(--app-text-muted)">
+                      Todavía no has subido CVs. El primero quedará como principal.
+                    </div>
+                  ) : (
+                    resumes.map((resume) => (
+                      <div key={resume.id} className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) p-3.5">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="flex items-start gap-2.5">
+                            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-(--app-surface) text-(--app-text-subtle)">
+                              <FileText className="size-4" />
+                            </span>
+                            <div>
+                              <p className="text-[0.85rem] font-semibold text-(--app-text)">{resume.filename}</p>
+                              <p className="mt-0.5 text-[0.72rem] text-(--app-text-muted)">
+                                {normalizeCandidateResumeLabel(resume.mime_type)} · {(resume.file_size_bytes / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                          {resume.is_default ? <Badge variant="soft">Principal</Badge> : <Badge variant="outline">Secundario</Badge>}
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button variant="outline" className="h-8 px-3 text-[0.78rem]" onClick={() => void openResume(resume.storage_path)}>
+                            Abrir
+                          </Button>
+                          {!resume.is_default ? (
+                            <Button
+                              variant="outline"
+                              className="h-8 px-3 text-[0.78rem]"
+                              onClick={() => setDefaultResumeMutation.mutate(resume.id)}
+                              disabled={setDefaultResumeMutation.isPending}
+                            >
+                              Usar como principal
+                            </Button>
+                          ) : null}
+                          <Button
+                            variant="ghost"
+                            className="h-8 px-3 text-[0.78rem]"
+                            onClick={() => deleteResumeMutation.mutate(resume)}
+                            disabled={deleteResumeMutation.isPending}
+                          >
+                            Eliminar
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <label className="flex items-start gap-3 rounded-xl border border-(--app-border) px-3.5 py-3 text-[0.8rem] text-(--app-text-muted)">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5"
+                    checked={isVisibleToRecruiters}
+                    disabled={visibilityMutation.isPending}
+                    onChange={(event) => {
+                      const nextValue = event.target.checked
+                      setIsVisibleToRecruiters(nextValue)
+                      visibilityMutation.mutate(nextValue)
+                    }}
+                  />
+                  <span>
+                    Permitir que empresas autorizadas encuentren este perfil en el directorio de talento.
+                    <span className="mt-1 block text-[0.72rem] text-(--app-text-subtle)">
+                      Esto no afecta tu capacidad de aplicar a vacantes si prefieres mantener el perfil oculto.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </Card>
+          ) : null}
+
+          {activeTab === 'experience' ? (
+            <div className="space-y-3">
+              <AccordionSection
+                icon={Briefcase}
+                title="Experiencia"
+                description="Organiza tu historial laboral y destaca tu impacto."
+                actionLabel="Agregar experiencia"
+                onAdd={() => setExperiences((current) => [...current, createEmptyCandidateExperience()])}
+                defaultOpen
+              >
                 {experiences.map((experience) => (
-                  <div key={experience.id} className="rounded-3xl border border-zinc-200 p-4 dark:border-zinc-800">
+                  <div key={experience.id} className="rounded-xl border border-(--app-border) p-3.5">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Input
                         placeholder="Empresa"
@@ -604,7 +846,7 @@ function CandidateProfileEditor({
                         onChange={(event) => updateCollectionItem(setExperiences, experience.id, { endDate: event.target.value })}
                       />
                     </div>
-                    <label className="mt-3 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    <label className="mt-3 flex items-center gap-2 text-[0.8rem] text-(--app-text-muted)">
                       <input
                         checked={experience.isCurrent}
                         type="checkbox"
@@ -626,6 +868,7 @@ function CandidateProfileEditor({
                     <div className="mt-3 flex justify-end">
                       <Button
                         variant="ghost"
+                        className="h-8 px-3 text-[0.78rem]"
                         onClick={() =>
                           setExperiences((current) =>
                             current.length === 1 ? [createEmptyCandidateExperience()] : current.filter((item) => item.id !== experience.id)
@@ -637,19 +880,17 @@ function CandidateProfileEditor({
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
+              </AccordionSection>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Educacion</h3>
-                <Button variant="outline" onClick={() => setEducations((current) => [...current, createEmptyCandidateEducation()])}>
-                  Agregar educacion
-                </Button>
-              </div>
-              <div className="space-y-4">
+              <AccordionSection
+                icon={GraduationCap}
+                title="Educación"
+                description="Tu formación académica y certificaciones."
+                actionLabel="Agregar educación"
+                onAdd={() => setEducations((current) => [...current, createEmptyCandidateEducation()])}
+              >
                 {educations.map((education) => (
-                  <div key={education.id} className="rounded-3xl border border-zinc-200 p-4 dark:border-zinc-800">
+                  <div key={education.id} className="rounded-xl border border-(--app-border) p-3.5">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Input
                         placeholder="Institucion"
@@ -680,7 +921,7 @@ function CandidateProfileEditor({
                         />
                       </div>
                     </div>
-                    <label className="mt-3 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    <label className="mt-3 flex items-center gap-2 text-[0.8rem] text-(--app-text-muted)">
                       <input
                         checked={education.isCurrent}
                         type="checkbox"
@@ -702,6 +943,7 @@ function CandidateProfileEditor({
                     <div className="mt-3 flex justify-end">
                       <Button
                         variant="ghost"
+                        className="h-8 px-3 text-[0.78rem]"
                         onClick={() =>
                           setEducations((current) =>
                             current.length === 1 ? [createEmptyCandidateEducation()] : current.filter((item) => item.id !== education.id)
@@ -713,133 +955,194 @@ function CandidateProfileEditor({
                     </div>
                   </div>
                 ))}
-              </div>
+              </AccordionSection>
             </div>
-          </CardContent>
-        </Card>
+          ) : null}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Skills, idiomas y links</CardTitle>
-            <CardDescription>Señales clave para matching, búsquedas de reclutadores y futuras postulaciones.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Skills</h3>
-                <Button variant="outline" onClick={() => setSkills((current) => [...current, createEmptyCandidateSkill()])}>
-                  Agregar skill
-                </Button>
-              </div>
-              {skills.map((skill) => (
-                <div key={skill.id} className="grid gap-3 rounded-3xl border border-zinc-200 p-4 dark:border-zinc-800 sm:grid-cols-[1fr_0.8fr_auto]">
-                  <Input
-                    placeholder="Skill"
-                    value={skill.skillName}
-                    onChange={(event) => updateCollectionItem(setSkills, skill.id, { skillName: event.target.value })}
-                  />
-                  <Input
-                    placeholder="Nivel"
-                    value={skill.proficiencyLabel}
-                    onChange={(event) => updateCollectionItem(setSkills, skill.id, { proficiencyLabel: event.target.value })}
-                  />
-                  <Button
-                    variant="ghost"
-                    onClick={() =>
-                      setSkills((current) => (current.length === 1 ? [createEmptyCandidateSkill()] : current.filter((item) => item.id !== skill.id)))
-                    }
-                  >
-                    Eliminar
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Idiomas</h3>
-                <Button variant="outline" onClick={() => setLanguages((current) => [...current, createEmptyCandidateLanguage()])}>
-                  Agregar idioma
-                </Button>
-              </div>
-              {languages.map((language) => (
-                <div key={language.id} className="grid gap-3 rounded-3xl border border-zinc-200 p-4 dark:border-zinc-800 sm:grid-cols-[1fr_0.8fr_auto]">
-                  <Input
-                    placeholder="Idioma"
-                    value={language.languageName}
-                    onChange={(event) => updateCollectionItem(setLanguages, language.id, { languageName: event.target.value })}
-                  />
-                  <Input
-                    placeholder="Nivel"
-                    value={language.proficiencyLabel}
-                    onChange={(event) => updateCollectionItem(setLanguages, language.id, { proficiencyLabel: event.target.value })}
-                  />
-                  <Button
-                    variant="ghost"
-                    onClick={() =>
-                      setLanguages((current) =>
-                        current.length === 1 ? [createEmptyCandidateLanguage()] : current.filter((item) => item.id !== language.id)
-                      )
-                    }
-                  >
-                    Eliminar
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Links</h3>
-                <Button variant="outline" onClick={() => setLinks((current) => [...current, createEmptyCandidateLink()])}>
-                  Agregar link
-                </Button>
-              </div>
-              {links.map((link) => (
-                <div key={link.id} className="space-y-3 rounded-3xl border border-zinc-200 p-4 dark:border-zinc-800">
-                  <div className="grid gap-3 sm:grid-cols-[0.7fr_1fr]">
-                    <Select
-                      value={link.linkType}
-                      onChange={(event) => updateCollectionItem(setLinks, link.id, { linkType: event.target.value as CandidateLinkDraft['linkType'] })}
-                    >
-                      <option value="other">Other</option>
-                      <option value="portfolio">Portfolio</option>
-                      <option value="linkedin">LinkedIn</option>
-                      <option value="github">GitHub</option>
-                      <option value="website">Website</option>
-                    </Select>
+          {activeTab === 'skills' ? (
+            <div className="space-y-3">
+              <AccordionSection
+                icon={Sparkles}
+                title="Skills"
+                description="Habilidades técnicas y blandas que te representan."
+                actionLabel="Agregar skill"
+                onAdd={() => setSkills((current) => [...current, createEmptyCandidateSkill()])}
+                defaultOpen
+              >
+                {skills.map((skill) => (
+                  <div key={skill.id} className="grid gap-3 rounded-xl border border-(--app-border) p-3.5 sm:grid-cols-[1fr_0.8fr_auto]">
                     <Input
-                      placeholder="Etiqueta"
-                      value={link.label}
-                      onChange={(event) => updateCollectionItem(setLinks, link.id, { label: event.target.value })}
+                      placeholder="Skill"
+                      value={skill.skillName}
+                      onChange={(event) => updateCollectionItem(setSkills, skill.id, { skillName: event.target.value })}
                     />
-                  </div>
-                  <Input
-                    placeholder="https://..."
-                    value={link.url}
-                    onChange={(event) => updateCollectionItem(setLinks, link.id, { url: event.target.value })}
-                  />
-                  <div className="flex justify-end">
+                    <Input
+                      placeholder="Nivel"
+                      value={skill.proficiencyLabel}
+                      onChange={(event) => updateCollectionItem(setSkills, skill.id, { proficiencyLabel: event.target.value })}
+                    />
                     <Button
                       variant="ghost"
+                      className="h-8 px-3 text-[0.78rem]"
                       onClick={() =>
-                        setLinks((current) => (current.length === 1 ? [createEmptyCandidateLink()] : current.filter((item) => item.id !== link.id)))
+                        setSkills((current) => (current.length === 1 ? [createEmptyCandidateSkill()] : current.filter((item) => item.id !== skill.id)))
                       }
                     >
                       Eliminar
                     </Button>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </AccordionSection>
 
-            <Button onClick={() => void form.handleSubmit((values) => saveMutation.mutate(values))()} disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? 'Sincronizando secciones...' : 'Guardar experiencia, educacion y metadata'}
-            </Button>
-          </CardContent>
-        </Card>
+              <AccordionSection
+                icon={LanguagesIcon}
+                title="Idiomas"
+                description="Idiomas que hablas y tu nivel."
+                actionLabel="Agregar idioma"
+                onAdd={() => setLanguages((current) => [...current, createEmptyCandidateLanguage()])}
+              >
+                {languages.map((language) => (
+                  <div key={language.id} className="grid gap-3 rounded-xl border border-(--app-border) p-3.5 sm:grid-cols-[1fr_0.8fr_auto]">
+                    <Input
+                      placeholder="Idioma"
+                      value={language.languageName}
+                      onChange={(event) => updateCollectionItem(setLanguages, language.id, { languageName: event.target.value })}
+                    />
+                    <Input
+                      placeholder="Nivel"
+                      value={language.proficiencyLabel}
+                      onChange={(event) => updateCollectionItem(setLanguages, language.id, { proficiencyLabel: event.target.value })}
+                    />
+                    <Button
+                      variant="ghost"
+                      className="h-8 px-3 text-[0.78rem]"
+                      onClick={() =>
+                        setLanguages((current) =>
+                          current.length === 1 ? [createEmptyCandidateLanguage()] : current.filter((item) => item.id !== language.id)
+                        )
+                      }
+                    >
+                      Eliminar
+                    </Button>
+                  </div>
+                ))}
+              </AccordionSection>
+
+              <AccordionSection
+                icon={Link2}
+                title="Links"
+                description="Enlaces importantes como portafolio o GitHub."
+                actionLabel="Agregar link"
+                onAdd={() => setLinks((current) => [...current, createEmptyCandidateLink()])}
+              >
+                {links.map((link) => (
+                  <div key={link.id} className="space-y-3 rounded-xl border border-(--app-border) p-3.5">
+                    <div className="grid gap-3 sm:grid-cols-[0.7fr_1fr]">
+                      <Select
+                        value={link.linkType}
+                        onChange={(event) => updateCollectionItem(setLinks, link.id, { linkType: event.target.value as CandidateLinkDraft['linkType'] })}
+                      >
+                        <option value="other">Other</option>
+                        <option value="portfolio">Portfolio</option>
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="github">GitHub</option>
+                        <option value="website">Website</option>
+                      </Select>
+                      <Input
+                        placeholder="Etiqueta"
+                        value={link.label}
+                        onChange={(event) => updateCollectionItem(setLinks, link.id, { label: event.target.value })}
+                      />
+                    </div>
+                    <Input
+                      placeholder="https://..."
+                      value={link.url}
+                      onChange={(event) => updateCollectionItem(setLinks, link.id, { url: event.target.value })}
+                    />
+                    <div className="flex justify-end">
+                      <Button
+                        variant="ghost"
+                        className="h-8 px-3 text-[0.78rem]"
+                        onClick={() =>
+                          setLinks((current) => (current.length === 1 ? [createEmptyCandidateLink()] : current.filter((item) => item.id !== link.id)))
+                        }
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </AccordionSection>
+            </div>
+          ) : null}
+        </motion.div>
+
+        {/* Sidebar */}
+        <motion.aside variants={cardReveal} className="space-y-4">
+          <Card>
+            <h2 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Resumen de tu perfil</h2>
+            <div className="mt-3 flex items-center gap-3">
+              <CircularProgress value={completionPercent} />
+              <div>
+                <p className="text-[0.85rem] font-semibold text-(--app-text)">Completado del perfil</p>
+                <p className="text-[0.76rem] text-(--app-text-muted)">
+                  {completionPercent >= 100 ? '¡Tu perfil está listo!' : '¡Vas muy bien! Completa la información para destacar más.'}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 space-y-2.5 border-t border-(--app-border) pt-3 text-[0.78rem]">
+              <div>
+                <p className="font-medium text-(--app-text)">Última actualización</p>
+                <p className="text-(--app-text-muted)">{formatUpdatedAt(bundle.profile?.updated_at)}</p>
+              </div>
+              <div>
+                <p className="font-medium text-(--app-text)">{isVisibleToRecruiters ? 'Visible' : 'Oculto'}</p>
+                <p className="text-(--app-text-muted)">
+                  {isVisibleToRecruiters ? 'Apareces para empresas en el directorio.' : 'No apareces en el directorio.'}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <h2 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Acciones rápidas</h2>
+            <div className="mt-3 space-y-2">
+              <QuickAction icon={Upload} title="Subir nuevo CV" description="Actualiza tu CV privado actual." onClick={() => setActiveTab('cv')} />
+              <QuickAction icon={Eye} title="Vista previa del perfil" description="Mira cómo te ven las empresas." onClick={() => toast.info('Vista previa próximamente')} />
+              <QuickAction icon={Download} title="Descargar mis datos" description="Obtén una copia de tu información." onClick={() => toast.info('Exportación de datos próximamente')} />
+            </div>
+          </Card>
+
+          <Card className="border-primary-200/70 bg-primary-50/60 dark:border-primary-500/25 dark:bg-primary-500/10">
+            <div className="flex items-start gap-2.5">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300">
+                <Lightbulb className="size-4" />
+              </span>
+              <div>
+                <h3 className="text-[0.85rem] font-semibold text-(--app-text)">Consejo</h3>
+                <p className="mt-0.5 text-[0.76rem] text-(--app-text-muted)">
+                  Perfiles completos reciben hasta 3x más vistas de reclutadores.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </motion.aside>
       </div>
-    </div>
+
+      {/* Footer acciones */}
+      <motion.div variants={cardReveal} className="flex items-center justify-between gap-3 border-t border-(--app-border) pt-4">
+        <button
+          type="button"
+          onClick={() => void navigate(surfacePaths.candidate.home)}
+          className="text-[0.82rem] font-medium text-(--app-text-muted) transition-colors hover:text-(--app-text)"
+        >
+          Cancelar
+        </button>
+        <Button className="h-10 px-5 text-[0.85rem]" disabled={saveMutation.isPending} onClick={() => void saveAll()}>
+          {saveMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
+        </Button>
+      </motion.div>
+    </motion.div>
   )
 }
 

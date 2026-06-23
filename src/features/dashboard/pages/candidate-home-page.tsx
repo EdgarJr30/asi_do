@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Spinner } from '@/components/ui/loader'
+import { applicationStatusDotClass, applicationStatusLabel } from '@/features/applications/lib/application-status'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 import { listMyApplications } from '@/features/applications/lib/applications-api'
 import { fetchMyCandidateProfile, type CandidateProfileBundle } from '@/features/candidate-profile/lib/candidate-profile-api'
@@ -28,16 +29,6 @@ import type { Database } from '@/shared/types/database'
 type PublicStatus = Database['public']['Enums']['application_public_status']
 
 const ACTIVE_STATUSES: PublicStatus[] = ['submitted', 'in_review', 'interviewing', 'offer']
-
-const statusCopy: Record<PublicStatus, { label: string; variant: 'default' | 'soft' | 'outline' }> = {
-  submitted: { label: 'Enviada', variant: 'outline' },
-  in_review: { label: 'En revisión', variant: 'soft' },
-  interviewing: { label: 'Entrevista', variant: 'default' },
-  offer: { label: 'Oferta', variant: 'default' },
-  rejected: { label: 'No seleccionada', variant: 'outline' },
-  withdrawn: { label: 'Retirada', variant: 'outline' },
-  hired: { label: 'Contratada', variant: 'default' }
-}
 
 function greetingForNow(date = new Date()) {
   const hour = date.getHours()
@@ -293,7 +284,6 @@ export function CandidateHomePage() {
             </div>
             <ul className="divide-y divide-(--app-border)">
               {recentApplications.map((application) => {
-                const status = statusCopy[application.status_public]
                 return (
                   <li
                     key={application.id}
@@ -314,8 +304,8 @@ export function CandidateHomePage() {
                       {formatApplicationDate(application.submitted_at)}
                     </p>
                     <span className="inline-flex items-center gap-1.5 text-[0.78rem] text-(--app-text)">
-                      <span className={`size-1.5 rounded-full ${statusDotClass(application.status_public)}`} />
-                      {status?.label ?? application.status_public}
+                      <span className={`size-1.5 rounded-full ${applicationStatusDotClass(application.status_public)}`} />
+                      {applicationStatusLabel(application.status_public)}
                     </span>
                     <button
                       type="button"
@@ -390,17 +380,3 @@ function formatApplicationDate(value?: string | null) {
   return Number.isNaN(date.getTime()) ? '—' : applicationDateFormatter.format(date)
 }
 
-function statusDotClass(status: PublicStatus) {
-  switch (status) {
-    case 'interviewing':
-    case 'offer':
-      return 'bg-primary-500'
-    case 'hired':
-      return 'bg-emerald-500'
-    case 'rejected':
-    case 'withdrawn':
-      return 'bg-(--app-text-subtle)'
-    default:
-      return 'bg-amber-500'
-  }
-}
