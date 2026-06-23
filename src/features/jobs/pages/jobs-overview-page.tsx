@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState, type MouseEvent } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { motion, useReducedMotion } from 'motion/react'
 import { useForm, useWatch } from 'react-hook-form'
-import { Clock3, MapPin } from 'lucide-react'
+import { Banknote, ChevronLeft, ChevronRight, Clock3, Eye, MapPin, MoreVertical, Pencil, Plus, Search } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -33,6 +34,7 @@ import {
 } from '@/features/jobs/lib/job-schemas'
 import {
   compensationTypeOptions,
+  getCompensationTypeLabel,
   getOpportunityTypeLabel,
   opportunityTypeOptions
 } from '@/features/opportunities/lib/opportunity-taxonomy'
@@ -40,6 +42,7 @@ import { fetchPipelineBoard } from '@/features/pipeline/lib/pipeline-api'
 import { fetchWorkspaceBundle, type WorkspaceBundle } from '@/features/tenants/lib/workspace-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
+import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 import { cn } from '@/lib/utils/cn'
 
 const PUBLIC_JOBS_QUERY_KEY = ['jobs', 'public'] as const
@@ -64,6 +67,47 @@ function relativeDays(value: string | null | undefined) {
     return 'hace 1 día'
   }
   return `hace ${days} días`
+}
+
+const WORKSPACE_JOBS_PAGE_SIZE = 8
+
+const EMPLOYMENT_LABELS: Record<string, string> = {
+  full_time: 'Tiempo completo',
+  part_time: 'Medio tiempo',
+  contract: 'Por contrato',
+  temporary: 'Temporal',
+  internship: 'Pasantía'
+}
+
+function employmentLabel(value: string | null | undefined) {
+  return value ? EMPLOYMENT_LABELS[value] ?? value : 'Sin especificar'
+}
+
+type TenantJobRow = JobPostingBundle['jobs'][number]
+
+function jobLocationLabel(job: Pick<TenantJobRow, 'city_name' | 'country_code'>) {
+  return [job.city_name, job.country_code].filter(Boolean).join(', ') || 'Sin ubicación'
+}
+
+const jobMenuItemClass =
+  'flex w-full items-center rounded-lg px-2.5 py-1.5 text-left text-[0.8rem] text-(--app-text-muted) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)'
+
+function closeMenu(event: MouseEvent<HTMLButtonElement>, action: () => void) {
+  event.currentTarget.closest('details')?.removeAttribute('open')
+  action()
+}
+
+function jobSalaryLabel(job: TenantJobRow) {
+  if (job.salary_visible && (job.salary_min_amount != null || job.salary_max_amount != null)) {
+    const currency = job.salary_currency ?? 'USD'
+    const format = (amount: number) =>
+      new Intl.NumberFormat('es', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount)
+    if (job.salary_min_amount != null && job.salary_max_amount != null) {
+      return `${format(job.salary_min_amount)} – ${format(job.salary_max_amount)}`
+    }
+    return format((job.salary_min_amount ?? job.salary_max_amount) as number)
+  }
+  return getCompensationTypeLabel(job.compensation_type) || 'Salario no especificado'
 }
 
 const linkButtonClassName =
@@ -507,10 +551,17 @@ function WorkspaceJobsManager() {
   const session = useAppSession()
   const queryClient = useQueryClient()
   const location = useLocation()
+  const shouldReduceMotion = useReducedMotion()
   const isWorkspaceContext = location.pathname.startsWith('/workspace')
   const canManageJobs = session.permissions.includes('job:create') || session.permissions.includes('job:update')
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [isEditorOpen, setIsEditorOpen] = useState(false)
+  const [statusTab, setStatusTab] = useState<'active' | 'inactive'>('active')
+  const [search, setSearch] = useState('')
+  const [employmentFilter, setEmploymentFilter] = useState('')
+  const [locationFilter, setLocationFilter] = useState('')
+  const [sort, setSort] = useState<'recent' | 'title'>('recent')
+  const [page, setPage] = useState(0)
 
   const workspaceQuery = useQuery({
     queryKey: ['workspace', 'jobs-page', session.activeTenantId],
@@ -550,9 +601,58 @@ function WorkspaceJobsManager() {
   })
   const applicationCounts = jobApplicationsQuery.data ?? new Map<string, number>()
 
-  const tenantJobs = tenantJobsQuery.data ?? []
+  const tenantJobs = useMemo(() => tenantJobsQuery.data ?? [], [tenantJobsQuery.data])
   const activeJobsCount = tenantJobs.filter((job) => job.status === 'published').length
+  const inactiveJobsCount = tenantJobs.length - activeJobsCount
   const selectedJob = tenantJobs.find((job) => job.id === selectedJobId) ?? null
+
+  const locationOptions = useMemo(() => {
+    const set = new Set<string>()
+    for (const job of tenantJobs) {
+      if (job.country_code) {
+        set.add(job.country_code)
+      }
+    }
+    return [...set].sort()
+  }, [tenantJobs])
+
+  const filteredJobs = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    const list = tenantJobs.filter((job) => {
+      const matchesTab = statusTab === 'active' ? job.status === 'published' : job.status !== 'published'
+      if (!matchesTab) {
+        return false
+      }
+      if (employmentFilter && job.employment_type !== employmentFilter) {
+        return false
+      }
+      if (locationFilter && job.country_code !== locationFilter) {
+        return false
+      }
+      if (query) {
+        const haystack = `${job.title} ${job.city_name ?? ''} ${getOpportunityTypeLabel(job.opportunity_type)}`.toLowerCase()
+        if (!haystack.includes(query)) {
+          return false
+        }
+      }
+      return true
+    })
+    return list.sort((a, b) =>
+      sort === 'recent'
+        ? new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        : a.title.localeCompare(b.title)
+    )
+  }, [tenantJobs, statusTab, employmentFilter, locationFilter, search, sort])
+
+  const pageCount = Math.max(1, Math.ceil(filteredJobs.length / WORKSPACE_JOBS_PAGE_SIZE))
+  const safePage = Math.min(page, pageCount - 1)
+  const pageStart = safePage * WORKSPACE_JOBS_PAGE_SIZE
+  const pageJobs = filteredJobs.slice(pageStart, pageStart + WORKSPACE_JOBS_PAGE_SIZE)
+  const isLastPage = safePage >= pageCount - 1
+
+  function resetToFirstPage() {
+    setPage(0)
+  }
 
   function openJobEditor(jobId: string | null) {
     setSelectedJobId(jobId)
@@ -585,22 +685,63 @@ function WorkspaceJobsManager() {
   })
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      variants={pageStagger}
+      initial={shouldReduceMotion ? false : 'hidden'}
+      animate="show"
+    >
       {isWorkspaceContext && canManageJobs ? (
-        <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">Vacantes</h1>
-            <p className="mt-1 text-sm text-(--app-text-muted)">
-              {activeJobsCount} {activeJobsCount === 1 ? 'activa' : 'activas'} · {tenantJobs.length} en total
-            </p>
+        <motion.section variants={cardReveal} className="space-y-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">Vacantes</h1>
+              <p className="mt-1 text-sm text-(--app-text-muted)">Gestiona y publica las posiciones abiertas en tu empresa.</p>
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              <Button variant="outline" onClick={() => toast.info('Exportación próximamente')}>
+                Exportar
+              </Button>
+              <Button onClick={() => openJobEditor(null)}>Publicar vacante</Button>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2.5">
-            <Button variant="outline" onClick={() => toast.info('Exportación próximamente')}>
-              Exportar
-            </Button>
-            <Button onClick={() => openJobEditor(null)}>Publicar vacante</Button>
+          <div className="flex flex-wrap gap-1.5">
+            {(
+              [
+                { value: 'active', label: 'Activas', count: activeJobsCount },
+                { value: 'inactive', label: 'Inactivas', count: inactiveJobsCount }
+              ] as const
+            ).map((tab) => {
+              const isActive = statusTab === tab.value
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => {
+                    setStatusTab(tab.value)
+                    resetToFirstPage()
+                  }}
+                  className={cn(
+                    'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[0.8rem] font-medium transition-colors',
+                    isActive
+                      ? 'bg-primary-600 text-white'
+                      : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
+                  )}
+                >
+                  {tab.label}
+                  <span
+                    className={cn(
+                      'rounded-full px-1.5 text-[0.7rem] font-semibold tabular-nums',
+                      isActive ? 'bg-white/20 text-white' : 'bg-(--app-surface-muted) text-(--app-text-subtle)'
+                    )}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              )
+            })}
           </div>
-        </section>
+        </motion.section>
       ) : (
         <section className="rounded-[30px] border border-(--app-border) bg-white px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] sm:px-7">
           <div className="flex flex-wrap items-end justify-between gap-4">
@@ -628,7 +769,7 @@ function WorkspaceJobsManager() {
       )}
 
       {canManageJobs && workspaceQuery.data && isWorkspaceContext ? (
-        <section className="space-y-4">
+        <motion.section variants={cardReveal} className="space-y-4">
           {isEditorOpen ? (
             <JobEditor
               key={selectedJob?.id ?? 'new-job'}
@@ -650,76 +791,209 @@ function WorkspaceJobsManager() {
             />
           ) : null}
 
-          {tenantJobs.length ? (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {tenantJobs.map((job) => {
-                const statusMeta = JOB_STATUS_META[job.status] ?? { label: job.status, className: 'bg-slate-100 text-slate-600' }
-                const count = applicationCounts.get(job.id) ?? 0
-                const place = [job.city_name, job.country_code].filter(Boolean).join(', ') || 'Sin ubicación'
-
-                return (
-                  <article
-                    key={job.id}
-                    className="flex flex-col rounded-panel border border-(--app-border) bg-(--app-surface) p-5 shadow-[0_8px_24px_rgba(15,23,42,0.05)] transition hover:shadow-[0_14px_32px_rgba(15,23,42,0.09)]"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.7rem] font-semibold', statusMeta.className)}>
-                        <span className="size-1.5 rounded-full bg-current" />
-                        {statusMeta.label}
-                      </span>
-                      <span className="text-xs text-(--app-text-subtle)">{relativeDays(job.updated_at)}</span>
-                    </div>
-
-                    <h3 className="mt-3 text-[1.05rem] font-semibold leading-tight text-(--app-text)">{job.title}</h3>
-                    <p className="mt-1 text-sm text-(--app-text-muted)">{getOpportunityTypeLabel(job.opportunity_type)}</p>
-
-                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-(--app-text-subtle)">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="size-3.5" /> {place}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Clock3 className="size-3.5" /> {job.employment_type}
-                      </span>
-                    </div>
-
-                    <div className="mt-4 flex items-end justify-between border-t border-(--app-border) pt-4">
-                      <div>
-                        <p className="text-[1.6rem] font-semibold leading-none text-(--app-text)">{count}</p>
-                        <p className="mt-1 text-xs text-(--app-text-muted)">aplicaciones</p>
-                      </div>
-                      <div className="flex flex-wrap justify-end gap-1.5">
-                        <Button className="h-9 rounded-full px-3 text-xs" variant="outline" onClick={() => openJobEditor(job.id)}>
-                          Editar
-                        </Button>
-                        {job.status !== 'published' ? (
-                          <Button
-                            className="h-9 rounded-full px-3 text-xs"
-                            variant="ghost"
-                            onClick={() => statusMutation.mutate({ jobId: job.id, status: 'published' })}
-                          >
-                            Publicar
-                          </Button>
-                        ) : (
-                          <Button
-                            className="h-9 rounded-full px-3 text-xs"
-                            variant="ghost"
-                            onClick={() => statusMutation.mutate({ jobId: job.id, status: 'closed' })}
-                          >
-                            Cerrar
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </article>
-                )
-              })}
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-1 flex-wrap gap-2">
+              <div className="relative min-w-[220px] flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
+                <Input
+                  value={search}
+                  onChange={(event) => {
+                    setSearch(event.target.value)
+                    resetToFirstPage()
+                  }}
+                  placeholder="Busca por título, área o ubicación"
+                  className="h-10 pl-9"
+                />
+              </div>
+              <Select
+                value={employmentFilter}
+                onChange={(event) => {
+                  setEmploymentFilter(event.target.value)
+                  resetToFirstPage()
+                }}
+                className="h-10 w-auto min-w-[150px]"
+              >
+                <option value="">Tipo de empleo</option>
+                {Object.entries(EMPLOYMENT_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </Select>
+              {locationOptions.length ? (
+                <Select
+                  value={locationFilter}
+                  onChange={(event) => {
+                    setLocationFilter(event.target.value)
+                    resetToFirstPage()
+                  }}
+                  className="h-10 w-auto min-w-[130px]"
+                >
+                  <option value="">Ubicación</option>
+                  {locationOptions.map((code) => (
+                    <option key={code} value={code}>
+                      {code}
+                    </option>
+                  ))}
+                </Select>
+              ) : null}
             </div>
+            <Select
+              value={sort}
+              onChange={(event) => setSort(event.target.value as 'recent' | 'title')}
+              className="h-10 w-auto min-w-[170px]"
+            >
+              <option value="recent">Ordenar por: Recientes</option>
+              <option value="title">Ordenar por: Título</option>
+            </Select>
+          </div>
+
+          <motion.div variants={gridStagger} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {pageJobs.map((job) => {
+              const statusMeta = JOB_STATUS_META[job.status] ?? { label: job.status, className: 'bg-slate-100 text-slate-600' }
+              const count = applicationCounts.get(job.id) ?? 0
+              const isPublished = job.status === 'published'
+
+              return (
+                <motion.article
+                  variants={cardReveal}
+                  key={job.id}
+                  className="flex h-full flex-col rounded-2xl border border-(--app-border) bg-(--app-surface) p-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)] transition hover:shadow-[0_14px_32px_rgba(15,23,42,0.09)]"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.7rem] font-semibold', statusMeta.className)}>
+                      <span className="size-1.5 rounded-full bg-current" />
+                      {statusMeta.label}
+                    </span>
+                    <details className="relative">
+                      <summary className="flex size-7 cursor-pointer list-none items-center justify-center rounded-lg text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text) [&::-webkit-details-marker]:hidden">
+                        <MoreVertical className="size-4" />
+                      </summary>
+                      <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-(--app-border) bg-(--app-surface-elevated) p-1 shadow-[0_18px_40px_rgba(15,23,42,0.16)]">
+                        <button type="button" className={jobMenuItemClass} onClick={(event) => closeMenu(event, () => openJobEditor(job.id))}>
+                          Editar
+                        </button>
+                        <Link className={jobMenuItemClass} to={surfacePaths.public.jobDetail(job.slug)}>
+                          Ver oportunidad
+                        </Link>
+                        {isPublished ? (
+                          <button type="button" className={jobMenuItemClass} onClick={(event) => closeMenu(event, () => statusMutation.mutate({ jobId: job.id, status: 'closed' }))}>
+                            Cerrar
+                          </button>
+                        ) : (
+                          <button type="button" className={jobMenuItemClass} onClick={(event) => closeMenu(event, () => statusMutation.mutate({ jobId: job.id, status: 'published' }))}>
+                            Publicar
+                          </button>
+                        )}
+                        {job.status !== 'archived' ? (
+                          <button type="button" className={jobMenuItemClass} onClick={(event) => closeMenu(event, () => statusMutation.mutate({ jobId: job.id, status: 'archived' }))}>
+                            Archivar
+                          </button>
+                        ) : null}
+                      </div>
+                    </details>
+                  </div>
+
+                  <h3 className="mt-3 line-clamp-2 text-[1rem] font-semibold leading-tight text-(--app-text)">{job.title}</h3>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-(--app-text-subtle)">
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="size-3.5" /> {jobLocationLabel(job)}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock3 className="size-3.5" /> {employmentLabel(job.employment_type)}
+                    </span>
+                  </div>
+
+                  <p className="mt-2 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-(--app-text)">
+                    <Banknote className="size-4 text-(--app-text-subtle)" /> {jobSalaryLabel(job)}
+                  </p>
+                  <p className="mt-1 text-xs text-(--app-text-muted)">
+                    {count} {count === 1 ? 'postulación' : 'postulaciones'} · {relativeDays(job.updated_at)}
+                  </p>
+
+                  <div className="mt-auto flex items-center gap-2 border-t border-(--app-border) pt-3">
+                    <Link
+                      to={surfacePaths.public.jobDetail(job.slug)}
+                      className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-(--app-border) bg-(--app-surface) text-xs font-semibold text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 dark:hover:border-primary-400 dark:hover:text-primary-200"
+                    >
+                      <Eye className="size-3.5" /> Ver
+                    </Link>
+                    <Button className="h-9 flex-1 rounded-full px-3 text-xs" variant="outline" onClick={() => openJobEditor(job.id)}>
+                      <Pencil className="size-3.5" /> Editar
+                    </Button>
+                  </div>
+                </motion.article>
+              )
+            })}
+
+            {isLastPage ? (
+              <motion.button
+                variants={cardReveal}
+                type="button"
+                onClick={() => openJobEditor(null)}
+                className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-(--app-border) bg-(--app-surface-muted)/40 p-4 text-center transition-colors hover:border-primary-300 hover:bg-primary-50/50 dark:hover:border-primary-500/40 dark:hover:bg-primary-500/8"
+              >
+                <span className="flex size-10 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+                  <Plus className="size-5" />
+                </span>
+                <span className="text-sm font-semibold text-(--app-text)">Publicar nueva vacante</span>
+                <span className="text-xs text-(--app-text-muted)">Crea y publica una posición</span>
+              </motion.button>
+            ) : null}
+          </motion.div>
+
+          {filteredJobs.length === 0 ? (
+            <p className="text-sm text-(--app-text-muted)">
+              {tenantJobs.length === 0
+                ? 'Todavía no hay vacantes en este espacio. Usa “Publicar vacante” para crear la primera.'
+                : 'Ninguna vacante coincide con los filtros actuales.'}
+            </p>
           ) : (
-            <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-10 text-center text-sm text-(--app-text-muted)">
-              Todavía no hay vacantes en este espacio. Usa “Publicar vacante” para crear la primera.
+            <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-(--app-text-muted)">
+                Mostrando {pageStart + 1} a {Math.min(pageStart + WORKSPACE_JOBS_PAGE_SIZE, filteredJobs.length)} de {filteredJobs.length} vacantes
+              </p>
+              {pageCount > 1 ? (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => Math.max(0, current - 1))}
+                    disabled={safePage === 0}
+                    className="flex size-8 items-center justify-center rounded-lg border border-(--app-border) text-(--app-text-muted) transition-colors hover:text-(--app-text) disabled:opacity-40"
+                    aria-label="Página anterior"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+                  {Array.from({ length: pageCount }).map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setPage(index)}
+                      className={cn(
+                        'flex size-8 items-center justify-center rounded-lg text-[0.8rem] font-medium transition-colors',
+                        index === safePage
+                          ? 'bg-primary-600 text-white'
+                          : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
+                      )}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+                    disabled={isLastPage}
+                    className="flex size-8 items-center justify-center rounded-lg border border-(--app-border) text-(--app-text-muted) transition-colors hover:text-(--app-text) disabled:opacity-40"
+                    aria-label="Página siguiente"
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                </div>
+              ) : null}
             </div>
           )}
-        </section>
+        </motion.section>
       ) : canManageJobs && workspaceQuery.data ? (
         <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
           <JobEditor
@@ -788,7 +1062,7 @@ function WorkspaceJobsManager() {
           </Card>
         </section>
       ) : null}
-    </div>
+    </motion.div>
   )
 }
 
