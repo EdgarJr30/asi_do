@@ -75,6 +75,12 @@ export interface SettleResult {
   application_id: string | null
 }
 
+export interface DonationSettleResult {
+  status: 'verified' | 'failed' | 'cancelled' | 'noop'
+  donor_user_id: string | null
+  donation_id: string | null
+}
+
 /**
  * Liquida el pago vía RPC `azul_settle_membership_payment` (service_role, idempotente
  * en SQL). Devuelve el estado resultante para construir el redirect/notificación.
@@ -96,5 +102,29 @@ export async function settlePaymentViaRpc(
   const row = (Array.isArray(data) ? data[0] : data) as SettleResult | undefined
   return (
     row ?? { status: 'noop', member_user_id: null, application_id: null }
+  )
+}
+
+/**
+ * Liquida una donación vía RPC `azul_settle_donation_payment` (service_role).
+ * Mantiene las donaciones separadas del pipeline de membresía.
+ */
+export async function settleDonationViaRpc(
+  service: SupabaseClient,
+  input: { orderNumber: string; approved: boolean; response: Record<string, unknown> }
+): Promise<DonationSettleResult> {
+  const { data, error } = await service.rpc('azul_settle_donation_payment', {
+    p_order_number: input.orderNumber,
+    p_approved: input.approved,
+    p_response: input.response
+  })
+
+  if (error) {
+    throw error
+  }
+
+  const row = (Array.isArray(data) ? data[0] : data) as DonationSettleResult | undefined
+  return (
+    row ?? { status: 'noop', donor_user_id: null, donation_id: null }
   )
 }

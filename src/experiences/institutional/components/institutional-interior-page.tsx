@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type { InstitutionalPageContent } from '@/experiences/institutional/content/site-content';
 
 import {
@@ -10,8 +12,10 @@ import {
 
 export function InstitutionalInteriorPage({
   content,
+  afterHero,
 }: {
   content: InstitutionalPageContent;
+  afterHero?: ReactNode;
 }) {
   return (
     <div>
@@ -101,6 +105,8 @@ export function InstitutionalInteriorPage({
           </div>
         )}
       </InstitutionalSection>
+
+      {afterHero}
 
       {content.sections.map((section) => {
         switch (section.type) {

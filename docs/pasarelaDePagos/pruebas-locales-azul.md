@@ -1,4 +1,4 @@
-# Guía de pruebas — Pagos de membresía con AZUL (local)
+# Guía de pruebas — Pagos de membresía y donaciones con AZUL (local)
 
 Documento explicativo para probar de extremo a extremo el pago de membresía con tarjeta vía la
 **Página de Pago de AZUL**, **sin desplegar nada** (todo corre en tu máquina contra el Supabase
@@ -140,6 +140,35 @@ tarjeta; si se pega con espacios, AZUL puede devolver `SGS-002303: Invalid credi
 | 4 | **Manipulación** (seguridad) | (simulado) callback con `AuthHash` alterado | `?payment=error`, el pago **no** cambia de estado |
 | 5 | **Reintento** | Tras un fallo, vuelve a pulsar “Pagar con tarjeta” | Se crea un nuevo intento; al aprobar queda `verified` |
 | 6 | **Renovación** | Miembro activo con solicitud aprobada | Botón “Renovar membresía” en la barra lateral → mismo flujo con `intent=renewal` |
+
+---
+
+## 6.1. Donaciones desde `/donate`
+
+La sección **Donar ahora** en `/donate` usa el mismo microservicio AZUL, pero un modelo de datos
+separado:
+
+- `donation_amount_options`: montos sugeridos configurables desde DB. Semilla inicial:
+  RD$10,000, RD$20,000, RD$35,000, RD$50,000, RD$65,000, RD$80,000 y RD$100,000.
+- `donations`: historial por intento con donante, monto, campaña/destino, `order_number`, estado,
+  respuesta de AZUL y auditoría.
+
+Recorrido:
+
+1. Abre `http://localhost:5173/donate`.
+2. Pulsa **Donar ahora** en el hero o baja a la sección de montos.
+3. Selecciona uno de los 7 montos o **Otro monto**.
+4. Completa nombre y correo del donante.
+5. Pulsa **Donar ahora**; el browser hace POST a AZUL con un formulario firmado.
+6. Al volver:
+   - aprobado → `/donate?payment=approved`, donación `verified`;
+   - declinado → `/donate?payment=declined`, donación `failed`;
+   - cancelado → `/donate?payment=cancelled`, donación `cancelled`;
+   - firma inválida/error → `/donate?payment=error`, sin liquidar como aprobada.
+
+La donación puede ser anónima frente a la cuenta de usuario, pero el formulario guarda nombre/correo
+para historial operativo. Si el visitante tiene sesión activa, el microservicio asocia también
+`donor_user_id`.
 
 ### Verificación rápida de seguridad (sin tarjeta)
 Confirma que un callback con firma inválida no afecta la DB:

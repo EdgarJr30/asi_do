@@ -3,13 +3,14 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { FastifyBaseLogger } from 'fastify'
 
 import type { AppConfig } from '../config.ts'
-import { isApproved, settlePaymentViaRpc } from '../azul/settle.ts'
+import { isApproved, settleDonationViaRpc, settlePaymentViaRpc } from '../azul/settle.ts'
 import { serviceClient } from '../supabase.ts'
 
 interface StalePaymentRow {
   order_number: string
   amount: number | null
   created_at: string
+  flow: 'membership' | 'donation'
 }
 
 /**
@@ -78,11 +79,28 @@ async function reconcileOnce(config: AppConfig, service: SupabaseClient, log: Fa
     .limit(50)
 
   if (error) {
-    log.error({ err: error }, 'Conciliación: no se pudieron leer pagos pendientes')
+    log.error({ err: error }, 'Conciliación: no se pudieron leer pagos de membresía pendientes')
     return
   }
 
-  const rows = (data ?? []) as StalePaymentRow[]
+  const { data: donationData, error: donationError } = await service
+    .from('donations')
+    .select('order_number, amount, created_at')
+    .eq('gateway', 'azul')
+    .eq('status', 'initiated')
+    .lt('created_at', cutoff)
+    .not('order_number', 'is', null)
+    .order('created_at', { ascending: true })
+    .limit(50)
+
+  if (donationError) {
+    log.error({ err: donationError }, 'Conciliación: no se pudieron leer donaciones pendientes')
+  }
+
+  const rows: StalePaymentRow[] = [
+    ...((data ?? []) as Omit<StalePaymentRow, 'flow'>[]).map((row) => ({ ...row, flow: 'membership' as const })),
+    ...((donationData ?? []) as Omit<StalePaymentRow, 'flow'>[]).map((row) => ({ ...row, flow: 'donation' as const }))
+  ]
   if (rows.length === 0) {
     return
   }
@@ -99,11 +117,14 @@ async function reconcileOnce(config: AppConfig, service: SupabaseClient, log: Fa
     }
 
     try {
-      const result = await settlePaymentViaRpc(service, {
+      const input = {
         orderNumber: row.order_number,
         approved: verdict.approved,
         response: { ...verdict.response, reconciledBy: 'cron' }
-      })
+      }
+      const result = row.flow === 'donation'
+        ? await settleDonationViaRpc(service, input)
+        : await settlePaymentViaRpc(service, input)
       log.info({ orderNumber: row.order_number, approved: verdict.approved, settleStatus: result.status }, 'Conciliado vía cron')
     } catch (settleError) {
       log.error({ err: settleError, orderNumber: row.order_number }, 'Error liquidando en conciliación')

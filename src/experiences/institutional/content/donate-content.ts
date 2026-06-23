@@ -21,7 +21,7 @@ export const donatePageContent: InstitutionalPageContent = {
       'ASI Republic Dominicana canaliza recursos hacia proyectos evangelísticos, educación, servicio comunitario y liderazgo. Cada aporte fortalece una red adventista comprometida con llevar el evangelio al corazón del mercado.',
     primaryAction: {
       label: 'Donar ahora',
-      to: surfacePaths.institutional.contactUs,
+      to: `${surfacePaths.institutional.donate}#donar-ahora`,
       variant: 'primary',
     },
     secondaryAction: {
@@ -216,8 +216,8 @@ export const donatePageContent: InstitutionalPageContent = {
     description:
       'El equipo de ASI DO está listo para orientarte, responderte y acompañarte en la decisión de donar. No importa el tamaño del aporte — lo que importa es que se sume a la misión.',
     primaryAction: {
-      label: 'Contactar para donar',
-      to: surfacePaths.institutional.contactUs,
+      label: 'Donar ahora',
+      to: `${surfacePaths.institutional.donate}#donar-ahora`,
       variant: 'primary',
     },
     secondaryAction: {
