@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion, useReducedMotion } from 'motion/react';
+import { Building2, Eye, Image as ImageIcon, Mail, MapPin, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useAppSession } from '@/app/providers/app-session-provider';
@@ -10,13 +13,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { SideSheet } from '@/components/ui/side-sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { toErrorMessage } from '@/features/auth/lib/auth-api';
 import {
@@ -30,6 +33,8 @@ import {
   type WorkspaceBundle,
 } from '@/features/tenants/lib/workspace-api';
 import { reportErrorWithToast } from '@/lib/errors/error-reporting';
+import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion';
+import { cn } from '@/lib/utils/cn';
 import { UploadConstraintError } from '@/lib/uploads/media';
 
 const WORKSPACE_QUERY_KEY = ['workspace', 'primary'] as const;
@@ -38,6 +43,109 @@ const fieldLabelTextClassName =
   'text-[0.82rem] font-medium tracking-[0.01em] text-(--app-text-muted)';
 const mutedPanelClassName =
   'rounded-[24px] border border-(--app-border) bg-(--app-surface-muted) p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]';
+
+const statAccentClassName = {
+  sky: 'bg-sky-50 text-sky-600 dark:bg-sky-500/12 dark:text-sky-300',
+  amber: 'bg-amber-50 text-amber-600 dark:bg-amber-500/12 dark:text-amber-300',
+  violet: 'bg-violet-50 text-violet-600 dark:bg-violet-500/12 dark:text-violet-300',
+  emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/12 dark:text-emerald-300',
+} as const;
+
+type StatAccent = keyof typeof statAccentClassName;
+
+const STAT_ICONS: LucideIcon[] = [Users, UserPlus, ShieldCheck, Eye];
+const STAT_ACCENTS: StatAccent[] = ['sky', 'amber', 'violet', 'emerald'];
+
+function greetingForNow(date = new Date()) {
+  const hour = date.getHours();
+  if (hour < 12) {
+    return 'Buenos días';
+  }
+  if (hour < 19) {
+    return 'Buenas tardes';
+  }
+  return 'Buenas noches';
+}
+
+function firstName(value: string) {
+  return value.trim().split(/\s+/)[0] ?? value;
+}
+
+function initialsOf(value: string) {
+  return (
+    value
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join('') || '·'
+  );
+}
+
+function AccentStatCard({
+  icon: Icon,
+  accent,
+  label,
+  value,
+  sublabel,
+}: {
+  icon: LucideIcon;
+  accent: StatAccent;
+  label: ReactNode;
+  value: ReactNode;
+  sublabel?: ReactNode;
+}) {
+  return (
+    <div className="rounded-[22px] border border-(--app-border) bg-(--app-surface-muted) px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[0.8rem] font-medium text-(--app-text-muted)">{label}</p>
+        <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-full', statAccentClassName[accent])}>
+          <Icon className="size-4" />
+        </span>
+      </div>
+      <p className="mt-2 text-[1.55rem] font-bold tracking-[-0.03em] text-(--app-text)">{value}</p>
+      {sublabel ? <p className="mt-1 text-xs text-(--app-text-subtle)">{sublabel}</p> : null}
+    </div>
+  );
+}
+
+function ConfigCard({
+  icon: Icon,
+  accent,
+  title,
+  description,
+  actionLabel,
+  onClick,
+}: {
+  icon: LucideIcon;
+  accent: StatAccent;
+  title: string;
+  description: ReactNode;
+  actionLabel: string;
+  onClick: () => void;
+}) {
+  return (
+    <div className="flex h-full items-start justify-between gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface) p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition hover:shadow-[0_12px_28px_rgba(15,23,42,0.08)]">
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-xl', statAccentClassName[accent])}>
+          <Icon className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-(--app-text)">{title}</p>
+          <p className="mt-0.5 text-xs leading-5 text-(--app-text-muted)">{description}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onClick}
+        className="shrink-0 text-[0.8rem] font-semibold text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
+      >
+        {actionLabel}
+      </button>
+    </div>
+  );
+}
 
 function createEditorKey(bundle: WorkspaceBundle) {
   // Clave de identidad estable: NO incluimos `updated_at` a propósito. Incluirlo
@@ -78,6 +186,8 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
   const [isPublic, setIsPublic] = useState(profile?.is_public ?? true);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRoleId, setInviteRoleId] = useState('');
+  const shouldReduceMotion = useReducedMotion();
+  const [openSheet, setOpenSheet] = useState<'profile' | 'team' | null>(null);
 
   const saveProfileMutation = useMutation({
     mutationFn: async () => {
@@ -97,6 +207,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY });
+      setOpenSheet(null);
       toast.success('Espacio actualizado', {
         description:
           'La presencia de tu empresa ya quedó alineada para vacantes y nuevas oportunidades.',
@@ -301,19 +412,29 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
     },
   ] as const;
 
+  const userDisplayName = session.profile?.display_name ?? session.profile?.full_name ?? 'equipo';
+
   return (
-    <div className="space-y-6">
-      <section className="rounded-[30px] border border-(--app-border) bg-(--app-surface-elevated) px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] dark:shadow-[0_18px_44px_rgba(0,0,0,0.2)] sm:px-7">
+    <motion.div
+      className="space-y-6"
+      variants={pageStagger}
+      initial={shouldReduceMotion ? false : 'hidden'}
+      animate="show"
+    >
+      <motion.section
+        variants={cardReveal}
+        className="rounded-[30px] border border-(--app-border) bg-(--app-surface-elevated) px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] dark:shadow-[0_18px_44px_rgba(0,0,0,0.2)] sm:px-7"
+      >
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700 dark:border-primary-500/25 dark:bg-primary-500/12 dark:text-primary-200">
-              Dashboard
+              Configuración
             </div>
             <h1 className="mt-4 text-[1.75rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2rem]">
-              Buenos dias, {session.profile?.display_name ?? session.profile?.full_name ?? 'equipo'}
+              {greetingForNow()}, {firstName(userDisplayName)}
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-(--app-text-muted)">
-              Revisa el estado del workspace, manten clara la identidad de empresa y resuelve accesos pendientes desde una sola vista.
+              Define la identidad de tu empresa, gestiona al equipo y mantén el acceso al día desde una sola vista.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -333,31 +454,89 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
         </div>
 
         <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {workspaceStats.map((stat) => (
-            <div
+          {workspaceStats.map((stat, index) => (
+            <AccentStatCard
               key={stat.label}
-              className="rounded-[22px] border border-(--app-border) bg-(--app-surface-muted) px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-            >
-              <p className="text-[0.8rem] font-medium text-(--app-text-muted)">{stat.label}</p>
-              <p className="mt-2 text-[1.7rem] font-bold tracking-[-0.03em] text-(--app-text)">
-                {stat.value}
-              </p>
-              <p className="mt-1 text-xs text-(--app-text-subtle)">{stat.sublabel}</p>
-            </div>
+              icon={STAT_ICONS[index] ?? Users}
+              accent={STAT_ACCENTS[index] ?? 'sky'}
+              label={stat.label}
+              value={stat.value}
+              sublabel={stat.sublabel}
+            />
           ))}
         </div>
-      </section>
+      </motion.section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+      <motion.section variants={cardReveal} className="space-y-3">
+        <div>
+          <h2 className="text-[1.05rem] font-semibold tracking-tight text-(--app-text)">Configuración del workspace</h2>
+          <p className="text-sm text-(--app-text-muted)">Administra los datos de tu empresa y los accesos del equipo.</p>
+        </div>
+        <motion.div variants={gridStagger} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <motion.div variants={cardReveal} className="h-full">
+            <ConfigCard icon={Building2} accent="sky" title="Perfil de empresa" description="Nombre visible, nombre legal e identidad pública." actionLabel="Editar" onClick={() => setOpenSheet('profile')} />
+          </motion.div>
+          <motion.div variants={cardReveal} className="h-full">
+            <ConfigCard icon={Mail} accent="violet" title="Canales de contacto" description="Website y correo de reclutamiento." actionLabel="Editar" onClick={() => setOpenSheet('profile')} />
+          </motion.div>
+          <motion.div variants={cardReveal} className="h-full">
+            <ConfigCard icon={MapPin} accent="amber" title="Contexto empresarial" description="País, industria y tamaño del equipo." actionLabel="Editar" onClick={() => setOpenSheet('profile')} />
+          </motion.div>
+          <motion.div variants={cardReveal} className="h-full">
+            <ConfigCard icon={Users} accent="emerald" title="Equipo y accesos" description={`${activeMembershipCount} activos · ${invitedMembershipCount} invitados`} actionLabel="Invitar" onClick={() => setOpenSheet('team')} />
+          </motion.div>
+          <motion.div variants={cardReveal} className="h-full">
+            <ConfigCard icon={ImageIcon} accent="sky" title="Branding / logo" description="Logo de tu empresa para vacantes y perfil." actionLabel="Configurar" onClick={() => setOpenSheet('profile')} />
+          </motion.div>
+        </motion.div>
+      </motion.section>
+
+      <motion.section variants={cardReveal}>
         <Card>
-          <CardHeader>
-            <CardTitle>Perfil de empresa</CardTitle>
-            <CardDescription>
-              Ajusta la identidad que verán los candidatos cuando conozcan tu
-              empresa y tus vacantes.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Miembros destacados</h3>
+              <p className="text-[0.8rem] text-(--app-text-muted)">Personas con acceso a este espacio.</p>
+            </div>
+            <Link
+              to={surfacePaths.workspace.access}
+              className="shrink-0 text-[0.8rem] font-semibold text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
+            >
+              Ver todos
+            </Link>
+          </div>
+          {bundle.memberships.length > 0 ? (
+            <ul className="mt-4 divide-y divide-(--app-border)">
+              {bundle.memberships.slice(0, 4).map((membership) => (
+                <li key={membership.id} className="flex items-center justify-between gap-3 py-2.5">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-[11px] font-semibold text-white">
+                      {initialsOf(membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'M')}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-(--app-text)">
+                        {membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'Miembro'}
+                      </p>
+                      <p className="truncate text-xs text-(--app-text-muted)">{membership.user?.email}</p>
+                    </div>
+                  </div>
+                  <Badge variant="outline">{membership.status}</Badge>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 text-sm text-(--app-text-muted)">Aún no hay miembros en este espacio.</p>
+          )}
+        </Card>
+      </motion.section>
+
+      <SideSheet
+        open={openSheet === 'profile'}
+        onClose={() => setOpenSheet(null)}
+        title="Editar perfil de empresa"
+        description="Actualiza la información e identidad pública de tu empresa."
+      >
+        <div className="grid gap-4">
             <div className={mutedPanelClassName}>
               <div className="mb-4 space-y-1">
                 <p className="text-sm font-semibold text-(--app-text)">
@@ -543,18 +722,16 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
                 ? 'Guardando cambios...'
                 : 'Guardar perfil de empresa'}
             </Button>
-          </CardContent>
-        </Card>
+        </div>
+      </SideSheet>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Equipo y accesos</CardTitle>
-            <CardDescription>
-              Invita personas, organiza accesos y mantén a cada colaborador con
-              el nivel correcto dentro del equipo.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
+      <SideSheet
+        open={openSheet === 'team'}
+        onClose={() => setOpenSheet(null)}
+        title="Equipo y accesos"
+        description="Invita personas y mantén a cada colaborador con el rol correcto."
+      >
+        <div className="space-y-3">
             <div className={mutedPanelClassName}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -683,10 +860,9 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
                 </div>
               );
             })}
-          </CardContent>
-        </Card>
-      </section>
-    </div>
+        </div>
+      </SideSheet>
+    </motion.div>
   );
 }
 
