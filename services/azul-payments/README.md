@@ -24,16 +24,29 @@ cp .env.example .env   # completa los secretos
 npm install
 npm run dev            # http://localhost:8080
 npm test               # vitest (incluye el vector de hash oficial de AZUL)
-npm run verify         # typecheck + test + build
+npm run verify         # typecheck + test
 ```
 
-## Despliegue (Railway / Render)
-1. Apunta el servicio al subdirectorio `services/azul-payments` (root directory).
-2. Build: `npm run build` · Start: `npm start` (o usa el `Dockerfile`).
-3. Configura las variables de `.env.example` en el secret store del proveedor.
-4. Toma la URL pública y ponla en `SERVICE_PUBLIC_URL`; registra
-   `${SERVICE_PUBLIC_URL}/payments/azul/callback` como Approved/Declined/CancelUrl con AZUL.
-5. En la SPA define `VITE_AZUL_PAYMENTS_URL` con la URL pública del servicio.
+## Despliegue recomendado: Railway + Hostinger
+Usa **Hostinger** para servir la SPA/dominio principal y **Railway** para este microservicio Node.js.
+El backend de pagos necesita proceso persistente, variables secretas, logs, healthcheck y HTTPS estable
+para recibir los callbacks de AZUL.
+
+1. En Railway crea un servicio desde GitHub y apunta el root directory a `services/azul-payments`.
+2. Railway debe usar `services/azul-payments/railway.json`; si el dashboard pide ruta absoluta por
+   monorepo, usa `/services/azul-payments/railway.json`.
+3. El deploy usa el `Dockerfile`, expone `PORT` y valida `/healthz`.
+4. Configura las variables de `.env.example` en Railway. Para producción:
+   - `SERVICE_PUBLIC_URL=https://<subdominio-pagos-o-railway>`
+   - `APP_URL=https://<tu-dominio-en-hostinger>`
+   - `ALLOWED_ORIGIN=https://<tu-dominio-en-hostinger>`
+5. Registra `${SERVICE_PUBLIC_URL}/payments/azul/callback` como Approved/Declined/CancelUrl con AZUL.
+6. En Hostinger, durante el build de la SPA, define:
+   `VITE_AZUL_PAYMENTS_URL=https://<subdominio-pagos-o-railway>`.
+
+Render también es viable. Hostinger puede funcionar para Node.js si tu plan soporta apps persistentes,
+pero no es la primera opción para este callback de pagos salvo que puedas garantizar variables secretas,
+logs, HTTPS, reinicios y healthchecks equivalentes.
 
 ## Conciliación
 El cron (`RECONCILE_CRON`) revisa pagos y donaciones `initiated` con antigüedad >

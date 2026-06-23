@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Microservicio de pasarela de pagos AZUL (Página de Pago) para membresías de ASI Rep. Dominicana.",
+  "description": "Microservicio de pasarela de pagos AZUL (Página de Pago) para membresías y donaciones de ASI Rep. Dominicana.",
   "engines": {
     "node": ">=22.0.0"
   },
