@@ -115,6 +115,21 @@ export interface MembershipCategoryInfo {
   note?: string
 }
 
+export const membershipCategoryDues = {
+  'organizational-non-profit': 'DOP 15,000',
+  'organizational-for-profit': 'DOP 15,000',
+  'executive-professional': 'DOP 15,000',
+  'sole-proprietor': 'DOP 12,000',
+  retired: 'DOP 9,000',
+  associate: 'DOP 9,000',
+  'young-professional': 'DOP 1,500',
+  'associate-international': 'DOP 15,000',
+} as const
+
+export function getMembershipCategoryDues(categorySlug: string) {
+  return membershipCategoryDues[categorySlug as keyof typeof membershipCategoryDues] ?? ''
+}
+
 export const membershipCategories: MembershipCategoryInfo[] = [
   {
     slug: 'organizational-non-profit',
@@ -127,7 +142,7 @@ export const membershipCategories: MembershipCategoryInfo[] = [
       'El propietario/director debe ser un adventista del Séptimo Día bautizado en plena comunión',
       'La organización no debe ser propiedad de ni estar controlada por la Iglesia Adventista del Séptimo Día',
     ],
-    dues: '$250',
+    dues: membershipCategoryDues['organizational-non-profit'],
     note:
       'Un propietario/director que haya sido miembro de ASI por cinco años o más y se jubile o venda la organización puede convertirse en miembro Personal de ASI.',
   },
@@ -142,7 +157,7 @@ export const membershipCategories: MembershipCategoryInfo[] = [
       'El propietario/director debe ser un adventista del Séptimo Día bautizado en plena comunión',
       'La organización no debe ser propiedad de ni estar controlada por la Iglesia Adventista del Séptimo Día',
     ],
-    dues: '$250',
+    dues: membershipCategoryDues['organizational-for-profit'],
     note:
       'Un propietario/director que haya sido miembro de ASI por cinco años o más y se jubile o venda la organización puede convertirse en miembro Personal de ASI.',
   },
@@ -157,7 +172,7 @@ export const membershipCategories: MembershipCategoryInfo[] = [
       'Supervisa un mínimo de dos equivalentes a tiempo completo',
       'Ejemplos: directivos ejecutivos, gerentes de departamento y médicos gestores empleados por organizaciones no afiliadas',
     ],
-    dues: '$250',
+    dues: membershipCategoryDues['executive-professional'],
   },
   {
     slug: 'sole-proprietor',
@@ -169,7 +184,7 @@ export const membershipCategories: MembershipCategoryInfo[] = [
       'El propietario no emplea a nadie más que a sí mismo',
       'Ejemplos: contadores, artistas visuales o escénicos, proveedores de cuidado infantil y consejeros',
     ],
-    dues: '$200',
+    dues: membershipCategoryDues['sole-proprietor'],
   },
   {
     slug: 'retired',
@@ -181,7 +196,7 @@ export const membershipCategories: MembershipCategoryInfo[] = [
       'Se ha jubilado o vendido su negocio',
       'No ha sido miembro de ASI anteriormente',
     ],
-    dues: '$150',
+    dues: membershipCategoryDues.retired,
   },
   {
     slug: 'associate',
@@ -195,7 +210,7 @@ export const membershipCategories: MembershipCategoryInfo[] = [
       'Ha ocupado el cargo por al menos un año',
       'Ejemplos: médicos, dentistas, abogados, científicos investigadores y auditores',
     ],
-    dues: '$150',
+    dues: membershipCategoryDues.associate,
     note: '* Requiere evaluación adicional',
   },
   {
@@ -208,7 +223,7 @@ export const membershipCategories: MembershipCategoryInfo[] = [
       'Estudiante, recién graduado, pasante, residente o joven emprendedor',
       'Debe hacer la transición en un plazo de tres años si califica para otra categoría',
     ],
-    dues: '$25',
+    dues: membershipCategoryDues['young-professional'],
     note: '* Requiere evaluación adicional',
   },
   {
@@ -222,7 +237,7 @@ export const membershipCategories: MembershipCategoryInfo[] = [
       'No existe presencia activa de ASI en el área',
       'Se aplican todos los requisitos para organizaciones sin fines de lucro',
     ],
-    dues: '$250',
+    dues: membershipCategoryDues['associate-international'],
     note: '* Requiere evaluación adicional',
   },
 ]

@@ -12,10 +12,14 @@ import { membershipCategories } from '@/experiences/institutional/content/eligib
 import { cn } from '@/lib/utils/cn'
 
 const duesColor: Record<string, string> = {
-  '$250': 'text-(--asi-primary)',
-  '$200': 'text-(--asi-secondary)',
-  '$150': 'text-(--asi-secondary)',
-  '$25': 'text-green-600',
+  'organizational-non-profit': 'text-(--asi-primary)',
+  'organizational-for-profit': 'text-(--asi-primary)',
+  'executive-professional': 'text-(--asi-primary)',
+  'associate-international': 'text-(--asi-primary)',
+  'sole-proprietor': 'text-(--asi-secondary)',
+  retired: 'text-(--asi-secondary)',
+  associate: 'text-(--asi-secondary)',
+  'young-professional': 'text-green-600',
 }
 
 function CategoryCard({ cat }: { cat: typeof membershipCategories[number] }) {
@@ -41,7 +45,7 @@ function CategoryCard({ cat }: { cat: typeof membershipCategories[number] }) {
           <span
             className={cn(
               'mt-1 block text-lg font-bold tracking-tight',
-              duesColor[cat.dues] ?? 'text-(--asi-primary)',
+              duesColor[cat.slug] ?? 'text-(--asi-primary)',
             )}
           >
             {cat.dues}
@@ -163,7 +167,7 @@ export function MembershipCategoriesPage() {
                     </td>
                     <td
                       className={`px-6 py-4 text-right text-sm font-semibold ${
-                        duesColor[cat.dues] ?? 'text-(--asi-text)'
+                        duesColor[cat.slug] ?? 'text-(--asi-text)'
                       }`}
                     >
                       {cat.dues}

@@ -83,7 +83,7 @@ Para iniciar un pago, el usuario logueado debe tener una **solicitud de membres�
 - Si aún no tienes una: regístrate / inicia sesión y crea una solicitud desde `/eligibility` →
   `/membership/apply`.
 - La cuota se toma de la categoría de la solicitud (montos en `membership_payment_settings.dues_by_category`,
-  en DOP). Ej.: *Joven Profesional* = 25, *Propietario Individual* = 200, etc.
+  en DOP). Ej.: *Joven Profesional* = RD$1,500, *Propietario Individual* = RD$12,000, etc.
 
 ### Tarjetas de prueba de AZUL (ambiente de pruebas)
 Todas con expiración **12/28** (`202812`). Copia el número completo **sin espacios** en el campo de

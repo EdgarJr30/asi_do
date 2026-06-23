@@ -16,6 +16,7 @@ import { InstitutionalSection } from '@/experiences/institutional/components/ins
 import {
   createEligibilityAccessToken,
   ELIGIBILITY_DRAFT_STORAGE_KEY,
+  getMembershipCategoryDues,
   internationalDivisionCountries,
   saveEligibilityToken,
   type EligibilityTokenPayload,
@@ -718,7 +719,7 @@ export function EligibilityPage() {
                           eligible: true,
                           category: 'Profesional o Empresario Jubilado',
                           categorySlug: 'retired',
-                          dues: '$150',
+                          dues: getMembershipCategoryDues('retired'),
                           message: '¡Felicitaciones! Puede calificar para la membresía de Profesional o Empresario Jubilado. Esta categoría es para personas que hubiesen sido elegibles para membresía Organizacional, Profesional Ejecutivo o Propietario Individual y que se han jubilado o vendido su negocio.',
                         },
                         { employmentStatus: 'retired' },
@@ -733,7 +734,7 @@ export function EligibilityPage() {
                           eligible: true,
                           category: 'Joven Profesional',
                           categorySlug: 'young-professional',
-                          dues: '$25',
+                          dues: getMembershipCategoryDues('young-professional'),
                           message: '¡Felicitaciones! Puede calificar para la membresía de Joven Profesional. Esta categoría está abierta a personas de 18 a 35 años que sean estudiantes, recién graduados, pasantes, residentes o jóvenes emprendedores.',
                         },
                         { employmentStatus: 'young-professional' },
@@ -761,7 +762,7 @@ export function EligibilityPage() {
                           eligible: true,
                           category: 'Profesional Ejecutivo',
                           categorySlug: 'executive-professional',
-                          dues: '$250',
+                          dues: getMembershipCategoryDues('executive-professional'),
                           message: '¡Felicitaciones! Puede calificar para la membresía de Profesional Ejecutivo. Esta categoría es para gerentes y ejecutivos que han ocupado su cargo por al menos un año, tienen autoridad para contratar y despedir, y supervisan un mínimo de dos equivalentes a tiempo completo.',
                         },
                         { hasAuthority: true },
@@ -776,7 +777,7 @@ export function EligibilityPage() {
                           eligible: true,
                           category: 'Asociado',
                           categorySlug: 'associate',
-                          dues: '$150',
+                          dues: getMembershipCategoryDues('associate'),
                           message: '¡Felicitaciones! Puede calificar para la membresía Asociada. Esta categoría es para profesionales con un alto nivel de responsabilidad en una organización controlada por otra persona, que no supervisan a otros empleados.',
                         },
                         { hasAuthority: false },
@@ -865,7 +866,7 @@ export function EligibilityPage() {
                           eligible: true,
                           category: 'Propietario Individual',
                           categorySlug: 'sole-proprietor',
-                          dues: '$200',
+                          dues: getMembershipCategoryDues('sole-proprietor'),
                           message: '¡Felicitaciones! Según sus respuestas, puede calificar para la membresía de Propietario Individual. Esta membresía está disponible para propietarios/operadores que no emplean a nadie más que a sí mismos. Su negocio debe haber estado en operación continua por un mínimo de un año.',
                         },
                         { orgSize: 'only-one' },
@@ -905,12 +906,13 @@ export function EligibilityPage() {
                       selected={state.orgChurchOwned === false}
                       onClick={() => {
                         const isNonProfit = state.orgType === 'non-profit'
+                        const categorySlug = isNonProfit ? 'organizational-non-profit' : 'organizational-for-profit'
                         resolveResult(
                           {
                             eligible: true,
                             category: isNonProfit ? 'Organizacional Sin Fines de Lucro' : 'Organizacional Con Fines de Lucro',
-                            categorySlug: isNonProfit ? 'organizational-non-profit' : 'organizational-for-profit',
-                            dues: '$250',
+                            categorySlug,
+                            dues: getMembershipCategoryDues(categorySlug),
                             message: isNonProfit
                               ? '¡Felicitaciones! Su organización puede calificar para la membresía Organizacional Sin Fines de Lucro. La membresía se registra a nombre de la organización y requiere al menos dos equivalentes a tiempo completo y un mínimo de un año de operación.'
                               : '¡Felicitaciones! Su organización puede calificar para la membresía Organizacional Con Fines de Lucro. La membresía se registra a nombre de la organización y requiere al menos dos equivalentes a tiempo completo y un mínimo de un año de operación.',
