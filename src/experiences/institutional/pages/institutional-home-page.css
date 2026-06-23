@@ -396,9 +396,8 @@
    following its natural aspect ratio so the borders are never cropped. */
 .institutional-home__hero-frame--image-only {
   width: 100%;
-  /* 56.28vw = full-width height at the poster ratio (941/1672).
-     Capped to the viewport so the whole poster is visible without scrolling. */
-  height: min(56.28vw, calc(100svh - 10rem));
+  /* 129.42vw = full-width height at the mobile poster ratio (1280/989). */
+  height: min(129.42vw, calc(100svh - 5.75rem));
   min-height: 0;
   max-height: none;
   aspect-ratio: auto;
@@ -423,4 +422,11 @@
 .institutional-home__hero-frame--image-only .institutional-home__image-frame {
   object-fit: contain;
   object-position: center;
+}
+
+@media (min-width: 768px) {
+  .institutional-home__hero-frame--image-only {
+    /* 50.00vw = full-width height at the desktop poster ratio (887/1774). */
+    height: min(50vw, calc(100svh - 7rem));
+  }
 }
