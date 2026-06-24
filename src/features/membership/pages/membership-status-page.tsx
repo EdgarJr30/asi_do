@@ -242,6 +242,9 @@ export function MembershipStatusPage() {
   const canRenew = session.hasActiveAsiAccess && bundle.application?.status === 'approved' && azulEnabled
   const importantStep = steps.find((step) => step.state === 'blocked') ?? steps.find((step) => step.state === 'current')
   const routeStatusLabel = session.hasActiveAsiAccess ? 'Activa' : importantStep?.title ?? 'En proceso'
+  const membershipActivatedAt =
+    session.profile?.membership_activated_at ?? bundle.verifiedPayment?.period_start ?? bundle.verifiedPayment?.verified_at ?? null
+  const membershipExpiresAt = session.profile?.membership_expires_at ?? bundle.verifiedPayment?.period_end ?? null
 
   // Resultado del retorno de AZUL (?payment=approved|declined|cancelled|error): avisa y refresca.
   const [searchParams, setSearchParams] = useSearchParams()
@@ -484,8 +487,8 @@ export function MembershipStatusPage() {
                 </CardHeader>
                 <CardContent className="space-y-1">
                   <StatusSummaryRow label="Fecha de pago" value={formatDate(bundle.verifiedPayment?.verified_at ?? null)} />
-                  <StatusSummaryRow label="Activación" value={formatDate(session.profile?.membership_activated_at ?? null)} />
-                  <StatusSummaryRow label="Vencimiento" value={formatDate(session.profile?.membership_expires_at ?? null)} />
+                  <StatusSummaryRow label="Activación" value={formatDate(membershipActivatedAt)} />
+                  <StatusSummaryRow label="Vencimiento" value={formatDate(membershipExpiresAt)} />
                 </CardContent>
               </Card>
             ) : null}
