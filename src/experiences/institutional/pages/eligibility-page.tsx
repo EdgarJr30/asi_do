@@ -326,6 +326,7 @@ function EligibleResult({
           </button>
           <Link
             to="/membership/categories"
+            state={{ fromEligibility: true }}
             className="asi-button asi-button-secondary w-full justify-center"
           >
             Ver todas las categorías

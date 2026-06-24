@@ -1,7 +1,8 @@
 import { useState } from 'react'
 
 import { AnimatePresence, motion } from 'motion/react'
-import { CheckCircle2, ChevronDown } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, ChevronDown } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { surfacePaths } from '@/app/router/surface-paths'
 import {
@@ -111,11 +112,27 @@ function CategoryCard({ cat }: { cat: typeof membershipCategories[number] }) {
 }
 
 export function MembershipCategoriesPage() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  // Solo cuando se llega desde el resultado de elegibilidad ("Ver todas las categorías").
+  const fromEligibility = Boolean((location.state as { fromEligibility?: boolean } | null)?.fromEligibility)
+
   return (
     <div>
       {/* ── Tarjetas de categorías ───────────────────────────── */}
       <InstitutionalSection tone="plain">
         <div className="space-y-10">
+          {fromEligibility ? (
+            <div className="mx-auto w-full max-w-3xl">
+              <button
+                type="button"
+                onClick={() => void navigate(surfacePaths.institutional.eligibility)}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-(--asi-primary) transition hover:opacity-80"
+              >
+                <ArrowLeft className="size-4" /> Volver a mi verificación
+              </button>
+            </div>
+          ) : null}
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="asi-heading-lg">Detalle de Categorías</h2>
             <p className="asi-copy mt-3">
