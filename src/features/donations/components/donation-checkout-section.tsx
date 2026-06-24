@@ -3,10 +3,12 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { CheckCircle2, CreditCard, HeartHandshake, ShieldCheck } from 'lucide-react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
+import { surfacePaths } from '@/app/router/surface-paths'
 import { useAppSession } from '@/app/providers/app-session-provider'
+import { merchantCompliance } from '@/experiences/institutional/content/payment-compliance-content'
 import {
   getDonationReceipt,
   listDonationAmountOptions,
@@ -19,6 +21,7 @@ import {
 import { InstitutionalCard, InstitutionalSection } from '@/experiences/institutional/components/institutional-ui'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 import { printReceipt, receiptPlainText, shareReceipt, type ReceiptLine } from '@/shared/ui/receipt'
+import { PaymentBrandStrip } from '@/shared/ui/payment-brand-strip'
 import { cn } from '@/lib/utils/cn'
 
 const DONATION_RECEIPT_TITLE = 'Comprobante de donación'
@@ -203,6 +206,7 @@ export function DonationCheckoutSection() {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [customAmount, setCustomAmount] = useState('')
   const [designation, setDesignation] = useState('Fondo general ASI DO')
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false)
 
   // Progressive profiling: si hay sesión, prefill desde el perfil (derivado, sin effect).
   // `null` = el usuario aún no edita el campo → usamos el valor del perfil; al escribir, manda su input.
@@ -240,12 +244,16 @@ export function DonationCheckoutSection() {
       return false
     }
 
+    if (!acceptedPolicies) {
+      return false
+    }
+
     if (isCustom) {
       return selectedAmount >= 100 && selectedAmount <= 1_000_000
     }
 
     return Boolean(selectedOption)
-  }, [donorEmail, donorName, isCustom, selectedAmount, selectedOption])
+  }, [acceptedPolicies, donorEmail, donorName, isCustom, selectedAmount, selectedOption])
 
   const donateMutation = useMutation({
     mutationFn: () =>
@@ -349,8 +357,15 @@ export function DonationCheckoutSection() {
               </span>
               <div>
                 <p className="text-lg font-semibold tracking-tight text-(--asi-text)">Resumen de donación</p>
-                <p className="text-sm text-(--asi-text-muted)">Pago seguro procesado por AZUL.</p>
+                <p className="text-sm text-(--asi-text-muted)">Pago seguro procesado por AZUL en RD$ / DOP$.</p>
               </div>
+            </div>
+
+            <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3">
+              <PaymentBrandStrip show3DSLabel />
+              <p className="mt-3 text-xs leading-5 text-(--asi-text-muted)">
+                Comercio: {merchantCompliance.businessName}. Servicio al Cliente: {merchantCompliance.email} · {merchantCompliance.phone}.
+              </p>
             </div>
 
             <div className="mt-5 rounded-[1.35rem] bg-(--asi-surface-raised) px-4 py-4">
@@ -421,6 +436,44 @@ export function DonationCheckoutSection() {
                 </select>
               </label>
             </div>
+
+            <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-xs leading-5 text-(--asi-text-muted)">
+              <p className="font-semibold text-(--asi-text)">Producto/servicio</p>
+              <p className="mt-1">{merchantCompliance.checkoutDescription}</p>
+              <p className="mt-2">
+                Dirección permanente: {merchantCompliance.address}. Moneda de compra: {merchantCompliance.currency}.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                <Link className="font-semibold text-(--asi-primary) hover:underline" to={surfacePaths.institutional.refunds}>
+                  Devoluciones
+                </Link>
+                <Link className="font-semibold text-(--asi-primary) hover:underline" to={surfacePaths.institutional.delivery}>
+                  Entrega
+                </Link>
+                <Link className="font-semibold text-(--asi-primary) hover:underline" to={surfacePaths.institutional.privacy}>
+                  Privacidad
+                </Link>
+                <Link className="font-semibold text-(--asi-primary) hover:underline" to={surfacePaths.institutional.paymentSecurity}>
+                  Seguridad de pagos
+                </Link>
+              </div>
+            </div>
+
+            <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-(--asi-text-muted)">
+              <input
+                checked={acceptedPolicies}
+                className="mt-1 size-4 shrink-0 accent-(--asi-primary)"
+                type="checkbox"
+                onChange={(event) => setAcceptedPolicies(event.target.checked)}
+              />
+              <span>
+                Acepto los{' '}
+                <Link className="font-semibold text-(--asi-primary) hover:underline" to={surfacePaths.institutional.terms}>
+                  términos y condiciones
+                </Link>
+                , las políticas de privacidad, entrega, devoluciones/cancelaciones y seguridad de pagos antes de continuar a AZUL.
+              </span>
+            </label>
 
             <button
               type="button"

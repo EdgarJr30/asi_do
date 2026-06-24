@@ -26,8 +26,10 @@ import { PageLoader } from '@/components/ui/loader'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { payMembershipWithAzul, type AzulPaymentIntent } from '@/features/membership/lib/azul-api'
+import { merchantCompliance } from '@/experiences/institutional/content/payment-compliance-content'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { printReceipt, receiptPlainText, shareReceipt, type ReceiptLine } from '@/shared/ui/receipt'
+import { PaymentBrandStrip } from '@/shared/ui/payment-brand-strip'
 import {
   fetchMyMembershipStatus,
   getCategoryDue,
@@ -666,6 +668,7 @@ function AzulPayCard({
   onRefresh: () => void
 }) {
   const [years, setYears] = useState(1)
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false)
   const processing = paymentStatus === 'initiated'
   const total = annualAmount != null ? annualAmount * years : null
   const totalLabel = total != null ? formatMoney(total, currency) : null
@@ -721,7 +724,7 @@ function AzulPayCard({
   const button = (
     <Button
       className={compact ? 'mt-3 h-9 w-full' : 'mt-3 h-10'}
-      disabled={payMutation.isPending}
+      disabled={payMutation.isPending || !acceptedPolicies}
       onClick={() => payMutation.mutate()}
     >
       <CreditCard className="size-4" />
@@ -737,6 +740,11 @@ function AzulPayCard({
     return (
       <div className="mt-2">
         {yearSelector}
+        <CheckoutComplianceBox
+          accepted={acceptedPolicies}
+          onAcceptedChange={setAcceptedPolicies}
+          compact
+        />
         {button}
       </div>
     )
@@ -768,6 +776,7 @@ function AzulPayCard({
         Serás redirigido a la página de pago de AZUL para completar la transacción con tu tarjeta de crédito o
         débito. Al terminar, volverás aquí automáticamente.
       </p>
+      <CheckoutComplianceBox accepted={acceptedPolicies} onAcceptedChange={setAcceptedPolicies} />
       {paymentStatus === 'failed' || paymentStatus === 'rejected' ? (
         <p className="mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">
           Tu intento anterior no se completó. Puedes intentarlo de nuevo.
@@ -777,6 +786,41 @@ function AzulPayCard({
       <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-(--app-surface) px-3 py-2 text-xs text-(--app-text-muted)">
         <ShieldCheck className="size-3.5" /> Transacción procesada por AZUL. No almacenamos los datos de tu tarjeta.
       </p>
+    </div>
+  )
+}
+
+function CheckoutComplianceBox({
+  accepted,
+  onAcceptedChange,
+  compact = false
+}: {
+  accepted: boolean
+  onAcceptedChange: (accepted: boolean) => void
+  compact?: boolean
+}) {
+  return (
+    <div className={cn('rounded-2xl border border-(--app-border) bg-(--app-surface) p-3', compact ? 'mt-3' : 'mt-3')}>
+      <PaymentBrandStrip itemClassName="h-9 min-w-12" show3DSLabel={!compact} />
+      <p className="mt-2 text-xs leading-5 text-(--app-text-muted)">
+        Comercio: {merchantCompliance.businessName}. Moneda: {merchantCompliance.currency}. Soporte:{' '}
+        {merchantCompliance.email} · {merchantCompliance.phone}.
+      </p>
+      <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs leading-5 text-(--app-text-muted)">
+        <input
+          checked={accepted}
+          className="mt-1 size-4 shrink-0 accent-primary-600"
+          type="checkbox"
+          onChange={(event) => onAcceptedChange(event.target.checked)}
+        />
+        <span>
+          Acepto los{' '}
+          <Link className="font-semibold text-primary-700 hover:underline" to={surfacePaths.institutional.terms}>
+            términos
+          </Link>
+          , privacidad, entrega, devoluciones/cancelaciones y seguridad de pagos antes de continuar a AZUL.
+        </span>
+      </label>
     </div>
   )
 }

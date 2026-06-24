@@ -7,8 +7,10 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { RouteScrollManager } from '@/app/router/route-scroll-manager';
 import { surfacePaths } from '@/app/router/surface-paths';
 import { institutionalNavigation } from '@/experiences/institutional/content/site-content';
+import { merchantCompliance, paymentPolicyLinks } from '@/experiences/institutional/content/payment-compliance-content';
 import { BrandLockup } from '@/components/ui/app-brand';
 import { cn } from '@/lib/utils/cn';
+import { PaymentBrandStrip } from '@/shared/ui/payment-brand-strip';
 
 const institutionalPrimaryNavigation = [
   { label: 'Contáctanos', to: surfacePaths.institutional.contactUs },
@@ -318,10 +320,16 @@ export function InstitutionalShell() {
                 </div>
               </div>
               <p className="mt-5 max-w-xl text-sm leading-7 text-white/74 sm:mt-6">
-                Un espacio institucional separado de la plataforma SaaS,
-                diseñado para comunicar misión, membresía, proyectos, noticias y
-                formas de participar con un lenguaje más elegante y editorial.
+                {merchantCompliance.legalName}. Membresías y donaciones
+                procesadas en {merchantCompliance.currency}. Dirección permanente:
+                {' '}{merchantCompliance.address}.
               </p>
+              <div className="mt-5">
+                <PaymentBrandStrip
+                  itemClassName="border-white/12 bg-white"
+                  show3DSLabel
+                />
+              </div>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <Link
                   className="asi-button asi-button-secondary w-full justify-center"
@@ -338,7 +346,7 @@ export function InstitutionalShell() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
+            <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
               <div className="rounded-3xl border border-white/10 bg-white/6 p-5 backdrop-blur-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
                   Explora
@@ -390,6 +398,27 @@ export function InstitutionalShell() {
                     Donaciones
                     <MoveRight className="size-4 text-white/44" />
                   </Link>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-white/10 bg-white/6 p-5 backdrop-blur-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
+                  Pagos y políticas
+                </p>
+                <div className="mt-4 space-y-2.5">
+                  {paymentPolicyLinks.map((item) => (
+                    <Link
+                      key={item.to}
+                      className="flex items-center justify-between rounded-2xl bg-white/6 px-3.5 py-3 text-sm font-medium text-white/82 transition hover:bg-white/12 hover:text-white"
+                      to={item.to}
+                    >
+                      {item.label}
+                      <MoveRight className="size-4 text-white/44" />
+                    </Link>
+                  ))}
+                </div>
+                <div className="mt-4 rounded-2xl bg-white/6 px-3.5 py-3 text-xs leading-5 text-white/72">
+                  Servicio al Cliente: {merchantCompliance.email} · {merchantCompliance.phone}
                 </div>
               </div>
             </div>

@@ -12,6 +12,7 @@ import { MembershipApplyPage } from '@/experiences/institutional/pages/membershi
 import { MembershipCategoriesPage } from '@/experiences/institutional/pages/membership-categories-page'
 import { MembershipPage } from '@/experiences/institutional/pages/membership-page'
 import { NewsPage } from '@/experiences/institutional/pages/news-page'
+import { PaymentPolicyPage } from '@/experiences/institutional/pages/payment-policy-page'
 import { ProjectFundingPage } from '@/experiences/institutional/pages/project-funding-page'
 import { ProjectsPage } from '@/experiences/institutional/pages/projects-page'
 import { WhoWeArePage } from '@/experiences/institutional/pages/who-we-are-page'
@@ -56,6 +57,30 @@ export const institutionalRoutes: RouteObject[] = [
       {
         path: 'donate',
         element: <DonatePage />
+      },
+      {
+        path: 'terms',
+        element: <PaymentPolicyPage kind="terms" />
+      },
+      {
+        path: 'privacy',
+        element: <PaymentPolicyPage kind="privacy" />
+      },
+      {
+        path: 'refunds-cancellations',
+        element: <PaymentPolicyPage kind="refunds" />
+      },
+      {
+        path: 'delivery-policy',
+        element: <PaymentPolicyPage kind="delivery" />
+      },
+      {
+        path: 'payment-security',
+        element: <PaymentPolicyPage kind="security" />
+      },
+      {
+        path: 'payment-receipt-model',
+        element: <PaymentPolicyPage kind="receipt" />
       },
       {
         path: 'who-we-are',
