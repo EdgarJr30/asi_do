@@ -165,7 +165,7 @@ const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
   },
   [surfacePaths.candidate.applications]: {
     title: 'Aplicaciones',
-    description: 'Sigue el avance de cada proceso con un solo vistazo'
+    description: ''
   },
   [surfacePaths.candidate.profile]: {
     title: 'Perfil',
