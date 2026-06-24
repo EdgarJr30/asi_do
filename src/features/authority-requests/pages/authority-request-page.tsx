@@ -550,8 +550,8 @@ export function AuthorityRequestPage() {
         {authorityType === 'pastoral' ? (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input placeholder="Cédula o documento" {...pastorForm.register('identityDocumentNumber')} />
-              <Input placeholder="Teléfono principal" {...pastorForm.register('phoneNumber')} />
+              <Input inputMode="numeric" placeholder="Cédula o documento" {...pastorForm.register('identityDocumentNumber')} />
+              <Input type="tel" inputMode="tel" autoComplete="tel" placeholder="Teléfono principal" {...pastorForm.register('phoneNumber')} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Input placeholder="Nombres legales" {...pastorForm.register('firstNames')} />
@@ -654,8 +654,8 @@ export function AuthorityRequestPage() {
         ) : (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input placeholder="Cédula o documento" {...regionalForm.register('identityDocumentNumber')} />
-              <Input placeholder="Teléfono principal" {...regionalForm.register('phoneNumber')} />
+              <Input inputMode="numeric" placeholder="Cédula o documento" {...regionalForm.register('identityDocumentNumber')} />
+              <Input type="tel" inputMode="tel" autoComplete="tel" placeholder="Teléfono principal" {...regionalForm.register('phoneNumber')} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Input placeholder="Nombres legales" {...regionalForm.register('firstNames')} />

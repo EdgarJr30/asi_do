@@ -388,7 +388,7 @@ function TestPanel({ defaultTo, onView }: { defaultTo: string; onView: (row: Ema
           <div className="grid gap-4 rounded-panel border border-(--app-border) bg-(--app-surface-elevated) p-5 sm:grid-cols-2">
             <label className="space-y-1.5 text-sm">
               <span className="font-medium text-(--app-text)">Destinatario</span>
-              <Input value={to} onChange={(event) => setTo(event.target.value)} placeholder="correo@ejemplo.com" />
+              <Input type="email" value={to} onChange={(event) => setTo(event.target.value)} placeholder="correo@ejemplo.com" />
             </label>
             <label className="space-y-1.5 text-sm">
               <span className="font-medium text-(--app-text)">Escenario a simular</span>

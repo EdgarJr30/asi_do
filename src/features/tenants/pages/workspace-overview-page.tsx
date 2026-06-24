@@ -582,6 +582,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
                 <label className={fieldLabelClassName}>
                   <span className={fieldLabelTextClassName}>Website</span>
                   <Input
+                    type="url"
                     value={websiteUrl}
                     onChange={(event) => setWebsiteUrl(event.target.value)}
                     placeholder="https://..."
@@ -592,6 +593,8 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
                     Email de reclutamiento
                   </span>
                   <Input
+                    type="email"
+                    autoComplete="email"
                     value={companyEmail}
                     onChange={(event) => setCompanyEmail(event.target.value)}
                     placeholder="careers@empresa.com"
@@ -614,6 +617,9 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
                 <label className={fieldLabelClassName}>
                   <span className={fieldLabelTextClassName}>Teléfono</span>
                   <Input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
                     value={companyPhone}
                     onChange={(event) => setCompanyPhone(event.target.value)}
                   />

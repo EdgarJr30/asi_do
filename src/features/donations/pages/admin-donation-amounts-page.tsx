@@ -131,7 +131,7 @@ export function AdminDonationAmountsPage() {
               </label>
               <label className="grid gap-1.5 text-sm">
                 <span className="font-medium text-(--app-text-muted)">Orden</span>
-                <Input type="number" placeholder="auto" value={newOrder} onChange={(event) => setNewOrder(event.target.value)} />
+                <Input type="number" inputMode="numeric" placeholder="auto" value={newOrder} onChange={(event) => setNewOrder(event.target.value)} />
               </label>
               <Button className="h-10" disabled={createMutation.isPending}>
                 <Plus className="size-4" /> {createMutation.isPending ? 'Agregando…' : 'Agregar'}

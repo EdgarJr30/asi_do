@@ -1900,6 +1900,7 @@ export function MembershipApplicationForm({
             required
             error={errors.cellPhone?.message}
             placeholder="809-000-0000"
+            type="tel"
             inputMode="tel"
             autoComplete="tel"
             {...form.register('cellPhone')}
@@ -2140,6 +2141,7 @@ export function MembershipApplicationForm({
                 label="Año de establecimiento"
                 required
                 error={errors.yearEstablished?.message}
+                type="number"
                 inputMode="numeric"
                 placeholder="2020"
                 {...form.register('yearEstablished')}
@@ -2148,6 +2150,7 @@ export function MembershipApplicationForm({
                 label="Número de empleados"
                 required
                 error={errors.employeeCount?.message}
+                type="number"
                 inputMode="numeric"
                 placeholder="2"
                 {...form.register('employeeCount')}
@@ -2159,11 +2162,15 @@ export function MembershipApplicationForm({
                 label="Teléfono de trabajo"
                 required
                 error={errors.workPhone?.message}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 {...form.register('workPhone')}
               />
               <TextField
                 label="Sitio web"
                 error={errors.website?.message}
+                type="url"
                 placeholder="www.organizacion.org"
                 {...form.register('website')}
               />
@@ -2206,6 +2213,7 @@ export function MembershipApplicationForm({
                 label="Años en el rol"
                 required
                 error={errors.yearsInRole?.message}
+                type="number"
                 inputMode="numeric"
                 {...form.register('yearsInRole')}
               />
@@ -2213,6 +2221,7 @@ export function MembershipApplicationForm({
                 label="Personas supervisadas"
                 required
                 error={errors.peopleSupervised?.message}
+                type="number"
                 inputMode="numeric"
                 {...form.register('peopleSupervised')}
               />
@@ -2241,11 +2250,15 @@ export function MembershipApplicationForm({
                 label="Teléfono laboral"
                 required
                 error={errors.workPhone?.message}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 {...form.register('workPhone')}
               />
               <TextField
                 label="Sitio web"
                 error={errors.website?.message}
+                type="url"
                 {...form.register('website')}
               />
             </div>
@@ -2273,6 +2286,7 @@ export function MembershipApplicationForm({
                 label="Año de operación"
                 required
                 error={errors.yearEstablished?.message}
+                type="number"
                 inputMode="numeric"
                 {...form.register('yearEstablished')}
               />
@@ -2280,12 +2294,16 @@ export function MembershipApplicationForm({
                 label="Teléfono de trabajo"
                 required
                 error={errors.workPhone?.message}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 {...form.register('workPhone')}
               />
             </div>
             <TextField
               label="Sitio web"
               error={errors.website?.message}
+              type="url"
               {...form.register('website')}
             />
             <TextAreaField
@@ -2365,12 +2383,16 @@ export function MembershipApplicationForm({
                 label="Teléfono laboral"
                 required
                 error={errors.workPhone?.message}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 {...form.register('workPhone')}
               />
             </div>
             <TextField
               label="Sitio web"
               error={errors.website?.message}
+              type="url"
               {...form.register('website')}
             />
             <TextAreaField
@@ -2558,6 +2580,9 @@ export function MembershipApplicationForm({
             label="Teléfono del pastor"
             required
             error={errors.pastorPhone?.message}
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
             {...form.register('pastorPhone')}
           />
           <TextField

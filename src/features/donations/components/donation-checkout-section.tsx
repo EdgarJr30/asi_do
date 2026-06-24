@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
@@ -206,6 +206,19 @@ export function DonationCheckoutSection() {
   const [donorEmail, setDonorEmail] = useState('')
   const [donorPhone, setDonorPhone] = useState('')
   const [designation, setDesignation] = useState('Fondo general ASI DO')
+  const didPrefillDonorRef = useRef(false)
+
+  useEffect(() => {
+    if (didPrefillDonorRef.current || (!session.profile && !session.authUser?.email)) {
+      return
+    }
+
+    didPrefillDonorRef.current = true
+
+    setDonorName((current) => current || session.profile?.full_name || session.profile?.display_name || '')
+    setDonorEmail((current) => current || session.profile?.email || session.authUser?.email || '')
+    setDonorPhone((current) => current || session.profile?.phone || '')
+  }, [session.authUser?.email, session.profile])
 
   const amountOptionsQuery = useQuery({
     queryKey: ['donations', 'amount-options'],
@@ -373,6 +386,7 @@ export function DonationCheckoutSection() {
                 Nombre del donante
                 <input
                   className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
+                  autoComplete="name"
                   value={donorName}
                   onChange={(event) => setDonorName(event.target.value)}
                 />
@@ -381,6 +395,7 @@ export function DonationCheckoutSection() {
                 Correo
                 <input
                   className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
+                  autoComplete="email"
                   type="email"
                   value={donorEmail}
                   onChange={(event) => setDonorEmail(event.target.value)}
@@ -390,6 +405,9 @@ export function DonationCheckoutSection() {
                 Teléfono
                 <input
                   className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  type="tel"
                   value={donorPhone}
                   onChange={(event) => setDonorPhone(event.target.value)}
                 />

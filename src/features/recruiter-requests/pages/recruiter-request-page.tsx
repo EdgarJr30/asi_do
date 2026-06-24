@@ -366,13 +366,13 @@ export function RecruiterRequestPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <span>Website</span>
-                  <Input placeholder="https://empresa.com" {...form.register('companyWebsiteUrl')} />
+                  <Input type="url" placeholder="https://empresa.com" {...form.register('companyWebsiteUrl')} />
                   <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.companyWebsiteUrl?.message}</p>
                 </label>
 
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <span>Email corporativo</span>
-                  <Input placeholder="jobs@empresa.com" {...form.register('companyEmail')} />
+                  <Input type="email" autoComplete="email" placeholder="jobs@empresa.com" {...form.register('companyEmail')} />
                   <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.companyEmail?.message}</p>
                 </label>
               </div>
@@ -380,7 +380,7 @@ export function RecruiterRequestPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <span>Teléfono</span>
-                  <Input placeholder="+1 809 000 0000" {...form.register('companyPhone')} />
+                  <Input type="tel" inputMode="tel" autoComplete="tel" placeholder="+1 809 000 0000" {...form.register('companyPhone')} />
                 </label>
 
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">

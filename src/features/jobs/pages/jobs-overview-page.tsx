@@ -390,11 +390,11 @@ function JobEditor({
               <div className="mt-4 grid gap-4 sm:grid-cols-3">
                 <label className="grid gap-2 text-sm">
                   <span>Mínimo</span>
-                  <Input {...form.register('compensationMinAmount')} />
+                  <Input type="number" inputMode="decimal" {...form.register('compensationMinAmount')} />
                 </label>
                 <label className="grid gap-2 text-sm">
                   <span>Máximo</span>
-                  <Input {...form.register('compensationMaxAmount')} />
+                  <Input type="number" inputMode="decimal" {...form.register('compensationMaxAmount')} />
                   <p className="text-xs text-rose-600">{form.formState.errors.compensationMaxAmount?.message}</p>
                 </label>
                 <label className="grid gap-2 text-sm">
