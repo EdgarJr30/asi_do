@@ -153,7 +153,7 @@ const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
 const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'description'>> = {
   [surfacePaths.account.membership]: {
     title: 'Membresía',
-    description: 'Estado de solicitud, pago y activación de tu cuenta'
+    description: ''
   },
   [surfacePaths.candidate.home]: {
     title: 'Inicio',

@@ -189,8 +189,6 @@ export function MembershipStatusPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const userId = session.authUser?.id ?? null
-  const displayName = session.profile?.display_name ?? session.profile?.full_name ?? session.authUser?.email ?? 'miembro'
-  const firstName = displayName.trim().split(/\s+/)[0] ?? displayName
   const [activeTab, setActiveTab] = useState<MembershipTab>('summary')
 
   const statusQuery = useQuery({
@@ -273,27 +271,18 @@ export function MembershipStatusPage() {
   return (
     <div className="space-y-5">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="max-w-3xl space-y-2">
-          <span className="inline-flex w-fit rounded-full border border-(--app-border) bg-(--app-surface) px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-(--app-text-subtle)">
-            Cuenta · Membresía
-          </span>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-(--app-text)">Tu membresía</h1>
-            <p className="mt-1 max-w-2xl text-[0.9rem] leading-6 text-(--app-text-muted)">
-              Hola, {firstName}. Aquí verás solo lo que requiere atención; lo completado queda organizado como historial.
-            </p>
-          </div>
+        <div className="max-w-3xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-(--app-text)">Tu membresía</h1>
+          <p className="mt-1 max-w-2xl text-[0.9rem] leading-6 text-(--app-text-muted)">
+            Mantén tu membresía ASI al día, renueva con facilidad y conserva tus comprobantes en un espacio organizado.
+          </p>
         </div>
 
-        {session.hasActiveAsiAccess ? (
-          <Button className="h-10 w-fit" onClick={() => void navigate(surfacePaths.candidate.home)}>
-            Entrar a la plataforma <ArrowRight className="size-4" />
-          </Button>
-        ) : (
+        {!session.hasActiveAsiAccess ? (
           <Button className="h-10 w-fit" onClick={() => void navigate(surfacePaths.institutional.eligibility)}>
             Completar solicitud <ArrowRight className="size-4" />
           </Button>
-        )}
+        ) : null}
       </header>
 
       {statusQuery.isLoading ? (
@@ -315,27 +304,27 @@ export function MembershipStatusPage() {
       ) : (
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_21rem]">
           <section className="space-y-5">
-            <Card className="overflow-hidden border-primary-200 bg-[linear-gradient(135deg,rgba(43,69,143,0.08),rgba(255,255,255,0.92))] dark:border-primary-500/25 dark:bg-[linear-gradient(135deg,rgba(43,69,143,0.24),rgba(15,23,42,0.96))]">
-              <CardHeader className="sm:flex sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:space-y-0">
-                <div className="space-y-2">
+            <Card className="overflow-hidden border-primary-200 bg-[linear-gradient(135deg,rgba(43,69,143,0.06),rgba(255,255,255,0.94))] dark:border-primary-500/25 dark:bg-[linear-gradient(135deg,rgba(43,69,143,0.2),rgba(15,23,42,0.96))]">
+              <CardHeader className="gap-3 sm:flex sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
+                <div className="space-y-1.5">
                   <Badge variant="soft" className="w-fit">{routeStatusLabel}</Badge>
                   <CardTitle>Lo importante ahora</CardTitle>
                   <CardDescription>
                     {session.hasActiveAsiAccess
-                      ? 'Tu acceso está activo. Lo principal aquí es mantener tus fechas y renovar cuando corresponda.'
+                      ? 'Tu membresía está activa. Revisa tu renovación y conserva tus datos al día.'
                       : currentStep?.description ?? 'Completa el siguiente paso para avanzar tu membresía.'}
                   </CardDescription>
                 </div>
-                <div className="min-w-24 rounded-2xl border border-(--app-border) bg-(--app-surface)/80 px-4 py-3 text-center">
+                <div className="min-w-22 rounded-2xl border border-(--app-border) bg-(--app-surface)/80 px-3 py-2.5 text-center">
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-(--app-text-subtle)">Avance</p>
-                  <p className="mt-1 text-2xl font-semibold text-(--app-text)">{progress.percent}%</p>
+                  <p className="mt-0.5 text-xl font-semibold text-(--app-text)">{progress.percent}%</p>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 {session.hasActiveAsiAccess && canRenew && bundle.application ? (
-                  <div className="rounded-panel border border-(--app-border) bg-(--app-surface) p-4">
+                  <div className="rounded-panel border border-(--app-border) bg-(--app-surface) p-3.5">
                     <p className="text-sm font-semibold text-(--app-text)">Renovar membresía</p>
-                    <p className="mt-1 text-sm leading-6 text-(--app-text-muted)">
+                    <p className="mt-1 text-[0.82rem] leading-5 text-(--app-text-muted)">
                       Renueva por 1 a 5 años. Tu membresía actual se conserva y el monto se calcula automáticamente.
                     </p>
                     <AzulPayCard
@@ -391,39 +380,48 @@ export function MembershipStatusPage() {
               <div className="border-b border-(--app-border) px-4 pt-4 sm:px-5">
                 <nav className="flex gap-1 overflow-x-auto" aria-label="Secciones de membresía">
                   {[
-                    { key: 'summary', label: 'Resumen' },
-                    { key: 'route', label: 'Ruta' },
-                    { key: 'receipts', label: 'Comprobantes' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      onClick={() => setActiveTab(tab.key as MembershipTab)}
-                      className={cn(
-                        'whitespace-nowrap border-b-2 px-3 py-3 text-sm font-semibold transition',
-                        activeTab === tab.key
-                          ? 'border-primary-600 text-primary-700 dark:text-primary-200'
-                          : 'border-transparent text-(--app-text-muted) hover:text-(--app-text)'
-                      )}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                    { key: 'summary', label: 'Resumen', icon: Sparkles },
+                    { key: 'route', label: 'Ruta', icon: ShieldCheck },
+                    { key: 'receipts', label: 'Comprobantes', icon: FileText }
+                  ].map((tab) => {
+                    const TabIcon = tab.icon
+                    return (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setActiveTab(tab.key as MembershipTab)}
+                        className={cn(
+                          'inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-semibold transition',
+                          activeTab === tab.key
+                            ? 'border-primary-600 text-primary-700 dark:text-primary-200'
+                            : 'border-transparent text-(--app-text-muted) hover:text-(--app-text)'
+                        )}
+                      >
+                        <TabIcon className="size-4" />
+                        {tab.label}
+                      </button>
+                    )
+                  })}
                 </nav>
               </div>
 
               <div className="p-4 sm:p-5">
                 {activeTab === 'summary' ? (
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <SummaryTile label="Solicitud" value={bundle.application ? applicationStatusLabels[bundle.application.status] ?? bundle.application.status : 'No enviada'} />
+                  <div className="grid gap-2.5 md:grid-cols-2">
                     <SummaryTile
+                      icon={FileText}
+                      label="Solicitud"
+                      value={bundle.application ? applicationStatusLabels[bundle.application.status] ?? bundle.application.status : 'No enviada'}
+                    />
+                    <SummaryTile
+                      icon={CreditCard}
                       label="Pago"
                       value={session.hasActiveAsiAccess ? 'Verificado' : bundle.payment ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status : 'Pendiente'}
                     />
-                    <SummaryTile label="Acceso" value={session.hasActiveAsiAccess ? 'Activo' : 'Pendiente'} />
-                    <SummaryTile label="Cuota" value={dueAmountLabel ?? due?.label ?? 'Por definir'} />
-                    <SummaryTile label="Categoría" value={bundle.application?.category_name ?? 'Sin categoría'} />
-                    <SummaryTile label="Siguiente paso" value={currentStep?.title ?? 'Membresía'} />
+                    <SummaryTile icon={ShieldCheck} label="Acceso" value={session.hasActiveAsiAccess ? 'Activo' : 'Pendiente'} />
+                    <SummaryTile icon={CreditCard} label="Cuota" value={dueAmountLabel ?? due?.label ?? 'Por definir'} />
+                    <SummaryTile icon={Sparkles} label="Categoría" value={bundle.application?.category_name ?? 'Sin categoría'} />
+                    <SummaryTile icon={ArrowRight} label="Siguiente paso" value={currentStep?.title ?? 'Membresía'} />
                   </div>
                 ) : null}
 
@@ -524,11 +522,16 @@ function StatusSummaryRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-function SummaryTile({ label, value }: { label: string; value: string }) {
+function SummaryTile({ icon: Icon, label, value }: { icon: typeof FileText; label: string; value: string }) {
   return (
-    <div className="rounded-[18px] border border-(--app-border) bg-(--app-surface-muted) p-4">
-      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-(--app-text-subtle)">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-(--app-text)">{value}</p>
+    <div className="flex items-center gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) p-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-(--app-surface) text-primary-700 dark:text-primary-200">
+        <Icon className="size-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle)">{label}</p>
+        <p className="mt-1 truncate text-sm font-semibold text-(--app-text)">{value}</p>
+      </div>
     </div>
   )
 }
