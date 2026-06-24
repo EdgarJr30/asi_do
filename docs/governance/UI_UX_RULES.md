@@ -505,6 +505,7 @@ Rules:
 8. For non-blocking feedback, use `sonner` only and keep toast behavior consistent across modules.
 9. Theme behavior must come from semantic light/dark tokens in the shared design system, not from page-level color rewrites repeated per feature.
 10. Country, province/state, and city fields must reuse the shared geo selectors/data helpers. Do not ask users to type ISO country codes manually when a select can use the canonical country catalog.
+11. Sidebar navigation groups should be ordered by user task priority and remain collapsible when multiple product scopes share the same shell.
 
 ---
 

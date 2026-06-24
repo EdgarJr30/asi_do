@@ -52,6 +52,7 @@ import type { NavigationItem } from '@/shared/types/navigation'
 
 const WORKSPACE_NOTIFICATION_QUERY_KEY = ['workspace-shell', 'notifications'] as const
 const WORKSPACE_SIDEBAR_COLLAPSED_STORAGE_KEY = 'asi:workspace-sidebar-collapsed:v1'
+const WORKSPACE_SIDEBAR_GROUPS_COLLAPSED_STORAGE_KEY = 'asi:workspace-sidebar-groups-collapsed:v1'
 const DESKTOP_SIDEBAR_EXPANDED_WIDTH = 272
 const DESKTOP_SIDEBAR_COLLAPSED_WIDTH = 88
 const NOTIFICATION_PAGE_SIZE = 8
@@ -276,6 +277,30 @@ function getInitialSidebarCollapsed() {
   }
 
   return window.localStorage.getItem(WORKSPACE_SIDEBAR_COLLAPSED_STORAGE_KEY) === '1'
+}
+
+function createSidebarGroupId(group: AppNavGroup, index: number) {
+  return (group.title ?? `group-${index}`)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
+function readInitialCollapsedSidebarGroups() {
+  if (typeof window === 'undefined') {
+    return new Set<string>()
+  }
+
+  try {
+    const raw = window.localStorage.getItem(WORKSPACE_SIDEBAR_GROUPS_COLLAPSED_STORAGE_KEY)
+    const parsed: unknown = raw ? JSON.parse(raw) : []
+
+    return new Set(Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : [])
+  } catch {
+    return new Set<string>()
+  }
 }
 
 function getRouteMeta(
@@ -807,6 +832,18 @@ function WorkspaceSidebarContent({
   const showCollapsedLabels = isDesktop && isCollapsed
   const activeItemHref = resolveActiveShellItemHref(config.sidebarGroups, activeHref)
   const [collapsedTooltip, setCollapsedTooltip] = useState<{ label: string; top: number } | null>(null)
+  const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(() => readInitialCollapsedSidebarGroups())
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.localStorage.setItem(
+      WORKSPACE_SIDEBAR_GROUPS_COLLAPSED_STORAGE_KEY,
+      JSON.stringify(Array.from(collapsedGroupIds))
+    )
+  }, [collapsedGroupIds])
 
   function showCollapsedTooltip(label: string, target: HTMLElement) {
     const rect = target.getBoundingClientRect()
@@ -826,6 +863,20 @@ function WorkspaceSidebarContent({
 
   function hideCollapsedTooltip() {
     setCollapsedTooltip(null)
+  }
+
+  function toggleGroup(groupId: string) {
+    setCollapsedGroupIds((current) => {
+      const next = new Set(current)
+
+      if (next.has(groupId)) {
+        next.delete(groupId)
+      } else {
+        next.add(groupId)
+      }
+
+      return next
+    })
   }
 
   return (
@@ -884,65 +935,76 @@ function WorkspaceSidebarContent({
             showCollapsedLabels ? 'overflow-x-hidden overscroll-contain' : ''
           )}
         >
-          {config.sidebarGroups.map((group, groupIndex) => (
-            <div key={group.title ?? `group-${groupIndex}`} className={cn(groupIndex === 0 ? '' : showCollapsedLabels ? 'mt-4' : 'mt-6')}>
-              {group.title && !showCollapsedLabels ? (
-                <p className="px-3 pb-2 text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-white/35">{group.title}</p>
-              ) : groupIndex > 0 && showCollapsedLabels ? (
-                <div className="mx-auto mb-2 h-px w-6 bg-white/10" />
-              ) : null}
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const isActive = activeItemHref === item.href
-                  const Icon = item.icon
+          {config.sidebarGroups.map((group, groupIndex) => {
+            const groupId = createSidebarGroupId(group, groupIndex)
+            const isGroupCollapsed = collapsedGroupIds.has(groupId)
 
-                  return (
-                    <button
-                      key={item.href}
-                      aria-label={item.title}
-                      aria-current={isActive ? 'page' : undefined}
-                      className={cn(
-                        'group relative flex w-full items-center rounded-xl text-left text-[0.875rem] font-medium outline-none transition-[background-color,color] duration-150',
-                        showCollapsedLabels ? 'h-11 justify-center px-0' : 'min-h-10 gap-3 px-3 py-2',
-                        'focus-visible:ring-2 focus-visible:ring-white/40',
-                        isActive
-                          ? 'bg-white/12 text-white'
-                          : 'text-white/60 hover:bg-white/8 hover:text-white'
-                      )}
-                      data-active={isActive ? 'true' : 'false'}
-                      type="button"
-                      onBlur={showCollapsedLabels ? hideCollapsedTooltip : undefined}
-                      onClick={() => {
-                        hideCollapsedTooltip()
-                        onActionNavigate(item.href)
-                      }}
-                      onFocus={showCollapsedLabels ? (event) => handleCollapsedTooltipFocus(item.title, event) : undefined}
-                      onMouseEnter={showCollapsedLabels ? (event) => handleCollapsedTooltipMouseEnter(item.title, event) : undefined}
-                      onMouseLeave={showCollapsedLabels ? hideCollapsedTooltip : undefined}
-                    >
-                      {isActive && !showCollapsedLabels ? (
-                        <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.5)]" />
-                      ) : null}
-                      <span
+            return (
+              <div key={group.title ?? `group-${groupIndex}`} className={cn(groupIndex === 0 ? '' : showCollapsedLabels ? 'mt-4' : 'mt-5')}>
+                {group.title && !showCollapsedLabels ? (
+                  <button
+                    type="button"
+                    aria-expanded={!isGroupCollapsed}
+                    className="mb-1 flex min-h-8 w-full items-center justify-between rounded-xl px-3 text-left text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-white/42 outline-none transition-colors hover:bg-white/7 hover:text-white/70 focus-visible:ring-2 focus-visible:ring-white/35"
+                    onClick={() => toggleGroup(groupId)}
+                  >
+                    <span className="truncate">{group.title}</span>
+                    {isGroupCollapsed ? <ChevronRight className="size-3.5 shrink-0" /> : <ChevronDown className="size-3.5 shrink-0" />}
+                  </button>
+                ) : groupIndex > 0 && showCollapsedLabels ? (
+                  <div className="mx-auto mb-2 h-px w-6 bg-white/10" />
+                ) : null}
+                <div className={cn('space-y-0.5', isGroupCollapsed && !showCollapsedLabels ? 'hidden' : '')}>
+                  {group.items.map((item) => {
+                    const isActive = activeItemHref === item.href
+                    const Icon = item.icon
+
+                    return (
+                      <button
+                        key={item.href}
+                        aria-label={item.title}
+                        aria-current={isActive ? 'page' : undefined}
                         className={cn(
-                          'flex shrink-0 items-center justify-center transition-colors',
-                          showCollapsedLabels ? 'size-10 rounded-xl' : 'size-5',
-                          showCollapsedLabels && isActive ? 'bg-white/12' : ''
+                          'group relative flex w-full items-center rounded-xl text-left text-[0.875rem] font-medium outline-none transition-[background-color,color] duration-150',
+                          showCollapsedLabels ? 'h-11 justify-center px-0' : 'min-h-10 gap-3 px-3 py-2',
+                          'focus-visible:ring-2 focus-visible:ring-white/40',
+                          isActive ? 'bg-white/12 text-white' : 'text-white/60 hover:bg-white/8 hover:text-white'
                         )}
+                        data-active={isActive ? 'true' : 'false'}
+                        type="button"
+                        onBlur={showCollapsedLabels ? hideCollapsedTooltip : undefined}
+                        onClick={() => {
+                          hideCollapsedTooltip()
+                          onActionNavigate(item.href)
+                        }}
+                        onFocus={showCollapsedLabels ? (event) => handleCollapsedTooltipFocus(item.title, event) : undefined}
+                        onMouseEnter={showCollapsedLabels ? (event) => handleCollapsedTooltipMouseEnter(item.title, event) : undefined}
+                        onMouseLeave={showCollapsedLabels ? hideCollapsedTooltip : undefined}
                       >
-                        {Icon ? <Icon className={cn(showCollapsedLabels ? 'size-[1.15rem]' : 'size-[1.15rem]', isActive ? 'text-white' : 'text-current')} strokeWidth={isActive ? 2.4 : 2} /> : null}
-                      </span>
-                      {!showCollapsedLabels ? (
-                        <span className="min-w-0 flex-1 truncate">{item.title}</span>
-                      ) : (
-                        <span className="sr-only">{item.title}</span>
-                      )}
-                    </button>
-                  )
-                })}
+                        {isActive && !showCollapsedLabels ? (
+                          <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.5)]" />
+                        ) : null}
+                        <span
+                          className={cn(
+                            'flex shrink-0 items-center justify-center transition-colors',
+                            showCollapsedLabels ? 'size-10 rounded-xl' : 'size-5',
+                            showCollapsedLabels && isActive ? 'bg-white/12' : ''
+                          )}
+                        >
+                          {Icon ? <Icon className={cn('size-[1.15rem]', isActive ? 'text-white' : 'text-current')} strokeWidth={isActive ? 2.4 : 2} /> : null}
+                        </span>
+                        {!showCollapsedLabels ? (
+                          <span className="min-w-0 flex-1 truncate">{item.title}</span>
+                        ) : (
+                          <span className="sr-only">{item.title}</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </nav>
 
         <SidebarFooter
@@ -1087,9 +1149,9 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
 
   const baseItems = pick(candidateItems, [
     surfacePaths.candidate.home,
-    surfacePaths.account.membership,
     surfacePaths.storefront.jobs,
     surfacePaths.candidate.applications,
+    surfacePaths.account.membership,
     surfacePaths.candidate.profile
   ]).map((item) => (item.href === surfacePaths.storefront.jobs ? { ...item, title: 'Empleos' } : item))
 
@@ -1124,7 +1186,7 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
     : []
 
   const sidebarGroups: AppNavGroup[] = [
-    { title: 'Tu espacio', items: baseItems },
+    { title: 'Mi espacio', items: baseItems },
     ...(pastorItems.length ? [{ title: 'Pastoral', items: pastorItems }] : []),
     ...(workspaceItems.length ? [{ title: 'Mi empresa', items: workspaceItems }] : []),
     ...(adminItems.length ? [{ title: 'Administración', items: adminItems }] : []),
