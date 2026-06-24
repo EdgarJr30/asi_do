@@ -65,7 +65,7 @@ export function SignUpPage() {
   }
 
   if (session.isLoading) {
-    return <PageLoader fullScreen label="Preparando tu plataforma" hint="Cargando tu menú y tu cuenta" />
+    return <PageLoader label="Preparando tu plataforma" hint="Cargando tu menú y tu cuenta" />
   }
 
   if (session.isAuthenticated) {

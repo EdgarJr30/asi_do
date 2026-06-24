@@ -58,7 +58,7 @@ export function SignInPage() {
   // listos: así un usuario ya registrado entra a su home (no a /candidate/profile)
   // y el sidebar/menú llega cargado antes de darle entrada.
   if (session.isLoading) {
-    return <PageLoader fullScreen label="Preparando tu plataforma" hint="Cargando tu menú y tu cuenta" />
+    return <PageLoader label="Preparando tu plataforma" hint="Cargando tu menú y tu cuenta" />
   }
 
   if (session.isAuthenticated) {

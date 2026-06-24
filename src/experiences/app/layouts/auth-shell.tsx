@@ -22,7 +22,7 @@ export function AuthShell() {
     <div className="min-h-screen bg-[linear-gradient(180deg,color-mix(in_srgb,var(--app-canvas)_88%,white)_0%,var(--app-canvas)_100%)]">
       <RouteScrollManager />
       <div className="lg:grid lg:min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.96fr)] xl:grid-cols-[minmax(0,1fr)_minmax(30rem,0.94fr)]">
-        <main className="flex min-h-screen flex-col px-5 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10 xl:px-14">
+        <main className="flex min-h-screen flex-col px-5 py-5 sm:px-8 sm:py-8 lg:px-12 lg:py-10 xl:px-14">
           <div className="flex items-start justify-between gap-4">
             <button
               className="rounded-[24px] p-1 transition hover:opacity-90"
@@ -61,11 +61,11 @@ export function AuthShell() {
             </div>
           </div>
 
-          <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-10 lg:py-14">
+          <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-8 sm:py-10 lg:py-14">
             <Outlet />
           </div>
 
-          <footer className="mt-8 flex flex-col items-center justify-between gap-3 border-t border-(--app-border) pt-6 text-center text-xs text-(--app-text-subtle) sm:flex-row sm:text-left">
+          <footer className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-(--app-border) pt-5 text-center text-xs text-(--app-text-subtle) sm:mt-8 sm:flex-row sm:pt-6 sm:text-left">
             <p>© 2026 ASI Rep. Dominicana</p>
             <div className="flex items-center gap-4">
               <button
