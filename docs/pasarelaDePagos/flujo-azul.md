@@ -33,6 +33,7 @@ sequenceDiagram
     SVC-->>SPA: { paymentUrl, fields (incl. AuthHash) }
     SPA->>AZ: Auto-POST <form> (navegación full-page)
     M->>AZ: Ingresa tarjeta y confirma
+    Note over AZ,M: ShowTransactionResult=1 mantiene visible el comprobante/resultado de AZUL antes del retorno
     AZ-->>SVC: GET /payments/azul/callback?outcome=approved&...&AuthHash=...
     SVC->>SVC: Verifica AuthHash respuesta (UTF-16LE) + IsoCode=00 + monto
     SVC->>DB: rpc azul_settle_membership_payment(order, approved=true, response)

@@ -48,6 +48,7 @@ Variables de entorno (secret store del proveedor — ver `.env.example`):
 | `AZUL_PAYMENT_ALT_URL` | `https://contpagos.azul.com.do/PaymentPage/Default.aspx` |
 | `AZUL_ENVIRONMENT` | `test` |
 | `AZUL_CURRENCY_CODE` | `$` |
+| `AZUL_SHOW_TRANSACTION_RESULT` | `1` para que AZUL muestre el comprobante antes del retorno |
 | `SUPABASE_URL` | URL del proyecto |
 | `SUPABASE_ANON_KEY` | anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | service_role (solo aquí) |
@@ -71,6 +72,10 @@ que te entregue Railway y usa ese mismo valor en `SERVICE_PUBLIC_URL`.
 - Activa el pago en `/admin/payments` (toggle **Habilitar pago con tarjeta (AZUL)**, CurrencyCode, ambiente).
 - Registra/confirma con AZUL las URLs de retorno:
   `${SERVICE_PUBLIC_URL}/payments/azul/callback` (la usan Approved/Declined/CancelUrl).
+- Mantén `AZUL_SHOW_TRANSACTION_RESULT=1` salvo que necesites retorno inmediato. El documento técnico
+  de Página de Pago incluido en `docs/pasarelaDePagos/` no documenta un timeout configurable para
+  exigir exactamente 10 segundos antes del redirect; este flag es el control disponible para que el
+  usuario vea el comprobante de AZUL antes de volver a la plataforma.
 - Solicita a AZUL: IP allowlist/certificado y credenciales del **Webservice de consulta** para la
   conciliación server-to-server.
 - Actualiza las cuotas en `/admin/payments` con los montos reales **en DOP**.

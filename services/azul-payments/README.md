@@ -40,6 +40,7 @@ para recibir los callbacks de AZUL.
    - `SERVICE_PUBLIC_URL=https://<subdominio-pagos-o-railway>`
    - `APP_URL=https://<tu-dominio-en-hostinger>`
    - `ALLOWED_ORIGIN=https://<tu-dominio-en-hostinger>`
+   - `AZUL_SHOW_TRANSACTION_RESULT=1` para que AZUL muestre su comprobante antes de retornar
 5. Registra `${SERVICE_PUBLIC_URL}/payments/azul/callback` como Approved/Declined/CancelUrl con AZUL.
 6. En Hostinger, durante el build de la SPA, define:
    `VITE_AZUL_PAYMENTS_URL=https://<subdominio-pagos-o-railway>`.

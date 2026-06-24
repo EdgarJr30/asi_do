@@ -60,8 +60,8 @@ export function buildSaleForm(config: AppConfig, record: BeginPaymentRecord): Az
   const fields: Record<string, string> = {
     ...hashFields,
     TrxType: 'Sale',
-    // 0 = AZUL NO muestra su pantalla de resultado ("Finish"/"Download") y redirige
-    // automáticamente a Approved/DeclinedUrl. No entra en el AuthHash.
+    // 1 = AZUL muestra su pantalla de resultado ("Finish"/"Download") antes de retornar.
+    // No entra en el AuthHash.
     ShowTransactionResult: config.azul.showTransactionResult ? '1' : '0',
     Locale: 'ES',
     AuthHash: authHash

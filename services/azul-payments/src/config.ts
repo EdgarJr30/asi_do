@@ -34,7 +34,7 @@ export interface AppConfig {
     paymentAltUrl: string
     environment: 'test' | 'production'
     currencyCode: string
-    /** Si AZUL muestra su pantalla de resultado ("Finish"/"Download"). Por defecto false (auto-retorno). */
+    /** Si AZUL muestra su pantalla de resultado ("Finish"/"Download"). Por defecto true para evitar retorno inmediato. */
     showTransactionResult: boolean
     /** Webservice de consulta de transacción (conciliación). Opcional hasta tener credenciales. */
     verifyApiUrl: string
@@ -73,7 +73,7 @@ export function loadConfig(): AppConfig {
       paymentAltUrl: optional('AZUL_PAYMENT_ALT_URL'),
       environment,
       currencyCode: optional('AZUL_CURRENCY_CODE', '$'),
-      showTransactionResult: optional('AZUL_SHOW_TRANSACTION_RESULT', '0') === '1',
+      showTransactionResult: optional('AZUL_SHOW_TRANSACTION_RESULT', '1') === '1',
       verifyApiUrl: optional('AZUL_VERIFY_API_URL'),
       verifyApiKey: optional('AZUL_VERIFY_API_KEY')
     },
