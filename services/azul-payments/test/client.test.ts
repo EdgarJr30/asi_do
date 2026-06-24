@@ -6,6 +6,7 @@ import type { AppConfig } from '../src/config.ts'
 const baseConfig: AppConfig = {
   port: 0,
   allowedOrigin: 'https://asi-do.netlify.app',
+  allowedOrigins: ['https://asi-do.netlify.app'],
   servicePublicUrl: 'https://svc.example.com',
   appUrl: 'https://asi-do.netlify.app',
   supabaseUrl: 'https://example.supabase.co',

@@ -26,9 +26,9 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
 
   await app.register(helmet, { contentSecurityPolicy: false })
 
-  // CORS estricto: solo la SPA puede invocar /create. El callback es navegación del browser.
+  // CORS estricto: solo los origins declarados de la SPA pueden invocar /create.
   await app.register(cors, {
-    origin: [config.allowedOrigin],
+    origin: config.allowedOrigins,
     methods: ['POST', 'GET', 'OPTIONS'],
     allowedHeaders: ['Authorization', 'Content-Type']
   })

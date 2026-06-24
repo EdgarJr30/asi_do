@@ -14,8 +14,10 @@ function optional(name: string, fallback = ''): string {
 
 export interface AppConfig {
   port: number
-  /** Origin de la SPA permitido para CORS en /payments/azul/create. */
+  /** Origin principal de la SPA permitido para CORS en /payments/azul/create. */
   allowedOrigin: string
+  /** Lista completa de origins permitidos para CORS. */
+  allowedOrigins: string[]
   /** URL pública de este servicio (base de Approved/Declined/CancelUrl). */
   servicePublicUrl: string
   /** URL pública de la SPA (destino del redirect tras el pago). */
@@ -53,10 +55,15 @@ export function loadConfig(): AppConfig {
   const environment = (optional('AZUL_ENVIRONMENT', 'test') === 'production' ? 'production' : 'test') as
     | 'test'
     | 'production'
+  const allowedOrigins = required('ALLOWED_ORIGIN')
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean)
 
   return {
     port: Number(optional('PORT', '8080')),
-    allowedOrigin: required('ALLOWED_ORIGIN'),
+    allowedOrigin: allowedOrigins[0],
+    allowedOrigins,
     servicePublicUrl: required('SERVICE_PUBLIC_URL').replace(/\/+$/, ''),
     appUrl: required('APP_URL').replace(/\/+$/, ''),
 

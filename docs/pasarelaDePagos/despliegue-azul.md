@@ -54,7 +54,7 @@ Variables de entorno (secret store del proveedor — ver `.env.example`):
 | `SUPABASE_SERVICE_ROLE_KEY` | service_role (solo aquí) |
 | `APP_URL` | `https://<tu-dominio-en-hostinger>` |
 | `SERVICE_PUBLIC_URL` | `https://<subdominio-pagos-o-railway>` |
-| `ALLOWED_ORIGIN` | `https://<tu-dominio-en-hostinger>` |
+| `ALLOWED_ORIGIN` | `https://<tu-dominio-en-hostinger>`; para varios origins, separa con coma |
 | `AZUL_VERIFY_API_URL` / `AZUL_VERIFY_API_KEY` | _(conciliación — por confirmar con AZUL)_ |
 
 > En producción, cambia a las URLs `https://pagos.azul.com.do/...`, `AZUL_ENVIRONMENT=production`,

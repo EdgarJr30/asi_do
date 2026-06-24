@@ -40,18 +40,26 @@ export async function startAzulMembershipPayment(input: {
     throw new Error('Tu sesión expiró. Vuelve a iniciar sesión para pagar.')
   }
 
-  const response = await fetch(`${requirePaymentsUrl()}/payments/azul/create`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`
-    },
-    body: JSON.stringify({
-      applicationId: input.applicationId,
-      intent: input.intent ?? 'initial',
-      years: input.years ?? 1
+  const paymentsUrl = requirePaymentsUrl()
+  let response: Response
+  try {
+    response = await fetch(`${paymentsUrl}/payments/azul/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({
+        applicationId: input.applicationId,
+        intent: input.intent ?? 'initial',
+        years: input.years ?? 1
+      })
     })
-  })
+  } catch {
+    throw new Error(
+      `No pudimos conectar con la pasarela de pagos (${paymentsUrl}). Verifica que el servicio esté disponible y permita el origin de esta app.`
+    )
+  }
 
   const payload = (await response.json().catch(() => ({}))) as Partial<AzulFormResponse> & { error?: string }
 

@@ -7,6 +7,7 @@ import type { AppConfig } from '../src/config.ts'
 const config: AppConfig = {
   port: 0,
   allowedOrigin: 'https://asi-do.netlify.app',
+  allowedOrigins: ['https://asi-do.netlify.app', 'http://localhost:5173'],
   servicePublicUrl: 'https://svc.example.com',
   appUrl: 'https://asi-do.netlify.app',
   supabaseUrl: 'https://example.supabase.co',
@@ -53,6 +54,21 @@ describe('rutas del servicio', () => {
       payload: { applicationId: '00000000-0000-0000-0000-000000000000' }
     })
     expect(res.statusCode).toBe(401)
+  })
+
+  it('OPTIONS /create permite el origin local configurado', async () => {
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/payments/azul/create',
+      headers: {
+        origin: 'http://localhost:5173',
+        'access-control-request-method': 'POST',
+        'access-control-request-headers': 'content-type,authorization'
+      }
+    })
+
+    expect(res.statusCode).toBe(204)
+    expect(res.headers['access-control-allow-origin']).toBe('http://localhost:5173')
   })
 
   it('POST /donations/create sin monto → 400', async () => {
