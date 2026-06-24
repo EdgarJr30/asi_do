@@ -47,7 +47,7 @@ type JobRow = JobPostingBundle['jobs'][number]
 type InspirationalQuote = { text: string; from: string }
 
 const PUBLIC_JOBS_QUERY_KEY = ['jobs', 'public-board'] as const
-const PAGE_SIZE = 8
+const PAGE_SIZE = 5
 
 const workplaceLabels: Record<string, string> = { remote: 'Remoto', hybrid: 'Híbrido', on_site: 'Presencial' }
 const employmentLabels: Record<string, string> = {
