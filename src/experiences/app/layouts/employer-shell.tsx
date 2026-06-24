@@ -710,62 +710,65 @@ function SidebarFooter({
       ) : null}
 
       {!isDesktop ? (
-        <div className="mt-3 rounded-2xl border border-white/10 bg-white/6 p-3">
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/10 text-sm font-semibold text-white">
-              {userInitials}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">{userName}</p>
-              <p className="truncate text-xs text-white/58">{userEmail}</p>
-            </div>
-          </div>
-          <div className="mt-3 grid gap-2">
+        <div
+          className="mt-2 rounded-2xl border border-white/10 bg-white/8 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+          data-testid="mobile-sidebar-profile-card"
+        >
+          <div className="flex items-center gap-2">
             <button
-              className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-white/78 transition hover:bg-white/10 hover:text-white"
+              aria-label={`Mi perfil: ${userName}`}
+              className="flex min-w-0 flex-1 items-center gap-2 rounded-xl px-2 py-1.5 text-left transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
               type="button"
               onClick={onOpenProfile}
             >
-              <UserRound className="size-4" />
-              Mi perfil
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10 text-[11px] font-semibold text-white">
+                {userInitials}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[0.82rem] font-semibold leading-5 text-white">{userName}</span>
+                <span className="block truncate text-[0.72rem] leading-4 text-white/55">{userEmail}</span>
+              </span>
+              <ChevronRight className="size-4 shrink-0 text-white/42" />
             </button>
             <button
-              className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-white/78 transition hover:bg-white/10 hover:text-white"
+              aria-label="Abrir notificaciones"
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-white/72 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
               type="button"
               onClick={onOpenNotifications}
             >
               <Bell className="size-4" />
-              Notificaciones
             </button>
           </div>
         </div>
       ) : null}
 
-      <button
-        type="button"
-        aria-label={`Abrir perfil de ${userName}`}
-        onClick={onOpenProfile}
-        className={cn(
-          'group relative mt-3 flex w-full items-center rounded-2xl outline-none transition-[background-color,border-color] duration-150 focus-visible:ring-2 focus-visible:ring-white/40',
-          showCollapsedLabels ? 'justify-center py-1' : 'gap-3 px-2 py-2',
-          !showCollapsedLabels && config.hideFooterChrome ? 'border border-white/10 bg-white/6 hover:border-white/16 hover:bg-white/10' : ''
-        )}
-      >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#3a63d6,#9fb6f0)] text-[11px] font-semibold text-white ring-2 ring-white/15">
-          {userInitials}
-        </span>
-        {!showCollapsedLabels ? (
-          <span className="min-w-0 flex-1 text-left">
-            <span className="block truncate text-[13px] font-semibold text-white">{userName}</span>
-            <span className="block truncate text-[11px] text-white/52">{config.userRole ?? userEmail}</span>
+      {isDesktop ? (
+        <button
+          type="button"
+          aria-label={`Abrir perfil de ${userName}`}
+          onClick={onOpenProfile}
+          className={cn(
+            'group relative mt-3 flex w-full items-center rounded-2xl outline-none transition-[background-color,border-color] duration-150 focus-visible:ring-2 focus-visible:ring-white/40',
+            showCollapsedLabels ? 'justify-center py-1' : 'gap-3 px-2 py-2',
+            !showCollapsedLabels && config.hideFooterChrome ? 'border border-white/10 bg-white/6 hover:border-white/16 hover:bg-white/10' : ''
+          )}
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#3a63d6,#9fb6f0)] text-[11px] font-semibold text-white ring-2 ring-white/15">
+            {userInitials}
           </span>
-        ) : (
-          <>
-            <span className="sr-only">{userName}</span>
-            <SidebarTooltip label={userName} />
-          </>
-        )}
-      </button>
+          {!showCollapsedLabels ? (
+            <span className="min-w-0 flex-1 text-left">
+              <span className="block truncate text-[13px] font-semibold text-white">{userName}</span>
+              <span className="block truncate text-[11px] text-white/52">{config.userRole ?? userEmail}</span>
+            </span>
+          ) : (
+            <>
+              <span className="sr-only">{userName}</span>
+              <SidebarTooltip label={userName} />
+            </>
+          )}
+        </button>
+      ) : null}
 
       <button
         aria-label="Cerrar sesión"

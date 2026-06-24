@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -489,6 +489,21 @@ describe('workspace shell', () => {
       expect(signOutCurrentUser).toHaveBeenCalled()
     })
     expect(await screen.findByText('Landing pública')).toBeInTheDocument()
+  })
+
+  it('renders a single compact profile card in the mobile sidebar', async () => {
+    seedWorkspaceSession(['workspace:read', 'role:read'])
+    renderWorkspaceShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir sidebar de plataforma' }))
+
+    const profileCards = await screen.findAllByTestId('mobile-sidebar-profile-card')
+    const profileCard = profileCards[0]
+
+    expect(profileCards).toHaveLength(1)
+    expect(within(profileCard).getByRole('button', { name: 'Mi perfil: Ana Torres' })).toBeInTheDocument()
+    expect(within(profileCard).getByRole('button', { name: 'Abrir notificaciones' })).toBeInTheDocument()
+    expect(within(profileCard).queryByText('Miembro del equipo')).not.toBeInTheDocument()
   })
 
   it('reuses the shared platform chrome for the candidate área', async () => {

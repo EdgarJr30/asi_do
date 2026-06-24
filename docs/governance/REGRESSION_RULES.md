@@ -290,6 +290,9 @@ Do not let the employer `workspace` shell drift back into a heavily stylized flo
 ### R-068 — Workspace shell must not duplicate logout in the top bar or reintroduce promo filler in the sidebar
 Do not bring back a prominent `Cerrar sesión` button in the workspace top bar when the same action already lives in the profile menu. In the workspace shell, logout should stay quickly discoverable in the lower sidebar area with restrained danger styling, while the sidebar itself must avoid promotional filler blocks such as generic recruitment marketing copy that distracts from navigation.
 
+### R-068A — Mobile workspace sidebar must not duplicate profile cards
+Do not render two user/profile cards in the mobile workspace sidebar. The mobile drawer should use one compact profile card that combines identity, profile navigation, and notification access, preserving vertical space for the navigation groups.
+
 ### R-069 — Workspace modules must use shared surfaces and preserve dark-mode contrast
 Do not regress workspace pages back to hardcoded light-only panels like `bg-white`, `bg-zinc-50`, or weak gray text that breaks hierarchy in dark mode. Forms, summary cards, detail panes, and supporting modules under `Company`, `Jobs`, `Candidates`, `Pipeline`, and `Roles` must prefer shared UI primitives and semantic surface tokens so the experience stays elegant, readable, and intuitive for first-time users in both themes.
 
