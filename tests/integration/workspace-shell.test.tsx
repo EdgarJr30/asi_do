@@ -459,6 +459,37 @@ describe('workspace shell', () => {
     })
   })
 
+  it('uses a fixed mobile-safe notifications panel', async () => {
+    seedWorkspaceSession(['workspace:read'])
+    notificationState.items = [
+      {
+        id: 'notification-mobile',
+        recipient_user_id: 'user-1',
+        tenant_id: 'tenant-1',
+        type: 'system.test',
+        title: 'Notificación móvil',
+        body: 'Detalle para revisar el panel móvil.',
+        action_url: null,
+        payload: {},
+        read_at: null,
+        clicked_at: null,
+        created_at: '2026-03-19T12:00:00.000Z',
+        updated_at: '2026-03-19T12:00:00.000Z'
+      }
+    ]
+
+    renderWorkspaceShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir notificaciones' }))
+
+    const panelPositioner = await screen.findByTestId('notification-panel-positioner')
+
+    expect(panelPositioner).toHaveClass('fixed')
+    expect(panelPositioner).toHaveClass('inset-x-3')
+    expect(panelPositioner).toHaveClass('top-20')
+    expect(await screen.findByText('Notificación móvil')).toBeInTheDocument()
+  })
+
   it('opens the profile menu and navigates to candidate profile', async () => {
     seedWorkspaceSession(['workspace:read', 'role:read'])
     renderWorkspaceShell()
@@ -489,6 +520,23 @@ describe('workspace shell', () => {
       expect(signOutCurrentUser).toHaveBeenCalled()
     })
     expect(await screen.findByText('Landing pública')).toBeInTheDocument()
+  })
+
+  it('locks document scrolling while the mobile sidebar is open', async () => {
+    seedWorkspaceSession(['workspace:read', 'role:read'])
+    renderWorkspaceShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir sidebar de plataforma' }))
+
+    expect(document.body.style.overflow).toBe('hidden')
+    expect(document.documentElement.style.overflow).toBe('hidden')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar navegacion de plataforma' }))
+
+    await waitFor(() => {
+      expect(document.body.style.overflow).toBe('')
+      expect(document.documentElement.style.overflow).toBe('')
+    })
   })
 
   it('renders a single compact profile card in the mobile sidebar', async () => {

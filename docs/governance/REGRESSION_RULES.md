@@ -293,6 +293,9 @@ Do not bring back a prominent `Cerrar sesión` button in the workspace top bar w
 ### R-068A — Mobile workspace sidebar must not duplicate profile cards
 Do not render two user/profile cards in the mobile workspace sidebar. The mobile drawer should use one compact profile card that combines identity, profile navigation, and notification access, preserving vertical space for the navigation groups.
 
+### R-068B — Mobile workspace overlays must stay viewport-safe
+Do not anchor the notifications panel as a desktop dropdown on mobile, where it can clip, drift off-screen, or sit awkwardly over content. On mobile, render notifications as a fixed viewport-bounded panel. When the mobile sidebar is open, lock page scroll behind the drawer until it closes.
+
 ### R-069 — Workspace modules must use shared surfaces and preserve dark-mode contrast
 Do not regress workspace pages back to hardcoded light-only panels like `bg-white`, `bg-zinc-50`, or weak gray text that breaks hierarchy in dark mode. Forms, summary cards, detail panes, and supporting modules under `Company`, `Jobs`, `Candidates`, `Pipeline`, and `Roles` must prefer shared UI primitives and semantic surface tokens so the experience stays elegant, readable, and intuitive for first-time users in both themes.
 

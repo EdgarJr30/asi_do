@@ -497,7 +497,7 @@ function WorkspaceNotificationPanel({
   const visibleUnreadCount = notifications.filter((notification) => !notification.read_at).length
 
   return (
-    <div className="flex max-h-[min(32rem,75vh)] w-[min(23rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_28px_72px_rgba(8,12,24,0.22)]">
+    <div className="flex max-h-[calc(100dvh-7rem)] w-full flex-col overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_28px_72px_rgba(8,12,24,0.22)] sm:max-h-[min(32rem,75vh)] sm:w-[min(23rem,calc(100vw-1.5rem))]">
       <div className="flex items-center justify-between gap-3 border-b border-(--app-border) px-4 py-3">
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-(--app-text)">Notificaciones</p>
@@ -1349,6 +1349,23 @@ export function PlatformAppShell({
   }, [isDesktopSidebarCollapsed])
 
   useEffect(() => {
+    if (!mobileSidebarOpen) {
+      return
+    }
+
+    const originalBodyOverflow = document.body.style.overflow
+    const originalDocumentOverflow = document.documentElement.style.overflow
+
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow
+      document.documentElement.style.overflow = originalDocumentOverflow
+    }
+  }, [mobileSidebarOpen])
+
+  useEffect(() => {
     if (!notificationPanelOpen && !profileMenuOpen) {
       return
     }
@@ -1568,7 +1585,10 @@ export function PlatformAppShell({
                   </button>
 
                   {notificationPanelOpen ? (
-                    <div className="absolute right-0 top-[calc(100%+0.75rem)] z-40">
+                    <div
+                      className="fixed inset-x-3 top-20 z-50 sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+0.75rem)]"
+                      data-testid="notification-panel-positioner"
+                    >
                       <WorkspaceNotificationPanel
                         isLoading={notificationsQuery.isLoading}
                         isPaging={notificationsQuery.isFetching}
