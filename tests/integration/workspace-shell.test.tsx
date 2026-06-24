@@ -565,6 +565,15 @@ describe('workspace shell', () => {
     expect(screen.getAllByText('Empleos').length).toBeGreaterThan(0)
   })
 
+  it('does not render placeholder search in the shared topbar', async () => {
+    seedWorkspaceSession(['workspace:read'])
+    renderWorkspaceShell()
+
+    expect(await screen.findByText('Resumen del workspace')).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Buscar en la plataforma...')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Buscar jobs (próximamente)')).not.toBeInTheDocument()
+  })
+
   it('keeps workspace modules visible in the unified sidebar when the user has workspace access', async () => {
     seedWorkspaceSession(['workspace:read'])
     renderCandidateShell()

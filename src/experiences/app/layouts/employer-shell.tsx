@@ -23,7 +23,6 @@ import {
   Layers3,
   LogOut,
   Menu,
-  Search,
   Settings,
   Shield,
   Sparkles,
@@ -78,7 +77,6 @@ type ShellConfig = {
   publicActionLabel: string
   routeMeta: Record<string, Pick<AppNavItem, 'title' | 'description'>>
   routeMetaDefault: Pick<AppNavItem, 'title' | 'description'>
-  searchPlaceholder: string
   sidebarGroups: AppNavGroup[]
   tenantName: string
   topbarEyebrow: string
@@ -1106,7 +1104,6 @@ function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
       title: 'Plataforma',
       description: 'Acceso a oportunidades para miembros, pricing y rutas de entrada al producto.'
     },
-    searchPlaceholder: 'Buscar jobs (próximamente)',
     sidebarGroups: [
       {
         title: 'Explora',
@@ -1226,7 +1223,6 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
       title: 'Tu espacio',
       description: 'Tu perfil, oportunidades y módulos en un solo lugar.'
     },
-    searchPlaceholder: 'Buscar en la plataforma...',
     sidebarGroups,
     tenantName: hasWorkspace ? session.activeMembership?.tenantName ?? 'Tu empresa' : 'Tu espacio',
     topbarEyebrow: 'Plataforma ASI'
@@ -1541,26 +1537,8 @@ export function PlatformAppShell({
               </div>
             </div>
 
-            <div className={cn('hidden lg:block', isWorkspace ? 'flex-1 px-2' : 'max-w-sm flex-1')}>
-              <div
-                className={cn(
-                  'flex h-11 items-center gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-white/10 dark:bg-white/5 dark:shadow-none',
-                  isWorkspace ? 'mx-auto max-w-xl' : ''
-                )}
-              >
-                <Search aria-hidden="true" className="size-4 text-slate-400" />
-                <input
-                  aria-label={config.searchPlaceholder}
-                  className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
-                  placeholder={config.searchPlaceholder}
-                  readOnly
-                  value=""
-                />
-              </div>
-            </div>
-
             {session.isAuthenticated ? (
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="ml-auto flex items-center gap-2 sm:gap-3">
                 <div className="relative" ref={notificationPanelRef}>
                   <button
                     aria-expanded={notificationPanelOpen}
@@ -1677,7 +1655,7 @@ export function PlatformAppShell({
                 </div>
               </div>
             ) : (
-              <div className="hidden items-center gap-2 lg:flex">
+              <div className="ml-auto hidden items-center gap-2 lg:flex">
                 <ThemeToggle
                   className="size-11 rounded-2xl border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
                   compact
