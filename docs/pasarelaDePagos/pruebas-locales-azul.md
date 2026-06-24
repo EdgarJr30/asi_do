@@ -148,7 +148,7 @@ tarjeta; si se pega con espacios, AZUL puede devolver `SGS-002303: Invalid credi
 |---|---|---|---|
 | 1 | **Aprobado** | Tarjeta 1–5 (p. ej. `5413330089600119`, CVV 979) | `?payment=approved`, pago `verified`, toast verde, admin puede activar |
 | 2 | **Declinado** | Tarjeta 6 `4005520000000129` (CVV 977, tope RD$ 75) con cuota ≥ RD$ 1,500 | `?payment=declined`, pago `failed`, toast rojo, botón para reintentar |
-| 3 | **Cancelado** | En AZUL pulsa “Cancelar” → “Sí, cancelar” | `?payment=cancelled`, pago `failed`/reintetable, toast info |
+| 3 | **Cancelado** | En AZUL pulsa “Cancelar” → “Sí, cancelar” | `?payment=cancelled`, pago `failed`/reintetable, toast info y formulario de reintento |
 | 4 | **Manipulación** (seguridad) | (simulado) callback con `AuthHash` alterado | `?payment=error`, el pago **no** cambia de estado |
 | 5 | **Reintento** | Tras un fallo, vuelve a pulsar “Pagar con tarjeta” | Se crea un nuevo intento; al aprobar queda `verified` |
 | 6 | **Renovación** | Miembro activo con solicitud aprobada | Botón “Renovar membresía” → pago `verified`, nuevo comprobante, vigencia extendida automáticamente y notificación a miembro/admins |
@@ -231,7 +231,7 @@ los admins.
 | AZUL no acepta la URL de retorno `http://localhost` | El portal exige HTTPS/URL pública | Usa un túnel (ver abajo) |
 | `?payment=error` siempre | `AuthKey` del `.env` no coincide con la del MerchantID | Verifica `AZUL_AUTH_KEY` en `services/azul-payments/.env` |
 | `?payment=declined` con `SGS-002303: Invalid credit card number` | AZUL no aceptó el número ingresado o no corresponde al comercio/ambiente de pruebas | Ingresa el número completo sin espacios y confirma `AZUL_MERCHANT_ID=39038540035`, `AZUL_MERCHANT_NAME=Prueba AZUL`, URL de pruebas y tarjetas vigentes de AZUL |
-| Pago queda en `initiated` | El usuario cerró el browser antes del retorno | En prod lo resuelve el cron de conciliación; en local, reintenta |
+| Pago queda en `initiated` | El usuario cerró el browser antes del retorno, o AZUL retornó cancelación sin orden | En prod lo resuelve el cron de conciliación; si la SPA volvió con `payment=cancelled`, permite reintentar de inmediato |
 
 ### Fallback con túnel (solo si AZUL rechaza localhost)
 ```bash

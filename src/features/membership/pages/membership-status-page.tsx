@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -41,6 +41,7 @@ import { cn } from '@/lib/utils/cn'
 
 type StepState = 'done' | 'current' | 'pending' | 'blocked'
 type MembershipTab = 'summary' | 'route' | 'receipts'
+type AzulReturnOutcome = 'declined' | 'cancelled' | 'error'
 
 const applicationStatusLabels: Record<string, string> = {
   submitted: 'Enviada',
@@ -107,7 +108,10 @@ const paymentStatusLabels: Record<string, string> = {
   submitted: 'En verificación',
   verified: 'Verificado',
   failed: 'Pago rechazado',
-  rejected: 'Rechazado'
+  rejected: 'Rechazado',
+  declined: 'Pago declinado',
+  cancelled: 'Pago cancelado',
+  error: 'Error de validación'
 }
 
 interface StepView {
@@ -232,6 +236,7 @@ export function MembershipStatusPage() {
   const queryClient = useQueryClient()
   const userId = session.authUser?.id ?? null
   const [activeTab, setActiveTab] = useState<MembershipTab>('summary')
+  const lastHandledPaymentResultRef = useRef<string | null>(null)
 
   const statusQuery = useQuery({
     queryKey: ['membership', 'status', userId],
@@ -291,11 +296,20 @@ export function MembershipStatusPage() {
 
   // Resultado del retorno de AZUL (?payment=approved|declined|cancelled|error): avisa y refresca.
   const [searchParams, setSearchParams] = useSearchParams()
+  const paymentResult = searchParams.get('payment')
+  const recoverableAzulOutcome: AzulReturnOutcome | null =
+    paymentResult === 'declined' || paymentResult === 'cancelled' || paymentResult === 'error' ? paymentResult : null
   useEffect(() => {
-    const result = searchParams.get('payment')
+    const result = paymentResult
     if (!result) {
       return
     }
+    const resultKey = `${result}:${searchParams.get('order') ?? ''}`
+    if (lastHandledPaymentResultRef.current === resultKey) {
+      return
+    }
+    lastHandledPaymentResultRef.current = resultKey
+
     const notices: Record<string, { kind: 'success' | 'error' | 'info'; text: string }> = {
       approved: { kind: 'success', text: '¡Pago confirmado! Un administrador activará tu cuenta en breve.' },
       declined: { kind: 'error', text: 'Tu pago fue declinado. Revisa los datos de tu tarjeta e inténtalo de nuevo.' },
@@ -316,12 +330,18 @@ export function MembershipStatusPage() {
     }
     if (result === 'approved') {
       void session.refresh()
+      const next = new URLSearchParams(searchParams)
+      next.delete('payment')
+      next.delete('order')
+      setSearchParams(next, { replace: true })
     }
     void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })
-    const next = new URLSearchParams(searchParams)
-    next.delete('payment')
-    setSearchParams(next, { replace: true })
-  }, [searchParams, setSearchParams, queryClient, session, userId])
+  }, [paymentResult, searchParams, setSearchParams, queryClient, session, userId])
+
+  const visiblePaymentStatus =
+    recoverableAzulOutcome && bundle.payment?.status === 'initiated'
+      ? recoverableAzulOutcome
+      : bundle.payment?.status ?? null
 
   return (
     <div className="space-y-5">
@@ -388,7 +408,7 @@ export function MembershipStatusPage() {
                       annualAmount={due?.amount ?? null}
                       currency={bundle.settings?.currency ?? 'DOP'}
                       categoryLabel={due?.label ?? bundle.application.category_name ?? null}
-                      paymentStatus={bundle.payment?.status === 'initiated' ? 'initiated' : null}
+                      paymentStatus={visiblePaymentStatus === 'initiated' ? 'initiated' : visiblePaymentStatus}
                       azulEnabled={azulEnabled}
                       compact
                       onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
@@ -411,7 +431,7 @@ export function MembershipStatusPage() {
                     annualAmount={due?.amount ?? null}
                     currency={bundle.settings?.currency ?? 'DOP'}
                     categoryLabel={due?.label ?? bundle.application.category_name ?? null}
-                    paymentStatus={bundle.payment?.status ?? null}
+                    paymentStatus={visiblePaymentStatus}
                     azulEnabled={azulEnabled}
                     onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
                   />
@@ -777,9 +797,11 @@ function AzulPayCard({
         débito. Al terminar, volverás aquí automáticamente.
       </p>
       <CheckoutComplianceBox accepted={acceptedPolicies} onAcceptedChange={setAcceptedPolicies} />
-      {paymentStatus === 'failed' || paymentStatus === 'rejected' ? (
+      {paymentStatus === 'failed' || paymentStatus === 'rejected' || paymentStatus === 'declined' || paymentStatus === 'cancelled' || paymentStatus === 'error' ? (
         <p className="mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">
-          Tu intento anterior no se completó. Puedes intentarlo de nuevo.
+          {paymentStatus === 'cancelled'
+            ? 'Cancelaste el intento anterior. Puedes volver a intentarlo cuando quieras.'
+            : 'Tu intento anterior no se completó. Puedes intentarlo de nuevo.'}
         </p>
       ) : null}
       {button}

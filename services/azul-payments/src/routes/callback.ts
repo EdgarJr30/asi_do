@@ -17,8 +17,7 @@ type PaymentFlow = 'membership' | 'donation'
 function redirectTo(config: AppConfig, flow: PaymentFlow, outcome: Outcome, orderNumber?: string): string {
   const path = flow === 'donation' ? '/donate' : '/account/membership'
   const params = new URLSearchParams({ payment: outcome })
-  // El número de orden permite a /donate mostrar el comprobante (incluye al donante anónimo).
-  if (flow === 'donation' && orderNumber) {
+  if (orderNumber) {
     params.set('order', orderNumber)
   }
   return `${config.appUrl}${path}?${params.toString()}`
@@ -26,6 +25,19 @@ function redirectTo(config: AppConfig, flow: PaymentFlow, outcome: Outcome, orde
 
 function resolveFlow(orderNumber: string): PaymentFlow {
   return orderNumber.startsWith('DON-') ? 'donation' : 'membership'
+}
+
+function readOrderNumber(query: Record<string, unknown>): string {
+  for (const key of ['order', 'OrderNumber', 'orderNumber']) {
+    const value = query[key]
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim()
+    }
+    if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) {
+      return value[0].trim()
+    }
+  }
+  return ''
 }
 
 async function settleByFlow(
@@ -48,7 +60,7 @@ export function registerCallbackRoute(app: FastifyInstance, config: AppConfig): 
   app.get('/payments/azul/callback', async (request, reply) => {
     const query = request.query as Record<string, unknown>
     const declaredOutcome = typeof query.outcome === 'string' ? query.outcome : ''
-    const orderNumber = typeof query.order === 'string' ? query.order : ''
+    const orderNumber = readOrderNumber(query)
     const declaredFlow = resolveFlow(orderNumber)
 
     // Cancelación: AZUL no envía parámetros de respuesta (ni hash). Marcar como fallido/reintetable.

@@ -86,7 +86,7 @@ describe('rutas del servicio', () => {
       url: '/payments/azul/callback?outcome=approved&order=ASI-1&OrderNumber=ASI-1&Amount=15000&ResponseCode=Approved&IsoCode=00&AuthHash=deadbeef'
     })
     expect(res.statusCode).toBe(302)
-    expect(res.headers.location).toBe('https://asi-do.netlify.app/account/membership?payment=error')
+    expect(res.headers.location).toBe('https://asi-do.netlify.app/account/membership?payment=error&order=ASI-1')
   })
 
   it('GET /callback de donación con AuthHash inválido → redirect a /donate', async () => {
@@ -102,5 +102,17 @@ describe('rutas del servicio', () => {
     const res = await app.inject({ method: 'GET', url: '/payments/azul/callback?outcome=cancelled' })
     expect(res.statusCode).toBe(302)
     expect(res.headers.location).toBe('https://asi-do.netlify.app/account/membership?payment=cancelled')
+  })
+
+  it('GET /callback cancelado preserva OrderNumber para que la SPA no quede en espera ciega', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/payments/azul/callback?outcome=cancelled&OrderNumber=ASI-260624-abc123'
+    })
+
+    expect(res.statusCode).toBe(302)
+    expect(res.headers.location).toBe(
+      'https://asi-do.netlify.app/account/membership?payment=cancelled&order=ASI-260624-abc123'
+    )
   })
 })
