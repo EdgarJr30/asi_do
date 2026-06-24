@@ -264,7 +264,6 @@ export function PublicJobBoard() {
   return (
     <div className="space-y-4">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Empleos</h1>
         <p className="max-w-2xl text-[0.72rem] italic leading-relaxed text-(--app-text-subtle) sm:text-[0.76rem]">
           "{quote.text}" <span className="not-italic text-(--app-text-muted)">- {quote.from}</span>
         </p>
