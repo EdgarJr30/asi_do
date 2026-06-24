@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 
 import type { AppConfig } from '../config.ts'
+import { resolveReturnBase } from '../azul/client.ts'
 import {
   isApproved,
   parseAzulResponse,
@@ -13,14 +14,34 @@ import { serviceClient } from '../supabase.ts'
 type Outcome = 'approved' | 'declined' | 'cancelled' | 'error'
 type PaymentFlow = 'membership' | 'donation'
 
-/** Destino final tras el pago: la SPA lee el estado real desde la DB con este flag. */
-function redirectTo(config: AppConfig, flow: PaymentFlow, outcome: Outcome, orderNumber?: string): string {
+function readQueryString(query: Record<string, unknown>, key: string): string {
+  const value = query[key]
+  if (typeof value === 'string') {
+    return value
+  }
+  if (Array.isArray(value) && typeof value[0] === 'string') {
+    return value[0]
+  }
+  return ''
+}
+
+/**
+ * Destino final tras el pago: vuelve al SPA que inició el pago (`returnBase`,
+ * validado contra la allowlist) para separar local de producción. La SPA lee el
+ * estado real desde la DB con el flag `payment`.
+ */
+function redirectTo(
+  returnBase: string,
+  flow: PaymentFlow,
+  outcome: Outcome,
+  orderNumber?: string
+): string {
   const path = flow === 'donation' ? '/donate' : '/account/membership'
   const params = new URLSearchParams({ payment: outcome })
   if (orderNumber) {
     params.set('order', orderNumber)
   }
-  return `${config.appUrl}${path}?${params.toString()}`
+  return `${returnBase}${path}?${params.toString()}`
 }
 
 function resolveFlow(orderNumber: string): PaymentFlow {
@@ -62,6 +83,8 @@ export function registerCallbackRoute(app: FastifyInstance, config: AppConfig): 
     const declaredOutcome = typeof query.outcome === 'string' ? query.outcome : ''
     const orderNumber = readOrderNumber(query)
     const declaredFlow = resolveFlow(orderNumber)
+    // Retorno al SPA que inició el pago (origin validado), para separar local de prod.
+    const returnBase = resolveReturnBase(config, readQueryString(query, 'return'))
 
     // Cancelación: AZUL no envía parámetros de respuesta (ni hash). Marcar como fallido/reintetable.
     if (declaredOutcome === 'cancelled') {
@@ -76,7 +99,7 @@ export function registerCallbackRoute(app: FastifyInstance, config: AppConfig): 
       } catch (error) {
         request.log.error({ err: error, orderNumber }, 'Error al liquidar cancelación')
       }
-      return reply.redirect(redirectTo(config, declaredFlow, 'cancelled', orderNumber))
+      return reply.redirect(redirectTo(returnBase, declaredFlow, 'cancelled', orderNumber))
     }
 
     const response = parseAzulResponse(query)
@@ -89,7 +112,7 @@ export function registerCallbackRoute(app: FastifyInstance, config: AppConfig): 
         { orderNumber: effectiveOrder, responseCode: response.ResponseCode },
         'AuthHash de respuesta inválido — posible manipulación; no se liquida el pago'
       )
-      return reply.redirect(redirectTo(config, effectiveFlow, 'error', effectiveOrder))
+      return reply.redirect(redirectTo(returnBase, effectiveFlow, 'error', effectiveOrder))
     }
 
     const approved = isApproved(response)
@@ -106,9 +129,9 @@ export function registerCallbackRoute(app: FastifyInstance, config: AppConfig): 
       )
     } catch (error) {
       request.log.error({ err: error, orderNumber: effectiveOrder }, 'Error al liquidar pago AZUL')
-      return reply.redirect(redirectTo(config, effectiveFlow, 'error', effectiveOrder))
+      return reply.redirect(redirectTo(returnBase, effectiveFlow, 'error', effectiveOrder))
     }
 
-    return reply.redirect(redirectTo(config, effectiveFlow, approved ? 'approved' : 'declined', effectiveOrder))
+    return reply.redirect(redirectTo(returnBase, effectiveFlow, approved ? 'approved' : 'declined', effectiveOrder))
   })
 }

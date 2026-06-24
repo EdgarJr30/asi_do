@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 
 import { authenticate, AuthError } from '../auth.ts'
-import { buildSaleForm, type BeginPaymentRecord } from '../azul/client.ts'
+import { buildSaleForm, resolveReturnBase, type BeginPaymentRecord } from '../azul/client.ts'
 import type { AppConfig } from '../config.ts'
 import { userClient } from '../supabase.ts'
 
@@ -52,9 +52,10 @@ export function registerCreateRoute(app: FastifyInstance, config: AppConfig): vo
       return reply.code(422).send({ error: 'No se pudo iniciar el pago.' })
     }
 
-    const form = buildSaleForm(config, record)
+    const returnBase = resolveReturnBase(config, request.headers.origin)
+    const form = buildSaleForm(config, record, returnBase)
     request.log.info(
-      { userId: user.id, orderNumber: record.order_number, amount: record.amount, intent: parsed.data.intent, years: parsed.data.years },
+      { userId: user.id, orderNumber: record.order_number, amount: record.amount, intent: parsed.data.intent, years: parsed.data.years, returnBase },
       'Pago AZUL iniciado'
     )
 

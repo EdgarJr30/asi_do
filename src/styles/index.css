@@ -463,3 +463,15 @@
     }
   }
 }
+
+/* Entrada suave del contenido de cada fase del formulario de membresía (re-disparada con key). */
+@keyframes ph-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

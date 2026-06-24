@@ -11,13 +11,12 @@ import {
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
   CheckCircle2,
   CircleAlert,
-  LockKeyhole,
   PencilLine,
 } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -704,18 +703,18 @@ function ApplicationSection({
   children: ReactNode
 }) {
   return (
-    <section className="rounded-[1.25rem] border border-(--asi-outline) bg-(--asi-surface-raised) p-4 shadow-(--asi-shadow-soft) sm:p-5">
+    <section>
       <div className="max-w-3xl">
-        <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
+        <h2 className="text-[1.375rem] font-extrabold tracking-tight text-[#15233e]">
           {title}
         </h2>
         {description ? (
-          <p className="mt-2 text-sm leading-7 text-(--asi-text-muted)">
+          <p className="mt-2 text-[15px] leading-7 text-[#65728a]">
             {description}
           </p>
         ) : null}
       </div>
-      <div className="mt-4 space-y-4">{children}</div>
+      <div className="mt-5 space-y-5">{children}</div>
     </section>
   )
 }
@@ -736,26 +735,26 @@ function Field({
   children: ReactNode
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <label
-        className="block text-sm font-semibold text-(--asi-text)"
+        className="block text-[13px] font-semibold text-[#34415c]"
         htmlFor={htmlFor}
       >
         {label}
-        {required ? <span className="ml-1 text-red-500">*</span> : null}
+        {required ? <span className="ml-1 font-bold text-[#e23744]">*</span> : null}
       </label>
       {children}
-      {hint ? <p className="text-xs leading-6 text-(--asi-text-muted)">{hint}</p> : null}
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {hint ? <p className="text-[12.5px] leading-5 text-[#8a96a8]">{hint}</p> : null}
+      {error ? <p className="text-[12.5px] font-medium text-[#e23744]">{error}</p> : null}
     </div>
   )
 }
 
 const fieldInputClassName =
-  'h-11 w-full rounded-xl border border-(--asi-outline) bg-white px-3.5 text-sm text-(--asi-text) outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-(--asi-text-muted) hover:border-(--asi-primary)/45 focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/12'
+  'h-[2.875rem] w-full rounded-[11px] border-[1.5px] border-[#dde3ec] bg-white px-3.5 text-[15px] text-[#14223b] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#8a96a8] hover:border-(--asi-primary)/55 focus:border-(--asi-primary) focus:ring-[3px] focus:ring-(--asi-primary)/12'
 
 const fieldTextareaClassName =
-  'min-h-28 w-full rounded-xl border border-(--asi-outline) bg-white px-3.5 py-3 text-sm text-(--asi-text) outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-(--asi-text-muted) hover:border-(--asi-primary)/45 focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/12'
+  'min-h-28 w-full rounded-[11px] border-[1.5px] border-[#dde3ec] bg-white px-3.5 py-3 text-[15px] leading-relaxed text-[#14223b] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#8a96a8] hover:border-(--asi-primary)/55 focus:border-(--asi-primary) focus:ring-[3px] focus:ring-(--asi-primary)/12'
 
 function TextField({
   label,
@@ -1098,42 +1097,43 @@ function RadioTileGroup({
   onChange: (value: string) => void
 }) {
   return (
-    <fieldset className="space-y-2">
-      <legend className="text-sm font-semibold text-(--asi-text)">
+    <fieldset className="space-y-1.5">
+      <legend className="text-[13px] font-semibold text-[#34415c]">
         {label}
-        {required ? <span className="ml-1 text-red-500">*</span> : null}
+        {required ? <span className="ml-1 font-bold text-[#e23744]">*</span> : null}
       </legend>
-      <div className="inline-grid w-full grid-cols-2 gap-2 rounded-xl border border-(--asi-outline) bg-(--asi-canvas) p-1">
+      <div className="grid grid-cols-2 gap-3">
         {options.map((option) => {
           const selected = option.value === value
           return (
             <button
               key={option.value}
               type="button"
-              aria-pressed={selected}
+              role="radio"
+              aria-checked={selected}
               onClick={() => onChange(option.value)}
               className={cn(
-                'flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition-all duration-150',
+                'flex items-center gap-2.5 rounded-[11px] border-[1.5px] px-3.5 py-3 text-[15px] font-semibold transition-colors duration-150',
                 selected
-                  ? 'bg-white text-(--asi-primary) shadow-[0_5px_18px_rgba(0,47,110,0.10)] ring-1 ring-(--asi-primary)'
-                  : 'text-(--asi-text-muted) hover:bg-white/70 hover:text-(--asi-text)'
+                  ? 'border-(--asi-primary) bg-(--asi-primary)/6 text-(--asi-primary)'
+                  : 'border-[#dde3ec] bg-white text-[#5b687e] hover:border-(--asi-primary)/45'
               )}
             >
               <span
                 className={cn(
-                  'flex size-4 shrink-0 rounded-full border-2',
-                  selected
-                    ? 'border-(--asi-primary) shadow-[inset_0_0_0_4px_var(--asi-primary)]'
-                    : 'border-(--asi-outline)'
+                  'flex size-[18px] shrink-0 items-center justify-center rounded-full border-2',
+                  selected ? 'border-(--asi-primary)' : 'border-[#c2cad8]'
                 )}
-              />
+              >
+                {selected ? <span className="size-2 rounded-full bg-(--asi-primary)" /> : null}
+              </span>
               {option.label}
             </button>
           )
         })}
       </div>
-      {hint ? <p className="text-xs leading-6 text-(--asi-text-muted)">{hint}</p> : null}
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {hint ? <p className="text-[12.5px] leading-5 text-[#8a96a8]">{hint}</p> : null}
+      {error ? <p className="text-[12.5px] font-medium text-[#e23744]">{error}</p> : null}
     </fieldset>
   )
 }
@@ -1154,24 +1154,24 @@ function CheckboxCard({
   return (
     <label
       className={cn(
-        'flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition-colors',
+        'flex cursor-pointer items-start gap-3 rounded-[13px] border-[1.5px] px-4 py-3.5 text-[14.5px] leading-[1.45] transition-colors',
         checked
-          ? 'border-(--asi-primary) bg-(--asi-primary)/7'
-          : 'border-(--asi-outline) bg-white hover:border-(--asi-primary)/45'
+          ? 'border-(--asi-primary) bg-[#f4f7fc] text-[#1b2a44]'
+          : 'border-[#e2e7f0] bg-white text-[#28344b] hover:border-(--asi-primary)/45'
       )}
     >
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="mt-1 size-4 rounded border-(--asi-outline)"
+        className="mt-0.5 size-[19px] shrink-0 accent-(--asi-primary)"
       />
-      <span className="block text-sm leading-7 text-(--asi-text)">
+      <span className="block">
         <span className="font-medium">{label}</span>
         {description ? (
-          <span className="block text-(--asi-text-muted)">{description}</span>
+          <span className="block text-[#5b687e]">{description}</span>
         ) : null}
-        {error ? <span className="block font-medium text-red-600">{error}</span> : null}
+        {error ? <span className="block font-medium text-[#e23744]">{error}</span> : null}
       </span>
     </label>
   )
@@ -1194,7 +1194,7 @@ function MultiCheckboxGroup({
 }) {
   return (
     <Field label={label} hint={hint} error={error} required>
-      <div className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {options.map((option) => {
           const checked = values.includes(option)
           return (
@@ -1211,197 +1211,226 @@ function MultiCheckboxGroup({
   )
 }
 
-function LockedQualificationCard({
+
+// ── Rediseño: chrome de dos columnas (rail + stepper + cabecera) ───────────────
+
+const STEP_SUBTITLES: Record<string, string> = {
+  contact: 'Identificación y dirección',
+  category: 'Etapa formativa y profesional',
+  evangelism: 'Misión, ministerio y voluntariado',
+  reference: 'Iglesia local y pastor',
+  dues: 'Facturación y pago',
+  commitment: 'Aceptaciones y firma',
+}
+
+const WHATS_NEXT_ITEMS = [
+  'Tu expediente preliminar queda organizado según la categoría aprobada.',
+  'Tu pastor completará o confirmará la referencia pastoral requerida.',
+  'El capítulo local de ASI revisará la solicitud y la documentación de apoyo.',
+  'La coordinación de cuota y beneficios continuará una vez la solicitud avance a aprobación.',
+]
+
+
+function ProgressTrack({ percent }: { percent: number }) {
+  return (
+    <div
+      className="h-2 overflow-hidden rounded-full bg-[#eaeef4]"
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percent}
+    >
+      <div
+        className="h-full rounded-full bg-[linear-gradient(90deg,var(--asi-primary),#2f5aa3)] transition-[width] duration-[450ms] ease-out"
+        style={{ width: `${percent}%` }}
+      />
+    </div>
+  )
+}
+
+function ContextCard({
   categoryName,
   dues,
-  badgeLabel,
   requirements,
 }: {
   categoryName: string
   dues: string
-  badgeLabel: string
   requirements: string[]
 }) {
-  const visibleRequirements = requirements.slice(0, 2)
-  const hiddenRequirements = requirements.slice(2)
-  const hiddenRequirementCount = Math.max(requirements.length - visibleRequirements.length, 0)
-  const [showHiddenRequirements, setShowHiddenRequirements] = useState(false)
-  const shouldReduceMotion = useReducedMotion()
-
   return (
-    <div className="rounded-2xl border border-(--asi-outline) bg-(--asi-primary)/5 px-4 py-3 sm:px-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0 space-y-2">
-          <div className="inline-flex w-fit max-w-full items-center gap-2 rounded-full bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-(--asi-secondary)">
-            <LockKeyhole className="size-3.5" />
-            Categoría bloqueada por elegibilidad
-          </div>
-          <div className="flex flex-col gap-2 md:flex-row md:items-end">
-            <p className="text-lg font-semibold tracking-tight text-(--asi-primary)">
-              {categoryName}
-            </p>
-            <p className="text-sm text-(--asi-text-muted)">
-              Ya verificada. Solo completa los datos pendientes.
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center justify-between gap-4 rounded-xl border border-(--asi-outline) bg-white px-4 py-2 lg:min-w-48">
-          <div>
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-(--asi-text-muted)">
-              Cuota anual
-            </p>
-            <p className="mt-0.5 text-xs text-(--asi-text-muted)">{badgeLabel}</p>
-          </div>
-          <p className="text-xl font-semibold tracking-tight text-(--asi-primary)">
-            {dues}
-          </p>
-        </div>
+    <div className="rounded-2xl border border-[#e7ebf2] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(16,40,80,0.04)]">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#cfe8d8] bg-[#eef6f0] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.06em] text-[#1f9d57]">
+        <Check className="size-3.5" /> Categoría verificada
+      </span>
+      <p className="mt-4 text-[18px] font-extrabold text-(--asi-primary)">{categoryName}</p>
+      <p className="mt-1 text-[13.5px] leading-6 text-[#65728a]">Ya verificada. Solo completa los datos pendientes.</p>
+      <div className="my-4 border-t border-[#eef1f6]" />
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-[#8a96a8]">Cuota anual</p>
+        <p className="text-[22px] font-extrabold text-(--asi-primary)">{dues}</p>
       </div>
-
-      {visibleRequirements.length > 0 ? (
-        <div className="mt-3 flex flex-col gap-2 border-t border-(--asi-outline) pt-3 text-xs leading-5 text-(--asi-text-muted) md:flex-row md:flex-wrap md:items-center">
-          <p className="font-semibold text-(--asi-text)">
-            Requisitos confirmados:
-          </p>
-          {visibleRequirements.map((requirement) => (
-            <span key={requirement} className="inline-flex items-start gap-1.5">
-              <span className="mt-2 size-1 shrink-0 rounded-full bg-(--asi-primary)" />
-              {requirement}
-            </span>
-          ))}
-          {hiddenRequirementCount > 0 ? (
-            <span
-              className="relative inline-flex"
-              onMouseEnter={() => setShowHiddenRequirements(true)}
-              onMouseLeave={() => setShowHiddenRequirements(false)}
-            >
-              <button
-                type="button"
-                aria-expanded={showHiddenRequirements}
-                onClick={() => setShowHiddenRequirements(true)}
-                onFocus={() => setShowHiddenRequirements(true)}
-                onBlur={() => setShowHiddenRequirements(false)}
-                className="font-semibold text-(--asi-primary) underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--asi-primary)/30"
-              >
-                +{hiddenRequirementCount} más
-              </button>
-              <AnimatePresence>
-                {showHiddenRequirements ? (
-                  <motion.div
-                    initial={shouldReduceMotion ? false : { opacity: 0, y: 6, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={shouldReduceMotion ? undefined : { opacity: 0, y: 6, scale: 0.98 }}
-                    transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-                    className="absolute left-0 top-full z-30 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-(--asi-outline) bg-white p-3 text-xs leading-5 text-(--asi-text-muted) shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
-                    role="tooltip"
-                  >
-                    <p className="font-semibold text-(--asi-text)">
-                      Requisitos adicionales
-                    </p>
-                    <ul className="mt-2 space-y-1.5">
-                      {hiddenRequirements.map((requirement) => (
-                        <li key={requirement} className="flex items-start gap-2">
-                          <span className="mt-2 size-1 shrink-0 rounded-full bg-(--asi-primary)" />
-                          <span>{requirement}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-            </span>
-          ) : null}
-        </div>
+      {requirements.length > 0 ? (
+        <>
+          <div className="my-4 border-t border-[#eef1f6]" />
+          <p className="text-[13px] font-bold text-[#1b2a44]">Requisitos confirmados</p>
+          <ul className="mt-2.5 space-y-2">
+            {requirements.map((req) => (
+              <li key={req} className="flex items-start gap-2 text-[13.5px] leading-5 text-[#516079]">
+                <Check className="mt-0.5 size-4 shrink-0 text-[#1f9d57]" />
+                <span>{req}</span>
+              </li>
+            ))}
+          </ul>
+        </>
       ) : null}
     </div>
   )
 }
 
-function ApplicationProgress({
-  currentStep,
+type StepperState = 'active' | 'done' | 'pending'
+
+function stepperStateOf(index: number, current: number): StepperState {
+  return index === current ? 'active' : index < current ? 'done' : 'pending'
+}
+
+function VerticalStepper({
   steps,
+  current,
+  onSelect,
 }: {
-  currentStep: number
   steps: readonly ApplicationStep[]
+  current: number
+  onSelect: (index: number) => void
 }) {
-  const progress = Math.round((currentStep / (steps.length - 1)) * 100)
-  const activeStep = steps[currentStep]
-
   return (
-    <div className="rounded-2xl border border-(--asi-outline) bg-(--asi-surface-raised) px-4 py-4 shadow-(--asi-shadow-soft) sm:px-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--asi-secondary)">
-            Fase {currentStep + 1} de {steps.length}
-          </p>
-          <h2 className="mt-1 text-xl font-semibold tracking-tight text-(--asi-text)">
-            {activeStep.title}
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-(--asi-text-muted)">
-            {activeStep.summary}
-          </p>
-        </div>
-        <div className="shrink-0 text-left sm:text-right">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--asi-text-muted)">
-            Progreso
-          </p>
-          <p className="mt-1 text-2xl font-semibold tracking-tight text-(--asi-primary)">
-            {progress}%
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <div
-          className="h-2 overflow-hidden rounded-full bg-(--asi-primary)/10"
-          aria-label={`Progreso de solicitud ${progress}%`}
-          aria-valuemax={100}
-          aria-valuemin={0}
-          aria-valuenow={progress}
-          role="progressbar"
-        >
-          <div
-            className="h-full rounded-full bg-(--asi-primary) transition-[width] duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
-
-      <ol className="mt-4 flex gap-2 overflow-x-auto pb-1">
+    <nav className="rounded-2xl border border-[#e7ebf2] bg-white p-3 shadow-[0_1px_2px_rgba(16,40,80,0.04)]">
+      <p className="px-2 pb-2 pt-1 text-[11px] font-bold uppercase tracking-[0.07em] text-[#8a96a8]">Fases de la solicitud</p>
+      <ol className="space-y-1">
         {steps.map((step, index) => {
-          const isCompleted = index < currentStep
-          const isActive = index === currentStep
-
+          const state = stepperStateOf(index, current)
           return (
-            <li
+            <li key={step.id}>
+              <button
+                type="button"
+                onClick={() => onSelect(index)}
+                aria-current={state === 'active' ? 'step' : undefined}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-[13px] px-3 py-2.5 text-left transition-colors',
+                  state === 'active'
+                    ? 'bg-(--asi-primary) shadow-[0_9px_18px_-11px_var(--asi-primary)]'
+                    : 'hover:bg-[#f4f7fc]'
+                )}
+              >
+                <span
+                  className={cn(
+                    'flex size-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold',
+                    state === 'active'
+                      ? 'bg-white text-(--asi-primary)'
+                      : state === 'done'
+                        ? 'bg-[#1f9d57] text-white'
+                        : 'bg-[#e7ebf2] text-[#7a8699]'
+                  )}
+                >
+                  {state === 'done' ? <Check className="size-4" /> : index + 1}
+                </span>
+                <span className="min-w-0">
+                  <span
+                    className={cn(
+                      'block text-[14px] font-semibold',
+                      state === 'active' ? 'text-white' : state === 'done' ? 'text-[#1b2a44]' : 'text-[#7a8699]'
+                    )}
+                  >
+                    {step.title}
+                  </span>
+                  <span
+                    className={cn(
+                      'block text-[12px]',
+                      state === 'active' ? 'text-white/70' : 'text-[#9aa6b8]'
+                    )}
+                  >
+                    {STEP_SUBTITLES[step.id]}
+                  </span>
+                </span>
+              </button>
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
+  )
+}
+
+function MobileStepBar({
+  steps,
+  current,
+  percent,
+  onSelect,
+}: {
+  steps: readonly ApplicationStep[]
+  current: number
+  percent: number
+  onSelect: (index: number) => void
+}) {
+  return (
+    <div className="rounded-2xl border border-[#e7ebf2] bg-white p-4 shadow-[0_1px_2px_rgba(16,40,80,0.04)] lg:hidden">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-[#8a96a8]">Fase {current + 1} de {steps.length}</p>
+        <p className="text-[16px] font-extrabold text-(--asi-primary)">{percent}%</p>
+      </div>
+      <div className="mt-3">
+        <ProgressTrack percent={percent} />
+      </div>
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        {steps.map((step, index) => {
+          const state = stepperStateOf(index, current)
+          return (
+            <button
               key={step.id}
+              type="button"
+              onClick={() => onSelect(index)}
               className={cn(
-                'flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm',
-                isActive
+                'inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border-[1.5px] px-3 py-2 text-[13px] font-semibold transition-colors',
+                state === 'active'
                   ? 'border-(--asi-primary) bg-(--asi-primary)/8 text-(--asi-primary)'
-                  : isCompleted
-                    ? 'border-green-200 bg-green-50 text-green-700'
-                    : 'border-(--asi-outline) bg-white text-(--asi-text-muted)'
+                  : state === 'done'
+                    ? 'border-[#c4e7d1] bg-[#e8f6ee] text-[#1f9d57]'
+                    : 'border-[#e2e7f0] bg-white text-[#7a8699]'
               )}
             >
               <span
                 className={cn(
-                  'flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
-                  isActive
+                  'flex size-5 items-center justify-center rounded-full text-[11px] font-bold',
+                  state === 'active'
                     ? 'bg-(--asi-primary) text-white'
-                    : isCompleted
-                      ? 'bg-green-600 text-white'
-                      : 'bg-(--asi-primary)/10 text-(--asi-text-muted)'
+                    : state === 'done'
+                      ? 'bg-[#1f9d57] text-white'
+                      : 'bg-[#e7ebf2] text-[#7a8699]'
                 )}
               >
-                {isCompleted ? <CheckCircle2 className="size-4" /> : index + 1}
+                {state === 'done' ? <Check className="size-3" /> : index + 1}
               </span>
-              <span className="min-w-0">
-                <span className="block whitespace-nowrap font-semibold">{step.title}</span>
-              </span>
-            </li>
+              {step.title}
+            </button>
           )
         })}
+      </div>
+    </div>
+  )
+}
+
+function WhatsNext() {
+  return (
+    <div className="rounded-panel border border-[#e7ebf2] bg-white p-7 shadow-[0_1px_2px_rgba(16,40,80,0.04),0_18px_40px_-28px_rgba(16,40,80,0.22)]">
+      <p className="text-[15px] font-bold text-[#15233e]">¿Qué ocurre después?</p>
+      <ol className="mt-4 space-y-3.5">
+        {WHATS_NEXT_ITEMS.map((item, index) => (
+          <li key={item} className="flex items-start gap-3 text-[14.5px] leading-6 text-[#516079]">
+            <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-[#eaf0fa] text-[13px] font-bold text-(--asi-primary)">
+              {index + 1}
+            </span>
+            <span>{item}</span>
+          </li>
+        ))}
       </ol>
     </div>
   )
@@ -1793,6 +1822,14 @@ export function MembershipApplicationForm({
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // Navegación directa desde el stepper/chips a cualquier fase.
+  function goToStep(index: number) {
+    setCurrentStepIndex(index)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const progressPercent = Math.round((currentStepIndex / (applicationSteps.length - 1)) * 100)
+
   function handleInvalidSubmission(
     formErrors: typeof form.formState.errors
   ) {
@@ -1821,31 +1858,60 @@ export function MembershipApplicationForm({
 
   return (
     <form
-      className="space-y-6"
       onSubmit={(event) => {
         void form.handleSubmit(handlePrepareSubmission, handleInvalidSubmission)(event)
       }}
     >
-      <LockedQualificationCard
-        badgeLabel={variant.lockedBadgeLabel}
-        categoryName={token.category}
-        dues={token.dues}
-        requirements={categoryInfo?.requirements ?? []}
-      />
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-[30px]">
+        {/* Rail izquierdo (escritorio) */}
+        <aside className="hidden w-[330px] shrink-0 flex-col gap-4 lg:sticky lg:top-9 lg:flex">
+          <div className="rounded-2xl border border-[#e7ebf2] bg-white px-5 py-4 shadow-[0_1px_2px_rgba(16,40,80,0.04)]">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-[#8a96a8]">Progreso general</p>
+              <p className="text-[18px] font-extrabold text-(--asi-primary)">{progressPercent}%</p>
+            </div>
+            <div className="mt-3">
+              <ProgressTrack percent={progressPercent} />
+            </div>
+          </div>
+          <ContextCard
+            categoryName={token.category}
+            dues={token.dues}
+            requirements={categoryInfo?.requirements ?? []}
+          />
+          <VerticalStepper steps={applicationSteps} current={currentStepIndex} onSelect={goToStep} />
+        </aside>
 
-      <ApplicationProgress currentStep={currentStepIndex} steps={applicationSteps} />
+        {/* Columna principal */}
+        <div className="min-w-0 flex-1 space-y-6">
+          <MobileStepBar steps={applicationSteps} current={currentStepIndex} percent={progressPercent} onSelect={goToStep} />
 
-      {submitMutation.isError ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-700">
-          No pudimos guardar la solicitud real. Revisa los datos o vuelve a intentar.
-        </div>
-      ) : null}
+          <div>
+            <p className="text-[11.5px] font-bold uppercase tracking-[0.13em] text-[#8a96a8]">Solicitud de membresía</p>
+            <h1 className="mt-1 text-[2rem] font-extrabold leading-tight tracking-[-0.02em] text-[#15233e]">Solicitud de membresía ASI</h1>
+            <p className="mt-2 max-w-[60ch] text-[15.5px] leading-7 text-[#65728a]">
+              Completa los datos requeridos para dejar listo tu expediente preliminar. Tu progreso queda visible en cada fase.
+            </p>
+          </div>
 
-      {MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-7 text-amber-900">
-          {MEMBERSHIP_APPLICATIONS_LOCKED_MESSAGE}
-        </div>
-      ) : null}
+          <div className="rounded-panel border border-[#e7ebf2] bg-white p-6 shadow-[0_1px_2px_rgba(16,40,80,0.04),0_18px_40px_-28px_rgba(16,40,80,0.22)] sm:p-8">
+            <span className="inline-flex w-fit rounded-full border border-[#e7ebf2] bg-[#f1f4f9] px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-[#8a96a8]">
+              Fase {currentStepIndex + 1} de {applicationSteps.length}
+            </span>
+
+            {submitMutation.isError ? (
+              <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-700">
+                No pudimos guardar la solicitud real. Revisa los datos o vuelve a intentar.
+              </div>
+            ) : null}
+
+            {MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED ? (
+              <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-7 text-amber-900">
+                {MEMBERSHIP_APPLICATIONS_LOCKED_MESSAGE}
+              </div>
+            ) : null}
+
+            <div key={currentStep.id} className="mt-6 animate-[ph-fade_0.35s_ease]">
 
       {currentStep.id === 'contact' ? (
         <ApplicationSection
@@ -3010,44 +3076,51 @@ export function MembershipApplicationForm({
         />
         </ApplicationSection>
       ) : null}
+            </div>
+          </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-        {!isFirstStep ? (
-          <button
-            type="button"
-            disabled={submitMutation.isPending}
-            className="asi-button asi-button-secondary w-full justify-center disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
-            onClick={handlePreviousStep}
-          >
-            <ArrowLeft className="size-4" />
-            Anterior
-          </button>
-        ) : null}
+          {currentStep.id === 'contact' ? <WhatsNext /> : null}
 
-        {isLastStep ? (
-          <button
-            type="submit"
-            disabled={submitMutation.isPending || MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED}
-            className="asi-button asi-button-primary w-full justify-center disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
-          >
-            {submitMutation.isPending
-              ? 'Enviando solicitud...'
-              : MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED
-                ? 'Envio cerrado'
-                : 'Enviar solicitud'}
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="asi-button asi-button-primary w-full justify-center sm:w-auto"
-            onClick={() => {
-              void handleNextStep()
-            }}
-          >
-            Siguiente
-            <ArrowRight className="size-4" />
-          </button>
-        )}
+          <div className="flex items-center gap-3">
+            {!isFirstStep ? (
+              <button
+                type="button"
+                disabled={submitMutation.isPending}
+                onClick={handlePreviousStep}
+                className="inline-flex items-center gap-2 rounded-[13px] border-[1.5px] border-[#dde3ec] bg-white px-6 py-3 text-[15px] font-semibold text-(--asi-primary) transition-colors hover:border-(--asi-primary) disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <ArrowLeft className="size-4" />
+                Anterior
+              </button>
+            ) : null}
+
+            {isLastStep ? (
+              <button
+                type="submit"
+                disabled={submitMutation.isPending || MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED}
+                className="ml-auto inline-flex items-center gap-2 rounded-[13px] bg-(--asi-primary) px-6 py-3 text-[15px] font-semibold text-white shadow-[0_13px_26px_-13px_var(--asi-primary)] transition-[filter] hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {submitMutation.isPending
+                  ? 'Enviando solicitud...'
+                  : MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED
+                    ? 'Envio cerrado'
+                    : 'Enviar solicitud'}
+                <ArrowRight className="size-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  void handleNextStep()
+                }}
+                className="ml-auto inline-flex items-center gap-2 rounded-[13px] bg-(--asi-primary) px-6 py-3 text-[15px] font-semibold text-white shadow-[0_13px_26px_-13px_var(--asi-primary)] transition-[filter] hover:brightness-95"
+              >
+                Siguiente
+                <ArrowRight className="size-4" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </form>
   )

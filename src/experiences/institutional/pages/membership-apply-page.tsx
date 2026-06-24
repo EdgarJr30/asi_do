@@ -179,50 +179,16 @@ export function MembershipApplyPage() {
     return <MembershipAuthGate token={token} />;
   }
 
+  // El formulario rediseñado provee su propio chrome completo (rail, cabecera,
+  // tarjeta, "¿qué ocurre después?" y footer). La página solo aporta el contenedor.
   return (
     <InstitutionalSection
       className="-mt-6 min-h-[70vh] pb-16 sm:-mt-8 lg:-mt-10"
       reveal="mount"
       spacing="none"
     >
-      <div className="mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="mb-5">
-          <p className="asi-kicker">Membresía</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-(--asi-text) sm:text-4xl">
-            Solicitud de membresía ASI
-          </h1>
-          <p className="mt-2 max-w-[48ch] text-base leading-7 text-(--asi-text-muted)">
-            Completa los datos requeridos para dejar listo tu expediente preliminar.
-          </p>
-        </div>
-
+      <div className="mx-auto max-w-[1340px]">
         <MembershipApplicationForm token={token} />
-
-        {/* Info note */}
-        <div className="mt-6 rounded-2xl border border-(--asi-outline) bg-(--asi-surface-raised) p-5">
-          <p className="text-sm font-semibold text-(--asi-text)">
-            ¿Qué ocurre después?
-          </p>
-          <ol className="mt-3 space-y-2">
-            {[
-              'Tu expediente preliminar queda organizado según la categoría aprobada.',
-              'Tu pastor completará o confirmará la referencia pastoral requerida.',
-              'El capítulo local de ASI revisará la solicitud y la documentación de apoyo.',
-              'La coordinación de cuota y beneficios continuará una vez la solicitud avance a aprobación.',
-            ].map((step, i) => (
-              <li
-                key={step}
-                className="flex items-start gap-3 text-sm text-(--asi-text-muted)"
-              >
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-(--asi-primary)/10 text-xs font-bold text-(--asi-primary)">
-                  {i + 1}
-                </span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
       </div>
     </InstitutionalSection>
   );

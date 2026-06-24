@@ -115,4 +115,22 @@ describe('rutas del servicio', () => {
       'https://asi-do.netlify.app/account/membership?payment=cancelled&order=ASI-260624-abc123'
     )
   })
+
+  it('GET /callback honra el return válido (separa local de producción)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/payments/azul/callback?outcome=cancelled&order=ASI-1&return=http%3A%2F%2Flocalhost%3A5173'
+    })
+    expect(res.statusCode).toBe(302)
+    expect(res.headers.location).toBe('http://localhost:5173/account/membership?payment=cancelled&order=ASI-1')
+  })
+
+  it('GET /callback ignora un return fuera de la allowlist (anti open-redirect)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/payments/azul/callback?outcome=cancelled&order=ASI-1&return=https%3A%2F%2Fevil.com'
+    })
+    expect(res.statusCode).toBe(302)
+    expect(res.headers.location).toBe('https://asi-do.netlify.app/account/membership?payment=cancelled&order=ASI-1')
+  })
 })

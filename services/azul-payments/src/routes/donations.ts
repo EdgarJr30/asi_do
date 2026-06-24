@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 
 import { authenticate } from '../auth.ts'
-import { buildSaleForm, type BeginPaymentRecord } from '../azul/client.ts'
+import { buildSaleForm, resolveReturnBase, type BeginPaymentRecord } from '../azul/client.ts'
 import type { AppConfig } from '../config.ts'
 import { serviceClient } from '../supabase.ts'
 
@@ -66,13 +66,18 @@ export function registerDonationRoutes(app: FastifyInstance, config: AppConfig):
       return reply.code(422).send({ error: 'No se pudo iniciar la donación.' })
     }
 
-    const form = buildSaleForm(config, {
-      payment_id: record.donation_id ?? record.payment_id,
-      order_number: record.order_number,
-      amount: record.amount,
-      currency: record.currency,
-      category_label: record.label ?? 'Donación'
-    })
+    const returnBase = resolveReturnBase(config, request.headers.origin)
+    const form = buildSaleForm(
+      config,
+      {
+        payment_id: record.donation_id ?? record.payment_id,
+        order_number: record.order_number,
+        amount: record.amount,
+        currency: record.currency,
+        category_label: record.label ?? 'Donación'
+      },
+      returnBase
+    )
 
     request.log.info({ donorUserId, orderNumber: record.order_number, amount: record.amount }, 'Donación AZUL iniciada')
 

@@ -25,17 +25,37 @@ export interface AzulFormPayload {
   fields: Record<string, string>
 }
 
+/**
+ * Resuelve la base de retorno (a dónde vuelve el navegador tras pagar) según el
+ * origin del SPA que inició el pago, validado contra la allowlist. Así un mismo
+ * servicio devuelve a local cuando vienes de local y a producción cuando vienes de
+ * producción. Si el origin no es válido/ausente, cae a APP_URL.
+ */
+export function resolveReturnBase(config: AppConfig, origin: string | undefined | null): string {
+  const normalized = (origin ?? '').trim().replace(/\/+$/, '')
+  if (normalized && config.allowedOrigins.includes(normalized)) {
+    return normalized
+  }
+  return config.appUrl
+}
+
 /** Construye la base de las Approved/Declined/CancelUrl que apuntan al callback de este servicio. */
-function callbackUrl(config: AppConfig, outcome: 'approved' | 'declined' | 'cancelled', orderNumber: string): string {
-  const params = new URLSearchParams({ outcome, order: orderNumber })
+function callbackUrl(
+  config: AppConfig,
+  outcome: 'approved' | 'declined' | 'cancelled',
+  orderNumber: string,
+  returnBase: string
+): string {
+  const params = new URLSearchParams({ outcome, order: orderNumber, return: returnBase })
   return `${config.servicePublicUrl}/payments/azul/callback?${params.toString()}`
 }
 
 /**
  * Arma el payload del formulario de venta (Sale) para la Página de Pago de AZUL,
  * incluyendo el AuthHash firmado server-side. El ITBIS va en '000' (cuotas exentas).
+ * `returnBase` es a dónde redirige el callback tras el pago (origin validado).
  */
-export function buildSaleForm(config: AppConfig, record: BeginPaymentRecord): AzulFormPayload {
+export function buildSaleForm(config: AppConfig, record: BeginPaymentRecord, returnBase: string): AzulFormPayload {
   const hashFields: AzulRequestHashFields = {
     MerchantId: config.azul.merchantId,
     MerchantName: config.azul.merchantName,
@@ -44,9 +64,9 @@ export function buildSaleForm(config: AppConfig, record: BeginPaymentRecord): Az
     OrderNumber: record.order_number,
     Amount: toAzulAmount(record.amount),
     ITBIS: '000',
-    ApprovedUrl: callbackUrl(config, 'approved', record.order_number),
-    DeclinedUrl: callbackUrl(config, 'declined', record.order_number),
-    CancelUrl: callbackUrl(config, 'cancelled', record.order_number),
+    ApprovedUrl: callbackUrl(config, 'approved', record.order_number, returnBase),
+    DeclinedUrl: callbackUrl(config, 'declined', record.order_number, returnBase),
+    CancelUrl: callbackUrl(config, 'cancelled', record.order_number, returnBase),
     UseCustomField1: '0',
     CustomField1Label: '',
     CustomField1Value: '',

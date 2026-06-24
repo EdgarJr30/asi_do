@@ -275,7 +275,7 @@ export function MembershipStatusPage() {
   )
 
   const bundle = useMemo<MembershipStatusBundle>(
-    () => statusQuery.data ?? { application: null, payment: null, verifiedPayment: null, settings: null },
+    () => statusQuery.data ?? { application: null, payment: null, verifiedPayment: null, verifiedPayments: [], settings: null },
     [statusQuery.data]
   )
   const steps = useMemo(() => computeSteps(bundle, session.hasActiveAsiAccess), [bundle, session.hasActiveAsiAccess])
@@ -514,12 +514,17 @@ export function MembershipStatusPage() {
                 ) : null}
 
                 {activeTab === 'receipts' ? (
-                  bundle.verifiedPayment ? (
-                    <MembershipReceiptCard
-                      payment={bundle.verifiedPayment}
-                      currency={bundle.settings?.currency ?? 'DOP'}
-                      categoryLabel={due?.label ?? bundle.application?.category_name ?? null}
-                    />
+                  bundle.verifiedPayments.length > 0 ? (
+                    <div className="space-y-4">
+                      {bundle.verifiedPayments.map((paymentItem) => (
+                        <MembershipReceiptCard
+                          key={paymentItem.id}
+                          payment={paymentItem}
+                          currency={bundle.settings?.currency ?? paymentItem.currency ?? 'DOP'}
+                          categoryLabel={due?.label ?? bundle.application?.category_name ?? null}
+                        />
+                      ))}
+                    </div>
                   ) : (
                     <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-muted) p-5 text-sm text-(--app-text-muted)">
                       Aún no hay comprobantes verificados disponibles. Cuando un pago sea aprobado, aparecerá aquí.
@@ -707,21 +712,21 @@ function AzulPayCard({
     )
   }
 
-  if (processing) {
-    return (
-      <div className="mt-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) p-4">
-        <p className="inline-flex items-center gap-2 text-sm font-semibold text-(--app-text)">
-          <Clock className="size-4" /> Estamos confirmando tu pago…
-        </p>
-        <p className="mt-1 text-xs text-(--app-text-muted)">
-          Si ya completaste el pago en AZUL, la confirmación puede tardar unos minutos.
-        </p>
-        <Button variant="outline" className="mt-3 h-9" onClick={onRefresh}>
-          Actualizar estado
-        </Button>
-      </div>
-    )
-  }
+  // Un intento 'initiated' no bloquea la tarjeta: avisamos pero dejamos reintentar
+  // (si lo cancelaste/cerraste no llega callback y quedaría colgado para siempre).
+  const processingNotice = processing ? (
+    <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+      <p className="inline-flex items-center gap-2 text-xs font-semibold text-amber-800 dark:text-amber-200">
+        <Clock className="size-3.5" /> Tienes un intento de pago sin completar
+      </p>
+      <p className="mt-1 text-xs leading-5 text-amber-700/90 dark:text-amber-200/80">
+        Si ya pagaste en AZUL, pulsa “Actualizar estado”. Si lo cancelaste o cerraste la ventana, vuelve a intentarlo aquí.
+      </p>
+      <Button variant="outline" className="mt-2 h-8 text-xs" onClick={onRefresh}>
+        Actualizar estado
+      </Button>
+    </div>
+  ) : null
 
   const yearSelector = (
     <label className="mt-3 flex items-center justify-between gap-3 text-sm">
@@ -759,6 +764,7 @@ function AzulPayCard({
   if (compact) {
     return (
       <div className="mt-2">
+        {processingNotice}
         {yearSelector}
         <CheckoutComplianceBox
           accepted={acceptedPolicies}
@@ -784,6 +790,7 @@ function AzulPayCard({
         </p>
       ) : null}
 
+      {processingNotice}
       {yearSelector}
       {total != null && annualAmount != null ? (
         <p className="mt-1 text-xs text-(--app-text-muted)">
@@ -882,12 +889,15 @@ function MembershipReceiptCard({
   categoryLabel: string | null
 }) {
   const lines = buildReceiptLines(payment, currency, categoryLabel)
+  const kindLabel = payment.intent === 'renewal' ? 'Renovación' : 'Membresía inicial'
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Comprobante de pago</CardTitle>
-        <CardDescription>Descárgalo o compártelo cuando lo necesites.</CardDescription>
+        <CardTitle>Comprobante · {kindLabel}</CardTitle>
+        <CardDescription>
+          Pago confirmado el {formatDate(payment.verified_at)}. Descárgalo o compártelo cuando lo necesites.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-1">
         {lines.map(([key, value]) => (

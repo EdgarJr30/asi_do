@@ -62,7 +62,7 @@ export function loadConfig(): AppConfig {
 
   return {
     port: Number(optional('PORT', '8080')),
-    allowedOrigin: allowedOrigins[0],
+    allowedOrigin: allowedOrigins[0] ?? '',
     allowedOrigins,
     servicePublicUrl: required('SERVICE_PUBLIC_URL').replace(/\/+$/, ''),
     appUrl: required('APP_URL').replace(/\/+$/, ''),

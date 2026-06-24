@@ -12,6 +12,8 @@ export interface MembershipStatusBundle {
   payment: MembershipPayment | null
   /** Último pago VERIFICADO; respalda la membresía activa y la "fecha de pago". */
   verifiedPayment: MembershipPayment | null
+  /** Todos los pagos verificados (inicial + renovaciones), más reciente primero. Historial de comprobantes. */
+  verifiedPayments: MembershipPayment[]
   settings: MembershipPaymentSettings | null
 }
 
@@ -58,7 +60,7 @@ export async function fetchMyMembershipStatus(userId: string): Promise<Membershi
 
   const application = applicationResponse.data ?? null
   let payment: MembershipPayment | null = null
-  let verifiedPayment: MembershipPayment | null = null
+  let verifiedPayments: MembershipPayment[] = []
 
   if (application) {
     const [latestResponse, verifiedResponse] = await Promise.all([
@@ -69,14 +71,13 @@ export async function fetchMyMembershipStatus(userId: string): Promise<Membershi
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
+      // Todos los verificados (inicial + renovaciones) para el historial de comprobantes.
       client
         .from('membership_payments')
         .select('*')
         .eq('application_id', application.id)
         .eq('status', 'verified')
         .order('verified_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
     ])
 
     if (latestResponse.error) {
@@ -86,10 +87,16 @@ export async function fetchMyMembershipStatus(userId: string): Promise<Membershi
       throw verifiedResponse.error
     }
     payment = latestResponse.data ?? null
-    verifiedPayment = verifiedResponse.data ?? null
+    verifiedPayments = verifiedResponse.data ?? []
   }
 
-  return { application, payment, verifiedPayment, settings: settingsResponse.data ?? null }
+  return {
+    application,
+    payment,
+    verifiedPayment: verifiedPayments[0] ?? null,
+    verifiedPayments,
+    settings: settingsResponse.data ?? null
+  }
 }
 
 /** Configuración de pago activa (datos bancarios + cuotas). Null si no hay. */
