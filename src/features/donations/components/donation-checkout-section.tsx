@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
@@ -202,23 +202,17 @@ export function DonationCheckoutSection() {
   const session = useAppSession()
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [customAmount, setCustomAmount] = useState('')
-  const [donorName, setDonorName] = useState('')
-  const [donorEmail, setDonorEmail] = useState('')
-  const [donorPhone, setDonorPhone] = useState('')
   const [designation, setDesignation] = useState('Fondo general ASI DO')
-  const didPrefillDonorRef = useRef(false)
 
-  useEffect(() => {
-    if (didPrefillDonorRef.current || (!session.profile && !session.authUser?.email)) {
-      return
-    }
+  // Progressive profiling: si hay sesión, prefill desde el perfil (derivado, sin effect).
+  // `null` = el usuario aún no edita el campo → usamos el valor del perfil; al escribir, manda su input.
+  const [donorNameInput, setDonorNameInput] = useState<string | null>(null)
+  const [donorEmailInput, setDonorEmailInput] = useState<string | null>(null)
+  const [donorPhoneInput, setDonorPhoneInput] = useState<string | null>(null)
 
-    didPrefillDonorRef.current = true
-
-    setDonorName((current) => current || session.profile?.full_name || session.profile?.display_name || '')
-    setDonorEmail((current) => current || session.profile?.email || session.authUser?.email || '')
-    setDonorPhone((current) => current || session.profile?.phone || '')
-  }, [session.authUser?.email, session.profile])
+  const donorName = donorNameInput ?? (session.profile?.full_name || session.profile?.display_name || '')
+  const donorEmail = donorEmailInput ?? (session.profile?.email || session.authUser?.email || '')
+  const donorPhone = donorPhoneInput ?? (session.profile?.phone || '')
 
   const amountOptionsQuery = useQuery({
     queryKey: ['donations', 'amount-options'],
@@ -388,7 +382,7 @@ export function DonationCheckoutSection() {
                   className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
                   autoComplete="name"
                   value={donorName}
-                  onChange={(event) => setDonorName(event.target.value)}
+                  onChange={(event) => setDonorNameInput(event.target.value)}
                 />
               </label>
               <label className="grid gap-2 text-sm font-medium text-(--asi-text)">
@@ -398,7 +392,7 @@ export function DonationCheckoutSection() {
                   autoComplete="email"
                   type="email"
                   value={donorEmail}
-                  onChange={(event) => setDonorEmail(event.target.value)}
+                  onChange={(event) => setDonorEmailInput(event.target.value)}
                 />
               </label>
               <label className="grid gap-2 text-sm font-medium text-(--asi-text)">
@@ -409,7 +403,7 @@ export function DonationCheckoutSection() {
                   inputMode="tel"
                   type="tel"
                   value={donorPhone}
-                  onChange={(event) => setDonorPhone(event.target.value)}
+                  onChange={(event) => setDonorPhoneInput(event.target.value)}
                 />
               </label>
               <label className="grid gap-2 text-sm font-medium text-(--asi-text)">
