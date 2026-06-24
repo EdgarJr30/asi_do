@@ -431,7 +431,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
             <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700 dark:border-primary-500/25 dark:bg-primary-500/12 dark:text-primary-200">
               Configuración
             </div>
-            <h1 className="mt-4 text-[1.75rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2rem]">
+            <h1 className="mt-3 text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">
               {greetingForNow()}, {firstName(userDisplayName)}
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-(--app-text-muted)">
@@ -470,7 +470,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
 
       <motion.section variants={cardReveal} className="space-y-3">
         <div>
-          <h2 className="text-[1.05rem] font-semibold tracking-tight text-(--app-text)">Configuración del workspace</h2>
+          <h2 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Configuración del workspace</h2>
           <p className="text-sm text-(--app-text-muted)">Administra los datos de tu empresa y los accesos del equipo.</p>
         </div>
         <motion.div variants={gridStagger} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

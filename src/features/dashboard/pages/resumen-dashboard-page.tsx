@@ -138,12 +138,11 @@ export function ResumenDashboardPage() {
         variants={cardReveal}
         className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
       >
-        <div className="space-y-1.5">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-(--app-text-subtle)">Dashboard · Resumen</p>
-          <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">
             {greeting}, {firstName(displayName)}
           </h1>
-          <p className="text-sm text-(--app-text-muted)">Este es el estado de tu reclutamiento hoy.</p>
+          <p className="text-[0.8rem] text-(--app-text-muted)">Este es el estado de tu reclutamiento hoy.</p>
         </div>
         <div className="flex flex-wrap gap-2.5">
           <Button variant="outline" onClick={() => void navigate(surfacePaths.workspace.pipeline)}>

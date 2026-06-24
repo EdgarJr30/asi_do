@@ -272,6 +272,9 @@ Do not reintroduce a "mantener sesión iniciada", "remember me", or equivalent c
 ### R-087 — Auth loaders must not expand the auth shell
 Do not render full-screen page loaders inside `/auth/sign-in` or `/auth/sign-up`. The shared auth shell already owns the viewport height, so login and sign-up loading states must stay bounded to the form pane and must not make the page suddenly grow or introduce scroll during session hydration.
 
+### R-088 — Workspace headings must stay compact
+Do not reintroduce oversized page headings or redundant eyebrow labels such as `Dashboard · Resumen` inside the `Mi empresa` workspace pages. Workspace headings should stay close to the compact `Mi espacio` home scale so operational pages feel dense, calm, and task-focused.
+
 ### R-064 — Tailwind utility syntax and override strategy must stay canonical
 Do not reintroduce non-canonical Tailwind utility spellings when the framework already provides an exact built-in token. Do not rely on CSS important overrides or Tailwind important modifiers as the default fix for styling conflicts; prefer semantic component APIs, Tailwind layer order, or clearer selectors so overrides resolve through the normal cascade. Prefer scale-based height utilities such as `h-88`, `sm:h-96`, `xl:h-108`, `2xl:h-112`, or `min-h-96` over arbitrary `rem` values like `h-[22rem]`, `sm:h-[24rem]`, `xl:h-[27rem]`, or `min-h-[24rem]` whenever the values map exactly to the Tailwind spacing scale.
 

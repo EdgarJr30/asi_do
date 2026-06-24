@@ -123,7 +123,7 @@ export function WorkspaceActivityPage() {
       animate="show"
     >
       <motion.div variants={cardReveal}>
-        <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">Mi actividad</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Mi actividad</h1>
         <p className="mt-1 text-sm text-(--app-text-muted)">Eventos recientes de tu pipeline de reclutamiento.</p>
       </motion.div>
 

@@ -699,7 +699,7 @@ function WorkspaceJobsManager() {
         <motion.section variants={cardReveal} className="space-y-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">Vacantes</h1>
+              <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Vacantes</h1>
               <p className="mt-1 text-sm text-(--app-text-muted)">Gestiona y publica las posiciones abiertas en tu empresa.</p>
             </div>
             <div className="flex flex-wrap gap-2.5">
@@ -753,7 +753,7 @@ function WorkspaceJobsManager() {
               <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
                 Reclutamiento
               </div>
-              <h1 className="mt-4 text-[1.75rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2rem]">
+              <h1 className="mt-3 text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">
                 {canManageJobs ? 'Vacantes y oportunidades desde una sola vista' : 'Explora oportunidades con filtros simples'}
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-(--app-text-muted)">

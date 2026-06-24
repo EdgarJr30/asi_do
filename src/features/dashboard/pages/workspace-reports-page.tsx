@@ -49,7 +49,7 @@ export function WorkspaceReportsPage() {
       animate="show"
     >
       <motion.div variants={cardReveal}>
-        <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">Reportes</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Reportes</h1>
         <p className="mt-1 text-sm text-(--app-text-muted)">Métricas y desempeño del reclutamiento de tu empresa.</p>
       </motion.div>
 

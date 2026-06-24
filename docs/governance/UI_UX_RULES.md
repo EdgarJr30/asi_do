@@ -301,6 +301,7 @@ Surface-direction rule:
 - Do not default customer-facing routes to dark hero shells, black dashboard chrome, or harsh pure-white full-screen backgrounds.
 - Public landing and marketing-facing entrypoints may add gentle atmospheric layering, but the dominant impression must still remain light, calm, and product-grade.
 - Authenticated operational surfaces should default to cleaner, brighter, calmer layouts that prioritize readability, task flow, and repeated daily use.
+- Workspace pages inside `Mi empresa` should use compact page headings that match the `Mi espacio` home scale (`text-xl` mobile and about `1.6rem` on larger screens) unless the page is a true marketing-style hero.
 - Authentication must live in its own isolated shell. Login and sign-up cannot inherit employer sidebars, admin console navigation, or any dashboard chrome.
 - Desktop auth should use a split composition: a calm light form pane for the active task and a branded informational pane that reinforces trust, product value, and platform context. On mobile, collapse to a single-column form-first flow without losing brand recognition.
 - Auth loading states rendered inside the auth shell must stay bounded to the form pane; do not use full-screen loaders inside login or sign-up outlets because the shell already owns viewport height.
