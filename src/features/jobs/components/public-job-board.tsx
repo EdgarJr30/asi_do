@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
+import quoteData from 'inspirational-quotes/data/data.json'
 import {
   ArrowLeft,
   ArrowRight,
@@ -43,6 +44,7 @@ import { cn } from '@/lib/utils/cn'
 import { cardReveal, gridStagger } from '@/shared/ui/card-motion'
 
 type JobRow = JobPostingBundle['jobs'][number]
+type InspirationalQuote = { text: string; from: string }
 
 const PUBLIC_JOBS_QUERY_KEY = ['jobs', 'public-board'] as const
 const PAGE_SIZE = 8
@@ -55,6 +57,7 @@ const employmentLabels: Record<string, string> = {
   temporary: 'Temporal',
   internship: 'Pasantía'
 }
+const inspirationalQuotes = quoteData as InspirationalQuote[]
 
 const primaryLinkClass =
   'inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-primary-600 bg-primary-600 px-6 text-[0.85rem] font-semibold text-white shadow-[0_12px_24px_rgba(43,69,143,0.2)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2'
@@ -101,6 +104,10 @@ function salaryText(job: Pick<JobRow, 'compensation_type' | 'compensation_min_am
   if (min && max) return `${currency} ${min.toLocaleString()} – ${max.toLocaleString()}`
   return `${currency} ${(min || max || 0).toLocaleString()}`
 }
+function randomQuote() {
+  const index = Math.floor(Math.random() * inspirationalQuotes.length)
+  return inspirationalQuotes[index] ?? { text: 'The future depends on what you do today.', from: 'Mahatma Gandhi' }
+}
 
 function CompanyAvatar({ name, size = 'md' }: { name: string | null | undefined; size?: 'sm' | 'md' | 'lg' }) {
   return (
@@ -131,6 +138,7 @@ export function PublicJobBoard() {
   const session = useAppSession()
   const queryClient = useQueryClient()
   const shouldReduceMotion = useReducedMotion()
+  const quote = useMemo(() => randomQuote(), [])
 
   const [filters, setFilters] = useState<Filters>(emptyFilters)
   const [sort, setSort] = useState<'recent' | 'salary'>('recent')
@@ -257,7 +265,9 @@ export function PublicJobBoard() {
     <div className="space-y-4">
       <header className="space-y-1">
         <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Empleos</h1>
-        <p className="text-[0.8rem] text-(--app-text-muted)">Encuentra tu próxima oportunidad. Busca, abre una vacante y aplica en un clic.</p>
+        <p className="max-w-2xl text-[0.72rem] italic leading-relaxed text-(--app-text-subtle) sm:text-[0.76rem]">
+          "{quote.text}" <span className="not-italic text-(--app-text-muted)">- {quote.from}</span>
+        </p>
       </header>
 
       {/* Búsqueda */}
@@ -668,4 +678,3 @@ function Pager({ page, totalPages, onGo }: { page: number; totalPages: number; o
     </nav>
   )
 }
-

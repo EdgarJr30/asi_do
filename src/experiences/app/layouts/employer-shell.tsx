@@ -184,7 +184,7 @@ const storefrontCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descripti
   },
   [surfacePaths.storefront.jobs]: {
     title: 'Jobs',
-    description: 'Oportunidades para miembros, detalles y acceso al flujo de aplicación'
+    description: ''
   },
   [surfacePaths.auth.signIn]: {
     title: 'Iniciar sesión',
