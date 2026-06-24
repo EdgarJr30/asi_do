@@ -191,10 +191,11 @@
 8. Individual ASI membership/subscription is personal access and must not be treated as a tenant workspace plan.
 9. The candidate-only individual user who applies to jobs/opportunities without publishing them is the `Joven Profesional` membership path.
 10. Annual membership categories and dues are: Organizacional Sin Fines de Lucro $250, Organizacional Con Fines de Lucro $250, Profesional Ejecutivo $250, Propietario Individual $200, Profesional o Empresario Jubilado $150, Asociado $150, Joven Profesional $25, and Asociado Internacional $250.
-11. Tenant plans unlock workspace capacity and features, but they do not activate individual user access by default.
-12. Roles decide what a user can do; plans decide what capacity/features are enabled; both checks are required.
-13. Tenant kind restrictions apply even when a tenant has a paid plan.
-14. The canonical commercial plan model lives in `docs/product/COMMERCIAL_PLAN_MODEL.md`.
+11. A verified renewal payment from an already active member extends `membership_expires_at` and `subscription_expires_at` from the current valid expiration date when it is still in the future; it must not reset the term from the payment date or require a second admin activation.
+12. Tenant plans unlock workspace capacity and features, but they do not activate individual user access by default.
+13. Roles decide what a user can do; plans decide what capacity/features are enabled; both checks are required.
+14. Tenant kind restrictions apply even when a tenant has a paid plan.
+15. The canonical commercial plan model lives in `docs/product/COMMERCIAL_PLAN_MODEL.md`.
 
 ---
 

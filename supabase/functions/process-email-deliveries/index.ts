@@ -219,6 +219,24 @@ function getEmailTheme(type: string) {
     }
   }
 
+  if (type === 'membership.renewed') {
+    return {
+      eyebrow: 'Renovación de membresía',
+      accent: '#2b418f',
+      accentSoft: '#f4f7ff',
+      accentBorder: '#dfe7ff',
+      badgeLabel: 'Membresía renovada',
+      actionLabel: 'Ver membresías',
+      summaryTitle: 'Qué cambió',
+      summaryItems: [
+        'El pago con tarjeta fue confirmado por AZUL.',
+        'La vigencia del miembro fue extendida automáticamente y el comprobante quedó registrado.'
+      ],
+      supportTitle: 'Seguimiento administrativo',
+      supportBody: 'Puedes revisar el pago y la nueva fecha de vencimiento desde la consola de membresía.'
+    }
+  }
+
   return {
     eyebrow: 'Notificación oficial',
     accent: '#4f6ed8',

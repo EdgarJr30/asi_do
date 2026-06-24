@@ -41,7 +41,7 @@ sequenceDiagram
     DB-->>SVC: { status: 'verified', member, application }
     SVC-->>M: 302 → /account/membership?payment=approved
     SPA->>SPA: toast + refresca estado (React Query)
-    Note over M: Admin ve pago 'verified' → clic "Activar"<br/>(activate_member, +1 año) — sin cambios
+    Note over M: Pago inicial: admin activa.<br/>Renovación: DB extiende vigencia automáticamente.
 ```
 
 ## Máquina de estados del pago (`membership_payments.status`)
@@ -54,7 +54,7 @@ stateDiagram-v2
     initiated --> failed: conciliación (cron) declina
     initiated --> verified: conciliación (cron) confirma
     failed --> initiated: el miembro reintenta el pago
-    verified --> [*]: admin activa la cuenta (activate_member)
+    verified --> [*]: inicial: admin activa / renovación: vigencia extendida
 ```
 
 ## Ramas de resultado del callback
@@ -89,4 +89,5 @@ flowchart LR
 - **Verificación de monto**: el `Amount` devuelto debe coincidir con el cobrado (anti-tamper).
 - **Idempotencia**: `azul_settle_membership_payment` solo actúa sobre pagos `initiated`.
 - **No se almacenan datos de tarjeta** (requisito de AZUL).
-- **Activación admin** se conserva como paso final de gobernanza (`activate_member`).
+- **Activación admin** se conserva para membresía inicial (`activate_member`); una renovación aprobada
+  de un miembro ya activo extiende la vigencia automáticamente desde la fecha vigente.

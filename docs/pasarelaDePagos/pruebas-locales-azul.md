@@ -146,7 +146,7 @@ tarjeta; si se pega con espacios, AZUL puede devolver `SGS-002303: Invalid credi
 | 3 | **Cancelado** | En AZUL pulsa “Cancelar” → “Sí, cancelar” | `?payment=cancelled`, pago `failed`/reintetable, toast info |
 | 4 | **Manipulación** (seguridad) | (simulado) callback con `AuthHash` alterado | `?payment=error`, el pago **no** cambia de estado |
 | 5 | **Reintento** | Tras un fallo, vuelve a pulsar “Pagar con tarjeta” | Se crea un nuevo intento; al aprobar queda `verified` |
-| 6 | **Renovación** | Miembro activo con solicitud aprobada | Botón “Renovar membresía” en la barra lateral → mismo flujo con `intent=renewal` |
+| 6 | **Renovación** | Miembro activo con solicitud aprobada | Botón “Renovar membresía” → pago `verified`, nuevo comprobante, vigencia extendida automáticamente y notificación a miembro/admins |
 
 ---
 
@@ -198,6 +198,10 @@ cd services/azul-payments && npm test
 Cada intento crea/actualiza una fila en `membership_payments`. Estados:
 `initiated` (formulario enviado) → `verified` (aprobado) | `failed` (declinado/cancelado).
 
+En renovaciones aprobadas (`intent=renewal`), el callback extiende `users.membership_expires_at` desde
+la fecha vigente si aún no venció, actualiza el `period_end` del nuevo pago para que funcione como
+comprobante de la vigencia acumulada y notifica al miembro y a los admins.
+
 Campos útiles tras la liquidación: `status`, `order_number`, `amount`, `authorization_code`,
 `azul_response_code`, `azul_iso_code`, `azul_rrn`, `gateway_payload` (respuesta completa de AZUL),
 `verified_at`.
@@ -205,8 +209,9 @@ Campos útiles tras la liquidación: `status`, `order_number`, `amount`, `author
 Puedes verlo desde el panel admin `/admin/membership`, o consultando la tabla en Supabase
 (Studio / SQL) filtrando por `order_number` (formato `ASI-AAMMDD-xxxxxxxx`).
 
-También se registran auditoría (`audit_logs`: `membership_payment.azul_initiated` y
-`membership_payment.azul_settled`) y notificaciones al miembro y a los admins.
+También se registran auditoría (`audit_logs`: `membership_payment.azul_initiated`,
+`membership_payment.azul_settled` y, para renovación, `member.renewed`) y notificaciones al miembro y a
+los admins.
 
 ---
 
@@ -245,4 +250,4 @@ alcanzable, y el navegador alcanza ambos).
 - [ ] Pago **cancelado** → vuelve a la SPA con aviso
 - [ ] Callback con firma inválida → `payment=error`, sin cambios en DB
 - [ ] `npm test` del microservicio en verde (vector de hash oficial)
-- [ ] (Opcional) Renovación con `intent=renewal`
+- [ ] Renovación con `intent=renewal` extiende vencimiento y muestra el nuevo comprobante

@@ -306,6 +306,8 @@ The commercial model must separate individual ASI membership/subscription from t
 
 The individual candidate-only user who applies to opportunities but does not publish opportunities is the `Joven Profesional` membership path with an annual dues amount of $25. Other annual membership categories and dues are documented in the commercial model and must not be replaced by generic "student" or generic paid-user labels.
 
+Renewal payments by already active members must extend the active membership/subscription term automatically from the current expiration date, record the new payment as the latest comprobante, and notify the member plus platform admins. Initial membership payments still require the governed admin activation step before protected access is granted.
+
 ### FR-13 Error transparency and diagnostics
 Meaningful user-facing failures must provide actionable feedback in the UI and also be logged to Supabase so platform admins can investigate the root cause later.
 

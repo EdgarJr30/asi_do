@@ -70,6 +70,10 @@ const closedRegistrationIntakeMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260516090000_close_public_registration_intake.sql'
 )
+const membershipRenewalSettlementMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260624152000_harden_membership_renewal_settlement.sql'
+)
 
 describe('supabase schema contract', () => {
   it('keeps the identity, notification, and push workflow migrations in place', () => {
@@ -90,6 +94,7 @@ describe('supabase schema contract', () => {
     expect(existsSync(asiTypeRequirementsMigrationPath)).toBe(true)
     expect(existsSync(asiMembershipAuthorityMigrationPath)).toBe(true)
     expect(existsSync(closedRegistrationIntakeMigrationPath)).toBe(true)
+    expect(existsSync(membershipRenewalSettlementMigrationPath)).toBe(true)
   })
 
   it('defines the core identity, approval, and storage foundations', () => {
@@ -237,6 +242,18 @@ describe('supabase schema contract', () => {
     expect(migration).toContain('with check (false)')
     expect(migration).toContain('revoke insert on public.institutional_membership_applications from anon')
     expect(migration).toContain('revoke insert on public.institutional_membership_applications from authenticated')
+  })
+
+  it('keeps verified AZUL renewals extending active membership automatically', () => {
+    const migration = readFileSync(membershipRenewalSettlementMigrationPath, 'utf8')
+
+    expect(migration).toContain("v_payment.intent = 'renewal'")
+    expect(migration).toContain('v_base := greatest')
+    expect(migration).toContain('membership_expires_at = v_new_expiry')
+    expect(migration).toContain('subscription_expires_at = v_new_expiry')
+    expect(migration).toContain('period_end = v_new_expiry::date')
+    expect(migration).toContain("'member.renewed'")
+    expect(migration).toContain("'membership.renewed'")
   })
 
   it('keeps applications foundations aligned with the schema contract', () => {

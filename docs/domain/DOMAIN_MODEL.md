@@ -197,7 +197,7 @@ Technical log line for provider attempts, failures, and retries.
 ### Identity & Access
 | Entity | Key fields |
 |---|---|
-| users | id, email, status, user_approval_status, asi_membership_status, user_subscription_status, membership_expires_at nullable, subscription_expires_at nullable, manual_access_override fields, avatar_path, created_at |
+| users | id, email, status, user_approval_status, asi_membership_status, user_subscription_status, membership_activated_at nullable, membership_expires_at nullable, subscription_expires_at nullable, manual_access_override fields, avatar_path, created_at |
 | tenants | id, slug, name, status, tenant_kind, created_at |
 | memberships | id, tenant_id, user_id, status, invited_by_user_id nullable, joined_at |
 | platform_roles | id, code, name, is_system |

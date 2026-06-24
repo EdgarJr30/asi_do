@@ -60,6 +60,46 @@ function formatDate(value: string | null | undefined): string {
   return date.toLocaleDateString('es-DO', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
+function latestDateValue(...values: Array<string | null | undefined>): string | null {
+  let latest: { raw: string; time: number } | null = null
+  for (const value of values) {
+    if (!value) continue
+    const time = new Date(value).getTime()
+    if (!Number.isFinite(time)) continue
+    if (!latest || time > latest.time) {
+      latest = { raw: value, time }
+    }
+  }
+  return latest?.raw ?? null
+}
+
+function formatRemainingMembership(value: string | null | undefined, now = new Date()): string {
+  if (!value) {
+    return '—'
+  }
+  const expiry = new Date(value)
+  if (!Number.isFinite(expiry.getTime()) || expiry <= now) {
+    return 'Vencida'
+  }
+
+  const totalMonths = Math.max(
+    0,
+    (expiry.getFullYear() - now.getFullYear()) * 12 + expiry.getMonth() - now.getMonth() -
+      (expiry.getDate() < now.getDate() ? 1 : 0)
+  )
+  const years = Math.floor(totalMonths / 12)
+  const months = totalMonths % 12
+  const parts: string[] = []
+
+  if (years > 0) {
+    parts.push(`${years} ${years === 1 ? 'año' : 'años'}`)
+  }
+  if (months > 0) {
+    parts.push(`${months} ${months === 1 ? 'mes' : 'meses'}`)
+  }
+  return parts.length > 0 ? parts.join(' y ') : 'Menos de 1 mes'
+}
+
 const paymentStatusLabels: Record<string, string> = {
   initiated: 'Procesando pago',
   submitted: 'En verificación',
@@ -244,7 +284,8 @@ export function MembershipStatusPage() {
   const routeStatusLabel = session.hasActiveAsiAccess ? 'Activa' : importantStep?.title ?? 'En proceso'
   const membershipActivatedAt =
     session.profile?.membership_activated_at ?? bundle.verifiedPayment?.period_start ?? bundle.verifiedPayment?.verified_at ?? null
-  const membershipExpiresAt = session.profile?.membership_expires_at ?? bundle.verifiedPayment?.period_end ?? null
+  const membershipExpiresAt = latestDateValue(session.profile?.membership_expires_at, bundle.verifiedPayment?.period_end)
+  const remainingMembership = formatRemainingMembership(membershipExpiresAt)
 
   // Resultado del retorno de AZUL (?payment=approved|declined|cancelled|error): avisa y refresca.
   const [searchParams, setSearchParams] = useSearchParams()
@@ -261,15 +302,24 @@ export function MembershipStatusPage() {
     }
     const notice = notices[result]
     if (notice) {
-      if (notice.kind === 'success') toast.success(notice.text)
+      if (notice.kind === 'success') {
+        toast.success(
+          session.hasActiveAsiAccess
+            ? '¡Membresía renovada! Tu nueva vigencia ya está actualizada.'
+            : notice.text
+        )
+      }
       else if (notice.kind === 'error') toast.error(notice.text)
       else toast.info(notice.text)
+    }
+    if (result === 'approved') {
+      void session.refresh()
     }
     void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })
     const next = new URLSearchParams(searchParams)
     next.delete('payment')
     setSearchParams(next, { replace: true })
-  }, [searchParams, setSearchParams, queryClient, userId])
+  }, [searchParams, setSearchParams, queryClient, session, userId])
 
   return (
     <div className="space-y-5">
@@ -422,6 +472,7 @@ export function MembershipStatusPage() {
                       value={session.hasActiveAsiAccess ? 'Verificado' : bundle.payment ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status : 'Pendiente'}
                     />
                     <SummaryTile icon={ShieldCheck} label="Acceso" value={session.hasActiveAsiAccess ? 'Activo' : 'Pendiente'} />
+                    <SummaryTile icon={Clock} label="Vigencia restante" value={remainingMembership} />
                     <SummaryTile icon={CreditCard} label="Cuota" value={dueAmountLabel ?? due?.label ?? 'Por definir'} />
                     <SummaryTile icon={Sparkles} label="Categoría" value={bundle.application?.category_name ?? 'Sin categoría'} />
                     <SummaryTile icon={ArrowRight} label="Siguiente paso" value={currentStep?.title ?? 'Membresía'} />
@@ -489,6 +540,7 @@ export function MembershipStatusPage() {
                   <StatusSummaryRow label="Fecha de pago" value={formatDate(bundle.verifiedPayment?.verified_at ?? null)} />
                   <StatusSummaryRow label="Activación" value={formatDate(membershipActivatedAt)} />
                   <StatusSummaryRow label="Vencimiento" value={formatDate(membershipExpiresAt)} />
+                  <StatusSummaryRow label="Vigencia restante" value={remainingMembership} />
                 </CardContent>
               </Card>
             ) : null}
@@ -732,11 +784,21 @@ function AzulPayCard({
 const RECEIPT_TITLE = 'Comprobante de pago de membresía'
 
 function buildReceiptLines(payment: MembershipPayment, currency: string, categoryLabel: string | null): ReceiptLine[] {
+  const termMonths = payment.term_months ?? 12
+  const termYears = Math.max(1, Math.round(termMonths / 12))
+  const period =
+    payment.period_start || payment.period_end
+      ? `${formatDate(payment.period_start)} - ${formatDate(payment.period_end)}`
+      : '—'
+
   return [
     ['Comercio', 'ASI Rep. Dominicana'],
     ['No. de orden', payment.order_number ?? '—'],
+    ['Tipo', payment.intent === 'renewal' ? 'Renovación' : 'Membresía inicial'],
     ['Categoría', categoryLabel ?? payment.category_slug],
     ['Monto', formatMoney(Number(payment.amount ?? 0), currency)],
+    ['Término', `${termYears} ${termYears === 1 ? 'año' : 'años'}`],
+    ['Vigencia', period],
     ['Resultado', 'Aprobado'],
     ['No. de autorización', payment.authorization_code ?? '—'],
     ['Referencia', payment.azul_rrn ?? '—'],
