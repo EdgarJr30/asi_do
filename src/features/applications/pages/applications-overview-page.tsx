@@ -28,6 +28,12 @@ function formatSubmittedAt(value?: string | null) {
   return Number.isNaN(date.getTime()) ? 'fecha no disponible' : dateFormatter.format(date)
 }
 
+function getJobDetailPath(slug?: string | null) {
+  const normalizedSlug = slug?.trim()
+
+  return normalizedSlug ? surfacePaths.public.jobDetail(normalizedSlug) : surfacePaths.public.jobs
+}
+
 export function ApplicationsOverviewPage() {
   const navigate = useNavigate()
   const session = useAppSession()
@@ -132,7 +138,7 @@ export function ApplicationsOverviewPage() {
                     </span>
 
                     <Link
-                      to={surfacePaths.public.jobDetail(application.job_posting?.slug ?? '')}
+                      to={getJobDetailPath(application.job_posting?.slug)}
                       className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-(--app-border) bg-(--app-surface) px-3 text-[0.74rem] font-semibold text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 dark:hover:border-primary-400 dark:hover:text-primary-200"
                     >
                       Ver vacante

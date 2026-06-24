@@ -45,6 +45,12 @@ function firstName(value: string) {
   return value.trim().split(/\s+/)[0] ?? value
 }
 
+function getApplicationDetailPath(application: { job_posting?: { slug?: string | null } | null }) {
+  const slug = application.job_posting?.slug?.trim()
+
+  return slug ? surfacePaths.public.jobDetail(slug) : surfacePaths.candidate.applications
+}
+
 interface CompletenessItem {
   key: string
   label: string
@@ -175,7 +181,6 @@ export function CandidateHomePage() {
         className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
       >
         <div className="space-y-1">
-          <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">Inicio · Tu espacio</p>
           <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">
             {greeting}, {firstName(displayName)}
           </h1>
@@ -309,7 +314,7 @@ export function CandidateHomePage() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => void navigate(surfacePaths.candidate.applications)}
+                      onClick={() => void navigate(getApplicationDetailPath(application))}
                       className="inline-flex h-8 items-center gap-1 rounded-full border border-(--app-border) bg-(--app-surface) px-3 text-[0.74rem] font-semibold text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 dark:hover:border-primary-400 dark:hover:text-primary-200"
                     >
                       Ver detalle
@@ -379,4 +384,3 @@ function formatApplicationDate(value?: string | null) {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? '—' : applicationDateFormatter.format(date)
 }
-

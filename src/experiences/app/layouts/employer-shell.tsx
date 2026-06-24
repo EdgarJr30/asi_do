@@ -157,7 +157,7 @@ const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
   },
   [surfacePaths.candidate.home]: {
     title: 'Inicio',
-    description: 'Tu panel con perfil, vacantes y aplicaciones en un vistazo'
+    description: ''
   },
   [surfacePaths.storefront.jobs]: {
     title: 'Vacantes',
@@ -1512,7 +1512,7 @@ export function PlatformAppShell({
                     </span>
                   </div>
                 ))}
-                {!isWorkspace ? (
+                {!isWorkspace && routeMeta.description ? (
                   <>
                     <span className="hidden h-5 w-px bg-slate-200 lg:block dark:bg-white/10" />
                     <p className="hidden truncate text-sm text-slate-500 lg:block dark:text-slate-400">{routeMeta.description}</p>
