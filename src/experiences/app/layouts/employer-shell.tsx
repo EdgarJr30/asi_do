@@ -1678,7 +1678,7 @@ export function PlatformAppShell({
 
         <main
           className={cn(
-            'min-w-0 py-8 dark:bg-none',
+            'min-w-0 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 dark:bg-none lg:pb-8',
             isWorkspace
               ? 'bg-[#f7f9fc] dark:bg-transparent'
               : 'bg-[radial-gradient(circle_at_top_right,rgba(143,171,229,0.16),transparent_24%),linear-gradient(180deg,#f4f7fc_0%,#eef3fb_100%)]'
