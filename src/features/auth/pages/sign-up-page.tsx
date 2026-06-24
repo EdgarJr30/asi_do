@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Check, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { getAuthenticatedHomePath, surfacePaths } from '@/app/router/surface-paths'
+import { buildAuthRedirectQuery, getSafeNextPath } from '@/features/auth/lib/auth-redirect'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/loader'
@@ -32,15 +33,18 @@ const passwordRules = [
 
 export function SignUpPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const session = useAppSession()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const nextPath = getSafeNextPath(location.search)
+  const prefillEmail = new URLSearchParams(location.search).get('email') ?? ''
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpFormSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
-      email: '',
+      email: prefillEmail,
       password: '',
       confirmPassword: ''
     }
@@ -65,7 +69,7 @@ export function SignUpPage() {
   }
 
   if (session.isAuthenticated) {
-    return <Navigate replace to={getAuthenticatedHomePath(session.permissions.includes('workspace:read'))} />
+    return <Navigate replace to={nextPath ?? getAuthenticatedHomePath(session.permissions.includes('workspace:read'))} />
   }
 
   async function handleSubmit(values: SignUpFormValues) {
@@ -80,9 +84,11 @@ export function SignUpPage() {
       if (result.session) {
         await session.refresh()
         toast.success('Cuenta creada', {
-          description: 'Vamos a completar tu perfil para dejar tu espacio listo.'
+          description: nextPath
+            ? 'Continuemos justo donde te quedaste.'
+            : 'Vamos a completar tu perfil para dejar tu espacio listo.'
         })
-        await navigate(surfacePaths.candidate.profile)
+        await navigate(nextPath ?? surfacePaths.candidate.profile)
         return
       }
 
@@ -228,7 +234,7 @@ export function SignUpPage() {
         <button
           className="font-semibold text-primary-600 transition hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
           type="button"
-          onClick={() => void navigate(surfacePaths.auth.signIn)}
+          onClick={() => void navigate(`${surfacePaths.auth.signIn}${buildAuthRedirectQuery(location.search)}`)}
         >
           Inicia sesión
         </button>

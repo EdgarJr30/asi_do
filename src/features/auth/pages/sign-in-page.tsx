@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { getAuthenticatedHomePath, surfacePaths } from '@/app/router/surface-paths'
+import { buildAuthRedirectQuery, getSafeNextPath } from '@/features/auth/lib/auth-redirect'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -26,12 +27,15 @@ function FieldError({ message }: { message?: string }) {
 
 export function SignInPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const session = useAppSession()
   const [showPassword, setShowPassword] = useState(false)
+  const nextPath = getSafeNextPath(location.search)
+  const prefillEmail = new URLSearchParams(location.search).get('email') ?? ''
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
-      email: '',
+      email: prefillEmail,
       password: ''
     }
   })
@@ -61,10 +65,13 @@ export function SignInPage() {
     return (
       <Navigate
         replace
-        to={getAuthenticatedHomePath(
-          session.permissions.includes('workspace:read'),
-          hasCompletedBaseOnboarding(session.profile)
-        )}
+        to={
+          nextPath ??
+          getAuthenticatedHomePath(
+            session.permissions.includes('workspace:read'),
+            hasCompletedBaseOnboarding(session.profile)
+          )
+        }
       />
     )
   }
@@ -165,7 +172,7 @@ export function SignInPage() {
         <button
           className="font-semibold text-primary-600 transition hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
           type="button"
-          onClick={() => void navigate(surfacePaths.auth.signUp)}
+          onClick={() => void navigate(`${surfacePaths.auth.signUp}${buildAuthRedirectQuery(location.search)}`)}
         >
           Regístrate
         </button>
