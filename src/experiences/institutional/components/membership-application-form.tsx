@@ -52,6 +52,12 @@ import {
   MEMBERSHIP_APPLICATIONS_LOCKED_MESSAGE,
   MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED,
 } from '@/shared/config/launch-access'
+import {
+  countryNameOptions,
+  dominicanProvinceOptions,
+  getDominicanCityOptionsByProvince,
+  isDominicanRepublicCountryName,
+} from '@/shared/geo/location-options'
 import type { Json } from '@/shared/types/database'
 import { cn } from '@/lib/utils/cn'
 
@@ -829,6 +835,74 @@ function SelectField({
   )
 }
 
+function CountryNameSelectField(props: Omit<SelectHTMLAttributes<HTMLSelectElement>, 'children'> & {
+  label: string
+  hint?: string
+  error?: string
+  required?: boolean
+}) {
+  const currentValue = typeof props.value === 'string' ? props.value : ''
+  const hasCurrentValue = currentValue
+    ? countryNameOptions.some((country) => country.value === currentValue)
+    : true
+
+  return (
+    <SelectField {...props}>
+      <option value="">Selecciona un país</option>
+      {!hasCurrentValue ? (
+        <option value={currentValue}>{currentValue}</option>
+      ) : null}
+      {countryNameOptions.map((country) => (
+        <option key={country.code} value={country.value}>
+          {country.label}
+        </option>
+      ))}
+    </SelectField>
+  )
+}
+
+function DominicanProvinceSelectField(props: Omit<SelectHTMLAttributes<HTMLSelectElement>, 'children'> & {
+  label: string
+  hint?: string
+  error?: string
+  required?: boolean
+}) {
+  return (
+    <SelectField {...props}>
+      <option value="">Selecciona una provincia</option>
+      {dominicanProvinceOptions.map((province) => (
+        <option key={province.code} value={province.value}>
+          {province.label}
+        </option>
+      ))}
+    </SelectField>
+  )
+}
+
+function DominicanCitySelectField({
+  provinceName,
+  ...props
+}: Omit<SelectHTMLAttributes<HTMLSelectElement>, 'children'> & {
+  label: string
+  hint?: string
+  error?: string
+  required?: boolean
+  provinceName: string
+}) {
+  const cityOptions = getDominicanCityOptionsByProvince(provinceName)
+
+  return (
+    <SelectField {...props}>
+      <option value="">{provinceName ? 'Selecciona una ciudad' : 'Selecciona una provincia primero'}</option>
+      {cityOptions.map((city) => (
+        <option key={city.value} value={city.value}>
+          {city.label}
+        </option>
+      ))}
+    </SelectField>
+  )
+}
+
 interface SelectedChurch {
   id: string
   name: string
@@ -1531,6 +1605,42 @@ export function MembershipApplicationForm({
     control: form.control,
     name: 'billingSameAsHome',
   })
+  const contactCountry = useWatch({
+    control: form.control,
+    name: 'country',
+  })
+  const contactCity = useWatch({
+    control: form.control,
+    name: 'city',
+  })
+  const contactStateProvince = useWatch({
+    control: form.control,
+    name: 'stateProvince',
+  })
+  const organizationCountry = useWatch({
+    control: form.control,
+    name: 'organizationCountry',
+  })
+  const organizationCity = useWatch({
+    control: form.control,
+    name: 'organizationCity',
+  })
+  const organizationStateProvince = useWatch({
+    control: form.control,
+    name: 'organizationStateProvince',
+  })
+  const billingCountry = useWatch({
+    control: form.control,
+    name: 'billingCountry',
+  })
+  const billingCity = useWatch({
+    control: form.control,
+    name: 'billingCity',
+  })
+  const billingStateProvince = useWatch({
+    control: form.control,
+    name: 'billingStateProvince',
+  })
   const selectedGender = useWatch({
     control: form.control,
     name: 'gender',
@@ -1573,6 +1683,9 @@ export function MembershipApplicationForm({
   })
 
   const errors = form.formState.errors
+  const isContactCountryDominican = isDominicanRepublicCountryName(contactCountry)
+  const isOrganizationCountryDominican = isDominicanRepublicCountryName(organizationCountry)
+  const isBillingCountryDominican = isDominicanRepublicCountryName(billingCountry)
 
   const submitMutation = useMutation({
     mutationFn: async (values: MembershipApplicationValues) => {
@@ -1822,18 +1935,53 @@ export function MembershipApplicationForm({
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.55fr)_minmax(0,0.9fr)]">
-          <TextField
-            label="Ciudad"
-            required
-            error={errors.city?.message}
-            {...form.register('city')}
-          />
-          <TextField
-            label="Provincia o estado"
-            required
-            error={errors.stateProvince?.message}
-            {...form.register('stateProvince')}
-          />
+          {isContactCountryDominican ? (
+            <DominicanProvinceSelectField
+              label="Provincia o estado"
+              required
+              error={errors.stateProvince?.message}
+              value={contactStateProvince}
+              onChange={(event) => {
+                form.setValue('stateProvince', event.target.value, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+                form.setValue('city', '', {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }}
+            />
+          ) : (
+            <TextField
+              label="Provincia o estado"
+              required
+              error={errors.stateProvince?.message}
+              {...form.register('stateProvince')}
+            />
+          )}
+          {isContactCountryDominican ? (
+            <DominicanCitySelectField
+              label="Ciudad"
+              required
+              error={errors.city?.message}
+              provinceName={contactStateProvince}
+              value={contactCity}
+              onChange={(event) =>
+                form.setValue('city', event.target.value, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+            />
+          ) : (
+            <TextField
+              label="Ciudad"
+              required
+              error={errors.city?.message}
+              {...form.register('city')}
+            />
+          )}
           <TextField
             label="Código postal"
             required
@@ -1841,12 +1989,18 @@ export function MembershipApplicationForm({
             autoComplete="postal-code"
             {...form.register('postalCode')}
           />
-          <TextField
+          <CountryNameSelectField
             label="País"
             required
             error={errors.country?.message}
             autoComplete="country-name"
-            {...form.register('country')}
+            value={contactCountry}
+            onChange={(event) =>
+              form.setValue('country', event.target.value, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
           />
         </div>
         </ApplicationSection>
@@ -1905,18 +2059,53 @@ export function MembershipApplicationForm({
             />
 
             <div className="grid gap-4 md:grid-cols-3">
-              <TextField
-                label="Ciudad"
-                required
-                error={errors.organizationCity?.message}
-                {...form.register('organizationCity')}
-              />
-              <TextField
-                label="Provincia o estado"
-                required
-                error={errors.organizationStateProvince?.message}
-                {...form.register('organizationStateProvince')}
-              />
+              {isOrganizationCountryDominican ? (
+                <DominicanProvinceSelectField
+                  label="Provincia o estado"
+                  required
+                  error={errors.organizationStateProvince?.message}
+                  value={organizationStateProvince}
+                  onChange={(event) => {
+                    form.setValue('organizationStateProvince', event.target.value, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                    form.setValue('organizationCity', '', {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }}
+                />
+              ) : (
+                <TextField
+                  label="Provincia o estado"
+                  required
+                  error={errors.organizationStateProvince?.message}
+                  {...form.register('organizationStateProvince')}
+                />
+              )}
+              {isOrganizationCountryDominican ? (
+                <DominicanCitySelectField
+                  label="Ciudad"
+                  required
+                  error={errors.organizationCity?.message}
+                  provinceName={organizationStateProvince}
+                  value={organizationCity}
+                  onChange={(event) =>
+                    form.setValue('organizationCity', event.target.value, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
+                />
+              ) : (
+                <TextField
+                  label="Ciudad"
+                  required
+                  error={errors.organizationCity?.message}
+                  {...form.register('organizationCity')}
+                />
+              )}
               <TextField
                 label="Código postal"
                 required
@@ -1925,11 +2114,17 @@ export function MembershipApplicationForm({
               />
             </div>
 
-            <TextField
+            <CountryNameSelectField
               label="País"
               required
               error={errors.organizationCountry?.message}
-              {...form.register('organizationCountry')}
+              value={organizationCountry}
+              onChange={(event) =>
+                form.setValue('organizationCountry', event.target.value, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
             />
 
             <TextAreaField
@@ -2399,18 +2594,53 @@ export function MembershipApplicationForm({
               {...form.register('billingAddress2')}
             />
             <div className="grid gap-4 md:grid-cols-3">
-              <TextField
-                label="Ciudad"
-                required
-                error={errors.billingCity?.message}
-                {...form.register('billingCity')}
-              />
-              <TextField
-                label="Provincia o estado"
-                required
-                error={errors.billingStateProvince?.message}
-                {...form.register('billingStateProvince')}
-              />
+              {isBillingCountryDominican ? (
+                <DominicanProvinceSelectField
+                  label="Provincia o estado"
+                  required
+                  error={errors.billingStateProvince?.message}
+                  value={billingStateProvince}
+                  onChange={(event) => {
+                    form.setValue('billingStateProvince', event.target.value, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                    form.setValue('billingCity', '', {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }}
+                />
+              ) : (
+                <TextField
+                  label="Provincia o estado"
+                  required
+                  error={errors.billingStateProvince?.message}
+                  {...form.register('billingStateProvince')}
+                />
+              )}
+              {isBillingCountryDominican ? (
+                <DominicanCitySelectField
+                  label="Ciudad"
+                  required
+                  error={errors.billingCity?.message}
+                  provinceName={billingStateProvince}
+                  value={billingCity}
+                  onChange={(event) =>
+                    form.setValue('billingCity', event.target.value, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
+                />
+              ) : (
+                <TextField
+                  label="Ciudad"
+                  required
+                  error={errors.billingCity?.message}
+                  {...form.register('billingCity')}
+                />
+              )}
               <TextField
                 label="Código postal"
                 required
@@ -2418,11 +2648,17 @@ export function MembershipApplicationForm({
                 {...form.register('billingPostalCode')}
               />
             </div>
-            <TextField
+            <CountryNameSelectField
               label="País"
               required
               error={errors.billingCountry?.message}
-              {...form.register('billingCountry')}
+              value={billingCountry}
+              onChange={(event) =>
+                form.setValue('billingCountry', event.target.value, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
             />
 
             <div className="rounded-2xl border border-(--asi-outline) bg-white p-4">
@@ -2599,18 +2835,53 @@ export function MembershipApplicationForm({
                   {...form.register('billingAddress2')}
                 />
                 <div className="grid gap-4 md:grid-cols-3">
-                  <TextField
-                    label="Ciudad"
-                    required
-                    error={errors.billingCity?.message}
-                    {...form.register('billingCity')}
-                  />
-                  <TextField
-                    label="Provincia o estado"
-                    required
-                    error={errors.billingStateProvince?.message}
-                    {...form.register('billingStateProvince')}
-                  />
+                  {isBillingCountryDominican ? (
+                    <DominicanProvinceSelectField
+                      label="Provincia o estado"
+                      required
+                      error={errors.billingStateProvince?.message}
+                      value={billingStateProvince}
+                      onChange={(event) => {
+                        form.setValue('billingStateProvince', event.target.value, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                        form.setValue('billingCity', '', {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }}
+                    />
+                  ) : (
+                    <TextField
+                      label="Provincia o estado"
+                      required
+                      error={errors.billingStateProvince?.message}
+                      {...form.register('billingStateProvince')}
+                    />
+                  )}
+                  {isBillingCountryDominican ? (
+                    <DominicanCitySelectField
+                      label="Ciudad"
+                      required
+                      error={errors.billingCity?.message}
+                      provinceName={billingStateProvince}
+                      value={billingCity}
+                      onChange={(event) =>
+                        form.setValue('billingCity', event.target.value, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }
+                    />
+                  ) : (
+                    <TextField
+                      label="Ciudad"
+                      required
+                      error={errors.billingCity?.message}
+                      {...form.register('billingCity')}
+                    />
+                  )}
                   <TextField
                     label="Código postal"
                     required
@@ -2618,11 +2889,17 @@ export function MembershipApplicationForm({
                     {...form.register('billingPostalCode')}
                   />
                 </div>
-                <TextField
+                <CountryNameSelectField
                   label="País"
                   required
                   error={errors.billingCountry?.message}
-                  {...form.register('billingCountry')}
+                  value={billingCountry}
+                  onChange={(event) =>
+                    form.setValue('billingCountry', event.target.value, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
                 />
               </>
             ) : null}

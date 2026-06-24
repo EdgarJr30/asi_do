@@ -19,7 +19,7 @@ import {
   UserRound
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -32,7 +32,9 @@ import { PageLoader } from '@/components/ui/loader'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { isDominicanRepublicCountryCode } from '@/shared/geo/location-options'
 import { cardReveal, pageStagger } from '@/shared/ui/card-motion'
+import { CountryCodeSelect, DominicanCitySelect } from '@/shared/ui/location-selects'
 import { cn } from '@/lib/utils/cn'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
@@ -543,7 +545,8 @@ function CandidateProfileEditor({
     }
   }
 
-  const watched = form.watch()
+  const watched = useWatch({ control: form.control })
+  const isDominicanRepublicProfile = isDominicanRepublicCountryCode(watched.countryCode ?? '')
   const skillCount = sanitizeCandidateSkillList(skills).length
   const languageCount = sanitizeCandidateLanguageList(languages).length
   const experienceCount = sanitizeCandidateExperienceList(experiences).length
@@ -677,11 +680,15 @@ function CandidateProfileEditor({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
                     <span>Ciudad</span>
-                    <Input placeholder="Santo Domingo" {...form.register('cityName')} />
+                    {isDominicanRepublicProfile ? (
+                      <DominicanCitySelect {...form.register('cityName')} />
+                    ) : (
+                      <Input placeholder="Santo Domingo" {...form.register('cityName')} />
+                    )}
                   </label>
                   <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
                     <span>País</span>
-                    <Input maxLength={2} placeholder="DO" {...form.register('countryCode')} />
+                    <CountryCodeSelect {...form.register('countryCode')} />
                     <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{form.formState.errors.countryCode?.message}</p>
                   </label>
                 </div>

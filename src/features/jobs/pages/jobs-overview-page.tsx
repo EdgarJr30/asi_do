@@ -45,6 +45,7 @@ import { fetchWorkspaceBundle, type WorkspaceBundle } from '@/features/tenants/l
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
+import { CountryCodeSelect } from '@/shared/ui/location-selects'
 import { cn } from '@/lib/utils/cn'
 
 const PUBLIC_JOBS_QUERY_KEY = ['jobs', 'public'] as const
@@ -356,7 +357,7 @@ function JobEditor({
             </label>
             <label className="grid gap-2 text-sm">
               <span>País</span>
-              <Input maxLength={2} {...form.register('countryCode')} />
+              <CountryCodeSelect {...form.register('countryCode')} />
             </label>
             <label className="grid gap-2 text-sm">
               <span>Senioridad</span>

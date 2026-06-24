@@ -33,6 +33,7 @@ import {
 } from '@/features/auth/lib/auth-api'
 import { onboardingSchema, type OnboardingValues } from '@/features/auth/lib/auth-schemas'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
+import { CountryCodeSelect } from '@/shared/ui/location-selects'
 import { captureClientError } from '@/lib/errors/client-error-logger'
 import {
   MAX_UPLOAD_SIZE_LABEL,
@@ -518,13 +519,7 @@ export function ProfileOnboardingFlow() {
 
                             <label className="block space-y-1.5">
                               <span className="text-[13px] font-semibold text-(--app-text)">País</span>
-                              <Input
-                                className="h-13 rounded-2xl uppercase"
-                                inputMode="text"
-                                maxLength={2}
-                                placeholder="DO"
-                                {...form.register('countryCode')}
-                              />
+                              <CountryCodeSelect className="h-13 rounded-2xl" {...form.register('countryCode')} />
                               <FieldError message={form.formState.errors.countryCode?.message} />
                             </label>
                           </div>

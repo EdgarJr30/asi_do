@@ -34,6 +34,7 @@ import {
 } from '@/features/tenants/lib/workspace-api';
 import { reportErrorWithToast } from '@/lib/errors/error-reporting';
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion';
+import { CountryCodeSelect } from '@/shared/ui/location-selects';
 import { cn } from '@/lib/utils/cn';
 import { UploadConstraintError } from '@/lib/uploads/media';
 
@@ -619,12 +620,11 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
                 </label>
                 <label className={fieldLabelClassName}>
                   <span className={fieldLabelTextClassName}>País</span>
-                  <Input
+                  <CountryCodeSelect
                     value={countryCode}
                     onChange={(event) =>
-                      setCountryCode(event.target.value.toUpperCase())
+                      setCountryCode(event.target.value)
                     }
-                    maxLength={2}
                   />
                 </label>
                 <label className={fieldLabelClassName}>

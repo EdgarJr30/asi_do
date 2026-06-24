@@ -34,6 +34,7 @@
     "@supabase/supabase-js": "^2.99.1",
     "@tanstack/react-query": "^5.90.21",
     "clsx": "^2.1.1",
+    "countries-states-cities": "^1.0.6",
     "i18next": "^25.8.18",
     "i18next-browser-languagedetector": "^8.2.1",
     "lucide-react": "^0.577.0",

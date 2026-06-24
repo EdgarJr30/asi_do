@@ -24,6 +24,7 @@ import {
 import { recruiterRequestSchema, type RecruiterRequestValues } from '@/features/auth/lib/auth-schemas'
 import { getTenantKindLabel, tenantKindOptions, tenantKindRequirementSummary } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { RecruiterRequestStatusBadge } from '@/features/recruiter-requests/components/recruiter-request-status-badge'
+import { CountryCodeSelect } from '@/shared/ui/location-selects'
 import { captureClientError } from '@/lib/errors/client-error-logger'
 import {
   MAX_UPLOAD_SIZE_LABEL,
@@ -384,7 +385,7 @@ export function RecruiterRequestPage() {
 
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <span>País</span>
-                  <Input maxLength={2} placeholder="DO" {...form.register('companyCountryCode')} />
+                  <CountryCodeSelect {...form.register('companyCountryCode')} />
                   <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.companyCountryCode?.message}</p>
                 </label>
               </div>

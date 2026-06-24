@@ -31,6 +31,7 @@ import {
 } from '@/features/talent/lib/talent-api'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cardReveal, pageStagger } from '@/shared/ui/card-motion'
+import { CountryCodeSelect } from '@/shared/ui/location-selects'
 import { cn } from '@/lib/utils/cn'
 
 const TALENT_PAGE_SIZE = 8
@@ -180,14 +181,13 @@ export function TalentDirectoryPage() {
               }}
               placeholder="Idioma (ej. Español)"
             />
-            <Input
+            <CountryCodeSelect
               value={countryCode}
               onChange={(event) => {
-                setCountryCode(event.target.value.toUpperCase())
+                setCountryCode(event.target.value)
                 resetToFirstPage()
               }}
-              maxLength={2}
-              placeholder="País (ej. DO)"
+              placeholder="País"
             />
           </div>
         ) : null}

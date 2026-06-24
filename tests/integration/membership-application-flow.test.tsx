@@ -129,11 +129,11 @@ async function completeContactStep() {
   fireEvent.change(screen.getByRole('textbox', { name: /^dirección del hogar\*/i }), {
     target: { value: 'Calle 1, Santo Domingo' },
   })
-  fireEvent.change(screen.getByRole('textbox', { name: /^ciudad\*/i }), {
-    target: { value: 'Santo Domingo' },
-  })
-  fireEvent.change(screen.getByRole('textbox', { name: /provincia o estado/i }), {
+  fireEvent.change(screen.getByRole('combobox', { name: /provincia o estado/i }), {
     target: { value: 'Distrito Nacional' },
+  })
+  fireEvent.change(screen.getByRole('combobox', { name: /^ciudad\*/i }), {
+    target: { value: 'Santo Domingo' },
   })
   fireEvent.change(screen.getByRole('textbox', { name: /código postal/i }), {
     target: { value: '10101' },
