@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
@@ -6,6 +6,8 @@ import {
   ArrowRight,
   BriefcaseBusiness,
   Building2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   FileText,
   LayoutDashboard,
@@ -120,8 +122,16 @@ export function CandidateHomePage() {
   const activeApplications = applications.filter((application) =>
     ACTIVE_STATUSES.includes(application.status_public)
   ).length
-  const recentApplications = applications.slice(0, 4)
   const resumeCount = profileQuery.data?.resumes.length ?? 0
+
+  const RECENT_PAGE_SIZE = 5
+  const [recentPage, setRecentPage] = useState(0)
+  const recentTotalPages = Math.max(1, Math.ceil(applications.length / RECENT_PAGE_SIZE))
+  const recentPageSafe = Math.min(recentPage, recentTotalPages - 1)
+  const recentApplications = applications.slice(
+    recentPageSafe * RECENT_PAGE_SIZE,
+    recentPageSafe * RECENT_PAGE_SIZE + RECENT_PAGE_SIZE
+  )
 
   const moduleCards: ModuleCard[] = [
     {
@@ -324,6 +334,33 @@ export function CandidateHomePage() {
                 )
               })}
             </ul>
+            {recentTotalPages > 1 ? (
+              <div className="mt-3 flex items-center justify-between gap-3 px-2">
+                <p className="text-[0.74rem] text-(--app-text-muted)">
+                  Página {recentPageSafe + 1} de {recentTotalPages}
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setRecentPage((page) => Math.max(0, page - 1))}
+                    disabled={recentPageSafe === 0}
+                    className="inline-flex size-8 items-center justify-center rounded-full border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--app-border) disabled:hover:text-(--app-text-muted) dark:hover:border-primary-400 dark:hover:text-primary-200"
+                    aria-label="Página anterior"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRecentPage((page) => Math.min(recentTotalPages - 1, page + 1))}
+                    disabled={recentPageSafe >= recentTotalPages - 1}
+                    className="inline-flex size-8 items-center justify-center rounded-full border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--app-border) disabled:hover:text-(--app-text-muted) dark:hover:border-primary-400 dark:hover:text-primary-200"
+                    aria-label="Página siguiente"
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="mt-4">

@@ -8,6 +8,17 @@ with applied_stage as (
     and code = 'applied'
   limit 1
 ),
+system_actor as (
+  -- application_stage_history.changed_by_user_id es NOT NULL: usamos al platform_owner
+  -- como actor del backfill de sistema. Si no hubiera ninguno, no se inserta historial.
+  select upr.user_id
+  from public.user_platform_roles upr
+  join public.platform_roles pr on pr.id = upr.role_id
+  where upr.revoked_at is null
+    and pr.code = 'platform_owner'
+  order by upr.assigned_at
+  limit 1
+),
 updated_applications as (
   update public.applications a
   set current_stage_id = applied_stage.id
@@ -26,10 +37,11 @@ select
   updated_applications.id,
   null,
   updated_applications.current_stage_id,
-  null,
+  (select user_id from system_actor),
   'Initial ATS stage backfilled after submit pipeline hardening'
 from updated_applications
 where updated_applications.current_stage_id is not null
+  and exists (select 1 from system_actor)
   and not exists (
     select 1
     from public.application_stage_history ash

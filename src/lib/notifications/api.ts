@@ -245,12 +245,37 @@ export async function markNotificationUnread(notificationId: string) {
   return response.data as AppNotification
 }
 
-/** Marca como leídas varias notificaciones (reutiliza el RPC por id, en paralelo). */
-export async function markAllNotificationsRead(notificationIds: string[]) {
-  if (notificationIds.length === 0) {
+/**
+ * Marca como leídas TODAS las notificaciones no leídas del usuario, no solo las
+ * cargadas en la página actual. Hace un UPDATE masivo filtrado por destinatario;
+ * la RLS (notifications_update_for_recipient_or_managers) garantiza que cada quien
+ * solo afecte las suyas.
+ */
+export async function markAllNotificationsRead(recipientUserId?: string | null) {
+  const client = requireSupabase()
+
+  let userId = recipientUserId ?? null
+  if (!userId) {
+    const { data } = await client.auth.getUser()
+    userId = data.user?.id ?? null
+  }
+  if (!userId) {
     return
   }
-  await Promise.all(notificationIds.map((id) => markNotificationRead(id)))
+
+  const response = await client
+    .from('notifications' as never)
+    .update({
+      read_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as never)
+    .eq('recipient_user_id', userId)
+    .is('read_at', null)
+    .select('id')
+
+  if (response.error) {
+    throw toControlledError(response.error)
+  }
 }
 
 export async function markNotificationClicked(notificationId: string, deliveryId?: string | null) {
