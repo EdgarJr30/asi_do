@@ -163,7 +163,7 @@ const candidateCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
     description: 'Explora oportunidades abiertas y aplica con más contexto'
   },
   [surfacePaths.candidate.applications]: {
-    title: 'Aplicaciones',
+    title: 'Postulaciones',
     description: ''
   },
   [surfacePaths.candidate.profile]: {
@@ -201,7 +201,7 @@ const storefrontCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descripti
   },
   [surfacePaths.candidate.profile]: {
     title: 'Mi perfil',
-    description: 'Abre tu espacio profesional dentro de la plataforma'
+    description: ''
   }
 }
 
@@ -493,7 +493,6 @@ function WorkspaceNotificationPanel({
   const hasNextPage = page < totalPages
   const firstVisibleItem = totalCount === 0 ? 0 : (page - 1) * pageSize + 1
   const lastVisibleItem = Math.min(page * pageSize, totalCount)
-  const visibleUnreadCount = notifications.filter((notification) => !notification.read_at).length
 
   return (
     <div className="flex max-h-[calc(100dvh-7rem)] w-full flex-col overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_28px_72px_rgba(8,12,24,0.22)] sm:max-h-[min(32rem,75vh)] sm:w-[min(23rem,calc(100vw-1.5rem))]">
@@ -506,7 +505,7 @@ function WorkspaceNotificationPanel({
             </span>
           ) : null}
         </div>
-        {visibleUnreadCount > 0 ? (
+        {unreadCount > 0 ? (
           <button
             type="button"
             onClick={onMarkAllRead}
@@ -1210,7 +1209,7 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
     profileMenuLinks: [
       { href: surfacePaths.account.membership, label: 'Mi membresía' },
       { href: surfacePaths.candidate.profile, label: 'Mi perfil' },
-      { href: surfacePaths.candidate.applications, label: 'Aplicaciones' },
+      { href: surfacePaths.candidate.applications, label: 'Postulaciones' },
       ...(settingsItem ? [{ href: settingsItem.href, label: settingsItem.title }] : [])
     ],
     publicActionHref: surfacePaths.storefront.jobs,
@@ -1318,7 +1317,7 @@ export function PlatformAppShell({
   })
 
   const markAllReadMutation = useMutation({
-    mutationFn: (ids: string[]) => markAllNotificationsRead(ids),
+    mutationFn: () => markAllNotificationsRead(session.authUser?.id),
     onSuccess: async () => {
       await invalidateNotifications()
     },
@@ -1424,9 +1423,9 @@ export function PlatformAppShell({
   }
 
   function handleMarkAllRead() {
-    const unreadIds = notifications.filter((item) => !item.read_at).map((item) => item.id)
-    if (unreadIds.length > 0) {
-      markAllReadMutation.mutate(unreadIds)
+    // Usa el conteo total del servidor (no solo la página visible) para decidir.
+    if (notificationUnreadCount > 0) {
+      markAllReadMutation.mutate()
     }
   }
 

@@ -75,7 +75,7 @@ export function ApplicationsOverviewPage() {
       animate="show"
     >
       <motion.header variants={cardReveal} className="space-y-1.5">
-        <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Aplicaciones</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Postulaciones</h1>
         <p className="max-w-2xl text-[0.84rem] leading-relaxed text-(--app-text-muted)">
           Revisa tus postulaciones, el estado actual de cada proceso y vuelve al detalle de la vacante cuando lo necesites.
         </p>

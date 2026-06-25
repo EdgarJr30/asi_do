@@ -46,7 +46,7 @@ export const candidateNavigationItems: NavigationItem[] = [
     description: 'Explora oportunidades abiertas'
   },
   {
-    title: 'Aplicaciones',
+    title: 'Postulaciones',
     href: '/candidate/applications',
     description: 'Sigue tus procesos',
     requiresAuth: true
@@ -209,5 +209,12 @@ export const adminNavigationItems: NavigationItem[] = [
     description: 'Pipeline de correos y modo de prueba',
     requiresAuth: true,
     requiredPermission: 'email:read'
+  },
+  {
+    title: 'Arnés de estrés',
+    href: surfacePaths.admin.stressHarness,
+    description: 'Datos sintéticos masivos y métricas de capacidad',
+    requiresAuth: true,
+    requiredPermission: 'platform_dashboard:read'
   }
 ]
