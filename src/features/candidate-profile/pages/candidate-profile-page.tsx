@@ -15,12 +15,10 @@ import {
   Link2,
   Plus,
   Sparkles,
-  Upload,
-  UserRound
+  Upload
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -234,9 +232,9 @@ function CircularProgress({ value }: { value: number }) {
   )
 }
 
-function ProfileStatTile({ icon: Icon, value, label }: { icon: LucideIcon; value: ReactNode; label: string }) {
+function ProfileStatTile({ icon: Icon, value, label, className }: { icon: LucideIcon; value: ReactNode; label: string; className?: string }) {
   return (
-    <div className="flex items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface) px-3 py-2.5">
+    <div className={cn('flex items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface) px-3 py-2.5', className)}>
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-(--app-surface-muted) text-(--app-text-subtle)">
         <Icon className="size-4" />
       </span>
@@ -326,7 +324,6 @@ function CandidateProfileEditor({
   session: ReturnType<typeof useAppSession>
 }) {
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
   const shouldReduceMotion = useReducedMotion()
   const [activeTab, setActiveTab] = useState<ProfileTab>('general')
   const [experiences, setExperiences] = useState<CandidateExperienceDraft[]>(() => toExperienceDrafts(bundle))
@@ -335,6 +332,7 @@ function CandidateProfileEditor({
   const [languages, setLanguages] = useState<CandidateLanguageDraft[]>(() => toLanguageDrafts(bundle))
   const [links, setLinks] = useState<CandidateLinkDraft[]>(() => toLinkDrafts(bundle))
   const [resumeFileError, setResumeFileError] = useState<string | null>(null)
+  const [isResumeDragging, setIsResumeDragging] = useState(false)
   const [isVisibleToRecruiters, setIsVisibleToRecruiters] = useState(() => bundle.profile?.is_visible_to_recruiters ?? false)
 
   const form = useForm<CandidateProfileFormValues>({
@@ -530,6 +528,13 @@ function CandidateProfileEditor({
 
   const resumes = bundle.resumes
 
+  function handleResumeFile(file: File | null | undefined) {
+    if (file) {
+      setResumeFileError(null)
+      uploadResumeMutation.mutate(file)
+    }
+  }
+
   async function openResume(storagePath: string) {
     try {
       const url = await createCandidateResumeUrl(storagePath)
@@ -569,10 +574,7 @@ function CandidateProfileEditor({
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
     >
-      <motion.header variants={cardReveal} className="space-y-3">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-[0.7rem] font-semibold text-primary-700 dark:border-primary-500/30 dark:bg-primary-500/12 dark:text-primary-300">
-          <UserRound className="size-3.5" /> Candidate profile
-        </span>
+      <motion.header variants={cardReveal} className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1.5">
           <h1 className="max-w-2xl text-xl font-semibold leading-tight tracking-tight text-(--app-text) sm:text-[1.7rem]">
             Mantén un perfil profesional listo para aplicar
@@ -581,22 +583,22 @@ function CandidateProfileEditor({
             Tu historial, CV y visibilidad viven aquí para que postularte o compartir tu perfil requiera menos esfuerzo.
           </p>
         </div>
+        <Button className="h-10 shrink-0 px-5 text-[0.85rem]" disabled={saveMutation.isPending} onClick={() => void saveAll()}>
+          {saveMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
+        </Button>
       </motion.header>
 
       {/* Estado del perfil */}
       <motion.div variants={cardReveal}>
         <Card>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
-                <UserRound className="size-5" />
-              </span>
-              <div>
-                <h2 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Estado del perfil</h2>
-                <p className="text-[0.78rem] text-(--app-text-muted)">Revisa tu información y controla cómo te ven las empresas.</p>
-              </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="mr-auto grid min-w-0 flex-1 grid-cols-2 gap-2.5 sm:grid-cols-4">
+              <ProfileStatTile className="min-w-0" icon={FileText} value={resumes.length} label="CV" />
+              <ProfileStatTile className="min-w-0" icon={Sparkles} value={skillCount} label="Skills" />
+              <ProfileStatTile className="min-w-0" icon={LanguagesIcon} value={languageCount} label="Idiomas" />
+              <ProfileStatTile className="min-w-0" icon={Briefcase} value={experienceCount} label="Experiencia" />
             </div>
-            <div className="flex items-center gap-3 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 py-2.5">
+            <div className="flex items-center gap-3 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 py-2">
               <div className="text-right">
                 <p className="text-[0.82rem] font-semibold text-(--app-text)">Visible para empresas</p>
                 <p className="text-[0.7rem] text-(--app-text-muted)">
@@ -627,12 +629,6 @@ function CandidateProfileEditor({
                 />
               </button>
             </div>
-          </div>
-          <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-            <ProfileStatTile icon={FileText} value={resumes.length} label="CV" />
-            <ProfileStatTile icon={Sparkles} value={skillCount} label="Skills" />
-            <ProfileStatTile icon={LanguagesIcon} value={languageCount} label="Idiomas" />
-            <ProfileStatTile icon={Briefcase} value={experienceCount} label="Experiencia" />
           </div>
         </Card>
       </motion.div>
@@ -712,27 +708,52 @@ function CandidateProfileEditor({
                 Sube versiones reutilizables (privadas, límite de {MAX_UPLOAD_SIZE_LABEL}) y controla si apareces en el directorio.
               </p>
               <div className="mt-4 space-y-4">
-                <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
-                  <span>Subir nuevo CV</span>
-                  <Input
-                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    type="file"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0]
-
-                      if (file) {
-                        setResumeFileError(null)
-                        uploadResumeMutation.mutate(file)
-                      }
-
-                      event.currentTarget.value = ''
+                <div className="space-y-1.5">
+                  <span className="text-[0.82rem] font-medium text-(--app-text)">Subir nuevo CV</span>
+                  <label
+                    onDragOver={(event) => {
+                      event.preventDefault()
+                      if (!isResumeDragging) setIsResumeDragging(true)
                     }}
-                  />
-                  <p className="text-[0.72rem] text-(--app-text-subtle)">
-                    Acepta PDF, DOC y DOCX. Si pesa más de {MAX_UPLOAD_SIZE_LABEL}, se rechazará con el peso detectado.
-                  </p>
+                    onDragLeave={(event) => {
+                      event.preventDefault()
+                      setIsResumeDragging(false)
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault()
+                      setIsResumeDragging(false)
+                      handleResumeFile(event.dataTransfer.files?.[0])
+                    }}
+                    className={cn(
+                      'group relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-8 text-center transition-colors',
+                      isResumeDragging
+                        ? 'border-primary-400 bg-primary-50/70 dark:border-primary-400 dark:bg-primary-500/10'
+                        : 'border-(--app-border) bg-(--app-surface-muted)/40 hover:border-primary-300 hover:bg-(--app-surface-muted)',
+                      uploadResumeMutation.isPending && 'pointer-events-none opacity-70'
+                    )}
+                  >
+                    <input
+                      className="sr-only"
+                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      type="file"
+                      disabled={uploadResumeMutation.isPending}
+                      onChange={(event) => {
+                        handleResumeFile(event.target.files?.[0])
+                        event.currentTarget.value = ''
+                      }}
+                    />
+                    <span className="flex size-11 items-center justify-center rounded-full bg-primary-50 text-primary-600 transition-transform group-hover:scale-105 dark:bg-primary-500/15 dark:text-primary-300">
+                      <Upload className="size-5" />
+                    </span>
+                    <span className="text-[0.85rem] font-semibold text-(--app-text)">
+                      {uploadResumeMutation.isPending ? 'Subiendo tu CV…' : 'Arrastra tu CV aquí o haz clic para subir'}
+                    </span>
+                    <span className="text-[0.72rem] text-(--app-text-muted)">
+                      PDF, DOC o DOCX · Tamaño máximo {MAX_UPLOAD_SIZE_LABEL}
+                    </span>
+                  </label>
                   {resumeFileError ? <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{resumeFileError}</p> : null}
-                </label>
+                </div>
 
                 <div className="space-y-2.5">
                   {resumes.length === 0 ? (
@@ -1135,20 +1156,6 @@ function CandidateProfileEditor({
           </Card>
         </motion.aside>
       </div>
-
-      {/* Footer acciones */}
-      <motion.div variants={cardReveal} className="flex items-center justify-between gap-3 border-t border-(--app-border) pt-4">
-        <button
-          type="button"
-          onClick={() => void navigate(surfacePaths.candidate.home)}
-          className="text-[0.82rem] font-medium text-(--app-text-muted) transition-colors hover:text-(--app-text)"
-        >
-          Cancelar
-        </button>
-        <Button className="h-10 px-5 text-[0.85rem]" disabled={saveMutation.isPending} onClick={() => void saveAll()}>
-          {saveMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
-        </Button>
-      </motion.div>
     </motion.div>
   )
 }
