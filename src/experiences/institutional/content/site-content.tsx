@@ -178,7 +178,7 @@ export const homeHeroSlides: InstitutionalMediaSlide[] = [
   {
     title: 'Convención ASI 2026',
     description: '',
-    image: '/media/2026-asi-convention_desktop.png',
+    image: '/media/2026-asi-convention_desktop.jpg',
     mobileImage: '/media/2026-asi-convention_movil.jpg',
     imageAlt: 'Convención ASI 2026',
     primaryAction: {
@@ -202,7 +202,7 @@ export const homeCarouselCards: InstitutionalFeatureItem[] = [
       '“Encontré una red de apoyo real para servir desde mi profesión con mayor claridad y compromiso.”',
     meta: 'Marlen Tejeda',
     image:
-      'https://images.unsplash.com/photo-1760367120345-2b96c53de838?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000',
+      'https://images.unsplash.com/photo-1760367120345-2b96c53de838?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=1200',
     imageAlt: 'Congregación cristiana reunida en oración',
   },
   {
@@ -227,7 +227,7 @@ export const homeCarouselCards: InstitutionalFeatureItem[] = [
       'Historias breves que muestran cómo la membresía se traduce en servicio, formación y alcance.',
     meta: 'Historias de fe y servicio',
     image:
-      'https://images.unsplash.com/photo-1697218173427-6bd39e9599cc?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000',
+      'https://images.unsplash.com/photo-1697218173427-6bd39e9599cc?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=1200',
     imageAlt: 'Grupo cristiano compartiendo un momento de oración',
   },
   {
@@ -236,7 +236,7 @@ export const homeCarouselCards: InstitutionalFeatureItem[] = [
       'Celebraciones congregacionales que convierten cada encuentro en una experiencia de fe compartida y esperanza activa.',
     meta: 'Culto y comunidad',
     image:
-      'https://images.unsplash.com/photo-1674566114911-cd9b71354d39?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000',
+      'https://images.unsplash.com/photo-1674566114911-cd9b71354d39?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=1200',
     imageAlt: 'Comunidad cristiana levantando las manos en adoración',
   },
 ] as const;

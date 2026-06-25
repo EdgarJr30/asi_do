@@ -7,6 +7,9 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { appRoutes } from '@/app/router/routes'
 import { StorefrontShell } from '@/experiences/storefront/layouts/storefront-shell'
 import { StorefrontPlatformShell } from '@/experiences/storefront/layouts/storefront-platform-shell'
+import { PLATFORM_REGISTRATION_LOCKED } from '@/shared/config/launch-access'
+
+const guestRegistrationActionName = PLATFORM_REGISTRATION_LOCKED ? 'Registro cerrado' : 'Crear cuenta'
 
 const authState = {
   session: null as null | { user: { id: string; email?: string } },
@@ -137,7 +140,13 @@ describe('route shells', () => {
     expect(await screen.findByRole('link', { name: /Plataforma ASI/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Jobs' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'ASI institucional' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Registro cerrado' })).toBeDisabled()
+    const guestRegistrationAction = screen.getByRole('button', { name: guestRegistrationActionName })
+    expect(guestRegistrationAction).toBeInTheDocument()
+    if (PLATFORM_REGISTRATION_LOCKED) {
+      expect(guestRegistrationAction).toBeDisabled()
+    } else {
+      expect(guestRegistrationAction).toBeEnabled()
+    }
     expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
 
@@ -220,7 +229,9 @@ describe('route shells', () => {
     expect(await screen.findByText('Plataforma ASI')).toBeInTheDocument()
     expect(screen.getAllByText('Jobs').length).toBeGreaterThan(0)
     expect(screen.getAllByRole('button', { name: 'ASI institucional' }).length).toBeGreaterThan(0)
-    expect(screen.getAllByRole('button', { name: 'Registro cerrado' }).every((button) => button.hasAttribute('disabled'))).toBe(true)
+    const guestRegistrationActions = screen.getAllByRole('button', { name: guestRegistrationActionName })
+    expect(guestRegistrationActions.length).toBeGreaterThan(0)
+    expect(guestRegistrationActions.every((button) => button.hasAttribute('disabled'))).toBe(PLATFORM_REGISTRATION_LOCKED)
     expect(screen.getAllByRole('button', { name: 'Iniciar sesión' }).length).toBeGreaterThan(0)
   })
 })

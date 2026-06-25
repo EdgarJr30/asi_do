@@ -2,14 +2,12 @@ import type { PropsWithChildren } from 'react'
 
 import { Navigate, useLocation } from 'react-router-dom'
 
+import { RoutePending } from '@/app/router/route-suspense'
 import { surfacePaths } from '@/app/router/surface-paths'
-import { AdminShell } from '@/experiences/app/layouts/admin-shell'
-import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
-import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
-import { PageLoader } from '@/components/ui/loader'
-import { SurfaceStatusPage, type AppSurface } from '@/app/router/routes/surface-status-page'
+import type { AppSurface } from '@/app/router/routes/surface-status-page'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
+import { GuardFallbackShell } from '@/lib/auth/guard-fallback-shell'
 import { hasAnyPermission } from '@/lib/permissions/guards'
 import type { PermissionCode } from '@/shared/constants/permissions'
 
@@ -17,7 +15,7 @@ export function RequireAuth({ children }: PropsWithChildren) {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <PageLoader fullScreen label="Recuperando tu sesión" hint="Validando tu acceso y permisos" />
+    return <RoutePending fullScreen label="Recuperando tu sesión" hint="Validando tu acceso y permisos" />
   }
 
   if (!session.isAuthenticated) {
@@ -33,7 +31,7 @@ export function RequireCompletedBaseOnboarding({ children }: PropsWithChildren) 
   const isProfileRoute = location.pathname === surfacePaths.candidate.profile
 
   if (session.isLoading) {
-    return <PageLoader fullScreen label="Preparando tu perfil" hint="Revisando los datos mínimos de tu cuenta" />
+    return <RoutePending fullScreen label="Preparando tu perfil" hint="Revisando los datos mínimos de tu cuenta" />
   }
 
   if (!session.isAuthenticated || isProfileRoute || hasCompletedBaseOnboarding(session.profile)) {
@@ -52,7 +50,7 @@ export function RequireActiveAsiAccess({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <PageLoader fullScreen label="Validando tu membresía" hint="Comprobando aprobación y suscripción ASI" />
+    return <RoutePending fullScreen label="Validando tu membresía" hint="Comprobando aprobación y suscripción ASI" />
   }
 
   if (!session.isAuthenticated) {
@@ -79,7 +77,7 @@ export function RequirePermission({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <PageLoader fullScreen label="Validando permisos" hint="Comprobando tu acceso" />
+    return <RoutePending fullScreen label="Validando permisos" hint="Comprobando tu acceso" />
   }
 
   if (!session.isAuthenticated) {
@@ -87,17 +85,7 @@ export function RequirePermission({
   }
 
   if (!session.permissions.includes(permission)) {
-    const content = <SurfaceStatusPage kind="forbidden" surface={surface} />
-
-    if (surface === 'candidate') {
-      return <CandidateShell fallbackContent={content} />
-    }
-
-    if (surface === 'admin') {
-      return <AdminShell fallbackContent={content} />
-    }
-
-    return <EmployerShell fallbackContent={content} />
+    return <GuardFallbackShell surface={surface} />
   }
 
   return children
@@ -114,7 +102,7 @@ export function RequireAnyPermission({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <PageLoader fullScreen label="Validando permisos" hint="Comprobando tu acceso" />
+    return <RoutePending fullScreen label="Validando permisos" hint="Comprobando tu acceso" />
   }
 
   if (!session.isAuthenticated) {
@@ -122,17 +110,7 @@ export function RequireAnyPermission({
   }
 
   if (!hasAnyPermission(session.permissions, permissions)) {
-    const content = <SurfaceStatusPage kind="forbidden" surface={surface} />
-
-    if (surface === 'candidate') {
-      return <CandidateShell fallbackContent={content} />
-    }
-
-    if (surface === 'admin') {
-      return <AdminShell fallbackContent={content} />
-    }
-
-    return <EmployerShell fallbackContent={content} />
+    return <GuardFallbackShell surface={surface} />
   }
 
   return children
@@ -142,7 +120,7 @@ export function RequireAdminAccess({ children }: PropsWithChildren) {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <PageLoader fullScreen label="Validando acceso admin" hint="Comprobando tu acceso a la consola" />
+    return <RoutePending fullScreen label="Validando acceso admin" hint="Comprobando tu acceso a la consola" />
   }
 
   if (!session.isAuthenticated) {
@@ -150,7 +128,7 @@ export function RequireAdminAccess({ children }: PropsWithChildren) {
   }
 
   if (!session.canAccessAdminConsole) {
-    return <AdminShell fallbackContent={<SurfaceStatusPage kind="forbidden" surface="admin" />} />
+    return <GuardFallbackShell surface="admin" />
   }
 
   return children
@@ -163,7 +141,7 @@ export function RequirePlatformAdmin({ children }: PropsWithChildren) {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <PageLoader fullScreen label="Validando acceso de plataforma" hint="Comprobando tu rol" />
+    return <RoutePending fullScreen label="Validando acceso de plataforma" hint="Comprobando tu rol" />
   }
 
   if (!session.isAuthenticated) {
@@ -171,7 +149,7 @@ export function RequirePlatformAdmin({ children }: PropsWithChildren) {
   }
 
   if (!session.isPlatformAdmin) {
-    return <AdminShell fallbackContent={<SurfaceStatusPage kind="forbidden" surface="admin" />} />
+    return <GuardFallbackShell surface="admin" />
   }
 
   return children

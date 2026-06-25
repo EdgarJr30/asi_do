@@ -1,33 +1,9 @@
+/* eslint-disable react-refresh/only-export-components */
+import { lazy } from 'react'
 import type { RouteObject } from 'react-router-dom'
 import { Navigate } from 'react-router-dom'
 
-import { ApplicationsOverviewPage } from '@/features/applications/pages/applications-overview-page'
-import { AuthConfirmPage } from '@/features/auth/pages/auth-confirm-page'
-import { AuthPage } from '@/features/auth/pages/auth-page'
-import { BootstrapOwnerPage } from '@/features/auth/pages/bootstrap-owner-page'
-import { SignInPage } from '@/features/auth/pages/sign-in-page'
-import { SignUpPage } from '@/features/auth/pages/sign-up-page'
-import { AuthorityRequestPage } from '@/features/authority-requests/pages/authority-request-page'
-import { AdminAuthorityInvitationsPage } from '@/features/authority-requests/pages/admin-authority-invitations-page'
-import { AdminDonationAmountsPage } from '@/features/donations/pages/admin-donation-amounts-page'
-import { WorkspaceApplicationsPage } from '@/features/applications/pages/workspace-applications-page'
-import { CandidateProfilePage } from '@/features/candidate-profile/pages/candidate-profile-page'
-import { CandidateHomePage } from '@/features/dashboard/pages/candidate-home-page'
-import { ResumenDashboardPage } from '@/features/dashboard/pages/resumen-dashboard-page'
-import { WorkspaceActivityPage } from '@/features/dashboard/pages/workspace-activity-page'
-import { WorkspaceReportsPage } from '@/features/dashboard/pages/workspace-reports-page'
-import { WorkspaceSectionPlaceholderPage } from '@/features/dashboard/pages/workspace-section-placeholder-page'
-import { ErrorLogReviewPage } from '@/features/error-monitoring/pages/error-log-review-page'
-import { AdminConsolePage } from '@/features/internal/pages/admin-console-page'
-import { JobsOverviewPage } from '@/features/jobs/pages/jobs-overview-page'
-import { ModerationOverviewPage } from '@/features/moderation/pages/moderation-overview-page'
-import { PipelineBoardPage } from '@/features/pipeline/pages/pipeline-board-page'
-import { PlatformOpsDashboardPage } from '@/features/platform-ops/pages/platform-ops-dashboard-page'
-import { RbacOverviewPage } from '@/features/rbac/pages/rbac-overview-page'
-import { RecruiterRequestPage } from '@/features/recruiter-requests/pages/recruiter-request-page'
-import { RecruiterReviewPage } from '@/features/recruiter-requests/pages/recruiter-review-page'
-import { TalentDirectoryPage } from '@/features/talent/pages/talent-directory-page'
-import { WorkspaceOverviewPage } from '@/features/tenants/pages/workspace-overview-page'
+import { RouteSuspense } from '@/app/router/route-suspense'
 import {
   RequireActiveAsiAccess,
   RequireAdminAccess,
@@ -38,44 +14,108 @@ import {
   RequirePlatformAdmin
 } from '@/lib/auth/guards'
 import { surfacePaths } from '@/app/router/surface-paths'
-import { SurfaceStatusPage } from '@/app/router/routes/surface-status-page'
-import { AdminShell } from '@/experiences/app/layouts/admin-shell'
-import { AuthShell } from '@/experiences/app/layouts/auth-shell'
-import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
-import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
-import { AppEntryRedirect } from '@/experiences/app/routes/app-entry-redirect'
-import { EmailPipelinePage } from '@/features/internal/pages/email-pipeline-page'
-import { StressHarnessPage } from '@/features/internal/pages/stress-harness-page'
-import { MembershipConsolePage } from '@/features/membership/pages/membership-console-page'
-import { MembershipPaymentsSettingsPage } from '@/features/membership/pages/membership-payments-settings-page'
-import { MembershipStatusPage } from '@/features/membership/pages/membership-status-page'
-import { PastorMembershipQueuePage } from '@/features/membership/pages/pastor-membership-queue-page'
+import { LazySurfaceStatusPage } from '@/app/router/routes/lazy-surface-status-page'
 import { approvalReviewPermissions } from '@/shared/constants/navigation'
+
+const ApplicationsOverviewPage = lazy(() =>
+  import('@/features/applications/pages/applications-overview-page').then(({ ApplicationsOverviewPage }) => ({ default: ApplicationsOverviewPage }))
+)
+const WorkspaceApplicationsPage = lazy(() =>
+  import('@/features/applications/pages/workspace-applications-page').then(({ WorkspaceApplicationsPage }) => ({ default: WorkspaceApplicationsPage }))
+)
+const AuthConfirmPage = lazy(() => import('@/features/auth/pages/auth-confirm-page').then(({ AuthConfirmPage }) => ({ default: AuthConfirmPage })))
+const AuthPage = lazy(() => import('@/features/auth/pages/auth-page').then(({ AuthPage }) => ({ default: AuthPage })))
+const BootstrapOwnerPage = lazy(() => import('@/features/auth/pages/bootstrap-owner-page').then(({ BootstrapOwnerPage }) => ({ default: BootstrapOwnerPage })))
+const SignInPage = lazy(() => import('@/features/auth/pages/sign-in-page').then(({ SignInPage }) => ({ default: SignInPage })))
+const SignUpPage = lazy(() => import('@/features/auth/pages/sign-up-page').then(({ SignUpPage }) => ({ default: SignUpPage })))
+const AuthorityRequestPage = lazy(() => import('@/features/authority-requests/pages/authority-request-page').then(({ AuthorityRequestPage }) => ({ default: AuthorityRequestPage })))
+const AdminAuthorityInvitationsPage = lazy(() =>
+  import('@/features/authority-requests/pages/admin-authority-invitations-page').then(({ AdminAuthorityInvitationsPage }) => ({ default: AdminAuthorityInvitationsPage }))
+)
+const CandidateProfilePage = lazy(() => import('@/features/candidate-profile/pages/candidate-profile-page').then(({ CandidateProfilePage }) => ({ default: CandidateProfilePage })))
+const AdminDonationAmountsPage = lazy(() =>
+  import('@/features/donations/pages/admin-donation-amounts-page').then(({ AdminDonationAmountsPage }) => ({ default: AdminDonationAmountsPage }))
+)
+const CandidateHomePage = lazy(() => import('@/features/dashboard/pages/candidate-home-page').then(({ CandidateHomePage }) => ({ default: CandidateHomePage })))
+const ResumenDashboardPage = lazy(() => import('@/features/dashboard/pages/resumen-dashboard-page').then(({ ResumenDashboardPage }) => ({ default: ResumenDashboardPage })))
+const WorkspaceActivityPage = lazy(() => import('@/features/dashboard/pages/workspace-activity-page').then(({ WorkspaceActivityPage }) => ({ default: WorkspaceActivityPage })))
+const WorkspaceReportsPage = lazy(() => import('@/features/dashboard/pages/workspace-reports-page').then(({ WorkspaceReportsPage }) => ({ default: WorkspaceReportsPage })))
+const WorkspaceSectionPlaceholderPage = lazy(() =>
+  import('@/features/dashboard/pages/workspace-section-placeholder-page').then(({ WorkspaceSectionPlaceholderPage }) => ({ default: WorkspaceSectionPlaceholderPage }))
+)
+const ErrorLogReviewPage = lazy(() => import('@/features/error-monitoring/pages/error-log-review-page').then(({ ErrorLogReviewPage }) => ({ default: ErrorLogReviewPage })))
+const AdminConsolePage = lazy(() => import('@/features/internal/pages/admin-console-page').then(({ AdminConsolePage }) => ({ default: AdminConsolePage })))
+const EmailPipelinePage = lazy(() => import('@/features/internal/pages/email-pipeline-page').then(({ EmailPipelinePage }) => ({ default: EmailPipelinePage })))
+const StressHarnessPage = lazy(() => import('@/features/internal/pages/stress-harness-page').then(({ StressHarnessPage }) => ({ default: StressHarnessPage })))
+const JobsOverviewPage = lazy(() => import('@/features/jobs/pages/jobs-overview-page').then(({ JobsOverviewPage }) => ({ default: JobsOverviewPage })))
+const MembershipConsolePage = lazy(() => import('@/features/membership/pages/membership-console-page').then(({ MembershipConsolePage }) => ({ default: MembershipConsolePage })))
+const MembershipPaymentsSettingsPage = lazy(() =>
+  import('@/features/membership/pages/membership-payments-settings-page').then(({ MembershipPaymentsSettingsPage }) => ({ default: MembershipPaymentsSettingsPage }))
+)
+const MembershipStatusPage = lazy(() => import('@/features/membership/pages/membership-status-page').then(({ MembershipStatusPage }) => ({ default: MembershipStatusPage })))
+const PastorMembershipQueuePage = lazy(() =>
+  import('@/features/membership/pages/pastor-membership-queue-page').then(({ PastorMembershipQueuePage }) => ({ default: PastorMembershipQueuePage }))
+)
+const ModerationOverviewPage = lazy(() => import('@/features/moderation/pages/moderation-overview-page').then(({ ModerationOverviewPage }) => ({ default: ModerationOverviewPage })))
+const PipelineBoardPage = lazy(() => import('@/features/pipeline/pages/pipeline-board-page').then(({ PipelineBoardPage }) => ({ default: PipelineBoardPage })))
+const PlatformOpsDashboardPage = lazy(() =>
+  import('@/features/platform-ops/pages/platform-ops-dashboard-page').then(({ PlatformOpsDashboardPage }) => ({ default: PlatformOpsDashboardPage }))
+)
+const RbacOverviewPage = lazy(() => import('@/features/rbac/pages/rbac-overview-page').then(({ RbacOverviewPage }) => ({ default: RbacOverviewPage })))
+const RecruiterRequestPage = lazy(() => import('@/features/recruiter-requests/pages/recruiter-request-page').then(({ RecruiterRequestPage }) => ({ default: RecruiterRequestPage })))
+const RecruiterReviewPage = lazy(() => import('@/features/recruiter-requests/pages/recruiter-review-page').then(({ RecruiterReviewPage }) => ({ default: RecruiterReviewPage })))
+const TalentDirectoryPage = lazy(() => import('@/features/talent/pages/talent-directory-page').then(({ TalentDirectoryPage }) => ({ default: TalentDirectoryPage })))
+const WorkspaceOverviewPage = lazy(() => import('@/features/tenants/pages/workspace-overview-page').then(({ WorkspaceOverviewPage }) => ({ default: WorkspaceOverviewPage })))
+const AdminShell = lazy(() => import('@/experiences/app/layouts/admin-shell').then(({ AdminShell }) => ({ default: AdminShell })))
+const AuthShell = lazy(() => import('@/experiences/app/layouts/auth-shell').then(({ AuthShell }) => ({ default: AuthShell })))
+const CandidateShell = lazy(() => import('@/experiences/app/layouts/candidate-shell').then(({ CandidateShell }) => ({ default: CandidateShell })))
+const EmployerShell = lazy(() => import('@/experiences/app/layouts/employer-shell').then(({ EmployerShell }) => ({ default: EmployerShell })))
+const AppEntryRedirect = lazy(() => import('@/experiences/app/routes/app-entry-redirect').then(({ AppEntryRedirect }) => ({ default: AppEntryRedirect })))
 
 export const applicationRoutes: RouteObject[] = [
   {
     path: '/auth',
-    element: <AuthShell />,
+    element: (
+      <RouteSuspense>
+        <AuthShell />
+      </RouteSuspense>
+    ),
     children: [
       {
         index: true,
-        element: <AuthPage />
+        element: (
+          <RouteSuspense>
+            <AuthPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'sign-in',
-        element: <SignInPage />
+        element: (
+          <RouteSuspense>
+            <SignInPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'sign-up',
-        element: <SignUpPage />
+        element: (
+          <RouteSuspense>
+            <SignUpPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'confirm',
-        element: <AuthConfirmPage />
+        element: (
+          <RouteSuspense>
+            <AuthConfirmPage />
+          </RouteSuspense>
+        )
       },
       {
         path: '*',
-        element: <SurfaceStatusPage kind="not-found" surface="auth" />
+        element: <LazySurfaceStatusPage kind="not-found" surface="auth" />
       }
     ]
   },
@@ -84,7 +124,9 @@ export const applicationRoutes: RouteObject[] = [
     element: (
       <RequireAuth>
         <RequireCompletedBaseOnboarding>
-          <AppEntryRedirect />
+          <RouteSuspense>
+            <AppEntryRedirect />
+          </RouteSuspense>
         </RequireCompletedBaseOnboarding>
       </RequireAuth>
     )
@@ -96,7 +138,15 @@ export const applicationRoutes: RouteObject[] = [
     element: (
       <RequireAuth>
         <RequireCompletedBaseOnboarding>
-          <CandidateShell fallbackContent={<MembershipStatusPage />} />
+          <RouteSuspense>
+            <CandidateShell
+              fallbackContent={
+                <RouteSuspense>
+                  <MembershipStatusPage />
+                </RouteSuspense>
+              }
+            />
+          </RouteSuspense>
         </RequireCompletedBaseOnboarding>
       </RequireAuth>
     )
@@ -106,14 +156,20 @@ export const applicationRoutes: RouteObject[] = [
     element: (
       <RequireAuth>
         <RequireCompletedBaseOnboarding>
-          <CandidateShell />
+          <RouteSuspense>
+            <CandidateShell />
+          </RouteSuspense>
         </RequireCompletedBaseOnboarding>
       </RequireAuth>
     ),
     children: [
       {
         index: true,
-        element: <CandidateHomePage />
+        element: (
+          <RouteSuspense>
+            <CandidateHomePage />
+          </RouteSuspense>
+        )
       },
       {
         // Legacy alias only. First-run setup now lives inside the profile surface.
@@ -122,34 +178,52 @@ export const applicationRoutes: RouteObject[] = [
       },
       {
         path: 'recruiter-request',
-        element: <RecruiterRequestPage />
+        element: (
+          <RouteSuspense>
+            <RecruiterRequestPage />
+          </RouteSuspense>
+        )
       },
       {
         // Solo accesible con un token de invitación generado por un admin.
         path: 'authority-request/:token',
-        element: <AuthorityRequestPage />
+        element: (
+          <RouteSuspense>
+            <AuthorityRequestPage />
+          </RouteSuspense>
+        )
       },
       {
         // Cola del pastor: visible para usuarios con autoridad pastoral activa.
         // La RLS limita las filas a sus iglesias; no requiere acceso ATS activo.
         path: 'membership-queue',
-        element: <PastorMembershipQueuePage />
+        element: (
+          <RouteSuspense>
+            <PastorMembershipQueuePage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'profile',
-        element: <CandidateProfilePage />
+        element: (
+          <RouteSuspense>
+            <CandidateProfilePage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'applications',
         element: (
           <RequireActiveAsiAccess surface="candidate">
-            <ApplicationsOverviewPage />
+            <RouteSuspense>
+              <ApplicationsOverviewPage />
+            </RouteSuspense>
           </RequireActiveAsiAccess>
         )
       },
       {
         path: '*',
-        element: <SurfaceStatusPage kind="not-found" surface="candidate" />
+        element: <LazySurfaceStatusPage kind="not-found" surface="candidate" />
       }
     ]
   },
@@ -159,7 +233,9 @@ export const applicationRoutes: RouteObject[] = [
       <RequireCompletedBaseOnboarding>
         <RequireActiveAsiAccess surface="workspace">
           <RequirePermission permission="workspace:read">
-            <EmployerShell />
+            <RouteSuspense>
+              <EmployerShell />
+            </RouteSuspense>
           </RequirePermission>
         </RequireActiveAsiAccess>
       </RequireCompletedBaseOnboarding>
@@ -167,21 +243,35 @@ export const applicationRoutes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <ResumenDashboardPage />
+        element: (
+          <RouteSuspense>
+            <ResumenDashboardPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'activity',
-        element: <WorkspaceActivityPage />
+        element: (
+          <RouteSuspense>
+            <WorkspaceActivityPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'jobs',
-        element: <JobsOverviewPage />
+        element: (
+          <RouteSuspense>
+            <JobsOverviewPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'applications',
         element: (
           <RequirePermission permission="application:read" surface="workspace">
-            <WorkspaceApplicationsPage />
+            <RouteSuspense>
+              <WorkspaceApplicationsPage />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
@@ -189,7 +279,9 @@ export const applicationRoutes: RouteObject[] = [
         path: 'talent',
         element: (
           <RequirePermission permission="candidate_directory:read">
-            <TalentDirectoryPage />
+            <RouteSuspense>
+              <TalentDirectoryPage />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
@@ -197,11 +289,13 @@ export const applicationRoutes: RouteObject[] = [
         path: 'talent-pool',
         element: (
           <RequirePermission permission="candidate_directory:read">
-            <WorkspaceSectionPlaceholderPage
-              eyebrow="Reclutamiento"
-              title="Banco de talento"
-              description="Talento guardado y preseleccionado para futuras vacantes."
-            />
+            <RouteSuspense>
+              <WorkspaceSectionPlaceholderPage
+                eyebrow="Reclutamiento"
+                title="Banco de talento"
+                description="Talento guardado y preseleccionado para futuras vacantes."
+              />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
@@ -209,29 +303,41 @@ export const applicationRoutes: RouteObject[] = [
         path: 'pipeline',
         element: (
           <RequirePermission permission="application:read" surface="workspace">
-            <PipelineBoardPage />
+            <RouteSuspense>
+              <PipelineBoardPage />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
       {
         path: 'reports',
-        element: <WorkspaceReportsPage />
+        element: (
+          <RouteSuspense>
+            <WorkspaceReportsPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'settings',
-        element: <WorkspaceOverviewPage />
+        element: (
+          <RouteSuspense>
+            <WorkspaceOverviewPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'settings/access',
         element: (
           <RequirePermission permission="role:read" surface="workspace">
-            <RbacOverviewPage />
+            <RouteSuspense>
+              <RbacOverviewPage />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
       {
         path: '*',
-        element: <SurfaceStatusPage kind="not-found" surface="workspace" />
+        element: <LazySurfaceStatusPage kind="not-found" surface="workspace" />
       }
     ]
   },
@@ -240,20 +346,28 @@ export const applicationRoutes: RouteObject[] = [
     element: (
       <RequireCompletedBaseOnboarding>
         <RequireAdminAccess>
-          <AdminShell />
+          <RouteSuspense>
+            <AdminShell />
+          </RouteSuspense>
         </RequireAdminAccess>
       </RequireCompletedBaseOnboarding>
     ),
     children: [
       {
         index: true,
-        element: <AdminConsolePage />
+        element: (
+          <RouteSuspense>
+            <AdminConsolePage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'approvals',
         element: (
           <RequireAnyPermission permissions={approvalReviewPermissions} surface="admin">
-            <RecruiterReviewPage />
+            <RouteSuspense>
+              <RecruiterReviewPage />
+            </RouteSuspense>
           </RequireAnyPermission>
         )
       },
@@ -261,7 +375,9 @@ export const applicationRoutes: RouteObject[] = [
         path: 'platform',
         element: (
           <RequirePermission permission="platform_dashboard:read" surface="admin">
-            <PlatformOpsDashboardPage />
+            <RouteSuspense>
+              <PlatformOpsDashboardPage />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
@@ -269,7 +385,9 @@ export const applicationRoutes: RouteObject[] = [
         path: 'moderation',
         element: (
           <RequirePermission permission="moderation:read" surface="admin">
-            <ModerationOverviewPage />
+            <RouteSuspense>
+              <ModerationOverviewPage />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
@@ -277,7 +395,9 @@ export const applicationRoutes: RouteObject[] = [
         path: 'errors',
         element: (
           <RequirePermission permission="audit_log:read" surface="admin">
-            <ErrorLogReviewPage />
+            <RouteSuspense>
+              <ErrorLogReviewPage />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
@@ -285,7 +405,9 @@ export const applicationRoutes: RouteObject[] = [
         path: 'membership',
         element: (
           <RequirePermission permission="membership_payment:verify" surface="admin">
-            <MembershipConsolePage />
+            <RouteSuspense>
+              <MembershipConsolePage />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
@@ -293,7 +415,9 @@ export const applicationRoutes: RouteObject[] = [
         path: 'authority',
         element: (
           <RequireAnyPermission permissions={approvalReviewPermissions} surface="admin">
-            <AdminAuthorityInvitationsPage />
+            <RouteSuspense>
+              <AdminAuthorityInvitationsPage />
+            </RouteSuspense>
           </RequireAnyPermission>
         )
       },
@@ -301,7 +425,9 @@ export const applicationRoutes: RouteObject[] = [
         path: 'payments',
         element: (
           <RequirePermission permission="platform_dashboard:read" surface="admin">
-            <MembershipPaymentsSettingsPage />
+            <RouteSuspense>
+              <MembershipPaymentsSettingsPage />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
@@ -309,7 +435,9 @@ export const applicationRoutes: RouteObject[] = [
         path: 'donations',
         element: (
           <RequirePermission permission="platform_dashboard:read" surface="admin">
-            <AdminDonationAmountsPage />
+            <RouteSuspense>
+              <AdminDonationAmountsPage />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
@@ -317,7 +445,9 @@ export const applicationRoutes: RouteObject[] = [
         path: 'correos',
         element: (
           <RequirePermission permission="email:read" surface="admin">
-            <EmailPipelinePage />
+            <RouteSuspense>
+              <EmailPipelinePage />
+            </RouteSuspense>
           </RequirePermission>
         )
       },
@@ -325,17 +455,23 @@ export const applicationRoutes: RouteObject[] = [
         path: 'stress-harness',
         element: (
           <RequirePlatformAdmin>
-            <StressHarnessPage />
+            <RouteSuspense>
+              <StressHarnessPage />
+            </RouteSuspense>
           </RequirePlatformAdmin>
         )
       },
       {
         path: 'bootstrap-owner',
-        element: <BootstrapOwnerPage />
+        element: (
+          <RouteSuspense>
+            <BootstrapOwnerPage />
+          </RouteSuspense>
+        )
       },
       {
         path: '*',
-        element: <SurfaceStatusPage kind="not-found" surface="admin" />
+        element: <LazySurfaceStatusPage kind="not-found" surface="admin" />
       }
     ]
   }

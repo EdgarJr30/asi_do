@@ -47,7 +47,14 @@ function completeProfile(input: { id: string; email: string; isInternalDeveloper
     display_name: 'Maria Reyes',
     locale: 'es',
     country_code: 'DO',
-    is_internal_developer: input.isInternalDeveloper ?? false
+    is_internal_developer: input.isInternalDeveloper ?? false,
+    status: 'active',
+    user_approval_status: 'approved',
+    asi_membership_status: 'active',
+    user_subscription_status: 'active',
+    membership_expires_at: '2099-12-31T23:59:59.000Z',
+    subscription_expires_at: '2099-12-31T23:59:59.000Z',
+    manual_access_override_until: null
   }
 }
 
@@ -66,7 +73,16 @@ vi.mock('@/lib/supabase/client', () => ({
           }
         }
       }))
-    }
+    },
+    channel: vi.fn(() => {
+      const channel = {
+        on: vi.fn(() => channel),
+        subscribe: vi.fn(() => channel)
+      }
+
+      return channel
+    }),
+    removeChannel: vi.fn(() => Promise.resolve({ error: null }))
   }
 }))
 
@@ -116,7 +132,7 @@ describe('surface access states', () => {
     renderRoute(surfacePaths.app.home)
 
     expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
-    expect(screen.getByText('Inicio · Tu espacio')).toBeInTheDocument()
+    expect((await screen.findAllByRole('button', { name: 'Inicio' })).length).toBeGreaterThan(0)
   })
 
   it('redirects /app to the workspace when the user has workspace access', async () => {
@@ -159,7 +175,7 @@ describe('surface access states', () => {
     renderRoute('/candidate/nope')
 
     expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
-    expect(screen.getAllByText('No encontramos esa pantalla de talento').length).toBeGreaterThan(0)
+    expect(await screen.findByRole('heading', { name: 'Ups, esta página no está disponible' })).toBeInTheDocument()
   })
 
   it('renders workspace forbidden inside the workspace shell', async () => {
@@ -185,7 +201,7 @@ describe('surface access states', () => {
     renderRoute(surfacePaths.workspace.access)
 
     expect((await screen.findAllByText('Acme')).length).toBeGreaterThan(0)
-    expect(screen.getAllByText('No puedes abrir esta vista del workspace').length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('No puedes abrir esta vista del workspace')).length).toBeGreaterThan(0)
   })
 
   it('renders admin forbidden inside the admin shell', async () => {
@@ -201,7 +217,7 @@ describe('surface access states', () => {
     renderRoute(surfacePaths.admin.root)
 
     expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
-    expect(screen.getAllByText('No puedes abrir esta vista administrativa').length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('No puedes abrir esta vista administrativa')).length).toBeGreaterThan(0)
   })
 
   it('renders admin not-found inside the admin shell', async () => {
@@ -217,7 +233,7 @@ describe('surface access states', () => {
     renderRoute('/admin/nope')
 
     expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
-    expect(screen.getAllByText('No encontramos esa pantalla administrativa').length).toBeGreaterThan(0)
+    expect(await screen.findByRole('heading', { name: 'Ups, esta página no está disponible' })).toBeInTheDocument()
   })
 
   it('redirects unauthenticated workspace access to sign-in', async () => {

@@ -1,106 +1,202 @@
+/* eslint-disable react-refresh/only-export-components */
+import { lazy } from 'react'
 import type { RouteObject } from 'react-router-dom'
 
 import { surfacePaths } from '@/app/router/surface-paths'
-import { SurfaceStatusPage } from '@/app/router/routes/surface-status-page'
-import { InstitutionalShell } from '@/experiences/institutional/layouts/institutional-shell'
-import { ContactUsPage } from '@/experiences/institutional/pages/contact-us-page'
-import { DirectoryPage } from '@/experiences/institutional/pages/directory-page'
-import { DonatePage } from '@/experiences/institutional/pages/donate-page'
-import { EligibilityPage } from '@/experiences/institutional/pages/eligibility-page'
-import { InstitutionalHomePage } from '@/experiences/institutional/pages/institutional-home-page'
-import { MembershipApplyPage } from '@/experiences/institutional/pages/membership-apply-page'
-import { MembershipCategoriesPage } from '@/experiences/institutional/pages/membership-categories-page'
-import { MembershipPage } from '@/experiences/institutional/pages/membership-page'
-import { NewsPage } from '@/experiences/institutional/pages/news-page'
-import { PaymentPolicyPage } from '@/experiences/institutional/pages/payment-policy-page'
-import { ProjectFundingPage } from '@/experiences/institutional/pages/project-funding-page'
-import { ProjectsPage } from '@/experiences/institutional/pages/projects-page'
-import { WhoWeArePage } from '@/experiences/institutional/pages/who-we-are-page'
+import { RouteSuspense } from '@/app/router/route-suspense'
+import { LazySurfaceStatusPage } from '@/app/router/routes/lazy-surface-status-page'
+
+const InstitutionalShell = lazy(() =>
+  import('@/experiences/institutional/layouts/institutional-shell').then(({ InstitutionalShell }) => ({ default: InstitutionalShell }))
+)
+const ContactUsPage = lazy(() => import('@/experiences/institutional/pages/contact-us-page').then(({ ContactUsPage }) => ({ default: ContactUsPage })))
+const DirectoryPage = lazy(() => import('@/experiences/institutional/pages/directory-page').then(({ DirectoryPage }) => ({ default: DirectoryPage })))
+const DonatePage = lazy(() => import('@/experiences/institutional/pages/donate-page').then(({ DonatePage }) => ({ default: DonatePage })))
+const EligibilityPage = lazy(() => import('@/experiences/institutional/pages/eligibility-page').then(({ EligibilityPage }) => ({ default: EligibilityPage })))
+const InstitutionalHomePage = lazy(() =>
+  import('@/experiences/institutional/pages/institutional-home-page').then(({ InstitutionalHomePage }) => ({ default: InstitutionalHomePage }))
+)
+const MembershipApplyPage = lazy(() =>
+  import('@/experiences/institutional/pages/membership-apply-page').then(({ MembershipApplyPage }) => ({ default: MembershipApplyPage }))
+)
+const MembershipCategoriesPage = lazy(() =>
+  import('@/experiences/institutional/pages/membership-categories-page').then(({ MembershipCategoriesPage }) => ({ default: MembershipCategoriesPage }))
+)
+const MembershipPage = lazy(() => import('@/experiences/institutional/pages/membership-page').then(({ MembershipPage }) => ({ default: MembershipPage })))
+const NewsPage = lazy(() => import('@/experiences/institutional/pages/news-page').then(({ NewsPage }) => ({ default: NewsPage })))
+const PaymentPolicyPage = lazy(() =>
+  import('@/experiences/institutional/pages/payment-policy-page').then(({ PaymentPolicyPage }) => ({ default: PaymentPolicyPage }))
+)
+const ProjectFundingPage = lazy(() =>
+  import('@/experiences/institutional/pages/project-funding-page').then(({ ProjectFundingPage }) => ({ default: ProjectFundingPage }))
+)
+const ProjectsPage = lazy(() => import('@/experiences/institutional/pages/projects-page').then(({ ProjectsPage }) => ({ default: ProjectsPage })))
+const WhoWeArePage = lazy(() => import('@/experiences/institutional/pages/who-we-are-page').then(({ WhoWeArePage }) => ({ default: WhoWeArePage })))
 
 export const institutionalRoutes: RouteObject[] = [
   {
     path: surfacePaths.institutional.home,
-    element: <InstitutionalShell />,
+    element: (
+      <RouteSuspense>
+        <InstitutionalShell />
+      </RouteSuspense>
+    ),
     children: [
       {
         index: true,
-        element: <InstitutionalHomePage />
+        element: (
+          <RouteSuspense>
+            <InstitutionalHomePage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'home',
-        element: <InstitutionalHomePage />
+        element: (
+          <RouteSuspense>
+            <InstitutionalHomePage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'membership',
-        element: <MembershipPage />
+        element: (
+          <RouteSuspense>
+            <MembershipPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'membership/categories',
-        element: <MembershipCategoriesPage />
+        element: (
+          <RouteSuspense>
+            <MembershipCategoriesPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'membership/apply',
-        element: <MembershipApplyPage />
+        element: (
+          <RouteSuspense>
+            <MembershipApplyPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'eligibility',
-        element: <EligibilityPage />
+        element: (
+          <RouteSuspense>
+            <EligibilityPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'projects',
-        element: <ProjectsPage />
+        element: (
+          <RouteSuspense>
+            <ProjectsPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'projects/funding',
-        element: <ProjectFundingPage />
+        element: (
+          <RouteSuspense>
+            <ProjectFundingPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'donate',
-        element: <DonatePage />
+        element: (
+          <RouteSuspense>
+            <DonatePage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'terms',
-        element: <PaymentPolicyPage kind="terms" />
+        element: (
+          <RouteSuspense>
+            <PaymentPolicyPage kind="terms" />
+          </RouteSuspense>
+        )
       },
       {
         path: 'privacy',
-        element: <PaymentPolicyPage kind="privacy" />
+        element: (
+          <RouteSuspense>
+            <PaymentPolicyPage kind="privacy" />
+          </RouteSuspense>
+        )
       },
       {
         path: 'refunds-cancellations',
-        element: <PaymentPolicyPage kind="refunds" />
+        element: (
+          <RouteSuspense>
+            <PaymentPolicyPage kind="refunds" />
+          </RouteSuspense>
+        )
       },
       {
         path: 'delivery-policy',
-        element: <PaymentPolicyPage kind="delivery" />
+        element: (
+          <RouteSuspense>
+            <PaymentPolicyPage kind="delivery" />
+          </RouteSuspense>
+        )
       },
       {
         path: 'payment-security',
-        element: <PaymentPolicyPage kind="security" />
+        element: (
+          <RouteSuspense>
+            <PaymentPolicyPage kind="security" />
+          </RouteSuspense>
+        )
       },
       {
         path: 'payment-receipt-model',
-        element: <PaymentPolicyPage kind="receipt" />
+        element: (
+          <RouteSuspense>
+            <PaymentPolicyPage kind="receipt" />
+          </RouteSuspense>
+        )
       },
       {
         path: 'who-we-are',
-        element: <WhoWeArePage />
+        element: (
+          <RouteSuspense>
+            <WhoWeArePage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'contact-us',
-        element: <ContactUsPage />
+        element: (
+          <RouteSuspense>
+            <ContactUsPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'directory',
-        element: <DirectoryPage />
+        element: (
+          <RouteSuspense>
+            <DirectoryPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'news',
-        element: <NewsPage />
+        element: (
+          <RouteSuspense>
+            <NewsPage />
+          </RouteSuspense>
+        )
       },
       {
         path: '*',
-        element: <SurfaceStatusPage kind="not-found" surface="institutional" />
+        element: <LazySurfaceStatusPage kind="not-found" surface="institutional" />
       }
     ]
   }

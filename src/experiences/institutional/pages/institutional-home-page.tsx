@@ -226,8 +226,8 @@ function InstitutionalCarouselCard({
           <img
             alt={item.imageAlt ?? item.title}
             className="h-full w-full object-cover"
-            fetchPriority="high"
-            loading="eager"
+            fetchPriority="low"
+            loading="lazy"
             src={item.image}
           />
           <div className="institutional-home__carousel-image-overlay absolute inset-0" />
@@ -286,6 +286,80 @@ function LoopingInstitutionalCarouselCard({
   return <InstitutionalCarouselCard cardRef={cardRef} item={item} x={x} />;
 }
 
+function LazyAutoplayVideo({
+  src,
+  className,
+  ariaLabel,
+  ariaHidden,
+  poster,
+  onCanPlay,
+  onError,
+}: {
+  src: string;
+  className: string;
+  ariaLabel?: string;
+  ariaHidden?: boolean;
+  poster?: string;
+  onCanPlay?: () => void;
+  onError?: () => void;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [shouldLoad, setShouldLoad] = useState(
+    () => typeof window !== 'undefined' && !('IntersectionObserver' in window)
+  );
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node || shouldLoad) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        setShouldLoad(true);
+        observer.disconnect();
+      },
+      { rootMargin: '360px 0px' }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [shouldLoad]);
+
+  return (
+    <div ref={containerRef} className="h-full w-full">
+      {shouldLoad ? (
+        <video
+          autoPlay
+          aria-hidden={ariaHidden}
+          aria-label={ariaLabel}
+          className={className}
+          controls={false}
+          controlsList="nofullscreen nodownload noplaybackrate noremoteplayback"
+          disablePictureInPicture
+          disableRemotePlayback
+          loop
+          muted
+          playsInline
+          poster={poster}
+          preload="none"
+          tabIndex={-1}
+          onCanPlay={onCanPlay}
+          onError={onError}
+        >
+          <source src={src} type="video/mp4" />
+        </video>
+      ) : (
+        <div className={cn(className, 'bg-[linear-gradient(135deg,#203b87,#687fca)]')} />
+      )}
+    </div>
+  );
+}
+
 export function InstitutionalHomePage() {
   const shouldReduceMotion = useReducedMotion();
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
@@ -329,20 +403,15 @@ export function InstitutionalHomePage() {
   }, [activeHeroIndex, heroInteractionTick, shouldReduceMotion]);
 
   useEffect(() => {
-    homeHeroSlides.forEach((slide) => {
-      const image = new window.Image();
-      image.src = slide.image;
-    });
+    if (homeHeroSlides.length <= 1) {
+      return;
+    }
 
-    homeCarouselCards.forEach((item) => {
-      if (!item.image) {
-        return;
-      }
-
-      const image = new window.Image();
-      image.src = item.image;
-    });
-  }, []);
+    const nextHeroSlide =
+      homeHeroSlides[wrapIndex(activeHeroIndex + 1, homeHeroSlides.length)];
+    const image = new window.Image();
+    image.src = nextHeroSlide.image;
+  }, [activeHeroIndex]);
 
   useEffect(() => {
     const syncCarouselMeasurements = (): void => {
@@ -1076,22 +1145,11 @@ export function InstitutionalHomePage() {
 
             <InstitutionalCard className="institutional-home__event-card overflow-hidden border-white/70 bg-white/78 p-0 backdrop-blur-sm">
               <div className="institutional-home__event-shell relative min-h-56">
-                <video
-                  autoPlay
+                <LazyAutoplayVideo
                   aria-label="Video breve de un evento cristiano comunitario"
                   className="pointer-events-none h-full w-full select-none object-cover"
-                  controls={false}
-                  controlsList="nofullscreen nodownload noplaybackrate noremoteplayback"
-                  disablePictureInPicture
-                  disableRemotePlayback
-                  loop
-                  muted
-                  playsInline
-                  preload="metadata"
-                  tabIndex={-1}
-                >
-                  <source src={christianEventVideoPath} type="video/mp4" />
-                </video>
+                  src={christianEventVideoPath}
+                />
                 <div className="institutional-home__event-overlay absolute inset-0" />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-4 sm:p-5">
                   <div className="institutional-home__event-caption max-w-104 border border-white/30 px-4 py-3 backdrop-blur-md">
@@ -1189,23 +1247,14 @@ export function InstitutionalHomePage() {
             <div className="institutional-home__device-shell overflow-hidden rounded-4xl p-3">
               <div className="institutional-home__device-frame overflow-hidden">
                 {platformVideoReady ? (
-                  <video
-                    autoPlay
-                    aria-hidden="true"
+                  <LazyAutoplayVideo
+                    ariaHidden
                     className="institutional-home__device-media pointer-events-none w-full select-none object-cover"
-                    controlsList="nofullscreen nodownload noplaybackrate noremoteplayback"
-                    disablePictureInPicture
-                    loop
-                    muted
-                    playsInline
                     poster="/brand/asi-logo-effect.png"
-                    preload="metadata"
-                    tabIndex={-1}
+                    src={platformDemoVideoPath}
                     onCanPlay={() => setPlatformVideoReady(true)}
                     onError={() => setPlatformVideoReady(false)}
-                  >
-                    <source src={platformDemoVideoPath} type="video/mp4" />
-                  </video>
+                  />
                 ) : (
                   <div className="institutional-home__device-fallback px-5 py-6 text-white">
                     <img
