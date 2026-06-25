@@ -13,8 +13,6 @@ import {
   Building2,
   CalendarClock,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   FileText,
   Globe,
   MapPin,
@@ -31,6 +29,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { PageLoader, Spinner } from '@/components/ui/loader'
+import { Pagination } from '@/components/ui/pagination'
 import { Select } from '@/components/ui/select'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { listMyApplications } from '@/features/applications/lib/applications-api'
@@ -423,7 +422,17 @@ export function PublicJobBoard() {
                 </motion.li>
               ))}
             </motion.ul>
-            {totalPages > 1 ? <Pager page={safePage} totalPages={totalPages} onGo={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }} /> : null}
+            {totalPages > 1 ? (
+              <Pagination
+                className="mt-4 justify-center"
+                page={safePage}
+                totalPages={totalPages}
+                onPageChange={(nextPage) => {
+                  setPage(nextPage)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+              />
+            ) : null}
           </div>
 
           {/* Detalle */}
@@ -657,39 +666,5 @@ function JobDetailPanel({
         ) : null}
       </div>
     </article>
-  )
-}
-
-function Pager({ page, totalPages, onGo }: { page: number; totalPages: number; onGo: (page: number) => void }) {
-  const pages: Array<number | 'dots'> = []
-  for (let i = 0; i < totalPages; i++) {
-    if (i === 0 || i === totalPages - 1 || Math.abs(i - page) <= 1) pages.push(i)
-    else if (Math.abs(i - page) === 2) pages.push('dots')
-  }
-  const btn = 'inline-flex h-9 min-w-9 items-center justify-center rounded-xl border px-2.5 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)'
-  return (
-    <nav className="mt-4 flex items-center justify-center gap-1.5" aria-label="Paginación">
-      <button type="button" className={cn(btn, 'border-(--app-border) disabled:opacity-40')} onClick={() => onGo(page - 1)} disabled={page === 0} aria-label="Página anterior">
-        <ChevronLeft className="size-4" />
-      </button>
-      {pages.map((p, index) =>
-        p === 'dots' ? (
-          <span key={`dots-${index}`} className="px-1 text-(--app-text-subtle)">…</span>
-        ) : (
-          <button
-            key={p}
-            type="button"
-            onClick={() => onGo(p)}
-            aria-current={p === page ? 'page' : undefined}
-            className={cn(btn, p === page ? 'border-primary-600 bg-primary-600 font-semibold text-white' : 'border-(--app-border) text-(--app-text) hover:border-primary-200')}
-          >
-            {p + 1}
-          </button>
-        )
-      )}
-      <button type="button" className={cn(btn, 'border-(--app-border) disabled:opacity-40')} onClick={() => onGo(page + 1)} disabled={page === totalPages - 1} aria-label="Página siguiente">
-        <ChevronRight className="size-4" />
-      </button>
-    </nav>
   )
 }

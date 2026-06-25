@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
-import { Activity, CalendarClock, ChevronLeft, ChevronRight, ClipboardList, Search } from 'lucide-react'
+import { Activity, CalendarClock, ClipboardList, Search } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -10,6 +10,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { KebabMenu, KebabMenuItem } from '@/components/ui/kebab-menu'
+import { Pagination } from '@/components/ui/pagination'
 import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/loader'
 import { fetchPipelineBoard } from '@/features/pipeline/lib/pipeline-api'
@@ -114,7 +115,6 @@ export function WorkspaceApplicationsPage() {
   const safePage = Math.min(page, pageCount - 1)
   const pageStart = safePage * APPLICATIONS_PAGE_SIZE
   const pageRows = filteredRows.slice(pageStart, pageStart + APPLICATIONS_PAGE_SIZE)
-  const isLastPage = safePage >= pageCount - 1
 
   function resetToFirstPage() {
     setPage(0)
@@ -275,41 +275,7 @@ export function WorkspaceApplicationsPage() {
               {filteredRows.length === 1 ? 'aplicación' : 'aplicaciones'}
             </p>
             {pageCount > 1 ? (
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setPage((current) => Math.max(0, current - 1))}
-                  disabled={safePage === 0}
-                  className="flex size-8 items-center justify-center rounded-lg border border-(--app-border) text-(--app-text-muted) transition-colors hover:text-(--app-text) disabled:opacity-40"
-                  aria-label="Página anterior"
-                >
-                  <ChevronLeft className="size-4" />
-                </button>
-                {Array.from({ length: pageCount }).map((_, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => setPage(index)}
-                    className={cn(
-                      'flex size-8 items-center justify-center rounded-lg text-[0.8rem] font-medium transition-colors',
-                      index === safePage
-                        ? 'bg-primary-600 text-white'
-                        : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
-                    )}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
-                  disabled={isLastPage}
-                  className="flex size-8 items-center justify-center rounded-lg border border-(--app-border) text-(--app-text-muted) transition-colors hover:text-(--app-text) disabled:opacity-40"
-                  aria-label="Página siguiente"
-                >
-                  <ChevronRight className="size-4" />
-                </button>
-              </div>
+              <Pagination page={safePage} totalPages={pageCount} onPageChange={setPage} ariaLabel="Paginación de aplicaciones" />
             ) : null}
           </div>
         ) : null}

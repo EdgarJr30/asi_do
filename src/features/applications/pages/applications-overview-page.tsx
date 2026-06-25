@@ -2,12 +2,13 @@ import { useMemo, useState } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
-import { ArrowRight, CalendarClock, ChevronLeft, ChevronRight, FileText } from 'lucide-react'
+import { ArrowRight, CalendarClock, FileText } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Spinner } from '@/components/ui/loader'
+import { Pagination } from '@/components/ui/pagination'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -208,29 +209,7 @@ function PaginationFooter({
       <p className="text-[0.76rem] text-(--app-text-muted)">
         Mostrando {firstVisible}-{lastVisible} de {totalItems}
       </p>
-      <nav className="flex items-center gap-2" aria-label="Paginación de aplicaciones">
-        <button
-          type="button"
-          onClick={() => onGo(Math.max(0, page - 1))}
-          disabled={page === 0}
-          className="inline-flex size-9 items-center justify-center rounded-full border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition hover:border-primary-300 hover:text-primary-700 disabled:pointer-events-none disabled:opacity-45"
-          aria-label="Página anterior"
-        >
-          <ChevronLeft className="size-4" />
-        </button>
-        <span className="min-w-18 text-center text-[0.78rem] font-semibold text-(--app-text-muted)">
-          {page + 1} / {totalPages}
-        </span>
-        <button
-          type="button"
-          onClick={() => onGo(Math.min(totalPages - 1, page + 1))}
-          disabled={page >= totalPages - 1}
-          className="inline-flex size-9 items-center justify-center rounded-full border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition hover:border-primary-300 hover:text-primary-700 disabled:pointer-events-none disabled:opacity-45"
-          aria-label="Página siguiente"
-        >
-          <ChevronRight className="size-4" />
-        </button>
-      </nav>
+      <Pagination page={page} totalPages={totalPages} onPageChange={onGo} ariaLabel="Paginación de aplicaciones" />
     </div>
   )
 }

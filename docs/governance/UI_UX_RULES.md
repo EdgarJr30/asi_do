@@ -438,6 +438,7 @@ Apple-inspired UI rules:
 2. On mobile, filters belong in sheets or full-screen filter flows, not cramped inline rows.
 3. Pagination controls must be finger-friendly.
 4. Infinite scroll is not the default. Use it only where discovery meaningfully benefits and state recovery remains strong.
+5. Numbered pagination must use the shared `Pagination` primitive in `src/components/ui/pagination.tsx`; do not render every page number when totals can grow.
 
 ---
 
