@@ -396,11 +396,10 @@
    following its natural aspect ratio so the borders are never cropped. */
 .institutional-home__hero-frame--image-only {
   width: 100%;
-  /* 129.42vw = full-width height at the mobile poster ratio (1280/989). */
-  height: 129.42vw;
+  height: auto;
   min-height: 0;
   max-height: none;
-  aspect-ratio: auto;
+  aspect-ratio: 941 / 1672;
 }
 
 .institutional-home__hero-frame--image-only .institutional-home__image-backdrop {
@@ -426,7 +425,6 @@
 
 @media (min-width: 768px) {
   .institutional-home__hero-frame--image-only {
-    /* 50.00vw = full-width height at the desktop poster ratio (887/1774). */
-    height: 50vw;
+    aspect-ratio: 1774 / 887;
   }
 }
