@@ -80,7 +80,7 @@ export async function fetchWorkspaceDashboardMetrics(tenantId: string): Promise<
 
   const recentApplications: DashboardRecentApplication[] = [...applications]
     .sort((left, right) => new Date(right.submitted_at).getTime() - new Date(left.submitted_at).getTime())
-    .slice(0, 6)
+    .slice(0, 30)
     .map((application) => {
       const stage = application.current_stage_id ? stageById.get(application.current_stage_id) : null
       const ratings = application.application_ratings ?? []
@@ -131,7 +131,7 @@ export async function fetchWorkspaceDashboardMetrics(tenantId: string): Promise<
 
   const recentActivity = activity
     .sort((left, right) => new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime())
-    .slice(0, 8)
+    .slice(0, 30)
 
   return {
     stats: { openJobs, activeCandidates, interviews, offers },

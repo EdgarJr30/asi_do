@@ -1,8 +1,8 @@
-import { useMemo, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, BriefcaseBusiness, CalendarClock, Send, Settings, UsersRound } from 'lucide-react'
+import { ArrowRight, BriefcaseBusiness, CalendarClock, ChevronLeft, ChevronRight, Send, Settings, UsersRound } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -106,6 +106,22 @@ export function ResumenDashboardPage() {
   const maxFunnelCount = useMemo(
     () => (metrics ? Math.max(1, ...metrics.funnel.map((stage) => stage.count)) : 1),
     [metrics]
+  )
+
+  const RECENT_APPLICATIONS_PER_PAGE = 5
+  const recentApplications = metrics?.recentApplications ?? []
+  const applicationsPageCount = Math.max(1, Math.ceil(recentApplications.length / RECENT_APPLICATIONS_PER_PAGE))
+  const [applicationsPage, setApplicationsPage] = useState(0)
+
+  // Si cambian las aplicaciones (realtime) y la página actual queda fuera de
+  // rango, volvemos a una página válida.
+  useEffect(() => {
+    setApplicationsPage((current) => Math.min(current, applicationsPageCount - 1))
+  }, [applicationsPageCount])
+
+  const pagedApplications = recentApplications.slice(
+    applicationsPage * RECENT_APPLICATIONS_PER_PAGE,
+    applicationsPage * RECENT_APPLICATIONS_PER_PAGE + RECENT_APPLICATIONS_PER_PAGE
   )
 
   if (!tenantId) {
@@ -280,7 +296,7 @@ export function ResumenDashboardPage() {
               {metricsQuery.isLoading ? (
                 <LoadingRow label="Cargando actividad…" />
               ) : metrics && metrics.recentActivity.length > 0 ? (
-                <ul className="space-y-3.5">
+                <ul className="-mr-2 max-h-[19rem] space-y-3.5 overflow-y-auto pr-2">
                   {metrics.recentActivity.map((item) => (
                     <ActivityRow key={item.id} item={item} />
                   ))}
@@ -309,24 +325,53 @@ export function ResumenDashboardPage() {
           <CardContent>
             {metricsQuery.isLoading ? (
               <LoadingRow label="Cargando aplicaciones…" />
-            ) : metrics && metrics.recentApplications.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[34rem] border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-(--app-border) text-left text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle)">
-                      <th className="py-2.5 pr-3 font-semibold">Candidato</th>
-                      <th className="px-3 py-2.5 font-semibold">Posición</th>
-                      <th className="px-3 py-2.5 font-semibold">Etapa</th>
-                      <th className="px-3 py-2.5 font-semibold">Score</th>
-                      <th className="py-2.5 pl-3 text-right font-semibold">Aplicó</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {metrics.recentApplications.map((application) => (
-                      <ApplicationRow key={application.applicationId} application={application} />
-                    ))}
-                  </tbody>
-                </table>
+            ) : metrics && recentApplications.length > 0 ? (
+              <div className="space-y-3">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[34rem] border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-(--app-border) text-left text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle)">
+                        <th className="py-2.5 pr-3 font-semibold">Candidato</th>
+                        <th className="px-3 py-2.5 font-semibold">Posición</th>
+                        <th className="px-3 py-2.5 font-semibold">Etapa</th>
+                        <th className="px-3 py-2.5 font-semibold">Score</th>
+                        <th className="py-2.5 pl-3 text-right font-semibold">Aplicó</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pagedApplications.map((application) => (
+                        <ApplicationRow key={application.applicationId} application={application} />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {applicationsPageCount > 1 ? (
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <p className="text-xs text-(--app-text-subtle)">
+                      Página {applicationsPage + 1} de {applicationsPageCount}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        className="size-8 rounded-full p-0"
+                        disabled={applicationsPage === 0}
+                        onClick={() => setApplicationsPage((current) => Math.max(0, current - 1))}
+                        aria-label="Página anterior"
+                      >
+                        <ChevronLeft className="size-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="size-8 rounded-full p-0"
+                        disabled={applicationsPage >= applicationsPageCount - 1}
+                        onClick={() => setApplicationsPage((current) => Math.min(applicationsPageCount - 1, current + 1))}
+                        aria-label="Página siguiente"
+                      >
+                        <ChevronRight className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : (
               <EmptyState title="Sin aplicaciones" description="Aún no hay postulaciones recientes en tus vacantes." />
