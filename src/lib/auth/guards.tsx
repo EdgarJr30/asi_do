@@ -155,3 +155,24 @@ export function RequireAdminAccess({ children }: PropsWithChildren) {
 
   return children
 }
+
+export function RequirePlatformAdmin({ children }: PropsWithChildren) {
+  // Reservado para herramientas de super admin (arnés de estrés, tooling sensible).
+  // El flag isPlatformAdmin cubre platform_owner/platform_admin; el backend (Edge
+  // Function) impone además platform_owner como gate estricto del lado servidor.
+  const session = useAppSession()
+
+  if (session.isLoading) {
+    return <PageLoader fullScreen label="Validando acceso de plataforma" hint="Comprobando tu rol" />
+  }
+
+  if (!session.isAuthenticated) {
+    return <Navigate replace to="/auth/sign-in" />
+  }
+
+  if (!session.isPlatformAdmin) {
+    return <AdminShell fallbackContent={<SurfaceStatusPage kind="forbidden" surface="admin" />} />
+  }
+
+  return children
+}

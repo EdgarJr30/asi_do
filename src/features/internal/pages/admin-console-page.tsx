@@ -111,6 +111,24 @@ export function AdminConsolePage() {
         </CardContent>
       </Card>
 
+      {session.isPlatformAdmin ? (
+        <Card className="border-amber-300/60 bg-amber-50/40 dark:border-amber-900/40 dark:bg-amber-950/15">
+          <CardHeader>
+            <Badge variant="soft">Super admin</Badge>
+            <CardTitle>Arnés de estrés</CardTitle>
+            <CardDescription>
+              Genera datos sintéticos masivos y mide el comportamiento de la base (p50/p95/p99, throughput, error rate).
+              Solo entornos no productivos; nunca toca datos reales.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={() => void navigate(surfacePaths.admin.stressHarness)}>
+              Abrir arnés de estrés
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <FoundationSettingsForm />
 
       <NotificationCenter />

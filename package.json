@@ -22,6 +22,9 @@
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.ts",
     "test:e2e:realtime": "playwright test tests/e2e/realtime-job-board.spec.ts --project=desktop-webkit",
+    "harness": "node scripts/stress-harness.ts",
+    "harness:seed": "node scripts/stress-harness.ts --profile=baseline",
+    "harness:purge": "node scripts/stress-harness.ts --purge",
     "version:plan": "node scripts/release-plan.mjs",
     "version:apply": "changeset version && npm install --package-lock-only",
     "verify": "npm run lint && npm run typecheck && npm run test && npm run build"

@@ -34,7 +34,8 @@ import {
   RequireAnyPermission,
   RequireAuth,
   RequireCompletedBaseOnboarding,
-  RequirePermission
+  RequirePermission,
+  RequirePlatformAdmin
 } from '@/lib/auth/guards'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { SurfaceStatusPage } from '@/app/router/routes/surface-status-page'
@@ -44,6 +45,7 @@ import { CandidateShell } from '@/experiences/app/layouts/candidate-shell'
 import { EmployerShell } from '@/experiences/app/layouts/employer-shell'
 import { AppEntryRedirect } from '@/experiences/app/routes/app-entry-redirect'
 import { EmailPipelinePage } from '@/features/internal/pages/email-pipeline-page'
+import { StressHarnessPage } from '@/features/internal/pages/stress-harness-page'
 import { MembershipConsolePage } from '@/features/membership/pages/membership-console-page'
 import { MembershipPaymentsSettingsPage } from '@/features/membership/pages/membership-payments-settings-page'
 import { MembershipStatusPage } from '@/features/membership/pages/membership-status-page'
@@ -317,6 +319,14 @@ export const applicationRoutes: RouteObject[] = [
           <RequirePermission permission="email:read" surface="admin">
             <EmailPipelinePage />
           </RequirePermission>
+        )
+      },
+      {
+        path: 'stress-harness',
+        element: (
+          <RequirePlatformAdmin>
+            <StressHarnessPage />
+          </RequirePlatformAdmin>
         )
       },
       {

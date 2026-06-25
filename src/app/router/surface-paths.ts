@@ -79,6 +79,7 @@ export const surfacePaths = {
     correos: '/admin/correos',
     payments: '/admin/payments',
     donations: '/admin/donations',
+    stressHarness: '/admin/stress-harness',
     bootstrapOwner: '/admin/bootstrap-owner'
   }
 } as const

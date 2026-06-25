@@ -2834,6 +2834,83 @@ export type Database = {
           },
         ]
       }
+      stress_harness_runs: {
+        Row: {
+          concurrency: number | null
+          created_at: string
+          created_by_user_id: string | null
+          env_label: string | null
+          error_rate: number
+          id: string
+          logs: Json
+          plan: Json
+          profile: string | null
+          project_ref: string | null
+          report: Json
+          run_id: string
+          send_emails: boolean
+          suppressed_emails: number
+          throughput_per_sec: number
+          total_errors: number
+          total_ok: number
+          total_operations: number
+          total_timeouts: number
+          total_wall_clock_ms: number
+        }
+        Insert: {
+          concurrency?: number | null
+          created_at?: string
+          created_by_user_id?: string | null
+          env_label?: string | null
+          error_rate?: number
+          id?: string
+          logs?: Json
+          plan?: Json
+          profile?: string | null
+          project_ref?: string | null
+          report: Json
+          run_id: string
+          send_emails?: boolean
+          suppressed_emails?: number
+          throughput_per_sec?: number
+          total_errors?: number
+          total_ok?: number
+          total_operations?: number
+          total_timeouts?: number
+          total_wall_clock_ms?: number
+        }
+        Update: {
+          concurrency?: number | null
+          created_at?: string
+          created_by_user_id?: string | null
+          env_label?: string | null
+          error_rate?: number
+          id?: string
+          logs?: Json
+          plan?: Json
+          profile?: string | null
+          project_ref?: string | null
+          report?: Json
+          run_id?: string
+          send_emails?: boolean
+          suppressed_emails?: number
+          throughput_per_sec?: number
+          total_errors?: number
+          total_ok?: number
+          total_operations?: number
+          total_timeouts?: number
+          total_wall_clock_ms?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stress_harness_runs_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           code: string
