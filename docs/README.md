@@ -11,6 +11,7 @@ This folder contains the canonical Markdown documentation for the repository.
 - `product/PASTOR_REGIONAL_APPROVAL_FORMS.md`
 - `product/NOTIFICATION_IMPLEMENTATION_PLAN.md`
 - `product/COMMERCIAL_PLAN_MODEL.md`
+- `product/membership-pipeline-plan.md`
 
 ### `domain/`
 - `domain/BUSINESS_RULES.md`
@@ -21,7 +22,19 @@ This folder contains the canonical Markdown documentation for the repository.
 ### `architecture/`
 - `architecture/TECHNICAL_ARCHITECTURE.md`
 - `architecture/SOFTWARE_ARCHITECTURE.md`
+- `architecture/REALTIME.md`
+- `architecture/arquitectura-db.md` (esquema de BD; `.html` = versión renderizada)
+- `architecture/plataforma-flujograma.md` (flujograma de la plataforma; `.html` = versión renderizada)
 - `adr/README.md`
+
+### `design/`
+- `design/DESIGN.md`
+- `design/DESIGN_INSTITUTIONAL.md`
+
+### `pasarelaDePagos/`
+- `pasarelaDePagos/flujo-azul.md`
+- `pasarelaDePagos/despliegue-azul.md`
+- `pasarelaDePagos/pruebas-locales-azul.md`
 
 ### `governance/`
 - `governance/INSTITUTIONAL_UI_RULES.md`
