@@ -152,7 +152,7 @@ export function AdminDonationAmountsPage() {
           </CardHeader>
           <CardContent>
             {optionsQuery.isLoading ? (
-              <PageLoader label="Cargando montos" />
+              <PageLoader inline label="Cargando montos" />
             ) : options.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-(--app-border) px-4 py-10 text-center text-sm text-(--app-text-muted)">
                 Aún no hay montos configurados. Agrega el primero arriba.
@@ -191,7 +191,7 @@ export function AdminDonationAmountsPage() {
           </CardHeader>
           <CardContent>
             {donationsQuery.isLoading ? (
-              <PageLoader label="Cargando donaciones" />
+              <PageLoader inline label="Cargando donaciones" />
             ) : donations.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-(--app-border) px-4 py-10 text-center text-sm text-(--app-text-muted)">
                 Aún no se han registrado donaciones.

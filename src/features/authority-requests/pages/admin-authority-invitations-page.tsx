@@ -198,7 +198,7 @@ export function AdminAuthorityInvitationsPage() {
           </CardHeader>
           <CardContent>
             {invitationsQuery.isLoading ? (
-              <PageLoader label="Cargando invitaciones" />
+              <PageLoader inline label="Cargando invitaciones" />
             ) : invitations.length === 0 ? (
               <div className="rounded-3xl border border-dashed border-(--app-border) px-4 py-10 text-center text-sm text-(--app-text-muted)">
                 Aún no has generado invitaciones de autorización.

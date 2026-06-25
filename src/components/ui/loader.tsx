@@ -78,24 +78,32 @@ export function PageLoader({
   label = 'Preparando tu espacio',
   hint,
   className,
-  fullScreen = false
+  fullScreen = false,
+  inline = false
 }: {
   label?: string
   hint?: string
   className?: string
+  /** Ocupa todo el viewport (`min-h-dvh`). Para pantallas de bloqueo/guards. */
   fullScreen?: boolean
+  /** Banda compacta para usos dentro de una sección/tarjeta con UI alrededor. */
+  inline?: boolean
 }) {
   const shouldReduceMotion = useReducedMotion()
+
+  // Altura del contenedor según el contexto:
+  // - fullScreen → viewport completo
+  // - inline → banda compacta dentro de una tarjeta/sección
+  // - default (página) → llena el alto visible del contenido (viewport menos header + padding
+  //   del shell ≈ 6.5rem arriba). Restar 12rem (≈ 2× ese offset) deja el loader centrado
+  //   verticalmente en el área de contenido sin generar scroll.
+  const minHeight = fullScreen ? 'min-h-dvh' : inline ? 'min-h-[clamp(16rem,42vh,28rem)]' : 'min-h-[calc(100dvh-12rem)]'
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className={cn(
-        'flex w-full flex-col items-center justify-center gap-6 px-6 text-center',
-        fullScreen ? 'min-h-dvh' : 'min-h-[clamp(16rem,42vh,28rem)]',
-        className
-      )}
+      className={cn('flex w-full flex-col items-center justify-center gap-6 px-6 text-center', minHeight, className)}
     >
       <div className="relative flex size-24 items-center justify-center">
         {/* Halo pulsante */}

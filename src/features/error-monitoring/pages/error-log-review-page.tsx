@@ -151,7 +151,7 @@ export function ErrorLogReviewPage() {
       </Card>
 
       {errorLogsQuery.isLoading ? (
-        <PageLoader label="Cargando errores registrados" hint="Recuperando el historial de monitoreo" />
+        <PageLoader inline label="Cargando errores registrados" hint="Recuperando el historial de monitoreo" />
       ) : filteredLogs.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-sm text-zinc-500">

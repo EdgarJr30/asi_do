@@ -372,7 +372,7 @@ export function MembershipStatusPage() {
       {statusQuery.isLoading ? (
         <Card>
           <CardContent className="mt-0">
-            <PageLoader label="Cargando tu estado" hint="Revisando tu solicitud y pago" />
+            <PageLoader inline label="Cargando tu estado" hint="Revisando tu solicitud y pago" />
           </CardContent>
         </Card>
       ) : statusQuery.error ? (
