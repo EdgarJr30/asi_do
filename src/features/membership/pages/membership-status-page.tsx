@@ -5,6 +5,7 @@ import {
   AlertCircle,
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
   Circle,
   Clock,
   CreditCard,
@@ -26,10 +27,8 @@ import { PageLoader } from '@/components/ui/loader'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { payMembershipWithAzul, type AzulPaymentIntent } from '@/features/membership/lib/azul-api'
-import { merchantCompliance } from '@/experiences/institutional/content/payment-compliance-content'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { printReceipt, receiptPlainText, shareReceipt, type ReceiptLine } from '@/shared/ui/receipt'
-import { PaymentBrandStrip } from '@/shared/ui/payment-brand-strip'
 import {
   fetchMyMembershipStatus,
   getCategoryDue,
@@ -85,13 +84,20 @@ function formatRemainingMembership(value: string | null | undefined, now = new D
     return 'Vencida'
   }
 
-  const totalMonths = Math.max(
-    0,
-    (expiry.getFullYear() - now.getFullYear()) * 12 + expiry.getMonth() - now.getMonth() -
-      (expiry.getDate() < now.getDate() ? 1 : 0)
-  )
-  const years = Math.floor(totalMonths / 12)
-  const months = totalMonths % 12
+  let years = expiry.getFullYear() - now.getFullYear()
+  let months = expiry.getMonth() - now.getMonth()
+  let days = expiry.getDate() - now.getDate()
+
+  if (days < 0) {
+    months -= 1
+    // Días del mes anterior a la fecha de vencimiento.
+    days += new Date(expiry.getFullYear(), expiry.getMonth(), 0).getDate()
+  }
+  if (months < 0) {
+    years -= 1
+    months += 12
+  }
+
   const parts: string[] = []
 
   if (years > 0) {
@@ -100,7 +106,10 @@ function formatRemainingMembership(value: string | null | undefined, now = new D
   if (months > 0) {
     parts.push(`${months} ${months === 1 ? 'mes' : 'meses'}`)
   }
-  return parts.length > 0 ? parts.join(' y ') : 'Menos de 1 mes'
+  if (days > 0) {
+    parts.push(`${days} ${days === 1 ? 'día' : 'días'}`)
+  }
+  return parts.length > 0 ? parts.join(' y ') : 'Menos de 1 día'
 }
 
 const paymentStatusLabels: Record<string, string> = {
@@ -515,13 +524,18 @@ export function MembershipStatusPage() {
 
                 {activeTab === 'receipts' ? (
                   bundle.verifiedPayments.length > 0 ? (
-                    <div className="space-y-4">
-                      {bundle.verifiedPayments.map((paymentItem) => (
+                    <div className="space-y-3">
+                      <p className="text-xs text-(--app-text-muted)">
+                        {bundle.verifiedPayments.length}{' '}
+                        {bundle.verifiedPayments.length === 1 ? 'comprobante' : 'comprobantes'}. Toca uno para ver el detalle.
+                      </p>
+                      {bundle.verifiedPayments.map((paymentItem, index) => (
                         <MembershipReceiptCard
                           key={paymentItem.id}
                           payment={paymentItem}
                           currency={bundle.settings?.currency ?? paymentItem.currency ?? 'DOP'}
                           categoryLabel={due?.label ?? bundle.application?.category_name ?? null}
+                          defaultOpen={index === 0}
                         />
                       ))}
                     </div>
@@ -830,12 +844,7 @@ function CheckoutComplianceBox({
 }) {
   return (
     <div className={cn('rounded-2xl border border-(--app-border) bg-(--app-surface) p-3', compact ? 'mt-3' : 'mt-3')}>
-      <PaymentBrandStrip itemClassName="h-9 min-w-12" show3DSLabel={!compact} />
-      <p className="mt-2 text-xs leading-5 text-(--app-text-muted)">
-        Comercio: {merchantCompliance.businessName}. Moneda: {merchantCompliance.currency}. Soporte:{' '}
-        {merchantCompliance.email} · {merchantCompliance.phone}.
-      </p>
-      <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs leading-5 text-(--app-text-muted)">
+      <label className="flex cursor-pointer items-start gap-2 text-xs leading-5 text-(--app-text-muted)">
         <input
           checked={accepted}
           className="mt-1 size-4 shrink-0 accent-primary-600"
@@ -882,27 +891,45 @@ function buildReceiptLines(payment: MembershipPayment, currency: string, categor
 function MembershipReceiptCard({
   payment,
   currency,
-  categoryLabel
+  categoryLabel,
+  defaultOpen = false
 }: {
   payment: MembershipPayment
   currency: string
   categoryLabel: string | null
+  defaultOpen?: boolean
 }) {
   const lines = buildReceiptLines(payment, currency, categoryLabel)
   const kindLabel = payment.intent === 'renewal' ? 'Renovación' : 'Membresía inicial'
+  const amountLabel = formatMoney(Number(payment.amount ?? 0), currency)
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Comprobante · {kindLabel}</CardTitle>
-        <CardDescription>
+    <details
+      className="group rounded-panel border border-(--app-border) bg-(--app-surface) transition-colors open:bg-(--app-surface-elevated)"
+      open={defaultOpen}
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-3 p-4 marker:hidden">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/12 dark:text-emerald-300">
+          <FileText className="size-4.5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-(--app-text)">Comprobante · {kindLabel}</p>
+          <p className="mt-0.5 truncate text-xs text-(--app-text-muted)">
+            {formatDate(payment.verified_at)} · {amountLabel}
+          </p>
+        </div>
+        <ChevronDown className="size-4 shrink-0 text-(--app-text-subtle) transition-transform group-open:rotate-180" />
+      </summary>
+
+      <div className="border-t border-(--app-border) px-4 pb-4 pt-3">
+        <p className="mb-3 text-xs leading-5 text-(--app-text-muted)">
           Pago confirmado el {formatDate(payment.verified_at)}. Descárgalo o compártelo cuando lo necesites.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-1">
-        {lines.map(([key, value]) => (
-          <StatusSummaryRow key={key} label={key} value={value} />
-        ))}
+        </p>
+        <div className="space-y-1">
+          {lines.map(([key, value]) => (
+            <StatusSummaryRow key={key} label={key} value={value} />
+          ))}
+        </div>
         <div className="flex gap-2 pt-3">
           <Button variant="outline" className="h-9 flex-1" onClick={() => printReceipt(RECEIPT_TITLE, lines)}>
             <Download className="size-4" /> Descargar
@@ -915,8 +942,8 @@ function MembershipReceiptCard({
             <Share2 className="size-4" /> Compartir
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </details>
   )
 }
 
