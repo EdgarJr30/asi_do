@@ -1,8 +1,8 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
-import { Activity, FileText, MoreVertical, Star, UserPlus } from 'lucide-react'
+import { Activity, ChevronLeft, ChevronRight, FileText, MoreVertical, Star, UserPlus } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -50,6 +50,8 @@ const KIND_META: Record<ActivityKind, { icon: LucideIcon; label: string; badge: 
   }
 }
 
+const PAGE_SIZE = 10
+
 const FILTER_TABS: { value: ActivityFilter; label: string }[] = [
   { value: 'all', label: 'Todo' },
   { value: 'application', label: 'Aplicaciones' },
@@ -63,6 +65,7 @@ export function WorkspaceActivityPage() {
   const tenantId = session.activeTenantId
   const [filter, setFilter] = useState<ActivityFilter>('all')
   const [sort, setSort] = useState<'recent' | 'oldest'>('recent')
+  const [page, setPage] = useState(1)
 
   const dashboardKey = ['workspace', 'dashboard', tenantId] as const
   const metricsQuery = useQuery({
@@ -103,6 +106,23 @@ export function WorkspaceActivityPage() {
       return sort === 'recent' ? diff : -diff
     })
   }, [activity, filter, sort])
+
+  const totalPages = Math.max(1, Math.ceil(visibleActivity.length / PAGE_SIZE))
+
+  // El filtro/orden o nuevos eventos en vivo pueden dejar la página fuera de rango.
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages))
+  }, [totalPages])
+
+  // Volver a la primera página cuando cambian los criterios de visualización.
+  useEffect(() => {
+    setPage(1)
+  }, [filter, sort])
+
+  const pagedActivity = useMemo(
+    () => visibleActivity.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [visibleActivity, page]
+  )
 
   if (!tenantId) {
     return (
@@ -196,11 +216,38 @@ export function WorkspaceActivityPage() {
                 <Spinner size="sm" /> Cargando actividad…
               </div>
             ) : visibleActivity.length > 0 ? (
-              <ol>
-                {visibleActivity.map((item, index) => (
-                  <ActivityRow key={item.id} item={item} isLast={index === visibleActivity.length - 1} />
-                ))}
-              </ol>
+              <>
+                <ol>
+                  {pagedActivity.map((item, index) => (
+                    <ActivityRow key={item.id} item={item} isLast={index === pagedActivity.length - 1} />
+                  ))}
+                </ol>
+                {totalPages > 1 ? (
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-(--app-border) pt-4">
+                    <p className="text-[0.78rem] text-(--app-text-muted)">
+                      Página {page} de {totalPages}
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setPage((current) => Math.max(1, current - 1))}
+                        disabled={page <= 1}
+                        className="inline-flex h-8 items-center gap-1 rounded-full border border-(--app-border) px-3 text-[0.8rem] font-medium text-(--app-text-muted) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <ChevronLeft className="size-4" /> Anterior
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                        disabled={page >= totalPages}
+                        className="inline-flex h-8 items-center gap-1 rounded-full border border-(--app-border) px-3 text-[0.8rem] font-medium text-(--app-text-muted) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Siguiente <ChevronRight className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </>
             ) : (
               <EmptyState
                 title="Sin actividad"
