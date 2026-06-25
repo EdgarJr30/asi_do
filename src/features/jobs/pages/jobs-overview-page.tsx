@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Input } from '@/components/ui/input'
 import { KebabMenu, KebabMenuItem } from '@/components/ui/kebab-menu'
+import { PageLoader } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
 import { SideSheet } from '@/components/ui/side-sheet'
 import { Textarea } from '@/components/ui/textarea'
@@ -606,6 +607,11 @@ function WorkspaceJobsManager() {
     }
   })
   const applicationCounts = jobApplicationsQuery.data ?? new Map<string, number>()
+  const isInitialWorkspaceJobsLoading =
+    isWorkspaceContext &&
+    canManageJobs &&
+    Boolean(session.activeTenantId) &&
+    (workspaceQuery.isLoading || tenantJobsQuery.isLoading || jobApplicationsQuery.isLoading)
 
   const tenantJobs = useMemo(() => tenantJobsQuery.data ?? [], [tenantJobsQuery.data])
   const activeJobsCount = tenantJobs.filter((job) => job.status === 'published').length
@@ -689,6 +695,15 @@ function WorkspaceJobsManager() {
       })
     }
   })
+
+  if (isInitialWorkspaceJobsLoading) {
+    return (
+      <PageLoader
+        label="Cargando vacantes"
+        hint="Estamos preparando las vacantes, postulaciones y datos de tu empresa"
+      />
+    )
+  }
 
   return (
     <motion.div
