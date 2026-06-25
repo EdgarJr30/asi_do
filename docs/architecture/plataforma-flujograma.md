@@ -5,10 +5,15 @@
 > registro hasta el cierre de sesión.
 >
 > Los diagramas están en **Mermaid** (se renderizan en GitHub, VS Code con extensión Mermaid, y la
-> mayoría de visores de Markdown). Generado el 2026-06-22 a partir del código real.
+> mayoría de visores de Markdown). Generado el 2026-06-22 y actualizado el 2026-06-25 a partir del
+> código real (incluye **pasarela de pago AZUL**, **renovación multi-año**, **notificaciones Fase 5**
+> y **donaciones**).
 >
 > 🗂️ **Validar arquitectura:** cada sección enlaza a la estructura real de sus tablas en
-> **[Arquitectura de base de datos →](arquitectura-db.md)** (campos, tipos, FKs de las 52 tablas).
+> **[Arquitectura de base de datos →](arquitectura-db.md)** (campos, tipos, FKs de las 54 tablas).
+>
+> 💳 **Detalle de la pasarela de pago:** el flujo HMAC, callback y conciliación viven en
+> **[Flujograma de la pasarela AZUL →](../pasarelaDePagos/flujo-azul.md)**.
 
 ---
 
@@ -21,6 +26,7 @@
 5. [Auth, onboarding y redirección de entrada](#5-auth-onboarding-y-redirección-de-entrada)
 6. [Gating del ATS (acceso a la plataforma)](#6-gating-del-ats)
 7. [Pipeline de membresía (carril principal)](#7-pipeline-de-membresía)
+   - [7.1 Pago con tarjeta — pasarela AZUL](#71-pago-con-tarjeta--pasarela-azul)
 8. [Flujo del MIEMBRO (panel de progreso)](#8-flujo-del-miembro)
 9. [Flujo del PASTOR](#9-flujo-del-pastor)
 10. [Flujo del ADMIN](#10-flujo-del-admin)
@@ -29,6 +35,7 @@
 13. [Máquinas de estado (todas)](#13-máquinas-de-estado)
 14. [Navegación por rol (qué ve cada quién)](#14-navegación-por-rol)
 15. [Matriz de permisos y RPCs](#15-matriz-de-permisos-y-rpcs)
+16. [Donaciones y superficies de compliance de pago](#16-donaciones-y-superficies-de-compliance-de-pago)
 
 ---
 
@@ -43,6 +50,8 @@ flowchart TB
         INST["Institucional /<br/>(home, membresía, proyectos, elegibilidad)"]
         STORE["Storefront /platform<br/>(producto + job board)"]
         AUTH["Auth /auth<br/>(sign-in, sign-up, confirm)"]
+        DONATE["Donaciones /donate<br/>(pago con tarjeta AZUL)"]
+        LEGAL["Compliance de pago<br/>/terms · /privacy · /refunds-cancellations ·<br/>/delivery-policy · /payment-security · /payment-receipt-model"]
     end
 
     subgraph AUTHED["🔒 Autenticadas"]
@@ -54,6 +63,8 @@ flowchart TB
     end
 
     INST -->|"Iniciar sesión"| AUTH
+    INST -->|"Donar"| DONATE
+    INST -.->|"Footer legal / checkout"| LEGAL
     STORE -->|"Crear cuenta"| AUTH
     AUTH -->|"login OK"| ENTRY
     ENTRY -->|"sin onboarding"| CAND
@@ -191,8 +202,8 @@ flowchart TD
 
     GATE -->|"no (cuenta pendiente)"| MPANEL["Panel de membresía<br/>/account/membership"]
     MPANEL --> APPLY["Enviar solicitud<br/>(form 6 pasos + iglesia)"]
-    APPLY --> PAY["Pagar + subir comprobante"]
-    PAY --> WAIT["Esperar revisión + activación"]
+    APPLY --> PAY["Pagar con tarjeta<br/>(pasarela AZUL · 1-5 años)"]
+    PAY --> WAIT["Esperar revisión pastoral + activación admin"]
     WAIT -->|"admin activa"| GATE
 
     GATE -->|"sí (activo)"| HOME{"¿Rol?"}
@@ -260,7 +271,9 @@ stateDiagram-v2
     Activo: status=active, approval=approved,<br/>asi_membership=active,<br/>subscription=active, +1 año
     Activo --> ATS: hasActiveAsiAccess = true
     ATS: Acceso a /candidate/applications,<br/>/workspace/*
+    Activo --> Activo: renovación con tarjeta (AZUL extiende +N años)
     Activo --> GracePeriod: vence membership_expires_at
+    GracePeriod --> Activo: renovación con tarjeta
     GracePeriod --> Expirado: sin renovación
     Expirado --> Pendiente: requiere re-activación
     note right of Pendiente
@@ -278,38 +291,44 @@ stateDiagram-v2
 
 ## 7. Pipeline de membresía
 
-El carril central. **Separación de funciones**: quien solicita ≠ quien aprueba ≠ quien verifica el
-pago ≠ quien activa.
+El carril central. **Separación de funciones**: quien solicita ≠ quien aprueba ≠ quien activa. El
+pago de la membresía se cobra **con tarjeta** a través de la pasarela **AZUL** (auto-verificado por
+callback firmado); la verificación manual de comprobante queda como **vía de respaldo** (pastor/admin
+registran un pago offline y un admin lo marca `verified`).
 
 ```mermaid
 sequenceDiagram
     actor M as 🧑 Miembro
     actor P as ⛪ Pastor
     actor A as 🛡️ Admin
+    participant SVC as 💳 azul-payments
     participant DB as BD + RPCs (security definer)
 
     M->>DB: 1. submitInstitutionalMembershipApplication<br/>(categoría + church_id)
-    DB->>DB: Trigger auto-ruteo:<br/>pastor_user_for_church(church_id)<br/>→ assigned_pastor_user_id / assigned_queue
+    DB->>DB: Trigger auto-ruteo: pastor_user_for_church(church_id)<br/>+ notifica pastor/admins (Fase 5)
     Note over DB: status = submitted
 
-    M->>DB: 2. submitMembershipPaymentReceipt<br/>(sube comprobante al bucket privado)
-    Note over DB: payment.status = submitted
+    M->>SVC: 2. Pagar con tarjeta (intent=initial, 1-5 años)
+    SVC->>DB: azul_begin_membership_payment → payment.status='initiated'
+    Note over SVC,DB: AZUL Payment Page · callback firmado (HMAC) →<br/>azul_settle_membership_payment(approved)
+    DB->>DB: payment.status=verified · notifica miembro + admins
+    Note over DB: 🔗 detalle en ../pasarelaDePagos/flujo-azul.md
 
     alt Hay pastor con scope
         P->>DB: 3a. review_membership_application(approved)<br/>(autoriza por user_authority_scope)
     else Sin pastor → cola admin
         A->>DB: 3b. review_membership_application(approved)
     end
-    Note over DB: status=approved, pastoral_reference=endorsed<br/>audit: membership_application.reviewed
+    Note over DB: status=approved, pastoral_reference=endorsed<br/>notifica miembro · audit: membership_application.reviewed
 
-    A->>DB: 4. verify_membership_payment(verified)<br/>(SOLO admin)
-    Note over DB: payment.status=verified<br/>audit: membership_payment.verified
-
-    A->>DB: 5. activate_member()<br/>(exige approved + verified)
-    DB->>DB: flip flags usuario (+1 año)
-    Note over DB: ATS ON · audit: member.activated
-    DB-->>M: 6. (Fase 5) notificación de bienvenida
+    A->>DB: 4. activate_member()<br/>(exige approved + pago verified)
+    DB->>DB: flip flags usuario (+N años de vigencia)
+    Note over DB: ATS ON · notifica bienvenida · audit: member.activated
 ```
+
+> **Renovación (miembro ya activo):** no requiere admin. Un pago `intent=renewal` aprobado por AZUL
+> ejecuta `azul_settle_membership_payment`, que **extiende `membership_expires_at`** automáticamente
+> y notifica al miembro y a los admins. Ver §6 y §7.1.
 
 **Variantes / loops:**
 
@@ -321,24 +340,56 @@ flowchart LR
     REV -->|"rechazar"| REJ["rejected"]
     NMI -->|"respond_membership_application<br/>(miembro responde)"| UR["under_review"]
     UR --> REV
-    APP --> VPAY{"Pago<br/>verify_membership_payment"}
-    VPAY -->|"verified"| ACT{"activate_member"}
-    VPAY -->|"rejected"| RESUB["Miembro re-sube comprobante"]
-    RESUB --> VPAY
+    APP --> PAID{"Pago verificado?"}
+    PAID -->|"tarjeta AZUL<br/>(initiated→verified)"| ACT{"activate_member"}
+    PAID -->|"respaldo: comprobante<br/>verify_membership_payment"| ACT
+    PAID -->|"failed / declinado"| RETRY["Miembro reintenta el pago"]
+    RETRY --> PAID
     ACT -->|"approved + verified"| ON["✅ Cuenta activa (ATS ON)"]
 ```
 
 🗂️ **Estructura de tablas:** [`institutional_membership_applications`](arquitectura-db.md#institutional_membership_applications) · [`membership_payments`](arquitectura-db.md#membership_payments) · [`user_authority_scopes`](arquitectura-db.md#user_authority_scopes) · [`churches`](arquitectura-db.md#churches) · [`audit_logs`](arquitectura-db.md#audit_logs)
 
+### 7.1 Pago con tarjeta — pasarela AZUL
+
+El cobro con tarjeta vive en el microservicio `services/azul-payments` (la `AuthKey` nunca toca el
+browser ni la BD). El miembro elige **1 a 5 años**; la cuota se calcula server-side desde
+`membership_payment_settings`.
+
+```mermaid
+flowchart LR
+    PAY["Panel: Pagar con tarjeta<br/>(acepta términos + años)"] --> BEGIN["POST /payments/azul/create<br/>(Bearer JWT)"]
+    BEGIN --> RPC1["azul_begin_membership_payment<br/>status='initiated' · order_number"]
+    RPC1 --> FORM["Microservicio firma AuthHash<br/>(HMAC-SHA512)"]
+    FORM --> AZUL["Auto-POST a AZUL Payment Page<br/>(navegación full-page)"]
+    AZUL --> CB["GET /payments/azul/callback?outcome=…&AuthHash=…"]
+    CB --> VERIF{"AuthHash válido +<br/>IsoCode=00 + monto OK?"}
+    VERIF -->|"sí"| SETTLE["azul_settle_membership_payment(approved)<br/>status='verified' · notifica"]
+    VERIF -->|"no"| FAIL["status='failed'<br/>(idempotente, no toca pagos ya resueltos)"]
+    SETTLE -->|"initial"| ADMINACT["Admin activa la cuenta"]
+    SETTLE -->|"renewal"| EXT["Extiende membership_expires_at +N años"]
+    FAIL --> RETRY2["Miembro reintenta desde el panel"]
+```
+
+> Garantías: verificación del **AuthHash de respuesta** (anti-falsificación de "Approved"),
+> **verificación de monto** (anti-tamper), **idempotencia** (solo actúa sobre `initiated`) y **no se
+> almacenan datos de tarjeta**. Conciliación server-to-server por cron para pagos `initiated`
+> colgados. Detalle completo en **[flujo-azul.md](../pasarelaDePagos/flujo-azul.md)**.
+
+🗂️ **Estructura de tablas:** [`membership_payments`](arquitectura-db.md#membership_payments) (campos AZUL: `order_number`, `intent`, `term_months`, `period_start/end`, `authorization_code`, `azul_rrn`) · [`membership_payment_settings`](arquitectura-db.md#membership_payment_settings) (`azul_enabled`, `azul_environment`, `azul_currency_code`)
+
 ---
 
 ## 8. Flujo del MIEMBRO
 
-Panel de progreso guiado (`/account/membership`) con 4 pasos en vivo.
+Panel guiado `/account/membership` ("Tu membresía") con **3 tabs** (Resumen · Ruta · Comprobantes) y
+**4 pasos en vivo** (Solicitud → Pago → Aprobación → Activación) que se actualizan por Supabase
+Realtime.
 
 ```mermaid
 flowchart TD
-    LAND["Llega a /account/membership<br/>(redirigido por gating)"] --> STEPS["Panel de 4 pasos"]
+    LAND["/account/membership · 'Tu membresía'<br/>(redirigido por gating, o ya activo)"] --> TABS["Tabs: Resumen · Ruta · Comprobantes"]
+    TABS --> STEPS["Ruta: 4 pasos en vivo"]
     STEPS --> S1["1. Solicitud"]
     STEPS --> S2["2. Pago"]
     STEPS --> S3["3. Aprobación"]
@@ -346,23 +397,32 @@ flowchart TD
 
     S1 -->|"Iniciar"| ELG["/eligibility (categoría)"]
     ELG --> FORM["Formulario 6 pasos<br/>(contacto, categoría, evangelismo,<br/>referencia+iglesia, cuotas, compromiso)"]
-    FORM -->|"Enviar"| OKSUB["Solicitud creada<br/>→ vuelve al panel"]
+    FORM -->|"Enviar"| OKSUB["Solicitud creada → vuelve al panel"]
 
-    S2 -->|"solicitud lista"| TRANSF["Ver datos de transferencia + cuota"]
-    TRANSF --> UPL["Subir comprobante"]
-    UPL --> VIEW["Ver/descargar comprobante (URL firmada)"]
+    S2 -->|"solicitud lista"| PAYCARD["Pagar con tarjeta (AZUL)<br/>elige 1-5 años + acepta términos"]
+    PAYCARD --> RES{"Retorno de AZUL"}
+    RES -->|"approved"| OKPAY["Pago verificado<br/>(realtime refresca el panel)"]
+    RES -->|"declined / cancelled / error"| RETRY["Reintentar pago"]
+    RETRY -.-> PAYCARD
 
     S3 -->|"needs_more_info"| NOTE["Ver nota del pastor + responder<br/>→ reenviar a revisión"]
-
     S4 -->|"activado"| ENTER["Botón: Entrar a la plataforma"]
 
+    TABS --> RCPT["Comprobantes: historial de pagos verificados<br/>(recibo descargable / compartible)"]
+    LAND --> ACTIVE{"¿Miembro activo?"}
+    ACTIVE -->|"sí"| RENEW["Renovar 1-5 años<br/>(extiende vigencia, sin admin)"]
+
     OKSUB -.-> S2
-    UPL -.-> S3
+    OKPAY -.-> S3
     NOTE -.-> S3
 ```
 
-Estados que ve el miembro por paso: `Enviada / En revisión / Falta información / Aprobada / Rechazada`
-(solicitud) y `Comprobante recibido / Pago verificado / Comprobante rechazado` (pago).
+Estados que ve el miembro: solicitud → `Enviada / En revisión / Falta información / Aprobada /
+Rechazada`; pago → `Procesando pago (initiated) / Verificado / Pago rechazado (failed) / Declinado /
+Cancelado / Error de validación` (más `En verificación` para el respaldo de comprobante manual).
+
+> El pago manual con comprobante **ya no se ofrece al miembro**: el panel solo expone el pago con
+> tarjeta AZUL. La carga de comprobante offline persiste como acción de **pastor/admin** (§9, §10).
 
 🗂️ **Estructura de tablas:** [`institutional_membership_applications`](arquitectura-db.md#institutional_membership_applications) · [`membership_payments`](arquitectura-db.md#membership_payments) · [`membership_payment_settings`](arquitectura-db.md#membership_payment_settings)
 
@@ -412,14 +472,15 @@ flowchart TB
     ADMIN["Admin (platform_owner/platform_admin)"] --> OVERVIEW["/admin (overview)"]
     ADMIN --> APPROV["/admin/approvals<br/>(recruiter + pastor + regional authority)"]
     ADMIN --> MEMBCON["/admin/membership<br/>(consola de membresía)"]
-    ADMIN --> PAYSET["/admin/payments<br/>(datos bancarios + cuotas)"]
+    ADMIN --> PAYSET["/admin/payments<br/>(cuotas + datos bancarios +<br/>config AZUL: enabled/env/moneda)"]
+    ADMIN --> DON["/admin/donations<br/>(donaciones AZUL + montos sugeridos)"]
     ADMIN --> PLAT["/admin/platform (ops)"]
     ADMIN --> MOD["/admin/moderation"]
     ADMIN --> ERR["/admin/errors (audit/errores)"]
 
     subgraph CONSOLE["Consola de membresía — por solicitud"]
         MEMBCON --> C1["Revisar solicitud<br/>(approve / needs-info / reject)"]
-        MEMBCON --> C2["Verificar / rechazar pago"]
+        MEMBCON --> C2["Verificar / rechazar pago<br/>(respaldo: comprobante offline;<br/>el pago con tarjeta se verifica solo)"]
         MEMBCON --> C3["Ver comprobante (URL firmada)"]
         MEMBCON --> C4{"Activar cuenta"}
         C4 -->|"habilitado si:<br/>approved + verified"| ACTV["activate_member<br/>→ ATS ON"]
@@ -523,11 +584,15 @@ stateDiagram-v2
 ### Pago de membresía (`membership_payment_status`)
 ```mermaid
 stateDiagram-v2
-    [*] --> submitted: miembro/pastor sube comprobante
+    [*] --> initiated: tarjeta · azul_begin_membership_payment
+    [*] --> submitted: respaldo · comprobante offline (pastor/admin)
+    initiated --> verified: callback AZUL aprobado (azul_settle)
+    initiated --> failed: declinado / cancelado / cron
+    failed --> initiated: el miembro reintenta
     submitted --> verified: admin (verify_membership_payment)
     submitted --> rejected: admin
     rejected --> submitted: re-subida
-    verified --> [*]
+    verified --> [*]: inicial → admin activa · renovación → vigencia extendida
 ```
 
 ### Referencia pastoral (`pastoral_reference_status`)
@@ -546,9 +611,11 @@ stateDiagram-v2
     [*] --> none
     none --> pending: solicitud en curso
     pending --> active: activate_member
-    active --> grace_period: vence +1 año
+    active --> active: renovación con tarjeta (extiende vigencia)
+    active --> grace_period: vence membership_expires_at
+    grace_period --> active: renovación con tarjeta
     grace_period --> expired
-    expired --> active: renovación (Fase 5, pendiente)
+    expired --> active: re-activación (nuevo pago + admin)
 ```
 
 ### Autoridad territorial (`authority_scope_status`)
@@ -570,7 +637,7 @@ flowchart TB
         BASE["📁 Tu espacio<br/>Inicio · Empleos · Aplicaciones · Perfil"]
         PASTORAL["⛪ Pastoral<br/>Solicitudes de mi iglesia<br/>(solo si isMembershipReviewerPastor)"]
         EMPRESA["🏢 Mi empresa<br/>Resumen · Vacantes · Aplicaciones · Pipeline ·<br/>Talento · Reportes · Config<br/>(solo si workspace:read)"]
-        ADM["🛡️ Administración<br/>Overview · Approvals · Membresía · Datos de pago ·<br/>Platform · Moderation · Errors<br/>(solo si canAccessAdminConsole)"]
+        ADM["🛡️ Administración<br/>Overview · Approvals · Membresía · Datos de pago · Donaciones ·<br/>Platform · Moderation · Errors<br/>(solo si canAccessAdminConsole)"]
         CUENTA["👤 Cuenta<br/>Reclutar con mi empresa · Autorización territorial"]
     end
 ```
@@ -591,11 +658,16 @@ flowchart TB
 |---|---|---|---|---|
 | Enviar solicitud | Miembro | RLS `requester = auth.uid()` | `submitInstitutionalMembershipApplication` | — |
 | Auto-ruteo a pastor | Sistema | trigger | `pastor_user_for_church` | — |
-| Subir comprobante | Miembro / Pastor | RLS dueño / `pastor_has_scope_over_member` | `submitMembershipPaymentReceipt` | — |
+| Iniciar pago con tarjeta | Miembro | RLS dueño (JWT reenviado) | `azul_begin_membership_payment` | — |
+| Liquidar pago de tarjeta | Microservicio AZUL | server-side (AuthHash + monto) | `azul_settle_membership_payment` | ✅ |
+| Subir comprobante (respaldo) | Pastor / Admin | RLS dueño / `pastor_has_scope_over_member` | `submitMembershipPaymentReceipt` | — |
+| Verificar pago (respaldo) | Admin | `is_platform_admin` | `verify_membership_payment` | ✅ |
 | Responder "falta info" | Miembro | RLS `requester = auth.uid()` | `respond_membership_application` | ✅ |
 | Revisar solicitud | Pastor / Admin | scope pastoral **o** `is_platform_admin` | `review_membership_application` | ✅ |
-| Verificar pago | Admin | `is_platform_admin` | `verify_membership_payment` | ✅ |
 | Activar cuenta | Admin | `is_platform_admin` + (approved+verified) | `activate_member` | ✅ |
+| Iniciar donación | Público (sin sesión) | server-side (service role) | `azul_begin_donation` | — |
+| Liquidar donación | Microservicio AZUL | server-side (AuthHash + monto) | `azul_settle_donation_payment` | ✅ |
+| Listar montos de donación | Público | — | `list_active_donation_amount_options` | — |
 | Aprobar recruiter | Admin | `recruiter_request:review` | `review_recruiter_request` | ✅ |
 | Otorgar autoridad pastor | Admin | `pastor_authority_request:review` | `review_pastor_authority_request` | ✅ |
 | Otorgar autoridad regional | Admin | `regional_authority_request:review` | `review_regional_authority_request` | ✅ |
@@ -606,15 +678,62 @@ flowchart TB
 
 ---
 
-## Pendientes conocidos (no implementados)
+## 16. Donaciones y superficies de compliance de pago
 
-- **Fase 5 — Notificaciones**: la infraestructura existe (`notifications`, `send-notification`,
-  `process-email-deliveries` con Resend, centro de notificaciones), pero **ninguna transición de
-  membresía la dispara**. Faltan: nueva solicitud→pastor, comprobante→admin, decisión→miembro,
-  activación→miembro.
-- **Recordatorios de renovación**: la membresía vence (`membership_expires_at` +1 año) sin aviso ni
-  flujo de re-pago.
-- **Contenido real (§8)**: cuotas por categoría + datos bancarios son seeds de prueba.
+Además de la membresía, la plataforma cobra **donaciones** con tarjeta (mismo microservicio AZUL) y
+expone las páginas de **compliance** que exige el comercio para operar la pasarela.
+
+```mermaid
+flowchart TD
+    subgraph DONA["💝 Donaciones (público, sin sesión)"]
+        D0["/donate"] --> D1["list_active_donation_amount_options<br/>(montos sugeridos + libre)"]
+        D1 --> D2["POST /payments/azul/donations/create<br/>(service role, sin JWT)"]
+        D2 --> D3["azul_begin_donation → donations.status='initiated'"]
+        D3 --> D4["AZUL Payment Page"]
+        D4 --> D5["callback firmado →<br/>azul_settle_donation_payment(verified|failed|cancelled)"]
+        D5 --> D6["/admin/donations<br/>(seguimiento + montos)"]
+    end
+
+    subgraph LEGAL["📄 Compliance pública (footer + checkout)"]
+        T1["/terms"]
+        T2["/privacy"]
+        T3["/refunds-cancellations"]
+        T4["/delivery-policy"]
+        T5["/payment-security"]
+        T6["/payment-receipt-model"]
+    end
+```
+
+> El checkout de membresía y de donación enlaza estas páginas y exige **aceptar términos** antes de
+> redirigir a AZUL. El microservicio firma/verifica el AuthHash igual que en membresía.
+
+🗂️ **Estructura de tablas:** [`donations`](arquitectura-db.md#donations) · [`donation_amount_options`](arquitectura-db.md#donation_amount_options) · [`membership_payment_settings`](arquitectura-db.md#membership_payment_settings)
+
+---
+
+## Estado de implementación
+
+**✅ Implementado desde la última generación del flujograma:**
+
+- **Pasarela AZUL** para membresía (inicial + renovación 1-5 años) con callback firmado, idempotencia
+  y conciliación por cron (§7.1).
+- **Renovación multi-año**: un pago `intent=renewal` aprobado **extiende `membership_expires_at`**
+  automáticamente, sin re-activación admin.
+- **Fase 5 — Notificaciones**: ya **cableadas** (triggers `*_notify_submitted` + RPCs `review` /
+  `verify` / `activate` / `azul_settle`). Disparan: nueva solicitud→pastor+admins, pago→admins,
+  decisión→miembro, activación/bienvenida→miembro, renovación→miembro+admins. Inbox in-app + cola de
+  email Resend vía `process-email-deliveries`.
+- **Donaciones** con tarjeta (§16) y **superficies de compliance** de pago.
+- **Historial de comprobantes** descargables/compartibles en el panel del miembro (§8).
+
+**🔜 Pendientes conocidos:**
+
+- **Recordatorios proactivos de renovación**: el flujo de re-pago existe, pero falta el aviso
+  automático *antes* de que venza `membership_expires_at`.
+- **Webservice de consulta AZUL** para la conciliación (hoy el cron solo loguea si no está
+  configurado; el callback firmado sigue siendo la vía principal).
+- **Contenido real (§8)**: cuotas por categoría + montos de donación parten de seeds de prueba.
 
 > Diagramas generados desde el código real (rutas, guards, RPCs, RLS y migraciones).
-> Para el detalle del pipeline de membresía ver `docs/membership-pipeline-plan.md`.
+> Para el detalle del pipeline de membresía ver [`../product/membership-pipeline-plan.md`](../product/membership-pipeline-plan.md)
+> y de la pasarela [`../pasarelaDePagos/flujo-azul.md`](../pasarelaDePagos/flujo-azul.md).

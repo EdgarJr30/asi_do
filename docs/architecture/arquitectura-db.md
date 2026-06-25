@@ -9,6 +9,7 @@ Tipos: `string`, `number`, `boolean`, `Json`, `string[]`, `enum <nombre>`, ` | n
 
 - **Identidad y acceso**: [`users`](#users) · [`tenants`](#tenants) · [`company_profiles`](#company_profiles) · [`memberships`](#memberships) · [`membership_roles`](#membership_roles) · [`tenant_roles`](#tenant_roles) · [`tenant_role_permissions`](#tenant_role_permissions) · [`permissions`](#permissions) · [`platform_roles`](#platform_roles) · [`platform_role_permissions`](#platform_role_permissions) · [`user_platform_roles`](#user_platform_roles)
 - **Membresía ASI**: [`institutional_membership_applications`](#institutional_membership_applications) · [`membership_payments`](#membership_payments) · [`membership_payment_settings`](#membership_payment_settings) · [`user_authority_scopes`](#user_authority_scopes) · [`pastor_authority_requests`](#pastor_authority_requests) · [`regional_administrator_authority_requests`](#regional_administrator_authority_requests) · [`recruiter_requests`](#recruiter_requests)
+- **Donaciones**: [`donations`](#donations) · [`donation_amount_options`](#donation_amount_options)
 - **Jerarquía de iglesias**: [`church_unions`](#church_unions) · [`church_associations`](#church_associations) · [`church_districts`](#church_districts) · [`churches`](#churches)
 - **Empleo (jobs & aplicaciones)**: [`job_postings`](#job_postings) · [`job_screening_questions`](#job_screening_questions) · [`applications`](#applications) · [`application_answers`](#application_answers) · [`application_notes`](#application_notes) · [`application_ratings`](#application_ratings) · [`application_stage_history`](#application_stage_history) · [`pipeline_stages`](#pipeline_stages) · [`opportunity_stage_templates`](#opportunity_stage_templates) · [`saved_jobs`](#saved_jobs) · [`job_alerts`](#job_alerts)
 - **Perfil del candidato**: [`candidate_profiles`](#candidate_profiles) · [`candidate_educations`](#candidate_educations) · [`candidate_experiences`](#candidate_experiences) · [`candidate_languages`](#candidate_languages) · [`candidate_links`](#candidate_links) · [`candidate_resumes`](#candidate_resumes) · [`candidate_skills`](#candidate_skills)
@@ -34,6 +35,8 @@ erDiagram
     users ||--o{ membership_payment_settings : "updated_by_user_id"
     institutional_membership_applications ||--o{ membership_payments : "application_id"
     users ||--o{ membership_payments : "member_user_id, uploaded_by_user_id, verified_by_user_id"
+    donation_amount_options ||--o{ donations : "amount_option_id"
+    users ||--o{ donations : "donor_user_id"
     church_associations ||--o{ pastor_authority_requests : "association_id"
     church_districts ||--o{ pastor_authority_requests : "district_id"
     church_unions ||--o{ pastor_authority_requests : "union_id"
@@ -362,26 +365,38 @@ erDiagram
 
 ### <a id="membership_payments"></a>`membership_payments`
 
-| Columna | Tipo | Nullable |
-|---|---|---|
-| `amount` | `number` | ✓ |
-| `application_id` | `string` |  |
-| `category_slug` | `string` |  |
-| `created_at` | `string` |  |
-| `currency` | `string` |  |
-| `id` | `string` |  |
-| `member_user_id` | `string` |  |
-| `method` | `string` |  |
-| `notes` | `string` | ✓ |
-| `period_end` | `string` | ✓ |
-| `period_start` | `string` | ✓ |
-| `receipt_path` | `string` | ✓ |
-| `reference_note` | `string` | ✓ |
-| `status` | `enum membership_payment_status` |  |
-| `updated_at` | `string` |  |
-| `uploaded_by_user_id` | `string` | ✓ |
-| `verified_at` | `string` | ✓ |
-| `verified_by_user_id` | `string` | ✓ |
+| Columna | Tipo | Nullable | Notas |
+|---|---|---|---|
+| `amount` | `number` | ✓ | Monto cobrado |
+| `application_id` | `string` |  | |
+| `authorization_code` | `string` | ✓ | AZUL: No. de autorización |
+| `azul_date_time` | `string` | ✓ | AZUL: fecha/hora de la transacción |
+| `azul_iso_code` | `string` | ✓ | AZUL: IsoCode (`00` = aprobado) |
+| `azul_order_id` | `string` | ✓ | AZUL: AzulOrderId |
+| `azul_response_code` | `string` | ✓ | AZUL: ResponseCode |
+| `azul_response_message` | `string` | ✓ | AZUL: mensaje de respuesta |
+| `azul_rrn` | `string` | ✓ | AZUL: RRN (referencia) |
+| `category_slug` | `string` |  | |
+| `created_at` | `string` |  | |
+| `currency` | `string` |  | |
+| `gateway` | `string` | ✓ | `azul` (o nulo para pago manual) |
+| `gateway_payload` | `Json` | ✓ | Respuesta cruda de la pasarela |
+| `id` | `string` |  | |
+| `intent` | `string` |  | `initial` \| `renewal` |
+| `member_user_id` | `string` |  | |
+| `method` | `string` |  | `card` \| `transfer` |
+| `notes` | `string` | ✓ | |
+| `order_number` | `string` | ✓ | OrderNumber enviado a AZUL |
+| `period_end` | `string` | ✓ | Fin de vigencia cubierta |
+| `period_start` | `string` | ✓ | Inicio de vigencia cubierta |
+| `receipt_path` | `string` | ✓ | Comprobante manual (bucket privado) |
+| `reference_note` | `string` | ✓ | |
+| `status` | `enum membership_payment_status` |  | `initiated`/`submitted`/`verified`/`failed`/`rejected` |
+| `term_months` | `number` |  | Meses pagados (12 × años) |
+| `updated_at` | `string` |  | |
+| `uploaded_by_user_id` | `string` | ✓ | |
+| `verified_at` | `string` | ✓ | |
+| `verified_by_user_id` | `string` | ✓ | |
 
 **Foreign keys:**
 - `application_id` → [`institutional_membership_applications`](#institutional_membership_applications).`id`
@@ -398,6 +413,9 @@ erDiagram
 | `account_holder` | `string` |  |
 | `account_number` | `string` |  |
 | `account_type` | `string` |  |
+| `azul_currency_code` | `string` |  |
+| `azul_enabled` | `boolean` |  |
+| `azul_environment` | `string` |  |
 | `bank_name` | `string` |  |
 | `created_at` | `string` |  |
 | `currency` | `string` |  |
@@ -549,6 +567,68 @@ erDiagram
 - `approved_tenant_id` → [`tenants`](#tenants).`id`
 - `requester_user_id` → [`users`](#users).`id`
 - `reviewed_by_user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+
+## Donaciones
+
+Donaciones con tarjeta vía la pasarela **AZUL** (mismo microservicio que la membresía). Son públicas:
+un donante sin sesión puede aportar. `azul_begin_donation` crea la fila en `initiated` y
+`azul_settle_donation_payment` la concilia tras el callback firmado.
+
+### <a id="donations"></a>`donations`
+
+| Columna | Tipo | Nullable | Notas |
+|---|---|---|---|
+| `amount` | `number` |  | Monto donado |
+| `amount_option_id` | `string` | ✓ | FK al monto sugerido (si no es libre) |
+| `authorization_code` | `string` | ✓ | AZUL: No. de autorización |
+| `azul_date_time` | `string` | ✓ | AZUL: fecha/hora |
+| `azul_iso_code` | `string` | ✓ | AZUL: IsoCode |
+| `azul_order_id` | `string` | ✓ | AZUL: AzulOrderId |
+| `azul_response_code` | `string` | ✓ | AZUL: ResponseCode |
+| `azul_response_message` | `string` | ✓ | AZUL: mensaje |
+| `azul_rrn` | `string` | ✓ | AZUL: RRN |
+| `campaign_slug` | `string` |  | Campaña/destino |
+| `created_at` | `string` |  | |
+| `currency` | `string` |  | |
+| `custom_amount` | `boolean` |  | `true` si el donante escribió el monto |
+| `designation` | `string` | ✓ | Designación libre |
+| `donor_email` | `string` | ✓ | |
+| `donor_name` | `string` | ✓ | |
+| `donor_phone` | `string` | ✓ | |
+| `donor_user_id` | `string` | ✓ | FK si el donante tenía sesión |
+| `gateway` | `string` |  | `azul` |
+| `gateway_payload` | `Json` |  | Respuesta cruda de AZUL |
+| `id` | `string` |  | |
+| `initiated_at` | `string` |  | |
+| `method` | `string` |  | `card` |
+| `order_number` | `string` |  | OrderNumber AZUL |
+| `settled_at` | `string` | ✓ | |
+| `status` | `enum donation_payment_status` |  | `initiated`/`verified`/`failed`/`cancelled` |
+| `updated_at` | `string` |  | |
+
+**Foreign keys:**
+- `amount_option_id` → [`donation_amount_options`](#donation_amount_options).`id`
+- `donor_user_id` → [`users`](#users).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="donation_amount_options"></a>`donation_amount_options`
+
+Montos sugeridos configurables que se muestran en `/donate` (`list_active_donation_amount_options`).
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `amount` | `number` |  |
+| `created_at` | `string` |  |
+| `currency` | `string` |  |
+| `display_order` | `number` |  |
+| `id` | `string` |  |
+| `is_active` | `boolean` |  |
+| `label` | `string` |  |
+| `updated_at` | `string` |  |
 
 [↑ índice](#índice-de-tablas)
 
