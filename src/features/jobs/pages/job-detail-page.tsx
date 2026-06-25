@@ -153,12 +153,9 @@ export function JobDetailPage() {
             <div className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) p-4">
               <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">Acciones</p>
               <div className="mt-3 flex flex-col gap-2.5">
-                <p className="rounded-xl bg-primary-50 px-3 py-2 text-[0.78rem] font-medium text-primary-700 dark:bg-primary-500/12 dark:text-primary-300">
-                  Apply llega en la siguiente fase
-                </p>
                 {session.isAuthenticated ? (
                   <Link className={actionPrimary} to={surfacePaths.public.jobApply(jobSlug)}>
-                    <SendHorizontal className="size-4" /> Apply now
+                    <SendHorizontal className="size-4" /> Aplicar ahora
                   </Link>
                 ) : (
                   <Link className={actionPrimary} to="/auth/sign-in">

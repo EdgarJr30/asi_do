@@ -55,7 +55,7 @@ export function JobApplicationPage() {
       })
     },
     onSuccess: async () => {
-      toast.success('Postulacion enviada', {
+      toast.success('Postulación enviada', {
         description: 'Tu perfil y respuestas ya quedaron registradas para esta vacante.'
       })
       // Refresca todas las listas de "mis aplicaciones" (overview, home, board) y el badge "Ya aplicaste".
@@ -64,7 +64,7 @@ export function JobApplicationPage() {
     },
     onError: async (error) => {
       await reportErrorWithToast({
-        title: 'No pudimos enviar tu postulacion',
+        title: 'No pudimos enviar tu postulación',
         source: 'applications.submit',
         route: surfacePaths.public.jobApply(jobSlug),
         userId: session.authUser?.id ?? null,
@@ -77,7 +77,7 @@ export function JobApplicationPage() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Preparando postulacion</CardTitle>
+          <CardTitle>Preparando postulación</CardTitle>
           <CardDescription>Estamos cargando la vacante, tu perfil y tus CVs disponibles.</CardDescription>
         </CardHeader>
       </Card>
@@ -119,7 +119,7 @@ export function JobApplicationPage() {
     <div className="space-y-6">
       <Card className="overflow-hidden bg-(--app-surface-muted)">
         <CardHeader className="space-y-3">
-          <Badge variant="soft">Apply flow</Badge>
+          <Badge variant="soft">Postulación</Badge>
           <CardTitle>Postula a {jobQuery.data.title}</CardTitle>
           <CardDescription>
             Tu perfil reusable se combina con CV, cover letter y screening para evitar repetir datos innecesarios.
@@ -127,7 +127,7 @@ export function JobApplicationPage() {
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-[24px] border border-white/70 bg-white/88 p-4 dark:border-zinc-800 dark:bg-zinc-950/75">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Perfil que se enviara</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Perfil que se enviará</p>
             <p className="mt-2 text-lg font-semibold text-zinc-950 dark:text-zinc-50">
               {session.profile?.display_name ?? session.profile?.full_name}
             </p>
@@ -146,7 +146,7 @@ export function JobApplicationPage() {
       <section className="grid gap-4 xl:grid-cols-[1fr_0.95fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Datos de envio</CardTitle>
+            <CardTitle>Datos de envío</CardTitle>
             <CardDescription>Selecciona el CV que quieres usar y agrega una nota breve si aporta contexto.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -177,7 +177,7 @@ export function JobApplicationPage() {
         <Card>
           <CardHeader>
             <CardTitle>Screening</CardTitle>
-            <CardDescription>Responde las preguntas de esta vacante antes de enviar la postulacion.</CardDescription>
+            <CardDescription>Responde las preguntas de esta vacante antes de enviar la postulación.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {jobQuery.data.job_screening_questions?.length ? (
@@ -202,13 +202,13 @@ export function JobApplicationPage() {
               ))
             ) : (
               <div className="rounded-[24px] border border-dashed border-zinc-300 px-4 py-6 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-                Esta vacante no tiene screening. Puedes enviar la postulacion directamente.
+                Esta vacante no tiene screening. Puedes enviar la postulación directamente.
               </div>
             )}
 
             <div className="flex flex-wrap gap-3">
               <Button onClick={() => applyMutation.mutate()} disabled={applyMutation.isPending}>
-                {applyMutation.isPending ? 'Enviando...' : 'Enviar postulacion'}
+                {applyMutation.isPending ? 'Enviando...' : 'Enviar postulación'}
               </Button>
               <Link to={surfacePaths.public.jobDetail(jobSlug)}>
                 <Button variant="outline">Volver a la vacante</Button>
