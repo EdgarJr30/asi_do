@@ -48,7 +48,6 @@ import {
   type TouchPanIntent,
 } from '@/experiences/institutional/lib/carousel-gesture';
 import { cn } from '@/lib/utils/cn';
-import { PaymentBrandStrip } from '@/shared/ui/payment-brand-strip';
 
 function wrapIndex(index: number, length: number) {
   return (index + length) % length;
@@ -1111,22 +1110,6 @@ export function InstitutionalHomePage() {
               </motion.div>
             </div>
           </motion.div>
-        </div>
-      </InstitutionalSection>
-
-      <InstitutionalSection tone="transparent" className="pt-0">
-        <div className="rounded-[1.5rem] border border-slate-200 bg-white/86 px-5 py-4 shadow-[0_12px_36px_rgba(0,47,110,0.06)] backdrop-blur-md">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--asi-secondary)">
-                Pagos seguros
-              </p>
-              <p className="mt-1 text-sm leading-6 text-(--asi-text-muted)">
-                Aceptamos Visa y Mastercard. Las transacciones en línea pueden usar Visa Secure y Mastercard ID Check mediante AZUL.
-              </p>
-            </div>
-            <PaymentBrandStrip show3DSLabel />
-          </div>
         </div>
       </InstitutionalSection>
 
