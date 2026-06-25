@@ -13,6 +13,7 @@ import { useAppSession } from '@/app/providers/app-session-provider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Input } from '@/components/ui/input'
 import { KebabMenu, KebabMenuItem } from '@/components/ui/kebab-menu'
 import { Select } from '@/components/ui/select'
@@ -566,6 +567,7 @@ function WorkspaceJobsManager() {
   const [locationFilter, setLocationFilter] = useState('')
   const [sort, setSort] = useState<'recent' | 'title'>('recent')
   const [page, setPage] = useState(0)
+  const [pendingStatusChange, setPendingStatusChange] = useState<{ jobId: string; action: 'close' | 'archive' } | null>(null)
 
   const workspaceQuery = useQuery({
     queryKey: ['workspace', 'jobs-page', session.activeTenantId],
@@ -886,12 +888,12 @@ function WorkspaceJobsManager() {
                       <KebabMenuItem onClick={() => openJobEditor(job.id)}>Editar</KebabMenuItem>
                       <KebabMenuItem to={surfacePaths.public.jobDetail(job.slug)}>Ver oportunidad</KebabMenuItem>
                       {isPublished ? (
-                        <KebabMenuItem onClick={() => statusMutation.mutate({ jobId: job.id, status: 'closed' })}>Cerrar</KebabMenuItem>
+                        <KebabMenuItem onClick={() => setPendingStatusChange({ jobId: job.id, action: 'close' })}>Cerrar</KebabMenuItem>
                       ) : (
                         <KebabMenuItem onClick={() => statusMutation.mutate({ jobId: job.id, status: 'published' })}>Publicar</KebabMenuItem>
                       )}
                       {job.status !== 'archived' ? (
-                        <KebabMenuItem danger onClick={() => statusMutation.mutate({ jobId: job.id, status: 'archived' })}>
+                        <KebabMenuItem danger onClick={() => setPendingStatusChange({ jobId: job.id, action: 'archive' })}>
                           Archivar
                         </KebabMenuItem>
                       ) : null}
@@ -1042,12 +1044,12 @@ function WorkspaceJobsManager() {
                           Publicar
                         </Button>
                       ) : (
-                        <Button variant="outline" onClick={() => statusMutation.mutate({ jobId: job.id, status: 'closed' })}>
+                        <Button variant="outline" onClick={() => setPendingStatusChange({ jobId: job.id, action: 'close' })}>
                           Cerrar
                         </Button>
                       )}
                       {job.status !== 'archived' ? (
-                        <Button variant="outline" onClick={() => statusMutation.mutate({ jobId: job.id, status: 'archived' })}>
+                        <Button variant="outline" onClick={() => setPendingStatusChange({ jobId: job.id, action: 'archive' })}>
                           Archivar
                         </Button>
                       ) : null}
@@ -1066,6 +1068,30 @@ function WorkspaceJobsManager() {
           </Card>
         </section>
       ) : null}
+
+      <ConfirmDialog
+        open={pendingStatusChange !== null}
+        variant={pendingStatusChange?.action === 'archive' ? 'danger' : 'primary'}
+        title={pendingStatusChange?.action === 'archive' ? '¿Archivar esta vacante?' : '¿Cerrar esta vacante?'}
+        description={
+          pendingStatusChange?.action === 'archive'
+            ? 'La vacante se moverá a inactivas y dejará de mostrarse públicamente. Podrás volver a publicarla más adelante.'
+            : 'La vacante dejará de aceptar nuevas postulaciones y ya no se mostrará públicamente. Podrás volver a publicarla cuando quieras.'
+        }
+        confirmLabel={pendingStatusChange?.action === 'archive' ? 'Archivar' : 'Cerrar vacante'}
+        loading={statusMutation.isPending}
+        onCancel={() => setPendingStatusChange(null)}
+        onConfirm={() => {
+          if (!pendingStatusChange) return
+          statusMutation.mutate(
+            {
+              jobId: pendingStatusChange.jobId,
+              status: pendingStatusChange.action === 'archive' ? 'archived' : 'closed'
+            },
+            { onSettled: () => setPendingStatusChange(null) }
+          )
+        }}
+      />
     </motion.div>
   )
 }
