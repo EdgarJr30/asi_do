@@ -9,6 +9,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageLoader } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -74,14 +75,7 @@ export function JobApplicationPage() {
   })
 
   if (jobQuery.isLoading || candidateProfileQuery.isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Preparando postulación</CardTitle>
-          <CardDescription>Estamos cargando la vacante, tu perfil y tus CVs disponibles.</CardDescription>
-        </CardHeader>
-      </Card>
-    )
+    return <PageLoader label="Preparando postulación" hint="Estamos cargando la vacante, tu perfil y tus CVs disponibles" />
   }
 
   if (jobQuery.error || !jobQuery.data) {

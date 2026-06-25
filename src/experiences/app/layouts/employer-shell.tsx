@@ -40,6 +40,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { BrandLockup, BrandMark } from '@/components/ui/app-brand'
 import { AppBottomNav, type AppNavGroup, type AppNavItem } from '@/components/ui/app-shell-navigation'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/loader'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api'
 import { fetchMyNotificationsPage, markAllNotificationsRead, markNotificationRead, markNotificationUnread, type AppNotification } from '@/lib/notifications/api'
@@ -512,7 +513,8 @@ function WorkspaceNotificationPanel({
             disabled={isMarkingAll}
             className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50 disabled:opacity-60 dark:text-primary-300 dark:hover:bg-primary-500/12"
           >
-            <CheckCheck className="size-3.5" /> {isMarkingAll ? 'Marcando…' : 'Marcar todas'}
+            {isMarkingAll ? <Spinner size="sm" /> : <CheckCheck className="size-3.5" />}
+            {isMarkingAll ? 'Marcando…' : 'Marcar todas'}
           </button>
         ) : null}
       </div>

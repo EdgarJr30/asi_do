@@ -10,6 +10,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageLoader, Spinner } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { exportApplicationsCsv } from '@/features/applications/lib/applications-api'
@@ -182,14 +183,7 @@ export function PipelineBoardPage() {
   }
 
   if (boardQuery.isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Cargando pipeline</CardTitle>
-          <CardDescription>Estamos recuperando stages y applicants para este tenant.</CardDescription>
-        </CardHeader>
-      </Card>
-    )
+    return <PageLoader label="Cargando pipeline" hint="Estamos recuperando etapas y postulaciones para este tenant" />
   }
 
   if (boardQuery.error || !boardQuery.data) {
@@ -450,7 +444,9 @@ export function PipelineBoardPage() {
                 <p className="text-sm font-semibold text-(--app-text)">Actividad reciente</p>
                 <div className="mt-3 space-y-3">
                   {activityQuery.isLoading ? (
-                    <p className="text-sm text-(--app-text-muted)">Cargando actividad...</p>
+                    <p className="inline-flex items-center gap-2 text-sm text-(--app-text-muted)">
+                      <Spinner size="sm" /> Cargando actividad...
+                    </p>
                   ) : activityQuery.error ? (
                     <p className="text-sm text-rose-600 dark:text-rose-300">{toErrorMessage(activityQuery.error)}</p>
                   ) : applicationActivity && (applicationActivity.history.length || applicationActivity.notes.length || applicationActivity.ratings.length) ? (

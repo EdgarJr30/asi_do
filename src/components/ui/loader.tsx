@@ -6,10 +6,28 @@ import { cn } from '@/lib/utils/cn'
 
 type LoaderSize = 'sm' | 'md' | 'lg'
 
-const ringSizeByVariant: Record<LoaderSize, string> = {
-  sm: 'size-5 border-[2px]',
-  md: 'size-8 border-[2.5px]',
-  lg: 'size-11 border-[3px]'
+const spinnerFrameBySize: Record<LoaderSize, string> = {
+  sm: 'size-7',
+  md: 'size-9',
+  lg: 'size-12'
+}
+
+const spinnerRingBySize: Record<LoaderSize, string> = {
+  sm: 'border-[2px]',
+  md: 'border-[2.5px]',
+  lg: 'border-[3px]'
+}
+
+const spinnerInsetBySize: Record<LoaderSize, string> = {
+  sm: 'inset-1',
+  md: 'inset-1.5',
+  lg: 'inset-2'
+}
+
+const spinnerBrandPanelBySize: Record<LoaderSize, string> = {
+  sm: 'size-4 rounded-md p-0.5 shadow-[0_6px_14px_rgba(43,69,143,0.22)]',
+  md: 'size-5 rounded-lg p-1 shadow-[0_8px_18px_rgba(43,69,143,0.24)]',
+  lg: 'size-7 rounded-xl p-1.5 shadow-[0_10px_22px_rgba(43,69,143,0.26)]'
 }
 
 const spinTransition: Transition = {
@@ -19,20 +37,34 @@ const spinTransition: Transition = {
 }
 
 /**
- * Spinner ligero para usos inline (botones, filas, secciones de tarjeta).
- * Dos arcos contrarrotatorios con los colores de marca.
+ * Loader oficial compacto para usos inline (botones, filas, tablas y tarjetas).
+ * Mantiene el logo ASI y los anillos del loader de página en escala pequeña.
  */
 export function Spinner({ size = 'md', className }: { size?: LoaderSize; className?: string }) {
   const shouldReduceMotion = useReducedMotion()
 
   return (
-    <span className={cn('relative inline-flex', ringSizeByVariant[size], className)} role="status" aria-label="Cargando">
+    <span
+      className={cn('relative inline-flex shrink-0 items-center justify-center', spinnerFrameBySize[size], className)}
+      role="status"
+      aria-label="Cargando"
+    >
       <motion.span
-        className="absolute inset-0 rounded-full border-(--app-border) border-t-primary-500"
-        style={{ borderWidth: 'inherit' }}
+        className={cn('absolute inset-0 rounded-full border-primary-500/15 border-t-primary-500', spinnerRingBySize[size])}
         animate={shouldReduceMotion ? undefined : { rotate: 360 }}
         transition={spinTransition}
       />
+      <motion.span
+        className={cn('absolute rounded-full border-accent-400/15 border-b-accent-400', spinnerInsetBySize[size], spinnerRingBySize[size])}
+        animate={shouldReduceMotion ? undefined : { rotate: -360 }}
+        transition={{ ...spinTransition, duration: 1.35 }}
+      />
+      <motion.span
+        animate={shouldReduceMotion ? undefined : { scale: [1, 1.05, 1] }}
+        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <BrandMark panelClassName={spinnerBrandPanelBySize[size]} />
+      </motion.span>
     </span>
   )
 }

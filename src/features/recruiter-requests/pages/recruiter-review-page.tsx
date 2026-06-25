@@ -8,6 +8,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Spinner } from '@/components/ui/loader'
 import { Textarea } from '@/components/ui/textarea'
 import {
   createPrivateFileUrl,
@@ -231,7 +232,9 @@ export function RecruiterReviewPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {recruiterRequestsQuery.isLoading ? (
-              <p className="text-sm text-zinc-500">Cargando solicitudes pendientes...</p>
+              <p className="inline-flex items-center gap-2 text-sm text-zinc-500">
+                <Spinner size="sm" /> Cargando solicitudes pendientes...
+              </p>
             ) : pendingRecruiterRequests.length === 0 ? (
               <p className="text-sm text-zinc-500">No hay solicitudes de operador pendientes.</p>
             ) : (
@@ -338,7 +341,9 @@ export function RecruiterReviewPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {pastorRequestsQuery.isLoading ? (
-              <p className="text-sm text-zinc-500">Cargando solicitudes pastorales...</p>
+              <p className="inline-flex items-center gap-2 text-sm text-zinc-500">
+                <Spinner size="sm" /> Cargando solicitudes pastorales...
+              </p>
             ) : pendingPastorRequests.length === 0 ? (
               <p className="text-sm text-zinc-500">No hay solicitudes pastorales pendientes.</p>
             ) : (
@@ -412,7 +417,9 @@ export function RecruiterReviewPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {regionalRequestsQuery.isLoading ? (
-              <p className="text-sm text-zinc-500">Cargando solicitudes regionales...</p>
+              <p className="inline-flex items-center gap-2 text-sm text-zinc-500">
+                <Spinner size="sm" /> Cargando solicitudes regionales...
+              </p>
             ) : pendingRegionalRequests.length === 0 ? (
               <p className="text-sm text-zinc-500">No hay solicitudes regionales pendientes.</p>
             ) : (

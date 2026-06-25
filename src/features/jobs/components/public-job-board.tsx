@@ -30,7 +30,7 @@ import { useAppSession } from '@/app/providers/app-session-provider'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
-import { PageLoader } from '@/components/ui/loader'
+import { PageLoader, Spinner } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { listMyApplications } from '@/features/applications/lib/applications-api'
@@ -313,8 +313,14 @@ export function PublicJobBoard() {
             <span className="rounded-full bg-primary-600 px-1.5 text-xs font-bold text-white">{activeChips.length}</span>
           ) : null}
         </button>
-        <span className="text-[0.82rem] text-(--app-text-muted)">
-          {jobsQuery.isLoading ? 'Cargando…' : `${filteredJobs.length} ${filteredJobs.length === 1 ? 'empleo' : 'empleos'}`}
+        <span className="inline-flex items-center gap-2 text-[0.82rem] text-(--app-text-muted)">
+          {jobsQuery.isLoading ? (
+            <>
+              <Spinner size="sm" /> Cargando…
+            </>
+          ) : (
+            `${filteredJobs.length} ${filteredJobs.length === 1 ? 'empleo' : 'empleos'}`
+          )}
         </span>
         <label className="ml-auto flex items-center gap-2 text-[0.82rem] text-(--app-text-muted)">
           Ordenar por
@@ -592,7 +598,17 @@ function JobDetailPanel({
               {saved ? <BookmarkCheck className="size-5" /> : <Bookmark className="size-5" />}
             </Button>
           ) : null}
-          {!applied ? <p className="text-[0.72rem] text-(--app-text-subtle)">{detailQuery.isLoading ? 'Cargando detalles…' : applyHint}</p> : null}
+          {!applied ? (
+            <p className="inline-flex items-center gap-2 text-[0.72rem] text-(--app-text-subtle)">
+              {detailQuery.isLoading ? (
+                <>
+                  <Spinner size="sm" /> Cargando detalles…
+                </>
+              ) : (
+                applyHint
+              )}
+            </p>
+          ) : null}
         </div>
       </div>
 

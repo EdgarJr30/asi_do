@@ -18,6 +18,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageLoader } from '@/components/ui/loader'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
 import { getPublicJobBySlug, toggleSavedJob } from '@/features/jobs/lib/jobs-api'
@@ -80,14 +81,7 @@ export function JobDetailPage() {
   })
 
   if (jobQuery.isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Cargando vacante</CardTitle>
-          <CardDescription>Estamos recuperando el detalle de esta oportunidad.</CardDescription>
-        </CardHeader>
-      </Card>
-    )
+    return <PageLoader label="Cargando vacante" hint="Estamos recuperando el detalle de esta oportunidad" />
   }
 
   if (jobQuery.error || !jobQuery.data) {

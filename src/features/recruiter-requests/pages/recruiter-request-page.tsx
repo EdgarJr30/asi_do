@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -447,7 +448,9 @@ export function RecruiterRequestPage() {
                   </p>
                   <p className="text-xs text-zinc-500">Se guarda privado durante la revisión.</p>
                   {isPreparingCompanyLogo ? (
-                    <p className="text-xs text-zinc-500">Optimizando logo antes de subir...</p>
+                    <p className="inline-flex items-center gap-2 text-xs text-zinc-500">
+                      <Spinner size="sm" /> Optimizando logo antes de subir...
+                    </p>
                   ) : null}
                   {companyLogoFileError ? (
                     <p className="text-xs text-rose-600 dark:text-rose-300">{companyLogoFileError}</p>
@@ -466,7 +469,9 @@ export function RecruiterRequestPage() {
                   </p>
                   <p className="text-xs text-zinc-500">Solo el solicitante y revisores admin pueden verlo.</p>
                   {isPreparingVerificationDocument ? (
-                    <p className="text-xs text-zinc-500">Preparando documento antes de subir...</p>
+                    <p className="inline-flex items-center gap-2 text-xs text-zinc-500">
+                      <Spinner size="sm" /> Preparando documento antes de subir...
+                    </p>
                   ) : null}
                   {verificationDocumentFileError ? (
                     <p className="text-xs text-rose-600 dark:text-rose-300">{verificationDocumentFileError}</p>

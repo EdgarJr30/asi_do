@@ -149,7 +149,7 @@ export function EmailPipelinePage() {
             onClick={refreshAll}
             disabled={pageQuery.isFetching || statsQuery.isFetching}
           >
-            <RefreshCw className={`h-4 w-4 ${pageQuery.isFetching || statsQuery.isFetching ? 'animate-spin' : ''}`} />
+            {pageQuery.isFetching || statsQuery.isFetching ? <Spinner size="sm" /> : <RefreshCw className="h-4 w-4" />}
             Actualizar
           </Button>
         }
@@ -418,7 +418,7 @@ function TestPanel({ defaultTo, onView }: { defaultTo: string; onView: (row: Ema
             <CardTitle className="text-base">Correos de prueba</CardTitle>
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={() => void testQuery.refetch()} disabled={testQuery.isFetching}>
-                <RefreshCw className={`h-4 w-4 ${testQuery.isFetching ? 'animate-spin' : ''}`} /> Actualizar
+                {testQuery.isFetching ? <Spinner size="sm" /> : <RefreshCw className="h-4 w-4" />} Actualizar
               </Button>
               <Button
                 variant="danger"

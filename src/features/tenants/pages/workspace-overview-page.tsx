@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { PageLoader } from '@/components/ui/loader';
 import { Select } from '@/components/ui/select';
 import { SideSheet } from '@/components/ui/side-sheet';
 import { Textarea } from '@/components/ui/textarea';
@@ -896,17 +897,7 @@ export function WorkspaceOverviewPage() {
   }
 
   if (workspaceQuery.isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Cargando tu espacio</CardTitle>
-          <CardDescription>
-            Estamos recuperando la configuración, el equipo y la imagen actual
-            de tu empresa.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
+    return <PageLoader label="Cargando tu espacio" hint="Estamos recuperando la configuración, el equipo y la imagen actual de tu empresa" />;
   }
 
   if (workspaceQuery.error || !workspaceQuery.data) {

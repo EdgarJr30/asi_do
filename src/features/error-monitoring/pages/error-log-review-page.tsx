@@ -8,6 +8,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageLoader } from '@/components/ui/loader'
 import { listAppErrorLogs, updateAppErrorResolution, type AppErrorLogRecord } from '@/lib/errors/api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import type { Tables } from '@/shared/types/database'
@@ -150,9 +151,7 @@ export function ErrorLogReviewPage() {
       </Card>
 
       {errorLogsQuery.isLoading ? (
-        <Card>
-          <CardContent className="py-8 text-sm text-zinc-500">Cargando errores registrados...</CardContent>
-        </Card>
+        <PageLoader label="Cargando errores registrados" hint="Recuperando el historial de monitoreo" />
       ) : filteredLogs.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-sm text-zinc-500">

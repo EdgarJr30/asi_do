@@ -22,6 +22,7 @@ import { InstitutionalCard, InstitutionalSection } from '@/experiences/instituti
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 import { printReceipt, receiptPlainText, shareReceipt, type ReceiptLine } from '@/shared/ui/receipt'
 import { PaymentBrandStrip } from '@/shared/ui/payment-brand-strip'
+import { Spinner } from '@/components/ui/loader'
 import { cn } from '@/lib/utils/cn'
 
 const DONATION_RECEIPT_TITLE = 'Comprobante de donación'
@@ -481,7 +482,13 @@ export function DonationCheckoutSection() {
               onClick={() => donateMutation.mutate()}
               className="asi-button asi-button-primary mt-5 w-full disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {donateMutation.isPending ? 'Preparando pago...' : 'Donar ahora'}
+              {donateMutation.isPending ? (
+                <>
+                  <Spinner size="sm" /> Preparando pago...
+                </>
+              ) : (
+                'Donar ahora'
+              )}
             </button>
 
             <div className="mt-5 grid gap-2 text-xs leading-5 text-(--asi-text-muted)">

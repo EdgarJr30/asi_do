@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/loader'
 import { Textarea } from '@/components/ui/textarea'
 import { fetchMyNotifications, markNotificationRead, sendNotification } from '@/lib/notifications/api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
@@ -157,8 +158,8 @@ export function NotificationCenter() {
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
-            <div className="rounded-[24px] bg-zinc-50 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900/80 dark:text-zinc-400">
-              {t('notifications.loading')}
+            <div className="inline-flex items-center gap-2 rounded-[24px] bg-zinc-50 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900/80 dark:text-zinc-400">
+              <Spinner size="sm" /> {t('notifications.loading')}
             </div>
           ) : notifications.length === 0 ? (
             <div className="rounded-[24px] bg-zinc-50 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900/80 dark:text-zinc-400">

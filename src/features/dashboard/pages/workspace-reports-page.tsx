@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Spinner } from '@/components/ui/loader'
 import { StatCard } from '@/components/ui/stat-card'
 import { fetchWorkspaceDashboardMetrics } from '@/features/dashboard/lib/dashboard-api'
 import { cardReveal, gridStagger, pageStagger, softEase } from '@/shared/ui/card-motion'
@@ -76,7 +77,9 @@ export function WorkspaceReportsPage() {
           </CardHeader>
           <CardContent>
             {metricsQuery.isLoading ? (
-              <p className="text-sm text-(--app-text-muted)">Cargando métricas…</p>
+              <p className="inline-flex items-center gap-2 text-sm text-(--app-text-muted)">
+                <Spinner size="sm" /> Cargando métricas…
+              </p>
             ) : metrics && metrics.funnel.length > 0 ? (
               <div className="space-y-3.5">
                 {metrics.funnel.map((stage) => (
