@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   ArrowLeft,
   ArrowRight,
-  BriefcaseBusiness,
   Camera,
   CheckCircle2,
+  CreditCard,
   Globe2,
-  Search,
   ShieldCheck,
   Sparkles,
   UploadCloud,
@@ -42,6 +41,11 @@ import {
   UploadConstraintError
 } from '@/lib/uploads/media'
 import { cn } from '@/lib/utils/cn'
+
+// Tras completar el perfil base redirigimos al pago de la membresía. 8s deja
+// leer el mensaje de éxito y respeta a usuarios con lectores de pantalla, sin
+// frenar el objetivo de "llenar formulario y pagar de inmediato".
+const MEMBERSHIP_REDIRECT_SECONDS = 8
 
 const steps = [
   {
@@ -166,6 +170,11 @@ export function ProfileOnboardingFlow() {
   const [avatarFileError, setAvatarFileError] = useState<string | null>(null)
   const [isPreparingAvatar, setIsPreparingAvatar] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
+  // `justSubmitted` solo es true cuando el usuario acaba de enviar el formulario
+  // en esta sesión (no al revisitar con el perfil ya completo), para que el
+  // auto-redireccionamiento al pago no dispare en visitas posteriores.
+  const [justSubmitted, setJustSubmitted] = useState(false)
+  const [redirectCountdown, setRedirectCountdown] = useState(MEMBERSHIP_REDIRECT_SECONDS)
 
   const form = useForm<OnboardingValues>({
     resolver: zodResolver(onboardingSchema),
@@ -228,6 +237,36 @@ export function ProfileOnboardingFlow() {
     }
   }, [avatarPreviewUrl])
 
+  // Ref estable para que el intervalo del countdown invoque siempre la última
+  // versión de leaveToMembership sin re-ejecutar el efecto en cada render.
+  const leaveToMembershipRef = useRef<() => void>(() => {})
+
+  // Auto-redireccionamiento al pago de la membresía con cuenta regresiva visible.
+  // Solo corre cuando el usuario acaba de enviar el formulario en esta sesión.
+  useEffect(() => {
+    if (!justSubmitted) {
+      return
+    }
+
+    setRedirectCountdown(MEMBERSHIP_REDIRECT_SECONDS)
+
+    const intervalId = window.setInterval(() => {
+      setRedirectCountdown((value) => {
+        if (value <= 1) {
+          window.clearInterval(intervalId)
+          leaveToMembershipRef.current()
+          return 0
+        }
+
+        return value - 1
+      })
+    }, 1000)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [justSubmitted])
+
   const activeStep = steps[activeStepIndex]
   const ActiveStepIcon = activeStep.icon
   const completedStepCount = isComplete ? steps.length : activeStepIndex
@@ -236,32 +275,44 @@ export function ProfileOnboardingFlow() {
   const previewLocale = form.watch('locale') === 'en' ? 'English' : 'Espanol'
   const isLastStep = activeStepIndex === steps.length - 1
 
-  const nextActions = useMemo(
-    () => [
-      {
-        title: 'Explorar empleos',
-        description: 'Busca oportunidades disponibles.',
-        icon: Search,
-        action: () => void navigate(surfacePaths.storefront.jobs)
-      },
-      {
-        title: 'Completar CV',
-        description: 'Agrega experiencia y documentos.',
-        icon: UserRound,
-        action: () => void navigate(surfacePaths.candidate.profile)
-      },
-      {
-        title: session.permissions.includes('workspace:read') ? 'Ir al workspace' : 'Solicitar empresa',
-        description: session.permissions.includes('workspace:read') ? 'Abre tu espacio operativo.' : 'Pide revisión para reclutar.',
-        icon: BriefcaseBusiness,
-        action: () =>
-          void navigate(
-            session.permissions.includes('workspace:read') ? surfacePaths.workspace.root : surfacePaths.candidate.recruiterRequest
-          )
-      }
-    ],
-    [navigate, session.permissions]
-  )
+  // Refresca la sesión (para que el guard de onboarding completo deje pasar) y
+  // navega. Idempotente: el countdown, el botón de pago y "Completar después"
+  // pueden dispararlo, pero solo una salida corre. Si el refresh o la navegación
+  // fallan, liberamos el cerrojo para permitir reintentar en lugar de dejar el
+  // botón muerto.
+  const isLeavingRef = useRef(false)
+  async function refreshAndNavigate(path: string) {
+    if (isLeavingRef.current) {
+      return
+    }
+    isLeavingRef.current = true
+    try {
+      await session.refresh()
+      await navigate(path)
+    } catch (error) {
+      isLeavingRef.current = false
+      toast.error('No pudimos continuar', {
+        description: toErrorMessage(error)
+      })
+    }
+  }
+
+  function goToMembership() {
+    void refreshAndNavigate(surfacePaths.account.membership)
+  }
+
+  // "Completar después": cancela el auto-redirect al pago y lleva al perfil.
+  function skipToProfile() {
+    void refreshAndNavigate(surfacePaths.candidate.profile)
+  }
+
+  // Mantén el ref del countdown apuntando siempre a la última versión, sin
+  // mutarlo durante el render (lo hacemos en un efecto, como recomienda React).
+  useEffect(() => {
+    leaveToMembershipRef.current = () => {
+      void refreshAndNavigate(surfacePaths.account.membership)
+    }
+  })
 
   async function handleAvatarChange(file: File | null) {
     setAvatarFileError(null)
@@ -344,10 +395,14 @@ export function ProfileOnboardingFlow() {
         avatarPath
       })
 
-      await session.refresh()
+      // No refrescamos la sesión aquí: hacerlo marca el onboarding como completo
+      // y CandidateProfilePage desmontaría este wizard antes de mostrar el
+      // resumen con el CTA de pago. Refrescamos justo antes de salir al pago
+      // (ver leaveToMembership), para que el resumen + cuenta regresiva sí se vean.
       setIsComplete(true)
+      setJustSubmitted(true)
       toast.success('Perfil listo', {
-        description: 'Tu perfil base quedó preparado.'
+        description: 'Te llevamos a activar tu membresía.'
       })
     } catch (error) {
       await captureClientError({
@@ -402,7 +457,7 @@ export function ProfileOnboardingFlow() {
             <Button
               className="h-11 rounded-full px-4"
               variant="ghost"
-              onClick={() => void navigate(surfacePaths.candidate.profile)}
+              onClick={() => void skipToProfile()}
             >
               Completar despues
             </Button>
@@ -430,29 +485,28 @@ export function ProfileOnboardingFlow() {
                         Listo, {previewName.split(' ')[0]}
                       </h2>
                       <p className="mt-2 max-w-xl text-sm leading-6 text-(--app-text-muted)">
-                        Ya tienes la base para moverte por ASI. Lo profesional y lo empresarial puede crecer paso a paso.
+                        El último paso es activar tu membresía. Es lo que habilita el acceso completo a ASI, así que te
+                        llevamos directo al pago.
                       </p>
                     </div>
 
-                    <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                      {nextActions.map((item) => {
-                        const Icon = item.icon
+                    <div className="mt-8">
+                      <Button className="h-12 w-full rounded-full px-5 sm:w-auto" onClick={goToMembership}>
+                        <CreditCard className="size-5" />
+                        Pagar mi membresía ahora
+                        <ArrowRight className="size-5" />
+                      </Button>
 
-                        return (
-                          <button
-                            key={item.title}
-                            className="group flex min-h-36 flex-col justify-between rounded-[22px] border border-(--app-border) bg-(--app-surface) p-4 text-left transition hover:border-primary-300 hover:bg-primary-50 dark:hover:border-primary-500/30 dark:hover:bg-primary-500/12"
-                            type="button"
-                            onClick={item.action}
-                          >
-                            <Icon className="size-5 text-primary-600 dark:text-primary-200" />
-                            <span>
-                              <span className="block text-sm font-semibold text-(--app-text)">{item.title}</span>
-                              <span className="mt-1 block text-xs leading-5 text-(--app-text-muted)">{item.description}</span>
-                            </span>
-                          </button>
-                        )
-                      })}
+                      {justSubmitted ? (
+                        <p
+                          aria-live="polite"
+                          className="mt-3 text-xs leading-5 text-(--app-text-muted)"
+                          role="status"
+                        >
+                          Te llevaremos al pago automáticamente en {redirectCountdown}{' '}
+                          {redirectCountdown === 1 ? 'segundo' : 'segundos'}.
+                        </p>
+                      ) : null}
                     </div>
                   </motion.div>
                 ) : (
