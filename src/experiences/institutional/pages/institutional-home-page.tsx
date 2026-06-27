@@ -1257,7 +1257,9 @@ export function InstitutionalHomePage() {
                       alt="ASI app mark"
                       className="w-16"
                       loading="lazy"
-                      src="/brand/asi-logo-white-transparent.webp"
+                      width={192}
+                      height={192}
+                      src="/brand/asi-logo-white-transparent-192.webp"
                     />
                     <p className="mt-5 text-lg font-semibold">
                       Demo en preparación

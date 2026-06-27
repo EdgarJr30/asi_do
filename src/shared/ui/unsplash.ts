@@ -15,6 +15,11 @@ function isUnsplash(url: string | undefined): url is string {
   return typeof url === 'string' && url.includes(UNSPLASH_HOST)
 }
 
+// Calidad objetivo para fotos: 75 es visualmente indistinguible de 80 en
+// contenido fotográfico (es compresión, no resolución → no pixela) y ahorra
+// bytes en móvil. Solo se aplica como tope: si la URL ya pide menos, se respeta.
+const TARGET_QUALITY = 75
+
 /** Reescribe el ancho (`w`) de una URL de Unsplash conservando el resto de params. */
 export function unsplashUrl(url: string, width: number): string {
   if (!isUnsplash(url)) return url
@@ -24,6 +29,10 @@ export function unsplashUrl(url: string, width: number): string {
     parsed.searchParams.set('w', String(width))
     // Deja que el CDN entregue WebP/AVIF cuando el navegador lo soporte.
     parsed.searchParams.set('auto', 'format')
+    // Baja la calidad solo si la actual es mayor (nunca la sube).
+    const currentQuality = Number.parseInt(parsed.searchParams.get('q') ?? '', 10)
+    const nextQuality = Number.isFinite(currentQuality) ? Math.min(currentQuality, TARGET_QUALITY) : TARGET_QUALITY
+    parsed.searchParams.set('q', String(nextQuality))
     return parsed.toString()
   } catch {
     return url

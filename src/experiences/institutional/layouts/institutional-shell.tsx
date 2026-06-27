@@ -147,6 +147,10 @@ export function InstitutionalShell() {
                       alt="ASI República Dominicana"
                       className="pointer-events-none absolute left-0 top-1/2 w-[10.8rem] -translate-y-1/2 sm:w-[10.8rem]"
                       loading="lazy"
+                      width={512}
+                      height={512}
+                      sizes="173px"
+                      srcSet="/brand/asi-logo-light.no-bg-192.webp 192w, /brand/asi-logo-light.no-bg-384.webp 384w, /brand/asi-logo-light.no-bg.webp 512w"
                       src="/brand/asi-logo-light.no-bg.webp"
                       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                       animate={
