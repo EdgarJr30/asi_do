@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase/client'
 import { extractErrorDetails } from '@/lib/errors/error-utils'
 import { collectClientEnvironmentMetadata } from '@/lib/platform/client-environment'
 
-interface CaptureClientErrorInput {
+export interface CaptureClientErrorInput {
   source: string
   route?: string | null
   userId?: string | null

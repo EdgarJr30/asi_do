@@ -83,7 +83,13 @@ export default defineConfig({
             return 'vendor-router'
           }
 
-          if (id.includes('/@tanstack/react-query/') || id.includes('/@supabase/supabase-js/')) {
+          // Supabase en su propio chunk: solo se importa de forma dinámica
+          // (sesión/feature APIs), así no entra en el bundle eager de la landing.
+          if (id.includes('/@supabase/')) {
+            return 'vendor-supabase'
+          }
+
+          if (id.includes('/@tanstack/react-query/')) {
             return 'vendor-data'
           }
 

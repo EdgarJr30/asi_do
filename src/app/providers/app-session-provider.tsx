@@ -1,13 +1,26 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { createContext, type PropsWithChildren, useContext, useEffect, useRef, useState } from 'react'
-import type { Session, User } from '@supabase/supabase-js'
+import type { Session, SupabaseClient, User } from '@supabase/supabase-js'
 
-import { fetchSessionSnapshot, type AppMembership } from '@/features/auth/lib/auth-api'
+import type { AppMembership } from '@/features/auth/lib/auth-api'
 import { hasActiveAsiAccess } from '@/lib/auth/asi-access'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabaseConfig } from '@/shared/config/env'
 import type { PermissionCode } from '@/shared/constants/permissions'
-import type { Tables } from '@/shared/types/database'
+import type { Database, Tables } from '@/shared/types/database'
+
+// `import()` dinámico del cliente Supabase: lo saca del bundle eager (landing)
+// y lo carga (chunk `vendor-supabase`) solo tras el montaje. Se determina la
+// configuración con el env (síncrono), sin cargar el SDK.
+const isSupabaseConfigured = getSupabaseConfig() !== null
+
+let supabaseClientPromise: Promise<SupabaseClient<Database> | null> | null = null
+function loadSupabaseClient() {
+  if (!supabaseClientPromise) {
+    supabaseClientPromise = import('@/lib/supabase/client').then((mod) => mod.supabase)
+  }
+  return supabaseClientPromise
+}
 
 interface AppSessionContextValue {
   isSupabaseConfigured: boolean
@@ -42,7 +55,7 @@ export function resolveActiveMembership(memberships: AppMembership[]) {
 function emptyState(session: Session | null): AppSessionContextValue {
   const activeMembership = resolveActiveMembership([])
   return {
-    isSupabaseConfigured: supabase !== null,
+    isSupabaseConfigured,
     isLoading: false,
     isAuthenticated: session !== null,
     session,
@@ -76,11 +89,12 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
   const [activePastorScopeCount, setActivePastorScopeCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const hydratedUserIdRef = useRef<string | null>(null)
+  const clientRef = useRef<SupabaseClient<Database> | null>(null)
 
   async function hydrateSession(user: User | null, options: { showLoading?: boolean } = {}) {
     const { showLoading = true } = options
 
-    if (!user || !supabase) {
+    if (!user) {
       hydratedUserIdRef.current = null
       setProfile(null)
       setMemberships([])
@@ -98,6 +112,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     }
 
     try {
+      const { fetchSessionSnapshot } = await import('@/features/auth/lib/auth-api')
       const snapshot = await fetchSessionSnapshot(user)
 
       hydratedUserIdRef.current = user.id
@@ -118,61 +133,69 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     // estar desfasado justo después de iniciar sesión). Así evitamos hidratar con
     // un usuario nulo y dejar `isLoading=false` con `profile=null`, lo que causaba
     // un redirect prematuro a /candidate/profile antes de cargar el perfil real.
-    if (!supabase) {
+    const client = clientRef.current ?? (await loadSupabaseClient())
+    clientRef.current = client
+
+    if (!client) {
       await hydrateSession(null)
       return
     }
 
-    const { data } = await supabase.auth.getSession()
+    const { data } = await client.auth.getSession()
     setSession(data.session)
     await hydrateSession(data.session?.user ?? null)
   }
 
   useEffect(() => {
-    const client = supabase
-
-    if (!client) {
-      setIsLoading(false)
-      return
-    }
-
-    const supabaseClient = client
-
     let isActive = true
+    let unsubscribe: (() => void) | undefined
 
-    async function initialize() {
-      const currentSessionResponse = await supabaseClient.auth.getSession()
-      const currentSession = currentSessionResponse.data.session
+    void (async () => {
+      const client = await loadSupabaseClient()
 
       if (!isActive) {
         return
       }
 
+      clientRef.current = client
+
+      if (!client) {
+        setIsLoading(false)
+        return
+      }
+
+      const currentSessionResponse = await client.auth.getSession()
+
+      if (!isActive) {
+        return
+      }
+
+      const currentSession = currentSessionResponse.data.session
       setSession(currentSession)
       await hydrateSession(currentSession?.user ?? null)
-    }
 
-    void initialize()
+      const authListener = client.auth.onAuthStateChange((_event, nextSession) => {
+        if (!isActive) {
+          return
+        }
 
-    const authListener = supabaseClient.auth.onAuthStateChange((_event, nextSession) => {
-      if (!isActive) {
-        return
-      }
+        const nextUserId = nextSession?.user.id ?? null
 
-      const nextUserId = nextSession?.user.id ?? null
+        setSession(nextSession)
 
-      setSession(nextSession)
+        if (nextUserId !== null && nextUserId === hydratedUserIdRef.current) {
+          return
+        }
 
-      if (nextUserId !== null && nextUserId === hydratedUserIdRef.current) {
-        return
-      }
+        void hydrateSession(nextSession?.user ?? null, { showLoading: hydratedUserIdRef.current === null })
+      })
 
-      void hydrateSession(nextSession?.user ?? null, { showLoading: hydratedUserIdRef.current === null })
-    })
+      unsubscribe = () => authListener.data.subscription.unsubscribe()
+    })()
 
     return () => {
       isActive = false
-      authListener.data.subscription.unsubscribe()
+      unsubscribe?.()
     }
   }, [])
 
@@ -196,7 +219,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     activeMembership,
     activeTenantId: activeMembership?.tenantId ?? null,
     hasMultipleWorkspaceMemberships: memberships.length > 1,
-    isSupabaseConfigured: supabase !== null,
+    isSupabaseConfigured,
     isLoading,
     isAuthenticated: session !== null,
     session,

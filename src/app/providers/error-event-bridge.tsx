@@ -1,7 +1,13 @@
 import { useEffect } from 'react'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
-import { captureClientError } from '@/lib/errors/client-error-logger'
+import type { CaptureClientErrorInput } from '@/lib/errors/client-error-logger'
+
+// Carga diferida del logger (y por tanto del cliente Supabase) solo cuando
+// realmente ocurre un error: este bridge vive en el árbol eager.
+function captureClientError(input: CaptureClientErrorInput) {
+  return import('@/lib/errors/client-error-logger').then(({ captureClientError }) => captureClientError(input))
+}
 
 export function ErrorEventBridge() {
   const session = useAppSession()

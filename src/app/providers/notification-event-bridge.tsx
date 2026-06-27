@@ -1,7 +1,14 @@
 import { useEffect, useRef } from 'react'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
-import { markNotificationClicked } from '@/lib/notifications/api'
+
+// Carga diferida de la API de notificaciones (y del cliente Supabase) solo al
+// procesar un click: este bridge vive en el árbol eager.
+function markNotificationClicked(notificationId: string, deliveryId?: string | null) {
+  return import('@/lib/notifications/api').then(({ markNotificationClicked }) =>
+    markNotificationClicked(notificationId, deliveryId)
+  )
+}
 
 interface NotificationClickMessage {
   type: 'notification-click'
