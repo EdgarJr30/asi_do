@@ -1,6 +1,3 @@
-import type { Transition } from 'motion/react'
-import { motion, useReducedMotion } from 'motion/react'
-
 import { BrandMark } from '@/components/ui/app-brand'
 import { cn } from '@/lib/utils/cn'
 
@@ -30,41 +27,37 @@ const spinnerBrandPanelBySize: Record<LoaderSize, string> = {
   lg: 'size-7 rounded-xl p-1.5 shadow-[0_10px_22px_rgba(43,69,143,0.26)]'
 }
 
-const spinTransition: Transition = {
-  repeat: Infinity,
-  ease: 'linear',
-  duration: 0.85
-}
-
 /**
  * Loader oficial compacto para usos inline (botones, filas, tablas y tarjetas).
  * Mantiene el logo ASI y los anillos del loader de página en escala pequeña.
+ *
+ * Animado con CSS puro (keyframes en `styles/index.css`) para no depender de
+ * `motion`, ya que este loader vive en el camino crítico (fallback de Suspense).
+ * `motion-reduce:animate-none` respeta `prefers-reduced-motion`.
  */
 export function Spinner({ size = 'md', className }: { size?: LoaderSize; className?: string }) {
-  const shouldReduceMotion = useReducedMotion()
-
   return (
     <span
       className={cn('relative inline-flex shrink-0 items-center justify-center', spinnerFrameBySize[size], className)}
       role="status"
       aria-label="Cargando"
     >
-      <motion.span
-        className={cn('absolute inset-0 rounded-full border-primary-500/15 border-t-primary-500', spinnerRingBySize[size])}
-        animate={shouldReduceMotion ? undefined : { rotate: 360 }}
-        transition={spinTransition}
+      <span
+        className={cn(
+          'absolute inset-0 rounded-full border-primary-500/15 border-t-primary-500 animate-[loader-spin_0.85s_linear_infinite] motion-reduce:animate-none',
+          spinnerRingBySize[size]
+        )}
       />
-      <motion.span
-        className={cn('absolute rounded-full border-accent-400/15 border-b-accent-400', spinnerInsetBySize[size], spinnerRingBySize[size])}
-        animate={shouldReduceMotion ? undefined : { rotate: -360 }}
-        transition={{ ...spinTransition, duration: 1.35 }}
+      <span
+        className={cn(
+          'absolute rounded-full border-accent-400/15 border-b-accent-400 animate-[loader-spin-reverse_1.35s_linear_infinite] motion-reduce:animate-none',
+          spinnerInsetBySize[size],
+          spinnerRingBySize[size]
+        )}
       />
-      <motion.span
-        animate={shouldReduceMotion ? undefined : { scale: [1, 1.05, 1] }}
-        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-      >
+      <span className="animate-[loader-breathe_1.8s_ease-in-out_infinite] motion-reduce:animate-none">
         <BrandMark panelClassName={spinnerBrandPanelBySize[size]} />
-      </motion.span>
+      </span>
     </span>
   )
 }
@@ -72,7 +65,7 @@ export function Spinner({ size = 'md', className }: { size?: LoaderSize; classNa
 /**
  * Loader de página: estado de carga centralizado y con sello de marca.
  * Halo pulsante + dos anillos contrarrotatorios alrededor del logo ASI que respira.
- * Respeta `prefers-reduced-motion`.
+ * Animado con CSS puro; respeta `prefers-reduced-motion` vía `motion-reduce:*`.
  */
 export function PageLoader({
   label = 'Preparando tu espacio',
@@ -89,8 +82,6 @@ export function PageLoader({
   /** Banda compacta para usos dentro de una sección/tarjeta con UI alrededor. */
   inline?: boolean
 }) {
-  const shouldReduceMotion = useReducedMotion()
-
   // Altura del contenedor según el contexto:
   // - fullScreen → viewport completo
   // - inline → banda compacta dentro de una tarjeta/sección
@@ -107,49 +98,31 @@ export function PageLoader({
     >
       <div className="relative flex size-24 items-center justify-center">
         {/* Halo pulsante */}
-        <motion.span
-          className="absolute inset-0 rounded-full bg-primary-500/15 blur-[2px]"
-          animate={shouldReduceMotion ? undefined : { scale: [1, 1.3, 1], opacity: [0.55, 0, 0.55] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        />
+        <span className="absolute inset-0 rounded-full bg-primary-500/15 blur-[2px] animate-[loader-halo_2s_ease-in-out_infinite] motion-reduce:animate-none" />
         {/* Anillo exterior */}
-        <motion.span
-          className="absolute inset-0 rounded-full border-[3px] border-primary-500/15 border-t-primary-500"
-          animate={shouldReduceMotion ? undefined : { rotate: 360 }}
-          transition={{ duration: 1.1, repeat: Infinity, ease: 'linear' }}
-        />
+        <span className="absolute inset-0 rounded-full border-[3px] border-primary-500/15 border-t-primary-500 animate-[loader-spin_1.1s_linear_infinite] motion-reduce:animate-none" />
         {/* Anillo interior contrarrotatorio */}
-        <motion.span
-          className="absolute inset-[0.55rem] rounded-full border-[3px] border-accent-400/15 border-b-accent-400"
-          animate={shouldReduceMotion ? undefined : { rotate: -360 }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: 'linear' }}
-        />
+        <span className="absolute inset-[0.55rem] rounded-full border-[3px] border-accent-400/15 border-b-accent-400 animate-[loader-spin-reverse_1.6s_linear_infinite] motion-reduce:animate-none" />
         {/* Marca que respira */}
-        <motion.span
-          animate={shouldReduceMotion ? undefined : { scale: [1, 1.06, 1] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        >
+        <span className="animate-[loader-breathe_2s_ease-in-out_infinite] motion-reduce:animate-none">
           <BrandMark className="size-7" panelClassName="size-12 rounded-2xl shadow-[0_12px_28px_rgba(43,69,143,0.28)]" />
-        </motion.span>
+        </span>
       </div>
 
       <div className="space-y-1.5">
         <p className="flex items-center justify-center gap-1 text-sm font-semibold text-(--app-text)">
           {label}
-          {shouldReduceMotion ? null : (
-            <span aria-hidden className="inline-flex">
-              {[0, 1, 2].map((index) => (
-                <motion.span
-                  key={index}
-                  className="inline-block"
-                  animate={{ opacity: [0.2, 1, 0.2] }}
-                  transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', delay: index * 0.18 }}
-                >
-                  .
-                </motion.span>
-              ))}
-            </span>
-          )}
+          <span aria-hidden className="inline-flex motion-reduce:hidden">
+            {[0, 1, 2].map((index) => (
+              <span
+                key={index}
+                className="inline-block animate-[loader-dot_1.2s_ease-in-out_infinite]"
+                style={{ animationDelay: `${index * 0.18}s` }}
+              >
+                .
+              </span>
+            ))}
+          </span>
         </p>
         {hint ? <p className="text-xs text-(--app-text-muted)">{hint}</p> : null}
       </div>
