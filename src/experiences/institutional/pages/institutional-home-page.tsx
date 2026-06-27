@@ -49,6 +49,7 @@ import {
   type TouchPanIntent,
 } from '@/experiences/institutional/lib/carousel-gesture';
 import { cn } from '@/lib/utils/cn';
+import { unsplashSrcSet } from '@/shared/ui/unsplash';
 
 function wrapIndex(index: number, length: number) {
   return (index + length) % length;
@@ -228,6 +229,8 @@ function InstitutionalCarouselCard({
             className="h-full w-full object-cover"
             fetchPriority="low"
             loading="lazy"
+            sizes="(max-width: 640px) 80vw, 380px"
+            srcSet={unsplashSrcSet(item.image, [380, 560, 760])}
             src={item.image}
           />
           <div className="institutional-home__carousel-image-overlay absolute inset-0" />
@@ -1167,6 +1170,8 @@ export function InstitutionalHomePage() {
                     alt={homeEcosystemCards[0].imageAlt}
                     className="h-full w-full object-cover"
                     loading="lazy"
+                    sizes="(max-width: 1280px) 100vw, 600px"
+                    srcSet={unsplashSrcSet(homeEcosystemCards[0].image, [600, 900, 1200])}
                     src={homeEcosystemCards[0].image}
                   />
                   <div className="institutional-home__ecosystem-hero-overlay absolute inset-0" />
@@ -1195,6 +1200,8 @@ export function InstitutionalHomePage() {
                         alt={item.imageAlt ?? item.title}
                         className="h-full w-full object-cover"
                         loading="lazy"
+                        sizes="(max-width: 768px) 100vw, 420px"
+                        srcSet={unsplashSrcSet(item.image, [420, 620, 840])}
                         src={item.image}
                       />
                       <div className="institutional-home__ecosystem-card-overlay absolute inset-0" />
@@ -1322,6 +1329,8 @@ export function InstitutionalHomePage() {
                   alt={item.imageAlt}
                   className="h-60 w-full object-cover"
                   loading="lazy"
+                  sizes="(max-width: 1024px) 100vw, 420px"
+                  srcSet={unsplashSrcSet(item.image, [420, 620, 840])}
                   src={item.image}
                 />
                 <div className="p-5">

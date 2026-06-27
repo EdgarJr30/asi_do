@@ -22,6 +22,8 @@ export function BrandLockup({
       alt={decorative ? '' : BRAND_NAME}
       aria-hidden={decorative || undefined}
       className={cn('block h-auto w-full object-contain', className)}
+      width={512}
+      height={512}
       src={src}
     />
   )
@@ -41,7 +43,13 @@ export function BrandMark({
         panelClassName
       )}
     >
-      <img alt={BRAND_NAME} className={cn('h-full w-full object-contain', className)} src="/brand/asi-logo-white-transparent.webp" />
+      <img
+        alt={BRAND_NAME}
+        className={cn('h-full w-full object-contain', className)}
+        width={512}
+        height={512}
+        src="/brand/asi-logo-white-transparent.webp"
+      />
     </span>
   )
 }
