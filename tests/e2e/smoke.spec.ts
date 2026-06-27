@@ -7,20 +7,25 @@ const candidateApplicationsPath = '/candidate/applications'
 const workspacePipelinePath = '/workspace/pipeline'
 
 test.describe('public shell smoke', () => {
-  test('loads the institutional home and platform jobs discovery on mobile', async ({ page }) => {
+  test('loads the institutional home and gates the members-only job board', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByText(/Transformando vidas a través del compromiso laico y la fe/i)).toBeVisible()
 
     await page.goto('/platform')
-    await expect(page.getByRole('button', { name: 'Jobs', exact: true })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: /Vacantes, talento y selección en un solo lugar/i })
+    ).toBeVisible()
 
+    // El job board (/platform/jobs) está detrás de RequireActiveAsiAccess: un
+    // visitante sin sesión activa es redirigido a iniciar sesión.
     await page.goto('/platform/jobs')
-    await expect(page.getByText(/Descubre oportunidades con filtros simples y contexto suficiente|Gestiona vacantes internas y públicas/i)).toBeVisible()
+    await page.waitForURL('**/auth/sign-in**', { timeout: 15_000 })
+    await expect(page.getByRole('heading', { name: /Bienvenida de vuelta/i })).toBeVisible()
   })
 
   test('treats removed legacy routes as no longer part of the public contract', async ({ page }) => {
     await page.goto('/pipeline')
-    await expect(page.getByRole('heading', { name: /No encontramos esa página institucional/i, level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Ups, esta página no está disponible/i, level: 1 })).toBeVisible()
   })
 })
 
