@@ -14,6 +14,25 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!--
+      Precarga del hero (elemento LCP de la home). Se descubre antes de parsear
+      el CSS, en paralelo con las fuentes, y con prioridad alta. Las media
+      queries reflejan el <picture> del hero: móvil vs. escritorio.
+    -->
+    <link
+      rel="preload"
+      as="image"
+      href="/media/2026-asi-convention_movil.webp"
+      media="(max-width: 767px)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="/media/2026-asi-convention_desktop.webp"
+      media="(min-width: 768px)"
+      fetchpriority="high"
+    />
     <title>ASI Rep. Dominicana</title>
   </head>
   <body>

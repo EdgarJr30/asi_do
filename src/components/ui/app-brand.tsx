@@ -15,7 +15,7 @@ export function BrandLockup({
   className,
   surface = 'light',
   decorative = false,
-  sizes = '176px'
+  sizes = '96px'
 }: {
   className?: string
   surface?: 'light' | 'dark' | 'auto'
@@ -55,13 +55,13 @@ export function BrandMark({
         panelClassName
       )}
     >
-      {/* Siempre se muestra pequeño (≤48px): la variante de 192px sobra y pesa ~6KB. */}
+      {/* Siempre se muestra pequeño (≤48px): la variante de 96px cubre DPR2 y pesa ~2.4KB. */}
       <img
         alt={BRAND_NAME}
         className={cn('h-full w-full object-contain', className)}
-        width={192}
-        height={192}
-        src="/brand/asi-logo-white-transparent-192.webp"
+        width={96}
+        height={96}
+        src="/brand/asi-logo-white-transparent-96.webp"
       />
     </span>
   )
