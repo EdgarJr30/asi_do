@@ -46,3 +46,10 @@ export function getSupabaseConfig(): { supabaseUrl: string; supabaseAnonKey: str
 export function isSupabaseConfigured() {
   return getSupabaseConfig() !== null
 }
+
+/** URL pública de un objeto en un bucket público de Supabase Storage. */
+export function publicStorageUrl(bucket: string, path: string): string {
+  const base = env.supabaseUrl?.replace(/\/$/, '') ?? ''
+  const cleanPath = path.replace(/^\//, '')
+  return `${base}/storage/v1/object/public/${bucket}/${cleanPath}`
+}
