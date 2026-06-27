@@ -27,6 +27,7 @@ import {
 // import { Link } from 'react-router-dom';
 
 import { surfacePaths } from '@/app/router/surface-paths';
+import { publicStorageUrl } from '@/shared/config/env';
 import './institutional-home-page.css';
 import {
   InstitutionalActionLink,
@@ -350,7 +351,7 @@ function LazyAutoplayVideo({
           onCanPlay={onCanPlay}
           onError={onError}
         >
-          <source src={src} type="video/mp4" />
+          <source src={src} type="video/webm" />
         </video>
       ) : (
         <div className={cn(className, 'bg-[linear-gradient(135deg,#203b87,#687fca)]')} />
@@ -384,8 +385,9 @@ export function InstitutionalHomePage() {
   const carouselTouchIntentRef = useRef<TouchPanIntent>('undetermined');
   const carouselResumeTimeoutRef = useRef<number | null>(null);
   const carouselOffsetX = useMotionValue(0);
-  const platformDemoVideoPath = '/media/demoApp.mp4';
-  const christianEventVideoPath = '/media/christian-event.mp4';
+  // Videos servidos como WebM (VP9) desde Supabase Storage (bucket público `public-media`).
+  const platformDemoVideoPath = publicStorageUrl('public-media', 'videos/demoApp.webm');
+  const christianEventVideoPath = publicStorageUrl('public-media', 'videos/christian-event.webm');
 
   useEffect(() => {
     if (shouldReduceMotion) {
@@ -862,7 +864,9 @@ export function InstitutionalHomePage() {
                           <img
                             alt={slide.imageAlt}
                             className="institutional-home__image-frame h-full w-full"
-                            loading="lazy"
+                            decoding="async"
+                            fetchPriority={index === 0 ? 'high' : 'low'}
+                            loading={index === 0 ? 'eager' : 'lazy'}
                             src={slide.image}
                           />
                         </picture>
@@ -876,7 +880,9 @@ export function InstitutionalHomePage() {
                       <img
                         alt={slide.imageAlt}
                         className="h-full w-full object-cover"
-                        loading="lazy"
+                        decoding="async"
+                        fetchPriority={index === 0 ? 'high' : 'low'}
+                        loading={index === 0 ? 'eager' : 'lazy'}
                         src={slide.image}
                       />
                     </picture>
@@ -1233,7 +1239,7 @@ export function InstitutionalHomePage() {
                   <LazyAutoplayVideo
                     ariaHidden
                     className="institutional-home__device-media pointer-events-none w-full select-none object-cover"
-                    poster="/brand/asi-logo-effect.png"
+                    poster="/brand/asi-logo-effect.webp"
                     src={platformDemoVideoPath}
                     onCanPlay={() => setPlatformVideoReady(true)}
                     onError={() => setPlatformVideoReady(false)}
@@ -1244,17 +1250,14 @@ export function InstitutionalHomePage() {
                       alt="ASI app mark"
                       className="w-16"
                       loading="lazy"
-                      src="/brand/asi-logo-white-transparent.png"
+                      src="/brand/asi-logo-white-transparent.webp"
                     />
                     <p className="mt-5 text-lg font-semibold">
-                      Demo lista para enlazar
+                      Demo en preparación
                     </p>
                     <p className="mt-3 text-sm leading-6 text-white/80">
-                      Coloca el archivo en{' '}
-                      <span className="font-semibold text-white">
-                        public/media/demoApp.mp4
-                      </span>{' '}
-                      y este bloque lo reproducirá automáticamente.
+                      La demostración se está cargando. En un momento verás la
+                      plataforma en acción.
                     </p>
                   </div>
                 )}

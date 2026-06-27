@@ -59,6 +59,8 @@ export function InstitutionalInteriorPage({
             <img
               alt={content.hero.imageAlt ?? ''}
               className="h-120 w-full rounded-[1.75rem] object-cover shadow-(--asi-shadow-soft)"
+              decoding="async"
+              fetchPriority="high"
               loading="eager"
               src={content.hero.image}
             />

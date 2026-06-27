@@ -15,7 +15,7 @@ export function BrandLockup({
 }) {
   const { resolvedTheme, theme } = useTheme()
   const activeSurface = surface === 'auto' ? ((resolvedTheme ?? theme) === 'dark' ? 'dark' : 'light') : surface
-  const src = activeSurface === 'dark' ? '/brand/asi-logo-white-transparent.png' : '/brand/asi-logo-light.no-bg.png'
+  const src = activeSurface === 'dark' ? '/brand/asi-logo-white-transparent.webp' : '/brand/asi-logo-light.no-bg.webp'
 
   return (
     <img
@@ -41,7 +41,7 @@ export function BrandMark({
         panelClassName
       )}
     >
-      <img alt={BRAND_NAME} className={cn('h-full w-full object-contain', className)} src="/brand/asi-logo-white-transparent.png" />
+      <img alt={BRAND_NAME} className={cn('h-full w-full object-contain', className)} src="/brand/asi-logo-white-transparent.webp" />
     </span>
   )
 }

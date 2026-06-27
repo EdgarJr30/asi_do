@@ -178,8 +178,8 @@ export const homeHeroSlides: InstitutionalMediaSlide[] = [
   {
     title: 'Convención ASI 2026',
     description: '',
-    image: '/media/2026-asi-convention_desktop.jpg',
-    mobileImage: '/media/2026-asi-convention_movil.png',
+    image: '/media/2026-asi-convention_desktop.webp',
+    mobileImage: '/media/2026-asi-convention_movil.webp',
     imageAlt: 'Convención ASI 2026',
     primaryAction: {
       label: 'Únete ahora',

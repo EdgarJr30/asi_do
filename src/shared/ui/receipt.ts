@@ -38,7 +38,7 @@ function isApprovedValue(value: string) {
  * Resultado, No. de orden) para darles un tratamiento visual destacado.
  */
 export function printReceipt(title: string, lines: ReceiptLine[]) {
-  const logoSrc = `${window.location.origin}/brand/asi-logo-white-transparent.png`
+  const logoSrc = `${window.location.origin}/brand/asi-logo-white-transparent.webp`
   const issuedAt = new Date().toLocaleString('es-DO', {
     dateStyle: 'long',
     timeStyle: 'short'

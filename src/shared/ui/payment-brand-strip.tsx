@@ -3,22 +3,22 @@ import { cn } from '@/lib/utils/cn'
 const paymentBrandAssets = [
   {
     label: 'Visa',
-    src: '/payment/visa.jpg',
+    src: '/payment/visa.webp',
     className: 'h-5 w-14'
   },
   {
     label: 'Mastercard',
-    src: '/payment/mastercard.jpg',
+    src: '/payment/mastercard.webp',
     className: 'h-8 w-12'
   },
   {
     label: 'Visa Secure',
-    src: '/payment/visa-secure.png',
+    src: '/payment/visa-secure.webp',
     className: 'h-9 w-9'
   },
   {
     label: 'Mastercard ID Check',
-    src: '/payment/mastercard-identity-check.png',
+    src: '/payment/mastercard-identity-check.webp',
     className: 'h-9 w-9'
   }
 ] as const

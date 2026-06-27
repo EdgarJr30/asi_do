@@ -67,9 +67,12 @@ export function PaymentPolicyPage({ kind }: { kind: PaymentPolicyKind }) {
                 </p>
                 <img
                   alt="Ejemplo de políticas de seguridad para website y pagos"
-                  className="mt-4 w-full rounded-2xl border border-slate-200 bg-white object-contain"
+                  className="mt-4 h-auto w-full rounded-2xl border border-slate-200 bg-white object-contain"
+                  decoding="async"
+                  height={515}
                   loading="lazy"
-                  src="/payment/security-policy-example.png"
+                  src="/payment/security-policy-example.webp"
+                  width={957}
                 />
               </InstitutionalCard>
             ) : null}
