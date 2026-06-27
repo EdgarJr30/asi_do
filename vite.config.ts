@@ -8,6 +8,37 @@ import { defineConfig } from 'vitest/config'
 
 const presentationIndexPath = fileURLToPath(new URL('./public/presentation/index.html', import.meta.url))
 
+// Inlines the build CSS bundle into <head> as a <style> tag so it stops being a
+// render-blocking network request (improves FCP/LCP). Build-only.
+function inlineCss(): PluginOption {
+  return {
+    name: 'asi-inline-css',
+    apply: 'build',
+    enforce: 'post',
+    transformIndexHtml(html, ctx) {
+      if (!ctx.bundle) return html
+
+      return html.replace(
+        /<link rel="stylesheet"[^>]*href="\/([^"]+\.css)"[^>]*>/g,
+        (match, fileName: string) => {
+          const asset = ctx.bundle?.[fileName]
+          if (!asset || asset.type !== 'asset') return match
+
+          const css =
+            typeof asset.source === 'string'
+              ? asset.source
+              : Buffer.from(asset.source).toString('utf8')
+
+          // Drop the standalone CSS file from the output; it's now inlined.
+          delete ctx.bundle![fileName]
+
+          return `<style>${css}</style>`
+        }
+      )
+    }
+  }
+}
+
 function servePresentationIndex(): PluginOption {
   return {
     name: 'asi-presentation-route',
@@ -37,7 +68,7 @@ function servePresentationIndex(): PluginOption {
 }
 
 export default defineConfig({
-  plugins: [servePresentationIndex(), react(), tailwindcss()],
+  plugins: [servePresentationIndex(), react(), tailwindcss(), inlineCss()],
   build: {
     rollupOptions: {
       output: {
