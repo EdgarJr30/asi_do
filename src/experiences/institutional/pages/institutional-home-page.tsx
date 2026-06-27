@@ -229,8 +229,8 @@ function InstitutionalCarouselCard({
             className="h-full w-full object-cover"
             fetchPriority="low"
             loading="lazy"
-            sizes="(max-width: 640px) 80vw, 380px"
-            srcSet={unsplashSrcSet(item.image, [380, 560, 760])}
+            sizes="(max-width: 640px) 264px, 320px"
+            srcSet={unsplashSrcSet(item.image, [320, 480, 640], 70)}
             src={item.image}
           />
           <div className="institutional-home__carousel-image-overlay absolute inset-0" />

@@ -15,13 +15,13 @@ function isUnsplash(url: string | undefined): url is string {
   return typeof url === 'string' && url.includes(UNSPLASH_HOST)
 }
 
-// Calidad objetivo para fotos: 75 es visualmente indistinguible de 80 en
-// contenido fotográfico (es compresión, no resolución → no pixela) y ahorra
+// Calidad objetivo por defecto para fotos: 75 es visualmente indistinguible de 80
+// en contenido fotográfico (es compresión, no resolución → no pixela) y ahorra
 // bytes en móvil. Solo se aplica como tope: si la URL ya pide menos, se respeta.
-const TARGET_QUALITY = 75
+const DEFAULT_QUALITY = 75
 
 /** Reescribe el ancho (`w`) de una URL de Unsplash conservando el resto de params. */
-export function unsplashUrl(url: string, width: number): string {
+export function unsplashUrl(url: string, width: number, quality: number = DEFAULT_QUALITY): string {
   if (!isUnsplash(url)) return url
 
   try {
@@ -31,7 +31,7 @@ export function unsplashUrl(url: string, width: number): string {
     parsed.searchParams.set('auto', 'format')
     // Baja la calidad solo si la actual es mayor (nunca la sube).
     const currentQuality = Number.parseInt(parsed.searchParams.get('q') ?? '', 10)
-    const nextQuality = Number.isFinite(currentQuality) ? Math.min(currentQuality, TARGET_QUALITY) : TARGET_QUALITY
+    const nextQuality = Number.isFinite(currentQuality) ? Math.min(currentQuality, quality) : quality
     parsed.searchParams.set('q', String(nextQuality))
     return parsed.toString()
   } catch {
@@ -44,8 +44,12 @@ export function unsplashUrl(url: string, width: number): string {
  * Devuelve `undefined` para URLs que no son de Unsplash (p. ej. assets locales),
  * de modo que el `<img>` simplemente use su `src` original.
  */
-export function unsplashSrcSet(url: string | undefined, widths: readonly number[]): string | undefined {
+export function unsplashSrcSet(
+  url: string | undefined,
+  widths: readonly number[],
+  quality: number = DEFAULT_QUALITY
+): string | undefined {
   if (!isUnsplash(url)) return undefined
 
-  return widths.map((width) => `${unsplashUrl(url, width)} ${width}w`).join(', ')
+  return widths.map((width) => `${unsplashUrl(url, width, quality)} ${width}w`).join(', ')
 }
