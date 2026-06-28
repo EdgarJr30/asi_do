@@ -808,9 +808,10 @@ export function InstitutionalHomePage() {
         <div className="space-y-8 sm:space-y-10">
           <motion.div
             className="institutional-home__hero-shell relative overflow-hidden bg-(--asi-primary) shadow-(--asi-shadow-strong)"
-            initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
+            // El hero es el elemento LCP: lo renderizamos visible de inmediato
+            // (sin fade de entrada) para no retrasar el LCP.
+            initial={false}
             transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
-            whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
             style={{
               cursor: 'default',
               touchAction: 'pan-y',
