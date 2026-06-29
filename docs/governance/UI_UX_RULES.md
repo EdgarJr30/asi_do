@@ -426,6 +426,7 @@ Apple-inspired UI rules:
 2. A card must have a predictable structure: title, critical metadata, status, and actions.
 3. Avoid unnecessary nested cards.
 4. Mobile list rows and tappable cards should provide at least **48px** row height or tap height.
+5. The `/platform/jobs` jobs board should use compact selectable rows plus a focused detail pane on desktop; avoid oversized repeated cards and avoid opening with a large empty detail panel when jobs are available.
 
 ### 11.2 Tables
 1. Tables are allowed for dense operational data on desktop.
