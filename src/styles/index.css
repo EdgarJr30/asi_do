@@ -522,3 +522,39 @@
     opacity: 1;
   }
 }
+
+/* ── Transición suave de tema (claro ⇄ oscuro) ──────────────────────────────
+   Usa la View Transitions API: el tema entrante se revela con un barrido
+   circular suave desde el botón. El JS del ThemeToggle inyecta las variables
+   --theme-x / --theme-y / --theme-r (origen y radio) y la clase de scope. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  /* Desactivamos el cross-fade por defecto: controlamos la animación abajo. */
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html.theme-transition-active::view-transition-old(root) {
+  z-index: 1;
+}
+
+html.theme-transition-active::view-transition-new(root) {
+  z-index: 2;
+  animation: theme-reveal 1100ms cubic-bezier(0.33, 0, 0.2, 1);
+}
+
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
+  to {
+    clip-path: circle(var(--theme-r, 150vmax) at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transition-active::view-transition-new(root),
+  html.theme-transition-active::view-transition-old(root) {
+    animation: none;
+  }
+}
