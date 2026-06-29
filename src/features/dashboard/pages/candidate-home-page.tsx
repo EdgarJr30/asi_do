@@ -1,25 +1,23 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { motion, useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion, type Variants } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
 import quoteData from 'inspirational-quotes/data/data.json'
 import {
   ArrowRight,
-  BriefcaseBusiness,
-  Building2,
+  CalendarClock,
   ChevronLeft,
   ChevronRight,
-  Clock,
   FileText,
-  LayoutDashboard,
-  MoreVertical,
-  Sparkles,
-  UserRound
+  Layers,
+  Percent,
+  Quote,
+  Target,
+  TrendingUp
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils/cn'
-
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { Button } from '@/components/ui/button'
@@ -27,14 +25,31 @@ import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Spinner } from '@/components/ui/loader'
 import { applicationStatusDotClass, applicationStatusLabel } from '@/features/applications/lib/application-status'
-import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
+import { softEase } from '@/shared/ui/card-motion'
 import { listMyApplications } from '@/features/applications/lib/applications-api'
-import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
+import { listPublicJobs } from '@/features/jobs/lib/jobs-api'
 import type { Database } from '@/shared/types/database'
 
 type PublicStatus = Database['public']['Enums']['application_public_status']
 
 const ACTIVE_STATUSES: PublicStatus[] = ['submitted', 'in_review', 'interviewing', 'offer']
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+const RECENT_PAGE_SIZE = 8
+
+// Variantes locales de esta pantalla: entrada más lenta y suave que la
+// curva compartida (no se modifica la global para no afectar otros módulos).
+const pageStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.16, delayChildren: 0.08 } }
+}
+const gridStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.13 } }
+}
+const cardReveal: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.95, ease: softEase } }
+}
 
 function greetingForNow(date = new Date()) {
   const hour = date.getHours()
@@ -59,19 +74,18 @@ function getApplicationDetailPath(application: { job_posting?: { slug?: string |
 
 type InspirationalQuote = { text: string; from: string }
 const inspirationalQuotes = quoteData as InspirationalQuote[]
+const FALLBACK_QUOTE: InspirationalQuote = { text: 'El futuro depende de lo que hagas hoy.', from: 'Mahatma Gandhi' }
 
-function randomQuote(): InspirationalQuote {
-  const index = Math.floor(Math.random() * inspirationalQuotes.length)
-  return inspirationalQuotes[index] ?? { text: 'El futuro depende de lo que hagas hoy.', from: 'Mahatma Gandhi' }
-}
-
-interface ModuleCard {
+interface MetricCardData {
   key: string
   icon: LucideIcon
-  title: string
-  description: string
-  cta: string
-  onClick: () => void
+  chipClass: string
+  label: string
+  value: number
+  suffix?: string
+  loading: boolean
+  sub: string
+  trendUp?: boolean
 }
 
 export function CandidateHomePage() {
@@ -80,13 +94,6 @@ export function CandidateHomePage() {
   const shouldReduceMotion = useReducedMotion()
   const userId = session.authUser?.id ?? null
   const displayName = session.profile?.display_name ?? session.profile?.full_name ?? session.authUser?.email ?? 'candidato'
-  const hasWorkspaceAccess = session.permissions.includes('workspace:read')
-
-  const profileQuery = useQuery({
-    queryKey: ['candidate', 'profile', userId],
-    enabled: Boolean(userId),
-    queryFn: async () => fetchMyCandidateProfile(userId!)
-  })
 
   const applicationsQuery = useQuery({
     queryKey: ['applications', 'mine', userId],
@@ -94,15 +101,73 @@ export function CandidateHomePage() {
     queryFn: async () => listMyApplications(userId!)
   })
 
-  const quote = useState(() => randomQuote())[0]
+  const openJobsQuery = useQuery({
+    queryKey: ['jobs', 'public-board', 'home-count'],
+    queryFn: async () => listPublicJobs()
+  })
 
-  const applications = applicationsQuery.data ?? []
-  const activeApplications = applications.filter((application) =>
-    ACTIVE_STATUSES.includes(application.status_public)
-  ).length
-  const resumeCount = profileQuery.data?.resumes.length ?? 0
+  const [mountTime] = useState(() => Date.now())
+  const applications = useMemo(() => applicationsQuery.data ?? [], [applicationsQuery.data])
 
-  const RECENT_PAGE_SIZE = 5
+  const metrics = useMemo(() => {
+    const total = applications.length
+    const active = applications.filter((application) => ACTIVE_STATUSES.includes(application.status_public)).length
+    const interviews = applications.filter((application) => application.status_public === 'interviewing').length
+    const responded = applications.filter((application) => application.status_public !== 'submitted').length
+    const thisWeek = applications.filter((application) => {
+      if (!application.submitted_at) return false
+      const submitted = new Date(application.submitted_at).getTime()
+      return !Number.isNaN(submitted) && mountTime - submitted <= WEEK_MS
+    }).length
+    const responseRate = total > 0 ? Math.round((responded / total) * 100) : 0
+
+    return { total, active, interviews, responded, thisWeek, responseRate }
+  }, [applications, mountTime])
+
+  const openJobsCount = openJobsQuery.data?.jobs.length ?? 0
+  const appsLoading = applicationsQuery.isLoading
+
+  const metricCards: MetricCardData[] = [
+    {
+      key: 'active',
+      icon: Layers,
+      chipClass: 'bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300',
+      label: 'Aplicaciones activas',
+      value: metrics.active,
+      loading: appsLoading,
+      sub: metrics.thisWeek > 0 ? `+${metrics.thisWeek} esta semana` : `${metrics.total} en total`,
+      trendUp: metrics.thisWeek > 0
+    },
+    {
+      key: 'interviews',
+      icon: CalendarClock,
+      chipClass: 'bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300',
+      label: 'Entrevistas programadas',
+      value: metrics.interviews,
+      loading: appsLoading,
+      sub: metrics.interviews > 0 ? 'En tus procesos activos' : 'Sin entrevistas aún'
+    },
+    {
+      key: 'response',
+      icon: Percent,
+      chipClass: 'bg-teal-50 text-teal-600 dark:bg-teal-500/15 dark:text-teal-300',
+      label: 'Tasa de respuesta',
+      value: metrics.responseRate,
+      suffix: '%',
+      loading: appsLoading,
+      sub: metrics.total > 0 ? `${metrics.responded} de ${metrics.total} te respondieron` : 'Aún sin postulaciones'
+    },
+    {
+      key: 'matches',
+      icon: Target,
+      chipClass: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300',
+      label: 'Vacantes para ti',
+      value: openJobsCount,
+      loading: openJobsQuery.isLoading,
+      sub: 'Abiertas según tu perfil'
+    }
+  ]
+
   const [recentPage, setRecentPage] = useState(0)
   const recentTotalPages = Math.max(1, Math.ceil(applications.length / RECENT_PAGE_SIZE))
   const recentPageSafe = Math.min(recentPage, recentTotalPages - 1)
@@ -111,208 +176,124 @@ export function CandidateHomePage() {
     recentPageSafe * RECENT_PAGE_SIZE + RECENT_PAGE_SIZE
   )
 
-  const moduleCards: ModuleCard[] = [
-    {
-      key: 'profile',
-      icon: UserRound,
-      title: 'Perfil & CV',
-      description: 'Mantén tu presencia profesional y tu CV listos para aplicar en segundos.',
-      cta: 'Editar perfil',
-      onClick: () => void navigate(surfacePaths.candidate.profile)
-    },
-    {
-      key: 'jobs',
-      icon: BriefcaseBusiness,
-      title: 'Explorar vacantes',
-      description: 'Descubre oportunidades abiertas y postúlate con tu perfil completo.',
-      cta: 'Ver vacantes',
-      onClick: () => void navigate(surfacePaths.storefront.jobs)
-    },
-    {
-      key: 'applications',
-      icon: FileText,
-      title: 'Mis aplicaciones',
-      description: 'Sigue el estado de cada postulación sin perder el contexto.',
-      cta: 'Ver aplicaciones',
-      onClick: () => void navigate(surfacePaths.candidate.applications)
-    },
-    hasWorkspaceAccess
-      ? {
-          key: 'workspace',
-          icon: LayoutDashboard,
-          title: 'Abrir mi workspace',
-          description: 'Entra al espacio operativo de tu empresa para gestionar vacantes y talento.',
-          cta: 'Ir al workspace',
-          onClick: () => void navigate(surfacePaths.workspace.root)
-        }
-      : {
-          key: 'recruiter',
-          icon: Building2,
-          title: '¿Representas una empresa?',
-          description: 'Lleva tu empresa a la plataforma y empieza a publicar vacantes y reclutar.',
-          cta: 'Solicitar acceso',
-          onClick: () => void navigate(surfacePaths.candidate.recruiterRequest)
-        }
-  ]
-
   const greeting = greetingForNow()
 
   return (
     <motion.div
-      className="space-y-4"
+      className="space-y-5"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
     >
+      {/* Saludo + frase del día */}
       <motion.div
         variants={cardReveal}
-        className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+        className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
       >
-        <div className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">
+        <div className="min-w-0 space-y-2.5">
+          <h1 className="text-2xl font-semibold tracking-tight text-(--app-text) sm:text-[1.75rem]">
             {greeting}, {firstName(displayName)}
           </h1>
-          <p className="text-[0.8rem] text-(--app-text-muted)">Todo lo que necesitas para avanzar en tu búsqueda, en un solo lugar.</p>
+          <DailyQuote />
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="h-9 text-[0.8rem]" onClick={() => void navigate(surfacePaths.candidate.profile)}>
+        <div className="flex shrink-0 flex-wrap gap-2.5">
+          <Button variant="outline" className="h-10 text-[0.82rem]" onClick={() => void navigate(surfacePaths.candidate.profile)}>
             Editar perfil
           </Button>
-          <Button className="h-9 text-[0.8rem]" onClick={() => void navigate(surfacePaths.storefront.jobs)}>Explorar vacantes</Button>
+          <Button className="h-10 gap-1.5 text-[0.82rem]" onClick={() => void navigate(surfacePaths.storefront.jobs)}>
+            Explorar vacantes
+            <ArrowRight className="size-4" />
+          </Button>
         </div>
       </motion.div>
 
-      <motion.div variants={gridStagger} className="grid gap-3 sm:grid-cols-3">
-        <motion.div variants={cardReveal} className="h-full">
-          <TypewriterQuote quote={quote} />
-        </motion.div>
-        <motion.div variants={cardReveal} className="h-full">
-          <HomeStatCard
-            icon={BriefcaseBusiness}
-            label="Aplicaciones activas"
-            value={applicationsQuery.isLoading ? '—' : activeApplications}
-            helper="Procesos abiertos en este momento"
-          />
-        </motion.div>
-        <motion.div variants={cardReveal} className="h-full">
-          <HomeStatCard
-            icon={FileText}
-            label="CV cargados"
-            value={profileQuery.isLoading ? '—' : resumeCount}
-            helper="Documentos listos para postular"
-          />
-        </motion.div>
+      {/* KPIs */}
+      <motion.div
+        variants={cardReveal}
+        className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-border) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] sm:grid-cols-2 xl:grid-cols-4 dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]"
+      >
+        {metricCards.map((metric) => (
+          <MetricCard key={metric.key} metric={metric} />
+        ))}
       </motion.div>
 
-      <motion.div variants={gridStagger} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {moduleCards.map((module) => {
-          const Icon = module.icon
-          return (
-            <motion.div key={module.key} variants={cardReveal} className="h-full">
-            <Card className="flex h-full flex-col">
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
-                  <Icon className="size-4" />
-                </span>
-                <h3 className="text-[0.9rem] font-semibold tracking-tight text-(--app-text)">{module.title}</h3>
-              </div>
-              <p className="mt-2.5 flex-1 text-[0.78rem] leading-4.5 text-(--app-text-muted)">{module.description}</p>
-              <button
-                type="button"
-                onClick={module.onClick}
-                className="mt-3 inline-flex items-center gap-1 self-start text-[0.8rem] font-semibold text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
-              >
-                {module.cta}
-                <ArrowRight className="size-4" />
-              </button>
-            </Card>
-            </motion.div>
-          )
-        })}
-      </motion.div>
-
-      <motion.div variants={cardReveal}>
-      <Card>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-(--app-surface-muted) text-(--app-text-subtle)">
-              <Clock className="size-4" />
-            </span>
-            <div>
-              <h3 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Aplicaciones recientes</h3>
-              <p className="text-[0.78rem] text-(--app-text-muted)">El estado más nuevo de cada proceso.</p>
-            </div>
-          </div>
+      {/* Aplicaciones recientes */}
+      <motion.div variants={cardReveal} className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-[1.05rem] font-semibold tracking-tight text-(--app-text)">Aplicaciones recientes</h2>
           <button
             type="button"
             onClick={() => void navigate(surfacePaths.candidate.applications)}
-            className="shrink-0 text-[0.78rem] font-semibold text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
+            className="inline-flex shrink-0 items-center gap-1 text-[0.8rem] font-semibold text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
           >
             Ver todas
+            <ChevronRight className="size-4" />
           </button>
         </div>
 
-        {applicationsQuery.isLoading ? (
-          <div className="mt-4 flex items-center gap-2.5 text-[0.8rem] text-(--app-text-muted)">
+        {appsLoading ? (
+          <Card className="flex items-center gap-2.5 text-[0.82rem] text-(--app-text-muted)">
             <Spinner size="sm" /> Cargando aplicaciones…
-          </div>
+          </Card>
         ) : recentApplications.length > 0 ? (
-          <div className="mt-4">
-            <div className="hidden grid-cols-[1.7fr_1fr_0.8fr_1fr_auto] items-center gap-4 border-b border-(--app-border) px-2 pb-2 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle) sm:grid">
-              <span>Título de la vacante</span>
-              <span>Empresa</span>
-              <span>Postulado</span>
-              <span>Etapa actual</span>
-              <span className="sr-only">Acciones</span>
-            </div>
-            <ul className="divide-y divide-(--app-border)">
-              {recentApplications.map((application) => {
-                return (
-                  <li
-                    key={application.id}
-                    className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl px-2 py-2.5 transition-colors hover:bg-(--app-surface-muted) sm:grid sm:grid-cols-[1.7fr_1fr_0.8fr_1fr_auto]"
+          <>
+            <motion.div
+              variants={cardReveal}
+              className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]"
+            >
+              <div className="hidden grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_110px_130px_40px] gap-x-4 border-b border-(--app-border) bg-(--app-surface-muted)/40 px-5 py-2.5 text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-(--app-text-subtle) sm:grid">
+                <span>Vacante</span>
+                <span>Empresa</span>
+                <span>Fecha</span>
+                <span>Etapa</span>
+                <span className="sr-only">Acciones</span>
+              </div>
+              <motion.ul variants={gridStagger}>
+              {recentApplications.map((application) => (
+                <motion.li key={application.id} variants={cardReveal} className="border-t border-(--app-border) first:border-t-0">
+                  <button
+                    type="button"
+                    onClick={() => void navigate(getApplicationDetailPath(application))}
+                    className="group grid w-full grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-3 text-left transition-colors hover:bg-(--app-surface-muted) sm:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_110px_130px_40px] sm:px-5"
                   >
-                    <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:flex-none">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-(--app-surface-muted) text-(--app-text-subtle)">
-                        <Building2 className="size-4" />
+                    <span className="flex min-w-0 items-center gap-3">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+                        <FileText className="size-4" />
                       </span>
-                      <p className="truncate text-[0.82rem] font-semibold text-(--app-text)">
+                      <span className="truncate text-[0.85rem] font-semibold text-(--app-text)">
                         {application.job_posting?.title || 'Vacante'}
-                      </p>
-                    </div>
-                    <p className="truncate text-[0.78rem] text-(--app-text-muted)">
+                      </span>
+                    </span>
+                    <span className="truncate text-right text-[0.78rem] text-(--app-text-muted) sm:text-left">
                       {application.job_posting?.company_profile?.display_name || '—'}
-                    </p>
-                    <p className="hidden text-[0.78rem] text-(--app-text-muted) sm:block">
+                    </span>
+                    <span className="col-span-2 text-[0.76rem] tabular-nums text-(--app-text-subtle) sm:col-span-1">
                       {formatApplicationDate(application.submitted_at)}
-                    </p>
+                    </span>
                     <span className="inline-flex items-center gap-1.5 text-[0.78rem] text-(--app-text)">
-                      <span className={`size-1.5 rounded-full ${applicationStatusDotClass(application.status_public)}`} />
+                      <span className={cn('size-1.5 rounded-full', applicationStatusDotClass(application.status_public))} />
                       {applicationStatusLabel(application.status_public)}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => void navigate(getApplicationDetailPath(application))}
-                      className="inline-flex h-8 items-center gap-1 rounded-full border border-(--app-border) bg-(--app-surface) px-3 text-[0.74rem] font-semibold text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 dark:hover:border-primary-400 dark:hover:text-primary-200"
-                    >
-                      Ver detalle
-                      <ArrowRight className="size-3.5" />
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
+                    <span className="hidden size-8 items-center justify-center justify-self-end rounded-lg text-(--app-text-subtle) transition-colors group-hover:bg-primary-50 group-hover:text-primary-600 sm:flex dark:group-hover:bg-primary-500/12 dark:group-hover:text-primary-300">
+                      <ChevronRight className="size-4" />
+                    </span>
+                  </button>
+                </motion.li>
+              ))}
+              </motion.ul>
+            </motion.div>
+
             {recentTotalPages > 1 ? (
-              <div className="mt-3 flex items-center justify-between gap-3 px-2">
-                <p className="text-[0.74rem] text-(--app-text-muted)">
+              <div className="flex items-center justify-between gap-3 px-0.5">
+                <p className="text-[0.76rem] text-(--app-text-muted)">
                   Página {recentPageSafe + 1} de {recentTotalPages}
                 </p>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setRecentPage((page) => Math.max(0, page - 1))}
                     disabled={recentPageSafe === 0}
-                    className="inline-flex size-8 items-center justify-center rounded-full border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--app-border) disabled:hover:text-(--app-text-muted) dark:hover:border-primary-400 dark:hover:text-primary-200"
+                    className="inline-flex size-8 items-center justify-center rounded-lg border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--app-border) disabled:hover:text-(--app-text-muted) dark:hover:border-primary-400 dark:hover:text-primary-200"
                     aria-label="Página anterior"
                   >
                     <ChevronLeft className="size-4" />
@@ -321,7 +302,7 @@ export function CandidateHomePage() {
                     type="button"
                     onClick={() => setRecentPage((page) => Math.min(recentTotalPages - 1, page + 1))}
                     disabled={recentPageSafe >= recentTotalPages - 1}
-                    className="inline-flex size-8 items-center justify-center rounded-full border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--app-border) disabled:hover:text-(--app-text-muted) dark:hover:border-primary-400 dark:hover:text-primary-200"
+                    className="inline-flex size-8 items-center justify-center rounded-lg border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--app-border) disabled:hover:text-(--app-text-muted) dark:hover:border-primary-400 dark:hover:text-primary-200"
                     aria-label="Página siguiente"
                   >
                     <ChevronRight className="size-4" />
@@ -329,104 +310,91 @@ export function CandidateHomePage() {
                 </div>
               </div>
             ) : null}
-          </div>
+          </>
         ) : (
-          <div className="mt-4">
+          <Card>
             <EmptyState
               title="Aún no tienes aplicaciones"
               description="Explora oportunidades abiertas y postúlate cuando tu perfil esté listo."
               actionLabel="Explorar vacantes"
               onAction={() => void navigate(surfacePaths.storefront.jobs)}
             />
-          </div>
+          </Card>
         )}
-      </Card>
       </motion.div>
     </motion.div>
   )
 }
 
-function TypewriterQuote({ quote }: { quote: InspirationalQuote }) {
-  const shouldReduceMotion = useReducedMotion()
-  const fullText = quote.text
-  const [typed, setTyped] = useState(0)
-
-  useEffect(() => {
-    if (shouldReduceMotion) return
-    let index = 0
-    const interval = window.setInterval(() => {
-      index += 1
-      setTyped(index)
-      if (index >= fullText.length) {
-        window.clearInterval(interval)
-      }
-    }, 38)
-    return () => window.clearInterval(interval)
-  }, [fullText, shouldReduceMotion])
-
-  const visibleCount = shouldReduceMotion ? fullText.length : typed
-  const isDone = visibleCount >= fullText.length
+function DailyQuote() {
+  // Una frase aleatoria por visita: se elige al montar y permanece fija
+  // hasta que el usuario sale y vuelve a entrar al módulo.
+  const quote = useState(() => {
+    if (inspirationalQuotes.length === 0) return FALLBACK_QUOTE
+    return inspirationalQuotes[Math.floor(Math.random() * inspirationalQuotes.length)] ?? FALLBACK_QUOTE
+  })[0]
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 via-(--app-surface-elevated) to-(--app-surface-elevated) p-4 shadow-[0_10px_26px_rgba(10,18,36,0.06)] dark:border-primary-500/20 dark:from-primary-500/10 dark:via-(--app-surface-elevated) dark:to-(--app-surface-elevated) dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]">
-      <div className="flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-primary-500/15 dark:text-primary-300">
-          <Sparkles className="size-4" />
-        </span>
-        <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-primary-500 dark:text-primary-300">Frase del día</p>
-      </div>
-      <p className="mt-3 flex-1 text-[0.92rem] font-medium leading-relaxed text-(--app-text)">
-        “{fullText.slice(0, visibleCount)}{isDone ? '”' : null}
-        <span
-          aria-hidden
-          className={cn(
-            'ml-0.5 inline-block h-[1em] w-px translate-y-[0.15em] border-r-2 border-primary-500',
-            'motion-safe:animate-pulse'
-          )}
-        />
-      </p>
-      <p
-        className={cn(
-          'mt-2 text-[0.74rem] font-medium text-(--app-text-muted) transition-opacity duration-500',
-          isDone ? 'opacity-100' : 'opacity-0'
-        )}
-      >
-        — {quote.from}
+    <div className="flex max-w-[40rem] items-start gap-2">
+      <Quote aria-hidden className="mt-0.5 size-4 shrink-0 text-primary-500/60 dark:text-primary-300/60" />
+      <p className="text-[0.9rem] leading-relaxed">
+        <span className="italic text-(--app-text-muted)">“{quote.text}”</span>{' '}
+        <span className="whitespace-nowrap text-[0.82rem] font-semibold text-(--app-text-subtle)">— {quote.from}</span>
       </p>
     </div>
   )
 }
 
-interface HomeStatCardProps {
-  icon: LucideIcon
-  label: string
-  value: ReactNode
-  helper?: ReactNode
-  progress?: number | null
+function CountUp({ value, suffix = '', duration = 1600 }: { value: number; suffix?: string; duration?: number }) {
+  const shouldReduceMotion = useReducedMotion()
+  const [display, setDisplay] = useState(0)
+
+  useEffect(() => {
+    if (shouldReduceMotion) return
+    let raf = 0
+    let start: number | undefined
+    const tick = (timestamp: number) => {
+      if (start === undefined) start = timestamp
+      const progress = Math.min(1, (timestamp - start) / duration)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setDisplay(Math.round(value * eased))
+      if (progress < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value, duration, shouldReduceMotion])
+
+  const shown = shouldReduceMotion ? value : display
+  return (
+    <>
+      {shown}
+      {suffix}
+    </>
+  )
 }
 
-function HomeStatCard({ icon: Icon, label, value, helper, progress = null }: HomeStatCardProps) {
+function MetricCard({ metric }: { metric: MetricCardData }) {
+  const Icon = metric.icon
   return (
-    <div className="h-full rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) p-4 shadow-[0_10px_26px_rgba(10,18,36,0.06)] dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]">
-      <div className="flex items-start justify-between">
-        <span className="flex size-9 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
-          <Icon className="size-4" />
-        </span>
-        <span className="-mr-1 -mt-1 flex size-7 items-center justify-center rounded-lg text-(--app-text-subtle)">
-          <MoreVertical className="size-4" />
-        </span>
+    <div className="flex items-start gap-3 bg-(--app-surface-elevated) p-4 sm:p-[1.1rem]">
+      <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-xl', metric.chipClass)}>
+        <Icon className="size-[1.1rem]" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[0.72rem] font-semibold text-(--app-text-subtle)">{metric.label}</p>
+        <p className="mt-1.5 text-[1.55rem] font-semibold leading-none tracking-tight tabular-nums text-(--app-text)">
+          {metric.loading ? '—' : <CountUp value={metric.value} suffix={metric.suffix} />}
+        </p>
+        <p
+          className={cn(
+            'mt-1.5 flex items-center gap-1 text-[0.72rem]',
+            metric.trendUp ? 'font-semibold text-emerald-600 dark:text-emerald-400' : 'text-(--app-text-muted)'
+          )}
+        >
+          {metric.trendUp ? <TrendingUp aria-hidden className="size-3.5" /> : null}
+          {metric.sub}
+        </p>
       </div>
-      <p className="mt-2.5 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">{label}</p>
-      <p className="mt-1 text-[1.4rem] font-semibold tracking-tight text-(--app-text)">{value}</p>
-      {progress !== null ? (
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-(--app-surface-muted)">
-          <div
-            className="h-full rounded-full bg-primary-500 transition-[width] duration-500"
-            style={{ width: `${Math.max(4, progress)}%` }}
-          />
-        </div>
-      ) : null}
-      {helper ? <p className="mt-2 text-[0.72rem] leading-4 text-(--app-text-muted)">{helper}</p> : null}
     </div>
   )
 }
