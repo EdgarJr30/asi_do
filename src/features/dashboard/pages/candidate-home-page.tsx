@@ -6,8 +6,10 @@ import quoteData from 'inspirational-quotes/data/data.json'
 import {
   ArrowRight,
   CalendarClock,
+  Check,
   ChevronLeft,
   ChevronRight,
+  Copy,
   FileText,
   Layers,
   Percent,
@@ -16,6 +18,7 @@ import {
   TrendingUp
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils/cn'
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -333,15 +336,43 @@ function DailyQuote() {
     if (inspirationalQuotes.length === 0) return FALLBACK_QUOTE
     return inspirationalQuotes[Math.floor(Math.random() * inspirationalQuotes.length)] ?? FALLBACK_QUOTE
   })[0]
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopy() {
+    const text = `“${quote.text}” — ${quote.from}`
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      toast.success('Frase copiada al portapapeles')
+      window.setTimeout(() => setCopied(false), 1800)
+    } catch {
+      toast.error('No pudimos copiar la frase')
+    }
+  }
 
   return (
-    <div className="flex max-w-[40rem] items-start gap-2">
+    <button
+      type="button"
+      onClick={() => void handleCopy()}
+      title="Clic para copiar la frase"
+      aria-label="Copiar frase del día"
+      className="group flex max-w-[40rem] items-start gap-2 rounded-lg text-left transition-colors hover:text-(--app-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50"
+    >
       <Quote aria-hidden className="mt-0.5 size-4 shrink-0 text-primary-500/60 dark:text-primary-300/60" />
       <p className="text-[0.9rem] leading-relaxed">
         <span className="italic text-(--app-text-muted)">“{quote.text}”</span>{' '}
-        <span className="whitespace-nowrap text-[0.82rem] font-semibold text-(--app-text-subtle)">— {quote.from}</span>
+        <span className="whitespace-nowrap text-[0.82rem] font-semibold text-(--app-text-subtle)">— {quote.from}</span>{' '}
+        <span
+          aria-hidden
+          className={cn(
+            'ml-0.5 inline-flex translate-y-0.5 items-center text-(--app-text-subtle) transition-colors group-hover:text-primary-600 dark:group-hover:text-primary-300',
+            copied && 'text-emerald-600 group-hover:text-emerald-600 dark:text-emerald-400 dark:group-hover:text-emerald-400'
+          )}
+        >
+          {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+        </span>
       </p>
-    </div>
+    </button>
   )
 }
 
