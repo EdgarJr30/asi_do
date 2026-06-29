@@ -1,7 +1,8 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
+import quoteData from 'inspirational-quotes/data/data.json'
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -12,9 +13,12 @@ import {
   FileText,
   LayoutDashboard,
   MoreVertical,
+  Sparkles,
   UserRound
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+
+import { cn } from '@/lib/utils/cn'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
@@ -25,7 +29,7 @@ import { Spinner } from '@/components/ui/loader'
 import { applicationStatusDotClass, applicationStatusLabel } from '@/features/applications/lib/application-status'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 import { listMyApplications } from '@/features/applications/lib/applications-api'
-import { fetchMyCandidateProfile, type CandidateProfileBundle } from '@/features/candidate-profile/lib/candidate-profile-api'
+import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
 import type { Database } from '@/shared/types/database'
 
 type PublicStatus = Database['public']['Enums']['application_public_status']
@@ -53,35 +57,12 @@ function getApplicationDetailPath(application: { job_posting?: { slug?: string |
   return slug ? surfacePaths.public.jobDetail(slug) : surfacePaths.candidate.applications
 }
 
-interface CompletenessItem {
-  key: string
-  label: string
-  done: boolean
-}
+type InspirationalQuote = { text: string; from: string }
+const inspirationalQuotes = quoteData as InspirationalQuote[]
 
-function computeProfileCompleteness(bundle: CandidateProfileBundle) {
-  const profile = bundle.profile
-  const items: CompletenessItem[] = [
-    { key: 'headline', label: 'Título profesional', done: Boolean(profile?.headline?.trim()) },
-    { key: 'summary', label: 'Resumen sobre ti', done: Boolean(profile?.summary?.trim()) },
-    {
-      key: 'location',
-      label: 'Ubicación',
-      done: Boolean(profile?.city_name?.trim() || profile?.country_code)
-    },
-    { key: 'resume', label: 'CV cargado', done: bundle.resumes.length > 0 },
-    { key: 'experience', label: 'Experiencia laboral', done: bundle.experiences.length > 0 },
-    { key: 'skills', label: 'Habilidades', done: bundle.skills.length > 0 },
-    {
-      key: 'visibility',
-      label: 'Visible para reclutadores',
-      done: Boolean(profile?.is_visible_to_recruiters)
-    }
-  ]
-  const completed = items.filter((item) => item.done).length
-  const percent = Math.round((completed / items.length) * 100)
-
-  return { items, completed, total: items.length, percent }
+function randomQuote(): InspirationalQuote {
+  const index = Math.floor(Math.random() * inspirationalQuotes.length)
+  return inspirationalQuotes[index] ?? { text: 'El futuro depende de lo que hagas hoy.', from: 'Mahatma Gandhi' }
 }
 
 interface ModuleCard {
@@ -113,10 +94,7 @@ export function CandidateHomePage() {
     queryFn: async () => listMyApplications(userId!)
   })
 
-  const completeness = useMemo(
-    () => (profileQuery.data ? computeProfileCompleteness(profileQuery.data) : null),
-    [profileQuery.data]
-  )
+  const quote = useState(() => randomQuote())[0]
 
   const applications = applicationsQuery.data ?? []
   const activeApplications = applications.filter((application) =>
@@ -206,17 +184,7 @@ export function CandidateHomePage() {
 
       <motion.div variants={gridStagger} className="grid gap-3 sm:grid-cols-3">
         <motion.div variants={cardReveal} className="h-full">
-          <HomeStatCard
-            icon={UserRound}
-            label="Perfil completo"
-            value={completeness ? `${completeness.percent}%` : '—'}
-            progress={completeness?.percent ?? null}
-            helper={
-              completeness && completeness.percent < 100
-                ? `${completeness.total - completeness.completed} cosas por completar`
-                : 'Tu perfil está listo'
-            }
-          />
+          <TypewriterQuote quote={quote} />
         </motion.div>
         <motion.div variants={cardReveal} className="h-full">
           <HomeStatCard
@@ -375,6 +343,57 @@ export function CandidateHomePage() {
       </Card>
       </motion.div>
     </motion.div>
+  )
+}
+
+function TypewriterQuote({ quote }: { quote: InspirationalQuote }) {
+  const shouldReduceMotion = useReducedMotion()
+  const fullText = quote.text
+  const [typed, setTyped] = useState(0)
+
+  useEffect(() => {
+    if (shouldReduceMotion) return
+    let index = 0
+    const interval = window.setInterval(() => {
+      index += 1
+      setTyped(index)
+      if (index >= fullText.length) {
+        window.clearInterval(interval)
+      }
+    }, 38)
+    return () => window.clearInterval(interval)
+  }, [fullText, shouldReduceMotion])
+
+  const visibleCount = shouldReduceMotion ? fullText.length : typed
+  const isDone = visibleCount >= fullText.length
+
+  return (
+    <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 via-(--app-surface-elevated) to-(--app-surface-elevated) p-4 shadow-[0_10px_26px_rgba(10,18,36,0.06)] dark:border-primary-500/20 dark:from-primary-500/10 dark:via-(--app-surface-elevated) dark:to-(--app-surface-elevated) dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]">
+      <div className="flex items-center gap-2">
+        <span className="flex size-9 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-primary-500/15 dark:text-primary-300">
+          <Sparkles className="size-4" />
+        </span>
+        <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-primary-500 dark:text-primary-300">Frase del día</p>
+      </div>
+      <p className="mt-3 flex-1 text-[0.92rem] font-medium leading-relaxed text-(--app-text)">
+        “{fullText.slice(0, visibleCount)}{isDone ? '”' : null}
+        <span
+          aria-hidden
+          className={cn(
+            'ml-0.5 inline-block h-[1em] w-px translate-y-[0.15em] border-r-2 border-primary-500',
+            'motion-safe:animate-pulse'
+          )}
+        />
+      </p>
+      <p
+        className={cn(
+          'mt-2 text-[0.74rem] font-medium text-(--app-text-muted) transition-opacity duration-500',
+          isDone ? 'opacity-100' : 'opacity-0'
+        )}
+      >
+        — {quote.from}
+      </p>
+    </div>
   )
 }
 
