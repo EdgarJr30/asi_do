@@ -150,6 +150,7 @@ export function PublicJobBoard() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(false) // controla móvil: lista ↔ detalle
 
+  const listScrollRef = useRef<HTMLDivElement | null>(null)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   function patchFilters(patch: Partial<Filters>) {
@@ -277,7 +278,7 @@ export function PublicJobBoard() {
   }
 
   // Scroll infinito: un sentinel al fondo del contenedor pide la siguiente página
-  // al entrar en viewport (incluye un margen para precargar antes de tocar fondo).
+  // al acercarse al final de la lista visible.
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       void fetchNextPage()
@@ -289,16 +290,16 @@ export function PublicJobBoard() {
     if (!sentinel) {
       return
     }
-    // root = viewport: en desktop la lista tiene scroll interno (el IO respeta el
-    // recorte del contenedor) y en móvil scrollea la página; en ambos el sentinel
-    // sólo intersecta al acercarse al fondo visible, sin precargar todo de golpe.
+    const isDesktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
+    const root = isDesktop ? listScrollRef.current : null
+    // Desktop observa el contenedor scrolleable; móvil observa el viewport.
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
           loadMore()
         }
       },
-      { rootMargin: '160px' }
+      { root, rootMargin: '160px' }
     )
     observer.observe(sentinel)
     return () => observer.disconnect()
@@ -448,7 +449,7 @@ export function PublicJobBoard() {
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
           {/* Lista de vacantes con scroll independiente + carga infinita */}
           <div className={cn('min-w-0', detailOpen ? 'hidden lg:block' : 'block')}>
-            <div className="flex flex-col gap-2 lg:max-h-[calc(100vh-15rem)] lg:overflow-y-auto lg:pr-1">
+            <div ref={listScrollRef} className="flex flex-col gap-2 lg:max-h-[calc(100dvh-9rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
               <motion.ul
                 className="flex flex-col gap-2"
                 variants={gridStagger}
