@@ -20,9 +20,8 @@ import { toast } from 'sonner'
 
 import { surfacePaths } from '@/app/router/surface-paths'
 import { useAppSession } from '@/app/providers/app-session-provider'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/loader'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -207,36 +206,23 @@ function computeSteps(bundle: MembershipStatusBundle, isActive: boolean): StepVi
   ]
 }
 
-const stateMeta: Record<StepState, { label: string; dot: string; badge: string }> = {
+const stateMeta: Record<StepState, { label: string }> = {
   done: {
-    label: 'Completado',
-    dot: 'bg-emerald-500 text-white',
-    badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300'
+    label: 'Completado'
   },
   current: {
-    label: 'En progreso',
-    dot: 'bg-primary-600 text-white',
-    badge: 'bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-300'
+    label: 'En progreso'
   },
   pending: {
-    label: 'Pendiente',
-    dot: 'bg-(--app-surface-muted) text-(--app-text-subtle)',
-    badge: 'bg-(--app-surface-muted) text-(--app-text-subtle)'
+    label: 'Pendiente'
   },
   blocked: {
-    label: 'Atención',
-    dot: 'bg-rose-500 text-white',
-    badge: 'bg-rose-50 text-rose-700 dark:bg-rose-500/12 dark:text-rose-300'
+    label: 'Atención'
   }
 }
 
 function getCurrentStep(steps: StepView[]) {
   return steps.find((step) => step.state === 'blocked') ?? steps.find((step) => step.state === 'current') ?? steps.at(-1)
-}
-
-function getProgressSummary(steps: StepView[]) {
-  const completed = steps.filter((step) => step.state === 'done').length
-  return { completed, total: steps.length, percent: Math.round((completed / steps.length) * 100) }
 }
 
 export function MembershipStatusPage() {
@@ -245,6 +231,7 @@ export function MembershipStatusPage() {
   const queryClient = useQueryClient()
   const userId = session.authUser?.id ?? null
   const [activeTab, setActiveTab] = useState<MembershipTab>('summary')
+  const [openReceiptId, setOpenReceiptId] = useState<string | null | undefined>(undefined)
   const lastHandledPaymentResultRef = useRef<string | null>(null)
 
   const statusQuery = useQuery({
@@ -288,7 +275,6 @@ export function MembershipStatusPage() {
     [statusQuery.data]
   )
   const steps = useMemo(() => computeSteps(bundle, session.hasActiveAsiAccess), [bundle, session.hasActiveAsiAccess])
-  const progress = useMemo(() => getProgressSummary(steps), [steps])
   const currentStep = getCurrentStep(steps)
   const due = getCategoryDue(bundle.settings, bundle.application?.category_slug)
   const dueAmountLabel = due?.amount != null ? `${bundle.settings?.currency ?? 'DOP'} ${due.amount.toLocaleString()}` : null
@@ -302,6 +288,9 @@ export function MembershipStatusPage() {
     session.profile?.membership_activated_at ?? bundle.verifiedPayment?.period_start ?? bundle.verifiedPayment?.verified_at ?? null
   const membershipExpiresAt = latestDateValue(session.profile?.membership_expires_at, bundle.verifiedPayment?.period_end)
   const remainingMembership = formatRemainingMembership(membershipExpiresAt)
+  const firstReceiptId = bundle.verifiedPayments[0]?.id ?? null
+  const visibleOpenReceiptId = openReceiptId === undefined ? firstReceiptId : openReceiptId
+  const membershipProgress = computeMembershipTermProgress(membershipActivatedAt, membershipExpiresAt)
 
   // Resultado del retorno de AZUL (?payment=approved|declined|cancelled|error): avisa y refresca.
   const [searchParams, setSearchParams] = useSearchParams()
@@ -353,12 +342,12 @@ export function MembershipStatusPage() {
       : bundle.payment?.status ?? null
 
   return (
-    <div className="space-y-5">
+    <div className="mx-auto max-w-7xl space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-3xl">
-          <h1 className="text-2xl font-semibold tracking-tight text-(--app-text)">Tu membresía</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-(--app-text)">Tu membresía</h1>
           <p className="mt-1 max-w-2xl text-[0.9rem] leading-6 text-(--app-text-muted)">
-            Mantén tu membresía ASI al día, renueva con facilidad y conserva tus comprobantes en un espacio organizado.
+            Mantén tu membresía ASI al día, renueva con facilidad y conserva tus comprobantes en un solo lugar.
           </p>
         </div>
 
@@ -386,45 +375,27 @@ export function MembershipStatusPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_21rem]">
-          <section className="space-y-5">
-            <Card className="overflow-hidden border-primary-200 bg-[linear-gradient(135deg,rgba(43,69,143,0.06),rgba(255,255,255,0.94))] dark:border-primary-500/25 dark:bg-[linear-gradient(135deg,rgba(43,69,143,0.2),rgba(15,23,42,0.96))]">
-              <CardHeader className="gap-3 sm:flex sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
-                <div className="space-y-1.5">
-                  <Badge variant="soft" className="w-fit">{routeStatusLabel}</Badge>
-                  <CardTitle>Lo importante ahora</CardTitle>
-                  <CardDescription>
-                    {session.hasActiveAsiAccess
-                      ? 'Tu membresía está activa. Revisa tu renovación y conserva tus datos al día.'
-                      : currentStep?.description ?? 'Completa el siguiente paso para avanzar tu membresía.'}
-                  </CardDescription>
-                </div>
-                <div className="min-w-22 rounded-2xl border border-(--app-border) bg-(--app-surface)/80 px-3 py-2.5 text-center">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-(--app-text-subtle)">Avance</p>
-                  <p className="mt-0.5 text-xl font-semibold text-(--app-text)">{progress.percent}%</p>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {session.hasActiveAsiAccess && canRenew && bundle.application ? (
-                  <div className="rounded-panel border border-(--app-border) bg-(--app-surface) p-3.5">
-                    <p className="text-sm font-semibold text-(--app-text)">Renovar membresía</p>
-                    <p className="mt-1 text-[0.82rem] leading-5 text-(--app-text-muted)">
-                      Renueva por 1 a 5 años. Tu membresía actual se conserva y el monto se calcula automáticamente.
-                    </p>
-                    <AzulPayCard
-                      applicationId={bundle.application.id}
-                      intent="renewal"
-                      annualAmount={due?.amount ?? null}
-                      currency={bundle.settings?.currency ?? 'DOP'}
-                      categoryLabel={due?.label ?? bundle.application.category_name ?? null}
-                      paymentStatus={visiblePaymentStatus === 'initiated' ? 'initiated' : visiblePaymentStatus}
-                      azulEnabled={azulEnabled}
-                      compact
-                      onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
-                    />
-                  </div>
-                ) : null}
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+          <section className="space-y-6">
+            <MembershipOverviewCard
+              category={bundle.application?.category_name ?? 'Sin categoría'}
+              statusLabel={routeStatusLabel}
+              activatedAt={membershipActivatedAt}
+              expiresAt={membershipExpiresAt}
+              remaining={remainingMembership}
+              progress={membershipProgress}
+              isActive={session.hasActiveAsiAccess}
+            />
 
+            {!session.hasActiveAsiAccess ? (
+              <Card className="rounded-2xl border-(--app-border) bg-(--app-surface-elevated) p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+                <CardContent className="mt-0 space-y-3">
+                  <div>
+                    <CardTitle>{currentStep?.title ?? 'Próximo paso'}</CardTitle>
+                    <p className="mt-1 text-sm leading-6 text-(--app-text-muted)">
+                      {currentStep?.description ?? 'Completa el siguiente paso para avanzar tu membresía.'}
+                    </p>
+                  </div>
                 {!session.hasActiveAsiAccess && bundle.application?.status === 'needs_more_info' ? (
                   <NeedsMoreInfoResponse
                     applicationId={bundle.application.id}
@@ -451,20 +422,17 @@ export function MembershipStatusPage() {
                     Iniciar mi solicitud <ArrowRight className="size-4" />
                   </Button>
                 ) : null}
+                </CardContent>
+              </Card>
+            ) : null}
 
-                {session.hasActiveAsiAccess && !canRenew ? (
-                  <div className="rounded-panel border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200">
-                    Tu membresía está activa. No tienes acciones pendientes ahora.
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden p-0">
-              <div className="border-b border-(--app-border) px-4 pt-4 sm:px-5">
-                <nav className="flex gap-1 overflow-x-auto" aria-label="Secciones de membresía">
+            <div>
+              <nav
+                className="inline-flex max-w-full gap-0.5 overflow-x-auto rounded-xl border border-(--app-border) bg-(--app-surface-elevated) p-1 shadow-sm"
+                aria-label="Secciones de membresía"
+              >
                   {[
-                    { key: 'summary', label: 'Resumen', icon: Sparkles },
+                    { key: 'summary', label: 'Resumen', icon: FileText },
                     { key: 'route', label: 'Ruta', icon: ShieldCheck },
                     { key: 'receipts', label: 'Comprobantes', icon: FileText }
                   ].map((tab) => {
@@ -475,10 +443,10 @@ export function MembershipStatusPage() {
                         type="button"
                         onClick={() => setActiveTab(tab.key as MembershipTab)}
                         className={cn(
-                          'inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-semibold transition',
+                          'inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-lg px-4 text-sm font-semibold transition',
                           activeTab === tab.key
-                            ? 'border-primary-600 text-primary-700 dark:text-primary-200'
-                            : 'border-transparent text-(--app-text-muted) hover:text-(--app-text)'
+                            ? 'bg-primary-600 text-white shadow-sm'
+                            : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
                         )}
                       >
                         <TabIcon className="size-4" />
@@ -487,31 +455,31 @@ export function MembershipStatusPage() {
                     )
                   })}
                 </nav>
-              </div>
 
-              <div className="p-4 sm:p-5">
+              <div className="mt-4">
                 {activeTab === 'summary' ? (
-                  <div className="grid gap-2.5 md:grid-cols-2">
-                    <SummaryTile
+                  <div className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+                    <SummaryRow
                       icon={FileText}
                       label="Solicitud"
                       value={bundle.application ? applicationStatusLabels[bundle.application.status] ?? bundle.application.status : 'No enviada'}
+                      tone={bundle.application?.status === 'approved' ? 'success' : 'neutral'}
                     />
-                    <SummaryTile
+                    <SummaryRow
                       icon={CreditCard}
                       label="Pago"
                       value={session.hasActiveAsiAccess ? 'Verificado' : bundle.payment ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status : 'Pendiente'}
+                      tone={session.hasActiveAsiAccess || bundle.payment?.status === 'verified' ? 'success' : 'neutral'}
                     />
-                    <SummaryTile icon={ShieldCheck} label="Acceso" value={session.hasActiveAsiAccess ? 'Activo' : 'Pendiente'} />
-                    <SummaryTile icon={Clock} label="Vigencia restante" value={remainingMembership} />
-                    <SummaryTile icon={CreditCard} label="Cuota" value={dueAmountLabel ?? due?.label ?? 'Por definir'} />
-                    <SummaryTile icon={Sparkles} label="Categoría" value={bundle.application?.category_name ?? 'Sin categoría'} />
-                    <SummaryTile icon={ArrowRight} label="Siguiente paso" value={currentStep?.title ?? 'Membresía'} />
+                    <SummaryRow icon={ShieldCheck} label="Acceso" value={session.hasActiveAsiAccess ? 'Activo' : 'Pendiente'} tone={session.hasActiveAsiAccess ? 'success' : 'neutral'} />
+                    <SummaryRow icon={CreditCard} label="Cuota anual" value={dueAmountLabel ?? due?.label ?? 'Por definir'} />
+                    <SummaryRow icon={Clock} label="Vigencia restante" value={remainingMembership} />
+                    <SummaryRow icon={Sparkles} label="Categoría" value={bundle.application?.category_name ?? 'Sin categoría'} />
                   </div>
                 ) : null}
 
                 {activeTab === 'route' ? (
-                  <div className="space-y-3">
+                  <div className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) px-5 py-2 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
                     {steps.map((step) => (
                       <MembershipStep
                         key={step.key}
@@ -525,17 +493,21 @@ export function MembershipStatusPage() {
                 {activeTab === 'receipts' ? (
                   bundle.verifiedPayments.length > 0 ? (
                     <div className="space-y-3">
-                      <p className="text-xs text-(--app-text-muted)">
+                      <p className="px-0.5 text-sm text-(--app-text-subtle)">
                         {bundle.verifiedPayments.length}{' '}
                         {bundle.verifiedPayments.length === 1 ? 'comprobante' : 'comprobantes'}. Toca uno para ver el detalle.
                       </p>
-                      {bundle.verifiedPayments.map((paymentItem, index) => (
+                      {bundle.verifiedPayments.map((paymentItem) => (
                         <MembershipReceiptCard
                           key={paymentItem.id}
                           payment={paymentItem}
                           currency={bundle.settings?.currency ?? paymentItem.currency ?? 'DOP'}
                           categoryLabel={due?.label ?? bundle.application?.category_name ?? null}
-                          defaultOpen={index === 0}
+                          isOpen={visibleOpenReceiptId === paymentItem.id}
+                          onToggle={() => setOpenReceiptId((current) => {
+                            const visibleCurrent = current === undefined ? firstReceiptId : current
+                            return visibleCurrent === paymentItem.id ? null : paymentItem.id
+                          })}
                         />
                       ))}
                     </div>
@@ -546,57 +518,46 @@ export function MembershipStatusPage() {
                   )
                 ) : null}
               </div>
-            </Card>
+            </div>
           </section>
 
-          <aside className="space-y-5">
-            <Card>
-              <CardHeader>
-                <CardTitle>Estado actual</CardTitle>
-                <CardDescription>Resumen operativo sin pasos completados ocupando el foco.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium text-(--app-text)">Avance</span>
-                    <span className="font-semibold text-(--app-text)">{progress.completed} / {progress.total}</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-(--app-surface-muted)">
-                    <div className="h-full rounded-full bg-primary-600" style={{ width: `${progress.percent}%` }} />
-                  </div>
-                </div>
-                <StatusSummaryRow label="Solicitud" value={bundle.application ? applicationStatusLabels[bundle.application.status] ?? bundle.application.status : 'No enviada'} />
-                <StatusSummaryRow label="Pago" value={session.hasActiveAsiAccess ? 'Verificado' : bundle.payment ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status : 'Pendiente'} />
-                <StatusSummaryRow label="Acceso" value={session.hasActiveAsiAccess ? 'Activo' : 'Pendiente'} />
-              </CardContent>
-            </Card>
-
-            {session.hasActiveAsiAccess ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Fechas clave</CardTitle>
-                  <CardDescription>Datos de referencia de tu membresía activa.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-1">
-                  <StatusSummaryRow label="Fecha de pago" value={formatDate(bundle.verifiedPayment?.verified_at ?? null)} />
-                  <StatusSummaryRow label="Activación" value={formatDate(membershipActivatedAt)} />
-                  <StatusSummaryRow label="Vencimiento" value={formatDate(membershipExpiresAt)} />
-                  <StatusSummaryRow label="Vigencia restante" value={remainingMembership} />
+          <aside className="space-y-5 lg:sticky lg:top-6">
+            {session.hasActiveAsiAccess && bundle.application ? (
+              <Card className="rounded-2xl p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+                <CardContent className="mt-0">
+                  <CardTitle>Renovar membresía</CardTitle>
+                  <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                    Renueva por 1 a 5 años. Tu membresía actual se conserva y el monto se calcula automáticamente.
+                  </p>
+                  <AzulPayCard
+                    applicationId={bundle.application.id}
+                    intent="renewal"
+                    annualAmount={due?.amount ?? null}
+                    currency={bundle.settings?.currency ?? 'DOP'}
+                    categoryLabel={due?.label ?? bundle.application.category_name ?? null}
+                    paymentStatus={visiblePaymentStatus === 'initiated' ? 'initiated' : visiblePaymentStatus}
+                    azulEnabled={canRenew}
+                    compact
+                    onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
+                  />
                 </CardContent>
               </Card>
             ) : null}
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Soporte</CardTitle>
-                <CardDescription>
+            <Card className="rounded-2xl p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+              <CardContent className="mt-0">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                    <AlertCircle className="size-4" />
+                  </span>
+                  <CardTitle>¿Necesitas ayuda?</CardTitle>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
                   ¿Dudas con tu membresía? Escríbenos y con gusto te ayudamos.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+                </p>
                 <Link
                   to={surfacePaths.institutional.contactUs}
-                  className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl border border-(--app-border) bg-(--app-surface) px-3.5 text-sm font-semibold text-(--app-text) shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+                  className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 text-sm font-semibold text-(--app-text) shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:bg-primary-500/12"
                 >
                   Ir a contacto <ArrowRight className="size-4" />
                 </Link>
@@ -609,25 +570,135 @@ export function MembershipStatusPage() {
   )
 }
 
-function StatusSummaryRow({ label, value }: { label: string; value: string }) {
+function computeMembershipTermProgress(activatedAt: string | null, expiresAt: string | null) {
+  if (!activatedAt || !expiresAt) {
+    return 0
+  }
+  const start = new Date(activatedAt).getTime()
+  const end = new Date(expiresAt).getTime()
+  const now = Date.now()
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start || now >= end) {
+    return 0
+  }
+  if (now <= start) {
+    return 100
+  }
+  return Math.max(4, Math.min(100, Math.round(((end - now) / (end - start)) * 100)))
+}
+
+function MembershipOverviewCard({
+  category,
+  statusLabel,
+  activatedAt,
+  expiresAt,
+  remaining,
+  progress,
+  isActive
+}: {
+  category: string
+  statusLabel: string
+  activatedAt: string | null
+  expiresAt: string | null
+  remaining: string
+  progress: number
+  isActive: boolean
+}) {
   return (
-    <div className="flex items-start justify-between gap-4 border-t border-(--app-border) pt-3 first:border-t-0 first:pt-0">
-      <span className="text-sm text-(--app-text-muted)">{label}</span>
-      <span className="text-right text-sm font-semibold text-(--app-text)">{value}</span>
+    <Card className="rounded-2xl border-(--app-border) bg-(--app-surface-elevated) p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] sm:p-6">
+      <CardContent className="mt-0">
+        <div className="flex items-center gap-4">
+          <span className="flex size-13 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 to-primary-400 text-white shadow-sm">
+            <Sparkles className="size-6" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.06em] text-(--app-text-subtle)">Categoría</p>
+            <p className="mt-0.5 truncate text-xl font-bold tracking-tight text-(--app-text)">{category}</p>
+          </div>
+          <StatusPill className="ml-auto shrink-0" label={statusLabel} tone={isActive ? 'success' : 'neutral'} />
+        </div>
+
+        <div className="mt-6">
+          <div className="mb-2 flex items-baseline justify-between gap-4">
+            <span className="text-sm text-(--app-text-muted)">Vigencia restante</span>
+            <span className="text-right text-sm font-semibold text-(--app-text)">{remaining}</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-(--app-border)">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-primary-700 to-primary-400 transition-[width] duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-4 text-xs text-(--app-text-subtle)">
+            <span>Activación · {formatDate(activatedAt)}</span>
+            <span className="text-right">Vence · {formatDate(expiresAt)}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function StatusPill({
+  label,
+  tone = 'neutral',
+  className
+}: {
+  label: string
+  tone?: 'success' | 'neutral' | 'danger'
+  className?: string
+}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex h-7 items-center gap-2 rounded-full px-3 text-xs font-semibold',
+        tone === 'success' && 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300',
+        tone === 'neutral' && 'bg-(--app-surface-muted) text-(--app-text-muted)',
+        tone === 'danger' && 'bg-rose-50 text-rose-700 dark:bg-rose-500/12 dark:text-rose-300',
+        className
+      )}
+    >
+      <span
+        className={cn(
+          'size-1.5 rounded-full',
+          tone === 'success' && 'bg-emerald-500',
+          tone === 'neutral' && 'bg-(--app-text-subtle)',
+          tone === 'danger' && 'bg-rose-500'
+        )}
+      />
+      {label}
+    </span>
+  )
+}
+
+function SummaryRow({
+  icon: Icon,
+  label,
+  value,
+  tone = 'plain'
+}: {
+  icon: typeof FileText
+  label: string
+  value: string
+  tone?: 'success' | 'neutral' | 'plain'
+}) {
+  return (
+    <div className="flex items-center gap-4 border-t border-(--app-border) px-5 py-4 first:border-t-0">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-(--app-border) bg-(--app-surface-muted) text-(--app-text-muted)">
+        <Icon className="size-4" />
+      </span>
+      <span className="min-w-0 flex-1 text-sm text-(--app-text-muted)">{label}</span>
+      <span className="text-right text-sm font-semibold text-(--app-text)">
+        {tone === 'plain' ? value : <StatusPill label={value} tone={tone} />}
+      </span>
     </div>
   )
 }
 
-function SummaryTile({ icon: Icon, label, value }: { icon: typeof FileText; label: string; value: string }) {
+function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) p-3">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-(--app-surface) text-primary-700 dark:text-primary-200">
-        <Icon className="size-4" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle)">{label}</p>
-        <p className="mt-1 truncate text-sm font-semibold text-(--app-text)">{value}</p>
-      </div>
+    <div>
+      <p className="text-xs font-bold uppercase tracking-[0.04em] text-(--app-text-subtle)">{label}</p>
+      <p className="mt-1 text-sm font-medium text-(--app-text)">{value}</p>
     </div>
   )
 }
@@ -639,43 +710,36 @@ function MembershipStep({
   step: StepView
   onStartApplication: () => void
 }) {
-  const Icon = step.icon
   const meta = stateMeta[step.state]
-  const isOpenByDefault = step.state !== 'done'
+  const tone = step.state === 'done' ? 'success' : step.state === 'blocked' ? 'danger' : 'neutral'
 
   return (
-    <details
-      className="group rounded-panel border border-(--app-border) bg-(--app-surface) transition-colors open:bg-(--app-surface-elevated)"
-      open={isOpenByDefault}
-    >
-      <summary className="flex cursor-pointer list-none items-center gap-3 p-4 marker:hidden">
-        <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-full', meta.dot)}>
-          {step.state === 'done' ? <CheckCircle2 className="size-5" /> : null}
-          {step.state === 'blocked' ? <AlertCircle className="size-5" /> : null}
-          {step.state === 'current' ? <Clock className="size-4.5" /> : null}
-          {step.state === 'pending' ? <Circle className="size-4" /> : null}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="inline-flex items-center gap-2 text-sm font-semibold text-(--app-text)">
-            <Icon className="size-4 shrink-0 text-(--app-text-muted)" />
-            {step.title}
-          </p>
-        </div>
-        <Badge variant="outline" className={cn('w-fit shrink-0 border-transparent', meta.badge)}>
-          {meta.label}
-        </Badge>
-      </summary>
-
-      <div className="border-t border-(--app-border) px-4 pb-4 pt-3">
-        <p className="text-sm leading-6 text-(--app-text-muted)">{step.description}</p>
-
-        {step.key === 'application' && step.state === 'current' ? (
-          <Button className="mt-4 h-10" onClick={onStartApplication}>
-            Iniciar mi solicitud <ArrowRight className="size-4" />
-          </Button>
-        ) : null}
+    <div className="flex items-center gap-4 border-t border-(--app-border) py-4 first:border-t-0">
+      <span
+        className={cn(
+          'flex size-8 shrink-0 items-center justify-center rounded-full',
+          step.state === 'done' && 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/12 dark:text-emerald-300',
+          step.state === 'current' && 'bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200',
+          step.state === 'pending' && 'bg-(--app-surface-muted) text-(--app-text-subtle)',
+          step.state === 'blocked' && 'bg-rose-50 text-rose-600 dark:bg-rose-500/12 dark:text-rose-300'
+        )}
+      >
+        {step.state === 'done' ? <CheckCircle2 className="size-4.5" /> : null}
+        {step.state === 'blocked' ? <AlertCircle className="size-4.5" /> : null}
+        {step.state === 'current' ? <Clock className="size-4" /> : null}
+        {step.state === 'pending' ? <Circle className="size-4" /> : null}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-(--app-text)">{step.title}</p>
+        <p className="mt-0.5 text-xs leading-5 text-(--app-text-subtle)">{step.description}</p>
       </div>
-    </details>
+      <StatusPill label={meta.label} tone={tone} />
+      {step.key === 'application' && step.state === 'current' ? (
+        <Button className="hidden h-9 rounded-xl px-3 text-xs sm:inline-flex" onClick={onStartApplication}>
+          Iniciar <ArrowRight className="size-3.5" />
+        </Button>
+      ) : null}
+    </div>
   )
 }
 
@@ -743,13 +807,16 @@ function AzulPayCard({
   ) : null
 
   const yearSelector = (
-    <label className="mt-3 flex items-center justify-between gap-3 text-sm">
-      <span className="font-medium text-(--app-text)">Años de membresía</span>
+    <label className={cn('mt-4 flex gap-2 text-sm', compact ? 'flex-col' : 'items-center justify-between')}>
+      <span className="text-xs font-semibold text-(--app-text-muted)">Años de membresía</span>
       <select
         value={years}
         onChange={(event) => setYears(Number(event.target.value))}
         disabled={payMutation.isPending}
-        className="h-9 rounded-lg border border-(--app-border) bg-(--app-surface) px-2 text-sm text-(--app-text) focus:border-primary-500 focus:outline-none"
+        className={cn(
+          'h-11 rounded-xl border border-(--app-border) bg-(--app-surface) px-3 text-sm font-medium text-(--app-text) focus:border-primary-500 focus:outline-none focus:ring-3 focus:ring-primary-500/12',
+          compact ? 'w-full' : 'min-w-34'
+        )}
       >
         {YEAR_OPTIONS.map((option) => (
           <option key={option} value={option}>
@@ -762,7 +829,7 @@ function AzulPayCard({
 
   const button = (
     <Button
-      className={compact ? 'mt-3 h-9 w-full' : 'mt-3 h-10'}
+      className={compact ? 'mt-4 h-12 w-full rounded-xl' : 'mt-3 h-10'}
       disabled={payMutation.isPending || !acceptedPolicies}
       onClick={() => payMutation.mutate()}
     >
@@ -777,15 +844,22 @@ function AzulPayCard({
 
   if (compact) {
     return (
-      <div className="mt-2">
+      <div className="mt-4">
         {processingNotice}
         {yearSelector}
+        <div className="mt-4 flex items-baseline justify-between gap-4 border-y border-(--app-border) py-4">
+          <span className="text-sm text-(--app-text-muted)">Total a pagar</span>
+          <span className="text-xl font-bold tracking-tight text-(--app-text)">{totalLabel ?? 'Por definir'}</span>
+        </div>
         <CheckoutComplianceBox
           accepted={acceptedPolicies}
           onAcceptedChange={setAcceptedPolicies}
           compact
         />
         {button}
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-(--app-text-subtle)">
+          <ShieldCheck className="size-3.5" /> Pago seguro procesado por AZUL
+        </p>
       </div>
     )
   }
@@ -892,58 +966,86 @@ function MembershipReceiptCard({
   payment,
   currency,
   categoryLabel,
-  defaultOpen = false
+  isOpen,
+  onToggle
 }: {
   payment: MembershipPayment
   currency: string
   categoryLabel: string | null
-  defaultOpen?: boolean
+  isOpen: boolean
+  onToggle: () => void
 }) {
   const lines = buildReceiptLines(payment, currency, categoryLabel)
   const kindLabel = payment.intent === 'renewal' ? 'Renovación' : 'Membresía inicial'
   const amountLabel = formatMoney(Number(payment.amount ?? 0), currency)
+  const termMonths = payment.term_months ?? 12
+  const termYears = Math.max(1, Math.round(termMonths / 12))
 
   return (
-    <details
-      className="group rounded-panel border border-(--app-border) bg-(--app-surface) transition-colors open:bg-(--app-surface-elevated)"
-      open={defaultOpen}
+    <div
+      className={cn(
+        'overflow-hidden rounded-2xl border bg-(--app-surface-elevated) transition-[border-color,box-shadow]',
+        isOpen
+          ? 'border-primary-200 shadow-[0_4px_14px_rgba(20,40,90,0.06)] dark:border-primary-500/25'
+          : 'border-(--app-border) hover:border-primary-200 hover:shadow-[0_4px_14px_rgba(20,40,90,0.06)]'
+      )}
     >
-      <summary className="flex cursor-pointer list-none items-center gap-3 p-4 marker:hidden">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/12 dark:text-emerald-300">
-          <FileText className="size-4.5" />
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        className="flex w-full cursor-pointer items-center gap-4 p-4 text-left"
+        onClick={onToggle}
+      >
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/12 dark:text-emerald-300">
+          <FileText className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-(--app-text)">Comprobante · {kindLabel}</p>
           <p className="mt-0.5 truncate text-xs text-(--app-text-muted)">
-            {formatDate(payment.verified_at)} · {amountLabel}
+            {formatDate(payment.verified_at)} · {termYears} {termYears === 1 ? 'año' : 'años'}
           </p>
         </div>
-        <ChevronDown className="size-4 shrink-0 text-(--app-text-subtle) transition-transform group-open:rotate-180" />
-      </summary>
+        <span className="shrink-0 text-sm font-bold tabular-nums text-(--app-text)">{amountLabel}</span>
+        <ChevronDown
+          className={cn('size-4 shrink-0 text-(--app-text-subtle) transition-transform duration-200', isOpen && 'rotate-180')}
+        />
+      </button>
 
-      <div className="border-t border-(--app-border) px-4 pb-4 pt-3">
-        <p className="mb-3 text-xs leading-5 text-(--app-text-muted)">
-          Pago confirmado el {formatDate(payment.verified_at)}. Descárgalo o compártelo cuando lo necesites.
-        </p>
-        <div className="space-y-1">
-          {lines.map(([key, value]) => (
-            <StatusSummaryRow key={key} label={key} value={value} />
-          ))}
-        </div>
-        <div className="flex gap-2 pt-3">
-          <Button variant="outline" className="h-9 flex-1" onClick={() => printReceipt(RECEIPT_TITLE, lines)}>
-            <Download className="size-4" /> Descargar
-          </Button>
-          <Button
-            variant="outline"
-            className="h-9 flex-1"
-            onClick={() => void shareReceipt(RECEIPT_TITLE, receiptPlainText(RECEIPT_TITLE, lines))}
-          >
-            <Share2 className="size-4" /> Compartir
-          </Button>
+      <div className={cn('max-h-0 overflow-hidden opacity-0 transition-all duration-300', isOpen && 'max-h-96 opacity-100')}>
+        <div className="border-t border-(--app-border) px-4 pb-4 pt-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <DetailRow label="Número" value={payment.order_number ?? '—'} />
+            <DetailRow label="Concepto" value={`${kindLabel}${termYears ? ` · ${termYears} ${termYears === 1 ? 'año' : 'años'}` : ''}`} />
+            <DetailRow label="Método de pago" value={payment.method === 'azul' ? 'Tarjeta · AZUL' : payment.method ?? '—'} />
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.04em] text-(--app-text-subtle)">Estado</p>
+              <p className="mt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-300">Pagado</p>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Button
+              className="h-10 flex-1 rounded-xl"
+              onClick={(event) => {
+                event.stopPropagation()
+                printReceipt(RECEIPT_TITLE, lines)
+              }}
+            >
+              <Download className="size-4" /> Descargar PDF
+            </Button>
+            <Button
+              variant="outline"
+              className="h-10 flex-1 rounded-xl"
+              onClick={(event) => {
+                event.stopPropagation()
+                void shareReceipt(RECEIPT_TITLE, receiptPlainText(RECEIPT_TITLE, lines))
+              }}
+            >
+              <Share2 className="size-4" /> Compartir
+            </Button>
+          </div>
         </div>
       </div>
-    </details>
+    </div>
   )
 }
 
