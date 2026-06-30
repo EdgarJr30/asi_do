@@ -331,7 +331,6 @@ export function InstitutionalShell() {
               <div className="mt-5">
                 <PaymentBrandStrip
                   itemClassName="border-white/12 bg-white"
-                  show3DSLabel
                 />
               </div>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">

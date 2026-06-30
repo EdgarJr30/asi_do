@@ -8,7 +8,6 @@ import {
   paymentPolicyLinks,
   type PaymentPolicyKind
 } from '@/experiences/institutional/content/payment-compliance-content'
-import { PaymentBrandStrip } from '@/shared/ui/payment-brand-strip'
 
 export function PaymentPolicyPage({ kind }: { kind: PaymentPolicyKind }) {
   const content = paymentPolicyContent[kind]
@@ -23,7 +22,6 @@ export function PaymentPolicyPage({ kind }: { kind: PaymentPolicyKind }) {
             <p className="asi-kicker">{content.eyebrow}</p>
             <h1 className="asi-heading-lg mt-4 max-w-[14ch]">{content.title}</h1>
             <p className="asi-copy mt-5 max-w-[68ch] text-[1.02rem]">{content.description}</p>
-            <PaymentBrandStrip className="mt-6" show3DSLabel />
           </div>
 
           <InstitutionalCard className="bg-white/88" hoverMotion={false}>

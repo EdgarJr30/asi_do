@@ -8,7 +8,6 @@ import { toast } from 'sonner'
 
 import { surfacePaths } from '@/app/router/surface-paths'
 import { useAppSession } from '@/app/providers/app-session-provider'
-import { merchantCompliance } from '@/experiences/institutional/content/payment-compliance-content'
 import {
   getDonationReceipt,
   listDonationAmountOptions,
@@ -21,7 +20,6 @@ import {
 import { InstitutionalCard, InstitutionalSection } from '@/experiences/institutional/components/institutional-ui'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 import { printReceipt, receiptPlainText, shareReceipt, type ReceiptLine } from '@/shared/ui/receipt'
-import { PaymentBrandStrip } from '@/shared/ui/payment-brand-strip'
 import { Spinner } from '@/components/ui/loader'
 import { cn } from '@/lib/utils/cn'
 
@@ -358,15 +356,7 @@ export function DonationCheckoutSection() {
               </span>
               <div>
                 <p className="text-lg font-semibold tracking-tight text-(--asi-text)">Resumen de donación</p>
-                <p className="text-sm text-(--asi-text-muted)">Pago seguro procesado por AZUL en RD$ / DOP$.</p>
               </div>
-            </div>
-
-            <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3">
-              <PaymentBrandStrip show3DSLabel />
-              <p className="mt-3 text-xs leading-5 text-(--asi-text-muted)">
-                Comercio: {merchantCompliance.businessName}. Servicio al Cliente: {merchantCompliance.email} · {merchantCompliance.phone}.
-              </p>
             </div>
 
             <div className="mt-5 rounded-[1.35rem] bg-(--asi-surface-raised) px-4 py-4">
@@ -436,28 +426,6 @@ export function DonationCheckoutSection() {
                   <option>Evangelismo en el mercado</option>
                 </select>
               </label>
-            </div>
-
-            <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-xs leading-5 text-(--asi-text-muted)">
-              <p className="font-semibold text-(--asi-text)">Producto/servicio</p>
-              <p className="mt-1">{merchantCompliance.checkoutDescription}</p>
-              <p className="mt-2">
-                Dirección permanente: {merchantCompliance.address}. Moneda de compra: {merchantCompliance.currency}.
-              </p>
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                <Link className="font-semibold text-(--asi-primary) hover:underline" to={surfacePaths.institutional.refunds}>
-                  Devoluciones
-                </Link>
-                <Link className="font-semibold text-(--asi-primary) hover:underline" to={surfacePaths.institutional.delivery}>
-                  Entrega
-                </Link>
-                <Link className="font-semibold text-(--asi-primary) hover:underline" to={surfacePaths.institutional.privacy}>
-                  Privacidad
-                </Link>
-                <Link className="font-semibold text-(--asi-primary) hover:underline" to={surfacePaths.institutional.paymentSecurity}>
-                  Seguridad de pagos
-                </Link>
-              </div>
             </div>
 
             <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-(--asi-text-muted)">
