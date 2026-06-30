@@ -448,7 +448,7 @@ export function PublicJobBoard() {
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
           {/* Lista de vacantes con scroll independiente + carga infinita */}
           <div className={cn('min-w-0', detailOpen ? 'hidden lg:block' : 'block')}>
-            <div ref={listScrollRef} className="flex max-h-104 flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
+            <div ref={listScrollRef} className="flex max-h-128 flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
               <motion.ul
                 className="flex flex-col gap-2"
                 variants={gridStagger}
@@ -524,7 +524,7 @@ function JobListRow({
       onClick={onSelect}
       aria-current={active ? 'true' : undefined}
       className={cn(
-        'flex w-full items-center gap-3 rounded-xl border bg-(--app-surface) px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
+        'flex h-24 w-full items-center gap-3 rounded-xl border bg-(--app-surface) px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
         active
           ? 'border-primary-600 shadow-[0_0_0_3px_rgba(45,82,168,0.12)] dark:border-primary-400'
           : 'border-(--app-border) hover:border-primary-200 hover:shadow-[0_4px_14px_rgba(20,40,90,0.06)]'
