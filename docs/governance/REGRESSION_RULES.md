@@ -338,6 +338,9 @@ Do not use `ASI ATS` as a visible product or brand label in public, auth, storef
 ### R-090 — Jobs board list scroll must stay internal and card-count bounded
 Do not regress the candidate jobs board back to full-page vacancy scrolling. The vacancy list must keep its own scroll container, show five vacancy cards before scrolling, and preserve infinite loading inside that container.
 
+### R-091 — Jobs board filters must not auto-select a vacancy
+Do not auto-select the first vacancy after the candidate changes filters, search, chips, reset, or sort in `/platform/jobs`. Filtering must clear the current selection and leave the detail pane in its explicit empty state until the user chooses the vacancy they prefer.
+
 ---
 
 ## Maintenance rule

@@ -153,8 +153,29 @@ export function PublicJobBoard() {
   const listScrollRef = useRef<HTMLDivElement | null>(null)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
+  function clearSelectedJob() {
+    setSelectedJobId(null)
+    setDetailOpen(false)
+  }
+
   function patchFilters(patch: Partial<Filters>) {
     setFilters((current) => ({ ...current, ...patch }))
+  }
+
+  function applyFilters(patch: Partial<Filters>) {
+    clearSelectedJob()
+    patchFilters(patch)
+  }
+
+  function clearSubmittedFilter(key: 'search' | 'location') {
+    clearSelectedJob()
+    setFilters((current) => ({ ...current, [key]: '' }))
+    setSubmitted((current) => ({ ...current, [key]: '' }))
+  }
+
+  function applySort(nextSort: 'recent' | 'salary') {
+    clearSelectedJob()
+    setSort(nextSort)
   }
 
   const candidateProfileQuery = useQuery({
@@ -230,16 +251,14 @@ export function PublicJobBoard() {
     [allJobs, filters.sector]
   )
 
-  const detailJob = selectedJobId
-    ? visibleJobs.find((job) => job.id === selectedJobId) ?? visibleJobs[0] ?? null
-    : visibleJobs[0] ?? null
+  const detailJob = selectedJobId ? visibleJobs.find((job) => job.id === selectedJobId) ?? null : null
 
   const activeChips = [
-    submitted.search ? { key: 'search', label: `"${submitted.search}"`, clear: () => { setFilters((current) => ({ ...current, search: '' })); setSubmitted((current) => ({ ...current, search: '' })) } } : null,
-    submitted.location ? { key: 'location', label: submitted.location, clear: () => { setFilters((current) => ({ ...current, location: '' })); setSubmitted((current) => ({ ...current, location: '' })) } } : null,
-    filters.sector ? { key: 'sector', label: getSectorLabel(filters.sector), clear: () => patchFilters({ sector: '' }) } : null,
-    filters.workplace ? { key: 'workplace', label: workplaceLabel(filters.workplace), clear: () => patchFilters({ workplace: '' }) } : null,
-    filters.type ? { key: 'type', label: getOpportunityTypeLabel(filters.type), clear: () => patchFilters({ type: '' }) } : null
+    submitted.search ? { key: 'search', label: `"${submitted.search}"`, clear: () => clearSubmittedFilter('search') } : null,
+    submitted.location ? { key: 'location', label: submitted.location, clear: () => clearSubmittedFilter('location') } : null,
+    filters.sector ? { key: 'sector', label: getSectorLabel(filters.sector), clear: () => applyFilters({ sector: '' }) } : null,
+    filters.workplace ? { key: 'workplace', label: workplaceLabel(filters.workplace), clear: () => applyFilters({ workplace: '' }) } : null,
+    filters.type ? { key: 'type', label: getOpportunityTypeLabel(filters.type), clear: () => applyFilters({ type: '' }) } : null
   ].filter(Boolean) as Array<{ key: string; label: string; clear: () => void }>
 
   // Sólo los chips de búsqueda/ubicación se muestran como pastillas: sector,
@@ -247,6 +266,7 @@ export function PublicJobBoard() {
   const searchChips = activeChips.filter((chip) => chip.key === 'search' || chip.key === 'location')
 
   function resetFilters() {
+    clearSelectedJob()
     setFilters(emptyFilters)
     setSubmitted({ search: '', location: '' })
   }
@@ -320,6 +340,7 @@ export function PublicJobBoard() {
         className="flex flex-col gap-2 rounded-panel border border-(--app-border) bg-(--app-surface) p-1.5 pl-3 shadow-sm md:flex-row md:items-center md:gap-1"
         onSubmit={(event) => {
           event.preventDefault()
+          clearSelectedJob()
           setSubmitted({ search: filters.search.trim(), location: filters.location.trim() })
         }}
         role="search"
@@ -355,7 +376,7 @@ export function PublicJobBoard() {
         <Select
           className="h-[34px] w-auto rounded-lg text-[0.82rem]"
           value={filters.sector}
-          onChange={(event) => patchFilters({ sector: event.target.value })}
+          onChange={(event) => applyFilters({ sector: event.target.value })}
           aria-label="Filtrar por sector"
         >
           <option value="">Todos los sectores</option>
@@ -368,7 +389,7 @@ export function PublicJobBoard() {
         <Select
           className="h-[34px] w-auto rounded-lg text-[0.82rem]"
           value={filters.workplace}
-          onChange={(event) => patchFilters({ workplace: event.target.value })}
+          onChange={(event) => applyFilters({ workplace: event.target.value })}
           aria-label="Filtrar por modalidad"
         >
           <option value="">Cualquier modalidad</option>
@@ -379,7 +400,7 @@ export function PublicJobBoard() {
         <Select
           className="h-[34px] w-auto rounded-lg text-[0.82rem]"
           value={filters.type}
-          onChange={(event) => patchFilters({ type: event.target.value })}
+          onChange={(event) => applyFilters({ type: event.target.value })}
           aria-label="Filtrar por tipo"
         >
           <option value="">Todos los tipos</option>
@@ -423,7 +444,7 @@ export function PublicJobBoard() {
 
         <label className="ml-auto flex items-center gap-2 text-[0.82rem] text-(--app-text-subtle)">
           Ordenar por
-          <Select className="h-[34px] w-auto rounded-lg text-[0.82rem]" value={sort} onChange={(event) => setSort(event.target.value as 'recent' | 'salary')} aria-label="Ordenar resultados">
+          <Select className="h-[34px] w-auto rounded-lg text-[0.82rem]" value={sort} onChange={(event) => applySort(event.target.value as 'recent' | 'salary')} aria-label="Ordenar resultados">
             <option value="recent">Más recientes</option>
             <option value="salary">Salario</option>
           </Select>
