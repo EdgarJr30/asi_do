@@ -199,6 +199,8 @@ User approval, ASI membership, and active subscription status are prerequisite g
 
 Commercial plan checks are separate from RBAC checks. Roles grant permission to attempt an action, while tenant plans and tenant-kind rules decide whether the workspace has capacity or eligibility for that action. The canonical commercial model lives in `docs/product/COMMERCIAL_PLAN_MODEL.md`.
 
+Candidate-owned application maintenance is not a tenant permission. After submission, a candidate may replace the CV attached to their own application only through an ownership-checked backend path; tenant application permissions do not grant that candidate self-service action and candidate UI checks do not replace database enforcement.
+
 ---
 
 ## 7. UI behavior rules

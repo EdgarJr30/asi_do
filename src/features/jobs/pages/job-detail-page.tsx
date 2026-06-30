@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/loader'
+import { listMyApplications } from '@/features/applications/lib/applications-api'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
 import { getPublicJobBySlug, toggleSavedJob } from '@/features/jobs/lib/jobs-api'
@@ -133,6 +134,11 @@ export function JobDetailPage() {
     enabled: jobSlug.length > 0,
     queryFn: async () => getPublicJobBySlug(jobSlug, candidateProfileQuery.data?.profile?.id ?? null)
   })
+  const applicationsQuery = useQuery({
+    queryKey: ['applications', 'mine', 'job-detail', session.authUser?.id ?? null],
+    enabled: session.isAuthenticated,
+    queryFn: async () => listMyApplications(session.authUser!.id)
+  })
 
   const saveMutation = useMutation({
     mutationFn: async (shouldSave: boolean) => {
@@ -199,8 +205,13 @@ export function JobDetailPage() {
   const employmentLabel = employmentLabels[job.employment_type] ?? job.employment_type
   const companyName = job.company_profile?.display_name || 'Empresa'
   const companyInitials = initialsFor(companyName)
+  const existingApplication = (applicationsQuery.data ?? []).find((application) => application.job_posting_id === job.id) ?? null
   const applicationPath = session.isAuthenticated ? surfacePaths.public.jobApply(jobSlug) : surfacePaths.auth.signIn
-  const applicationLabel = session.isAuthenticated ? 'Aplicar ahora' : 'Inicia sesión para aplicar'
+  const applicationLabel = existingApplication
+    ? 'Actualizar CV enviado'
+    : session.isAuthenticated
+      ? 'Aplicar ahora'
+      : 'Inicia sesión para aplicar'
   const isSaveDisabled = saveMutation.isPending || !candidateProfileQuery.data?.profile
 
   const saveButton = (
@@ -269,12 +280,6 @@ export function JobDetailPage() {
                 <Clock3 className="size-3.5" /> {formatRelativeDate(job.published_at)}
               </span>
             </div>
-          </div>
-          <div className="hidden w-58 shrink-0 flex-col gap-2 min-[1080px]:flex">
-            <Link className={linkButtonClassName} to={applicationPath}>
-              <SendHorizontal className="size-4" /> {applicationLabel}
-            </Link>
-            {session.isAuthenticated ? saveButton : null}
           </div>
         </div>
       </motion.header>
@@ -347,13 +352,19 @@ export function JobDetailPage() {
         </motion.main>
 
         <motion.aside variants={gridStagger} className="space-y-4 xl:sticky xl:top-4 xl:self-start">
-          <motion.div variants={cardReveal}>
+          <motion.div variants={cardReveal} className="hidden min-[860px]:block">
             <Card className="rounded-xl p-4">
               <div className="flex flex-col gap-2">
                 <Link className={linkButtonClassName} to={applicationPath}>
-                  <SendHorizontal className="size-4" /> {applicationLabel}
+                  {existingApplication ? <FileText className="size-4" /> : <SendHorizontal className="size-4" />}
+                  {applicationLabel}
                 </Link>
-                {session.isAuthenticated ? saveButton : null}
+                {session.isAuthenticated && !existingApplication ? saveButton : null}
+                {existingApplication ? (
+                  <p className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-medium leading-5 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
+                    Ya aplicaste a esta vacante. Solo puedes actualizar el CV asociado.
+                  </p>
+                ) : null}
               </div>
               <dl className="mt-4 divide-y divide-(--app-border)">
                 <div className="flex items-center justify-between gap-3 py-3 text-sm">
@@ -409,7 +420,7 @@ export function JobDetailPage() {
       </motion.div>
 
       <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-(--app-border) bg-(--app-surface)/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur min-[860px]:hidden">
-        {session.isAuthenticated ? (
+        {session.isAuthenticated && !existingApplication ? (
           <Button
             type="button"
             variant="outline"
@@ -422,6 +433,7 @@ export function JobDetailPage() {
           </Button>
         ) : null}
         <Link className={linkButtonClassName} to={applicationPath}>
+          {existingApplication ? <FileText className="size-4" /> : null}
           {applicationLabel}
         </Link>
       </div>

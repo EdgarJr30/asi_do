@@ -42,6 +42,25 @@ export async function submitApplication(input: {
   return response.data as Tables<'applications'>
 }
 
+export async function updateApplicationResume(input: {
+  applicationId: string
+  submittedResumeId: string
+}) {
+  const client = requireSupabase()
+  const response = await (client as typeof client & {
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: Error | null }>
+  }).rpc('update_application_resume', {
+    p_application_id: input.applicationId,
+    p_submitted_resume_id: input.submittedResumeId
+  })
+
+  if (response.error) {
+    throw response.error
+  }
+
+  return response.data as Tables<'applications'>
+}
+
 export async function listMyApplications(userId: string) {
   const client = requireSupabase()
   const profileResponse = await client.from('candidate_profiles').select('id').eq('user_id', userId).maybeSingle()

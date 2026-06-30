@@ -96,6 +96,7 @@
 8. Only authorized tenant members may view or act on applications for their tenant opportunities.
 9. Application review and talent sourcing are related but distinct flows.
 10. Duplicate applications for the same candidate and opportunity must be blocked at the database layer, not only in the UI.
+11. After a candidate has applied to an opportunity, the candidate-facing flow must not create a second application or reopen the full application form as a general edit surface. The allowed self-service change is replacing the submitted CV for that existing application.
 
 ---
 

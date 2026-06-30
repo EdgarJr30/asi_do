@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -24,7 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PageLoader } from '@/components/ui/loader'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
-import { submitApplication } from '@/features/applications/lib/applications-api'
+import { listMyApplications, submitApplication, updateApplicationResume } from '@/features/applications/lib/applications-api'
 import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
 import { getPublicJobBySlug } from '@/features/jobs/lib/jobs-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
@@ -40,6 +40,50 @@ const steps = [
   { name: 'Preguntas', subtitle: 'Screening de la vacante' },
   { name: 'Revisar y enviar', subtitle: 'Confirma tu postulación' }
 ] as const
+
+interface ApplicationDraft {
+  selectedResumeId?: string
+  coverLetter?: string
+  answers?: Record<string, string>
+  currentStep?: number
+}
+
+function applicationDraftKey(jobSlug: string, userId: string | null | undefined) {
+  return userId ? `asi:job-application-draft:${userId}:${jobSlug}` : null
+}
+
+function readApplicationDraft(key: string | null): ApplicationDraft | null {
+  if (!key || typeof window === 'undefined') {
+    return null
+  }
+
+  try {
+    const raw = window.localStorage.getItem(key)
+    if (!raw) {
+      return null
+    }
+    const parsed = JSON.parse(raw) as ApplicationDraft
+    return parsed && typeof parsed === 'object' ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function writeApplicationDraft(key: string | null, draft: ApplicationDraft) {
+  if (!key || typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(key, JSON.stringify(draft))
+}
+
+function clearApplicationDraft(key: string | null) {
+  if (!key || typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.removeItem(key)
+}
 
 function initialsFor(value: string | null | undefined) {
   const normalized = value?.trim()
@@ -97,14 +141,17 @@ export function JobApplicationPage() {
   const { jobSlug = '' } = useParams()
   const session = useAppSession()
   const queryClient = useQueryClient()
-  const [currentStep, setCurrentStep] = useState(0)
-  const [maxVisitedStep, setMaxVisitedStep] = useState(0)
-  const [selectedResumeId, setSelectedResumeId] = useState('')
-  const [coverLetter, setCoverLetter] = useState('')
-  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const draftKey = applicationDraftKey(jobSlug, session.authUser?.id)
+  const [draftSeed] = useState(() => readApplicationDraft(draftKey))
+  const [currentStep, setCurrentStep] = useState(() => draftSeed?.currentStep ?? 0)
+  const [maxVisitedStep, setMaxVisitedStep] = useState(() => draftSeed?.currentStep ?? 0)
+  const [selectedResumeId, setSelectedResumeId] = useState(() => draftSeed?.selectedResumeId ?? '')
+  const [coverLetter, setCoverLetter] = useState(() => draftSeed?.coverLetter ?? '')
+  const [answers, setAnswers] = useState<Record<string, string>>(() => draftSeed?.answers ?? {})
   const [showResumeError, setShowResumeError] = useState(false)
   const [questionErrors, setQuestionErrors] = useState<Record<string, boolean>>({})
   const [applicationSubmitted, setApplicationSubmitted] = useState(false)
+  const [successKind, setSuccessKind] = useState<'submitted' | 'updated'>('submitted')
 
   const candidateProfileQuery = useQuery({
     queryKey: ['candidate-profile', 'mine', 'apply'],
@@ -116,20 +163,36 @@ export function JobApplicationPage() {
     enabled: jobSlug.length > 0,
     queryFn: async () => getPublicJobBySlug(jobSlug)
   })
+  const applicationsQuery = useQuery({
+    queryKey: ['applications', 'mine', 'job-apply', session.authUser?.id ?? null],
+    enabled: session.isAuthenticated,
+    queryFn: async () => listMyApplications(session.authUser!.id)
+  })
 
   const profileBundle = candidateProfileQuery.data
   const job = jobQuery.data
+  const existingApplication = useMemo(
+    () => (job ? (applicationsQuery.data ?? []).find((application) => application.job_posting_id === job.id) ?? null : null),
+    [applicationsQuery.data, job]
+  )
   const requiredQuestions = useMemo(
     () => job?.job_screening_questions?.filter((question) => question.is_required) ?? [],
     [job?.job_screening_questions]
   )
   const defaultResumeId = profileBundle?.resumes.find((resume) => resume.is_default)?.id ?? profileBundle?.resumes[0]?.id ?? ''
-  const activeResumeId = selectedResumeId || defaultResumeId
+  const activeResumeId = selectedResumeId || existingApplication?.submitted_resume_id || defaultResumeId
 
   const applyMutation = useMutation({
     mutationFn: async () => {
       if (!job) {
         throw new Error('La vacante ya no está disponible.')
+      }
+
+      if (existingApplication) {
+        return updateApplicationResume({
+          applicationId: existingApplication.id,
+          submittedResumeId: activeResumeId
+        })
       }
 
       return submitApplication({
@@ -144,17 +207,26 @@ export function JobApplicationPage() {
       })
     },
     onSuccess: async () => {
-      toast.success('Postulación enviada', {
-        description: 'Tu perfil y respuestas ya quedaron registrados para esta vacante.'
+      const nextSuccessKind = existingApplication ? 'updated' : 'submitted'
+      toast.success(nextSuccessKind === 'updated' ? 'CV actualizado' : 'Postulación enviada', {
+        description:
+          nextSuccessKind === 'updated'
+            ? 'Actualizamos el CV asociado a esta postulación.'
+            : 'Tu perfil y respuestas ya quedaron registrados para esta vacante.'
       })
       await queryClient.invalidateQueries({ queryKey: ['applications', 'mine'] })
+      await queryClient.invalidateQueries({ queryKey: ['jobs'] })
+      if (!existingApplication) {
+        clearApplicationDraft(draftKey)
+      }
+      setSuccessKind(nextSuccessKind)
       setApplicationSubmitted(true)
       setMaxVisitedStep(TOTAL_STEPS - 1)
     },
     onError: async (error) => {
       await reportErrorWithToast({
-        title: 'No pudimos enviar tu postulación',
-        source: 'applications.submit',
+        title: existingApplication ? 'No pudimos actualizar el CV de tu postulación' : 'No pudimos enviar tu postulación',
+        source: existingApplication ? 'applications.update-resume' : 'applications.submit',
         route: surfacePaths.public.jobApply(jobSlug),
         userId: session.authUser?.id ?? null,
         error
@@ -162,7 +234,20 @@ export function JobApplicationPage() {
     }
   })
 
-  if (jobQuery.isLoading || candidateProfileQuery.isLoading) {
+  useEffect(() => {
+    if (applicationSubmitted || existingApplication) {
+      return
+    }
+
+    writeApplicationDraft(draftKey, {
+      selectedResumeId: activeResumeId,
+      coverLetter,
+      answers,
+      currentStep
+    })
+  }, [activeResumeId, answers, applicationSubmitted, coverLetter, currentStep, draftKey, existingApplication])
+
+  if (jobQuery.isLoading || candidateProfileQuery.isLoading || applicationsQuery.isLoading) {
     return <PageLoader label="Preparando postulación" hint="Estamos cargando la vacante, tu perfil y tus CVs disponibles" />
   }
 
@@ -200,10 +285,11 @@ export function JobApplicationPage() {
   const companyInitials = initialsFor(companyName)
   const workplaceLabel = job.workplace_type ? workplaceLabels[job.workplace_type] ?? job.workplace_type : 'Modalidad flexible'
   const progress = `${((applicationSubmitted ? TOTAL_STEPS : currentStep + 1) / TOTAL_STEPS) * 100}%`
+  const isResumeUpdateMode = Boolean(existingApplication && !applicationSubmitted)
 
   function validateStep(step: number) {
     if (step === 0) {
-      const hasResume = Boolean(activeResumeId)
+      const hasResume = Boolean(selectedResume)
       setShowResumeError(!hasResume)
       return hasResume
     }
@@ -256,6 +342,14 @@ export function JobApplicationPage() {
     applyMutation.mutate()
   }
 
+  function updateSubmittedResume() {
+    if (!validateStep(0)) {
+      return
+    }
+
+    applyMutation.mutate()
+  }
+
   function updateAnswer(questionId: string, value: string) {
     setAnswers((current) => ({ ...current, [questionId]: value }))
     if (value.trim()) {
@@ -287,31 +381,38 @@ export function JobApplicationPage() {
           </div>
         </div>
 
-        <ol className="relative flex gap-1 overflow-x-auto pb-1 lg:block lg:overflow-visible lg:pb-0 lg:before:absolute lg:before:bottom-4 lg:before:left-4 lg:before:top-4 lg:before:w-px lg:before:bg-(--app-border)">
-          {steps.map((step, index) => {
-            const isActive = currentStep === index && !applicationSubmitted
-            return (
-              <li key={step.name} className="relative min-w-20 flex-1 lg:min-w-0">
-                <button
-                  type="button"
-                  className="flex w-full flex-col items-center gap-2 rounded-xl p-1 text-center transition hover:bg-(--app-surface-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) lg:flex-row lg:items-start lg:gap-3 lg:px-0 lg:py-2 lg:text-left"
-                  onClick={() => goToStep(index)}
-                  disabled={applicationSubmitted}
-                >
-                  <StepDot index={index} currentStep={applicationSubmitted ? TOTAL_STEPS : currentStep} />
-                  <span className="pt-0.5">
-                    <span className={cn('block text-[0.72rem] font-semibold leading-tight lg:text-sm', isActive ? 'text-(--app-text)' : 'text-(--app-text-subtle)')}>
-                      {step.name}
+        {isResumeUpdateMode ? (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/12 dark:text-emerald-200">
+            <p className="font-semibold">Ya aplicaste a esta vacante</p>
+            <p className="mt-1 leading-6">Desde aquí solo puedes actualizar el CV enviado. La carta y las respuestas originales se mantienen.</p>
+          </div>
+        ) : (
+          <ol className="relative flex gap-1 overflow-x-auto pb-1 lg:block lg:overflow-visible lg:pb-0 lg:before:absolute lg:before:bottom-4 lg:before:left-4 lg:before:top-4 lg:before:w-px lg:before:bg-(--app-border)">
+            {steps.map((step, index) => {
+              const isActive = currentStep === index && !applicationSubmitted
+              return (
+                <li key={step.name} className="relative min-w-20 flex-1 lg:min-w-0">
+                  <button
+                    type="button"
+                    className="flex w-full flex-col items-center gap-2 rounded-xl p-1 text-center transition hover:bg-(--app-surface-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) lg:flex-row lg:items-start lg:gap-3 lg:px-0 lg:py-2 lg:text-left"
+                    onClick={() => goToStep(index)}
+                    disabled={applicationSubmitted}
+                  >
+                    <StepDot index={index} currentStep={applicationSubmitted ? TOTAL_STEPS : currentStep} />
+                    <span className="pt-0.5">
+                      <span className={cn('block text-[0.72rem] font-semibold leading-tight lg:text-sm', isActive ? 'text-(--app-text)' : 'text-(--app-text-subtle)')}>
+                        {step.name}
+                      </span>
+                      <span className={cn('mt-0.5 hidden text-xs text-(--app-text-subtle) lg:block', !isActive && 'lg:hidden')}>
+                        {step.subtitle}
+                      </span>
                     </span>
-                    <span className={cn('mt-0.5 hidden text-xs text-(--app-text-subtle) lg:block', !isActive && 'lg:hidden')}>
-                      {step.subtitle}
-                    </span>
-                  </span>
-                </button>
-              </li>
-            )
-          })}
-        </ol>
+                  </button>
+                </li>
+              )
+            })}
+          </ol>
+        )}
       </aside>
 
       <main className="mx-auto w-full max-w-145">
@@ -324,16 +425,20 @@ export function JobApplicationPage() {
             <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
               <Check className="size-8" />
             </div>
-            <h1 className="mt-5 text-2xl font-semibold tracking-tight text-(--app-text)">Postulación enviada</h1>
+            <h1 className="mt-5 text-2xl font-semibold tracking-tight text-(--app-text)">
+              {successKind === 'updated' ? 'CV actualizado' : 'Postulación enviada'}
+            </h1>
             <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
-              Enviamos tu perfil, CV y respuestas al equipo de {companyName}. Puedes revisar el estado desde tus postulaciones.
+              {successKind === 'updated'
+                ? `Actualizamos el CV enviado al equipo de ${companyName}.`
+                : `Enviamos tu perfil, CV y respuestas al equipo de ${companyName}. Puedes revisar el estado desde tus postulaciones.`}
             </p>
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
               <Link
-                to={surfacePaths.public.jobs}
+                to={surfacePaths.public.jobDetail(jobSlug)}
                 className="inline-flex h-11 items-center justify-center rounded-xl border border-(--app-border) bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
               >
-                Ver más vacantes
+                Volver a la vacante
               </Link>
               <Link
                 to={surfacePaths.candidate.applications}
@@ -341,6 +446,89 @@ export function JobApplicationPage() {
               >
                 Ir a mis postulaciones
               </Link>
+            </div>
+          </section>
+        ) : isResumeUpdateMode ? (
+          <section>
+            <span className="text-xs font-bold uppercase tracking-[0.08em] text-primary-700 dark:text-primary-200">Postulación existente</span>
+            <h1 className="mt-2 text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text)">Actualizar CV enviado</h1>
+            <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+              Ya aplicaste a esta vacante. Para evitar cambios accidentales, solo puedes reemplazar el CV asociado a la postulación.
+            </p>
+
+            <div className="mt-6 rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-sm text-(--app-text-muted)">
+              CV actual: <span className="font-semibold text-(--app-text)">{existingApplication?.submitted_resume_filename ?? 'Sin CV registrado'}</span>
+            </div>
+
+            <div className="mt-6 space-y-2.5">
+              {profileBundle.resumes.length ? (
+                profileBundle.resumes.map((resume) => {
+                  const isSelected = activeResumeId === resume.id
+                  return (
+                    <button
+                      key={resume.id}
+                      type="button"
+                      className={cn(
+                        'flex min-h-17 w-full items-center gap-3 rounded-xl border bg-(--app-surface) px-4 py-3 text-left transition hover:border-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
+                        isSelected
+                          ? 'border-primary-600 shadow-[0_0_0_3px_rgba(57,85,184,0.16)]'
+                          : 'border-(--app-border)'
+                      )}
+                      onClick={() => {
+                        setSelectedResumeId(resume.id)
+                        setShowResumeError(false)
+                      }}
+                    >
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                        <FileText className="size-5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-(--app-text)">{resume.filename}</span>
+                        <span className="mt-0.5 block text-xs text-(--app-text-muted)">
+                          Subido el {formatUploadedAt(resume.uploaded_at)} · {formatFileSize(resume.file_size_bytes)}
+                        </span>
+                      </span>
+                      {resume.is_default ? <Badge className="hidden bg-emerald-50 text-emerald-700 sm:inline-flex">Principal</Badge> : null}
+                      <span
+                        className={cn(
+                          'flex size-5 shrink-0 items-center justify-center rounded-full border-2',
+                          isSelected ? 'border-primary-600' : 'border-(--app-border)'
+                        )}
+                      >
+                        {isSelected ? <span className="size-2.5 rounded-full bg-primary-600" /> : null}
+                      </span>
+                    </button>
+                  )
+                })
+              ) : (
+                <div className="rounded-xl border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
+                  Todavía no tienes un CV guardado en tu perfil.
+                </div>
+              )}
+            </div>
+
+            <Link
+              to={surfacePaths.candidate.profile}
+              className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-xl border border-dashed border-(--app-border) bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text-muted) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+            >
+              <Upload className="size-4" />
+              Subir otro documento desde mi perfil
+            </Link>
+            {showResumeError ? <InlineError>Selecciona un CV para actualizar la postulación.</InlineError> : null}
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link to={surfacePaths.public.jobDetail(jobSlug)}>
+                <Button variant="outline" className="rounded-xl">Volver a la vacante</Button>
+              </Link>
+              <Button className="ml-auto rounded-xl" onClick={updateSubmittedResume} disabled={applyMutation.isPending || !selectedResume}>
+                {applyMutation.isPending ? (
+                  'Actualizando...'
+                ) : (
+                  <>
+                    <FileText className="size-4" /> Actualizar CV
+                  </>
+                )}
+              </Button>
             </div>
           </section>
         ) : (
