@@ -289,7 +289,8 @@ export function PublicJobBoard() {
     if (!sentinel) {
       return
     }
-    // root = viewport: la lista usa el scroll natural de la página y el sentinel
+    // root = viewport: en desktop la lista tiene scroll interno (el IO respeta el
+    // recorte del contenedor) y en móvil scrollea la página; en ambos el sentinel
     // sólo intersecta al acercarse al fondo visible, sin precargar todo de golpe.
     const observer = new IntersectionObserver(
       (entries) => {
@@ -445,9 +446,9 @@ export function PublicJobBoard() {
         />
       ) : (
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
-          {/* Lista de vacantes con carga infinita sobre el scroll de la página */}
+          {/* Lista de vacantes con scroll independiente + carga infinita */}
           <div className={cn('min-w-0', detailOpen ? 'hidden lg:block' : 'block')}>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 lg:max-h-[calc(100vh-15rem)] lg:overflow-y-auto lg:pr-1">
               <motion.ul
                 className="flex flex-col gap-2"
                 variants={gridStagger}
@@ -663,7 +664,7 @@ function JobDetailPanel({
     <motion.article
       {...panelMotion}
       style={{ willChange: 'transform, filter, opacity' }}
-      className="overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface) shadow-sm lg:sticky lg:top-4"
+      className="overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface) shadow-sm lg:sticky lg:top-4 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto"
     >
       <motion.div variants={blockVariants} className="border-b border-(--app-border) p-6">
         <button type="button" onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-(--app-text-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) lg:hidden">
