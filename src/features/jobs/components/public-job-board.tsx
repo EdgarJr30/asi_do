@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { motion, useReducedMotion } from 'motion/react'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import type { Variants } from 'motion/react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -10,17 +11,18 @@ import {
   BookmarkCheck,
   Briefcase,
   Building2,
-  CalendarClock,
+  Check,
   CheckCircle2,
-  FileText,
+  Clock3,
   Globe,
   MapPin,
   Search,
-  SlidersHorizontal,
+  Share2,
   Sparkles,
   X
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { surfacePaths } from '@/app/router/surface-paths'
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -28,12 +30,12 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { PageLoader, Spinner } from '@/components/ui/loader'
-import { Pagination } from '@/components/ui/pagination'
 import { Select } from '@/components/ui/select'
+import { Tooltip } from '@/components/ui/tooltip'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { listMyApplications } from '@/features/applications/lib/applications-api'
 import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
-import { getPublicJobBySlug, listPublicJobs, toggleSavedJob, type JobPostingBundle } from '@/features/jobs/lib/jobs-api'
+import { getPublicJobBySlug, listPublicJobsPage, toggleSavedJob, type JobPostingBundle } from '@/features/jobs/lib/jobs-api'
 import { classifySector, getSectorLabel, sectorDefinitions } from '@/features/jobs/lib/sectors'
 import { getCompensationTypeLabel, getOpportunityTypeLabel, opportunityTypeOptions } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
@@ -44,7 +46,7 @@ import { cardReveal, gridStagger } from '@/shared/ui/card-motion'
 type JobRow = JobPostingBundle['jobs'][number]
 
 const PUBLIC_JOBS_QUERY_KEY = ['jobs', 'public-board'] as const
-const PAGE_SIZE = 5
+const PAGE_SIZE = 8
 
 const workplaceLabels: Record<string, string> = { remote: 'Remoto', hybrid: 'Híbrido', on_site: 'Presencial' }
 const employmentLabels: Record<string, string> = {
@@ -55,11 +57,18 @@ const employmentLabels: Record<string, string> = {
   internship: 'Pasantía'
 }
 
-const primaryLinkClass =
-  'inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-primary-600 bg-primary-600 px-5 text-[0.85rem] font-semibold text-white shadow-[0_10px_20px_rgba(43,69,143,0.18)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2'
+// Paleta rotativa para los logos de empresa (cuadros de color sólido con iniciales),
+// indexada de forma estable por el nombre para que cada empresa conserve su color.
+const LOGO_COLORS = ['#3b62b8', '#0e8a86', '#6b46c1', '#c2683a', '#1f9d61', '#b8456f', '#2d52a8', '#0f7a9c'] as const
 
-const metaChipClass =
-  'inline-flex items-center gap-1.5 rounded-lg border border-(--app-border) bg-(--app-surface-muted) px-2.5 py-1 text-[0.74rem] text-(--app-text-muted)'
+function logoColor(seed: string | null | undefined) {
+  const value = (seed ?? '').trim() || 'ASI'
+  let hash = 0
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0
+  }
+  return LOGO_COLORS[hash % LOGO_COLORS.length]
+}
 
 function workplaceLabel(value: string | null | undefined) {
   return value ? workplaceLabels[value] ?? value : ''
@@ -100,16 +109,18 @@ function salaryText(job: Pick<JobRow, 'compensation_type' | 'compensation_min_am
   if (min && max) return `${currency} ${min.toLocaleString()} – ${max.toLocaleString()}`
   return `${currency} ${(min || max || 0).toLocaleString()}`
 }
-function CompanyAvatar({ name, size = 'md' }: { name: string | null | undefined; size?: 'sm' | 'md' | 'lg' }) {
+
+function CompanyLogo({ name, size = 'md' }: { name: string | null | undefined; size?: 'sm' | 'md' | 'lg' }) {
   return (
     <span
       aria-hidden
       className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-xl bg-primary-50 font-semibold text-primary-700 dark:bg-primary-500/12 dark:text-primary-300',
-        size === 'lg' && 'size-12 text-base',
+        'inline-flex shrink-0 items-center justify-center rounded-xl font-bold leading-none tracking-tight text-white',
+        size === 'lg' && 'size-14 rounded-[13px] text-lg',
         size === 'md' && 'size-11 text-sm',
-        size === 'sm' && 'size-10 text-[0.8rem]'
+        size === 'sm' && 'size-[42px] text-[0.8rem]'
       )}
+      style={{ backgroundColor: logoColor(name) }}
     >
       {companyInitials(name)}
     </span>
@@ -131,15 +142,18 @@ export function PublicJobBoard() {
   const shouldReduceMotion = useReducedMotion()
 
   const [filters, setFilters] = useState<Filters>(emptyFilters)
+  // `submitted` = lo que realmente filtra en el servidor (búsqueda + ubicación).
+  // Se aplica al pulsar "Buscar"/Enter o al limpiar el chip; así no disparamos un
+  // refetch en cada tecla. Modalidad/tipo/orden sí aplican de inmediato.
+  const [submitted, setSubmitted] = useState({ search: '', location: '' })
   const [sort, setSort] = useState<'recent' | 'salary'>('recent')
-  const [page, setPage] = useState(0)
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(false) // controla móvil: lista ↔ detalle
 
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
   function patchFilters(patch: Partial<Filters>) {
     setFilters((current) => ({ ...current, ...patch }))
-    setPage(0)
   }
 
   const candidateProfileQuery = useQuery({
@@ -149,10 +163,27 @@ export function PublicJobBoard() {
   })
   const candidateProfileId = candidateProfileQuery.data?.profile?.id ?? null
 
-  const jobsQuery = useQuery({
-    queryKey: [...PUBLIC_JOBS_QUERY_KEY, candidateProfileId],
-    queryFn: async () => listPublicJobs({ candidateProfileId })
+  // Paginación real de servidor + scroll infinito: cada página llega vía `range`,
+  // no se trae todo de inmediato. La key incluye los filtros de servidor para que
+  // un cambio reinicie desde el offset 0.
+  const jobsQuery = useInfiniteQuery({
+    queryKey: [...PUBLIC_JOBS_QUERY_KEY, candidateProfileId, submitted.search, submitted.location, filters.workplace, filters.type, sort],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) =>
+      listPublicJobsPage({
+        candidateProfileId,
+        query: submitted.search,
+        location: submitted.location,
+        workplaceType: filters.workplace,
+        opportunityType: filters.type,
+        sort,
+        limit: PAGE_SIZE,
+        offset: pageParam
+      }),
+    getNextPageParam: (lastPage) => lastPage.nextOffset
   })
+
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = jobsQuery
 
   // En vivo: cuando una empresa publica/edita una vacante, el board se refresca
   // solo, sin que el candidato tenga que recargar. RLS acota qué filas llegan.
@@ -166,8 +197,10 @@ export function PublicJobBoard() {
     queryFn: async () => listMyApplications(session.authUser!.id)
   })
 
-  const allJobs = useMemo(() => jobsQuery.data?.jobs ?? [], [jobsQuery.data])
-  const savedJobIds = jobsQuery.data?.savedJobIds ?? []
+  const pages = useMemo(() => jobsQuery.data?.pages ?? [], [jobsQuery.data])
+  const allJobs = useMemo(() => pages.flatMap((entry) => entry.jobs), [pages])
+  const totalCount = pages[0]?.totalCount ?? 0
+  const savedJobIds = useMemo(() => Array.from(new Set(pages.flatMap((entry) => entry.savedJobIds))), [pages])
   const appliedJobIds = useMemo(() => {
     const set = new Set<string>()
     for (const application of applicationsQuery.data ?? []) {
@@ -189,41 +222,33 @@ export function PublicJobBoard() {
       .sort((a, b) => b.count - a.count)
   }, [allJobs])
 
-  const filteredJobs = useMemo(() => {
-    const search = filters.search.trim().toLowerCase()
-    const location = filters.location.trim().toLowerCase()
-    const result = allJobs.filter((job) => {
-      if (search) {
-        const haystack = [job.title, job.company_profile?.display_name, job.summary].filter(Boolean).join(' ').toLowerCase()
-        if (!haystack.includes(search)) return false
-      }
-      if (location) {
-        const haystack = [job.city_name, job.country_code].filter(Boolean).join(' ').toLowerCase()
-        if (!haystack.includes(location)) return false
-      }
-      if (filters.sector && classifySector(job.company_profile?.industry) !== filters.sector) return false
-      if (filters.workplace && job.workplace_type !== filters.workplace) return false
-      if (filters.type && job.opportunity_type !== filters.type) return false
-      return true
-    })
-    if (sort === 'salary') {
-      result.sort((a, b) => (b.compensation_max_amount ?? b.compensation_min_amount ?? -1) - (a.compensation_max_amount ?? a.compensation_min_amount ?? -1))
-    }
-    return result
-  }, [allJobs, filters, sort])
+  // El sector clasifica texto libre (`industry`) en cliente, por eso es el único
+  // filtro que se aplica sobre las páginas ya cargadas.
+  const visibleJobs = useMemo(
+    () => (filters.sector ? allJobs.filter((job) => classifySector(job.company_profile?.industry) === filters.sector) : allJobs),
+    [allJobs, filters.sector]
+  )
 
-  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / PAGE_SIZE))
-  const safePage = Math.min(page, totalPages - 1)
-  const pageJobs = filteredJobs.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
-  const detailJob = selectedJobId ? filteredJobs.find((job) => job.id === selectedJobId) ?? null : pageJobs[0] ?? null
+  const detailJob = selectedJobId
+    ? visibleJobs.find((job) => job.id === selectedJobId) ?? visibleJobs[0] ?? null
+    : visibleJobs[0] ?? null
 
   const activeChips = [
-    filters.search ? { key: 'search', label: `"${filters.search}"`, clear: () => patchFilters({ search: '' }) } : null,
-    filters.location ? { key: 'location', label: filters.location, clear: () => patchFilters({ location: '' }) } : null,
+    submitted.search ? { key: 'search', label: `"${submitted.search}"`, clear: () => { setFilters((current) => ({ ...current, search: '' })); setSubmitted((current) => ({ ...current, search: '' })) } } : null,
+    submitted.location ? { key: 'location', label: submitted.location, clear: () => { setFilters((current) => ({ ...current, location: '' })); setSubmitted((current) => ({ ...current, location: '' })) } } : null,
     filters.sector ? { key: 'sector', label: getSectorLabel(filters.sector), clear: () => patchFilters({ sector: '' }) } : null,
     filters.workplace ? { key: 'workplace', label: workplaceLabel(filters.workplace), clear: () => patchFilters({ workplace: '' }) } : null,
     filters.type ? { key: 'type', label: getOpportunityTypeLabel(filters.type), clear: () => patchFilters({ type: '' }) } : null
   ].filter(Boolean) as Array<{ key: string; label: string; clear: () => void }>
+
+  // Sólo los chips de búsqueda/ubicación se muestran como pastillas: sector,
+  // modalidad y tipo ya quedan visibles en sus propios selects de la toolbar.
+  const searchChips = activeChips.filter((chip) => chip.key === 'search' || chip.key === 'location')
+
+  function resetFilters() {
+    setFilters(emptyFilters)
+    setSubmitted({ search: '', location: '' })
+  }
 
   const saveJobMutation = useMutation({
     mutationFn: async (input: { jobId: string; shouldSave: boolean }) => {
@@ -251,138 +276,159 @@ export function PublicJobBoard() {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // Scroll infinito: un sentinel al fondo del contenedor pide la siguiente página
+  // al entrar en viewport (incluye un margen para precargar antes de tocar fondo).
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage()
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) {
+      return
+    }
+    // root = viewport: en desktop la lista tiene scroll interno (el IO respeta el
+    // recorte del contenedor) y en móvil scrollea la página; en ambos el sentinel
+    // sólo intersecta al acercarse al fondo visible, sin precargar todo de golpe.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore()
+        }
+      },
+      { rootMargin: '160px' }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [loadMore, visibleJobs.length])
+
+  const resultCount = filters.sector ? visibleJobs.length : totalCount
+
   return (
-    <div className="space-y-5">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Vacantes</h1>
-          <p className="mt-1 max-w-2xl text-sm text-(--app-text-muted)">
-            Encuentra oportunidades abiertas y aplica con tu perfil.
-          </p>
-        </div>
-        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-(--app-border) bg-(--app-surface) px-3 py-1.5 text-xs text-(--app-text-muted)">
-          <span className="size-1.5 rounded-full bg-emerald-500" />
-          {jobsQuery.isLoading ? 'Cargando empleos' : `${filteredJobs.length} ${filteredJobs.length === 1 ? 'empleo disponible' : 'empleos disponibles'}`}
-        </div>
+    <div className="space-y-4">
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight text-(--app-text)">Vacantes</h1>
+        <p className="mt-1.5 text-sm text-(--app-text-muted)">
+          Descubre oportunidades abiertas y postúlate con tu perfil en minutos.
+        </p>
       </header>
 
-      {/* Búsqueda */}
+      {/* Búsqueda: una sola barra blanca con dos campos separados por un divisor */}
       <form
-        className="flex flex-col gap-2 rounded-panel border border-(--app-border) bg-(--app-surface) p-2 shadow-sm md:flex-row md:items-center"
-        onSubmit={(event) => event.preventDefault()}
+        className="flex flex-col gap-2 rounded-panel border border-(--app-border) bg-(--app-surface) p-1.5 pl-3 shadow-sm md:flex-row md:items-center md:gap-1"
+        onSubmit={(event) => {
+          event.preventDefault()
+          setSubmitted({ search: filters.search.trim(), location: filters.location.trim() })
+        }}
         role="search"
       >
         <div className="relative flex-1">
-          <Search aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
+          <Search aria-hidden className="pointer-events-none absolute left-2 top-1/2 size-4.5 -translate-y-1/2 text-(--app-text-subtle)" />
           <Input
-            className="h-10 border-transparent bg-transparent pl-10 text-sm shadow-none focus:bg-(--app-surface-muted)"
+            className="h-11 border-transparent bg-transparent pl-9 text-sm shadow-none focus:bg-transparent focus-visible:ring-0"
             placeholder="Cargo, empresa o palabra clave"
             aria-label="Buscar por cargo, empresa o palabra clave"
             value={filters.search}
             onChange={(event) => patchFilters({ search: event.target.value })}
           />
         </div>
-        <div className="relative md:w-64">
-          <MapPin aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
+        <span aria-hidden className="hidden h-6 w-px shrink-0 bg-(--app-border) md:block" />
+        <div className="relative md:w-56">
+          <MapPin aria-hidden className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
           <Input
-            className="h-10 border-transparent bg-transparent pl-10 text-sm shadow-none focus:bg-(--app-surface-muted) md:border-l md:border-l-(--app-border) md:rounded-l-none"
+            className="h-11 border-transparent bg-transparent pl-8 text-sm shadow-none focus:bg-transparent focus-visible:ring-0"
             placeholder="Ciudad o país"
             aria-label="Filtrar por ubicación"
             value={filters.location}
             onChange={(event) => patchFilters({ location: event.target.value })}
           />
         </div>
-        <Button type="submit" className="h-10 text-[0.85rem] md:w-auto">
+        <Button type="submit" className="h-11 shrink-0 rounded-[0.7rem] px-5 text-sm">
           <Search className="size-4" /> Buscar
         </Button>
       </form>
 
-      {/* Controles */}
-      <div className="flex flex-wrap items-center gap-2.5">
-        <button
-          type="button"
-          onClick={() => setFiltersOpen((value) => !value)}
-          aria-expanded={filtersOpen}
-          className="inline-flex h-10 items-center gap-2 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 text-sm font-medium text-(--app-text) transition hover:border-primary-200 hover:bg-(--app-surface-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)"
+      {/* Toolbar: filtros inline + chips de búsqueda + contador + orden */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Select
+          className="h-[34px] w-auto rounded-lg text-[0.82rem]"
+          value={filters.sector}
+          onChange={(event) => patchFilters({ sector: event.target.value })}
+          aria-label="Filtrar por sector"
         >
-          <SlidersHorizontal className="size-4 text-(--app-text-muted)" /> Filtros
-          {activeChips.length > 0 ? (
-            <span className="rounded-full bg-primary-600 px-1.5 text-xs font-bold text-white">{activeChips.length}</span>
-          ) : null}
-        </button>
-        <span className="inline-flex items-center gap-2 text-sm text-(--app-text-muted)">
+          <option value="">Todos los sectores</option>
+          {sectorOptions.map((sector) => (
+            <option key={sector.id} value={sector.id}>
+              {sector.label} ({sector.count})
+            </option>
+          ))}
+        </Select>
+        <Select
+          className="h-[34px] w-auto rounded-lg text-[0.82rem]"
+          value={filters.workplace}
+          onChange={(event) => patchFilters({ workplace: event.target.value })}
+          aria-label="Filtrar por modalidad"
+        >
+          <option value="">Cualquier modalidad</option>
+          <option value="remote">Remoto</option>
+          <option value="hybrid">Híbrido</option>
+          <option value="on_site">Presencial</option>
+        </Select>
+        <Select
+          className="h-[34px] w-auto rounded-lg text-[0.82rem]"
+          value={filters.type}
+          onChange={(event) => patchFilters({ type: event.target.value })}
+          aria-label="Filtrar por tipo"
+        >
+          <option value="">Todos los tipos</option>
+          {opportunityTypeOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+
+        {searchChips.map((chip) => (
+          <button
+            key={chip.key}
+            type="button"
+            onClick={chip.clear}
+            className="inline-flex h-[34px] items-center gap-1.5 rounded-lg border border-primary-200 bg-primary-50 px-3 text-[0.82rem] font-medium text-primary-700 transition hover:bg-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:border-primary-500/30 dark:bg-primary-500/12 dark:text-primary-300"
+          >
+            {chip.label}
+            <X aria-hidden className="size-3" />
+            <span className="sr-only">Quitar filtro</span>
+          </button>
+        ))}
+
+        {activeChips.length > 0 ? (
+          <button type="button" onClick={resetFilters} className="text-[0.82rem] font-medium text-(--app-text-muted) underline-offset-2 hover:underline">
+            Limpiar
+          </button>
+        ) : null}
+
+        <span className="inline-flex items-center gap-2 text-[0.82rem] text-(--app-text-subtle)">
           {jobsQuery.isLoading ? (
             <>
               <Spinner size="sm" /> Cargando…
             </>
           ) : (
-            `${filteredJobs.length} ${filteredJobs.length === 1 ? 'empleo' : 'empleos'}`
+            <>
+              <b className="font-semibold text-(--app-text)">{resultCount}</b> {resultCount === 1 ? 'empleo' : 'empleos'}
+            </>
           )}
         </span>
-        <label className="ml-auto flex items-center gap-2 text-sm text-(--app-text-muted)">
+
+        <label className="ml-auto flex items-center gap-2 text-[0.82rem] text-(--app-text-subtle)">
           Ordenar por
-          <Select className="h-10 w-auto text-sm" value={sort} onChange={(event) => setSort(event.target.value as 'recent' | 'salary')} aria-label="Ordenar resultados">
+          <Select className="h-[34px] w-auto rounded-lg text-[0.82rem]" value={sort} onChange={(event) => setSort(event.target.value as 'recent' | 'salary')} aria-label="Ordenar resultados">
             <option value="recent">Más recientes</option>
-            <option value="salary">Mejor salario</option>
+            <option value="salary">Salario</option>
           </Select>
         </label>
       </div>
-
-      {filtersOpen ? (
-        <div className="grid gap-3 rounded-panel border border-(--app-border) bg-(--app-surface) p-4 sm:grid-cols-3">
-          <label className="text-sm">
-            <span className="mb-1.5 block font-medium text-(--app-text-muted)">Sector</span>
-            <Select className="h-10" value={filters.sector} onChange={(event) => patchFilters({ sector: event.target.value })}>
-              <option value="">Todos los sectores</option>
-              {sectorOptions.map((sector) => (
-                <option key={sector.id} value={sector.id}>
-                  {sector.label} ({sector.count})
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="text-sm">
-            <span className="mb-1.5 block font-medium text-(--app-text-muted)">Modalidad</span>
-            <Select className="h-10" value={filters.workplace} onChange={(event) => patchFilters({ workplace: event.target.value })}>
-              <option value="">Cualquier modalidad</option>
-              <option value="remote">Remoto</option>
-              <option value="hybrid">Híbrido</option>
-              <option value="on_site">Presencial</option>
-            </Select>
-          </label>
-          <label className="text-sm">
-            <span className="mb-1.5 block font-medium text-(--app-text-muted)">Tipo</span>
-            <Select className="h-10" value={filters.type} onChange={(event) => patchFilters({ type: event.target.value })}>
-              <option value="">Todos los tipos</option>
-              {opportunityTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-          </label>
-        </div>
-      ) : null}
-
-      {activeChips.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          {activeChips.map((chip) => (
-            <button
-              key={chip.key}
-              type="button"
-              onClick={chip.clear}
-              className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700 transition hover:bg-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:border-primary-500/30 dark:bg-primary-500/12 dark:text-primary-300"
-            >
-              {chip.label}
-              <X aria-hidden className="size-3" />
-              <span className="sr-only">Quitar filtro</span>
-            </button>
-          ))}
-          <button type="button" onClick={() => { setFilters(emptyFilters); setPage(0) }} className="text-xs font-medium text-(--app-text-muted) underline-offset-2 hover:underline">
-            Limpiar todo
-          </button>
-        </div>
-      ) : null}
 
       {/* Contenido */}
       {jobsQuery.isLoading ? (
@@ -391,58 +437,54 @@ export function PublicJobBoard() {
         <div className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-6 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
           {toErrorMessage(jobsQuery.error)}
         </div>
-      ) : filteredJobs.length === 0 ? (
+      ) : visibleJobs.length === 0 && !hasNextPage && !isFetchingNextPage ? (
         <EmptyState
           title="No encontramos empleos con estos filtros"
           description="Prueba con menos filtros o cambia las palabras clave para ampliar tu búsqueda."
           actionLabel={activeChips.length > 0 ? 'Limpiar filtros' : undefined}
-          onAction={activeChips.length > 0 ? () => { setFilters(emptyFilters); setPage(0) } : undefined}
+          onAction={activeChips.length > 0 ? resetFilters : undefined}
         />
       ) : (
-        <div className="flex flex-col items-start gap-4 lg:flex-row">
-          {/* Lista */}
-          <div className={cn('w-full lg:w-100 xl:w-105', detailOpen ? 'hidden lg:block' : 'block')}>
-            <motion.ul
-              className="overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface) divide-y divide-(--app-border)"
-              variants={gridStagger}
-              initial={shouldReduceMotion ? false : 'hidden'}
-              animate="show"
-            >
-              {pageJobs.map((job) => (
-                <motion.li key={job.id} variants={cardReveal}>
-                  <JobListCard
-                    job={job}
-                    active={job.id === detailJob?.id}
-                    saved={savedJobIds.includes(job.id)}
-                    applied={appliedJobIds.has(job.id)}
-                    onSelect={() => openJob(job.id)}
-                  />
-                </motion.li>
-              ))}
-            </motion.ul>
-            {totalPages > 1 ? (
-              <Pagination
-                className="mt-4 justify-center"
-                page={safePage}
-                totalPages={totalPages}
-                onPageChange={(nextPage) => {
-                  setPage(nextPage)
-                  window.scrollTo({ top: 0, behavior: 'smooth' })
-                }}
-              />
-            ) : null}
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
+          {/* Lista de vacantes con scroll independiente + carga infinita */}
+          <div className={cn('min-w-0', detailOpen ? 'hidden lg:block' : 'block')}>
+            <div className="flex flex-col gap-2 lg:max-h-[calc(100vh-15rem)] lg:overflow-y-auto lg:pr-1">
+              <motion.ul
+                className="flex flex-col gap-2"
+                variants={gridStagger}
+                initial={shouldReduceMotion ? false : 'hidden'}
+                animate="show"
+              >
+                {visibleJobs.map((job) => (
+                  <motion.li key={job.id} variants={cardReveal}>
+                    <JobListRow
+                      job={job}
+                      active={job.id === detailJob?.id}
+                      saved={savedJobIds.includes(job.id)}
+                      applied={appliedJobIds.has(job.id)}
+                      onSelect={() => openJob(job.id)}
+                    />
+                  </motion.li>
+                ))}
+              </motion.ul>
+              {/* Sentinel: al entrar en viewport pide la siguiente página */}
+              <div ref={sentinelRef} aria-hidden className="h-px w-full" />
+              {isFetchingNextPage ? (
+                <div className="flex items-center justify-center gap-2 py-3 text-[0.78rem] text-(--app-text-subtle)">
+                  <Spinner size="sm" /> Cargando más vacantes…
+                </div>
+              ) : !hasNextPage && visibleJobs.length > 0 ? (
+                <p className="py-3 text-center text-[0.74rem] text-(--app-text-subtle)">No hay más vacantes</p>
+              ) : null}
+            </div>
           </div>
 
           {/* Detalle */}
-          <div className={cn('w-full min-w-0 flex-1', detailOpen ? 'block' : 'hidden lg:block')}>
-            {detailJob ? (
-              <motion.div
-                key={detailJob.id}
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              >
+          <div className={cn('w-full min-w-0', detailOpen ? 'block' : 'hidden lg:block')}>
+            <AnimatePresence mode="wait" initial={false}>
+              {detailJob ? (
                 <JobDetailPanel
+                  key={detailJob.id}
                   job={detailJob}
                   saved={savedJobIds.includes(detailJob.id)}
                   applied={appliedJobIds.has(detailJob.id)}
@@ -452,8 +494,10 @@ export function PublicJobBoard() {
                   onToggleSave={(shouldSave) => saveJobMutation.mutate({ jobId: detailJob.id, shouldSave })}
                   savePending={saveJobMutation.isPending}
                 />
-              </motion.div>
-            ) : null}
+              ) : (
+                <DetailEmptyState key="empty" />
+              )}
+            </AnimatePresence>
           </div>
         </div>
       )}
@@ -461,7 +505,7 @@ export function PublicJobBoard() {
   )
 }
 
-function JobListCard({
+function JobListRow({
   job,
   active,
   saved,
@@ -480,43 +524,89 @@ function JobListCard({
       onClick={onSelect}
       aria-current={active ? 'true' : undefined}
       className={cn(
-        'flex w-full gap-3 border-l-2 border-transparent px-3.5 py-3 text-left transition hover:bg-(--app-surface-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--app-ring)',
-        active && 'border-l-primary-600 bg-primary-50/70 dark:bg-primary-500/10'
+        'flex w-full items-center gap-3 rounded-xl border bg-(--app-surface) px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
+        active
+          ? 'border-primary-600 shadow-[0_0_0_3px_rgba(45,82,168,0.12)] dark:border-primary-400'
+          : 'border-(--app-border) hover:border-primary-200 hover:shadow-[0_4px_14px_rgba(20,40,90,0.06)]'
       )}
     >
-      <CompanyAvatar name={job.company_profile?.display_name} size="sm" />
+      <CompanyLogo name={job.company_profile?.display_name} size="sm" />
       <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-1 text-sm font-semibold text-(--app-text)">{job.title}</h3>
-          {saved ? <BookmarkCheck aria-label="Guardada" className="size-4 shrink-0 text-primary-600 dark:text-primary-300" /> : null}
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="truncate text-[0.92rem] font-semibold text-(--app-text)">{job.title}</h3>
+          <span className="shrink-0 text-[0.72rem] text-(--app-text-subtle)">{relativeDays(job.published_at ?? job.updated_at)}</span>
         </div>
-        <p className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate text-[0.78rem] text-(--app-text-muted)">
-          <Building2 aria-hidden className="size-3.5 shrink-0" /> {job.company_profile?.display_name || 'Empresa'}
-        </p>
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.72rem] text-(--app-text-muted)">
-          <span className="inline-flex items-center gap-1">
-            <MapPin aria-hidden className="size-3.5" /> {locationLabel(job)}
-          </span>
-          {job.workplace_type ? (
-            <span className="inline-flex items-center gap-1">
-              <Globe aria-hidden className="size-3.5" /> {workplaceLabel(job.workplace_type)}
+        <p className="mt-0.5 truncate text-[0.8rem] text-(--app-text-muted)">{job.company_profile?.display_name || 'Empresa'}</p>
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-3 text-[0.74rem] text-(--app-text-subtle)">
+            <span className="inline-flex min-w-0 items-center gap-1">
+              <MapPin aria-hidden className="size-3.5 shrink-0" /> <span className="truncate">{job.city_name || locationLabel(job)}</span>
             </span>
-          ) : null}
-        </div>
-        <div className="mt-2.5 flex items-center justify-between gap-2">
+            {job.workplace_type ? (
+              <span className="inline-flex shrink-0 items-center gap-1">
+                <Clock3 aria-hidden className="size-3.5" /> {workplaceLabel(job.workplace_type)}
+              </span>
+            ) : null}
+          </div>
           {applied ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[0.68rem] font-semibold text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
-              <CheckCircle2 className="size-3" /> Ya aplicaste
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[0.68rem] font-semibold text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
+              <Check className="size-3" /> Aplicaste
             </span>
-          ) : (
-            <span />
-          )}
-          <span className="shrink-0 text-[0.7rem] text-(--app-text-subtle)">{relativeDays(job.published_at ?? job.updated_at)}</span>
+          ) : saved ? (
+            <BookmarkCheck aria-label="Guardada" className="size-4 shrink-0 text-primary-600 dark:text-primary-300" />
+          ) : null}
         </div>
       </div>
     </button>
   )
 }
+
+function DetailEmptyState() {
+  const shouldReduceMotion = useReducedMotion()
+  return (
+    <motion.article
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: 'blur(6px)' }}
+      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
+      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, filter: 'blur(6px)' }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="flex min-h-80 flex-col items-center justify-center rounded-panel border border-(--app-border) bg-(--app-surface) p-10 text-center shadow-sm"
+    >
+      <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+        <Briefcase className="size-6" />
+      </span>
+      <h3 className="text-base font-semibold text-(--app-text)">Selecciona una vacante</h3>
+      <p className="mt-1.5 max-w-xs text-sm leading-6 text-(--app-text-muted)">
+        Elige una oportunidad de la lista para ver el detalle completo y postularte.
+      </p>
+    </motion.article>
+  )
+}
+
+const detailTagClass =
+  'inline-flex h-[30px] items-center gap-1.5 rounded-lg border border-(--app-border) bg-(--app-surface-muted) px-3 text-[0.78rem] font-medium text-(--app-text-muted)'
+
+// Entrada "tipo Apple" del panel de detalle: el card entra con un sutil
+// desenfoque + escala + desplazamiento, y su contenido se asienta en cascada.
+// La curva [0.16,1,0.3,1] (easeOutExpo) da el frenado suave y elegante.
+const detailPanelVariants: Variants = {
+  hidden: { opacity: 0, y: 16, scale: 0.985, filter: 'blur(8px)' },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1], when: 'beforeChildren', staggerChildren: 0.055, delayChildren: 0.04 }
+  },
+  exit: { opacity: 0, y: -10, scale: 0.992, filter: 'blur(6px)', transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } }
+}
+
+const detailBlockVariants: Variants = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+}
+
+const applyLinkClass =
+  'inline-flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-primary-600 bg-primary-600 px-5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(43,69,143,0.18)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2'
 
 function JobDetailPanel({
   job,
@@ -544,113 +634,134 @@ function JobDetailPanel({
   })
   const detail = detailQuery.data
   const sector = classifySector(job.company_profile?.industry)
-  const questionsCount = detail?.job_screening_questions?.length ?? 0
-  const applyHint = questionsCount > 0 ? `Postulación rápida · ${questionsCount} ${questionsCount === 1 ? 'pregunta' : 'preguntas'}` : 'Aplica con tu perfil en un paso'
+  const shouldReduceMotion = useReducedMotion()
+
+  // En "reduce motion" mantenemos sólo un fundido discreto, sin desplazamiento,
+  // escala ni desenfoque, respetando la preferencia del sistema.
+  const panelMotion = shouldReduceMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.2 } }
+    : { variants: detailPanelVariants, initial: 'hidden' as const, animate: 'show' as const, exit: 'exit' as const }
+  const blockVariants = shouldReduceMotion ? undefined : detailBlockVariants
+
+  async function handleShare() {
+    const url = typeof window !== 'undefined' ? `${window.location.origin}${surfacePaths.public.jobDetail(job.slug)}` : ''
+    const shareData = { title: job.title, text: `${job.title} · ${job.company_profile?.display_name ?? 'ASI'}`, url }
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share(shareData)
+        return
+      }
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(url)
+        toast.success('Enlace copiado al portapapeles')
+      }
+    } catch {
+      // El usuario canceló el diálogo de compartir: no es un error que reportar.
+    }
+  }
 
   return (
-    <article className="overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface) shadow-sm lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
-      <div className="border-b border-(--app-border) p-4">
+    <motion.article
+      {...panelMotion}
+      style={{ willChange: 'transform, filter, opacity' }}
+      className="overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface) shadow-sm lg:sticky lg:top-4 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto"
+    >
+      <motion.div variants={blockVariants} className="border-b border-(--app-border) p-6">
         <button type="button" onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-(--app-text-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) lg:hidden">
           <ArrowLeft aria-hidden className="size-4" /> Volver a resultados
         </button>
-        <div className="flex items-start gap-3">
-          <CompanyAvatar name={job.company_profile?.display_name} size="lg" />
+        <div className="flex items-start gap-4">
+          <CompanyLogo name={job.company_profile?.display_name} size="lg" />
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold leading-tight tracking-tight text-(--app-text) sm:text-xl">{job.title}</h2>
-            <p className="mt-1 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-(--app-text-muted)">
-              <Building2 aria-hidden className="size-3.5" /> {job.company_profile?.display_name || 'Empresa'}
+            <h2 className="text-balance text-xl font-bold leading-tight tracking-tight text-(--app-text)">{job.title}</h2>
+            <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-(--app-text-muted)">
+              <Building2 aria-hidden className="size-4" /> {job.company_profile?.display_name || 'Empresa'}
             </p>
           </div>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className={metaChipClass}><MapPin aria-hidden className="size-3.5" /> {locationLabel(job)}</span>
-          {job.workplace_type ? <span className={metaChipClass}><Globe aria-hidden className="size-3.5" /> {workplaceLabel(job.workplace_type)}</span> : null}
-          <span className={metaChipClass}><Briefcase aria-hidden className="size-3.5" /> {employmentLabel(job.employment_type) || getOpportunityTypeLabel(job.opportunity_type)}</span>
-          {job.experience_level ? <span className={metaChipClass}><Sparkles aria-hidden className="size-3.5" /> {job.experience_level}</span> : null}
-          <span className={cn(metaChipClass, hasSalary(job) && 'border-emerald-200 font-semibold text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300')}>
+          <span className={detailTagClass}><MapPin aria-hidden className="size-3.5 text-(--app-text-subtle)" /> {locationLabel(job)}</span>
+          {job.workplace_type ? <span className={detailTagClass}><Clock3 aria-hidden className="size-3.5 text-(--app-text-subtle)" /> {workplaceLabel(job.workplace_type)}</span> : null}
+          <span className={detailTagClass}><Briefcase aria-hidden className="size-3.5 text-(--app-text-subtle)" /> {employmentLabel(job.employment_type) || getOpportunityTypeLabel(job.opportunity_type)}</span>
+          {job.experience_level ? <span className={detailTagClass}><Sparkles aria-hidden className="size-3.5 text-(--app-text-subtle)" /> {job.experience_level}</span> : null}
+          <span className={cn(detailTagClass, hasSalary(job) && 'border-emerald-200 text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300')}>
             <Banknote aria-hidden className="size-3.5" /> {salaryText(job)}
           </span>
-          <span className={metaChipClass}><CalendarClock aria-hidden className="size-3.5" /> {relativeDays(job.published_at ?? job.updated_at)}</span>
         </div>
+      </motion.div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2.5">
-          {applied ? (
-            <span className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
-              <CheckCircle2 className="size-5" /> Ya aplicaste
-            </span>
-          ) : isAuthenticated ? (
-            <Link className={primaryLinkClass} to={surfacePaths.public.jobApply(job.slug)}>
-              Aplicar ahora <ArrowRight className="size-4" />
-            </Link>
-          ) : (
-            <Link className={primaryLinkClass} to="/auth/sign-in">
-              Inicia sesión para aplicar
-            </Link>
-          )}
-          {isAuthenticated && !applied ? (
-            <Button variant="outline" className="size-10 p-0" aria-label={saved ? 'Quitar de guardadas' : 'Guardar vacante'} onClick={() => onToggleSave(!saved)} disabled={savePending || !canSave}>
+      {/* Barra de acciones */}
+      <motion.div variants={blockVariants} className="flex items-center gap-2.5 border-b border-(--app-border) px-6 py-4">
+        {applied ? (
+          <span className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
+            <CheckCircle2 className="size-5" /> Ya aplicaste
+          </span>
+        ) : isAuthenticated ? (
+          <Link className={applyLinkClass} to={surfacePaths.public.jobApply(job.slug)}>
+            Postularme ahora <ArrowRight className="size-4" />
+          </Link>
+        ) : (
+          <Link className={applyLinkClass} to="/auth/sign-in">
+            Inicia sesión para postularte
+          </Link>
+        )}
+        {isAuthenticated && !applied ? (
+          <Tooltip label={saved ? 'Quitar de guardadas' : 'Guardar vacante'}>
+            <Button
+              variant="outline"
+              className="size-11 shrink-0 rounded-xl p-0"
+              aria-label={saved ? 'Quitar de guardadas' : 'Guardar vacante'}
+              onClick={() => onToggleSave(!saved)}
+              disabled={savePending || !canSave}
+            >
               {saved ? <BookmarkCheck className="size-5" /> : <Bookmark className="size-5" />}
             </Button>
-          ) : null}
-          {!applied ? (
-            <p className="inline-flex items-center gap-2 text-[0.72rem] text-(--app-text-subtle)">
-              {detailQuery.isLoading ? (
-                <>
-                  <Spinner size="sm" /> Cargando detalles…
-                </>
-              ) : (
-                applyHint
-              )}
-            </p>
-          ) : null}
-        </div>
-      </div>
+          </Tooltip>
+        ) : null}
+        <Tooltip label="Compartir">
+          <Button variant="outline" className="size-11 shrink-0 rounded-xl p-0" aria-label="Compartir vacante" onClick={() => void handleShare()}>
+            <Share2 className="size-5" />
+          </Button>
+        </Tooltip>
+      </motion.div>
 
-      <div className="space-y-5 p-4">
-        <section>
-          <h3 className="text-sm font-semibold text-(--app-text)">Resumen</h3>
-          {job.summary ? <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">{job.summary}</p> : null}
-          <h4 className="mt-3 text-[0.85rem] font-semibold text-(--app-text)">Sobre el rol</h4>
-          <div className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-(--app-text-muted)">
-            {job.description || 'La empresa aún no agregó una descripción detallada.'}
-          </div>
+      <motion.div variants={blockVariants} className="divide-y divide-(--app-border)">
+        <section className="px-6 py-5">
+          <h4 className="mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Descripción del puesto</h4>
+          {job.summary ? (
+            <p className="text-sm leading-7 text-(--app-text-muted)">{job.summary}</p>
+          ) : (
+            <p className="line-clamp-4 whitespace-pre-wrap text-sm leading-7 text-(--app-text-muted)">
+              {job.description || 'La empresa aún no agregó una descripción detallada.'}
+            </p>
+          )}
+          <Link
+            to={surfacePaths.public.jobDetail(job.slug)}
+            className="mt-3 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-primary-600 hover:underline dark:text-primary-300"
+          >
+            Ver vacante completa <ArrowRight aria-hidden className="size-3.5" />
+          </Link>
         </section>
 
-        <section className="rounded-panel border border-(--app-border) bg-(--app-surface-muted) p-4">
-          <h3 className="inline-flex items-center gap-2 text-[0.85rem] font-semibold text-(--app-text)"><Building2 aria-hidden className="size-4" /> Sobre la empresa</h3>
+        <section className="px-6 py-5">
+          <h4 className="mb-3 inline-flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">
+            <Building2 aria-hidden className="size-3.5" /> Sobre la empresa
+          </h4>
           {sector ? (
-            <span className="mt-2 inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-[0.7rem] font-semibold text-primary-700 dark:bg-primary-500/12 dark:text-primary-300">
+            <span className="mb-2 inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-[0.7rem] font-semibold text-primary-700 dark:bg-primary-500/12 dark:text-primary-300">
               {getSectorLabel(sector)}
             </span>
           ) : null}
-          <p className="mt-2 text-[0.82rem] font-medium text-(--app-text)">{job.company_profile?.display_name || 'Empresa'}</p>
-          {job.company_profile?.industry ? <p className="mt-0.5 text-[0.78rem] text-(--app-text-muted)">{job.company_profile.industry}</p> : null}
-          {detail?.company_profile?.description ? <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">{detail.company_profile.description}</p> : null}
+          <p className="text-[0.85rem] font-medium text-(--app-text)">{job.company_profile?.display_name || 'Empresa'}</p>
+          {job.company_profile?.industry ? <p className="mt-0.5 text-[0.8rem] text-(--app-text-muted)">{job.company_profile.industry}</p> : null}
           {detail?.company_profile?.website_url ? (
             <a className="mt-3 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-primary-600 hover:underline dark:text-primary-300" href={detail.company_profile.website_url} rel="noreferrer" target="_blank">
               <Globe aria-hidden className="size-4" /> Visitar sitio web
             </a>
           ) : null}
         </section>
-
-        {questionsCount > 0 ? (
-          <section>
-            <h3 className="text-[0.85rem] font-semibold text-(--app-text)">Qué te preguntarán al aplicar</h3>
-            <ul className="mt-2 space-y-2">
-              {detail!.job_screening_questions!.map((question) => (
-                <li key={question.id} className="inline-flex w-full items-start gap-2 rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3.5 py-2.5 text-[0.82rem]">
-                  <FileText aria-hidden className="mt-0.5 size-4 shrink-0 text-(--app-text-subtle)" />
-                  <span>
-                    <span className="block font-medium text-(--app-text)">{question.question_text}</span>
-                    <span className="mt-0.5 block text-[0.72rem] text-(--app-text-subtle)">{question.is_required ? 'Requerida' : 'Opcional'}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-      </div>
-    </article>
+      </motion.div>
+    </motion.article>
   )
 }

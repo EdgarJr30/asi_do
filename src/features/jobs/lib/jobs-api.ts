@@ -88,6 +88,107 @@ export async function listPublicJobs(input?: {
   } satisfies JobPostingBundle
 }
 
+export interface PublicJobsPage {
+  jobs: JobPostingQueryRow[]
+  savedJobIds: string[]
+  totalCount: number
+  nextOffset: number | null
+}
+
+/**
+ * Página real del board público con paginación de servidor (`range`) para
+ * habilitar scroll infinito sin traer todo de inmediato. Empuja al backend los
+ * filtros que PostgREST soporta (búsqueda, ubicación, modalidad, tipo) y el
+ * orden; el filtro por sector se resuelve en cliente porque clasifica texto
+ * libre de `company_profiles.industry`.
+ */
+export async function listPublicJobsPage(input: {
+  candidateProfileId?: string | null
+  query?: string
+  location?: string
+  // '' = sin filtro; el valor proviene de los <select> de la UI (texto libre).
+  workplaceType?: string
+  opportunityType?: string
+  sort?: 'recent' | 'salary'
+  limit: number
+  offset: number
+}): Promise<PublicJobsPage> {
+  const client = requireSupabase()
+  let query = client
+    .from('job_postings')
+    .select(
+      `
+        *,
+        company_profile:company_profiles!job_postings_company_profile_id_fkey (
+          display_name,
+          logo_path,
+          industry
+        ),
+        saved_jobs (
+          id,
+          candidate_profile_id,
+          job_posting_id
+        )
+      `,
+      { count: 'exact' }
+    )
+    .eq('status', 'published')
+
+  if (input.sort === 'salary') {
+    query = query
+      .order('compensation_max_amount', { ascending: false, nullsFirst: false })
+      .order('compensation_min_amount', { ascending: false, nullsFirst: false })
+      .order('published_at', { ascending: false })
+  } else {
+    query = query.order('published_at', { ascending: false })
+  }
+  // Desempate determinista para que los rangos sean estables entre páginas.
+  query = query.order('id', { ascending: false })
+
+  if (input.workplaceType) {
+    query = query.eq('workplace_type', input.workplaceType as Tables<'job_postings'>['workplace_type'])
+  }
+
+  if (input.opportunityType) {
+    query = query.eq('opportunity_type', input.opportunityType as Tables<'job_postings'>['opportunity_type'])
+  }
+
+  const search = input.query?.trim()
+  if (search) {
+    query = query.or(
+      `title.ilike.%${search}%,summary.ilike.%${search}%,description.ilike.%${search}%,experience_level.ilike.%${search}%`
+    )
+  }
+
+  const location = input.location?.trim()
+  if (location) {
+    query = query.or(`city_name.ilike.%${location}%,country_code.ilike.%${location}%`)
+  }
+
+  const from = input.offset
+  const to = input.offset + input.limit - 1
+  const response = await query.range(from, to)
+
+  if (response.error) {
+    throw response.error
+  }
+
+  const jobs = (response.data ?? []) as unknown as JobPostingQueryRow[]
+  const totalCount = response.count ?? jobs.length
+  const loadedCount = input.offset + jobs.length
+
+  return {
+    jobs,
+    savedJobIds: input.candidateProfileId
+      ? jobs
+          .filter((job) => job.saved_jobs?.some((savedJob) => savedJob.candidate_profile_id === input.candidateProfileId))
+          .map((job) => job.id)
+      : [],
+    totalCount,
+    nextOffset: loadedCount < totalCount ? loadedCount : null
+  }
+}
+
 export async function listTenantJobs(tenantId: string) {
   const client = requireSupabase()
   const response = await client
