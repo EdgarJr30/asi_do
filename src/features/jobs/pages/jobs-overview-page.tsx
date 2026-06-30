@@ -856,7 +856,7 @@ function WorkspaceJobsManager() {
       animate="show"
     >
       {isWorkspaceContext && canManageJobs ? (
-        <motion.section variants={cardReveal} className="mx-auto w-full max-w-[1180px] space-y-5">
+        <motion.section variants={cardReveal} className="w-full space-y-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-[1.6rem] font-bold leading-tight tracking-tight text-(--app-text)">Vacantes</h1>
@@ -937,7 +937,7 @@ function WorkspaceJobsManager() {
       )}
 
       {canManageJobs && workspaceQuery.data && isWorkspaceContext ? (
-        <motion.section variants={cardReveal} className="mx-auto w-full max-w-[1180px] space-y-4">
+        <motion.section variants={cardReveal} className="w-full space-y-4">
           <SideSheet
             open={isEditorOpen}
             onClose={() => {
