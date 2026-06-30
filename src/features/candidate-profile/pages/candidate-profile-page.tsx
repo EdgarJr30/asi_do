@@ -4,7 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import {
+  ArrowRight,
   Briefcase,
+  Check,
   ChevronDown,
   Download,
   Eye,
@@ -15,6 +17,7 @@ import {
   Link2,
   Plus,
   Sparkles,
+  Trash2,
   Upload
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -206,43 +209,107 @@ const PROFILE_TABS: Array<{ id: ProfileTab; label: string }> = [
   { id: 'skills', label: 'Skills, idiomas y links' }
 ]
 
+const profileFieldClass = 'h-[46px] rounded-[10px] bg-(--app-surface) text-[0.9rem]'
+const profileTextareaClass = 'min-h-28 rounded-[10px] bg-(--app-surface) text-[0.9rem] leading-6'
+
 function CircularProgress({ value }: { value: number }) {
-  const radius = 26
+  const radius = 25
   const circumference = 2 * Math.PI * radius
   const clamped = Math.max(0, Math.min(100, value))
   const offset = circumference - (clamped / 100) * circumference
   return (
-    <div className="relative size-16 shrink-0">
-      <svg className="size-16 -rotate-90" viewBox="0 0 64 64" aria-hidden>
-        <circle cx="32" cy="32" r={radius} fill="none" strokeWidth="6" className="stroke-(--app-surface-muted)" />
+    <div className="relative size-[58px] shrink-0">
+      <svg className="size-[58px] -rotate-90" viewBox="0 0 58 58" aria-hidden>
+        <circle cx="29" cy="29" r={radius} fill="none" strokeWidth="6" className="stroke-(--app-surface-muted)" />
         <circle
-          cx="32"
-          cy="32"
+          cx="29"
+          cy="29"
           r={radius}
           fill="none"
           strokeWidth="6"
           strokeLinecap="round"
-          className="stroke-primary-500 transition-[stroke-dashoffset] duration-700"
+          className="stroke-primary-600 transition-[stroke-dashoffset] duration-700"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[0.82rem] font-semibold text-(--app-text)">{clamped}%</span>
+      <span className="absolute inset-0 flex items-center justify-center text-[0.8rem] font-bold text-primary-700 dark:text-primary-200">{clamped}%</span>
     </div>
   )
 }
 
 function ProfileStatTile({ icon: Icon, value, label, className }: { icon: LucideIcon; value: ReactNode; label: string; className?: string }) {
   return (
-    <div className={cn('flex items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface) px-3 py-2.5', className)}>
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-(--app-surface-muted) text-(--app-text-subtle)">
+    <div className={cn('flex min-w-[140px] flex-1 items-center gap-3 rounded-xl border border-(--app-border) bg-(--app-surface) px-4 py-3', className)}>
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-[9px] bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
         <Icon className="size-4" />
       </span>
       <div className="leading-tight">
-        <p className="text-[0.95rem] font-semibold text-(--app-text)">{value}</p>
-        <p className="text-[0.66rem] text-(--app-text-muted)">{label}</p>
+        <p className="text-lg font-bold leading-none text-(--app-text)">{value}</p>
+        <p className="mt-1 text-[0.78rem] text-(--app-text-subtle)">{label}</p>
       </div>
     </div>
+  )
+}
+
+function ProfileSection({
+  icon: Icon,
+  title,
+  description,
+  actionLabel,
+  onAction,
+  children
+}: {
+  icon: LucideIcon
+  title: string
+  description: string
+  actionLabel?: string
+  onAction?: () => void
+  children: ReactNode
+}) {
+  return (
+    <Card className="rounded-[14px] p-6 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+      <div className="mb-5 flex items-start gap-3">
+        <span className="flex size-[38px] shrink-0 items-center justify-center rounded-[10px] bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+          <Icon className="size-[18px]" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-base font-bold tracking-tight text-(--app-text)">{title}</h2>
+          <p className="mt-1 text-[0.82rem] leading-5 text-(--app-text-muted)">{description}</p>
+        </div>
+        {actionLabel && onAction ? (
+          <button
+            type="button"
+            onClick={onAction}
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[9px] border border-(--app-border) bg-(--app-surface) px-3.5 text-[0.8rem] font-semibold text-primary-600 transition-colors hover:border-primary-200 hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-500/12"
+          >
+            <Plus className="size-3.5" />
+            {actionLabel}
+          </button>
+        ) : null}
+      </div>
+      {children}
+    </Card>
+  )
+}
+
+function ProfileField({
+  label,
+  error,
+  className,
+  children
+}: {
+  label: string
+  error?: string
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <label className={cn('block space-y-2 text-[0.8rem] font-semibold text-(--app-text-muted)', className)}>
+      <span>{label}</span>
+      {children}
+      {error ? <p className="text-[0.72rem] font-medium text-rose-600 dark:text-rose-300">{error}</p> : null}
+    </label>
   )
 }
 
@@ -265,14 +332,14 @@ function AccordionSection({
 }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <div className="overflow-hidden rounded-xl border border-(--app-border)">
-      <div className="flex items-center gap-3 px-3.5 py-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
-          <Icon className="size-4" />
+    <Card className="overflow-hidden rounded-[14px] p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+      <div className="flex items-center gap-3 px-6 py-[18px]">
+        <span className="flex size-[38px] shrink-0 items-center justify-center rounded-[10px] bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+          <Icon className="size-[18px]" />
         </span>
         <button type="button" onClick={() => setOpen((value) => !value)} className="min-w-0 flex-1 text-left">
-          <h3 className="text-[0.9rem] font-semibold tracking-tight text-(--app-text)">{title}</h3>
-          <p className="truncate text-[0.74rem] text-(--app-text-muted)">{description}</p>
+          <h3 className="text-base font-bold tracking-tight text-(--app-text)">{title}</h3>
+          <p className="mt-1 truncate text-[0.82rem] text-(--app-text-muted)">{description}</p>
         </button>
         <button
           type="button"
@@ -280,7 +347,7 @@ function AccordionSection({
             onAdd()
             setOpen(true)
           }}
-          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-(--app-border) bg-(--app-surface) px-3 text-[0.74rem] font-semibold text-primary-600 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:text-primary-300 dark:hover:border-primary-400"
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[9px] border border-(--app-border) bg-(--app-surface) px-3.5 text-[0.8rem] font-semibold text-primary-600 transition-colors hover:border-primary-200 hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-500/12"
         >
           <Plus className="size-3.5" /> {actionLabel}
         </button>
@@ -293,8 +360,8 @@ function AccordionSection({
           <ChevronDown className={cn('size-4 transition-transform', open && 'rotate-180')} />
         </button>
       </div>
-      {open ? <div className="space-y-4 border-t border-(--app-border) p-3.5">{children}</div> : null}
-    </div>
+      {open ? <div className="space-y-4 px-6 pb-6">{children}</div> : null}
+    </Card>
   )
 }
 
@@ -303,15 +370,16 @@ function QuickAction({ icon: Icon, title, description, onClick }: { icon: Lucide
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-start gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface) px-3 py-2.5 text-left transition-colors hover:border-primary-200 hover:bg-(--app-surface-muted)"
+      className="flex w-full items-center gap-3 rounded-[11px] px-3.5 py-3 text-left transition-colors hover:bg-(--app-surface-muted)"
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-(--app-surface-muted) text-(--app-text-subtle)">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-(--app-border) bg-(--app-surface-muted) text-(--app-text-muted)">
         <Icon className="size-4" />
       </span>
-      <span className="min-w-0">
-        <span className="block text-[0.82rem] font-semibold text-(--app-text)">{title}</span>
-        <span className="block text-[0.72rem] text-(--app-text-muted)">{description}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[0.84rem] font-semibold text-(--app-text)">{title}</span>
+        <span className="mt-0.5 block text-[0.75rem] text-(--app-text-subtle)">{description}</span>
       </span>
+      <ArrowRight className="size-4 shrink-0 text-(--app-text-subtle)" />
     </button>
   )
 }
@@ -566,235 +634,228 @@ function CandidateProfileEditor({
   ]
   const completionPercent = Math.round((completionItems.filter(Boolean).length / completionItems.length) * 100)
   const saveAll = form.handleSubmit((values) => saveMutation.mutate(values))
+  const handleTabSelect = (tab: ProfileTab) => {
+    setActiveTab(tab)
+    window.requestAnimationFrame(() => {
+      document.getElementById('candidate-profile-tabs')?.scrollIntoView({ block: 'start' })
+    })
+  }
 
   return (
     <motion.div
-      className="space-y-5"
+      className="mx-auto max-w-7xl space-y-5"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
     >
-      <motion.header variants={cardReveal} className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1.5">
-          <h1 className="max-w-2xl text-xl font-semibold leading-tight tracking-tight text-(--app-text) sm:text-[1.7rem]">
+      <motion.header variants={cardReveal} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="max-w-2xl text-2xl font-bold leading-tight tracking-tight text-(--app-text)">
             Mantén un perfil profesional listo para aplicar
           </h1>
-          <p className="max-w-2xl text-[0.85rem] text-(--app-text-muted)">
+          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-(--app-text-muted)">
             Tu historial, CV y visibilidad viven aquí para que postularte o compartir tu perfil requiera menos esfuerzo.
           </p>
         </div>
-        <Button className="h-10 shrink-0 px-5 text-[0.85rem]" disabled={saveMutation.isPending} onClick={() => void saveAll()}>
-          {saveMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
+        <Button
+          className="h-[42px] w-full shrink-0 rounded-[10px] px-5 text-sm sm:w-auto"
+          disabled={saveMutation.isPending}
+          onClick={() => void saveAll()}
+        >
+          <Check className="size-4" />
+          {saveMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
         </Button>
       </motion.header>
 
-      {/* Estado del perfil */}
-      <motion.div variants={cardReveal}>
-        <Card>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="mr-auto grid min-w-0 flex-1 grid-cols-2 gap-2.5 sm:grid-cols-4">
-              <ProfileStatTile className="min-w-0" icon={FileText} value={resumes.length} label="CV" />
-              <ProfileStatTile className="min-w-0" icon={Sparkles} value={skillCount} label="Skills" />
-              <ProfileStatTile className="min-w-0" icon={LanguagesIcon} value={languageCount} label="Idiomas" />
-              <ProfileStatTile className="min-w-0" icon={Briefcase} value={experienceCount} label="Experiencia" />
-            </div>
-            <div className="flex items-center gap-3 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 py-2">
-              <div className="text-right">
-                <p className="text-[0.82rem] font-semibold text-(--app-text)">Visible para empresas</p>
-                <p className="text-[0.7rem] text-(--app-text-muted)">
-                  {isVisibleToRecruiters ? 'Tu perfil es visible en el directorio.' : 'Tu perfil está oculto del directorio.'}
-                </p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={isVisibleToRecruiters}
-                aria-label="Visible para empresas"
-                disabled={visibilityMutation.isPending}
-                onClick={() => {
-                  const nextValue = !isVisibleToRecruiters
-                  setIsVisibleToRecruiters(nextValue)
-                  visibilityMutation.mutate(nextValue)
-                }}
-                className={cn(
-                  'relative h-6 w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) disabled:opacity-60',
-                  isVisibleToRecruiters ? 'bg-primary-500' : 'bg-(--app-surface-muted)'
-                )}
-              >
-                <span
-                  className={cn(
-                    'absolute top-0.5 size-5 rounded-full bg-white shadow transition-all',
-                    isVisibleToRecruiters ? 'left-[22px]' : 'left-0.5'
-                  )}
-                />
-              </button>
-            </div>
+      <motion.div variants={cardReveal} className="flex flex-wrap gap-2.5">
+        <ProfileStatTile icon={FileText} value={resumes.length} label="CV" />
+        <ProfileStatTile icon={Sparkles} value={skillCount} label="Skills" />
+        <ProfileStatTile icon={LanguagesIcon} value={languageCount} label="Idiomas" />
+        <ProfileStatTile icon={Briefcase} value={experienceCount} label="Experiencia" />
+        <div className="flex min-w-[230px] flex-1 items-center justify-between gap-4 rounded-xl border border-(--app-border) bg-(--app-surface) px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-[0.84rem] font-semibold text-(--app-text)">Visible para empresas</p>
+            <p className="mt-0.5 text-xs text-(--app-text-subtle)">
+              {isVisibleToRecruiters ? 'Apareces en el directorio.' : 'Oculto del directorio.'}
+            </p>
           </div>
-        </Card>
-      </motion.div>
-
-      {/* Tabs */}
-      <motion.div variants={cardReveal} className="flex flex-wrap gap-1.5 rounded-xl border border-(--app-border) bg-(--app-surface) p-1.5">
-        {PROFILE_TABS.map((tab) => (
           <button
-            key={tab.id}
             type="button"
-            onClick={() => setActiveTab(tab.id)}
-            aria-current={activeTab === tab.id ? 'page' : undefined}
+            role="switch"
+            aria-checked={isVisibleToRecruiters}
+            aria-label="Visible para empresas"
+            disabled={visibilityMutation.isPending}
+            onClick={() => {
+              const nextValue = !isVisibleToRecruiters
+              setIsVisibleToRecruiters(nextValue)
+              visibilityMutation.mutate(nextValue)
+            }}
             className={cn(
-              'rounded-lg px-3 py-1.5 text-[0.8rem] font-semibold transition-colors',
-              activeTab === tab.id
-                ? 'bg-primary-600 text-white'
-                : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
+              'relative h-[26px] w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) disabled:opacity-60',
+              isVisibleToRecruiters ? 'bg-primary-600' : 'bg-secondary-200 dark:bg-secondary-500'
             )}
           >
-            {tab.label}
+            <span
+              className={cn(
+                'absolute top-[3px] size-5 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.2)] transition-transform',
+                isVisibleToRecruiters ? 'left-[3px] translate-x-[18px]' : 'left-[3px] translate-x-0'
+              )}
+            />
           </button>
-        ))}
+        </div>
       </motion.div>
 
-      <div className="grid items-start gap-4 xl:grid-cols-[1.6fr_0.9fr]">
-        {/* Panel principal */}
-        <motion.div variants={cardReveal} className="space-y-4">
+      <div className="grid items-stretch gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <motion.div variants={cardReveal} className="min-w-0 space-y-[18px]">
+          <div
+            id="candidate-profile-tabs"
+            className="flex gap-1 overflow-x-auto rounded-[11px] border border-(--app-border) bg-(--app-surface) p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {PROFILE_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabSelect(tab.id)}
+                aria-current={activeTab === tab.id ? 'page' : undefined}
+                className={cn(
+                  'inline-flex h-[38px] shrink-0 items-center justify-center gap-2 rounded-lg px-4 text-[0.84rem] font-semibold transition-colors',
+                  activeTab === tab.id
+                    ? 'bg-primary-600 text-white'
+                    : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
+                )}
+              >
+                {tab.id === 'general' ? <span className="size-4 rounded-full border border-current" /> : null}
+                {tab.id === 'cv' ? <FileText className="size-4" /> : null}
+                {tab.id === 'experience' ? <Briefcase className="size-4" /> : null}
+                {tab.id === 'skills' ? <Sparkles className="size-4" /> : null}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           {activeTab === 'general' ? (
-            <Card>
-              <h2 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Perfil general</h2>
-              <p className="text-[0.78rem] text-(--app-text-muted)">Resumen reutilizable para futuras aplicaciones y nuevas oportunidades.</p>
-              <div className="mt-4 space-y-4">
-                <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
-                  <span>Titular profesional</span>
-                  <Input placeholder="Ej. Coordinador de proyectos" {...form.register('headline')} />
-                  <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{form.formState.errors.headline?.message}</p>
-                </label>
+            <ProfileSection
+              icon={Sparkles}
+              title="Perfil general"
+              description="Resumen reutilizable para futuras aplicaciones y nuevas oportunidades."
+            >
+              <div className="space-y-4">
+                <ProfileField label="Titular profesional" error={form.formState.errors.headline?.message}>
+                  <Input className={profileFieldClass} placeholder="Ej. Coordinador de proyectos" {...form.register('headline')} />
+                </ProfileField>
 
-                <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
-                  <span>Rol objetivo</span>
-                  <Input placeholder="Ej. Talent Acquisition Lead" {...form.register('desiredRole')} />
-                  <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{form.formState.errors.desiredRole?.message}</p>
-                </label>
+                <ProfileField label="Rol objetivo" error={form.formState.errors.desiredRole?.message}>
+                  <Input className={profileFieldClass} placeholder="Ej. Talent Acquisition Lead" {...form.register('desiredRole')} />
+                </ProfileField>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
-                    <span>Ciudad</span>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <ProfileField label="Ciudad">
                     {isDominicanRepublicProfile ? (
-                      <DominicanCitySelect {...form.register('cityName')} />
+                      <DominicanCitySelect className={profileFieldClass} {...form.register('cityName')} />
                     ) : (
-                      <Input placeholder="Santo Domingo" {...form.register('cityName')} />
+                      <Input className={profileFieldClass} placeholder="Santo Domingo" {...form.register('cityName')} />
                     )}
-                  </label>
-                  <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
-                    <span>País</span>
-                    <CountryCodeSelect {...form.register('countryCode')} />
-                    <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{form.formState.errors.countryCode?.message}</p>
-                  </label>
+                  </ProfileField>
+                  <ProfileField label="País" error={form.formState.errors.countryCode?.message}>
+                    <CountryCodeSelect className={profileFieldClass} {...form.register('countryCode')} />
+                  </ProfileField>
                 </div>
 
-                <label className="space-y-1.5 text-[0.82rem] font-medium text-(--app-text)">
-                  <span>Resumen profesional</span>
+                <ProfileField label="Resumen profesional" error={form.formState.errors.summary?.message}>
                   <Textarea
+                    className={profileTextareaClass}
                     placeholder="Resume experiencia, fortalezas, logros y el tipo de oportunidad que quieres atraer."
                     {...form.register('summary')}
                   />
-                  <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{form.formState.errors.summary?.message}</p>
-                </label>
+                </ProfileField>
               </div>
-            </Card>
+            </ProfileSection>
           ) : null}
 
           {activeTab === 'cv' ? (
-            <Card>
-              <h2 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">CV y visibilidad</h2>
-              <p className="text-[0.78rem] text-(--app-text-muted)">
-                Sube versiones reutilizables (privadas, límite de {MAX_UPLOAD_SIZE_LABEL}) y controla si apareces en el directorio.
-              </p>
-              <div className="mt-4 space-y-4">
-                <div className="space-y-1.5">
-                  <span className="text-[0.82rem] font-medium text-(--app-text)">Subir nuevo CV</span>
-                  <label
-                    onDragOver={(event) => {
-                      event.preventDefault()
-                      if (!isResumeDragging) setIsResumeDragging(true)
+            <ProfileSection
+              icon={FileText}
+              title="CV y visibilidad"
+              description={`Sube versiones reutilizables privadas y controla si apareces en el directorio. Tamaño máximo ${MAX_UPLOAD_SIZE_LABEL}.`}
+            >
+              <div className="space-y-4">
+                <label
+                  onDragOver={(event) => {
+                    event.preventDefault()
+                    if (!isResumeDragging) setIsResumeDragging(true)
+                  }}
+                  onDragLeave={(event) => {
+                    event.preventDefault()
+                    setIsResumeDragging(false)
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault()
+                    setIsResumeDragging(false)
+                    handleResumeFile(event.dataTransfer.files?.[0])
+                  }}
+                  className={cn(
+                    'group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-[1.5px] border-dashed px-5 py-8 text-center transition-colors',
+                    isResumeDragging
+                      ? 'border-primary-400 bg-primary-50/80 dark:bg-primary-500/10'
+                      : 'border-secondary-200 bg-(--app-surface-muted)/40 hover:border-primary-300 hover:bg-primary-50/50 dark:hover:bg-primary-500/10',
+                    uploadResumeMutation.isPending && 'pointer-events-none opacity-70'
+                  )}
+                >
+                  <input
+                    className="sr-only"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    type="file"
+                    disabled={uploadResumeMutation.isPending}
+                    onChange={(event) => {
+                      handleResumeFile(event.target.files?.[0])
+                      event.currentTarget.value = ''
                     }}
-                    onDragLeave={(event) => {
-                      event.preventDefault()
-                      setIsResumeDragging(false)
-                    }}
-                    onDrop={(event) => {
-                      event.preventDefault()
-                      setIsResumeDragging(false)
-                      handleResumeFile(event.dataTransfer.files?.[0])
-                    }}
-                    className={cn(
-                      'group relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-8 text-center transition-colors',
-                      isResumeDragging
-                        ? 'border-primary-400 bg-primary-50/70 dark:border-primary-400 dark:bg-primary-500/10'
-                        : 'border-(--app-border) bg-(--app-surface-muted)/40 hover:border-primary-300 hover:bg-(--app-surface-muted)',
-                      uploadResumeMutation.isPending && 'pointer-events-none opacity-70'
-                    )}
-                  >
-                    <input
-                      className="sr-only"
-                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                      type="file"
-                      disabled={uploadResumeMutation.isPending}
-                      onChange={(event) => {
-                        handleResumeFile(event.target.files?.[0])
-                        event.currentTarget.value = ''
-                      }}
-                    />
-                    <span className="flex size-11 items-center justify-center rounded-full bg-primary-50 text-primary-600 transition-transform group-hover:scale-105 dark:bg-primary-500/15 dark:text-primary-300">
-                      <Upload className="size-5" />
-                    </span>
-                    <span className="text-[0.85rem] font-semibold text-(--app-text)">
-                      {uploadResumeMutation.isPending ? 'Subiendo tu CV…' : 'Arrastra tu CV aquí o haz clic para subir'}
-                    </span>
-                    <span className="text-[0.72rem] text-(--app-text-muted)">
-                      PDF, DOC o DOCX · Tamaño máximo {MAX_UPLOAD_SIZE_LABEL}
-                    </span>
-                  </label>
-                  {resumeFileError ? <p className="text-[0.72rem] text-rose-600 dark:text-rose-300">{resumeFileError}</p> : null}
-                </div>
+                  />
+                  <span className="mb-3 flex size-11 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-transform group-hover:scale-105 dark:bg-primary-500/15 dark:text-primary-300">
+                    <Upload className="size-5" />
+                  </span>
+                  <span className="text-sm font-semibold text-(--app-text)">
+                    {uploadResumeMutation.isPending ? 'Subiendo tu CV...' : 'Arrastra tu CV aquí o haz clic para subir'}
+                  </span>
+                  <span className="mt-1 text-[0.78rem] text-(--app-text-subtle)">PDF, DOC o DOCX · Tamaño máximo {MAX_UPLOAD_SIZE_LABEL}</span>
+                </label>
+                {resumeFileError ? <p className="text-[0.72rem] font-medium text-rose-600 dark:text-rose-300">{resumeFileError}</p> : null}
 
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {resumes.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-(--app-border) px-4 py-6 text-[0.8rem] text-(--app-text-muted)">
+                    <div className="rounded-xl border border-dashed border-(--app-border) px-4 py-6 text-sm text-(--app-text-muted)">
                       Todavía no has subido CVs. El primero quedará como principal.
                     </div>
                   ) : (
                     resumes.map((resume) => (
-                      <div key={resume.id} className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) p-3.5">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="flex items-start gap-2.5">
-                            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-(--app-surface) text-(--app-text-subtle)">
-                              <FileText className="size-4" />
-                            </span>
-                            <div>
-                              <p className="text-[0.85rem] font-semibold text-(--app-text)">{resume.filename}</p>
-                              <p className="mt-0.5 text-[0.72rem] text-(--app-text-muted)">
-                                {normalizeCandidateResumeLabel(resume.mime_type)} · {(resume.file_size_bytes / 1024 / 1024).toFixed(2)} MB
-                              </p>
-                            </div>
-                          </div>
-                          {resume.is_default ? <Badge variant="soft">Principal</Badge> : <Badge variant="outline">Secundario</Badge>}
+                      <div key={resume.id} className="flex flex-col gap-3 rounded-xl border border-(--app-border) p-3.5 sm:flex-row sm:items-center">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-(--app-success-surface) text-emerald-600 dark:text-emerald-300">
+                          <FileText className="size-5" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-(--app-text)">{resume.filename}</p>
+                          <p className="mt-0.5 text-[0.78rem] text-(--app-text-subtle)">
+                            {normalizeCandidateResumeLabel(resume.mime_type)} · {(resume.file_size_bytes / 1024 / 1024).toFixed(2)} MB
+                          </p>
                         </div>
-
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <Button variant="outline" className="h-8 px-3 text-[0.78rem]" onClick={() => void openResume(resume.storage_path)}>
+                        {resume.is_default ? <Badge variant="soft">Principal</Badge> : <Badge variant="outline">Secundario</Badge>}
+                        <div className="flex flex-wrap gap-2 sm:justify-end">
+                          <Button variant="outline" className="h-8 rounded-lg px-3 text-[0.78rem]" onClick={() => void openResume(resume.storage_path)}>
                             Abrir
                           </Button>
                           {!resume.is_default ? (
                             <Button
                               variant="outline"
-                              className="h-8 px-3 text-[0.78rem]"
+                              className="h-8 rounded-lg px-3 text-[0.78rem]"
                               onClick={() => setDefaultResumeMutation.mutate(resume.id)}
                               disabled={setDefaultResumeMutation.isPending}
                             >
-                              Usar como principal
+                              Principal
                             </Button>
                           ) : null}
                           <Button
                             variant="ghost"
-                            className="h-8 px-3 text-[0.78rem]"
+                            className="h-8 rounded-lg px-3 text-[0.78rem]"
                             onClick={() => deleteResumeMutation.mutate(resume)}
                             disabled={deleteResumeMutation.isPending}
                           >
@@ -806,10 +867,10 @@ function CandidateProfileEditor({
                   )}
                 </div>
 
-                <label className="flex items-start gap-3 rounded-xl border border-(--app-border) px-3.5 py-3 text-[0.8rem] text-(--app-text-muted)">
+                <label className="flex items-start gap-3 rounded-xl bg-(--app-surface-muted) px-4 py-3 text-[0.82rem] text-(--app-text)">
                   <input
                     type="checkbox"
-                    className="mt-0.5"
+                    className="mt-1 size-4 accent-primary-600"
                     checked={isVisibleToRecruiters}
                     disabled={visibilityMutation.isPending}
                     onChange={(event) => {
@@ -820,175 +881,217 @@ function CandidateProfileEditor({
                   />
                   <span>
                     Permitir que empresas autorizadas encuentren este perfil en el directorio de talento.
-                    <span className="mt-1 block text-[0.72rem] text-(--app-text-subtle)">
+                    <span className="mt-1 block text-xs text-(--app-text-subtle)">
                       Esto no afecta tu capacidad de aplicar a vacantes si prefieres mantener el perfil oculto.
                     </span>
                   </span>
                 </label>
               </div>
-            </Card>
+            </ProfileSection>
           ) : null}
 
           {activeTab === 'experience' ? (
-            <div className="space-y-3">
-              <AccordionSection
+            <div className="space-y-4">
+              <ProfileSection
                 icon={Briefcase}
                 title="Experiencia"
                 description="Organiza tu historial laboral y destaca tu impacto."
-                actionLabel="Agregar experiencia"
-                onAdd={() => setExperiences((current) => [...current, createEmptyCandidateExperience()])}
-                defaultOpen
+                actionLabel="Agregar"
+                onAction={() => setExperiences((current) => [...current, createEmptyCandidateExperience()])}
               >
                 {experiences.map((experience) => (
-                  <div key={experience.id} className="rounded-xl border border-(--app-border) p-3.5">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Input
-                        placeholder="Empresa"
-                        value={experience.companyName}
-                        onChange={(event) => updateCollectionItem(setExperiences, experience.id, { companyName: event.target.value })}
-                      />
-                      <Input
-                        placeholder="Rol"
-                        value={experience.roleTitle}
-                        onChange={(event) => updateCollectionItem(setExperiences, experience.id, { roleTitle: event.target.value })}
-                      />
-                      <Input
-                        placeholder="Tipo de empleo"
-                        value={experience.employmentType}
-                        onChange={(event) => updateCollectionItem(setExperiences, experience.id, { employmentType: event.target.value })}
-                      />
-                      <Input
-                        placeholder="Ciudad / país"
-                        value={experience.cityName}
-                        onChange={(event) => updateCollectionItem(setExperiences, experience.id, { cityName: event.target.value })}
-                      />
-                      <Input
-                        type="date"
-                        value={experience.startDate}
-                        onChange={(event) => updateCollectionItem(setExperiences, experience.id, { startDate: event.target.value })}
-                      />
-                      <Input
-                        type="date"
-                        disabled={experience.isCurrent}
-                        value={experience.endDate}
-                        onChange={(event) => updateCollectionItem(setExperiences, experience.id, { endDate: event.target.value })}
-                      />
+                  <div key={experience.id} className="rounded-xl border border-(--app-border) p-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <ProfileField label="Empresa">
+                        <Input
+                          className={profileFieldClass}
+                          placeholder="Empresa"
+                          value={experience.companyName}
+                          onChange={(event) => updateCollectionItem(setExperiences, experience.id, { companyName: event.target.value })}
+                        />
+                      </ProfileField>
+                      <ProfileField label="Rol">
+                        <Input
+                          className={profileFieldClass}
+                          placeholder="Rol"
+                          value={experience.roleTitle}
+                          onChange={(event) => updateCollectionItem(setExperiences, experience.id, { roleTitle: event.target.value })}
+                        />
+                      </ProfileField>
+                      <ProfileField label="Tipo de empleo">
+                        <Input
+                          className={profileFieldClass}
+                          placeholder="Tiempo completo"
+                          value={experience.employmentType}
+                          onChange={(event) => updateCollectionItem(setExperiences, experience.id, { employmentType: event.target.value })}
+                        />
+                      </ProfileField>
+                      <ProfileField label="Ubicación">
+                        <Input
+                          className={profileFieldClass}
+                          placeholder="Ciudad / país"
+                          value={experience.cityName}
+                          onChange={(event) => updateCollectionItem(setExperiences, experience.id, { cityName: event.target.value })}
+                        />
+                      </ProfileField>
+                      <ProfileField label="Inicio">
+                        <Input
+                          className={profileFieldClass}
+                          type="date"
+                          value={experience.startDate}
+                          onChange={(event) => updateCollectionItem(setExperiences, experience.id, { startDate: event.target.value })}
+                        />
+                      </ProfileField>
+                      <ProfileField label="Fin">
+                        <Input
+                          className={profileFieldClass}
+                          type="date"
+                          disabled={experience.isCurrent}
+                          value={experience.endDate}
+                          onChange={(event) => updateCollectionItem(setExperiences, experience.id, { endDate: event.target.value })}
+                        />
+                      </ProfileField>
                     </div>
-                    <label className="mt-3 flex items-center gap-2 text-[0.8rem] text-(--app-text-muted)">
-                      <input
-                        checked={experience.isCurrent}
-                        type="checkbox"
-                        onChange={(event) =>
-                          updateCollectionItem(setExperiences, experience.id, {
-                            isCurrent: event.target.checked,
-                            endDate: event.target.checked ? '' : experience.endDate
-                          })
-                        }
+                    <ProfileField label="Impacto" className="mt-4">
+                      <Textarea
+                        className={profileTextareaClass}
+                        placeholder="Impacto, responsabilidades y resultados."
+                        value={experience.summary}
+                        onChange={(event) => updateCollectionItem(setExperiences, experience.id, { summary: event.target.value })}
                       />
-                      Trabajo actual
-                    </label>
-                    <Textarea
-                      className="mt-3"
-                      placeholder="Impacto, responsabilidades y resultados."
-                      value={experience.summary}
-                      onChange={(event) => updateCollectionItem(setExperiences, experience.id, { summary: event.target.value })}
-                    />
-                    <div className="mt-3 flex justify-end">
-                      <Button
-                        variant="ghost"
-                        className="h-8 px-3 text-[0.78rem]"
+                    </ProfileField>
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
+                      <label className="inline-flex items-center gap-2 text-[0.82rem] text-(--app-text)">
+                        <input
+                          className="size-4 accent-primary-600"
+                          checked={experience.isCurrent}
+                          type="checkbox"
+                          onChange={(event) =>
+                            updateCollectionItem(setExperiences, experience.id, {
+                              isCurrent: event.target.checked,
+                              endDate: event.target.checked ? '' : experience.endDate
+                            })
+                          }
+                        />
+                        Trabajo actual
+                      </label>
+                      <span className="flex-1" />
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:text-rose-600"
                         onClick={() =>
                           setExperiences((current) =>
                             current.length === 1 ? [createEmptyCandidateExperience()] : current.filter((item) => item.id !== experience.id)
                           )
                         }
                       >
+                        <Trash2 className="size-4" />
                         Eliminar
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 ))}
-              </AccordionSection>
+              </ProfileSection>
 
-              <AccordionSection
+              <ProfileSection
                 icon={GraduationCap}
                 title="Educación"
                 description="Tu formación académica y certificaciones."
-                actionLabel="Agregar educación"
-                onAdd={() => setEducations((current) => [...current, createEmptyCandidateEducation()])}
+                actionLabel="Agregar"
+                onAction={() => setEducations((current) => [...current, createEmptyCandidateEducation()])}
               >
                 {educations.map((education) => (
-                  <div key={education.id} className="rounded-xl border border-(--app-border) p-3.5">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Input
-                        placeholder="Institucion"
-                        value={education.institutionName}
-                        onChange={(event) => updateCollectionItem(setEducations, education.id, { institutionName: event.target.value })}
-                      />
-                      <Input
-                        placeholder="Título o grado"
-                        value={education.degreeName}
-                        onChange={(event) => updateCollectionItem(setEducations, education.id, { degreeName: event.target.value })}
-                      />
-                      <Input
-                        placeholder="Área de estudio"
-                        value={education.fieldOfStudy}
-                        onChange={(event) => updateCollectionItem(setEducations, education.id, { fieldOfStudy: event.target.value })}
-                      />
-                      <div className="grid gap-3 sm:grid-cols-2">
+                  <div key={education.id} className="rounded-xl border border-(--app-border) p-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <ProfileField label="Institución">
                         <Input
-                          type="date"
-                          value={education.startDate}
-                          onChange={(event) => updateCollectionItem(setEducations, education.id, { startDate: event.target.value })}
+                          className={profileFieldClass}
+                          placeholder="Institución"
+                          value={education.institutionName}
+                          onChange={(event) => updateCollectionItem(setEducations, education.id, { institutionName: event.target.value })}
                         />
+                      </ProfileField>
+                      <ProfileField label="Título/certificación">
                         <Input
-                          type="date"
-                          disabled={education.isCurrent}
-                          value={education.endDate}
-                          onChange={(event) => updateCollectionItem(setEducations, education.id, { endDate: event.target.value })}
+                          className={profileFieldClass}
+                          placeholder="Título o grado"
+                          value={education.degreeName}
+                          onChange={(event) => updateCollectionItem(setEducations, education.id, { degreeName: event.target.value })}
                         />
+                      </ProfileField>
+                      <ProfileField label="Área de estudio">
+                        <Input
+                          className={profileFieldClass}
+                          placeholder="Área de estudio"
+                          value={education.fieldOfStudy}
+                          onChange={(event) => updateCollectionItem(setEducations, education.id, { fieldOfStudy: event.target.value })}
+                        />
+                      </ProfileField>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <ProfileField label="Inicio">
+                          <Input
+                            className={profileFieldClass}
+                            type="date"
+                            value={education.startDate}
+                            onChange={(event) => updateCollectionItem(setEducations, education.id, { startDate: event.target.value })}
+                          />
+                        </ProfileField>
+                        <ProfileField label="Fin">
+                          <Input
+                            className={profileFieldClass}
+                            type="date"
+                            disabled={education.isCurrent}
+                            value={education.endDate}
+                            onChange={(event) => updateCollectionItem(setEducations, education.id, { endDate: event.target.value })}
+                          />
+                        </ProfileField>
                       </div>
                     </div>
-                    <label className="mt-3 flex items-center gap-2 text-[0.8rem] text-(--app-text-muted)">
-                      <input
-                        checked={education.isCurrent}
-                        type="checkbox"
-                        onChange={(event) =>
-                          updateCollectionItem(setEducations, education.id, {
-                            isCurrent: event.target.checked,
-                            endDate: event.target.checked ? '' : education.endDate
-                          })
-                        }
+                    <ProfileField label="Notas" className="mt-4">
+                      <Textarea
+                        className={profileTextareaClass}
+                        placeholder="Logros, enfoque o certificaciones."
+                        value={education.summary}
+                        onChange={(event) => updateCollectionItem(setEducations, education.id, { summary: event.target.value })}
                       />
-                      En curso actualmente
-                    </label>
-                    <Textarea
-                      className="mt-3"
-                      placeholder="Logros, enfoque o certificaciones."
-                      value={education.summary}
-                      onChange={(event) => updateCollectionItem(setEducations, education.id, { summary: event.target.value })}
-                    />
-                    <div className="mt-3 flex justify-end">
-                      <Button
-                        variant="ghost"
-                        className="h-8 px-3 text-[0.78rem]"
+                    </ProfileField>
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
+                      <label className="inline-flex items-center gap-2 text-[0.82rem] text-(--app-text)">
+                        <input
+                          className="size-4 accent-primary-600"
+                          checked={education.isCurrent}
+                          type="checkbox"
+                          onChange={(event) =>
+                            updateCollectionItem(setEducations, education.id, {
+                              isCurrent: event.target.checked,
+                              endDate: event.target.checked ? '' : education.endDate
+                            })
+                          }
+                        />
+                        En curso actualmente
+                      </label>
+                      <span className="flex-1" />
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:text-rose-600"
                         onClick={() =>
                           setEducations((current) =>
                             current.length === 1 ? [createEmptyCandidateEducation()] : current.filter((item) => item.id !== education.id)
                           )
                         }
                       >
+                        <Trash2 className="size-4" />
                         Eliminar
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 ))}
-              </AccordionSection>
+              </ProfileSection>
             </div>
           ) : null}
 
           {activeTab === 'skills' ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <AccordionSection
                 icon={Sparkles}
                 title="Skills"
@@ -998,26 +1101,33 @@ function CandidateProfileEditor({
                 defaultOpen
               >
                 {skills.map((skill) => (
-                  <div key={skill.id} className="grid gap-3 rounded-xl border border-(--app-border) p-3.5 sm:grid-cols-[1fr_0.8fr_auto]">
-                    <Input
-                      placeholder="Skill"
-                      value={skill.skillName}
-                      onChange={(event) => updateCollectionItem(setSkills, skill.id, { skillName: event.target.value })}
-                    />
-                    <Input
-                      placeholder="Nivel"
-                      value={skill.proficiencyLabel}
-                      onChange={(event) => updateCollectionItem(setSkills, skill.id, { proficiencyLabel: event.target.value })}
-                    />
-                    <Button
-                      variant="ghost"
-                      className="h-8 px-3 text-[0.78rem]"
+                  <div key={skill.id} className="grid gap-4 rounded-xl border border-(--app-border) p-4 md:grid-cols-[minmax(0,1fr)_minmax(10rem,0.65fr)_auto]">
+                    <ProfileField label="Skill">
+                      <Input
+                        className={profileFieldClass}
+                        placeholder="Skill"
+                        value={skill.skillName}
+                        onChange={(event) => updateCollectionItem(setSkills, skill.id, { skillName: event.target.value })}
+                      />
+                    </ProfileField>
+                    <ProfileField label="Nivel">
+                      <Input
+                        className={profileFieldClass}
+                        placeholder="Nivel"
+                        value={skill.proficiencyLabel}
+                        onChange={(event) => updateCollectionItem(setSkills, skill.id, { proficiencyLabel: event.target.value })}
+                      />
+                    </ProfileField>
+                    <button
+                      type="button"
+                      className="inline-flex h-[46px] items-center justify-center gap-2 self-end rounded-lg px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
                       onClick={() =>
                         setSkills((current) => (current.length === 1 ? [createEmptyCandidateSkill()] : current.filter((item) => item.id !== skill.id)))
                       }
                     >
+                      <Trash2 className="size-4" />
                       Eliminar
-                    </Button>
+                    </button>
                   </div>
                 ))}
               </AccordionSection>
@@ -1030,28 +1140,35 @@ function CandidateProfileEditor({
                 onAdd={() => setLanguages((current) => [...current, createEmptyCandidateLanguage()])}
               >
                 {languages.map((language) => (
-                  <div key={language.id} className="grid gap-3 rounded-xl border border-(--app-border) p-3.5 sm:grid-cols-[1fr_0.8fr_auto]">
-                    <Input
-                      placeholder="Idioma"
-                      value={language.languageName}
-                      onChange={(event) => updateCollectionItem(setLanguages, language.id, { languageName: event.target.value })}
-                    />
-                    <Input
-                      placeholder="Nivel"
-                      value={language.proficiencyLabel}
-                      onChange={(event) => updateCollectionItem(setLanguages, language.id, { proficiencyLabel: event.target.value })}
-                    />
-                    <Button
-                      variant="ghost"
-                      className="h-8 px-3 text-[0.78rem]"
+                  <div key={language.id} className="grid gap-4 rounded-xl border border-(--app-border) p-4 md:grid-cols-[minmax(0,1fr)_minmax(10rem,0.65fr)_auto]">
+                    <ProfileField label="Idioma">
+                      <Input
+                        className={profileFieldClass}
+                        placeholder="Idioma"
+                        value={language.languageName}
+                        onChange={(event) => updateCollectionItem(setLanguages, language.id, { languageName: event.target.value })}
+                      />
+                    </ProfileField>
+                    <ProfileField label="Nivel">
+                      <Input
+                        className={profileFieldClass}
+                        placeholder="Nivel"
+                        value={language.proficiencyLabel}
+                        onChange={(event) => updateCollectionItem(setLanguages, language.id, { proficiencyLabel: event.target.value })}
+                      />
+                    </ProfileField>
+                    <button
+                      type="button"
+                      className="inline-flex h-[46px] items-center justify-center gap-2 self-end rounded-lg px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
                       onClick={() =>
                         setLanguages((current) =>
                           current.length === 1 ? [createEmptyCandidateLanguage()] : current.filter((item) => item.id !== language.id)
                         )
                       }
                     >
+                      <Trash2 className="size-4" />
                       Eliminar
-                    </Button>
+                    </button>
                   </div>
                 ))}
               </AccordionSection>
@@ -1064,39 +1181,49 @@ function CandidateProfileEditor({
                 onAdd={() => setLinks((current) => [...current, createEmptyCandidateLink()])}
               >
                 {links.map((link) => (
-                  <div key={link.id} className="space-y-3 rounded-xl border border-(--app-border) p-3.5">
-                    <div className="grid gap-3 sm:grid-cols-[0.7fr_1fr]">
-                      <Select
-                        value={link.linkType}
-                        onChange={(event) => updateCollectionItem(setLinks, link.id, { linkType: event.target.value as CandidateLinkDraft['linkType'] })}
-                      >
-                        <option value="other">Other</option>
-                        <option value="portfolio">Portfolio</option>
-                        <option value="linkedin">LinkedIn</option>
-                        <option value="github">GitHub</option>
-                        <option value="website">Website</option>
-                      </Select>
-                      <Input
-                        placeholder="Etiqueta"
-                        value={link.label}
-                        onChange={(event) => updateCollectionItem(setLinks, link.id, { label: event.target.value })}
-                      />
+                  <div key={link.id} className="space-y-4 rounded-xl border border-(--app-border) p-4">
+                    <div className="grid gap-4 md:grid-cols-[0.7fr_1fr]">
+                      <ProfileField label="Tipo">
+                        <Select
+                          className={profileFieldClass}
+                          value={link.linkType}
+                          onChange={(event) => updateCollectionItem(setLinks, link.id, { linkType: event.target.value as CandidateLinkDraft['linkType'] })}
+                        >
+                          <option value="other">Otro</option>
+                          <option value="portfolio">Portafolio</option>
+                          <option value="linkedin">LinkedIn</option>
+                          <option value="github">GitHub</option>
+                          <option value="website">Website</option>
+                        </Select>
+                      </ProfileField>
+                      <ProfileField label="Etiqueta">
+                        <Input
+                          className={profileFieldClass}
+                          placeholder="Etiqueta"
+                          value={link.label}
+                          onChange={(event) => updateCollectionItem(setLinks, link.id, { label: event.target.value })}
+                        />
+                      </ProfileField>
                     </div>
-                    <Input
-                      placeholder="https://..."
-                      value={link.url}
-                      onChange={(event) => updateCollectionItem(setLinks, link.id, { url: event.target.value })}
-                    />
+                    <ProfileField label="URL">
+                      <Input
+                        className={profileFieldClass}
+                        placeholder="https://..."
+                        value={link.url}
+                        onChange={(event) => updateCollectionItem(setLinks, link.id, { url: event.target.value })}
+                      />
+                    </ProfileField>
                     <div className="flex justify-end">
-                      <Button
-                        variant="ghost"
-                        className="h-8 px-3 text-[0.78rem]"
+                      <button
+                        type="button"
+                        className="inline-flex h-8 items-center gap-2 rounded-lg px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
                         onClick={() =>
                           setLinks((current) => (current.length === 1 ? [createEmptyCandidateLink()] : current.filter((item) => item.id !== link.id)))
                         }
                       >
+                        <Trash2 className="size-4" />
                         Eliminar
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -1105,50 +1232,49 @@ function CandidateProfileEditor({
           ) : null}
         </motion.div>
 
-        {/* Sidebar */}
-        <motion.aside variants={cardReveal} className="space-y-4">
-          <Card>
-            <h2 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Resumen de tu perfil</h2>
-            <div className="mt-3 flex items-center gap-3">
+        <motion.aside variants={cardReveal} className="flex h-full flex-col gap-4">
+          <Card className="rounded-[14px] p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+            <h2 className="text-[0.95rem] font-bold tracking-tight text-(--app-text)">Resumen de tu perfil</h2>
+            <div className="mt-4 flex items-center gap-4">
               <CircularProgress value={completionPercent} />
               <div>
-                <p className="text-[0.85rem] font-semibold text-(--app-text)">Completado del perfil</p>
-                <p className="text-[0.76rem] text-(--app-text-muted)">
+                <p className="text-sm font-semibold text-(--app-text)">Completado del perfil</p>
+                <p className="mt-0.5 text-[0.78rem] text-(--app-text-subtle)">
                   {completionPercent >= 100 ? '¡Tu perfil está listo!' : '¡Vas muy bien! Completa la información para destacar más.'}
                 </p>
               </div>
             </div>
-            <div className="mt-3 space-y-2.5 border-t border-(--app-border) pt-3 text-[0.78rem]">
-              <div>
-                <p className="font-medium text-(--app-text)">Última actualización</p>
-                <p className="text-(--app-text-muted)">{formatUpdatedAt(bundle.profile?.updated_at)}</p>
+            <div className="mt-4 divide-y divide-(--app-border)">
+              <div className="py-3">
+                <p className="text-xs text-(--app-text-subtle)">Última actualización</p>
+                <p className="mt-1 text-[0.84rem] font-semibold text-(--app-text)">{formatUpdatedAt(bundle.profile?.updated_at)}</p>
               </div>
-              <div>
-                <p className="font-medium text-(--app-text)">{isVisibleToRecruiters ? 'Visible' : 'Oculto'}</p>
-                <p className="text-(--app-text-muted)">
-                  {isVisibleToRecruiters ? 'Apareces para empresas en el directorio.' : 'No apareces en el directorio.'}
+              <div className="py-3">
+                <p className="text-xs text-(--app-text-subtle)">Visibilidad</p>
+                <p className={cn('mt-1 text-[0.84rem] font-semibold', isVisibleToRecruiters ? 'text-emerald-600 dark:text-emerald-300' : 'text-(--app-text)')}>
+                  {isVisibleToRecruiters ? 'Visible en el directorio' : 'Oculto del directorio'}
                 </p>
               </div>
             </div>
           </Card>
 
-          <Card>
-            <h2 className="text-[0.95rem] font-semibold tracking-tight text-(--app-text)">Acciones rápidas</h2>
-            <div className="mt-3 space-y-2">
-              <QuickAction icon={Upload} title="Subir nuevo CV" description="Actualiza tu CV privado actual." onClick={() => setActiveTab('cv')} />
+          <Card className="rounded-[14px] p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+            <h2 className="text-[0.95rem] font-bold tracking-tight text-(--app-text)">Acciones rápidas</h2>
+            <div className="mt-4 divide-y divide-(--app-border)">
+              <QuickAction icon={Upload} title="Subir nuevo CV" description="Actualiza tu CV privado actual." onClick={() => handleTabSelect('cv')} />
               <QuickAction icon={Eye} title="Vista previa del perfil" description="Mira cómo te ven las empresas." onClick={() => toast.info('Vista previa próximamente')} />
               <QuickAction icon={Download} title="Descargar mis datos" description="Obtén una copia de tu información." onClick={() => toast.info('Exportación de datos próximamente')} />
             </div>
           </Card>
 
-          <Card className="border-primary-200/70 bg-primary-50/60 dark:border-primary-500/25 dark:bg-primary-500/10">
-            <div className="flex items-start gap-2.5">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-300">
+          <Card className="mt-auto rounded-[14px] border-primary-100 bg-linear-to-br from-primary-50 to-white p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] dark:border-primary-500/25 dark:from-primary-500/12 dark:to-transparent">
+            <div className="flex items-start gap-3">
+              <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[9px] bg-white text-amber-600 shadow-sm dark:bg-white/10 dark:text-amber-300">
                 <Lightbulb className="size-4" />
               </span>
               <div>
-                <h3 className="text-[0.85rem] font-semibold text-(--app-text)">Consejo</h3>
-                <p className="mt-0.5 text-[0.76rem] text-(--app-text-muted)">
+                <h3 className="text-[0.84rem] font-bold text-(--app-text)">Consejo</h3>
+                <p className="mt-1 text-[0.78rem] leading-5 text-(--app-text-muted)">
                   Perfiles completos reciben hasta 3x más vistas de reclutadores.
                 </p>
               </div>
