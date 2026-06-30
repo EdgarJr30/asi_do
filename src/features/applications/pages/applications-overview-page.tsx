@@ -24,7 +24,11 @@ import {
 } from '@/features/applications/lib/application-overview-filters'
 import { cn } from '@/lib/utils/cn'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
-import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
+import {
+  smoothCardReveal as cardReveal,
+  smoothGridStagger as gridStagger,
+  smoothPageStagger as pageStagger
+} from '@/shared/ui/card-motion'
 
 const PAGE_SIZE = 10
 const dateFormatter = new Intl.DateTimeFormat('es', { day: '2-digit', month: 'short', year: 'numeric' })

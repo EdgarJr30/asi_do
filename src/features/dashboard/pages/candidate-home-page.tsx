@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { motion, useReducedMotion, type Variants } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
 import quoteData from 'inspirational-quotes/data/data.json'
 import {
@@ -28,7 +28,11 @@ import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Spinner } from '@/components/ui/loader'
 import { applicationStatusDotClass, applicationStatusLabel } from '@/features/applications/lib/application-status'
-import { softEase } from '@/shared/ui/card-motion'
+import {
+  smoothCardReveal as cardReveal,
+  smoothGridStagger as gridStagger,
+  smoothPageStagger as pageStagger
+} from '@/shared/ui/card-motion'
 import { listMyApplications } from '@/features/applications/lib/applications-api'
 import { listPublicJobs } from '@/features/jobs/lib/jobs-api'
 import type { Database } from '@/shared/types/database'
@@ -38,21 +42,6 @@ type PublicStatus = Database['public']['Enums']['application_public_status']
 const ACTIVE_STATUSES: PublicStatus[] = ['submitted', 'in_review', 'interviewing', 'offer']
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 const RECENT_PAGE_SIZE = 8
-
-// Variantes locales de esta pantalla: entrada más lenta y suave que la
-// curva compartida (no se modifica la global para no afectar otros módulos).
-const pageStagger: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.16, delayChildren: 0.08 } }
-}
-const gridStagger: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.13 } }
-}
-const cardReveal: Variants = {
-  hidden: { opacity: 0, y: 18 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.95, ease: softEase } }
-}
 
 function greetingForNow(date = new Date()) {
   const hour = date.getHours()

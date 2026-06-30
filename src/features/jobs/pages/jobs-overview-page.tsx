@@ -47,7 +47,11 @@ import { fetchPipelineBoard } from '@/features/pipeline/lib/pipeline-api'
 import { fetchWorkspaceBundle, type WorkspaceBundle } from '@/features/tenants/lib/workspace-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
-import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
+import {
+  smoothCardReveal as cardReveal,
+  smoothGridStagger as gridStagger,
+  smoothPageStagger as pageStagger
+} from '@/shared/ui/card-motion'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
 import { cn } from '@/lib/utils/cn'
 

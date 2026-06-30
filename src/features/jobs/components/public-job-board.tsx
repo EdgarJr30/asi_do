@@ -41,7 +41,12 @@ import { getCompensationTypeLabel, getOpportunityTypeLabel, opportunityTypeOptio
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cn } from '@/lib/utils/cn'
-import { cardReveal, gridStagger } from '@/shared/ui/card-motion'
+import {
+  softEase,
+  smoothCardReveal as cardReveal,
+  smoothGridStagger as gridStagger,
+  smoothPageStagger as pageStagger
+} from '@/shared/ui/card-motion'
 
 type JobRow = JobPostingBundle['jobs'][number]
 
@@ -340,16 +345,22 @@ export function PublicJobBoard() {
   const resultCount = filters.sector ? visibleJobs.length : totalCount
 
   return (
-    <div className="space-y-4">
-      <header>
+    <motion.div
+      className="space-y-4"
+      variants={pageStagger}
+      initial={shouldReduceMotion ? false : 'hidden'}
+      animate="show"
+    >
+      <motion.header variants={cardReveal}>
         <h1 className="text-2xl font-bold tracking-tight text-(--app-text)">Vacantes</h1>
         <p className="mt-1.5 text-sm text-(--app-text-muted)">
           Descubre oportunidades abiertas y postúlate con tu perfil en minutos.
         </p>
-      </header>
+      </motion.header>
 
       {/* Búsqueda: una sola barra blanca con dos campos separados por un divisor */}
-      <form
+      <motion.form
+        variants={cardReveal}
         className="flex flex-col gap-2 rounded-panel border border-(--app-border) bg-(--app-surface) p-1.5 pl-3 shadow-sm md:flex-row md:items-center md:gap-1"
         onSubmit={(event) => {
           event.preventDefault()
@@ -382,10 +393,10 @@ export function PublicJobBoard() {
         <Button type="submit" className="h-11 shrink-0 rounded-[0.7rem] px-5 text-sm">
           <Search className="size-4" /> Buscar
         </Button>
-      </form>
+      </motion.form>
 
       {/* Toolbar: filtros inline + chips de búsqueda + contador + orden */}
-      <div className="flex flex-wrap items-center gap-2">
+      <motion.div variants={cardReveal} className="flex flex-wrap items-center gap-2">
         <Select
           className="h-[34px] w-auto rounded-lg text-[0.82rem]"
           value={filters.sector}
@@ -462,24 +473,34 @@ export function PublicJobBoard() {
             <option value="salary">Salario</option>
           </Select>
         </label>
-      </div>
+      </motion.div>
 
       {/* Contenido */}
       {jobsQuery.isLoading ? (
-        <PageLoader label="Buscando empleos" hint="Cargando las oportunidades disponibles" />
+        <motion.div variants={cardReveal}>
+          <PageLoader label="Buscando empleos" hint="Cargando las oportunidades disponibles" />
+        </motion.div>
       ) : jobsQuery.error ? (
-        <div className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-6 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+        <motion.div
+          variants={cardReveal}
+          className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-6 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+        >
           {toErrorMessage(jobsQuery.error)}
-        </div>
+        </motion.div>
       ) : visibleJobs.length === 0 && !hasNextPage && !isFetchingNextPage ? (
-        <EmptyState
-          title="No encontramos empleos con estos filtros"
-          description="Prueba con menos filtros o cambia las palabras clave para ampliar tu búsqueda."
-          actionLabel={activeChips.length > 0 ? 'Limpiar filtros' : undefined}
-          onAction={activeChips.length > 0 ? resetFilters : undefined}
-        />
+        <motion.div variants={cardReveal}>
+          <EmptyState
+            title="No encontramos empleos con estos filtros"
+            description="Prueba con menos filtros o cambia las palabras clave para ampliar tu búsqueda."
+            actionLabel={activeChips.length > 0 ? 'Limpiar filtros' : undefined}
+            onAction={activeChips.length > 0 ? resetFilters : undefined}
+          />
+        </motion.div>
       ) : (
-        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
+        <motion.div
+          variants={cardReveal}
+          className="grid items-start gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]"
+        >
           {/* Lista de vacantes con scroll independiente + carga infinita */}
           <div className={cn('min-w-0', detailOpen ? 'hidden lg:block' : 'block')}>
             <div ref={listScrollRef} className="flex max-h-128 flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
@@ -533,9 +554,9 @@ export function PublicJobBoard() {
               )}
             </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -602,7 +623,7 @@ function DetailEmptyState() {
       initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: 'blur(6px)' }}
       animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
       exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, filter: 'blur(6px)' }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      transition={shouldReduceMotion ? { duration: 0.2 } : { duration: 0.95, ease: softEase }}
       className="flex min-h-80 flex-col items-center justify-center rounded-panel border border-(--app-border) bg-(--app-surface) p-10 text-center shadow-sm lg:min-h-128"
     >
       <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
@@ -619,9 +640,8 @@ function DetailEmptyState() {
 const detailTagClass =
   'inline-flex h-[30px] items-center gap-1.5 rounded-lg border border-(--app-border) bg-(--app-surface-muted) px-3 text-[0.78rem] font-medium text-(--app-text-muted)'
 
-// Entrada "tipo Apple" del panel de detalle: el card entra con un sutil
-// desenfoque + escala + desplazamiento, y su contenido se asienta en cascada.
-// La curva [0.16,1,0.3,1] (easeOutExpo) da el frenado suave y elegante.
+// Entrada suave del panel de detalle: el card entra con un sutil desenfoque,
+// escala y desplazamiento, y su contenido se asienta en cascada.
 const detailPanelVariants: Variants = {
   hidden: { opacity: 0, y: 16, scale: 0.985, filter: 'blur(8px)' },
   show: {
@@ -629,14 +649,14 @@ const detailPanelVariants: Variants = {
     y: 0,
     scale: 1,
     filter: 'blur(0px)',
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1], when: 'beforeChildren', staggerChildren: 0.055, delayChildren: 0.04 }
+    transition: { duration: 0.95, ease: softEase, when: 'beforeChildren', staggerChildren: 0.13, delayChildren: 0.08 }
   },
   exit: { opacity: 0, y: -10, scale: 0.992, filter: 'blur(6px)', transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } }
 }
 
 const detailBlockVariants: Variants = {
   hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+  show: { opacity: 1, y: 0, transition: { duration: 0.95, ease: softEase } }
 }
 
 const applyLinkClass =

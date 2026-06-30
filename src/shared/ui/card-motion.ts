@@ -28,3 +28,19 @@ export const cardReveal: Variants = {
     transition: { duration: 0.5, ease: softEase }
   }
 }
+
+// Entrada más lenta y suave para las superficies principales del candidato.
+export const smoothPageStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.16, delayChildren: 0.08 } }
+}
+
+export const smoothGridStagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.13 } }
+}
+
+export const smoothCardReveal: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.95, ease: softEase } }
+}

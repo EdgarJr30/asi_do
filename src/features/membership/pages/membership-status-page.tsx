@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { motion, useReducedMotion } from 'motion/react'
 import {
   AlertCircle,
   ArrowRight,
@@ -28,6 +29,11 @@ import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { payMembershipWithAzul, type AzulPaymentIntent } from '@/features/membership/lib/azul-api'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { printReceipt, receiptPlainText, shareReceipt, type ReceiptLine } from '@/shared/ui/receipt'
+import {
+  smoothCardReveal as cardReveal,
+  smoothGridStagger as gridStagger,
+  smoothPageStagger as pageStagger
+} from '@/shared/ui/card-motion'
 import {
   fetchMyMembershipStatus,
   getCategoryDue,
@@ -229,6 +235,7 @@ export function MembershipStatusPage() {
   const session = useAppSession()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const shouldReduceMotion = useReducedMotion()
   const userId = session.authUser?.id ?? null
   const [activeTab, setActiveTab] = useState<MembershipTab>('summary')
   const [openReceiptId, setOpenReceiptId] = useState<string | null | undefined>(undefined)
@@ -342,8 +349,13 @@ export function MembershipStatusPage() {
       : bundle.payment?.status ?? null
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <motion.div
+      className="space-y-6"
+      variants={pageStagger}
+      initial={shouldReduceMotion ? false : 'hidden'}
+      animate="show"
+    >
+      <motion.header variants={cardReveal} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-3xl">
           <h1 className="text-2xl font-bold tracking-tight text-(--app-text)">Tu membresía</h1>
           <p className="mt-1 max-w-2xl text-[0.9rem] leading-6 text-(--app-text-muted)">
@@ -356,77 +368,85 @@ export function MembershipStatusPage() {
             Completar solicitud <ArrowRight className="size-4" />
           </Button>
         ) : null}
-      </header>
+      </motion.header>
 
       {statusQuery.isLoading ? (
-        <Card>
-          <CardContent className="mt-0">
-            <PageLoader inline label="Cargando tu estado" hint="Revisando tu solicitud y pago" />
-          </CardContent>
-        </Card>
+        <motion.div variants={cardReveal}>
+          <Card>
+            <CardContent className="mt-0">
+              <PageLoader inline label="Cargando tu estado" hint="Revisando tu solicitud y pago" />
+            </CardContent>
+          </Card>
+        </motion.div>
       ) : statusQuery.error ? (
-        <Card className="border-rose-200 bg-rose-50/70 dark:border-rose-500/30 dark:bg-rose-500/10">
-          <CardContent className="mt-0 flex items-start gap-3 text-sm text-rose-700 dark:text-rose-300">
-            <AlertCircle className="mt-0.5 size-5 shrink-0" />
-            <div>
-              <p className="font-semibold">No pudimos cargar tu membresía.</p>
-              <p className="mt-1">{toErrorMessage(statusQuery.error)}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div variants={cardReveal}>
+          <Card className="border-rose-200 bg-rose-50/70 dark:border-rose-500/30 dark:bg-rose-500/10">
+            <CardContent className="mt-0 flex items-start gap-3 text-sm text-rose-700 dark:text-rose-300">
+              <AlertCircle className="mt-0.5 size-5 shrink-0" />
+              <div>
+                <p className="font-semibold">No pudimos cargar tu membresía.</p>
+                <p className="mt-1">{toErrorMessage(statusQuery.error)}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       ) : (
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
-          <section className="space-y-6">
-            <MembershipOverviewCard
-              category={bundle.application?.category_name ?? 'Sin categoría'}
-              statusLabel={routeStatusLabel}
-              activatedAt={membershipActivatedAt}
-              expiresAt={membershipExpiresAt}
-              remaining={remainingMembership}
-              progress={membershipProgress}
-              isActive={session.hasActiveAsiAccess}
-            />
+        <motion.div variants={gridStagger} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+          <motion.section variants={gridStagger} className="space-y-6">
+            <motion.div variants={cardReveal}>
+              <MembershipOverviewCard
+                category={bundle.application?.category_name ?? 'Sin categoría'}
+                statusLabel={routeStatusLabel}
+                activatedAt={membershipActivatedAt}
+                expiresAt={membershipExpiresAt}
+                remaining={remainingMembership}
+                progress={membershipProgress}
+                isActive={session.hasActiveAsiAccess}
+              />
+            </motion.div>
 
             {!session.hasActiveAsiAccess ? (
-              <Card className="rounded-2xl border-(--app-border) bg-(--app-surface-elevated) p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
-                <CardContent className="mt-0 space-y-3">
-                  <div>
-                    <CardTitle>{currentStep?.title ?? 'Próximo paso'}</CardTitle>
-                    <p className="mt-1 text-sm leading-6 text-(--app-text-muted)">
-                      {currentStep?.description ?? 'Completa el siguiente paso para avanzar tu membresía.'}
-                    </p>
-                  </div>
-                {!session.hasActiveAsiAccess && bundle.application?.status === 'needs_more_info' ? (
-                  <NeedsMoreInfoResponse
-                    applicationId={bundle.application.id}
-                    reviewNote={bundle.application.review_notes}
-                    onResponded={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
-                  />
-                ) : null}
+              <motion.div variants={cardReveal}>
+                <Card className="rounded-2xl border-(--app-border) bg-(--app-surface-elevated) p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+                  <CardContent className="mt-0 space-y-3">
+                    <div>
+                      <CardTitle>{currentStep?.title ?? 'Próximo paso'}</CardTitle>
+                      <p className="mt-1 text-sm leading-6 text-(--app-text-muted)">
+                        {currentStep?.description ?? 'Completa el siguiente paso para avanzar tu membresía.'}
+                      </p>
+                    </div>
+                    {!session.hasActiveAsiAccess && bundle.application?.status === 'needs_more_info' ? (
+                      <NeedsMoreInfoResponse
+                        applicationId={bundle.application.id}
+                        reviewNote={bundle.application.review_notes}
+                        onResponded={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
+                      />
+                    ) : null}
 
-                {!session.hasActiveAsiAccess && showPayStep && bundle.application ? (
-                  <AzulPayCard
-                    applicationId={bundle.application.id}
-                    intent="initial"
-                    annualAmount={due?.amount ?? null}
-                    currency={bundle.settings?.currency ?? 'DOP'}
-                    categoryLabel={due?.label ?? bundle.application.category_name ?? null}
-                    paymentStatus={visiblePaymentStatus}
-                    azulEnabled={azulEnabled}
-                    onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
-                  />
-                ) : null}
+                    {!session.hasActiveAsiAccess && showPayStep && bundle.application ? (
+                      <AzulPayCard
+                        applicationId={bundle.application.id}
+                        intent="initial"
+                        annualAmount={due?.amount ?? null}
+                        currency={bundle.settings?.currency ?? 'DOP'}
+                        categoryLabel={due?.label ?? bundle.application.category_name ?? null}
+                        paymentStatus={visiblePaymentStatus}
+                        azulEnabled={azulEnabled}
+                        onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
+                      />
+                    ) : null}
 
-                {!session.hasActiveAsiAccess && currentStep?.key === 'application' && currentStep.state === 'current' ? (
-                  <Button className="h-10" onClick={() => void navigate(surfacePaths.institutional.eligibility)}>
-                    Iniciar mi solicitud <ArrowRight className="size-4" />
-                  </Button>
-                ) : null}
-                </CardContent>
-              </Card>
+                    {!session.hasActiveAsiAccess && currentStep?.key === 'application' && currentStep.state === 'current' ? (
+                      <Button className="h-10" onClick={() => void navigate(surfacePaths.institutional.eligibility)}>
+                        Iniciar mi solicitud <ArrowRight className="size-4" />
+                      </Button>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              </motion.div>
             ) : null}
 
-            <div>
+            <motion.div variants={cardReveal}>
               <nav
                 className="inline-flex max-w-full gap-0.5 overflow-x-auto rounded-xl border border-(--app-border) bg-(--app-surface-elevated) p-1 shadow-sm"
                 aria-label="Secciones de membresía"
@@ -518,55 +538,59 @@ export function MembershipStatusPage() {
                   )
                 ) : null}
               </div>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
-          <aside className="space-y-5 lg:sticky lg:top-6">
+          <motion.aside variants={gridStagger} className="space-y-5 lg:sticky lg:top-6">
             {session.hasActiveAsiAccess && bundle.application ? (
-              <Card className="rounded-2xl p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
-                <CardContent className="mt-0">
-                  <CardTitle>Renovar membresía</CardTitle>
-                  <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
-                    Renueva por 1 a 5 años. Tu membresía actual se conserva y el monto se calcula automáticamente.
-                  </p>
-                  <AzulPayCard
-                    applicationId={bundle.application.id}
-                    intent="renewal"
-                    annualAmount={due?.amount ?? null}
-                    currency={bundle.settings?.currency ?? 'DOP'}
-                    categoryLabel={due?.label ?? bundle.application.category_name ?? null}
-                    paymentStatus={visiblePaymentStatus === 'initiated' ? 'initiated' : visiblePaymentStatus}
-                    azulEnabled={canRenew}
-                    compact
-                    onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
-                  />
-                </CardContent>
-              </Card>
+              <motion.div variants={cardReveal}>
+                <Card className="rounded-2xl p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+                  <CardContent className="mt-0">
+                    <CardTitle>Renovar membresía</CardTitle>
+                    <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                      Renueva por 1 a 5 años. Tu membresía actual se conserva y el monto se calcula automáticamente.
+                    </p>
+                    <AzulPayCard
+                      applicationId={bundle.application.id}
+                      intent="renewal"
+                      annualAmount={due?.amount ?? null}
+                      currency={bundle.settings?.currency ?? 'DOP'}
+                      categoryLabel={due?.label ?? bundle.application.category_name ?? null}
+                      paymentStatus={visiblePaymentStatus === 'initiated' ? 'initiated' : visiblePaymentStatus}
+                      azulEnabled={canRenew}
+                      compact
+                      onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
+                    />
+                  </CardContent>
+                </Card>
+              </motion.div>
             ) : null}
 
-            <Card className="rounded-2xl p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
-              <CardContent className="mt-0">
-                <div className="flex items-center gap-3">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
-                    <AlertCircle className="size-4" />
-                  </span>
-                  <CardTitle>¿Necesitas ayuda?</CardTitle>
-                </div>
-                <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
-                  ¿Dudas con tu membresía? Escríbenos y con gusto te ayudamos.
-                </p>
-                <Link
-                  to={surfacePaths.institutional.contactUs}
-                  className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 text-sm font-semibold text-(--app-text) shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:bg-primary-500/12"
-                >
-                  Ir a contacto <ArrowRight className="size-4" />
-                </Link>
-              </CardContent>
-            </Card>
-          </aside>
-        </div>
+            <motion.div variants={cardReveal}>
+              <Card className="rounded-2xl p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+                <CardContent className="mt-0">
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                      <AlertCircle className="size-4" />
+                    </span>
+                    <CardTitle>¿Necesitas ayuda?</CardTitle>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                    ¿Dudas con tu membresía? Escríbenos y con gusto te ayudamos.
+                  </p>
+                  <Link
+                    to={surfacePaths.institutional.contactUs}
+                    className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 text-sm font-semibold text-(--app-text) shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:bg-primary-500/12"
+                  >
+                    Ir a contacto <ArrowRight className="size-4" />
+                  </Link>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.aside>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
 }
 
