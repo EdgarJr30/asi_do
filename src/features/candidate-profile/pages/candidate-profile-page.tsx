@@ -643,7 +643,7 @@ function CandidateProfileEditor({
 
   return (
     <motion.div
-      className="mx-auto max-w-7xl space-y-5"
+      className="space-y-5"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
