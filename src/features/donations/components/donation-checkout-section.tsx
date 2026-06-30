@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
-import { CheckCircle2, CreditCard, HeartHandshake, ShieldCheck } from 'lucide-react'
+import { CreditCard, HeartHandshake, MailCheck, ShieldCheck } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -11,11 +11,9 @@ import { useAppSession } from '@/app/providers/app-session-provider'
 import {
   getDonationReceipt,
   listDonationAmountOptions,
-  listMyDonations,
   payDonationWithAzul,
   type DonationAmountOption,
-  type DonationReceipt,
-  type DonationRow
+  type DonationReceipt
 } from '@/features/donations/lib/donation-api'
 import { InstitutionalCard, InstitutionalSection } from '@/experiences/institutional/components/institutional-ui'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
@@ -36,78 +34,6 @@ function donationReceiptLines(receipt: DonationReceipt): ReceiptLine[] {
     ['Referencia', receipt.azulRrn ?? '—'],
     ['Fecha', new Date(receipt.settledAt ?? receipt.createdAt).toLocaleString('es-DO')]
   ]
-}
-
-function donationRowReceiptLines(row: DonationRow): ReceiptLine[] {
-  return [
-    ['Comercio', 'ASI Rep. Dominicana'],
-    ['No. de orden', row.order_number],
-    ['Donante', row.donor_name ?? '—'],
-    ['Monto', `${row.currency} ${Number(row.amount).toLocaleString('es-DO')}`],
-    ['Resultado', 'Aprobado'],
-    ['No. de autorización', row.authorization_code ?? '—'],
-    ['Referencia', row.azul_rrn ?? '—'],
-    ['Fecha', new Date(row.settled_at ?? row.created_at).toLocaleString('es-DO')]
-  ]
-}
-
-function donationStatusLabel(status: string) {
-  switch (status) {
-    case 'verified':
-      return { label: 'Aprobada', className: 'bg-emerald-50 text-emerald-700' }
-    case 'failed':
-      return { label: 'Fallida', className: 'bg-rose-50 text-rose-700' }
-    case 'cancelled':
-      return { label: 'Cancelada', className: 'bg-zinc-100 text-zinc-600' }
-    default:
-      return { label: 'En proceso', className: 'bg-sky-50 text-sky-700' }
-  }
-}
-
-function MyDonationsHistory({ userId }: { userId: string }) {
-  const donationsQuery = useQuery({
-    queryKey: ['donations', 'mine', userId],
-    queryFn: () => listMyDonations(userId)
-  })
-  const donations = donationsQuery.data ?? []
-
-  if (donationsQuery.isLoading || donations.length === 0) {
-    return null
-  }
-
-  return (
-    <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-white px-5 py-4">
-      <p className="text-sm font-semibold text-(--asi-text)">Mis donaciones</p>
-      <p className="mt-0.5 text-xs text-slate-500">Historial de tus aportes. Descarga el comprobante de las aprobadas.</p>
-      <ul className="mt-3 space-y-2">
-        {donations.map((donation) => {
-          const meta = donationStatusLabel(donation.status)
-          return (
-            <li key={donation.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-2 first:border-t-0 first:pt-0">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-(--asi-text)">{formatDop(Number(donation.amount))}</p>
-                <p className="text-xs text-slate-500">
-                  {new Date(donation.created_at).toLocaleDateString('es-DO')} · {donation.order_number}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={cn('rounded-full px-2.5 py-1 text-xs font-semibold', meta.className)}>{meta.label}</span>
-                {donation.status === 'verified' ? (
-                  <button
-                    type="button"
-                    onClick={() => printReceipt(DONATION_RECEIPT_TITLE, donationRowReceiptLines(donation))}
-                    className="inline-flex h-8 items-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                  >
-                    Descargar
-                  </button>
-                ) : null}
-              </div>
-            </li>
-          )
-        })}
-      </ul>
-    </div>
-  )
 }
 
 function DonationReceiptCard({ receipt }: { receipt: DonationReceipt }) {
@@ -286,7 +212,7 @@ export function DonationCheckoutSection() {
             <div className="asi-accent-line" />
             <h2 className="asi-heading-lg">Elige un monto y completa tu aporte en AZUL.</h2>
             <p className="asi-copy mt-4 text-[1.02rem]">
-              La donación queda registrada antes de enviarte a la pasarela. Al regresar, ASI puede reconciliar el historial por donante, fecha, monto, campaña y respuesta de AZUL.
+              La donación queda registrada antes de enviarte a la pasarela. Cuando AZUL apruebe el pago, enviaremos el comprobante al correo indicado.
             </p>
           </div>
 
@@ -305,8 +231,6 @@ export function DonationCheckoutSection() {
           ) : null}
 
           {receipt && receipt.status === 'verified' ? <DonationReceiptCard receipt={receipt} /> : null}
-
-          {session.authUser ? <MyDonationsHistory userId={session.authUser.id} /> : null}
 
           <motion.div variants={gridStagger} className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {options.map((option) => (
@@ -465,8 +389,8 @@ export function DonationCheckoutSection() {
                 No almacenamos datos de tarjeta en ASI.
               </span>
               <span className="inline-flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-(--asi-primary)" />
-                Guardamos historial de monto, fecha, donante y respuesta de pago.
+                <MailCheck className="size-4 text-(--asi-primary)" />
+                Enviamos el comprobante de la donación aprobada al correo indicado.
               </span>
               <span className="inline-flex items-center gap-2">
                 <HeartHandshake className="size-4 text-(--asi-primary)" />

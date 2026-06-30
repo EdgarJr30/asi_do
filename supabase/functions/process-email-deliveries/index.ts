@@ -237,6 +237,24 @@ function getEmailTheme(type: string) {
     }
   }
 
+  if (type === 'donation.receipt_issued') {
+    return {
+      eyebrow: 'Donación confirmada',
+      accent: '#047857',
+      accentSoft: '#ecfdf5',
+      accentBorder: '#bbf7d0',
+      badgeLabel: 'Donación aprobada',
+      actionLabel: 'Ver comprobante',
+      summaryTitle: 'Detalle importante',
+      summaryItems: [
+        'AZUL confirmó el pago y ASI registró tu aporte institucional.',
+        'Conserva este correo como comprobante junto con la referencia de la transacción.'
+      ],
+      supportTitle: 'Gracias por apoyar',
+      supportBody: 'Tu donación ayuda a sostener la misión y los proyectos de ASI Rep. Dominicana.'
+    }
+  }
+
   return {
     eyebrow: 'Notificación oficial',
     accent: '#4f6ed8',
@@ -601,8 +619,13 @@ Deno.serve(async (req) => {
         typeof delivery.notification?.payload?.to === 'string'
           ? (delivery.notification.payload.to as string).trim()
           : ''
+      const overrideRecipientName =
+        typeof delivery.notification?.payload?.recipientName === 'string'
+          ? (delivery.notification.payload.recipientName as string).trim()
+          : ''
       const recipientEmail = overrideTo || (delivery.notification?.recipient_user?.email?.trim() ?? '')
       const recipientName =
+        overrideRecipientName ||
         delivery.notification?.recipient_user?.display_name?.trim() ||
         delivery.notification?.recipient_user?.full_name?.trim() ||
         'usuario'

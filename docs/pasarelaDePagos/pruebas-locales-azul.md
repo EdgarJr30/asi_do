@@ -163,7 +163,7 @@ separado:
 - `donation_amount_options`: montos sugeridos configurables desde DB. Semilla inicial:
   RD$10,000, RD$20,000, RD$35,000, RD$50,000, RD$65,000, RD$80,000 y RD$100,000.
 - `donations`: historial por intento con donante, monto, campaña/destino, `order_number`, estado,
-  respuesta de AZUL y auditoría.
+  respuesta de AZUL, auditoría y soporte del correo de comprobante.
 
 Recorrido:
 
@@ -173,14 +173,15 @@ Recorrido:
 4. Completa nombre y correo del donante.
 5. Pulsa **Donar ahora**; el browser hace POST a AZUL con un formulario firmado.
 6. Al volver:
-   - aprobado → `/donate?payment=approved`, donación `verified`;
+   - aprobado → `/donate?payment=approved`, donación `verified` y correo de comprobante al donante;
    - declinado → `/donate?payment=declined`, donación `failed`;
    - cancelado → `/donate?payment=cancelled`, donación `cancelled`;
    - firma inválida/error → `/donate?payment=error`, sin liquidar como aprobada.
 
 La donación puede ser anónima frente a la cuenta de usuario, pero el formulario guarda nombre/correo
-para historial operativo. Si el visitante tiene sesión activa, el microservicio asocia también
-`donor_user_id`.
+para historial operativo y envío de comprobante por email. La pantalla pública no muestra un historial
+de donaciones del usuario; ese seguimiento queda en `/admin/donations`. Si el visitante tiene sesión
+activa, el microservicio asocia también `donor_user_id`.
 
 ### Verificación rápida de seguridad (sin tarjeta)
 Confirma que un callback con firma inválida no afecta la DB:

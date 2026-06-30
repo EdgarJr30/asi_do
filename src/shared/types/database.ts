@@ -2188,7 +2188,7 @@ export type Database = {
           is_test: boolean
           payload: Json
           read_at: string | null
-          recipient_user_id: string
+          recipient_user_id: string | null
           tenant_id: string | null
           title: string
           type: string
@@ -2203,7 +2203,7 @@ export type Database = {
           is_test?: boolean
           payload?: Json
           read_at?: string | null
-          recipient_user_id: string
+          recipient_user_id?: string | null
           tenant_id?: string | null
           title: string
           type: string
@@ -2218,7 +2218,7 @@ export type Database = {
           is_test?: boolean
           payload?: Json
           read_at?: string | null
-          recipient_user_id?: string
+          recipient_user_id?: string | null
           tenant_id?: string | null
           title?: string
           type?: string
@@ -3517,8 +3517,8 @@ export type Database = {
       azul_settle_donation_payment: {
         Args: { p_approved: boolean; p_order_number: string; p_response?: Json }
         Returns: {
-          donation_id: string
-          donor_user_id: string
+          donation_id: string | null
+          donor_user_id: string | null
           status: string
         }[]
       }
@@ -3598,6 +3598,10 @@ export type Database = {
           p_to: string
         }
         Returns: string
+      }
+      enqueue_donation_receipt_email: {
+        Args: { p_donation_id: string }
+        Returns: string | null
       }
       get_authority_invitation: {
         Args: { p_token: string }
@@ -3701,7 +3705,7 @@ export type Database = {
           is_test: boolean
           payload: Json
           read_at: string | null
-          recipient_user_id: string
+          recipient_user_id: string | null
           tenant_id: string | null
           title: string
           type: string
@@ -3725,7 +3729,7 @@ export type Database = {
           is_test: boolean
           payload: Json
           read_at: string | null
-          recipient_user_id: string
+          recipient_user_id: string | null
           tenant_id: string | null
           title: string
           type: string
@@ -3749,7 +3753,7 @@ export type Database = {
           is_test: boolean
           payload: Json
           read_at: string | null
-          recipient_user_id: string
+          recipient_user_id: string | null
           tenant_id: string | null
           title: string
           type: string

@@ -86,6 +86,7 @@ Security includes protecting:
 26. Critical notification preferences must never allow users to fully disable security, access, approval, membership/subscription, compliance, role/permission, or sensitive-action notices.
 27. When registration intake is closed, browser-side controls are not sufficient. Public membership-application inserts must be blocked by database grants/RLS, and public Auth sign-up must also be disabled in the live Supabase Auth configuration before the site is treated as console-proof.
 28. Admin approval queues must require explicit approval/review permission at navigation and route-guard level; generic admin-console visibility is not enough to open approval workflows.
+29. Email-only transactional records may use nullable `notifications.recipient_user_id` only when the recipient is not a platform user; the email processor must use an explicit payload recipient and the payload must stay limited to non-card, non-tenant-private receipt data.
 
 ### Supabase MCP rules for LLM-assisted development
 - Supabase MCP may be used only as an internal developer tool, never as an end-user or customer-facing capability.

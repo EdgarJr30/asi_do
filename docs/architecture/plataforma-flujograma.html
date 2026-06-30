@@ -710,7 +710,8 @@ flowchart TD
         D2 --> D3["azul_begin_donation → donations.status='initiated'"]
         D3 --> D4["AZUL Payment Page"]
         D4 --> D5["callback firmado →<br/>azul_settle_donation_payment(verified|failed|cancelled)"]
-        D5 --> D6["/admin/donations<br/>(seguimiento + montos)"]
+        D5 --> D6["correo de comprobante<br/>si verified + donor_email"]
+        D5 --> D7["/admin/donations<br/>(seguimiento + montos)"]
     end
 
     subgraph LEGAL["📄 Compliance pública (footer + checkout)"]
@@ -725,6 +726,8 @@ flowchart TD
 
 > El checkout de membresía y de donación enlaza estas páginas y exige **aceptar términos** antes de
 > redirigir a AZUL. El microservicio firma/verifica el AuthHash igual que en membresía.
+> `/donate` no muestra historial de donaciones al donante; solo confirma la transacción actual y el
+> comprobante aprobado se envía por email. El historial operativo queda en `/admin/donations`.
 
 🗂️ **Estructura de tablas:** [`donations`](arquitectura-db.html#donations) · [`donation_amount_options`](arquitectura-db.html#donation_amount_options) · [`membership_payment_settings`](arquitectura-db.html#membership_payment_settings)
 

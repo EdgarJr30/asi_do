@@ -223,7 +223,7 @@ The MVP should **not** initially include:
 - actionable error states with technical logging for admin follow-up
 - public product landing with client-ready positioning
 - visible SaaS pricing section for commercial review, even before billing is connected
-- donation section and donation CTA as UI/UX-only surfaces until payment logic ships
+- donation section with AZUL checkout, immediate approved-payment confirmation, and donor receipt email
 - admin console isolated from the client-facing product experience
 - canonical product experiences for `institutional`, `storefront`, and `app`
 - authenticated `app` route surfaces for `auth`, `candidate`, `workspace`, and `admin`

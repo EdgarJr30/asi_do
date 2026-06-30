@@ -326,7 +326,7 @@ Apple-inspired UI rules:
 - workflow or feature explanation
 - pricing section
 - final CTA region
-3. A donation section or donation CTA may be present as UI/UX-only groundwork, but it must still feel intentional and visually integrated.
+3. Donation checkout must stay focused on the current contribution: do not show donor-facing historical donation lists on `/donate`; send approved donation receipts by email and keep operational history in admin surfaces.
 4. Internal QA, launch-readiness, or foundations tools must never appear in the public landing experience for standard users.
 5. Public landing content must be product-specific. Do not ship Tailwind demo labels, placeholder navigation items, sample pricing copy, or generic FAQ text in customer-facing routes.
 6. Customer-facing copy in public, auth, candidate, and employer surfaces must be benefit-first and commercially legible. Terms such as `RBAC`, `RLS`, `tenant`, `membership`, `Supabase`, `audit`, and similar implementation language should stay in internal or admin-only contexts unless the user must act on that exact concept.
