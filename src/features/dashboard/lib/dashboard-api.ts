@@ -22,6 +22,7 @@ export interface DashboardActivityItem {
   id: string
   kind: 'application' | 'note' | 'rating'
   candidateName: string
+  jobTitle: string
   summary: string
   occurredAt: string
 }
@@ -102,11 +103,13 @@ export async function fetchWorkspaceDashboardMetrics(tenantId: string): Promise<
   const activity: DashboardActivityItem[] = []
   for (const application of applications) {
     const candidateName = application.candidate_display_name_snapshot
+    const jobTitle = application.job_posting?.title ?? 'Vacante'
     activity.push({
       id: `app-${application.id}`,
       kind: 'application',
       candidateName,
-      summary: `aplicó a ${application.job_posting?.title ?? 'una vacante'}`,
+      jobTitle,
+      summary: 'aplicó a una vacante',
       occurredAt: application.submitted_at
     })
     for (const note of application.application_notes ?? []) {
@@ -114,6 +117,7 @@ export async function fetchWorkspaceDashboardMetrics(tenantId: string): Promise<
         id: `note-${note.id}`,
         kind: 'note',
         candidateName,
+        jobTitle,
         summary: 'recibió una nueva nota',
         occurredAt: note.created_at
       })
@@ -123,6 +127,7 @@ export async function fetchWorkspaceDashboardMetrics(tenantId: string): Promise<
         id: `rating-${rating.id}`,
         kind: 'rating',
         candidateName,
+        jobTitle,
         summary: `fue calificado · ${rating.score}/5`,
         occurredAt: rating.created_at
       })

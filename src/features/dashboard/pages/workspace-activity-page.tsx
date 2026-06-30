@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
-import { Activity, ChevronLeft, ChevronRight, FileText, MoreVertical, Star, UserPlus } from 'lucide-react'
+import { Activity, BriefcaseBusiness, ChevronLeft, ChevronRight, Clipboard, Eye, FileText, Star, UserPlus } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { EmptyState } from '@/components/ui/empty-state'
+import { KebabMenu, KebabMenuItem } from '@/components/ui/kebab-menu'
 import { Spinner } from '@/components/ui/loader'
 import { fetchWorkspaceDashboardMetrics, type DashboardActivityItem } from '@/features/dashboard/lib/dashboard-api'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
-import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
+import { cardReveal, pageStagger } from '@/shared/ui/card-motion'
 import { cn } from '@/lib/utils/cn'
 
 function relativeTime(value: string) {
@@ -31,26 +31,34 @@ function relativeTime(value: string) {
 
 type ActivityKind = DashboardActivityItem['kind']
 type ActivityFilter = 'all' | ActivityKind
+type ActivityBucket = 'today' | 'week' | 'older'
 
-const KIND_META: Record<ActivityKind, { icon: LucideIcon; label: string; badge: string }> = {
+const KIND_META: Record<
+  ActivityKind,
+  {
+    icon: LucideIcon
+    label: string
+    accent: 'apply' | 'rate' | 'note'
+  }
+> = {
   application: {
     icon: UserPlus,
     label: 'Aplicación',
-    badge: 'bg-sky-50 text-sky-700 dark:bg-sky-500/12 dark:text-sky-300'
+    accent: 'apply'
   },
   rating: {
     icon: Star,
     label: 'Calificación',
-    badge: 'bg-violet-50 text-violet-700 dark:bg-violet-500/12 dark:text-violet-300'
+    accent: 'rate'
   },
   note: {
     icon: FileText,
     label: 'Nota',
-    badge: 'bg-amber-50 text-amber-700 dark:bg-amber-500/12 dark:text-amber-300'
+    accent: 'note'
   }
 }
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 12
 
 const FILTER_TABS: { value: ActivityFilter; label: string }[] = [
   { value: 'all', label: 'Todo' },
@@ -59,10 +67,40 @@ const FILTER_TABS: { value: ActivityFilter; label: string }[] = [
   { value: 'note', label: 'Notas' }
 ]
 
+const BUCKET_LABELS: Record<ActivityBucket, string> = {
+  today: 'Hoy',
+  week: 'Esta semana',
+  older: 'Anteriores'
+}
+
+function getActivityBucket(value: string): ActivityBucket {
+  const date = new Date(value)
+  const now = new Date()
+
+  if (Number.isNaN(date.getTime())) {
+    return 'older'
+  }
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const startOfActivityDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+  const daysAgo = Math.floor((startOfToday - startOfActivityDay) / 86_400_000)
+
+  if (daysAgo <= 0) {
+    return 'today'
+  }
+
+  if (daysAgo <= 6) {
+    return 'week'
+  }
+
+  return 'older'
+}
+
 export function WorkspaceActivityPage() {
   const session = useAppSession()
   const shouldReduceMotion = useReducedMotion()
   const tenantId = session.activeTenantId
+  const pageTopRef = useRef<HTMLDivElement>(null)
   const [filter, setFilter] = useState<ActivityFilter>('all')
   const [sort, setSort] = useState<'recent' | 'oldest'>('recent')
   const [page, setPage] = useState(1)
@@ -109,20 +147,53 @@ export function WorkspaceActivityPage() {
 
   const totalPages = Math.max(1, Math.ceil(visibleActivity.length / PAGE_SIZE))
 
-  // El filtro/orden o nuevos eventos en vivo pueden dejar la página fuera de rango.
-  useEffect(() => {
-    setPage((current) => Math.min(current, totalPages))
-  }, [totalPages])
-
-  // Volver a la primera página cuando cambian los criterios de visualización.
-  useEffect(() => {
-    setPage(1)
-  }, [filter, sort])
+  const boundedPage = Math.min(page, totalPages)
 
   const pagedActivity = useMemo(
-    () => visibleActivity.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [visibleActivity, page]
+    () => visibleActivity.slice((boundedPage - 1) * PAGE_SIZE, boundedPage * PAGE_SIZE),
+    [visibleActivity, boundedPage]
   )
+
+  const bucketCounts = useMemo(
+    () =>
+      visibleActivity.reduce<Record<ActivityBucket, number>>(
+        (acc, item) => {
+          acc[getActivityBucket(item.occurredAt)] += 1
+          return acc
+        },
+        { today: 0, week: 0, older: 0 }
+      ),
+    [visibleActivity]
+  )
+
+  const groupedPagedActivity = useMemo(() => {
+    const groups: Array<{ bucket: ActivityBucket; items: DashboardActivityItem[] }> = []
+
+    for (const item of pagedActivity) {
+      const bucket = getActivityBucket(item.occurredAt)
+      const previous = groups.at(-1)
+
+      if (previous?.bucket === bucket) {
+        previous.items.push(item)
+      } else {
+        groups.push({ bucket, items: [item] })
+      }
+    }
+
+    return groups
+  }, [pagedActivity])
+
+  const firstVisibleItem = visibleActivity.length === 0 ? 0 : (boundedPage - 1) * PAGE_SIZE + 1
+  const lastVisibleItem = Math.min(boundedPage * PAGE_SIZE, visibleActivity.length)
+
+  function scrollToPageTop() {
+    pageTopRef.current?.scrollIntoView({ behavior: shouldReduceMotion ? 'auto' : 'smooth', block: 'start' })
+  }
+
+  function goToPage(nextPage: number) {
+    setPage(nextPage)
+    window.setTimeout(scrollToPageTop, 0)
+  }
 
   if (!tenantId) {
     return (
@@ -137,192 +208,256 @@ export function WorkspaceActivityPage() {
 
   return (
     <motion.div
-      className="space-y-6"
+      ref={pageTopRef}
+      className="mx-auto w-full max-w-7xl space-y-6 pb-8"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
     >
       <motion.div variants={cardReveal}>
-        <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Mi actividad</h1>
-        <p className="mt-1 text-sm text-(--app-text-muted)">Eventos recientes de tu pipeline de reclutamiento.</p>
+        <h1 className="text-[1.55rem] font-bold leading-[1.1] tracking-tight text-(--app-text) sm:text-[1.625rem]">Mi actividad</h1>
+        <p className="mt-1.5 text-[0.9rem] text-(--app-text-muted)">Eventos recientes de tu pipeline de reclutamiento.</p>
       </motion.div>
 
-      <motion.div variants={gridStagger} className="grid gap-3 sm:grid-cols-3">
-        <motion.div variants={cardReveal} className="h-full">
-          <ActivityStatCard
+      <motion.div
+        variants={cardReveal}
+        className="grid overflow-hidden rounded-[14px] border border-[#e9edf5] bg-white shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:border-white/10 dark:bg-(--app-surface-elevated)"
+      >
+        <div className="grid sm:grid-cols-3">
+          <ActivityStatCell
             icon={UserPlus}
-            accent="sky"
+            accent="apply"
             label="Aplicaciones"
             value={metricsQuery.isLoading ? '—' : counts.application}
-            helper="Últimos 30 días"
           />
-        </motion.div>
-        <motion.div variants={cardReveal} className="h-full">
-          <ActivityStatCard
+          <ActivityStatCell
             icon={Star}
-            accent="violet"
+            accent="rate"
             label="Calificaciones"
             value={metricsQuery.isLoading ? '—' : counts.rating}
-            helper="Últimos 30 días"
           />
-        </motion.div>
-        <motion.div variants={cardReveal} className="h-full">
-          <ActivityStatCard
+          <ActivityStatCell
             icon={Activity}
-            accent="emerald"
+            accent="total"
             label="Actividad total"
             value={metricsQuery.isLoading ? '—' : counts.total}
-            helper="Últimos 30 días"
           />
-        </motion.div>
+        </div>
       </motion.div>
 
-      <motion.div variants={cardReveal}>
-        <Card>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-1.5">
-              {FILTER_TABS.map((tab) => {
-                const isActive = filter === tab.value
-                return (
-                  <button
-                    key={tab.value}
-                    type="button"
-                    onClick={() => setFilter(tab.value)}
+      <motion.section variants={cardReveal} aria-labelledby="workspace-activity-feed">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div
+            className="inline-flex w-full flex-wrap items-center gap-1 rounded-[11px] bg-[#eef1f7] p-1 sm:w-auto dark:bg-white/8"
+            aria-label="Filtrar actividad"
+            role="tablist"
+          >
+            {FILTER_TABS.map((tab) => {
+              const isActive = filter === tab.value
+              const count = tab.value === 'all' ? counts.total : counts[tab.value]
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  aria-selected={isActive}
+                  role="tab"
+                  onClick={() => {
+                    setFilter(tab.value)
+                    setPage(1)
+                  }}
+                  className={cn(
+                    'inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[0.84rem] font-semibold transition-[background-color,color,box-shadow] sm:flex-none',
+                    isActive
+                      ? 'bg-white text-[#2d52a8] shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:bg-white/12 dark:text-primary-200'
+                      : 'text-[#5a6987] hover:text-(--app-text) dark:text-(--app-text-muted)'
+                  )}
+                >
+                  {tab.label}
+                  <span
                     className={cn(
-                      'inline-flex h-8 items-center rounded-full px-3 text-[0.8rem] font-medium transition-colors',
+                      'inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1.5 text-[0.68rem] font-bold',
                       isActive
-                        ? 'bg-primary-600 text-white'
-                        : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
+                        ? 'bg-[#eef3fc] text-[#2d52a8] dark:bg-primary-500/20 dark:text-primary-200'
+                        : 'bg-[rgba(90,105,135,0.16)] text-[#5a6987] dark:bg-white/10 dark:text-(--app-text-muted)'
                     )}
                   >
-                    {tab.label}
-                  </button>
-                )
-              })}
-            </div>
+                    {metricsQuery.isLoading ? '—' : count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <label className="relative inline-flex w-full sm:w-auto">
+            <span className="sr-only">Ordenar actividad</span>
             <select
               value={sort}
-              onChange={(event) => setSort(event.target.value as 'recent' | 'oldest')}
-              className="h-8 rounded-full border border-(--app-border) bg-(--app-surface) px-3 text-[0.8rem] font-medium text-(--app-text-muted) outline-none transition-colors hover:text-(--app-text) focus-visible:ring-2 focus-visible:ring-(--app-ring)"
+              onChange={(event) => {
+                setSort(event.target.value as 'recent' | 'oldest')
+                setPage(1)
+              }}
+              className="h-10 w-full appearance-none rounded-[11px] border border-[#e9edf5] bg-white px-3.5 pr-9 text-[0.84rem] font-semibold text-[#5a6987] outline-none transition-colors hover:border-[#cdd6e8] focus-visible:ring-2 focus-visible:ring-(--app-ring) sm:w-44 dark:border-white/10 dark:bg-(--app-surface-elevated) dark:text-(--app-text-muted)"
             >
               <option value="recent">Más recientes</option>
               <option value="oldest">Más antiguos</option>
             </select>
-          </div>
+            <ChevronRight aria-hidden className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 rotate-90 text-[#8b97b0]" />
+          </label>
+        </div>
 
-          <div className="mt-4">
-            {metricsQuery.isLoading ? (
-              <div className="flex items-center gap-2.5 text-sm text-(--app-text-muted)">
-                <Spinner size="sm" /> Cargando actividad…
+        <div className="mt-5">
+          {metricsQuery.isLoading ? (
+            <div className="flex items-center gap-2.5 rounded-[14px] border border-dashed border-[#e9edf5] bg-white px-4 py-5 text-sm text-(--app-text-muted) dark:border-white/10 dark:bg-(--app-surface-elevated)">
+              <Spinner size="sm" /> Cargando actividad…
+            </div>
+          ) : visibleActivity.length > 0 ? (
+            <>
+              <h2 id="workspace-activity-feed" className="sr-only">
+                Timeline de actividad
+              </h2>
+              <div className="space-y-1">
+                {groupedPagedActivity.map((group) => (
+                  <ActivityDayGroup key={`${group.bucket}-${group.items[0]?.id}`} bucket={group.bucket} count={bucketCounts[group.bucket]} items={group.items} />
+                ))}
               </div>
-            ) : visibleActivity.length > 0 ? (
-              <>
-                <ol>
-                  {pagedActivity.map((item, index) => (
-                    <ActivityRow key={item.id} item={item} isLast={index === pagedActivity.length - 1} />
-                  ))}
-                </ol>
-                {totalPages > 1 ? (
-                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-(--app-border) pt-4">
-                    <p className="text-[0.78rem] text-(--app-text-muted)">
-                      Página {page} de {totalPages}
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setPage((current) => Math.max(1, current - 1))}
-                        disabled={page <= 1}
-                        className="inline-flex h-8 items-center gap-1 rounded-full border border-(--app-border) px-3 text-[0.8rem] font-medium text-(--app-text-muted) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <ChevronLeft className="size-4" /> Anterior
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                        disabled={page >= totalPages}
-                        className="inline-flex h-8 items-center gap-1 rounded-full border border-(--app-border) px-3 text-[0.8rem] font-medium text-(--app-text-muted) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        Siguiente <ChevronRight className="size-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <EmptyState
-                title="Sin actividad"
-                description="Cuando trabajes el pipeline, tu actividad reciente aparecerá aquí."
-              />
-            )}
-          </div>
-        </Card>
-      </motion.div>
+              <div className="mt-5 flex flex-col gap-4 border-t border-[#f0f3f9] pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
+                <p className="text-[0.84rem] text-[#8b97b0] dark:text-(--app-text-subtle)">
+                  Mostrando <b className="font-semibold text-[#5a6987] dark:text-(--app-text-muted)">{firstVisibleItem}-{lastVisibleItem}</b> de{' '}
+                  <b className="font-semibold text-[#5a6987] dark:text-(--app-text-muted)">{visibleActivity.length}</b> eventos
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => goToPage(Math.max(1, boundedPage - 1))}
+                    disabled={boundedPage <= 1}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-[#e9edf5] bg-white px-3 text-[0.84rem] font-semibold text-[#5a6987] transition-colors hover:border-[#cdd6e8] hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-(--app-surface-elevated) dark:text-(--app-text-muted)"
+                  >
+                    <ChevronLeft className="size-4" /> Anterior
+                  </button>
+                  <span className="px-1 text-[0.84rem] text-[#8b97b0] dark:text-(--app-text-subtle)">
+                    Página <b className="font-semibold text-(--app-text)">{boundedPage}</b> de {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => goToPage(Math.min(totalPages, boundedPage + 1))}
+                    disabled={boundedPage >= totalPages}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-[#e9edf5] bg-white px-3 text-[0.84rem] font-semibold text-[#5a6987] transition-colors hover:border-[#cdd6e8] hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-(--app-surface-elevated) dark:text-(--app-text-muted)"
+                  >
+                    Siguiente <ChevronRight className="size-4" />
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <ActivityEmptyState />
+          )}
+        </div>
+      </motion.section>
     </motion.div>
   )
 }
 
-const accentClassName = {
-  sky: 'bg-sky-50 text-sky-600 dark:bg-sky-500/12 dark:text-sky-300',
-  violet: 'bg-violet-50 text-violet-600 dark:bg-violet-500/12 dark:text-violet-300',
-  emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/12 dark:text-emerald-300'
+const accentClassName: Record<'apply' | 'rate' | 'note' | 'total', string> = {
+  apply: 'bg-[#eef4ff] text-[#2d52a8] dark:bg-primary-500/16 dark:text-primary-200',
+  rate: 'bg-[#fff5e6] text-[#b06a00] dark:bg-amber-400/12 dark:text-amber-200',
+  note: 'bg-[#f1ecff] text-[#6b46c1] dark:bg-violet-400/14 dark:text-violet-200',
+  total: 'bg-[#e9f7ef] text-[#1f9d61] dark:bg-emerald-400/12 dark:text-emerald-200'
 } as const
 
-function ActivityStatCard({
+function ActivityStatCell({
   icon: Icon,
   accent,
   label,
-  value,
-  helper
+  value
 }: {
   icon: LucideIcon
   accent: keyof typeof accentClassName
   label: ReactNode
   value: ReactNode
-  helper?: ReactNode
 }) {
   return (
-    <div className="h-full rounded-panel border border-(--app-border) bg-(--app-surface-elevated) px-3.5 py-3 shadow-[0_10px_26px_rgba(10,18,36,0.06)] dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]">
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">{label}</p>
-        <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-full', accentClassName[accent])}>
-          <Icon className="size-4" />
-        </span>
+    <div className="relative flex items-center gap-3.5 border-t border-[#e9edf5] px-5 py-4 first:border-t-0 sm:border-l sm:border-t-0 sm:first:border-l-0 dark:border-white/10">
+      <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-[11px]', accentClassName[accent])}>
+        <Icon className="size-5" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-2xl font-bold leading-none tracking-tight text-(--app-text)">{value}</p>
+        <p className="mt-1 text-[0.78rem] text-[#8b97b0] dark:text-(--app-text-subtle)">
+          {label} · <b className="font-semibold text-[#5a6987] dark:text-(--app-text-muted)">últimos 30 días</b>
+        </p>
       </div>
-      <p className="mt-2 text-[1.4rem] font-semibold tracking-tight text-(--app-text)">{value}</p>
-      {helper ? <p className="mt-1 text-[0.72rem] leading-4 text-(--app-text-muted)">{helper}</p> : null}
     </div>
   )
 }
 
-function ActivityRow({ item, isLast }: { item: DashboardActivityItem; isLast: boolean }) {
+function ActivityDayGroup({ bucket, count, items }: { bucket: ActivityBucket; count: number; items: DashboardActivityItem[] }) {
+  return (
+    <div>
+      <div className="flex items-center gap-2.5 px-1 py-2 text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#8b97b0] dark:text-(--app-text-subtle)">
+        <span>{BUCKET_LABELS[bucket]}</span>
+        <span className="text-xs font-semibold normal-case tracking-normal">· {count}</span>
+        <span className="h-px flex-1 bg-[#f0f3f9] dark:bg-white/10" />
+      </div>
+      <ol className="space-y-0.5">
+        {items.map((item) => (
+          <ActivityRow key={item.id} item={item} />
+        ))}
+      </ol>
+    </div>
+  )
+}
+
+function ActivityRow({ item }: { item: DashboardActivityItem }) {
   const meta = KIND_META[item.kind]
   const Icon = meta.icon
   return (
-    <li className="flex gap-3">
-      <div className="flex flex-col items-center">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-(--app-surface-muted) text-(--app-text-muted)">
-          <Icon className="size-4" />
-        </span>
-        {!isLast ? <span className="my-1 w-px flex-1 bg-(--app-border)" /> : null}
-      </div>
-      <div className={cn('flex flex-1 items-start justify-between gap-3', isLast ? 'pb-1' : 'pb-5')}>
-        <p className="min-w-0 pt-1.5 text-sm leading-5 text-(--app-text)">
-          <span className="font-semibold">{item.candidateName}</span> {item.summary}
+    <li className="group flex items-center gap-3.5 rounded-xl px-3 py-2.5 transition-[background-color,box-shadow] duration-150 hover:bg-white hover:shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:hover:bg-white/6">
+      <span className={cn('flex size-[38px] shrink-0 items-center justify-center rounded-[11px]', accentClassName[meta.accent])}>
+        <Icon className="size-[19px]" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[0.9rem] leading-snug text-[#5a6987] dark:text-(--app-text-muted)">
+          <b className="font-semibold text-[#18223b] dark:text-(--app-text)">{item.candidateName}</b> {item.summary}
         </p>
-        <div className="flex shrink-0 items-center gap-2.5 pt-1">
-          <span className={cn('hidden rounded-full px-2.5 py-1 text-[0.7rem] font-semibold sm:inline-flex', meta.badge)}>
+        <div className="mt-0.5 flex min-w-0 items-center gap-2 text-[0.8rem]">
+          <span className={cn('inline-flex h-[19px] shrink-0 items-center rounded-full px-2 text-[0.72rem] font-semibold', accentClassName[meta.accent])}>
             {meta.label}
           </span>
-          <span className="whitespace-nowrap text-[0.72rem] text-(--app-text-subtle)">{relativeTime(item.occurredAt)}</span>
-          <button
-            type="button"
-            className="flex size-7 items-center justify-center rounded-lg text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)"
-            aria-label="Más acciones"
-          >
-            <MoreVertical className="size-4" />
-          </button>
+          <span className="min-w-0 truncate font-medium text-[#5a6987] dark:text-(--app-text-muted)">{item.jobTitle}</span>
         </div>
       </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <span className="hidden whitespace-nowrap text-[0.78rem] text-[#8b97b0] sm:inline dark:text-(--app-text-subtle)">{relativeTime(item.occurredAt)}</span>
+        <span className="opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+          <KebabMenu className="size-8 rounded-[9px]" label={`Acciones para ${item.candidateName}`}>
+            <KebabMenuItem>
+              <Eye className="mr-2 size-4 text-(--app-text-subtle)" />
+              Ver detalle
+            </KebabMenuItem>
+            <KebabMenuItem>
+              <BriefcaseBusiness className="mr-2 size-4 text-(--app-text-subtle)" />
+              Ir a la vacante
+            </KebabMenuItem>
+            <KebabMenuItem>
+              <Clipboard className="mr-2 size-4 text-(--app-text-subtle)" />
+              Copiar enlace
+            </KebabMenuItem>
+          </KebabMenu>
+        </span>
+      </div>
     </li>
+  )
+}
+
+function ActivityEmptyState() {
+  return (
+    <div className="px-4 py-14 text-center">
+      <span className="mx-auto flex size-[54px] items-center justify-center rounded-[15px] bg-[#eef3fc] text-[#2d52a8] dark:bg-primary-500/16 dark:text-primary-200">
+        <Activity className="size-6" />
+      </span>
+      <h3 className="mt-4 text-[1.03rem] font-bold tracking-tight text-(--app-text)">Sin actividad todavía</h3>
+      <p className="mx-auto mt-2 max-w-[300px] text-sm leading-6 text-[#5a6987] dark:text-(--app-text-muted)">
+        Cuando trabajes el pipeline, tu actividad reciente aparecerá aquí.
+      </p>
+    </div>
   )
 }
