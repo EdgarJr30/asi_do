@@ -13,7 +13,6 @@ import {
   FileText,
   GraduationCap,
   Languages as LanguagesIcon,
-  Lightbulb,
   Link2,
   Plus,
   Sparkles,
@@ -1267,19 +1266,6 @@ function CandidateProfileEditor({
             </div>
           </Card>
 
-          <Card className="mt-auto rounded-[14px] border-primary-100 bg-linear-to-br from-primary-50 to-white p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] dark:border-primary-500/25 dark:from-primary-500/12 dark:to-transparent">
-            <div className="flex items-start gap-3">
-              <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[9px] bg-white text-amber-600 shadow-sm dark:bg-white/10 dark:text-amber-300">
-                <Lightbulb className="size-4" />
-              </span>
-              <div>
-                <h3 className="text-[0.84rem] font-bold text-(--app-text)">Consejo</h3>
-                <p className="mt-1 text-[0.78rem] leading-5 text-(--app-text-muted)">
-                  Perfiles completos reciben hasta 3x más vistas de reclutadores.
-                </p>
-              </div>
-            </div>
-          </Card>
         </motion.aside>
       </div>
     </motion.div>
