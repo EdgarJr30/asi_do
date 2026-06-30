@@ -33,13 +33,6 @@ import {
 const PAGE_SIZE = 10
 const dateFormatter = new Intl.DateTimeFormat('es', { day: '2-digit', month: 'short', year: 'numeric' })
 
-const FILTER_OPTIONS: Array<{ key: ApplicationFilter; label: string }> = [
-  { key: 'all', label: 'Todas' },
-  { key: 'sent', label: 'Enviadas' },
-  { key: 'review', label: 'En revisión' },
-  { key: 'hired', label: 'Contratadas' }
-]
-
 const FILTER_STATS: Array<{
   key: ApplicationFilter
   label: string
@@ -218,7 +211,7 @@ export function ApplicationsOverviewPage() {
         })}
       </motion.div>
 
-      <motion.div variants={cardReveal} className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <motion.div variants={cardReveal}>
         <label className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface-elevated) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
           <Search className="size-4.5 shrink-0 text-(--app-text-subtle)" />
           <span className="sr-only">Buscar por puesto o empresa</span>
@@ -229,37 +222,6 @@ export function ApplicationsOverviewPage() {
             className="h-full rounded-none border-0 bg-transparent px-0 text-[0.9rem] shadow-none focus:border-0 focus:bg-transparent focus:ring-0"
           />
         </label>
-
-        <div
-          className="flex gap-1.5 overflow-x-auto rounded-xl border border-(--app-border) bg-(--app-surface-elevated) p-1"
-          role="tablist"
-          aria-label="Filtrar postulaciones por estado"
-        >
-          {FILTER_OPTIONS.map((option) => {
-            const isActive = option.key === activeFilter
-
-            return (
-              <button
-                key={option.key}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => applyFilter(option.key)}
-                className={cn(
-                  'inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg px-3 text-[0.82rem] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas) lg:h-10',
-                  isActive
-                    ? 'bg-primary-600 text-white'
-                    : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
-                )}
-              >
-                {option.label}
-                <span className={cn('text-[0.72rem]', isActive ? 'text-white/80' : 'text-(--app-text-subtle)')}>
-                  {filterCounts[option.key]}
-                </span>
-              </button>
-            )
-          })}
-        </div>
       </motion.div>
 
       {myApplicationsQuery.isLoading ? (

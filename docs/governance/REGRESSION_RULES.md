@@ -344,6 +344,9 @@ Do not auto-select the first vacancy after the candidate changes filters, search
 ### R-092 — Candidate application lists must use the shell width
 Do not constrain candidate application history to a narrow centered container when the candidate shell has usable lateral space. Match the broader width rhythm used by Inicio and Empleos, and keep row actions such as `Ver vacante` on one line at tablet and desktop widths instead of wrapping text unnecessarily.
 
+### R-093 — Candidate application filters must not duplicate controls
+Do not show both clickable status summary cards and a separate segmented status control on the candidate `Postulaciones` page. The summary cards are the status filters; the search row should stay focused on text search unless a future filter adds a distinct, non-redundant criterion.
+
 ---
 
 ## Maintenance rule
