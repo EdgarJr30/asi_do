@@ -341,6 +341,9 @@ Do not regress the candidate jobs board back to full-page vacancy scrolling. The
 ### R-091 — Jobs board filters must not auto-select a vacancy
 Do not auto-select the first vacancy after the candidate changes filters, search, chips, reset, or sort in `/platform/jobs`. Filtering must clear the current selection and leave the detail pane in its explicit empty state until the user chooses the vacancy they prefer.
 
+### R-092 — Candidate application lists must use the shell width
+Do not constrain candidate application history to a narrow centered container when the candidate shell has usable lateral space. Match the broader width rhythm used by Inicio and Empleos, and keep row actions such as `Ver vacante` on one line at tablet and desktop widths instead of wrapping text unnecessarily.
+
 ---
 
 ## Maintenance rule

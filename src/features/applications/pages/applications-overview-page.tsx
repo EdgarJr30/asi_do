@@ -172,7 +172,7 @@ export function ApplicationsOverviewPage() {
 
   return (
     <motion.div
-      className="mx-auto max-w-[1080px] space-y-4"
+      className="space-y-4"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
@@ -294,7 +294,7 @@ export function ApplicationsOverviewPage() {
                       <motion.li key={application.id} variants={cardReveal}>
                         <Link
                           to={detailPath}
-                          className="group grid min-h-16 gap-x-3 gap-y-2 px-4 py-3.5 transition-colors hover:bg-(--app-surface-muted) sm:grid-cols-[minmax(0,1fr)_auto] sm:px-5 lg:grid-cols-[minmax(0,1fr)_8.5rem_8.5rem_7.5rem] lg:items-center lg:gap-4 lg:py-0"
+                          className="group grid min-h-16 gap-x-3 gap-y-2 px-4 py-3.5 transition-colors hover:bg-(--app-surface-muted) sm:grid-cols-[minmax(0,1fr)_auto] sm:px-5 lg:grid-cols-[minmax(0,1.8fr)_9rem_10rem_9.5rem] lg:items-center lg:gap-4 lg:py-0 xl:grid-cols-[minmax(0,2fr)_10rem_11rem_10rem]"
                         >
                           <div className="flex min-w-0 items-center gap-3">
                             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
@@ -324,8 +324,8 @@ export function ApplicationsOverviewPage() {
                             {applicationStatusLabel(status)}
                           </span>
 
-                          <span className="inline-flex h-11 w-11 items-center justify-center gap-1.5 justify-self-end rounded-lg border border-(--app-border) bg-(--app-surface) text-[0.8rem] font-semibold text-(--app-text-muted) transition-[border-color,background-color,color] group-hover:border-primary-200 group-hover:bg-primary-50 group-hover:text-primary-700 sm:col-start-2 lg:col-start-auto lg:h-9 lg:w-auto lg:px-3.5 dark:group-hover:border-primary-400/40 dark:group-hover:bg-primary-500/12 dark:group-hover:text-primary-200">
-                            <span className="hidden lg:inline">Ver vacante</span>
+                          <span className="inline-flex h-11 w-11 items-center justify-center gap-1.5 justify-self-end whitespace-nowrap rounded-lg border border-(--app-border) bg-(--app-surface) text-[0.8rem] font-semibold text-(--app-text-muted) transition-[border-color,background-color,color] group-hover:border-primary-200 group-hover:bg-primary-50 group-hover:text-primary-700 sm:col-start-2 sm:w-auto sm:px-3.5 lg:col-start-auto lg:h-9 dark:group-hover:border-primary-400/40 dark:group-hover:bg-primary-500/12 dark:group-hover:text-primary-200">
+                            <span className="hidden sm:inline">Ver vacante</span>
                             <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                           </span>
                         </Link>
