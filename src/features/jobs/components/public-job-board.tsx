@@ -290,9 +290,8 @@ export function PublicJobBoard() {
     if (!sentinel) {
       return
     }
-    const isDesktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
-    const root = isDesktop ? listScrollRef.current : null
-    // Desktop observa el contenedor scrolleable; móvil observa el viewport.
+    const root = listScrollRef.current
+    // La lista de vacantes tiene scroll propio; la carga observa ese contenedor.
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
@@ -449,7 +448,7 @@ export function PublicJobBoard() {
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
           {/* Lista de vacantes con scroll independiente + carga infinita */}
           <div className={cn('min-w-0', detailOpen ? 'hidden lg:block' : 'block')}>
-            <div ref={listScrollRef} className="flex flex-col gap-2 lg:max-h-[calc(100dvh-9rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
+            <div ref={listScrollRef} className="flex max-h-104 flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
               <motion.ul
                 className="flex flex-col gap-2"
                 variants={gridStagger}

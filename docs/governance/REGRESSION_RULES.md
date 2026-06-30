@@ -221,9 +221,6 @@ Do not overload customer-facing mobile-promo sections with oversized device mock
 ### R-060 — Public landing spacing must stay compact and standardized
 Do not let the customer-facing landing drift back into oversized vertical gaps, inflated top/bottom padding, or inconsistent one-off spacing between related sections. Public marketing sections must follow the shared landing spacing rhythm documented in `UI_UX_RULES.md`, using tighter reusable section utilities so the page feels cohesive, efficient, and intentionally paced.
 
-### R-061 — Jobs board list scroll must stay internal and usable
-Do not regress the candidate jobs board back to full-page vacancy scrolling on desktop, and do not constrain the internal list viewport so tightly that only a few rows are usable. The vacancy list must keep its own scroll container, preserve infinite loading inside that container, and leave enough vertical space for candidates to scan several opportunities before scrolling.
-
 ### R-061 — Pricing hero should stay compact and avoid redundant eyebrow badges
 Do not reintroduce oversized top padding, excessive vertical air, or a redundant `Pricing` eyebrow badge in the public pricing hero when the section is already clearly identified by its heading and placement. That block should start tighter, move faster into the segmented control and cards, and preserve a more compact commercial rhythm.
 
@@ -337,6 +334,9 @@ Do not wrap segmented controls, radio-like buttons, or checkbox groups inside a 
 
 ### R-079 — Public copy must keep ASI naming, accents, and neutral examples
 Do not use `ASI ATS` as a visible product or brand label in public, auth, storefront, or app UI copy; use ASI, pipeline, workflow, or the specific module name instead. Spanish UI copy must include required accents and opening punctuation where applicable. Auth copy must label email fields as `Correo` and password fields as `Contraseña`. Placeholder examples that represent people must use `John Doe` or `John` / `Doe` for split-name fields instead of local personal names.
+
+### R-090 — Jobs board list scroll must stay internal and card-count bounded
+Do not regress the candidate jobs board back to full-page vacancy scrolling. The vacancy list must keep its own scroll container, show five vacancy cards before scrolling, and preserve infinite loading inside that container.
 
 ---
 
