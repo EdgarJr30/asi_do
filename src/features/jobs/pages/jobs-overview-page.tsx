@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { useForm, useWatch } from 'react-hook-form'
-import { Banknote, Clock3, Eye, MapPin, Pencil, Plus, Search } from 'lucide-react'
+import { Archive, Banknote, Ban, BriefcaseBusiness, Download, Eye, MapPin, Pencil, Plus, Search, Users, X } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -49,7 +50,6 @@ import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import {
   smoothCardReveal as cardReveal,
-  smoothGridStagger as gridStagger,
   smoothPageStagger as pageStagger
 } from '@/shared/ui/card-motion'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
@@ -57,13 +57,6 @@ import { cn } from '@/lib/utils/cn'
 
 const PUBLIC_JOBS_QUERY_KEY = ['jobs', 'public'] as const
 const TENANT_JOBS_QUERY_KEY = ['jobs', 'tenant'] as const
-
-const JOB_STATUS_META: Record<string, { label: string; className: string }> = {
-  published: { label: 'Activa', className: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300' },
-  draft: { label: 'Borrador', className: 'bg-amber-50 text-amber-700 dark:bg-amber-500/12 dark:text-amber-300' },
-  closed: { label: 'Cerrada', className: 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300' },
-  archived: { label: 'Archivada', className: 'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400' }
-}
 
 function relativeDays(value: string | null | undefined) {
   if (!value) {
@@ -95,6 +88,16 @@ function employmentLabel(value: string | null | undefined) {
 
 type TenantJobRow = JobPostingBundle['jobs'][number]
 
+const WORKPLACE_LABELS: Record<string, string> = {
+  remote: 'Remote',
+  hybrid: 'Híbrido',
+  on_site: 'On-site'
+}
+
+function workplaceLabel(value: string | null | undefined) {
+  return value ? WORKPLACE_LABELS[value] ?? value : 'Modalidad flexible'
+}
+
 function jobLocationLabel(job: Pick<TenantJobRow, 'city_name' | 'country_code'>) {
   return [job.city_name, job.country_code].filter(Boolean).join(', ') || 'Sin ubicación'
 }
@@ -110,6 +113,14 @@ function jobSalaryLabel(job: TenantJobRow) {
     return format((job.salary_min_amount ?? job.salary_max_amount) as number)
   }
   return getCompensationTypeLabel(job.compensation_type) || 'Salario no especificado'
+}
+
+function isMutedCompensation(job: TenantJobRow) {
+  return !job.salary_visible || (job.salary_min_amount == null && job.salary_max_amount == null)
+}
+
+function jobPublishedTimeLabel(job: TenantJobRow) {
+  return relativeDays(job.published_at ?? job.updated_at) || 'sin fecha'
 }
 
 const linkButtonClassName =
@@ -528,13 +539,24 @@ function JobEditor({
             ))}
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div
+            className={cn(
+              bare
+                ? 'sticky bottom-0 -mx-5 -mb-5 mt-2 flex justify-end gap-3 border-t border-(--app-border) bg-(--app-surface) px-5 py-4 sm:-mx-6 sm:-mb-5 sm:px-6'
+                : 'flex flex-wrap gap-3'
+            )}
+          >
+            {bare ? (
+              <Button type="button" variant="outline" onClick={onClear}>
+                Cancelar
+              </Button>
+            ) : null}
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Guardando...' : selectedJob ? 'Guardar cambios' : 'Crear draft'}
             </Button>
-            {selectedJob ? (
+            {selectedJob && !bare ? (
               <Button type="button" variant="outline" onClick={onClear}>
-                Limpiar seleccion
+                Limpiar selección
               </Button>
             ) : null}
           </div>
@@ -558,6 +580,113 @@ function JobEditor({
   )
 }
 
+function WorkspaceJobViewDialog({
+  job,
+  applicationCount,
+  onClose,
+  onEdit
+}: {
+  job: TenantJobRow | null
+  applicationCount: number
+  onClose: () => void
+  onEdit: (jobId: string) => void
+}) {
+  if (!job) {
+    return null
+  }
+
+  const isPublished = job.status === 'published'
+
+  return (
+    <Dialog open={Boolean(job)} onClose={onClose} className="relative z-50">
+      <DialogBackdrop
+        transition
+        className="fixed inset-0 bg-slate-950/40 transition-opacity duration-200 data-[closed]:opacity-0"
+      />
+      <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6">
+        <DialogPanel
+          transition
+          className="flex max-h-[88vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface) shadow-[0_24px_64px_rgba(15,30,70,0.28)] transition duration-200 ease-out data-[closed]:translate-y-3 data-[closed]:scale-[0.98] data-[closed]:opacity-0"
+        >
+          <header className="relative border-b border-(--app-border) px-5 py-5 sm:px-6">
+            <span
+              className={cn(
+                'inline-flex h-7 items-center gap-2 rounded-full px-3 text-xs font-semibold',
+                isPublished
+                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300'
+                  : 'bg-(--app-surface-muted) text-(--app-text-subtle)'
+              )}
+            >
+              <span className="size-1.5 rounded-full bg-current" />
+              {isPublished ? 'Activa' : 'Inactiva'}
+            </span>
+            <DialogTitle className="mt-3 pr-10 text-[1.3rem] font-bold leading-tight tracking-tight text-(--app-text)">
+              {job.title}
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Cerrar"
+              className="absolute right-5 top-5 flex size-9 items-center justify-center rounded-xl text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)"
+            >
+              <X className="size-4" />
+            </button>
+          </header>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+            <dl className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <dt className="text-[0.72rem] font-bold uppercase tracking-[0.05em] text-(--app-text-subtle)">Ubicación</dt>
+                <dd className="mt-1.5 flex items-center gap-2 text-sm font-semibold text-(--app-text)">
+                  <MapPin className="size-4 text-(--app-text-subtle)" /> {jobLocationLabel(job)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[0.72rem] font-bold uppercase tracking-[0.05em] text-(--app-text-subtle)">Tipo de empleo</dt>
+                <dd className="mt-1.5 flex items-center gap-2 text-sm font-semibold text-(--app-text)">
+                  <BriefcaseBusiness className="size-4 text-(--app-text-subtle)" /> {employmentLabel(job.employment_type)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[0.72rem] font-bold uppercase tracking-[0.05em] text-(--app-text-subtle)">Compensación</dt>
+                <dd
+                  className={cn(
+                    'mt-1.5 flex items-center gap-2 text-sm font-semibold text-(--app-text)',
+                    isMutedCompensation(job) && 'font-medium text-(--app-text-subtle)'
+                  )}
+                >
+                  <Banknote className="size-4 text-(--app-text-subtle)" /> {jobSalaryLabel(job)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[0.72rem] font-bold uppercase tracking-[0.05em] text-(--app-text-subtle)">Postulaciones</dt>
+                <dd className="mt-1.5 flex items-center gap-2 text-sm font-semibold text-(--app-text)">
+                  <Users className="size-4 text-(--app-text-subtle)" />
+                  {applicationCount} {applicationCount === 1 ? 'postulación' : 'postulaciones'} · publicada {jobPublishedTimeLabel(job)}
+                </dd>
+              </div>
+            </dl>
+
+            <section className="mt-6">
+              <h3 className="text-[0.72rem] font-bold uppercase tracking-[0.05em] text-(--app-text-subtle)">Resumen</h3>
+              <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                {job.summary || job.description || 'Esta vacante todavía no tiene un resumen disponible.'}
+              </p>
+            </section>
+          </div>
+
+          <footer className="flex justify-end gap-3 border-t border-(--app-border) px-5 py-4 sm:px-6">
+            <Button variant="outline" onClick={onClose}>
+              Cerrar
+            </Button>
+            <Button onClick={() => onEdit(job.id)}>Editar vacante</Button>
+          </footer>
+        </DialogPanel>
+      </div>
+    </Dialog>
+  )
+}
+
 function WorkspaceJobsManager() {
   const session = useAppSession()
   const queryClient = useQueryClient()
@@ -571,8 +700,9 @@ function WorkspaceJobsManager() {
   const [search, setSearch] = useState('')
   const [employmentFilter, setEmploymentFilter] = useState('')
   const [locationFilter, setLocationFilter] = useState('')
-  const [sort, setSort] = useState<'recent' | 'title'>('recent')
+  const [sort, setSort] = useState<'recent' | 'applications' | 'title'>('recent')
   const [page, setPage] = useState(0)
+  const [viewJobId, setViewJobId] = useState<string | null>(null)
   const [pendingStatusChange, setPendingStatusChange] = useState<{ jobId: string; action: 'close' | 'archive' } | null>(null)
 
   const workspaceQuery = useQuery({
@@ -611,7 +741,7 @@ function WorkspaceJobsManager() {
       return counts
     }
   })
-  const applicationCounts = jobApplicationsQuery.data ?? new Map<string, number>()
+  const applicationCounts = useMemo(() => jobApplicationsQuery.data ?? new Map<string, number>(), [jobApplicationsQuery.data])
   const isInitialWorkspaceJobsLoading =
     isWorkspaceContext &&
     canManageJobs &&
@@ -619,23 +749,26 @@ function WorkspaceJobsManager() {
     (workspaceQuery.isLoading || tenantJobsQuery.isLoading || jobApplicationsQuery.isLoading)
 
   const tenantJobs = useMemo(() => tenantJobsQuery.data ?? [], [tenantJobsQuery.data])
-  const activeJobsCount = tenantJobs.filter((job) => job.status === 'published').length
-  const inactiveJobsCount = tenantJobs.length - activeJobsCount
+  const manageableJobs = useMemo(() => tenantJobs.filter((job) => job.status !== 'archived'), [tenantJobs])
+  const activeJobsCount = manageableJobs.filter((job) => job.status === 'published').length
+  const inactiveJobsCount = manageableJobs.length - activeJobsCount
   const selectedJob = tenantJobs.find((job) => job.id === selectedJobId) ?? null
+  const viewJob = tenantJobs.find((job) => job.id === viewJobId) ?? null
 
   const locationOptions = useMemo(() => {
     const set = new Set<string>()
-    for (const job of tenantJobs) {
-      if (job.country_code) {
-        set.add(job.country_code)
+    for (const job of manageableJobs) {
+      const label = jobLocationLabel(job)
+      if (label !== 'Sin ubicación') {
+        set.add(label)
       }
     }
     return [...set].sort()
-  }, [tenantJobs])
+  }, [manageableJobs])
 
   const filteredJobs = useMemo(() => {
     const query = search.trim().toLowerCase()
-    const list = tenantJobs.filter((job) => {
+    const list = manageableJobs.filter((job) => {
       const matchesTab = statusTab === 'active' ? job.status === 'published' : job.status !== 'published'
       if (!matchesTab) {
         return false
@@ -643,35 +776,40 @@ function WorkspaceJobsManager() {
       if (employmentFilter && job.employment_type !== employmentFilter) {
         return false
       }
-      if (locationFilter && job.country_code !== locationFilter) {
+      if (locationFilter && jobLocationLabel(job) !== locationFilter) {
         return false
       }
       if (query) {
-        const haystack = `${job.title} ${job.city_name ?? ''} ${getOpportunityTypeLabel(job.opportunity_type)}`.toLowerCase()
+        const haystack =
+          `${job.title} ${job.city_name ?? ''} ${job.country_code ?? ''} ${employmentLabel(job.employment_type)} ${getOpportunityTypeLabel(job.opportunity_type)}`.toLowerCase()
         if (!haystack.includes(query)) {
           return false
         }
       }
       return true
     })
-    return list.sort((a, b) =>
-      sort === 'recent'
-        ? new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-        : a.title.localeCompare(b.title)
-    )
-  }, [tenantJobs, statusTab, employmentFilter, locationFilter, search, sort])
+    return list.sort((a, b) => {
+      if (sort === 'applications') {
+        return (applicationCounts.get(b.id) ?? 0) - (applicationCounts.get(a.id) ?? 0)
+      }
+      if (sort === 'title') {
+        return a.title.localeCompare(b.title)
+      }
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    })
+  }, [manageableJobs, statusTab, employmentFilter, locationFilter, search, sort, applicationCounts])
 
   const pageCount = Math.max(1, Math.ceil(filteredJobs.length / WORKSPACE_JOBS_PAGE_SIZE))
   const safePage = Math.min(page, pageCount - 1)
   const pageStart = safePage * WORKSPACE_JOBS_PAGE_SIZE
   const pageJobs = filteredJobs.slice(pageStart, pageStart + WORKSPACE_JOBS_PAGE_SIZE)
-  const isLastPage = safePage >= pageCount - 1
 
   function resetToFirstPage() {
     setPage(0)
   }
 
   function openJobEditor(jobId: string | null) {
+    setViewJobId(null)
     setSelectedJobId(jobId)
     setIsEditorOpen(true)
     if (typeof window !== 'undefined') {
@@ -718,20 +856,24 @@ function WorkspaceJobsManager() {
       animate="show"
     >
       {isWorkspaceContext && canManageJobs ? (
-        <motion.section variants={cardReveal} className="space-y-4">
+        <motion.section variants={cardReveal} className="mx-auto w-full max-w-[1180px] space-y-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Vacantes</h1>
-              <p className="mt-1 text-sm text-(--app-text-muted)">Gestiona y publica las posiciones abiertas en tu empresa.</p>
+              <h1 className="text-[1.6rem] font-bold leading-tight tracking-tight text-(--app-text)">Vacantes</h1>
+              <p className="mt-1 text-[0.92rem] text-(--app-text-muted)">Gestiona y publica las posiciones abiertas en tu empresa.</p>
             </div>
-            <div className="flex flex-wrap gap-2.5">
-              <Button variant="outline" onClick={() => toast.info('Exportación próximamente')}>
+            <div className="flex w-full flex-wrap gap-2.5 sm:w-auto sm:flex-nowrap">
+              <Button className="h-10 flex-1 rounded-xl sm:flex-none" variant="outline" onClick={() => toast.info('Exportación próximamente')}>
+                <Download className="size-4" />
                 Exportar
               </Button>
-              <Button onClick={() => openJobEditor(null)}>Publicar vacante</Button>
+              <Button className="h-10 flex-1 rounded-xl sm:flex-none" onClick={() => openJobEditor(null)}>
+                <Plus className="size-4" />
+                Publicar vacante
+              </Button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex border-b border-(--app-border)">
             {(
               [
                 { value: 'active', label: 'Activas', count: activeJobsCount },
@@ -748,17 +890,17 @@ function WorkspaceJobsManager() {
                     resetToFirstPage()
                   }}
                   className={cn(
-                    'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[0.8rem] font-medium transition-colors',
+                    'relative mr-5 inline-flex items-center gap-2 px-0 py-3 text-sm font-semibold transition-colors',
                     isActive
-                      ? 'bg-primary-600 text-white'
+                      ? 'text-primary-700 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary-600'
                       : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
                   )}
                 >
                   {tab.label}
                   <span
                     className={cn(
-                      'rounded-full px-1.5 text-[0.7rem] font-semibold tabular-nums',
-                      isActive ? 'bg-white/20 text-white' : 'bg-(--app-surface-muted) text-(--app-text-subtle)'
+                      'inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold tabular-nums',
+                      isActive ? 'bg-primary-50 text-primary-700' : 'bg-(--app-surface-muted) text-(--app-text-subtle)'
                     )}
                   >
                     {tab.count}
@@ -795,7 +937,7 @@ function WorkspaceJobsManager() {
       )}
 
       {canManageJobs && workspaceQuery.data && isWorkspaceContext ? (
-        <motion.section variants={cardReveal} className="space-y-4">
+        <motion.section variants={cardReveal} className="mx-auto w-full max-w-[1180px] space-y-4">
           <SideSheet
             open={isEditorOpen}
             onClose={() => {
@@ -808,6 +950,7 @@ function WorkspaceJobsManager() {
                 ? 'Actualiza los detalles de esta posición.'
                 : 'Crea una posición y publícala cuando esté lista.'
             }
+            widthClassName="max-w-xl"
           >
             <JobEditor
               key={selectedJob?.id ?? 'new-job'}
@@ -830,27 +973,34 @@ function WorkspaceJobsManager() {
             />
           </SideSheet>
 
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-1 flex-wrap gap-2">
-              <div className="relative min-w-[220px] flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
-                <Input
-                  value={search}
-                  onChange={(event) => {
-                    setSearch(event.target.value)
-                    resetToFirstPage()
-                  }}
-                  placeholder="Busca por título, área o ubicación"
-                  className="h-10 pl-9"
-                />
-              </div>
+          <WorkspaceJobViewDialog
+            job={viewJob}
+            applicationCount={viewJob ? applicationCounts.get(viewJob.id) ?? 0 : 0}
+            onClose={() => setViewJobId(null)}
+            onEdit={openJobEditor}
+          />
+
+          <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
+            <div className="relative min-w-60 flex-1">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
+              <Input
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value)
+                  resetToFirstPage()
+                }}
+                placeholder="Busca por título, área o ubicación"
+                className="h-11 rounded-xl pl-10"
+              />
+            </div>
+            <div className="grid gap-2.5 sm:grid-cols-3 lg:flex lg:shrink-0">
               <Select
                 value={employmentFilter}
                 onChange={(event) => {
                   setEmploymentFilter(event.target.value)
                   resetToFirstPage()
                 }}
-                className="h-10 w-auto min-w-[150px]"
+                className="h-11 min-w-40 rounded-xl"
               >
                 <option value="">Tipo de empleo</option>
                 {Object.entries(EMPLOYMENT_LABELS).map(([value, label]) => (
@@ -859,132 +1009,170 @@ function WorkspaceJobsManager() {
                   </option>
                 ))}
               </Select>
-              {locationOptions.length ? (
-                <Select
-                  value={locationFilter}
-                  onChange={(event) => {
-                    setLocationFilter(event.target.value)
-                    resetToFirstPage()
-                  }}
-                  className="h-10 w-auto min-w-[130px]"
-                >
-                  <option value="">Ubicación</option>
-                  {locationOptions.map((code) => (
-                    <option key={code} value={code}>
-                      {code}
-                    </option>
-                  ))}
-                </Select>
-              ) : null}
+              <Select
+                value={locationFilter}
+                onChange={(event) => {
+                  setLocationFilter(event.target.value)
+                  resetToFirstPage()
+                }}
+                className="h-11 min-w-40 rounded-xl"
+              >
+                <option value="">Ubicación</option>
+                {locationOptions.map((locationOption) => (
+                  <option key={locationOption} value={locationOption}>
+                    {locationOption}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                value={sort}
+                onChange={(event) => setSort(event.target.value as 'recent' | 'applications' | 'title')}
+                className="h-11 min-w-48 rounded-xl"
+              >
+                <option value="recent">Ordenar por: Recientes</option>
+                <option value="applications">Más postulaciones</option>
+                <option value="title">A-Z</option>
+              </Select>
             </div>
-            <Select
-              value={sort}
-              onChange={(event) => setSort(event.target.value as 'recent' | 'title')}
-              className="h-10 w-auto min-w-[170px]"
-            >
-              <option value="recent">Ordenar por: Recientes</option>
-              <option value="title">Ordenar por: Título</option>
-            </Select>
           </div>
 
-          <motion.div variants={gridStagger} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {pageJobs.map((job) => {
-              const statusMeta = JOB_STATUS_META[job.status] ?? { label: job.status, className: 'bg-slate-100 text-slate-600' }
-              const count = applicationCounts.get(job.id) ?? 0
-              const isPublished = job.status === 'published'
+          <div className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]">
+            <div className="hidden grid-cols-[minmax(0,1fr)_180px_130px_116px] items-center gap-4 border-b border-(--app-border) bg-(--app-surface-muted)/70 px-5 py-3 text-[0.72rem] font-bold uppercase tracking-[0.05em] text-(--app-text-subtle) lg:grid">
+              <span>Vacante</span>
+              <span>Compensación</span>
+              <span>Postulaciones</span>
+              <span className="text-right">Acciones</span>
+            </div>
 
-              return (
-                <motion.article
-                  variants={cardReveal}
-                  key={job.id}
-                  className="flex h-full flex-col rounded-2xl border border-(--app-border) bg-(--app-surface) p-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)] transition hover:shadow-[0_14px_32px_rgba(15,23,42,0.09)]"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.7rem] font-semibold', statusMeta.className)}>
-                      <span className="size-1.5 rounded-full bg-current" />
-                      {statusMeta.label}
-                    </span>
-                    <KebabMenu>
-                      <KebabMenuItem onClick={() => openJobEditor(job.id)}>Editar</KebabMenuItem>
-                      <KebabMenuItem to={surfacePaths.public.jobDetail(job.slug)}>Ver oportunidad</KebabMenuItem>
-                      {isPublished ? (
-                        <KebabMenuItem onClick={() => setPendingStatusChange({ jobId: job.id, action: 'close' })}>Cerrar</KebabMenuItem>
-                      ) : (
-                        <KebabMenuItem onClick={() => statusMutation.mutate({ jobId: job.id, status: 'published' })}>Publicar</KebabMenuItem>
+            {pageJobs.length ? (
+              pageJobs.map((job) => {
+                const count = applicationCounts.get(job.id) ?? 0
+                const isPublished = job.status === 'published'
+                const compensationIsMuted = isMutedCompensation(job)
+                const iconButtonClassName =
+                  'flex size-10 items-center justify-center rounded-xl text-(--app-text-muted) transition-colors hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:hover:bg-primary-500/12 dark:hover:text-primary-200'
+
+                return (
+                  <motion.div
+                    variants={cardReveal}
+                    key={job.id}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 border-b border-(--app-border) px-4 py-4 transition-colors last:border-b-0 hover:bg-(--app-surface-muted)/55 lg:grid-cols-[minmax(0,1fr)_180px_130px_116px] lg:items-center lg:gap-4 lg:px-5"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span
+                          className={cn(
+                            'size-2 shrink-0 rounded-full',
+                            isPublished
+                              ? 'bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.14)]'
+                              : 'bg-slate-400 shadow-[0_0_0_3px_rgba(148,163,184,0.18)]'
+                          )}
+                        />
+                        <h3 className="truncate text-[0.97rem] font-semibold text-(--app-text)">{job.title}</h3>
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 pl-5 text-[0.82rem] text-(--app-text-muted)">
+                        <span className="inline-flex min-w-0 items-center gap-1.5">
+                          <MapPin className="size-3.5 shrink-0 text-(--app-text-subtle)" />
+                          <span className="truncate">{jobLocationLabel(job)}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <BriefcaseBusiness className="size-3.5 text-(--app-text-subtle)" />
+                          {employmentLabel(job.employment_type)}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 lg:hidden">
+                          <span className="size-1 rounded-full bg-(--app-text-subtle)" />
+                          {workplaceLabel(job.workplace_type)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p
+                      className={cn(
+                        'col-start-1 pl-5 text-sm font-semibold text-(--app-text) lg:col-auto lg:pl-0',
+                        compensationIsMuted && 'font-medium text-(--app-text-subtle)'
                       )}
-                      {job.status !== 'archived' ? (
+                    >
+                      {jobSalaryLabel(job)}
+                    </p>
+
+                    <div className="col-start-1 pl-5 lg:col-auto lg:pl-0">
+                      <p className={cn('text-sm font-semibold text-(--app-text)', count === 0 && 'font-medium text-(--app-text-subtle)')}>
+                        {count} {count === 1 ? 'postulación' : 'postulaciones'}
+                      </p>
+                      <p className="mt-0.5 text-xs text-(--app-text-subtle)">Publicada {jobPublishedTimeLabel(job)}</p>
+                    </div>
+
+                    <div className="col-start-2 row-span-3 row-start-1 flex items-start justify-end gap-1 self-start lg:col-auto lg:row-auto lg:self-center">
+                      <button
+                        type="button"
+                        aria-label={`Ver ${job.title}`}
+                        className={iconButtonClassName}
+                        onClick={() => setViewJobId(job.id)}
+                      >
+                        <Eye className="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Editar ${job.title}`}
+                        className={iconButtonClassName}
+                        onClick={() => openJobEditor(job.id)}
+                      >
+                        <Pencil className="size-4" />
+                      </button>
+                      <KebabMenu className="size-10 rounded-xl" label={`Más acciones para ${job.title}`}>
+                        <KebabMenuItem onClick={() => openJobEditor(job.id)}>
+                          <Pencil className="mr-2 size-4 text-(--app-text-subtle)" />
+                          Editar
+                        </KebabMenuItem>
+                        <KebabMenuItem onClick={() => setViewJobId(job.id)}>
+                          <Eye className="mr-2 size-4 text-(--app-text-subtle)" />
+                          Ver oportunidad
+                        </KebabMenuItem>
+                        {isPublished ? (
+                          <KebabMenuItem onClick={() => setPendingStatusChange({ jobId: job.id, action: 'close' })}>
+                            <Ban className="mr-2 size-4 text-(--app-text-subtle)" />
+                            Cerrar
+                          </KebabMenuItem>
+                        ) : (
+                          <KebabMenuItem onClick={() => statusMutation.mutate({ jobId: job.id, status: 'published' })}>
+                            <BriefcaseBusiness className="mr-2 size-4 text-(--app-text-subtle)" />
+                            Publicar
+                          </KebabMenuItem>
+                        )}
                         <KebabMenuItem danger onClick={() => setPendingStatusChange({ jobId: job.id, action: 'archive' })}>
+                          <Archive className="mr-2 size-4" />
                           Archivar
                         </KebabMenuItem>
-                      ) : null}
-                    </KebabMenu>
-                  </div>
+                      </KebabMenu>
+                    </div>
+                  </motion.div>
+                )
+              })
+            ) : (
+              <div className="px-5 py-16 text-center">
+                <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                  <Search className="size-6" />
+                </div>
+                <h3 className="mt-4 text-base font-bold tracking-tight text-(--app-text)">Sin resultados</h3>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-(--app-text-muted)">
+                  {manageableJobs.length === 0
+                    ? 'Todavía no hay vacantes en este espacio. Usa “Publicar vacante” para crear la primera.'
+                    : 'Ajusta la búsqueda o los filtros para encontrar otra vacante.'}
+                </p>
+              </div>
+            )}
+          </div>
 
-                  <h3 className="mt-3 line-clamp-2 text-[1rem] font-semibold leading-tight text-(--app-text)">{job.title}</h3>
-
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-(--app-text-subtle)">
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin className="size-3.5" /> {jobLocationLabel(job)}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Clock3 className="size-3.5" /> {employmentLabel(job.employment_type)}
-                    </span>
-                  </div>
-
-                  <p className="mt-2 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-(--app-text)">
-                    <Banknote className="size-4 text-(--app-text-subtle)" /> {jobSalaryLabel(job)}
-                  </p>
-                  <p className="mt-1 text-xs text-(--app-text-muted)">
-                    {count} {count === 1 ? 'postulación' : 'postulaciones'} · {relativeDays(job.updated_at)}
-                  </p>
-
-                  <div className="mt-auto flex items-center gap-2 border-t border-(--app-border) pt-3">
-                    <Link
-                      to={surfacePaths.public.jobDetail(job.slug)}
-                      className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-(--app-border) bg-(--app-surface) text-xs font-semibold text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 dark:hover:border-primary-400 dark:hover:text-primary-200"
-                    >
-                      <Eye className="size-3.5" /> Ver
-                    </Link>
-                    <Button className="h-9 flex-1 rounded-full px-3 text-xs" variant="outline" onClick={() => openJobEditor(job.id)}>
-                      <Pencil className="size-3.5" /> Editar
-                    </Button>
-                  </div>
-                </motion.article>
-              )
-            })}
-
-            {isLastPage ? (
-              <motion.button
-                variants={cardReveal}
-                type="button"
-                onClick={() => openJobEditor(null)}
-                className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-(--app-border) bg-(--app-surface-muted)/40 p-4 text-center transition-colors hover:border-primary-300 hover:bg-primary-50/50 dark:hover:border-primary-500/40 dark:hover:bg-primary-500/8"
-              >
-                <span className="flex size-10 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
-                  <Plus className="size-5" />
-                </span>
-                <span className="text-sm font-semibold text-(--app-text)">Publicar nueva vacante</span>
-                <span className="text-xs text-(--app-text-muted)">Crea y publica una posición</span>
-              </motion.button>
-            ) : null}
-          </motion.div>
-
-          {filteredJobs.length === 0 ? (
-            <p className="text-sm text-(--app-text-muted)">
-              {tenantJobs.length === 0
-                ? 'Todavía no hay vacantes en este espacio. Usa “Publicar vacante” para crear la primera.'
-                : 'Ninguna vacante coincide con los filtros actuales.'}
-            </p>
-          ) : (
+          {filteredJobs.length > 0 ? (
             <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-(--app-text-muted)">
-                Mostrando {pageStart + 1} a {Math.min(pageStart + WORKSPACE_JOBS_PAGE_SIZE, filteredJobs.length)} de {filteredJobs.length} vacantes
+                Mostrando <b className="font-semibold text-(--app-text-muted)">{pageStart + 1} a {Math.min(pageStart + WORKSPACE_JOBS_PAGE_SIZE, filteredJobs.length)}</b> de {filteredJobs.length} vacantes
               </p>
               {pageCount > 1 ? (
                 <Pagination page={safePage} totalPages={pageCount} onPageChange={setPage} ariaLabel="Paginación de vacantes" />
               ) : null}
             </div>
-          )}
+          ) : null}
         </motion.section>
       ) : canManageJobs && workspaceQuery.data ? (
         <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
@@ -1061,7 +1249,7 @@ function WorkspaceJobsManager() {
         title={pendingStatusChange?.action === 'archive' ? '¿Archivar esta vacante?' : '¿Cerrar esta vacante?'}
         description={
           pendingStatusChange?.action === 'archive'
-            ? 'La vacante se moverá a inactivas y dejará de mostrarse públicamente. Podrás volver a publicarla más adelante.'
+            ? 'La vacante saldrá del inventario visible y dejará de mostrarse públicamente. Podrás restaurarla desde datos administrativos si hace falta.'
             : 'La vacante dejará de aceptar nuevas postulaciones y ya no se mostrará públicamente. Podrás volver a publicarla cuando quieras.'
         }
         confirmLabel={pendingStatusChange?.action === 'archive' ? 'Archivar' : 'Cerrar vacante'}
