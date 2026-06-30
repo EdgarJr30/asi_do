@@ -347,6 +347,7 @@ Apple-inspired UI rules:
 8. Dark mode must mirror the same hierarchy through semantic theme tokens instead of feature-local ad hoc dark palettes.
 9. The brand palette should feel vivid, polished, and intentional. Do not default the customer-facing product identity to muddy or dull green-dominant branding unless a documented brand decision explicitly requires it.
 10. When the platform brand is `ASI`, shared theme tokens should anchor on the logo palette: royal blue as the primary action color, deeper navy-blue for emphasis, and silver-gray as the supporting neutral accent.
+11. Authenticated platform shells must keep one continuous page canvas color from the top bar through the end of the viewport. Do not layer a feature-local gradient, gray overlay, or second bottom background over `--app-platform-canvas` in workspace, candidate, or admin modules.
 
 ### 8.3 Contrast rules
 1. Follow WCAG 2.2 AA by default.

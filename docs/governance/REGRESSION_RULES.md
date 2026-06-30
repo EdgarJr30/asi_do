@@ -278,6 +278,9 @@ Do not render full-screen page loaders inside `/auth/sign-in` or `/auth/sign-up`
 ### R-088 — Workspace headings must stay compact
 Do not reintroduce oversized page headings or redundant eyebrow labels such as `Dashboard · Resumen` inside the `Mi empresa` workspace pages. Workspace headings should stay close to the compact `Mi espacio` home scale so operational pages feel dense, calm, and task-focused.
 
+### R-089 — Platform pages must use one uniform canvas color
+Do not reintroduce mixed background layers inside authenticated platform modules. Workspace, candidate, and admin pages must share the same `--app-platform-canvas` from the shell through the main content area, without feature-local gray overlays, decorative canvas gradients, or contrasting bottom bands.
+
 ### R-064 — Tailwind utility syntax and override strategy must stay canonical
 Do not reintroduce non-canonical Tailwind utility spellings when the framework already provides an exact built-in token. Do not rely on CSS important overrides or Tailwind important modifiers as the default fix for styling conflicts; prefer semantic component APIs, Tailwind layer order, or clearer selectors so overrides resolve through the normal cascade. Prefer scale-based height utilities such as `h-88`, `sm:h-96`, `xl:h-108`, `2xl:h-112`, or `min-h-96` over arbitrary `rem` values like `h-[22rem]`, `sm:h-[24rem]`, `xl:h-[27rem]`, or `min-h-[24rem]` whenever the values map exactly to the Tailwind spacing scale.
 

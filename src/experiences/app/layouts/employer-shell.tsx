@@ -1441,7 +1441,7 @@ export function PlatformAppShell({
   }
 
   return (
-    <div className="tm-shell min-h-screen overflow-x-clip bg-[#f4f7fc] dark:bg-slate-900" style={shellLayoutStyle}>
+    <div className="tm-shell min-h-screen overflow-x-clip bg-(--app-platform-canvas)" style={shellLayoutStyle}>
       <RouteScrollManager />
 
       <aside
@@ -1679,12 +1679,7 @@ export function PlatformAppShell({
         </header>
 
         <main
-          className={cn(
-            'min-w-0 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 dark:bg-none lg:pb-8',
-            isWorkspace
-              ? 'bg-[#f7f9fc] dark:bg-transparent'
-              : 'bg-[radial-gradient(circle_at_top_right,rgba(143,171,229,0.16),transparent_24%),linear-gradient(180deg,#f4f7fc_0%,#eef3fb_100%)]'
-          )}
+          className="min-h-[calc(100svh-4.5rem)] min-w-0 bg-(--app-platform-canvas) pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 lg:pb-8"
         >
           <div className="min-w-0 px-4 sm:px-6 lg:px-8">{fallbackContent ?? <Outlet />}</div>
         </main>

@@ -46,6 +46,7 @@
   color-scheme: light;
   --app-canvas: #ffffff;
   --app-canvas-strong: #f4f7ff;
+  --app-platform-canvas: #f7f9fc;
   --app-surface: #ffffff;
   --app-surface-muted: #f6f8fd;
   --app-surface-elevated: rgba(255, 255, 255, 0.94);
@@ -68,6 +69,7 @@
   color-scheme: dark;
   --app-canvas: #091127;
   --app-canvas-strong: #101934;
+  --app-platform-canvas: #091127;
   --app-surface: #101d3f;
   --app-surface-muted: #152551;
   --app-surface-elevated: rgba(14, 25, 55, 0.9);
