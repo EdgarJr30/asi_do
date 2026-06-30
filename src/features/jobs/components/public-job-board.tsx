@@ -158,6 +158,19 @@ export function PublicJobBoard() {
     setDetailOpen(false)
   }
 
+  // Esc cierra el detalle de la vacante que se está visualizando.
+  useEffect(() => {
+    if (!selectedJobId) return
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setSelectedJobId(null)
+        setDetailOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [selectedJobId])
+
   function patchFilters(patch: Partial<Filters>) {
     setFilters((current) => ({ ...current, ...patch }))
   }
@@ -590,7 +603,7 @@ function DetailEmptyState() {
       animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
       exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, filter: 'blur(6px)' }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="flex min-h-80 flex-col items-center justify-center rounded-panel border border-(--app-border) bg-(--app-surface) p-10 text-center shadow-sm"
+      className="flex min-h-80 flex-col items-center justify-center rounded-panel border border-(--app-border) bg-(--app-surface) p-10 text-center shadow-sm lg:min-h-128"
     >
       <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
         <Briefcase className="size-6" />
