@@ -168,6 +168,7 @@ Do not introduce arbitrary spacing values unless a reusable token is added to th
 4. Do not create “desktop-only” information architecture branches.
 5. Public landing sections that visually belong to the same first-fold system must share the same max-width and side padding as the public header at the matching breakpoint.
 6. Staggered or editorial compositions are allowed for customer-facing marketing sections only when they remain in normal flow at small breakpoints, preserve readable spacing between cards, and avoid accidental overlap or collision at any supported viewport.
+7. Candidate job detail and application flows must keep the job context visible without turning the page into stacked heavy cards. Job details should use clear content sections plus a sticky action rail on larger viewports, while application forms should use short guided steps with inline validation instead of one long wall of fields.
 
 ### 5.6 Public landing spacing standard
 Use a tighter shared rhythm for marketing sections so the landing reads as one continuous product story instead of isolated blocks with excessive empty space.

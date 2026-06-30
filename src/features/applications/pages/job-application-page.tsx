@@ -1,7 +1,19 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CircleAlert,
+  FileText,
+  HelpCircle,
+  MessageSquareText,
+  SendHorizontal,
+  Upload,
+  UserRound
+} from 'lucide-react'
+import { Link, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -10,22 +22,89 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/loader'
-import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { submitApplication } from '@/features/applications/lib/applications-api'
 import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
 import { getPublicJobBySlug } from '@/features/jobs/lib/jobs-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
+import { cn } from '@/lib/utils/cn'
+
+const TOTAL_STEPS = 4
+
+const workplaceLabels: Record<string, string> = { remote: 'Remoto', hybrid: 'Híbrido', on_site: 'Presencial' }
+
+const steps = [
+  { name: 'Tu CV', subtitle: 'Elige el documento a enviar' },
+  { name: 'Presentación', subtitle: 'Cuenta por qué encajas' },
+  { name: 'Preguntas', subtitle: 'Screening de la vacante' },
+  { name: 'Revisar y enviar', subtitle: 'Confirma tu postulación' }
+] as const
+
+function initialsFor(value: string | null | undefined) {
+  const normalized = value?.trim()
+  if (!normalized) {
+    return 'AS'
+  }
+
+  return normalized
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((item) => item[0]?.toUpperCase())
+    .join('')
+}
+
+function formatFileSize(value: number) {
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1)} MB`
+  }
+
+  return `${Math.max(1, Math.round(value / 1_000))} KB`
+}
+
+function formatUploadedAt(value: string) {
+  return new Intl.DateTimeFormat('es-DO', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+}
+
+function StepDot({ index, currentStep }: { index: number; currentStep: number }) {
+  const isDone = index < currentStep
+  const isActive = index === currentStep
+
+  return (
+    <span
+      className={cn(
+        'relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border-2 bg-(--app-surface) text-xs font-bold transition',
+        isDone && 'border-primary-600 bg-primary-600 text-white',
+        isActive && 'border-primary-600 bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200',
+        !isDone && !isActive && 'border-(--app-border) text-(--app-text-subtle)'
+      )}
+    >
+      {isDone ? <Check className="size-4" /> : index + 1}
+    </span>
+  )
+}
+
+function InlineError({ children }: { children: string }) {
+  return (
+    <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-300">
+      <CircleAlert className="size-3.5" />
+      {children}
+    </p>
+  )
+}
 
 export function JobApplicationPage() {
   const { jobSlug = '' } = useParams()
-  const navigate = useNavigate()
   const session = useAppSession()
   const queryClient = useQueryClient()
+  const [currentStep, setCurrentStep] = useState(0)
+  const [maxVisitedStep, setMaxVisitedStep] = useState(0)
   const [selectedResumeId, setSelectedResumeId] = useState('')
   const [coverLetter, setCoverLetter] = useState('')
   const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [showResumeError, setShowResumeError] = useState(false)
+  const [questionErrors, setQuestionErrors] = useState<Record<string, boolean>>({})
+  const [applicationSubmitted, setApplicationSubmitted] = useState(false)
 
   const candidateProfileQuery = useQuery({
     queryKey: ['candidate-profile', 'mine', 'apply'],
@@ -38,18 +117,27 @@ export function JobApplicationPage() {
     queryFn: async () => getPublicJobBySlug(jobSlug)
   })
 
+  const profileBundle = candidateProfileQuery.data
+  const job = jobQuery.data
+  const requiredQuestions = useMemo(
+    () => job?.job_screening_questions?.filter((question) => question.is_required) ?? [],
+    [job?.job_screening_questions]
+  )
+  const defaultResumeId = profileBundle?.resumes.find((resume) => resume.is_default)?.id ?? profileBundle?.resumes[0]?.id ?? ''
+  const activeResumeId = selectedResumeId || defaultResumeId
+
   const applyMutation = useMutation({
     mutationFn: async () => {
-      if (!jobQuery.data) {
-        throw new Error('La vacante ya no esta disponible.')
+      if (!job) {
+        throw new Error('La vacante ya no está disponible.')
       }
 
       return submitApplication({
-        jobPostingId: jobQuery.data.id,
-        submittedResumeId: selectedResumeId || null,
+        jobPostingId: job.id,
+        submittedResumeId: activeResumeId,
         coverLetter,
         answers:
-          jobQuery.data.job_screening_questions?.map((question) => ({
+          job.job_screening_questions?.map((question) => ({
             screeningQuestionId: question.id,
             answerText: answers[question.id] || ''
           })) ?? []
@@ -57,11 +145,11 @@ export function JobApplicationPage() {
     },
     onSuccess: async () => {
       toast.success('Postulación enviada', {
-        description: 'Tu perfil y respuestas ya quedaron registradas para esta vacante.'
+        description: 'Tu perfil y respuestas ya quedaron registrados para esta vacante.'
       })
-      // Refresca todas las listas de "mis aplicaciones" (overview, home, board) y el badge "Ya aplicaste".
       await queryClient.invalidateQueries({ queryKey: ['applications', 'mine'] })
-      await navigate(surfacePaths.candidate.applications)
+      setApplicationSubmitted(true)
+      setMaxVisitedStep(TOTAL_STEPS - 1)
     },
     onError: async (error) => {
       await reportErrorWithToast({
@@ -78,7 +166,7 @@ export function JobApplicationPage() {
     return <PageLoader label="Preparando postulación" hint="Estamos cargando la vacante, tu perfil y tus CVs disponibles" />
   }
 
-  if (jobQuery.error || !jobQuery.data) {
+  if (jobQuery.error || !job) {
     return (
       <Card>
         <CardHeader>
@@ -88,8 +176,6 @@ export function JobApplicationPage() {
       </Card>
     )
   }
-
-  const profileBundle = candidateProfileQuery.data
 
   if (!profileBundle?.profile) {
     return (
@@ -109,108 +195,404 @@ export function JobApplicationPage() {
     )
   }
 
+  const selectedResume = profileBundle.resumes.find((resume) => resume.id === activeResumeId) ?? null
+  const companyName = job.company_profile?.display_name || 'Empresa'
+  const companyInitials = initialsFor(companyName)
+  const workplaceLabel = job.workplace_type ? workplaceLabels[job.workplace_type] ?? job.workplace_type : 'Modalidad flexible'
+  const progress = `${((applicationSubmitted ? TOTAL_STEPS : currentStep + 1) / TOTAL_STEPS) * 100}%`
+
+  function validateStep(step: number) {
+    if (step === 0) {
+      const hasResume = Boolean(activeResumeId)
+      setShowResumeError(!hasResume)
+      return hasResume
+    }
+
+    if (step === 2) {
+      const nextErrors = requiredQuestions.reduce<Record<string, boolean>>((current, question) => {
+        current[question.id] = !answers[question.id]?.trim()
+        return current
+      }, {})
+      setQuestionErrors(nextErrors)
+      return !Object.values(nextErrors).some(Boolean)
+    }
+
+    return true
+  }
+
+  function goToStep(nextStep: number) {
+    if (nextStep <= currentStep || nextStep <= maxVisitedStep) {
+      setCurrentStep(nextStep)
+      return
+    }
+
+    for (let step = currentStep; step < nextStep; step += 1) {
+      if (!validateStep(step)) {
+        setCurrentStep(step)
+        return
+      }
+    }
+
+    setCurrentStep(nextStep)
+    setMaxVisitedStep((current) => Math.max(current, nextStep))
+  }
+
+  function goNext() {
+    if (!validateStep(currentStep)) {
+      return
+    }
+
+    const nextStep = Math.min(currentStep + 1, TOTAL_STEPS - 1)
+    setCurrentStep(nextStep)
+    setMaxVisitedStep((current) => Math.max(current, nextStep))
+  }
+
+  function submit() {
+    if (!validateStep(0) || !validateStep(2)) {
+      setCurrentStep(!activeResumeId ? 0 : 2)
+      return
+    }
+
+    applyMutation.mutate()
+  }
+
+  function updateAnswer(questionId: string, value: string) {
+    setAnswers((current) => ({ ...current, [questionId]: value }))
+    if (value.trim()) {
+      setQuestionErrors((current) => ({ ...current, [questionId]: false }))
+    }
+  }
+
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden bg-(--app-surface-muted)">
-        <CardHeader className="space-y-3">
-          <Badge variant="soft">Postulación</Badge>
-          <CardTitle>Postula a {jobQuery.data.title}</CardTitle>
-          <CardDescription>
-            Tu perfil reusable se combina con CV, cover letter y screening para evitar repetir datos innecesarios.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="rounded-[24px] border border-white/70 bg-white/88 p-4 dark:border-zinc-800 dark:bg-zinc-950/75">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Perfil que se enviará</p>
-            <p className="mt-2 text-lg font-semibold text-zinc-950 dark:text-zinc-50">
-              {session.profile?.display_name ?? session.profile?.full_name}
-            </p>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              {profileBundle.profile.desired_role || profileBundle.profile.headline || 'Perfil candidato activo'}
+    <div className="mx-auto grid max-w-265 gap-8 lg:grid-cols-[18rem_1fr] xl:gap-10">
+      <aside className="space-y-5 lg:sticky lg:top-4 lg:self-start">
+        <Link
+          to={surfacePaths.public.jobDetail(jobSlug)}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-(--app-text-muted) transition hover:text-primary-700 dark:hover:text-primary-200"
+        >
+          <ArrowLeft className="size-4" />
+          Volver a la vacante
+        </Link>
+
+        <div className="flex items-center gap-3 rounded-xl border border-(--app-border) bg-(--app-surface-elevated) p-3 shadow-[0_1px_2px_rgba(20,40,90,0.04)]">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-sm font-bold text-white">
+            {companyInitials}
+          </div>
+          <div className="min-w-0">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Postulas a</p>
+            <p className="truncate text-sm font-semibold text-(--app-text)">{job.title}</p>
+            <p className="truncate text-xs text-(--app-text-muted)">
+              {companyName} · {workplaceLabel}
             </p>
           </div>
-          <div className="rounded-[24px] border border-white/70 bg-white/88 p-4 dark:border-zinc-800 dark:bg-zinc-950/75">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Vacante</p>
-            <p className="mt-2 text-lg font-semibold text-zinc-950 dark:text-zinc-50">{jobQuery.data.title}</p>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{jobQuery.data.company_profile?.display_name}</p>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      <section className="grid gap-4 xl:grid-cols-[1fr_0.95fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Datos de envío</CardTitle>
-            <CardDescription>Selecciona el CV que quieres usar y agrega una nota breve si aporta contexto.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <label className="grid gap-2 text-sm">
-              <span>CV a enviar</span>
-              <Select value={selectedResumeId} onChange={(event) => setSelectedResumeId(event.target.value)}>
-                <option value="">Sin CV seleccionado</option>
-                {profileBundle.resumes.map((resume) => (
-                  <option key={resume.id} value={resume.id}>
-                    {resume.filename} {resume.is_default ? '· principal' : ''}
-                  </option>
-                ))}
-              </Select>
-            </label>
-
-            <label className="grid gap-2 text-sm">
-              <span>Cover letter</span>
-              <Textarea
-                rows={8}
-                value={coverLetter}
-                onChange={(event) => setCoverLetter(event.target.value)}
-                placeholder="Explica por que encajas para la vacante, tu contexto o disponibilidad."
-              />
-            </label>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Screening</CardTitle>
-            <CardDescription>Responde las preguntas de esta vacante antes de enviar la postulación.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {jobQuery.data.job_screening_questions?.length ? (
-              jobQuery.data.job_screening_questions.map((question) => (
-                <label key={question.id} className="grid gap-2 text-sm">
-                  <span>
-                    {question.question_text}
-                    {question.is_required ? ' *' : ''}
+        <ol className="relative flex gap-1 overflow-x-auto pb-1 lg:block lg:overflow-visible lg:pb-0 lg:before:absolute lg:before:bottom-4 lg:before:left-4 lg:before:top-4 lg:before:w-px lg:before:bg-(--app-border)">
+          {steps.map((step, index) => {
+            const isActive = currentStep === index && !applicationSubmitted
+            return (
+              <li key={step.name} className="relative min-w-20 flex-1 lg:min-w-0">
+                <button
+                  type="button"
+                  className="flex w-full flex-col items-center gap-2 rounded-xl p-1 text-center transition hover:bg-(--app-surface-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) lg:flex-row lg:items-start lg:gap-3 lg:px-0 lg:py-2 lg:text-left"
+                  onClick={() => goToStep(index)}
+                  disabled={applicationSubmitted}
+                >
+                  <StepDot index={index} currentStep={applicationSubmitted ? TOTAL_STEPS : currentStep} />
+                  <span className="pt-0.5">
+                    <span className={cn('block text-[0.72rem] font-semibold leading-tight lg:text-sm', isActive ? 'text-(--app-text)' : 'text-(--app-text-subtle)')}>
+                      {step.name}
+                    </span>
+                    <span className={cn('mt-0.5 hidden text-xs text-(--app-text-subtle) lg:block', !isActive && 'lg:hidden')}>
+                      {step.subtitle}
+                    </span>
                   </span>
-                  <Textarea
-                    rows={question.answer_type === 'long_text' ? 5 : 3}
-                    value={answers[question.id] ?? ''}
-                    onChange={(event) =>
-                      setAnswers((current) => ({
-                        ...current,
-                        [question.id]: event.target.value
-                      }))
-                    }
-                    placeholder="Escribe tu respuesta"
-                  />
-                </label>
-              ))
-            ) : (
-              <div className="rounded-[24px] border border-dashed border-zinc-300 px-4 py-6 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-                Esta vacante no tiene screening. Puedes enviar la postulación directamente.
-              </div>
-            )}
+                </button>
+              </li>
+            )
+          })}
+        </ol>
+      </aside>
 
-            <div className="flex flex-wrap gap-3">
-              <Button onClick={() => applyMutation.mutate()} disabled={applyMutation.isPending}>
-                {applyMutation.isPending ? 'Enviando...' : 'Enviar postulación'}
-              </Button>
-              <Link to={surfacePaths.public.jobDetail(jobSlug)}>
-                <Button variant="outline">Volver a la vacante</Button>
+      <main className="mx-auto w-full max-w-145">
+        <div className="mb-6 h-1 overflow-hidden rounded-full bg-(--app-border)">
+          <div className="h-full rounded-full bg-primary-600 transition-[width] duration-300 ease-out" style={{ width: progress }} />
+        </div>
+
+        {applicationSubmitted ? (
+          <section className="rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) p-6 text-center shadow-[0_1px_2px_rgba(20,40,90,0.04)] sm:p-8">
+            <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
+              <Check className="size-8" />
+            </div>
+            <h1 className="mt-5 text-2xl font-semibold tracking-tight text-(--app-text)">Postulación enviada</h1>
+            <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+              Enviamos tu perfil, CV y respuestas al equipo de {companyName}. Puedes revisar el estado desde tus postulaciones.
+            </p>
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+              <Link
+                to={surfacePaths.public.jobs}
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-(--app-border) bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+              >
+                Ver más vacantes
+              </Link>
+              <Link
+                to={surfacePaths.candidate.applications}
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-primary-600 bg-primary-600 px-4 text-sm font-semibold text-white transition hover:border-primary-700 hover:bg-primary-700"
+              >
+                Ir a mis postulaciones
               </Link>
             </div>
-          </CardContent>
-        </Card>
-      </section>
+          </section>
+        ) : (
+          <section>
+            {currentStep === 0 ? (
+              <div>
+                <span className="text-xs font-bold uppercase tracking-[0.08em] text-primary-700 dark:text-primary-200">Paso 1 de 4</span>
+                <h1 className="mt-2 text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text)">Tu CV</h1>
+                <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                  Usa uno de tus documentos guardados. Tu perfil de ASI viaja con la postulación, así no repites tus datos.
+                </p>
+
+                <div className="mt-6 space-y-2.5">
+                  {profileBundle.resumes.length ? (
+                    profileBundle.resumes.map((resume) => {
+                      const isSelected = activeResumeId === resume.id
+                      return (
+                        <button
+                          key={resume.id}
+                          type="button"
+                          className={cn(
+                            'flex min-h-17 w-full items-center gap-3 rounded-xl border bg-(--app-surface) px-4 py-3 text-left transition hover:border-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
+                            isSelected
+                              ? 'border-primary-600 shadow-[0_0_0_3px_rgba(57,85,184,0.16)]'
+                              : 'border-(--app-border)'
+                          )}
+                          onClick={() => {
+                            setSelectedResumeId(resume.id)
+                            setShowResumeError(false)
+                          }}
+                        >
+                          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                            <FileText className="size-5" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold text-(--app-text)">{resume.filename}</span>
+                            <span className="mt-0.5 block text-xs text-(--app-text-muted)">
+                              Subido el {formatUploadedAt(resume.uploaded_at)} · {formatFileSize(resume.file_size_bytes)}
+                            </span>
+                          </span>
+                          {resume.is_default ? <Badge className="hidden bg-emerald-50 text-emerald-700 sm:inline-flex">Principal</Badge> : null}
+                          <span
+                            className={cn(
+                              'flex size-5 shrink-0 items-center justify-center rounded-full border-2',
+                              isSelected ? 'border-primary-600' : 'border-(--app-border)'
+                            )}
+                          >
+                            {isSelected ? <span className="size-2.5 rounded-full bg-primary-600" /> : null}
+                          </span>
+                        </button>
+                      )
+                    })
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
+                      Todavía no tienes un CV guardado en tu perfil.
+                    </div>
+                  )}
+                </div>
+
+                <Link
+                  to={surfacePaths.candidate.profile}
+                  className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-xl border border-dashed border-(--app-border) bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text-muted) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+                >
+                  <Upload className="size-4" />
+                  Subir otro documento desde mi perfil
+                </Link>
+                {showResumeError ? <InlineError>Selecciona un CV para continuar.</InlineError> : null}
+
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                  <Link to={surfacePaths.public.jobDetail(jobSlug)}>
+                    <Button variant="outline" className="rounded-xl">Cancelar</Button>
+                  </Link>
+                  <Button className="ml-auto rounded-xl" onClick={goNext}>
+                    Continuar <ArrowRight className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
+            {currentStep === 1 ? (
+              <div>
+                <span className="text-xs font-bold uppercase tracking-[0.08em] text-primary-700 dark:text-primary-200">Paso 2 de 4</span>
+                <h1 className="mt-2 text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text)">Presentación</h1>
+                <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                  Una nota breve y honesta marca la diferencia. Es opcional, pero suele ayudar al equipo que revisa.
+                </p>
+
+                <div className="mt-6 flex gap-3 rounded-xl bg-primary-50 p-4 text-sm leading-6 text-primary-900 dark:bg-primary-500/12 dark:text-primary-100">
+                  <MessageSquareText className="mt-0.5 size-5 shrink-0 text-primary-700 dark:text-primary-200" />
+                  <p>Enfócate en disponibilidad, motivación y experiencia relevante. Evita repetir tu CV completo.</p>
+                </div>
+
+                <label className="mt-6 block">
+                  <span className="text-sm font-semibold text-(--app-text)">
+                    Carta de presentación <span className="font-medium text-(--app-text-subtle)">· opcional</span>
+                  </span>
+                  <Textarea
+                    className="mt-2 min-h-42 rounded-xl"
+                    maxLength={900}
+                    rows={7}
+                    value={coverLetter}
+                    onChange={(event) => setCoverLetter(event.target.value)}
+                    placeholder="Hola, me interesa esta posición porque..."
+                  />
+                  <span className="mt-1 block text-right text-xs text-(--app-text-subtle)">{coverLetter.length} / 900</span>
+                </label>
+
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                  <Button variant="outline" className="rounded-xl" onClick={() => goToStep(0)}>
+                    <ArrowLeft className="size-4" /> Atrás
+                  </Button>
+                  <Button className="ml-auto rounded-xl" onClick={goNext}>
+                    Continuar <ArrowRight className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
+            {currentStep === 2 ? (
+              <div>
+                <span className="text-xs font-bold uppercase tracking-[0.08em] text-primary-700 dark:text-primary-200">Paso 3 de 4</span>
+                <h1 className="mt-2 text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text)">Preguntas</h1>
+                <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                  {companyName} quiere conocerte mejor. Responde con tus palabras.
+                </p>
+
+                <div className="mt-6 space-y-5">
+                  {job.job_screening_questions?.length ? (
+                    job.job_screening_questions.map((question, index) => (
+                      <label key={question.id} className="block">
+                        <span className="flex items-start gap-2 text-sm font-semibold text-(--app-text)">
+                          <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-xs font-bold text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                            {index + 1}
+                          </span>
+                          <span>
+                            {question.question_text}{' '}
+                            {question.is_required ? (
+                              <span className="text-amber-700 dark:text-amber-300">*</span>
+                            ) : (
+                              <span className="font-medium text-(--app-text-subtle)">· opcional</span>
+                            )}
+                          </span>
+                        </span>
+                        <Textarea
+                          className="mt-2 rounded-xl"
+                          rows={question.answer_type === 'long_text' ? 5 : 4}
+                          value={answers[question.id] ?? ''}
+                          onChange={(event) => updateAnswer(question.id, event.target.value)}
+                          placeholder="Escribe tu respuesta"
+                        />
+                        {questionErrors[question.id] ? <InlineError>Esta pregunta es obligatoria.</InlineError> : null}
+                      </label>
+                    ))
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
+                      Esta vacante no tiene screening. Puedes revisar y enviar la postulación.
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                  <Button variant="outline" className="rounded-xl" onClick={() => goToStep(1)}>
+                    <ArrowLeft className="size-4" /> Atrás
+                  </Button>
+                  <Button className="ml-auto rounded-xl" onClick={goNext}>
+                    Revisar <ArrowRight className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
+            {currentStep === 3 ? (
+              <div>
+                <span className="text-xs font-bold uppercase tracking-[0.08em] text-primary-700 dark:text-primary-200">Paso 4 de 4</span>
+                <h1 className="mt-2 text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text)">Revisar y enviar</h1>
+                <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                  Confirma que todo esté correcto. Podrás ver el estado en Postulaciones.
+                </p>
+
+                <div className="mt-6 divide-y divide-(--app-border)">
+                  <div className="flex gap-3 py-4 first:pt-0">
+                    <FileText className="mt-0.5 size-5 shrink-0 text-(--app-text-subtle)" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">CV a enviar</p>
+                      <p className="mt-1 text-sm font-semibold text-(--app-text)">{selectedResume?.filename ?? 'Pendiente'}</p>
+                    </div>
+                    <button type="button" className="text-xs font-semibold text-primary-700 hover:text-primary-800" onClick={() => goToStep(0)}>
+                      Editar
+                    </button>
+                  </div>
+                  <div className="flex gap-3 py-4">
+                    <MessageSquareText className="mt-0.5 size-5 shrink-0 text-(--app-text-subtle)" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Carta de presentación</p>
+                      <p className={cn('mt-1 text-sm leading-6', coverLetter.trim() ? 'text-(--app-text)' : 'text-(--app-text-subtle)')}>
+                        {coverLetter.trim() || 'Sin carta, opcional'}
+                      </p>
+                    </div>
+                    <button type="button" className="text-xs font-semibold text-primary-700 hover:text-primary-800" onClick={() => goToStep(1)}>
+                      Editar
+                    </button>
+                  </div>
+                  <div className="flex gap-3 py-4">
+                    <HelpCircle className="mt-0.5 size-5 shrink-0 text-(--app-text-subtle)" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Respuestas de screening</p>
+                      <div className="mt-1 space-y-1 text-sm leading-6 text-(--app-text)">
+                        {job.job_screening_questions?.length ? (
+                          job.job_screening_questions.map((question, index) => (
+                            <p key={question.id}>
+                              {index + 1}. {answers[question.id]?.trim() || 'Pendiente'}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-(--app-text-subtle)">Sin preguntas para esta vacante.</p>
+                        )}
+                      </div>
+                    </div>
+                    <button type="button" className="text-xs font-semibold text-primary-700 hover:text-primary-800" onClick={() => goToStep(2)}>
+                      Editar
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                  <Button variant="outline" className="rounded-xl" onClick={() => goToStep(2)}>
+                    <ArrowLeft className="size-4" /> Atrás
+                  </Button>
+                  <span className="ml-auto hidden items-center gap-1.5 text-xs font-semibold text-emerald-700 sm:inline-flex dark:text-emerald-300">
+                    <Check className="size-3.5" />
+                    Borrador local
+                  </span>
+                  <Button className="rounded-xl" onClick={submit} disabled={applyMutation.isPending}>
+                    {applyMutation.isPending ? (
+                      'Enviando...'
+                    ) : (
+                      <>
+                        <SendHorizontal className="size-4" /> Enviar postulación
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </section>
+        )}
+
+        <div className="mt-8 flex items-center gap-2 rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-xs text-(--app-text-muted)">
+          <UserRound className="size-4 shrink-0" />
+          Se enviará tu perfil candidato activo: {session.profile?.display_name ?? session.profile?.full_name ?? 'Perfil ASI'}.
+        </div>
+      </main>
     </div>
   )
 }

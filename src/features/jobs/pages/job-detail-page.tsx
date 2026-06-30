@@ -1,22 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import {
+  ArrowLeft,
   Banknote,
   Bookmark,
   BookmarkCheck,
   Building2,
-  Eye,
+  Check,
+  Clock3,
   FileText,
   Globe,
   HelpCircle,
   MapPin,
   SendHorizontal,
-  Sparkles
+  Sparkles,
+  Users
 } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/loader'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -27,14 +32,91 @@ import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 
-const workplaceLabels: Record<string, string> = { remote: 'remoto', hybrid: 'híbrido', on_site: 'presencial' }
+const workplaceLabels: Record<string, string> = { remote: 'Remoto', hybrid: 'Híbrido', on_site: 'Presencial' }
+const employmentLabels: Record<string, string> = {
+  full_time: 'Tiempo completo',
+  part_time: 'Medio tiempo',
+  contract: 'Por contrato',
+  temporary: 'Temporal',
+  internship: 'Pasantía'
+}
 
-const metaChip =
-  'inline-flex items-center gap-1.5 rounded-full border border-(--app-border) bg-(--app-surface) px-3 py-1 text-[0.74rem] text-(--app-text-muted)'
-const actionPrimary =
-  'inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-primary-600 bg-primary-600 px-4 text-[0.85rem] font-semibold text-white shadow-[0_12px_24px_rgba(43,69,143,0.2)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2'
-const actionOutline =
-  'inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-(--app-border) bg-(--app-surface) px-4 text-[0.82rem] font-medium text-(--app-text) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) disabled:cursor-not-allowed disabled:opacity-60 dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200'
+const linkButtonClassName =
+  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-primary-600 bg-primary-600 px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(43,69,143,0.2)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)'
+const outlineLinkButtonClassName =
+  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-(--app-border) bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas) dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200'
+const tagClassName =
+  'inline-flex min-h-8 items-center gap-1.5 rounded-full border border-(--app-border) bg-(--app-surface) px-3 py-1 text-[0.75rem] font-medium text-(--app-text-muted)'
+
+function parseMetadata(value: unknown) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>
+  }
+
+  return {}
+}
+
+function readStringList(metadata: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = metadata[key]
+
+    if (Array.isArray(value)) {
+      const items = value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      if (items.length > 0) {
+        return items
+      }
+    }
+
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value
+        .split(/\n|;/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+    }
+  }
+
+  return []
+}
+
+function initialsFor(value: string | null | undefined) {
+  const normalized = value?.trim()
+  if (!normalized) {
+    return 'AS'
+  }
+
+  return normalized
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((item) => item[0]?.toUpperCase())
+    .join('')
+}
+
+function formatRelativeDate(value: string | null | undefined) {
+  if (!value) {
+    return 'Fecha no indicada'
+  }
+
+  const days = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 86_400_000))
+  if (days === 0) {
+    return 'Publicado hoy'
+  }
+  if (days === 1) {
+    return 'Publicado hace 1 día'
+  }
+
+  return `Publicado hace ${days} días`
+}
+
+function SectionTitle({ icon: Icon, children }: { icon: typeof FileText; children: string }) {
+  return (
+    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-(--app-text)">
+      <span className="flex size-7 items-center justify-center rounded-lg bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+        <Icon className="size-4" />
+      </span>
+      {children}
+    </h2>
+  )
+}
 
 export function JobDetailPage() {
   const { jobSlug = '' } = useParams()
@@ -92,7 +174,7 @@ export function JobDetailPage() {
           <CardDescription>{toErrorMessage(jobQuery.error) || 'El slug no corresponde a una vacante publicada.'}</CardDescription>
         </CardHeader>
         <div className="mt-4">
-          <Link className={actionOutline} to={surfacePaths.public.jobs}>
+          <Link className={outlineLinkButtonClassName} to={surfacePaths.public.jobs}>
             Volver a empleos
           </Link>
         </div>
@@ -101,135 +183,248 @@ export function JobDetailPage() {
   }
 
   const job = jobQuery.data
+  const metadata = parseMetadata(job.opportunity_metadata)
+  const responsibilities = readStringList(metadata, ['responsibilities', 'key_responsibilities', 'responsabilidades'])
+  const descriptionParagraphs = (job.description || 'La empresa aún no agregó una descripción detallada.')
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
   const hasSalaryAmount = Boolean(job.compensation_min_amount || job.compensation_max_amount)
   const compensationLabel = hasSalaryAmount
-    ? `${getCompensationTypeLabel(job.compensation_type)}: ${job.compensation_currency || 'USD'} ${(job.compensation_min_amount || job.compensation_max_amount || 0).toLocaleString()}${job.compensation_min_amount && job.compensation_max_amount ? ` - ${job.compensation_max_amount.toLocaleString()}` : ''}`
+    ? `${job.compensation_currency || 'USD'} ${(job.compensation_min_amount || job.compensation_max_amount || 0).toLocaleString()}${job.compensation_min_amount && job.compensation_max_amount ? ` - ${job.compensation_max_amount.toLocaleString()}` : ''}`
     : getCompensationTypeLabel(job.compensation_type)
   const locationLabel = [job.city_name, job.country_code].filter(Boolean).join(', ') || 'Ubicación flexible'
-  const workplaceLabel = job.workplace_type ? workplaceLabels[job.workplace_type] ?? job.workplace_type : ''
+  const workplaceLabel = job.workplace_type ? workplaceLabels[job.workplace_type] ?? job.workplace_type : 'Sin modalidad'
+  const opportunityLabel = getOpportunityTypeLabel(job.opportunity_type)
+  const employmentLabel = employmentLabels[job.employment_type] ?? job.employment_type
+  const companyName = job.company_profile?.display_name || 'Empresa'
+  const companyInitials = initialsFor(companyName)
+  const applicationPath = session.isAuthenticated ? surfacePaths.public.jobApply(jobSlug) : surfacePaths.auth.signIn
+  const applicationLabel = session.isAuthenticated ? 'Aplicar ahora' : 'Inicia sesión para aplicar'
+  const isSaveDisabled = saveMutation.isPending || !candidateProfileQuery.data?.profile
+
+  const saveButton = (
+    <Button
+      type="button"
+      variant="outline"
+      className="h-11 w-full rounded-xl"
+      onClick={() => saveMutation.mutate(!job.isSaved)}
+      disabled={isSaveDisabled}
+    >
+      {job.isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
+      {job.isSaved ? 'Quitar guardado' : 'Guardar vacante'}
+    </Button>
+  )
 
   return (
     <motion.div
-      className="space-y-5"
+      className="mx-auto max-w-280 pb-24 lg:pb-4"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
     >
       <motion.div variants={cardReveal}>
-        <Card>
-          <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-            {/* Información */}
-            <div className="space-y-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-[0.7rem] font-semibold text-primary-700 dark:border-primary-500/30 dark:bg-primary-500/12 dark:text-primary-300">
-                <Sparkles className="size-3.5" /> Oportunidad ASI
-              </span>
-              <h1 className="max-w-2xl text-2xl font-semibold leading-tight tracking-tight text-(--app-text) sm:text-[1.7rem]">
-                {job.title}
-              </h1>
-              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[0.82rem] text-(--app-text-muted)">
-                <span className="inline-flex items-center gap-1.5">
-                  <Building2 className="size-4" /> {job.company_profile?.display_name || 'Empresa'}
-                </span>
-                <span className="text-(--app-text-subtle)">·</span>
-                <span>{getOpportunityTypeLabel(job.opportunity_type)}{workplaceLabel ? ` ${workplaceLabel}` : ''}</span>
-              </div>
-              {job.summary ? <p className="max-w-2xl text-[0.85rem] leading-6 text-(--app-text-muted)">{job.summary}</p> : null}
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <span className={metaChip}><MapPin className="size-3.5" /> {locationLabel}</span>
-                {job.experience_level ? <span className={metaChip}><Sparkles className="size-3.5" /> {job.experience_level}</span> : null}
-                <span className={cn(metaChip, hasSalaryAmount && 'border-emerald-200 font-semibold text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300')}>
-                  <Banknote className="size-3.5" /> {compensationLabel}
-                </span>
-              </div>
-            </div>
-
-            {/* Acciones */}
-            <div className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) p-4">
-              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">Acciones</p>
-              <div className="mt-3 flex flex-col gap-2.5">
-                {session.isAuthenticated ? (
-                  <Link className={actionPrimary} to={surfacePaths.public.jobApply(jobSlug)}>
-                    <SendHorizontal className="size-4" /> Aplicar ahora
-                  </Link>
-                ) : (
-                  <Link className={actionPrimary} to="/auth/sign-in">
-                    <SendHorizontal className="size-4" /> Inicia sesión para aplicar
-                  </Link>
-                )}
-                {session.isAuthenticated ? (
-                  <button
-                    type="button"
-                    className={actionOutline}
-                    onClick={() => saveMutation.mutate(!job.isSaved)}
-                    disabled={saveMutation.isPending || !candidateProfileQuery.data?.profile}
-                  >
-                    {job.isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
-                    {job.isSaved ? 'Quitar guardado' : 'Guardar vacante'}
-                  </button>
-                ) : null}
-                <Link className={actionOutline} to={surfacePaths.public.jobs}>
-                  <Eye className="size-4" /> Volver al discovery
-                </Link>
-              </div>
-            </div>
-          </div>
-        </Card>
+        <Link
+          to={surfacePaths.public.jobs}
+          className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-(--app-text-muted) transition hover:text-primary-700 dark:hover:text-primary-200"
+        >
+          <ArrowLeft className="size-4" />
+          Volver a vacantes
+        </Link>
       </motion.div>
 
-      <motion.section variants={gridStagger} className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
-        <motion.div variants={cardReveal}>
-          <Card>
-            <h2 className="inline-flex items-center gap-2 text-[0.95rem] font-semibold tracking-tight text-(--app-text)">
-              <FileText className="size-4 text-(--app-text-subtle)" /> Descripción completa
-            </h2>
-            <div className="mt-3 whitespace-pre-wrap text-[0.82rem] leading-6 text-(--app-text-muted)">
-              {job.description || 'La empresa aún no agregó una descripción detallada.'}
+      <motion.header variants={cardReveal} className="border-b border-(--app-border) pb-6">
+        <div className="flex flex-col gap-4 min-[860px]:flex-row min-[860px]:items-start">
+          <div className="flex size-15 shrink-0 items-center justify-center rounded-2xl bg-[#c2683a] text-lg font-bold text-white shadow-sm">
+            {companyInitials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <Badge className="gap-1.5 bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+              <Sparkles className="size-3.5" />
+              Oportunidad ASI
+            </Badge>
+            <h1 className="mt-3 max-w-3xl text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text) sm:text-[1.7rem]">
+              {job.title}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm font-medium text-(--app-text-muted)">
+              <span className="inline-flex items-center gap-1.5">
+                <Building2 className="size-4 text-(--app-text-subtle)" /> {companyName}
+              </span>
+              <span className="size-1 rounded-full bg-(--app-text-subtle)" />
+              <span>{opportunityLabel}</span>
             </div>
-          </Card>
-        </motion.div>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className={tagClassName}>
+                <MapPin className="size-3.5" /> {locationLabel}
+              </span>
+              {job.experience_level ? (
+                <span className={tagClassName}>
+                  <Users className="size-3.5" /> {job.experience_level}
+                </span>
+              ) : null}
+              <span className={cn(tagClassName, hasSalaryAmount && 'border-emerald-200 text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300')}>
+                <Banknote className="size-3.5" /> {compensationLabel}
+              </span>
+              <span className={tagClassName}>
+                <Clock3 className="size-3.5" /> {formatRelativeDate(job.published_at)}
+              </span>
+            </div>
+          </div>
+          <div className="hidden w-58 shrink-0 flex-col gap-2 min-[1080px]:flex">
+            <Link className={linkButtonClassName} to={applicationPath}>
+              <SendHorizontal className="size-4" /> {applicationLabel}
+            </Link>
+            {session.isAuthenticated ? saveButton : null}
+          </div>
+        </div>
+      </motion.header>
 
-        <motion.div variants={gridStagger} className="space-y-4">
+      <motion.div variants={gridStagger} className="mt-7 grid gap-7 xl:grid-cols-[1fr_19.5rem]">
+        <motion.main variants={gridStagger} className="space-y-8">
+          <motion.section variants={cardReveal} className="space-y-3">
+            <SectionTitle icon={FileText}>Descripción del puesto</SectionTitle>
+            <div className="space-y-3 text-[0.94rem] leading-7 text-(--app-text-muted)">
+              {descriptionParagraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
+          </motion.section>
+
+          <motion.section variants={cardReveal} className="space-y-3">
+            <SectionTitle icon={Check}>Responsabilidades</SectionTitle>
+            {responsibilities.length > 0 ? (
+              <div className="space-y-2">
+                {responsibilities.map((responsibility) => (
+                  <div
+                    key={responsibility}
+                    className="flex items-start gap-3 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 py-3 text-sm shadow-[0_1px_2px_rgba(20,40,90,0.04)] transition hover:border-primary-200 hover:bg-primary-50/40 dark:hover:border-primary-500/30 dark:hover:bg-primary-500/8"
+                  >
+                    <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                      <Check className="size-3.5" />
+                    </span>
+                    <span className="font-medium leading-6 text-(--app-text)">{responsibility}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-xl border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
+                La empresa todavía no detalló responsabilidades específicas para esta vacante.
+              </p>
+            )}
+          </motion.section>
+
+          <motion.section variants={cardReveal} className="space-y-3">
+            <SectionTitle icon={HelpCircle}>Preguntas de filtrado</SectionTitle>
+            <p className="text-sm text-(--app-text-muted)">Visibles desde ahora; las responderás al aplicar a la vacante.</p>
+            <div className="space-y-2">
+              {job.job_screening_questions?.length ? (
+                job.job_screening_questions.map((question, index) => (
+                  <div
+                    key={question.id}
+                    className="flex items-start gap-3 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 py-3 text-sm shadow-[0_1px_2px_rgba(20,40,90,0.04)]"
+                  >
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-xs font-bold text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                      {index + 1}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-semibold text-(--app-text)">{question.question_text}</span>
+                      <span className="mt-1 block text-[0.75rem] text-(--app-text-subtle)">
+                        <span className={question.is_required ? 'font-semibold text-amber-700 dark:text-amber-300' : ''}>
+                          {question.is_required ? 'Obligatoria' : 'Opcional'}
+                        </span>{' '}
+                        · respuesta abierta
+                      </span>
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="rounded-xl border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
+                  Esta vacante no tiene preguntas de filtrado.
+                </p>
+              )}
+            </div>
+          </motion.section>
+        </motion.main>
+
+        <motion.aside variants={gridStagger} className="space-y-4 xl:sticky xl:top-4 xl:self-start">
           <motion.div variants={cardReveal}>
-            <Card>
-              <h2 className="inline-flex items-center gap-2 text-[0.95rem] font-semibold tracking-tight text-(--app-text)">
-                <Building2 className="size-4 text-(--app-text-subtle)" /> Resumen de la empresa
-              </h2>
-              <p className="mt-3 text-[0.85rem] font-semibold text-(--app-text)">{job.company_profile?.display_name || 'Empresa'}</p>
-              {job.company_profile?.industry ? <p className="mt-0.5 text-[0.78rem] text-(--app-text-muted)">{job.company_profile.industry}</p> : null}
-              {job.company_profile?.description ? <p className="mt-2 text-[0.8rem] leading-6 text-(--app-text-muted)">{job.company_profile.description}</p> : null}
+            <Card className="rounded-xl p-4">
+              <div className="flex flex-col gap-2">
+                <Link className={linkButtonClassName} to={applicationPath}>
+                  <SendHorizontal className="size-4" /> {applicationLabel}
+                </Link>
+                {session.isAuthenticated ? saveButton : null}
+              </div>
+              <dl className="mt-4 divide-y divide-(--app-border)">
+                <div className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <dt className="text-(--app-text-subtle)">Modalidad</dt>
+                  <dd className="font-semibold text-(--app-text)">{workplaceLabel}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <dt className="text-(--app-text-subtle)">Tipo</dt>
+                  <dd className="text-right font-semibold text-(--app-text)">{employmentLabel}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <dt className="text-(--app-text-subtle)">Oportunidad</dt>
+                  <dd className="text-right font-semibold text-(--app-text)">{opportunityLabel}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <dt className="text-(--app-text-subtle)">Preguntas</dt>
+                  <dd className="font-semibold text-(--app-text)">{job.job_screening_questions?.length ?? 0}</dd>
+                </div>
+              </dl>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={cardReveal}>
+            <Card className="rounded-xl p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Sobre la empresa</p>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-sm font-bold text-white">
+                  {companyInitials}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-(--app-text)">{companyName}</p>
+                  {job.company_profile?.industry ? (
+                    <p className="text-xs text-(--app-text-muted)">{job.company_profile.industry}</p>
+                  ) : null}
+                </div>
+              </div>
+              {job.company_profile?.description ? (
+                <p className="mt-3 line-clamp-4 text-sm leading-6 text-(--app-text-muted)">{job.company_profile.description}</p>
+              ) : null}
               {job.company_profile?.website_url ? (
-                <a className={cn(actionOutline, 'mt-3 w-auto px-3.5')} href={job.company_profile.website_url} rel="noreferrer" target="_blank">
-                  <Globe className="size-4" /> Visitar website
+                <a
+                  className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary-700 transition hover:text-primary-800 dark:text-primary-200 dark:hover:text-primary-100"
+                  href={job.company_profile.website_url}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <Globe className="size-4" /> Visitar sitio web
                 </a>
               ) : null}
             </Card>
           </motion.div>
+        </motion.aside>
+      </motion.div>
 
-          <motion.div variants={cardReveal}>
-            <Card>
-              <h2 className="inline-flex items-center gap-2 text-[0.95rem] font-semibold tracking-tight text-(--app-text)">
-                <HelpCircle className="size-4 text-(--app-text-subtle)" /> Preguntas de filtrado
-              </h2>
-              <p className="mt-1 text-[0.78rem] text-(--app-text-muted)">Visibles desde ya; las responderás al aplicar a la vacante.</p>
-              <div className="mt-3 space-y-2">
-                {job.job_screening_questions?.length ? (
-                  job.job_screening_questions.map((question) => (
-                    <div key={question.id} className="flex items-start gap-2 rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3.5 py-2.5 text-[0.82rem]">
-                      <FileText className="mt-0.5 size-4 shrink-0 text-(--app-text-subtle)" />
-                      <span>
-                        <span className="block font-medium text-(--app-text)">{question.question_text}</span>
-                        <span className="mt-0.5 block text-[0.72rem] text-(--app-text-subtle)">{question.is_required ? 'Requerida' : 'Opcional'}</span>
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-[0.8rem] text-(--app-text-muted)">Esta vacante no tiene preguntas de filtrado.</p>
-                )}
-              </div>
-            </Card>
-          </motion.div>
-        </motion.div>
-      </motion.section>
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-(--app-border) bg-(--app-surface)/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur min-[860px]:hidden">
+        {session.isAuthenticated ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="size-11 shrink-0 rounded-xl px-0"
+            aria-label={job.isSaved ? 'Quitar guardado' : 'Guardar vacante'}
+            onClick={() => saveMutation.mutate(!job.isSaved)}
+            disabled={isSaveDisabled}
+          >
+            {job.isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
+          </Button>
+        ) : null}
+        <Link className={linkButtonClassName} to={applicationPath}>
+          {applicationLabel}
+        </Link>
+      </div>
     </motion.div>
   )
 }
