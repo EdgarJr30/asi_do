@@ -503,6 +503,7 @@ Rules:
 7. When Motion is available, prefer Motion-driven enters, exits, layout transitions, and hover movement over CSS transition choreography for landing-page surfaces and marketing interactions. Static color, border, and state styles may remain in CSS, but the actual movement should come from Motion.
 8. Smooth scrolling should feel native and calm. Anchor or section jumps should use a soft scroll behavior by default, while reduced-motion preferences must disable that smoothing.
 9. Primary candidate surfaces may use the shared smooth page-entry variants for first-render orientation only: a slow opacity/vertical-offset reveal with staged children. Keep control feedback, tab changes, filters, and destructive confirmations responsive; do not use the slow reveal timing for frequent task actions.
+10. Internal tab panels in candidate-facing task surfaces, such as membership status and candidate profile editing, should use a short Motion-driven panel transition with reduced-motion fallback. Avoid abrupt unmount/remount jumps, but keep the timing fast enough that editing, filtering, and checking receipts still feel immediate.
 
 ---
 

@@ -347,6 +347,9 @@ Do not constrain candidate application history to a narrow centered container wh
 ### R-093 — Candidate application filters must not duplicate controls
 Do not show both clickable status summary cards and a separate segmented status control on the candidate `Postulaciones` page. The summary cards are the status filters; the search row should stay focused on text search unless a future filter adds a distinct, non-redundant criterion.
 
+### R-094 — Candidate tab panels must transition smoothly
+Do not let candidate-facing internal tabs, including `Tu membresía` tabs and `Mi perfil` editor tabs, switch content with abrupt unmount/remount jumps. Use the shared tab-panel motion variant with reduced-motion fallback so tab changes feel smooth without delaying task actions.
+
 ---
 
 ## Maintenance rule

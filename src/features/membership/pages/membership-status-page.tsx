@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { motion, useReducedMotion } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
   AlertCircle,
   ArrowRight,
@@ -30,9 +30,11 @@ import { payMembershipWithAzul, type AzulPaymentIntent } from '@/features/member
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { printReceipt, receiptPlainText, shareReceipt, type ReceiptLine } from '@/shared/ui/receipt'
 import {
+  reducedTabPanelReveal,
   smoothCardReveal as cardReveal,
   smoothGridStagger as gridStagger,
-  smoothPageStagger as pageStagger
+  smoothPageStagger as pageStagger,
+  tabPanelReveal
 } from '@/shared/ui/card-motion'
 import {
   fetchMyMembershipStatus,
@@ -298,6 +300,7 @@ export function MembershipStatusPage() {
   const firstReceiptId = bundle.verifiedPayments[0]?.id ?? null
   const visibleOpenReceiptId = openReceiptId === undefined ? firstReceiptId : openReceiptId
   const membershipProgress = computeMembershipTermProgress(membershipActivatedAt, membershipExpiresAt)
+  const activeTabPanelVariants = shouldReduceMotion ? reducedTabPanelReveal : tabPanelReveal
 
   // Resultado del retorno de AZUL (?payment=approved|declined|cancelled|error): avisa y refresca.
   const [searchParams, setSearchParams] = useSearchParams()
@@ -477,66 +480,91 @@ export function MembershipStatusPage() {
                 </nav>
 
               <div className="mt-4">
-                {activeTab === 'summary' ? (
-                  <div className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
-                    <SummaryRow
-                      icon={FileText}
-                      label="Solicitud"
-                      value={bundle.application ? applicationStatusLabels[bundle.application.status] ?? bundle.application.status : 'No enviada'}
-                      tone={bundle.application?.status === 'approved' ? 'success' : 'neutral'}
-                    />
-                    <SummaryRow
-                      icon={CreditCard}
-                      label="Pago"
-                      value={session.hasActiveAsiAccess ? 'Verificado' : bundle.payment ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status : 'Pendiente'}
-                      tone={session.hasActiveAsiAccess || bundle.payment?.status === 'verified' ? 'success' : 'neutral'}
-                    />
-                    <SummaryRow icon={ShieldCheck} label="Acceso" value={session.hasActiveAsiAccess ? 'Activo' : 'Pendiente'} tone={session.hasActiveAsiAccess ? 'success' : 'neutral'} />
-                    <SummaryRow icon={CreditCard} label="Cuota anual" value={dueAmountLabel ?? due?.label ?? 'Por definir'} />
-                    <SummaryRow icon={Clock} label="Vigencia restante" value={remainingMembership} />
-                    <SummaryRow icon={Sparkles} label="Categoría" value={bundle.application?.category_name ?? 'Sin categoría'} />
-                  </div>
-                ) : null}
-
-                {activeTab === 'route' ? (
-                  <div className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) px-5 py-2 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
-                    {steps.map((step) => (
-                      <MembershipStep
-                        key={step.key}
-                        step={step}
-                        onStartApplication={() => void navigate(surfacePaths.institutional.eligibility)}
+                <AnimatePresence mode="wait" initial={false}>
+                  {activeTab === 'summary' ? (
+                    <motion.div
+                      key="summary"
+                      variants={activeTabPanelVariants}
+                      initial="hidden"
+                      animate="show"
+                      exit="exit"
+                      className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]"
+                    >
+                      <SummaryRow
+                        icon={FileText}
+                        label="Solicitud"
+                        value={bundle.application ? applicationStatusLabels[bundle.application.status] ?? bundle.application.status : 'No enviada'}
+                        tone={bundle.application?.status === 'approved' ? 'success' : 'neutral'}
                       />
-                    ))}
-                  </div>
-                ) : null}
+                      <SummaryRow
+                        icon={CreditCard}
+                        label="Pago"
+                        value={session.hasActiveAsiAccess ? 'Verificado' : bundle.payment ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status : 'Pendiente'}
+                        tone={session.hasActiveAsiAccess || bundle.payment?.status === 'verified' ? 'success' : 'neutral'}
+                      />
+                      <SummaryRow icon={ShieldCheck} label="Acceso" value={session.hasActiveAsiAccess ? 'Activo' : 'Pendiente'} tone={session.hasActiveAsiAccess ? 'success' : 'neutral'} />
+                      <SummaryRow icon={CreditCard} label="Cuota anual" value={dueAmountLabel ?? due?.label ?? 'Por definir'} />
+                      <SummaryRow icon={Clock} label="Vigencia restante" value={remainingMembership} />
+                      <SummaryRow icon={Sparkles} label="Categoría" value={bundle.application?.category_name ?? 'Sin categoría'} />
+                    </motion.div>
+                  ) : null}
 
-                {activeTab === 'receipts' ? (
-                  bundle.verifiedPayments.length > 0 ? (
-                    <div className="space-y-3">
-                      <p className="px-0.5 text-sm text-(--app-text-subtle)">
-                        {bundle.verifiedPayments.length}{' '}
-                        {bundle.verifiedPayments.length === 1 ? 'comprobante' : 'comprobantes'}. Toca uno para ver el detalle.
-                      </p>
-                      {bundle.verifiedPayments.map((paymentItem) => (
-                        <MembershipReceiptCard
-                          key={paymentItem.id}
-                          payment={paymentItem}
-                          currency={bundle.settings?.currency ?? paymentItem.currency ?? 'DOP'}
-                          categoryLabel={due?.label ?? bundle.application?.category_name ?? null}
-                          isOpen={visibleOpenReceiptId === paymentItem.id}
-                          onToggle={() => setOpenReceiptId((current) => {
-                            const visibleCurrent = current === undefined ? firstReceiptId : current
-                            return visibleCurrent === paymentItem.id ? null : paymentItem.id
-                          })}
+                  {activeTab === 'route' ? (
+                    <motion.div
+                      key="route"
+                      variants={activeTabPanelVariants}
+                      initial="hidden"
+                      animate="show"
+                      exit="exit"
+                      className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) px-5 py-2 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]"
+                    >
+                      {steps.map((step) => (
+                        <MembershipStep
+                          key={step.key}
+                          step={step}
+                          onStartApplication={() => void navigate(surfacePaths.institutional.eligibility)}
                         />
                       ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-muted) p-5 text-sm text-(--app-text-muted)">
-                      Aún no hay comprobantes verificados disponibles. Cuando un pago sea aprobado, aparecerá aquí.
-                    </div>
-                  )
-                ) : null}
+                    </motion.div>
+                  ) : null}
+
+                  {activeTab === 'receipts' ? (
+                    <motion.div
+                      key="receipts"
+                      variants={activeTabPanelVariants}
+                      initial="hidden"
+                      animate="show"
+                      exit="exit"
+                      className="space-y-3"
+                    >
+                      {bundle.verifiedPayments.length > 0 ? (
+                        <>
+                          <p className="px-0.5 text-sm text-(--app-text-subtle)">
+                            {bundle.verifiedPayments.length}{' '}
+                            {bundle.verifiedPayments.length === 1 ? 'comprobante' : 'comprobantes'}. Toca uno para ver el detalle.
+                          </p>
+                          {bundle.verifiedPayments.map((paymentItem) => (
+                            <MembershipReceiptCard
+                              key={paymentItem.id}
+                              payment={paymentItem}
+                              currency={bundle.settings?.currency ?? paymentItem.currency ?? 'DOP'}
+                              categoryLabel={due?.label ?? bundle.application?.category_name ?? null}
+                              isOpen={visibleOpenReceiptId === paymentItem.id}
+                              onToggle={() => setOpenReceiptId((current) => {
+                                const visibleCurrent = current === undefined ? firstReceiptId : current
+                                return visibleCurrent === paymentItem.id ? null : paymentItem.id
+                              })}
+                            />
+                          ))}
+                        </>
+                      ) : (
+                        <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-muted) p-5 text-sm text-(--app-text-muted)">
+                          Aún no hay comprobantes verificados disponibles. Cuando un pago sea aprobado, aparecerá aquí.
+                        </div>
+                      )}
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
               </div>
             </motion.div>
           </motion.section>

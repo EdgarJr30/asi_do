@@ -2,7 +2,7 @@ import { type Dispatch, type ReactNode, type SetStateAction, useState } from 're
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { motion, useReducedMotion } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
   ArrowRight,
   Briefcase,
@@ -33,7 +33,12 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { isDominicanRepublicCountryCode } from '@/shared/geo/location-options'
-import { smoothCardReveal as cardReveal, smoothPageStagger as pageStagger } from '@/shared/ui/card-motion'
+import {
+  reducedTabPanelReveal,
+  smoothCardReveal as cardReveal,
+  smoothPageStagger as pageStagger,
+  tabPanelReveal
+} from '@/shared/ui/card-motion'
 import { CountryCodeSelect, DominicanCitySelect } from '@/shared/ui/location-selects'
 import { cn } from '@/lib/utils/cn'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -622,6 +627,7 @@ function CandidateProfileEditor({
   const skillCount = sanitizeCandidateSkillList(skills).length
   const languageCount = sanitizeCandidateLanguageList(languages).length
   const experienceCount = sanitizeCandidateExperienceList(experiences).length
+  const activeTabPanelVariants = shouldReduceMotion ? reducedTabPanelReveal : tabPanelReveal
   const completionItems = [
     Boolean(watched.headline?.trim()),
     Boolean(watched.summary?.trim()),
@@ -732,8 +738,10 @@ function CandidateProfileEditor({
             ))}
           </div>
 
-          {activeTab === 'general' ? (
-            <ProfileSection
+          <AnimatePresence mode="wait" initial={false}>
+            {activeTab === 'general' ? (
+              <motion.div key="general" variants={activeTabPanelVariants} initial="hidden" animate="show" exit="exit">
+                <ProfileSection
               icon={Sparkles}
               title="Perfil general"
               description="Resumen reutilizable para futuras aplicaciones y nuevas oportunidades."
@@ -768,11 +776,13 @@ function CandidateProfileEditor({
                   />
                 </ProfileField>
               </div>
-            </ProfileSection>
-          ) : null}
+                </ProfileSection>
+              </motion.div>
+            ) : null}
 
-          {activeTab === 'cv' ? (
-            <ProfileSection
+            {activeTab === 'cv' ? (
+              <motion.div key="cv" variants={activeTabPanelVariants} initial="hidden" animate="show" exit="exit">
+                <ProfileSection
               icon={FileText}
               title="CV y visibilidad"
               description={`Sube versiones reutilizables privadas y controla si apareces en el directorio. Tamaño máximo ${MAX_UPLOAD_SIZE_LABEL}.`}
@@ -886,11 +896,19 @@ function CandidateProfileEditor({
                   </span>
                 </label>
               </div>
-            </ProfileSection>
-          ) : null}
+                </ProfileSection>
+              </motion.div>
+            ) : null}
 
-          {activeTab === 'experience' ? (
-            <div className="space-y-4">
+            {activeTab === 'experience' ? (
+              <motion.div
+                key="experience"
+                variants={activeTabPanelVariants}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+                className="space-y-4"
+              >
               <ProfileSection
                 icon={Briefcase}
                 title="Experiencia"
@@ -1086,11 +1104,18 @@ function CandidateProfileEditor({
                   </div>
                 ))}
               </ProfileSection>
-            </div>
-          ) : null}
+              </motion.div>
+            ) : null}
 
-          {activeTab === 'skills' ? (
-            <div className="space-y-4">
+            {activeTab === 'skills' ? (
+              <motion.div
+                key="skills"
+                variants={activeTabPanelVariants}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+                className="space-y-4"
+              >
               <AccordionSection
                 icon={Sparkles}
                 title="Skills"
@@ -1227,8 +1252,9 @@ function CandidateProfileEditor({
                   </div>
                 ))}
               </AccordionSection>
-            </div>
-          ) : null}
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
         </motion.div>
 
         <motion.aside variants={cardReveal} className="flex h-full flex-col gap-4">
