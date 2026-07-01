@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase/client'
 import { prepareUploadFile, RECRUITER_LOGO_MIME_TYPES } from '@/lib/uploads/media'
-import type { Tables } from '@/shared/types/database'
+import type { Tables, TablesUpdate } from '@/shared/types/database'
 
 interface WorkspaceMembershipRow extends Tables<'memberships'> {
   user: Pick<
@@ -113,21 +113,26 @@ export async function updateWorkspaceProfile(input: {
   logoPath?: string | null
 }) {
   const client = requireSupabase()
+  const payload: TablesUpdate<'company_profiles'> = {
+    display_name: input.displayName.trim(),
+    legal_name: input.legalName.trim(),
+    website_url: input.websiteUrl?.trim() || null,
+    company_email: input.companyEmail?.trim() || null,
+    company_phone: input.companyPhone?.trim() || null,
+    country_code: input.countryCode?.trim().toUpperCase() || null,
+    industry: input.industry?.trim() || null,
+    size_range: input.sizeRange?.trim() || null,
+    description: input.description?.trim() || null,
+    is_public: input.isPublic
+  }
+
+  if ('logoPath' in input) {
+    payload.logo_path = input.logoPath
+  }
+
   const response = await client
     .from('company_profiles')
-    .update({
-      display_name: input.displayName.trim(),
-      legal_name: input.legalName.trim(),
-      website_url: input.websiteUrl?.trim() || null,
-      company_email: input.companyEmail?.trim() || null,
-      company_phone: input.companyPhone?.trim() || null,
-      country_code: input.countryCode?.trim().toUpperCase() || null,
-      industry: input.industry?.trim() || null,
-      size_range: input.sizeRange?.trim() || null,
-      description: input.description?.trim() || null,
-      is_public: input.isPublic,
-      logo_path: input.logoPath ?? undefined
-    })
+    .update(payload)
     .eq('tenant_id', input.tenantId)
     .select('*')
     .single()
