@@ -7,10 +7,10 @@ import {
   ExternalLink,
   GraduationCap,
   Mail,
+  MapPin,
   Search,
   SlidersHorizontal,
-  Sparkles,
-  X
+  Sparkles
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSearchParams } from 'react-router-dom'
@@ -22,6 +22,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { Pagination } from '@/components/ui/pagination'
 import { Select } from '@/components/ui/select'
+import { SideSheet } from '@/components/ui/side-sheet'
 import { Spinner } from '@/components/ui/loader'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import {
@@ -36,6 +37,8 @@ import { cn } from '@/lib/utils/cn'
 
 const TALENT_PAGE_SIZE = 8
 
+type SortOption = 'relevance' | 'score' | 'name' | 'experience'
+
 function candidateInitials(value: string) {
   return (
     value
@@ -48,13 +51,10 @@ function candidateInitials(value: string) {
 }
 
 function scorePillClass(score: number) {
-  if (score >= 75) {
+  if (score >= 85) {
     return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300'
   }
-  if (score >= 50) {
-    return 'bg-amber-50 text-amber-700 dark:bg-amber-500/12 dark:text-amber-300'
-  }
-  return 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300'
+  return 'bg-amber-50 text-amber-700 dark:bg-amber-500/12 dark:text-amber-300'
 }
 
 function locationLabel(candidate: Pick<CandidateDirectoryRow, 'city_name' | 'country_code'>) {
@@ -69,8 +69,8 @@ export function TalentDirectoryPage() {
   const [skill, setSkill] = useState('')
   const [language, setLanguage] = useState('')
   const [countryCode, setCountryCode] = useState('')
-  const [sort, setSort] = useState<'relevance' | 'name'>('relevance')
-  const [showFilters, setShowFilters] = useState(true)
+  const [sort, setSort] = useState<SortOption>('relevance')
+  const [showFilters, setShowFilters] = useState(false)
   const [page, setPage] = useState(0)
   // Permite deep-link desde Aplicaciones: `/workspace/talent?candidate=<id>` abre
   // directamente el perfil del candidato que aplicó.
@@ -78,6 +78,9 @@ export function TalentDirectoryPage() {
   const [selectedCandidateProfileId, setSelectedCandidateProfileId] = useState<string | null>(
     () => searchParams.get('candidate')
   )
+
+  // Nº de filtros avanzados aplicados; alimenta el badge del botón "Más filtros".
+  const activeFilterCount = [skill.trim(), language.trim(), countryCode.trim()].filter(Boolean).length
 
   function selectCandidate(candidateProfileId: string | null) {
     setSelectedCandidateProfileId(candidateProfileId)
@@ -125,11 +128,19 @@ export function TalentDirectoryPage() {
 
   const rows = useMemo(() => {
     const data = searchQuery.data ?? []
-    return [...data].sort((left, right) =>
-      sort === 'relevance'
-        ? right.completeness_score - left.completeness_score
-        : left.display_name.localeCompare(right.display_name)
-    )
+    return [...data].sort((left, right) => {
+      switch (sort) {
+        case 'score':
+          return right.completeness_score - left.completeness_score
+        case 'name':
+          return left.display_name.localeCompare(right.display_name)
+        case 'experience':
+          return right.total_experiences - left.total_experiences
+        case 'relevance':
+        default:
+          return right.completeness_score - left.completeness_score
+      }
+    })
   }, [searchQuery.data, sort])
 
   const pageCount = Math.max(1, Math.ceil(rows.length / TALENT_PAGE_SIZE))
@@ -141,6 +152,8 @@ export function TalentDirectoryPage() {
     setPage(0)
   }
 
+  const detailOpen = Boolean(selectedCandidateProfileId)
+
   return (
     <motion.div
       className="space-y-5"
@@ -151,13 +164,14 @@ export function TalentDirectoryPage() {
       <motion.div variants={cardReveal}>
         <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">Candidatos</h1>
         <p className="mt-1 text-sm text-(--app-text-muted)">
-          {rows.length} {rows.length === 1 ? 'perfil visible' : 'perfiles visibles'}
+          <span className="font-semibold text-(--app-text)">{rows.length}</span>{' '}
+          {rows.length === 1 ? 'perfil visible' : 'perfiles visibles'}
         </p>
       </motion.div>
 
       <motion.div variants={cardReveal} className="space-y-2.5">
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-          <div className="flex flex-1 items-center gap-2.5 rounded-2xl border border-(--app-border) bg-(--app-surface) px-3.5">
+          <div className="flex flex-1 items-center gap-2.5 rounded-2xl border border-(--app-border) bg-(--app-surface) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-300 focus-within:ring-2 focus-within:ring-(--app-ring)">
             <Search aria-hidden="true" className="size-4 text-(--app-text-subtle)" />
             <input
               value={query}
@@ -169,17 +183,28 @@ export function TalentDirectoryPage() {
               className="h-11 w-full bg-transparent text-sm text-(--app-text) outline-none placeholder:text-(--app-text-subtle)"
             />
           </div>
-          <Select className="sm:w-52" value={sort} onChange={(event) => setSort(event.target.value as 'relevance' | 'name')}>
+          <Select className="sm:w-56" value={sort} onChange={(event) => setSort(event.target.value as SortOption)}>
             <option value="relevance">Ordenar: Relevancia</option>
-            <option value="name">Ordenar: Nombre</option>
+            <option value="score">Ordenar: Score</option>
+            <option value="name">Ordenar: Nombre A–Z</option>
+            <option value="experience">Ordenar: Experiencia</option>
           </Select>
           <Button
             variant="outline"
-            className="h-11 gap-1.5"
+            className={cn(
+              'h-11 gap-1.5',
+              showFilters && 'border-primary-300 bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200'
+            )}
+            aria-expanded={showFilters}
             onClick={() => setShowFilters((current) => !current)}
           >
             <SlidersHorizontal className="size-4" />
             Más filtros
+            {activeFilterCount > 0 ? (
+              <span className="inline-flex min-w-[1.125rem] items-center justify-center rounded-full bg-primary-600 px-1.5 text-[0.68rem] font-bold text-white">
+                {activeFilterCount}
+              </span>
+            ) : null}
           </Button>
         </div>
 
@@ -213,217 +238,175 @@ export function TalentDirectoryPage() {
         ) : null}
       </motion.div>
 
-      <motion.section variants={cardReveal} className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <div className="min-w-0">
-          <Card className="overflow-hidden p-0">
-            {searchQuery.isLoading ? (
-              <div className="flex items-center gap-2.5 px-6 py-10 text-sm text-(--app-text-muted)">
-                <Spinner size="sm" /> Buscando candidatos…
-              </div>
-            ) : searchQuery.error ? (
-              <div className="px-6 py-10 text-sm text-rose-600 dark:text-rose-300">{toErrorMessage(searchQuery.error)}</div>
-            ) : pageRows.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[680px] border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-(--app-border) bg-(--app-surface-muted) text-left text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle)">
-                      <th className="px-5 py-3 font-semibold">Candidato</th>
-                      <th className="px-4 py-3 font-semibold">Perfil</th>
-                      <th className="px-4 py-3 font-semibold">Ubicación</th>
-                      <th className="px-4 py-3 font-semibold">Score</th>
-                      <th className="px-4 py-3 font-semibold">Skills</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pageRows.map((candidate) => {
-                      const isSelected = selectedCandidateProfileId === candidate.candidate_profile_id
-                      return (
-                        <tr
-                          key={candidate.candidate_profile_id}
-                          onClick={() => selectCandidate(candidate.candidate_profile_id)}
-                          className={cn(
-                            'cursor-pointer border-b border-(--app-border)/70 transition-colors last:border-0',
-                            isSelected ? 'bg-primary-50/70 dark:bg-primary-500/12' : 'hover:bg-(--app-surface-muted)/60'
-                          )}
-                        >
-                          <td className="px-5 py-3">
-                            <div className="flex items-center gap-3">
-                              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-[11px] font-semibold text-white">
-                                {candidateInitials(candidate.display_name)}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="truncate font-medium text-(--app-text)">{candidate.display_name}</p>
-                                <p className="truncate text-xs text-(--app-text-subtle)">{candidate.total_experiences} experiencias</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-(--app-text-muted)">
-                            {candidate.desired_role || candidate.headline || 'Perfil visible'}
-                          </td>
-                          <td className="px-4 py-3 text-(--app-text-muted)">{locationLabel(candidate)}</td>
-                          <td className="px-4 py-3">
-                            <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[0.72rem] font-semibold', scorePillClass(candidate.completeness_score))}>
-                              {candidate.completeness_score}%
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex flex-wrap gap-1.5">
-                              {candidate.skill_names.slice(0, 3).map((item) => (
-                                <span key={item} className="inline-flex items-center rounded-full bg-(--app-surface-muted) px-2.5 py-1 text-[0.72rem] font-medium text-(--app-text-muted)">
-                                  {item}
-                                </span>
-                              ))}
-                              {candidate.skill_names.length === 0 ? <span className="text-(--app-text-subtle)">—</span> : null}
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="p-4">
-                <EmptyState title="Sin candidatos" description="No encontramos perfiles visibles con esta combinación de filtros." />
-              </div>
-            )}
-          </Card>
-
-          {!searchQuery.isLoading && rows.length > 0 ? (
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-(--app-text-muted)">
-                Mostrando {pageStart + 1} a {Math.min(pageStart + TALENT_PAGE_SIZE, rows.length)} de {rows.length}{' '}
-                {rows.length === 1 ? 'perfil' : 'perfiles'}
-              </p>
-              {pageCount > 1 ? (
-                <Pagination page={safePage} totalPages={pageCount} onPageChange={setPage} ariaLabel="Paginación de talentos" />
-              ) : null}
+      <motion.section variants={cardReveal} className="min-w-0">
+        <Card className="overflow-hidden p-0">
+          {searchQuery.isLoading ? (
+            <div className="flex items-center gap-2.5 px-6 py-10 text-sm text-(--app-text-muted)">
+              <Spinner size="sm" /> Buscando candidatos…
             </div>
-          ) : null}
-        </div>
-
-        <div className="xl:sticky xl:top-4 xl:self-start">
-          {!selectedCandidateProfileId ? (
-            <Card className="flex min-h-[280px] flex-col items-center justify-center gap-2 border-dashed text-center">
-              <span className="flex size-11 items-center justify-center rounded-full bg-(--app-surface-muted) text-(--app-text-subtle)">
-                <Sparkles className="size-5" />
-              </span>
-              <p className="text-sm font-semibold text-(--app-text)">Selecciona un candidato</p>
-              <p className="max-w-[15rem] text-xs text-(--app-text-muted)">
-                Elige un perfil de la tabla para revisar su experiencia, educación y habilidades.
-              </p>
-            </Card>
-          ) : detailQuery.isLoading ? (
-            <Card className="flex min-h-[280px] items-center gap-2.5 text-sm text-(--app-text-muted)">
-              <Spinner size="sm" /> Cargando perfil…
-            </Card>
-          ) : detailQuery.error || !detailQuery.data ? (
-            <Card className="min-h-[280px] text-sm text-rose-600 dark:text-rose-300">{toErrorMessage(detailQuery.error)}</Card>
+          ) : searchQuery.error ? (
+            <div className="px-6 py-10 text-sm text-rose-600 dark:text-rose-300">{toErrorMessage(searchQuery.error)}</div>
+          ) : pageRows.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-(--app-border) bg-(--app-surface-muted) text-left text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle)">
+                    <th className="px-5 py-3 font-semibold">Candidato</th>
+                    <th className="px-4 py-3 font-semibold">Perfil</th>
+                    <th className="hidden px-4 py-3 font-semibold lg:table-cell">Ubicación</th>
+                    <th className="px-4 py-3 font-semibold">Score</th>
+                    <th className="px-4 py-3 font-semibold">Skills</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageRows.map((candidate) => {
+                    const isSelected = selectedCandidateProfileId === candidate.candidate_profile_id
+                    const visibleSkills = candidate.skill_names.slice(0, 2)
+                    const extraSkills = candidate.skill_names.length - visibleSkills.length
+                    return (
+                      <tr
+                        key={candidate.candidate_profile_id}
+                        onClick={() => selectCandidate(candidate.candidate_profile_id)}
+                        className={cn(
+                          'cursor-pointer border-b border-(--app-border)/70 transition-colors last:border-0',
+                          isSelected ? 'bg-primary-50/70 dark:bg-primary-500/12' : 'hover:bg-(--app-surface-muted)/60'
+                        )}
+                      >
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-[11px] font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-200">
+                              {candidateInitials(candidate.display_name)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate font-medium text-(--app-text)">{candidate.display_name}</p>
+                              <p className="truncate text-xs text-(--app-text-subtle)">
+                                {candidate.total_experiences}{' '}
+                                {candidate.total_experiences === 1 ? 'experiencia' : 'experiencias'}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-(--app-text-muted)">
+                          {candidate.desired_role || candidate.headline || 'Perfil visible'}
+                        </td>
+                        <td className="hidden px-4 py-3 text-(--app-text-muted) lg:table-cell">
+                          <span className="inline-flex items-center gap-1.5">
+                            <MapPin className="size-3.5 shrink-0 text-(--app-text-subtle)" />
+                            <span className="truncate">{locationLabel(candidate)}</span>
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={cn(
+                              'inline-flex items-center rounded-full px-2.5 py-1 text-[0.72rem] font-semibold',
+                              scorePillClass(candidate.completeness_score)
+                            )}
+                          >
+                            {candidate.completeness_score}%
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-1.5">
+                            {visibleSkills.map((item) => (
+                              <span
+                                key={item}
+                                className="inline-flex items-center rounded-lg bg-(--app-surface-muted) px-2.5 py-1 text-[0.72rem] font-medium text-(--app-text-muted)"
+                              >
+                                {item}
+                              </span>
+                            ))}
+                            {extraSkills > 0 ? (
+                              <span className="inline-flex items-center rounded-lg px-2 py-1 text-[0.72rem] font-semibold text-(--app-text-subtle)">
+                                +{extraSkills}
+                              </span>
+                            ) : null}
+                            {candidate.skill_names.length === 0 ? (
+                              <span className="text-(--app-text-subtle)">—</span>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           ) : (
-            <CandidateDetailPanel data={detailQuery.data} onClose={() => selectCandidate(null)} />
+            <div className="p-4">
+              <EmptyState title="Sin candidatos" description="No encontramos perfiles visibles con esta combinación de filtros." />
+            </div>
           )}
-        </div>
+        </Card>
+
+        {!searchQuery.isLoading && rows.length > 0 ? (
+          <div className="mt-3 flex flex-col gap-3 border-t border-(--app-border) pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-(--app-text-muted)">
+              Mostrando{' '}
+              <span className="font-medium text-(--app-text-muted)">
+                {pageStart + 1}–{Math.min(pageStart + TALENT_PAGE_SIZE, rows.length)}
+              </span>{' '}
+              de <span className="font-medium text-(--app-text-muted)">{rows.length}</span>{' '}
+              {rows.length === 1 ? 'perfil' : 'perfiles'}
+            </p>
+            {pageCount > 1 ? (
+              <Pagination page={safePage} totalPages={pageCount} onPageChange={setPage} ariaLabel="Paginación de talentos" />
+            ) : null}
+          </div>
+        ) : null}
       </motion.section>
+
+      <CandidateDetailSheet
+        open={detailOpen}
+        onClose={() => selectCandidate(null)}
+        isLoading={detailQuery.isLoading}
+        error={detailQuery.error}
+        data={detailQuery.data}
+      />
     </motion.div>
   )
 }
 
-function CandidateDetailPanel({
-  data,
-  onClose
+function CandidateDetailSheet({
+  open,
+  onClose,
+  isLoading,
+  error,
+  data
 }: {
-  data: Awaited<ReturnType<typeof fetchCandidateDirectoryDetail>>
+  open: boolean
   onClose: () => void
+  isLoading: boolean
+  error: unknown
+  data: Awaited<ReturnType<typeof fetchCandidateDirectoryDetail>> | undefined
 }) {
-  const profile = data.profile
-  const role = profile.desired_role || profile.headline || 'Perfil profesional'
+  const profile = data?.profile
+  const role = profile ? profile.desired_role || profile.headline || 'Perfil profesional' : ''
 
-  return (
-    <Card className="space-y-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-sm font-semibold text-white">
-            {candidateInitials(profile.display_name)}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-[1.05rem] font-semibold text-(--app-text)">{profile.display_name}</p>
-            <p className="truncate text-sm text-(--app-text-muted)">{role}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[0.72rem] font-semibold', scorePillClass(profile.completeness_score))}>
-            {profile.completeness_score}%
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Cerrar"
-            className="flex size-7 items-center justify-center rounded-lg text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-      </div>
+  const title = profile ? (
+    <span className="flex items-center gap-3">
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-50 text-sm font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-200">
+        {candidateInitials(profile.display_name)}
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-[1.05rem] font-semibold text-(--app-text)">{profile.display_name}</span>
+        <span className="block truncate text-sm font-normal text-(--app-text-muted)">{role}</span>
+      </span>
+    </span>
+  ) : (
+    'Perfil del candidato'
+  )
 
-      <DetailSection title="Resumen profesional">
-        <p className="text-sm leading-6 text-(--app-text-muted)">
-          {profile.summary || 'Este perfil aún no agregó un resumen profesional.'}
-        </p>
-      </DetailSection>
-
-      <DetailSection title="Experiencia" icon={Briefcase}>
-        {data.experiences.length > 0 ? (
-          <div className="space-y-2">
-            {data.experiences.map((experience) => (
-              <div key={experience.id} className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3 py-2.5">
-                <p className="text-sm font-semibold text-(--app-text)">{experience.role_title}</p>
-                <p className="text-xs text-(--app-text-muted)">{experience.company_name}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-(--app-text-muted)">No hay experiencias cargadas.</p>
-        )}
-      </DetailSection>
-
-      <DetailSection title="Educación" icon={GraduationCap}>
-        {data.educations.length > 0 ? (
-          <div className="space-y-2">
-            {data.educations.map((education) => (
-              <div key={education.id} className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3 py-2.5">
-                <p className="text-sm font-semibold text-(--app-text)">{education.degree_name}</p>
-                <p className="text-xs text-(--app-text-muted)">{education.institution_name}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-(--app-text-muted)">No hay educación cargada.</p>
-        )}
-      </DetailSection>
-
-      <DetailSection title="Habilidades e idiomas" icon={Sparkles}>
-        <div className="flex flex-wrap gap-1.5">
-          {data.skills.map((item) => (
-            <span key={item.id} className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-1 text-[0.72rem] font-medium text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
-              {item.skill_name}
-            </span>
-          ))}
-          {data.languages.map((item) => (
-            <span key={item.id} className="inline-flex items-center rounded-full border border-(--app-border) px-2.5 py-1 text-[0.72rem] font-medium text-(--app-text-muted)">
-              {item.language_name}
-            </span>
-          ))}
-          {data.skills.length === 0 && data.languages.length === 0 ? (
-            <span className="text-sm text-(--app-text-muted)">No hay habilidades ni idiomas registrados.</span>
-          ) : null}
-        </div>
-      </DetailSection>
-
-      <div className="flex flex-col gap-2 border-t border-(--app-border) pt-4 sm:flex-row">
+  const footer =
+    profile && !isLoading && !error ? (
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Button
           variant="outline"
           className="flex-1 gap-1.5"
-          onClick={() => toast.info('Perfil completo', { description: 'La vista de perfil completo estará disponible próximamente.' })}
+          onClick={() =>
+            toast.info('Perfil completo', {
+              description: 'La vista de perfil completo estará disponible próximamente.'
+            })
+          }
         >
           <ExternalLink className="size-4" /> Ver perfil completo
         </Button>
@@ -434,7 +417,80 @@ function CandidateDetailPanel({
           <Mail className="size-4" /> Contactar
         </a>
       </div>
-    </Card>
+    ) : undefined
+
+  return (
+    <SideSheet open={open} onClose={onClose} title={title} widthClassName="max-w-[420px]" footer={footer}>
+      {isLoading ? (
+        <div className="flex items-center gap-2.5 text-sm text-(--app-text-muted)">
+          <Spinner size="sm" /> Cargando perfil…
+        </div>
+      ) : error || !data ? (
+        <p className="text-sm text-rose-600 dark:text-rose-300">{toErrorMessage(error)}</p>
+      ) : (
+        <div className="space-y-5">
+          <DetailSection title="Resumen profesional">
+            <p className="text-sm leading-6 text-(--app-text-muted)">
+              {data.profile.summary || 'Este perfil aún no agregó un resumen profesional.'}
+            </p>
+          </DetailSection>
+
+          <DetailSection title="Experiencia" icon={Briefcase}>
+            {data.experiences.length > 0 ? (
+              <div>
+                {data.experiences.map((experience) => (
+                  <div key={experience.id} className="border-t border-(--app-border) py-3 first:border-t-0 first:pt-0">
+                    <p className="text-sm font-semibold text-(--app-text)">{experience.role_title}</p>
+                    <p className="mt-0.5 text-xs text-(--app-text-subtle)">{experience.company_name}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-(--app-text-muted)">No hay experiencias cargadas.</p>
+            )}
+          </DetailSection>
+
+          <DetailSection title="Educación" icon={GraduationCap}>
+            {data.educations.length > 0 ? (
+              <div>
+                {data.educations.map((education) => (
+                  <div key={education.id} className="border-t border-(--app-border) py-3 first:border-t-0 first:pt-0">
+                    <p className="text-sm font-semibold text-(--app-text)">{education.degree_name}</p>
+                    <p className="mt-0.5 text-xs text-(--app-text-subtle)">{education.institution_name}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-(--app-text-muted)">No hay educación cargada.</p>
+            )}
+          </DetailSection>
+
+          <DetailSection title="Habilidades e idiomas" icon={Sparkles}>
+            <div className="flex flex-wrap gap-1.5">
+              {data.skills.map((item) => (
+                <span
+                  key={item.id}
+                  className="inline-flex items-center rounded-lg bg-primary-50 px-2.5 py-1 text-[0.72rem] font-medium text-primary-700 dark:bg-primary-500/12 dark:text-primary-200"
+                >
+                  {item.skill_name}
+                </span>
+              ))}
+              {data.languages.map((item) => (
+                <span
+                  key={item.id}
+                  className="inline-flex items-center rounded-lg border border-(--app-border) px-2.5 py-1 text-[0.72rem] font-medium text-(--app-text-muted)"
+                >
+                  {item.language_name}
+                </span>
+              ))}
+              {data.skills.length === 0 && data.languages.length === 0 ? (
+                <span className="text-sm text-(--app-text-muted)">No hay habilidades ni idiomas registrados.</span>
+              ) : null}
+            </div>
+          </DetailSection>
+        </div>
+      )}
+    </SideSheet>
   )
 }
 
@@ -448,7 +504,7 @@ function DetailSection({
   children: ReactNode
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       <p className="flex items-center gap-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-(--app-text-subtle)">
         {Icon ? <Icon className="size-3.5" /> : null}
         {title}
