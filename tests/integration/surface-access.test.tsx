@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -38,6 +38,12 @@ const authState = {
     isPlatformAdmin: boolean
   }
 }
+
+const membershipApiMocks = vi.hoisted(() => ({
+  fetchMyMembershipStatus: vi.fn(),
+  getCategoryDue: vi.fn(() => null),
+  respondMembershipApplication: vi.fn(() => Promise.resolve())
+}))
 
 function completeProfile(input: { id: string; email: string; isInternalDeveloper?: boolean }) {
   return {
@@ -95,19 +101,53 @@ vi.mock('@/features/auth/lib/auth-api', async () => {
   }
 })
 
-vi.mock('@/features/membership/lib/membership-api', () => ({
-  fetchMyMembershipStatus: vi.fn(() =>
-    Promise.resolve({
-      application: null,
-      payment: null,
-      verifiedPayment: null,
-      verifiedPayments: [],
-      settings: null
-    })
-  ),
-  getCategoryDue: vi.fn(() => null),
-  respondMembershipApplication: vi.fn(() => Promise.resolve())
-}))
+vi.mock('@/features/membership/lib/membership-api', () => membershipApiMocks)
+
+function emptyMembershipStatusBundle() {
+  return {
+    application: null,
+    payment: null,
+    verifiedPayment: null,
+    verifiedPayments: [],
+    settings: null
+  }
+}
+
+function buildVerifiedPayment(index: number) {
+  const day = String(index + 1).padStart(2, '0')
+
+  return {
+    id: `payment-${index}`,
+    amount: index === 4 ? 2500 : 1500,
+    application_id: 'application-1',
+    authorization_code: `AUTH-${index}`,
+    azul_rrn: `RRN-${index}`,
+    category_slug: 'young-professional',
+    created_at: `2026-07-${day}T10:00:00.000Z`,
+    currency: 'DOP',
+    gateway_payload: {},
+    intent: index === 0 ? 'initial' : 'renewal',
+    member_user_id: 'user-active-member',
+    method: 'azul',
+    notes: null,
+    order_number: `ORD-${index}`,
+    period_end: `2027-07-${day}T10:00:00.000Z`,
+    period_start: `2026-07-${day}T10:00:00.000Z`,
+    rejected_at: null,
+    status: 'verified',
+    submitted_at: `2026-07-${day}T10:00:00.000Z`,
+    term_months: 12,
+    updated_at: `2026-07-${day}T10:00:00.000Z`,
+    verified_at: `2026-07-${day}T10:00:00.000Z`,
+    verified_by_user_id: 'admin-1'
+  }
+}
+
+function getCollapsedReceiptButtons() {
+  return screen
+    .getAllByRole('button')
+    .filter((button) => button.getAttribute('aria-expanded') === 'false' && button.textContent?.includes('Comprobante'))
+}
 
 function renderRoute(initialEntry: string) {
   const router = createMemoryRouter(appRoutes, {
@@ -130,6 +170,10 @@ beforeEach(() => {
     platformPermissions: [],
     isPlatformAdmin: false
   }
+  membershipApiMocks.fetchMyMembershipStatus.mockReset()
+  membershipApiMocks.fetchMyMembershipStatus.mockResolvedValue(emptyMembershipStatusBundle())
+  membershipApiMocks.getCategoryDue.mockClear()
+  membershipApiMocks.respondMembershipApplication.mockClear()
 })
 
 describe('surface access states', () => {
@@ -243,6 +287,38 @@ describe('surface access states', () => {
     expect(await screen.findByRole('heading', { name: 'Tu membresía' })).toBeInTheDocument()
     expect((await screen.findAllByText('Vigencia restante')).length).toBeGreaterThan(0)
     expect(await screen.findByRole('link', { name: /Ir a contacto/i })).toBeInTheDocument()
+  })
+
+  it('paginates membership receipts by four and keeps them collapsed initially', async () => {
+    const verifiedPayments = Array.from({ length: 5 }, (_, index) => buildVerifiedPayment(index))
+    membershipApiMocks.fetchMyMembershipStatus.mockResolvedValue({
+      ...emptyMembershipStatusBundle(),
+      verifiedPayment: verifiedPayments[0],
+      verifiedPayments
+    })
+
+    authState.session = { user: { id: 'user-active-member', email: 'active@example.com' } }
+    authState.snapshot = {
+      profile: completeProfile({ id: 'user-active-member', email: 'active@example.com' }),
+      memberships: [],
+      permissions: [],
+      platformPermissions: [],
+      isPlatformAdmin: false
+    }
+
+    renderRoute(surfacePaths.account.membership)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Comprobantes' }))
+
+    expect(await screen.findByText('5 comprobantes. Toca uno para ver el detalle.')).toBeInTheDocument()
+    expect(screen.getAllByText(/Comprobante ·/)).toHaveLength(4)
+    expect(getCollapsedReceiptButtons()).toHaveLength(4)
+
+    fireEvent.click(screen.getByRole('button', { name: '2' }))
+
+    expect(screen.getAllByText(/Comprobante ·/)).toHaveLength(1)
+    expect(screen.getByText('DOP 2,500')).toBeInTheDocument()
+    expect(getCollapsedReceiptButtons()).toHaveLength(1)
   })
 
   it('renders workspace forbidden inside the workspace shell', async () => {

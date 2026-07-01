@@ -24,6 +24,7 @@ import { useAppSession } from '@/app/providers/app-session-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/loader'
+import { Pagination } from '@/components/ui/pagination'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { payMembershipWithAzul, type AzulPaymentIntent } from '@/features/membership/lib/azul-api'
@@ -48,6 +49,8 @@ import { cn } from '@/lib/utils/cn'
 type StepState = 'done' | 'current' | 'pending' | 'blocked'
 type MembershipTab = 'summary' | 'route' | 'receipts'
 type AzulReturnOutcome = 'declined' | 'cancelled' | 'error'
+
+const RECEIPTS_PAGE_SIZE = 4
 
 const applicationStatusLabels: Record<string, string> = {
   submitted: 'Enviada',
@@ -240,7 +243,8 @@ export function MembershipStatusPage() {
   const shouldReduceMotion = useReducedMotion()
   const userId = session.authUser?.id ?? null
   const [activeTab, setActiveTab] = useState<MembershipTab>('summary')
-  const [openReceiptId, setOpenReceiptId] = useState<string | null | undefined>(undefined)
+  const [openReceiptId, setOpenReceiptId] = useState<string | null>(null)
+  const [receiptsPage, setReceiptsPage] = useState(0)
   const lastHandledPaymentResultRef = useRef<string | null>(null)
 
   const statusQuery = useQuery({
@@ -297,8 +301,12 @@ export function MembershipStatusPage() {
     session.profile?.membership_activated_at ?? bundle.verifiedPayment?.period_start ?? bundle.verifiedPayment?.verified_at ?? null
   const membershipExpiresAt = latestDateValue(session.profile?.membership_expires_at, bundle.verifiedPayment?.period_end)
   const remainingMembership = formatRemainingMembership(membershipExpiresAt)
-  const firstReceiptId = bundle.verifiedPayments[0]?.id ?? null
-  const visibleOpenReceiptId = openReceiptId === undefined ? firstReceiptId : openReceiptId
+  const receiptsTotalPages = Math.ceil(bundle.verifiedPayments.length / RECEIPTS_PAGE_SIZE)
+  const safeReceiptsPage = receiptsTotalPages > 0 ? Math.min(Math.max(receiptsPage, 0), receiptsTotalPages - 1) : 0
+  const visibleReceipts = bundle.verifiedPayments.slice(
+    safeReceiptsPage * RECEIPTS_PAGE_SIZE,
+    safeReceiptsPage * RECEIPTS_PAGE_SIZE + RECEIPTS_PAGE_SIZE
+  )
   const membershipProgress = computeMembershipTermProgress(membershipActivatedAt, membershipExpiresAt)
   const activeTabPanelVariants = shouldReduceMotion ? reducedTabPanelReveal : tabPanelReveal
   // Esta rama aparece después del query; no debe depender de un estado inicial
@@ -552,19 +560,26 @@ export function MembershipStatusPage() {
                             {bundle.verifiedPayments.length}{' '}
                             {bundle.verifiedPayments.length === 1 ? 'comprobante' : 'comprobantes'}. Toca uno para ver el detalle.
                           </p>
-                          {bundle.verifiedPayments.map((paymentItem) => (
+                          {visibleReceipts.map((paymentItem) => (
                             <MembershipReceiptCard
                               key={paymentItem.id}
                               payment={paymentItem}
                               currency={bundle.settings?.currency ?? paymentItem.currency ?? 'DOP'}
                               categoryLabel={due?.label ?? bundle.application?.category_name ?? null}
-                              isOpen={visibleOpenReceiptId === paymentItem.id}
-                              onToggle={() => setOpenReceiptId((current) => {
-                                const visibleCurrent = current === undefined ? firstReceiptId : current
-                                return visibleCurrent === paymentItem.id ? null : paymentItem.id
-                              })}
+                              isOpen={openReceiptId === paymentItem.id}
+                              onToggle={() => setOpenReceiptId((current) => (current === paymentItem.id ? null : paymentItem.id))}
                             />
                           ))}
+                          <Pagination
+                            page={safeReceiptsPage}
+                            totalPages={receiptsTotalPages}
+                            onPageChange={(nextPage) => {
+                              setReceiptsPage(nextPage)
+                              setOpenReceiptId(null)
+                            }}
+                            ariaLabel="Paginación de comprobantes de pago"
+                            className="pt-1"
+                          />
                         </>
                       ) : (
                         <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-muted) p-5 text-sm text-(--app-text-muted)">
