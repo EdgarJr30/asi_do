@@ -133,8 +133,8 @@ const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
     description: 'Talento guardado y preseleccionado para futuras vacantes'
   },
   [surfacePaths.workspace.pipeline]: {
-    title: 'Pipeline',
-    description: 'Seguimiento colaborativo de cada aplicacion por etapa'
+    title: 'Proceso de selección',
+    description: 'Seguimiento colaborativo de cada aplicación por etapa'
   },
   [surfacePaths.workspace.reports]: {
     title: 'Reportes',

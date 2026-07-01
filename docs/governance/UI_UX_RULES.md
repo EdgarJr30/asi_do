@@ -373,7 +373,7 @@ Apple-inspired UI rules:
 3. Filters, secondary actions, and dense controls should move into sheets, drawers, or scoped toolbars on mobile.
 4. Important mobile actions should stay within easy thumb reach whenever possible.
 5. Candidate mobile navigation should center on `Jobs`, `Applications`, `Profile`, and a scoped secondary destination such as `More`; first-run profile setup must not appear as its own persistent navigation item.
-6. Employer mobile navigation should center on `Jobs`, `Candidates`, `Pipeline`, and `Company`.
+6. Employer mobile navigation should center on `Jobs`, `Candidates`, `Proceso de selección`, and `Company`.
 7. Internal-only utilities, advanced role controls, and bootstrap/configuration flows must never occupy customer-facing primary mobile navigation.
 
 ### 9.2 Desktop navigation
@@ -437,8 +437,9 @@ Apple-inspired UI rules:
 3. Avoid unnecessary nested cards.
 4. Mobile list rows and tappable cards should provide at least **48px** row height or tap height.
 5. The `/platform/jobs` jobs board should use compact selectable rows plus a focused detail pane on desktop; avoid oversized repeated cards, and after filters or sort changes leave the detail pane unselected until the user chooses a vacancy.
-6. Workspace operational list screens such as `Vacantes`, `Postulaciones`, `Aplicaciones`, `Pipeline`, and comparable admin tables must use the full available shell content width by default. Do not constrain these dense management screens with narrow handoff-specific containers such as 1180px; constrain only reading/detail/form panes when line length or focus requires it.
+6. Workspace operational list screens such as `Vacantes`, `Postulaciones`, `Aplicaciones`, `Proceso de selección`, and comparable admin tables must use the full available shell content width by default. Do not constrain these dense management screens with narrow handoff-specific containers such as 1180px; constrain only reading/detail/form panes when line length or focus requires it.
 7. Internally scrollable app lists must use the shared `tm-scrollbar` treatment so scrollbars inherit semantic theme tokens and stay visually aligned with the platform style guide instead of falling back to browser-default gray rails.
+8. The workspace `Proceso de selección` board must keep the shared app shell intact, render as a compact Kanban with page-level height bounded to the viewport, and place vertical overflow inside each stage column. Candidate cards should stay row-sized and avoid repeating status pills that are already communicated by the column.
 
 ### 11.2 Tables
 1. Tables are allowed for dense operational data on desktop.

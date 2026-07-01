@@ -115,7 +115,7 @@ export const employerNavigationItems: NavigationItem[] = [
     requiredPermission: 'candidate_directory:read'
   },
   {
-    title: 'Tablero Kanban',
+    title: 'Proceso de selección',
     href: surfacePaths.workspace.pipeline,
     description: 'Da seguimiento al proceso por etapa',
     group: 'pipeline',

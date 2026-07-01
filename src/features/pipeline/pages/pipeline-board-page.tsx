@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
-import { Search, X } from 'lucide-react'
+import { Download, Plus, Search, Star } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -10,8 +10,10 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { PageLoader, Spinner } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
+import { SideSheet } from '@/components/ui/side-sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { exportApplicationsCsv } from '@/features/applications/lib/applications-api'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -22,12 +24,66 @@ import {
   moveApplicationStage,
   upsertApplicationRating
 } from '@/features/pipeline/lib/pipeline-api'
-import { cn } from '@/lib/utils/cn'
-import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
+import { cn } from '@/lib/utils/cn'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 
-const STAGE_DOT_COLORS = ['bg-sky-500', 'bg-violet-500', 'bg-amber-500', 'bg-emerald-500', 'bg-rose-500', 'bg-indigo-500']
+type PipelineBoard = Awaited<ReturnType<typeof fetchPipelineBoard>>
+type PipelineStage = PipelineBoard['stages'][number]
+type PipelineApplication = PipelineBoard['applications'][number]
+
+const STAGE_TONES = [
+  {
+    key: 'applied',
+    dotClassName: 'bg-[#2f6fe0]',
+    trackClassName: 'bg-[#2f6fe0]',
+    pillClassName:
+      'border-primary-100 bg-primary-50 text-primary-700 dark:border-primary-500/20 dark:bg-primary-500/12 dark:text-primary-200'
+  },
+  {
+    key: 'screening',
+    dotClassName: 'bg-[#8f57e6]',
+    trackClassName: 'bg-[#8f57e6]',
+    pillClassName:
+      'border-[#d9ccfb] bg-[#efeafc] text-[#6a46c1] dark:border-[#8f57e6]/30 dark:bg-[#8f57e6]/14 dark:text-[#c7b7ff]'
+  },
+  {
+    key: 'interview',
+    dotClassName: 'bg-[#e0a13a]',
+    trackClassName: 'bg-[#e0a13a]',
+    pillClassName:
+      'border-[#f4dfb7] bg-[#fbf2e2] text-[#a9760f] dark:border-[#e0a13a]/30 dark:bg-[#e0a13a]/14 dark:text-[#f3c56a]'
+  },
+  {
+    key: 'offer',
+    dotClassName: 'bg-[#17a7ae]',
+    trackClassName: 'bg-[#17a7ae]',
+    pillClassName:
+      'border-[#bfe5e6] bg-[#e3f5f5] text-[#127e86] dark:border-[#17a7ae]/30 dark:bg-[#17a7ae]/14 dark:text-[#7ad8de]'
+  },
+  {
+    key: 'hired',
+    dotClassName: 'bg-[#1f9d61]',
+    trackClassName: 'bg-[#1f9d61]',
+    pillClassName:
+      'border-[#c7ecd8] bg-[#e9f7ef] text-[#1f9d61] dark:border-[#1f9d61]/30 dark:bg-[#1f9d61]/14 dark:text-[#7ee1a8]'
+  },
+  {
+    key: 'rejected',
+    dotClassName: 'bg-[#d2455f]',
+    trackClassName: 'bg-[#d2455f]',
+    pillClassName:
+      'border-[#f6cbd3] bg-[#fdecef] text-[#d2455f] dark:border-[#d2455f]/30 dark:bg-[#d2455f]/14 dark:text-[#f3a0ad]'
+  }
+] as const
+
+function getStageTone(stage: PipelineStage, index: number) {
+  const normalizedStage = `${stage.code} ${stage.name}`.toLowerCase()
+  const matchedTone = STAGE_TONES.find((tone) => normalizedStage.includes(tone.key))
+
+  return matchedTone ?? STAGE_TONES[index % STAGE_TONES.length]
+}
 
 function initialsFrom(value: string) {
   return (
@@ -41,15 +97,29 @@ function initialsFrom(value: string) {
   )
 }
 
+function getLatestRating(application: PipelineApplication) {
+  return (application.application_ratings ?? []).reduce<PipelineApplication['application_ratings'][number] | null>(
+    (latest, rating) => {
+      if (!latest) {
+        return rating
+      }
+
+      return new Date(rating.created_at).getTime() > new Date(latest.created_at).getTime() ? rating : latest
+    },
+    null
+  )
+}
+
 export function PipelineBoardPage() {
   const session = useAppSession()
   const queryClient = useQueryClient()
   const shouldReduceMotion = useReducedMotion()
   const tenantId = session.activeTenantId
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null)
+  const [selectedStageId, setSelectedStageId] = useState('')
   const [stageNote, setStageNote] = useState('')
   const [newNote, setNewNote] = useState('')
-  const [score, setScore] = useState('4')
+  const [score, setScore] = useState('')
   const [candidateQuery, setCandidateQuery] = useState('')
   const [jobFilter, setJobFilter] = useState('')
   const [stageFilter, setStageFilter] = useState('')
@@ -91,13 +161,13 @@ export function PipelineBoardPage() {
         queryClient.invalidateQueries({ queryKey: ['applications'] }),
         queryClient.invalidateQueries({ queryKey: ['pipeline-activity', selectedApplicationId] })
       ])
-      toast.success('Stage actualizado', {
-        description: 'El applicant ya se movio en el pipeline y el historial quedó auditado.'
+      toast.success('Etapa actualizada', {
+        description: 'La persona candidata ya se movió de etapa y el historial quedó auditado.'
       })
     },
     onError: async (error) => {
       await reportErrorWithToast({
-        title: 'No pudimos mover el applicant de stage',
+        title: 'No pudimos mover la postulación de etapa',
         source: 'pipeline.move-stage',
         route: surfacePaths.workspace.pipeline,
         userId: session.authUser?.id ?? null,
@@ -109,7 +179,7 @@ export function PipelineBoardPage() {
   const noteMutation = useMutation({
     mutationFn: async () => {
       if (!selectedApplicationId || !session.authUser) {
-        throw new Error('Debes seleccionar una application y tener sesión activa para agregar notas.')
+        throw new Error('Debes seleccionar una postulación y tener sesión activa para agregar notas.')
       }
 
       return addApplicationNote({
@@ -125,7 +195,7 @@ export function PipelineBoardPage() {
         queryClient.invalidateQueries({ queryKey: ['pipeline-activity', selectedApplicationId] })
       ])
       toast.success('Nota agregada', {
-        description: 'La colaboracion del equipo ya quedó asociada al applicant.'
+        description: 'La colaboración del equipo ya quedó asociada a esta postulación.'
       })
     },
     onError: async (error) => {
@@ -142,7 +212,7 @@ export function PipelineBoardPage() {
   const ratingMutation = useMutation({
     mutationFn: async () => {
       if (!selectedApplicationId || !session.authUser) {
-        throw new Error('Debes seleccionar una application y tener sesión activa para calificar.')
+        throw new Error('Debes seleccionar una postulación y tener sesión activa para calificar.')
       }
 
       return upsertApplicationRating({
@@ -157,7 +227,7 @@ export function PipelineBoardPage() {
         queryClient.invalidateQueries({ queryKey: ['pipeline-activity', selectedApplicationId] })
       ])
       toast.success('Rating actualizado', {
-        description: 'La evaluación del applicant ya quedó guardada.'
+        description: 'La evaluación de esta postulación ya quedó guardada.'
       })
     },
     onError: async (error) => {
@@ -176,21 +246,21 @@ export function PipelineBoardPage() {
       <Card>
         <CardHeader>
           <CardTitle>No tienes un workspace operativo activo</CardTitle>
-          <CardDescription>El pipeline se habilita para tenants aprobados con acceso de coordinador.</CardDescription>
+          <CardDescription>El proceso de selección se habilita para tenants aprobados con acceso de coordinador.</CardDescription>
         </CardHeader>
       </Card>
     )
   }
 
   if (boardQuery.isLoading) {
-    return <PageLoader label="Cargando pipeline" hint="Estamos recuperando etapas y postulaciones para este tenant" />
+    return <PageLoader label="Cargando proceso de selección" hint="Estamos recuperando etapas y postulaciones para este tenant" />
   }
 
   if (boardQuery.error || !boardQuery.data) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No pudimos cargar el pipeline</CardTitle>
+          <CardTitle>No pudimos cargar el proceso de selección</CardTitle>
           <CardDescription>{toErrorMessage(boardQuery.error)}</CardDescription>
         </CardHeader>
       </Card>
@@ -218,9 +288,25 @@ export function PipelineBoardPage() {
       )
     ).values()
   )
+  const visibleStages = stageFilter
+    ? boardQuery.data.stages.filter((stage) => stage.id === stageFilter)
+    : boardQuery.data.stages
   const visibleSelectedApplication =
     filteredApplications.find((application) => application.id === selectedApplicationId) ?? selectedApplication
   const applicationActivity = activityQuery.data
+  const selectedStage = boardQuery.data.stages.find((stage) => stage.id === visibleSelectedApplication?.current_stage_id)
+  const selectedStageTone = selectedStage
+    ? getStageTone(selectedStage, boardQuery.data.stages.findIndex((stage) => stage.id === selectedStage.id))
+    : STAGE_TONES[0]
+
+  function openApplication(application: PipelineApplication) {
+    const latestRating = getLatestRating(application)
+    setSelectedApplicationId(application.id)
+    setSelectedStageId(application.current_stage_id ?? '')
+    setStageNote('')
+    setNewNote('')
+    setScore(latestRating ? String(latestRating.score) : '')
+  }
 
   function handleDropOnStage(stageId: string) {
     const application = boardQuery.data?.applications.find((item) => item.id === draggedId)
@@ -231,43 +317,72 @@ export function PipelineBoardPage() {
     }
   }
 
+  function handleMoveSelectedApplication() {
+    if (!visibleSelectedApplication || !selectedStageId) {
+      return
+    }
+
+    moveMutation.mutate({
+      applicationId: visibleSelectedApplication.id,
+      toStageId: selectedStageId,
+      note: stageNote
+    })
+  }
+
   return (
     <motion.div
-      className="space-y-6"
+      className="flex h-[calc(100svh-13.5rem)] min-h-0 flex-col overflow-hidden lg:h-[calc(100svh-8.5rem)]"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
     >
-      <motion.section variants={cardReveal} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-[1.7rem] font-semibold tracking-tight text-(--app-text) sm:text-[2rem]">Pipeline</h1>
-          <p className="mt-1 text-sm text-(--app-text-muted)">{filteredApplications.length} candidatos en proceso</p>
+      <motion.section
+        variants={cardReveal}
+        className="flex shrink-0 flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="min-w-0">
+          <h1 className="flex flex-wrap items-center gap-3 text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">
+            Proceso de selección
+            <span className="inline-flex rounded-full border border-(--app-border) bg-(--app-surface) px-3 py-1 text-xs font-semibold text-(--app-text-muted)">
+              <span className="font-bold text-primary-700 dark:text-primary-200">{filteredApplications.length}</span>
+              <span className="ml-1">candidatos en proceso</span>
+            </span>
+          </h1>
+          <p className="mt-1 text-sm text-(--app-text-muted)">
+            Revisa candidatos por etapa, filtra el tablero y registra decisiones sin salir del flujo.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
           {canExportApplications ? (
             <Button
+              className="h-10 rounded-xl"
               variant="outline"
               onClick={() => exportApplicationsCsv(filteredApplications, stageNameById)}
               disabled={filteredApplications.length === 0}
             >
+              <Download className="size-4" />
               Exportar CSV
             </Button>
           ) : null}
-          <Button onClick={() => toast.info('Agregar candidato próximamente')}>Agregar candidato</Button>
+          <Button className="h-10 rounded-xl" onClick={() => toast.info('Agregar candidato próximamente')}>
+            <Plus className="size-4" />
+            Agregar candidato
+          </Button>
         </div>
       </motion.section>
 
-      <motion.div variants={cardReveal} className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
-        <div className="flex flex-1 items-center gap-2.5 rounded-2xl border border-(--app-border) bg-(--app-surface) px-3.5">
-          <Search aria-hidden="true" className="size-4 text-(--app-text-subtle)" />
-          <input
+      <motion.div variants={cardReveal} className="flex shrink-0 flex-col gap-3 pb-4 lg:flex-row lg:items-center">
+        <label className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface-elevated) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
+          <Search aria-hidden="true" className="size-4 shrink-0 text-(--app-text-subtle)" />
+          <span className="sr-only">Buscar candidato o correo</span>
+          <Input
             value={candidateQuery}
             onChange={(event) => setCandidateQuery(event.target.value)}
-            placeholder="Buscar candidato o email..."
-            className="h-11 w-full bg-transparent text-sm text-(--app-text) outline-none placeholder:text-(--app-text-subtle)"
+            placeholder="Buscar candidato o correo..."
+            className="h-full rounded-none border-0 bg-transparent px-0 shadow-none hover:border-0 focus:border-0 focus:bg-transparent focus:ring-0"
           />
-        </div>
-        <Select className="lg:w-52" value={jobFilter} onChange={(event) => setJobFilter(event.target.value)}>
+        </label>
+        <Select className="rounded-xl lg:w-56" value={jobFilter} onChange={(event) => setJobFilter(event.target.value)}>
           <option value="">Todas las vacantes</option>
           {tenantJobs.map((job) => (
             <option key={job.id} value={job.id}>
@@ -275,7 +390,7 @@ export function PipelineBoardPage() {
             </option>
           ))}
         </Select>
-        <Select className="lg:w-52" value={stageFilter} onChange={(event) => setStageFilter(event.target.value)}>
+        <Select className="rounded-xl lg:w-56" value={stageFilter} onChange={(event) => setStageFilter(event.target.value)}>
           <option value="">Todas las etapas</option>
           {boardQuery.data.stages.map((stage) => (
             <option key={stage.id} value={stage.id}>
@@ -285,201 +400,258 @@ export function PipelineBoardPage() {
         </Select>
       </motion.div>
 
-      <motion.div variants={gridStagger} className="flex gap-4 overflow-x-auto pb-2">
-        {boardQuery.data.stages.map((stage, stageIndex) => {
-          const stageApplications = filteredApplications.filter((application) => application.current_stage_id === stage.id)
-          const isDropTarget = dragOverStageId === stage.id
+      {filteredApplications.length === 0 ? (
+        <motion.div
+          variants={cardReveal}
+          className="flex min-h-0 flex-1 items-center justify-center rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-elevated) px-6 text-center text-sm text-(--app-text-muted)"
+        >
+          No se encontraron candidatos con esos filtros.
+        </motion.div>
+      ) : (
+        <motion.div variants={gridStagger} className="tm-scrollbar flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4">
+          {visibleStages.map((stage, stageIndex) => {
+            const stageApplications = filteredApplications.filter((application) => application.current_stage_id === stage.id)
+            const isDropTarget = dragOverStageId === stage.id
+            const tone = getStageTone(stage, stageIndex)
 
-          return (
-            <motion.div
-              variants={cardReveal}
-              key={stage.id}
-              onDragOver={(event) => {
-                event.preventDefault()
-                if (dragOverStageId !== stage.id) {
-                  setDragOverStageId(stage.id)
-                }
-              }}
-              onDragLeave={() => setDragOverStageId((current) => (current === stage.id ? null : current))}
-              onDrop={() => handleDropOnStage(stage.id)}
-              className={cn(
-                'flex min-h-104 w-[18rem] shrink-0 flex-col rounded-panel border p-3 transition',
-                isDropTarget ? 'border-primary-400 bg-primary-50/70 dark:bg-primary-500/10' : 'border-(--app-border) bg-(--app-surface-muted)/70'
-              )}
-            >
-              <div className="flex items-center justify-between px-1 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className={cn('size-2 rounded-full', STAGE_DOT_COLORS[stageIndex % STAGE_DOT_COLORS.length])} />
-                  <span className="text-sm font-semibold text-(--app-text)">{stage.name}</span>
-                </div>
-                <span className="rounded-full bg-(--app-surface) px-2 py-0.5 text-xs font-semibold text-(--app-text-muted)">
-                  {stageApplications.length}
-                </span>
-              </div>
-
-              <div className="flex flex-1 flex-col gap-2.5">
-                {stageApplications.length > 0 ? (
-                  stageApplications.map((application) => (
-                    <article
-                      key={application.id}
-                      draggable
-                      onDragStart={() => setDraggedId(application.id)}
-                      onDragEnd={() => {
-                        setDraggedId(null)
-                        setDragOverStageId(null)
-                      }}
-                      onClick={() => setSelectedApplicationId(application.id)}
-                      className={cn(
-                        'cursor-grab rounded-2xl border bg-(--app-surface) p-3 shadow-[0_4px_14px_rgba(15,23,42,0.05)] transition hover:shadow-[0_10px_24px_rgba(15,23,42,0.1)] active:cursor-grabbing',
-                        selectedApplicationId === application.id ? 'border-primary-300 ring-1 ring-primary-200' : 'border-(--app-border)',
-                        draggedId === application.id ? 'opacity-50' : ''
-                      )}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-[11px] font-semibold text-white">
-                          {initialsFrom(application.candidate_display_name_snapshot)}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-(--app-text)">{application.candidate_display_name_snapshot}</p>
-                          <p className="truncate text-xs text-(--app-text-muted)">{application.job_posting?.title || 'Vacante'}</p>
-                        </div>
-                      </div>
-                      <div className="mt-2.5 flex items-center justify-between">
-                        <Badge variant="outline">{application.status_public}</Badge>
-                        <span className="text-xs text-(--app-text-subtle)">
-                          {application.application_notes?.length ?? 0} · {application.application_ratings?.length ?? 0}★
-                        </span>
-                      </div>
-                    </article>
-                  ))
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-(--app-border) px-3 py-6 text-center text-xs text-(--app-text-subtle)">
-                    Arrastra candidatos aquí
-                  </div>
+            return (
+              <motion.div
+                variants={cardReveal}
+                key={stage.id}
+                onDragOver={(event) => {
+                  event.preventDefault()
+                  if (dragOverStageId !== stage.id) {
+                    setDragOverStageId(stage.id)
+                  }
+                }}
+                onDragLeave={() => setDragOverStageId((current) => (current === stage.id ? null : current))}
+                onDrop={() => handleDropOnStage(stage.id)}
+                className={cn(
+                  'flex min-h-0 min-w-60 flex-1 shrink-0 flex-col rounded-panel border transition lg:min-w-64',
+                  isDropTarget
+                    ? 'border-primary-400 bg-primary-50/70 dark:bg-primary-500/10'
+                    : 'border-(--app-border) bg-(--app-surface-muted)/80'
                 )}
-              </div>
-            </motion.div>
-          )
-        })}
-      </motion.div>
+              >
+                <div className="flex shrink-0 items-center justify-between gap-2 px-4 pb-3 pt-4">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className={cn('size-2.5 shrink-0 rounded-full', tone.dotClassName)} />
+                    <span className="truncate text-sm font-semibold text-(--app-text)">{stage.name}</span>
+                  </div>
+                  <span className="rounded-full border border-(--app-border) bg-(--app-surface) px-2.5 py-0.5 text-xs font-bold text-(--app-text-muted)">
+                    {stageApplications.length}
+                  </span>
+                </div>
+                <div className={cn('mx-4 h-1 shrink-0 rounded-full', tone.trackClassName)} />
+
+                <div className="tm-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2.5 py-3">
+                  {stageApplications.length > 0 ? (
+                    stageApplications.map((application) => {
+                      const latestRating = getLatestRating(application)
+
+                      return (
+                        <button
+                          key={application.id}
+                          type="button"
+                          draggable
+                          onDragStart={() => setDraggedId(application.id)}
+                          onDragEnd={() => {
+                            setDraggedId(null)
+                            setDragOverStageId(null)
+                          }}
+                          onClick={() => openApplication(application)}
+                          className={cn(
+                            'flex min-h-14 w-full cursor-grab items-center gap-3 rounded-xl border bg-(--app-surface) px-3 py-2.5 text-left transition-[border-color,box-shadow,transform] hover:-translate-y-px hover:border-[#c6d2ea] hover:shadow-[0_4px_14px_rgba(20,40,90,0.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) active:cursor-grabbing',
+                            selectedApplicationId === application.id
+                              ? 'border-primary-300 ring-1 ring-primary-200'
+                              : 'border-(--app-border)',
+                            draggedId === application.id ? 'opacity-50' : ''
+                          )}
+                        >
+                          <span className="flex size-8.5 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#4869b6,#8aa2d8)] text-[11px] font-bold text-white">
+                            {initialsFrom(application.candidate_display_name_snapshot)}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[0.84rem] font-semibold text-(--app-text)">
+                              {application.candidate_display_name_snapshot}
+                            </span>
+                            <span className="mt-0.5 block truncate text-[0.72rem] text-(--app-text-subtle)">
+                              {application.job_posting?.title || 'Vacante'}
+                            </span>
+                          </span>
+                          <span
+                            className={cn(
+                              'inline-flex shrink-0 items-center gap-1 text-xs font-semibold',
+                              latestRating ? 'text-[#a9760f]' : 'text-(--app-text-subtle) opacity-60'
+                            )}
+                          >
+                            <Star className="size-3.5 fill-current" />
+                            {latestRating?.score ?? null}
+                          </span>
+                        </button>
+                      )
+                    })
+                  ) : (
+                    <div className="px-3 py-7 text-center text-xs text-(--app-text-subtle)">Sin candidatos</div>
+                  )}
+                </div>
+              </motion.div>
+            )
+          })}
+        </motion.div>
+      )}
 
       {visibleSelectedApplication ? (
-        <div className="fixed inset-0 z-50">
-          <button
-            aria-label="Cerrar detalle"
-            type="button"
-            className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
-            onClick={() => setSelectedApplicationId(null)}
-          />
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col overflow-y-auto bg-(--app-surface) shadow-[0_0_60px_rgba(8,12,24,0.3)]">
-            <header className="flex items-start justify-between gap-3 border-b border-(--app-border) px-5 py-4">
-              <div className="flex items-center gap-3">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-sm font-semibold text-white">
-                  {initialsFrom(visibleSelectedApplication.candidate_display_name_snapshot)}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-base font-semibold text-(--app-text)">{visibleSelectedApplication.candidate_display_name_snapshot}</p>
-                  <p className="truncate text-sm text-(--app-text-muted)">{visibleSelectedApplication.job_posting?.title}</p>
-                </div>
-              </div>
-              <button
-                aria-label="Cerrar"
-                type="button"
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-(--app-border) text-(--app-text-muted) transition hover:bg-(--app-surface-muted)"
-                onClick={() => setSelectedApplicationId(null)}
-              >
-                <X className="size-4.5" />
-              </button>
-            </header>
+        <SideSheet
+          open={Boolean(visibleSelectedApplication)}
+          onClose={() => setSelectedApplicationId(null)}
+          widthClassName="max-w-md"
+          title={
+            <span className="flex min-w-0 items-center gap-3">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-sm font-semibold text-white">
+                {initialsFrom(visibleSelectedApplication.candidate_display_name_snapshot)}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate">{visibleSelectedApplication.candidate_display_name_snapshot}</span>
+              </span>
+            </span>
+          }
+          description={visibleSelectedApplication.job_posting?.title ?? visibleSelectedApplication.candidate_email_snapshot}
+        >
+          <div className="space-y-3.5">
+            <section className="rounded-panel border border-(--app-border) bg-(--app-surface) p-4">
+              <h2 className="text-sm font-semibold text-(--app-text)">Mover etapa</h2>
+              <Badge className={cn('mt-3 border', selectedStageTone.pillClassName)} variant="outline">
+                Etapa actual · {selectedStage?.name ?? 'Sin etapa'}
+              </Badge>
 
-            <div className="space-y-4 p-5">
-              <div className="grid gap-3 rounded-panel border border-(--app-border) bg-(--app-surface-muted) p-4">
-                <p className="text-sm font-semibold text-(--app-text)">Mover etapa</p>
-                <Select
-                  value={visibleSelectedApplication.current_stage_id ?? ''}
-                  onChange={(event) => {
-                    const nextStageId = event.target.value
-                    if (nextStageId) {
-                      moveMutation.mutate({
-                        applicationId: visibleSelectedApplication.id,
-                        toStageId: nextStageId,
-                        note: stageNote
-                      })
-                    }
-                  }}
+              <div className="mt-4 grid gap-3">
+                <label className="grid gap-1.5 text-xs font-semibold text-(--app-text-muted)">
+                  Nueva etapa
+                  <Select
+                    className="rounded-xl"
+                    value={selectedStageId}
+                    onChange={(event) => setSelectedStageId(event.target.value)}
+                  >
+                    <option value="">Selecciona etapa</option>
+                    {boardQuery.data.stages.map((stage) => (
+                      <option key={stage.id} value={stage.id}>
+                        {stage.name}
+                      </option>
+                    ))}
+                  </Select>
+                </label>
+                <label className="grid gap-1.5 text-xs font-semibold text-(--app-text-muted)">
+                  <span>
+                    Contexto del movimiento <span className="font-medium text-(--app-text-subtle)">(opcional)</span>
+                  </span>
+                  <Textarea
+                    className="rounded-xl"
+                    rows={3}
+                    value={stageNote}
+                    onChange={(event) => setStageNote(event.target.value)}
+                    placeholder="Ej. Pasa a entrevista técnica el jueves..."
+                  />
+                </label>
+                <Button
+                  className="w-full rounded-xl"
+                  onClick={handleMoveSelectedApplication}
+                  disabled={
+                    moveMutation.isPending ||
+                    !selectedStageId ||
+                    selectedStageId === visibleSelectedApplication.current_stage_id
+                  }
                 >
-                  <option value="">Selecciona etapa</option>
-                  {boardQuery.data.stages.map((stage) => (
-                    <option key={stage.id} value={stage.id}>
-                      {stage.name}
-                    </option>
-                  ))}
-                </Select>
-                <Textarea rows={3} value={stageNote} onChange={(event) => setStageNote(event.target.value)} placeholder="Contexto opcional para el movimiento" />
-              </div>
-
-              <div className="grid gap-3 rounded-panel border border-(--app-border) bg-(--app-surface-muted) p-4">
-                <p className="text-sm font-semibold text-(--app-text)">Anotar colaboración</p>
-                <Textarea rows={4} value={newNote} onChange={(event) => setNewNote(event.target.value)} placeholder="Escribe una nota interna para el equipo..." />
-                <Button onClick={() => noteMutation.mutate()} disabled={noteMutation.isPending || newNote.trim().length === 0}>
-                  {noteMutation.isPending ? 'Guardando nota...' : 'Guardar nota'}
+                  {moveMutation.isPending ? 'Actualizando etapa...' : 'Actualizar etapa'}
                 </Button>
               </div>
+            </section>
 
-              <div className="grid gap-3 rounded-panel border border-(--app-border) bg-(--app-surface-muted) p-4">
-                <p className="text-sm font-semibold text-(--app-text)">Rating rápido</p>
-                <Select value={score} onChange={(event) => setScore(event.target.value)}>
+            <section className="rounded-panel border border-(--app-border) bg-(--app-surface) p-4">
+              <h2 className="text-sm font-semibold text-(--app-text)">Anotar colaboración</h2>
+              <label className="mt-3 grid gap-1.5 text-xs font-semibold text-(--app-text-muted)">
+                Nota interna para el equipo
+                <Textarea
+                  className="rounded-xl"
+                  rows={4}
+                  value={newNote}
+                  onChange={(event) => setNewNote(event.target.value)}
+                  placeholder="Escribe una nota interna para el equipo..."
+                />
+              </label>
+              <Button
+                className="mt-3 w-full rounded-xl"
+                variant="outline"
+                onClick={() => noteMutation.mutate()}
+                disabled={noteMutation.isPending || newNote.trim().length === 0}
+              >
+                {noteMutation.isPending ? 'Guardando nota...' : 'Guardar nota'}
+              </Button>
+            </section>
+
+            <section className="rounded-panel border border-(--app-border) bg-(--app-surface) p-4">
+              <h2 className="text-sm font-semibold text-(--app-text)">Rating rápido</h2>
+              <div className="mt-3 flex gap-2.5">
+                <Select className="rounded-xl" value={score} onChange={(event) => setScore(event.target.value)}>
+                  <option value="">Sin calificar</option>
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>
                   <option value="4">4</option>
                   <option value="5">5</option>
                 </Select>
-                <Button variant="outline" onClick={() => ratingMutation.mutate()} disabled={ratingMutation.isPending}>
-                  {ratingMutation.isPending ? 'Guardando rating...' : 'Guardar rating'}
+                <Button
+                  className="shrink-0 rounded-xl"
+                  variant="outline"
+                  onClick={() => ratingMutation.mutate()}
+                  disabled={ratingMutation.isPending || !score}
+                >
+                  {ratingMutation.isPending ? 'Guardando...' : 'Guardar'}
                 </Button>
               </div>
+            </section>
 
-              <div className="rounded-panel border border-(--app-border) bg-(--app-surface) p-4">
-                <p className="text-sm font-semibold text-(--app-text)">Actividad reciente</p>
-                <div className="mt-3 space-y-3">
-                  {activityQuery.isLoading ? (
-                    <p className="inline-flex items-center gap-2 text-sm text-(--app-text-muted)">
-                      <Spinner size="sm" /> Cargando actividad...
-                    </p>
-                  ) : activityQuery.error ? (
-                    <p className="text-sm text-rose-600 dark:text-rose-300">{toErrorMessage(activityQuery.error)}</p>
-                  ) : applicationActivity && (applicationActivity.history.length || applicationActivity.notes.length || applicationActivity.ratings.length) ? (
-                    <>
-                      {applicationActivity.history.map((event) => (
-                        <div key={event.id} className="rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
-                          <p className="font-medium text-(--app-text)">Cambio de etapa</p>
-                          <p className="mt-1 text-(--app-text-muted)">
-                            {(event.from_stage?.name ?? 'Inicio')} → {event.to_stage.name}
-                          </p>
-                        </div>
-                      ))}
-                      {applicationActivity.notes.map((event) => (
-                        <div key={event.id} className="rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
-                          <p className="font-medium text-(--app-text)">Nota interna</p>
-                          <p className="mt-1 text-(--app-text-muted)">{event.body}</p>
-                        </div>
-                      ))}
-                      {applicationActivity.ratings.map((event) => (
-                        <div key={event.id} className="rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
-                          <p className="font-medium text-(--app-text)">Rating registrado</p>
-                          <p className="mt-1 text-(--app-text-muted)">Score: {event.score}/5</p>
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    <p className="text-sm text-(--app-text-muted)">Aún no hay actividad registrada para este candidato.</p>
-                  )}
-                </div>
+            <section className="rounded-panel border border-(--app-border) bg-(--app-surface) p-4">
+              <h2 className="text-sm font-semibold text-(--app-text)">Actividad reciente</h2>
+              <div className="mt-3 space-y-3">
+                {activityQuery.isLoading ? (
+                  <p className="inline-flex items-center gap-2 text-sm text-(--app-text-muted)">
+                    <Spinner size="sm" /> Cargando actividad...
+                  </p>
+                ) : activityQuery.error ? (
+                  <p className="text-sm text-rose-600 dark:text-rose-300">{toErrorMessage(activityQuery.error)}</p>
+                ) : applicationActivity && (applicationActivity.history.length || applicationActivity.notes.length || applicationActivity.ratings.length) ? (
+                  <>
+                    {applicationActivity.history.map((event) => (
+                      <div key={event.id} className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
+                        <p className="font-medium text-(--app-text)">Cambio de etapa</p>
+                        <p className="mt-1 text-(--app-text-muted)">
+                          {(event.from_stage?.name ?? 'Inicio')} → {event.to_stage.name}
+                        </p>
+                      </div>
+                    ))}
+                    {applicationActivity.notes.map((event) => (
+                      <div key={event.id} className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
+                        <p className="font-medium text-(--app-text)">Nota interna</p>
+                        <p className="mt-1 text-(--app-text-muted)">{event.body}</p>
+                      </div>
+                    ))}
+                    {applicationActivity.ratings.map((event) => (
+                      <div key={event.id} className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
+                        <p className="font-medium text-(--app-text)">Rating registrado</p>
+                        <p className="mt-1 text-(--app-text-muted)">Score: {event.score}/5</p>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <p className="text-sm leading-relaxed text-(--app-text-muted)">
+                    Aún no hay actividad registrada para este candidato.
+                  </p>
+                )}
               </div>
-            </div>
+            </section>
           </div>
-        </div>
+        </SideSheet>
       ) : null}
     </motion.div>
   )
