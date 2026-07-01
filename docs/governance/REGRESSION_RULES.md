@@ -353,6 +353,9 @@ Do not let candidate-facing internal tabs, including `Tu membresía` tabs and `M
 ### R-095 — Closing or archiving vacancies must require confirmation
 Do not let workspace users close or archive a vacancy directly from a button, menu item, quick action, or future bulk action. These actions must first open the shared confirmation dialog, name the affected vacancy, explain that the vacancy will stop showing publicly, and only execute the status mutation after the user confirms.
 
+### R-096 — Account membership must render through normal nested routing
+Do not mount `/account/membership` by passing the membership page as shell `fallbackContent`. The account membership page must remain a real child route rendered through the shared candidate shell `Outlet`, so direct entry and auth-guard redirects cannot leave the shell with a blank content area during first navigation.
+
 ---
 
 ## Maintenance rule

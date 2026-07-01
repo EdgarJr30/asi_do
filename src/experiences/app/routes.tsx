@@ -139,17 +139,21 @@ export const applicationRoutes: RouteObject[] = [
       <RequireAuth>
         <RequireCompletedBaseOnboarding>
           <RouteSuspense>
-            <CandidateShell
-              fallbackContent={
-                <RouteSuspense>
-                  <MembershipStatusPage />
-                </RouteSuspense>
-              }
-            />
+            <CandidateShell />
           </RouteSuspense>
         </RequireCompletedBaseOnboarding>
       </RequireAuth>
-    )
+    ),
+    children: [
+      {
+        index: true,
+        element: (
+          <RouteSuspense>
+            <MembershipStatusPage />
+          </RouteSuspense>
+        )
+      }
+    ]
   },
   {
     path: surfacePaths.candidate.root,

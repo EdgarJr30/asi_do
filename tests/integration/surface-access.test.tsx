@@ -95,6 +95,20 @@ vi.mock('@/features/auth/lib/auth-api', async () => {
   }
 })
 
+vi.mock('@/features/membership/lib/membership-api', () => ({
+  fetchMyMembershipStatus: vi.fn(() =>
+    Promise.resolve({
+      application: null,
+      payment: null,
+      verifiedPayment: null,
+      verifiedPayments: [],
+      settings: null
+    })
+  ),
+  getCategoryDue: vi.fn(() => null),
+  respondMembershipApplication: vi.fn(() => Promise.resolve())
+}))
+
 function renderRoute(initialEntry: string) {
   const router = createMemoryRouter(appRoutes, {
     initialEntries: [initialEntry]
@@ -176,6 +190,31 @@ describe('surface access states', () => {
 
     expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
     expect(await screen.findByRole('heading', { name: 'Ups, esta página no está disponible' })).toBeInTheDocument()
+  })
+
+  it('renders account membership inside the candidate shell on direct entry', async () => {
+    const inactiveMemberProfile = {
+      ...completeProfile({ id: 'user-membership', email: 'member@example.com' }),
+      asi_membership_status: 'none',
+      user_subscription_status: 'none',
+      membership_expires_at: null,
+      subscription_expires_at: null
+    }
+
+    authState.session = { user: { id: 'user-membership', email: 'member@example.com' } }
+    authState.snapshot = {
+      profile: inactiveMemberProfile,
+      memberships: [],
+      permissions: [],
+      platformPermissions: [],
+      isPlatformAdmin: false
+    }
+
+    renderRoute(surfacePaths.account.membership)
+
+    expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
+    expect(await screen.findByRole('heading', { name: 'Tu membresía' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Completar solicitud/i })).toBeInTheDocument()
   })
 
   it('renders workspace forbidden inside the workspace shell', async () => {
