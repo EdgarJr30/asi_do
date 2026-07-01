@@ -209,7 +209,7 @@ export function WorkspaceActivityPage() {
   return (
     <motion.div
       ref={pageTopRef}
-      className="mx-auto w-full max-w-7xl space-y-6 pb-8"
+      className="w-full space-y-6 pb-8"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
