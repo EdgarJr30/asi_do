@@ -33,6 +33,13 @@ export interface WorkspaceDashboardMetrics {
     activeCandidates: number
     interviews: number
     offers: number
+    hired: number
+  }
+  deltas: {
+    openJobs: number
+    activeCandidates: number
+    interviews: number
+    offers: number
   }
   funnel: DashboardFunnelStage[]
   recentApplications: DashboardRecentApplication[]
@@ -51,15 +58,82 @@ function isOfferStage(code: string | null | undefined, name: string | null | und
   return value.includes('offer') || value.includes('oferta')
 }
 
-export async function fetchWorkspaceDashboardMetrics(tenantId: string): Promise<WorkspaceDashboardMetrics> {
+function isHiredStage(code: string | null | undefined, name: string | null | undefined) {
+  const value = `${code ?? ''} ${name ?? ''}`.toLowerCase()
+  return value.includes('hired') || value.includes('contrat')
+}
+
+function getPeriodStart(periodDays?: number, offsetDays = 0) {
+  if (!periodDays) {
+    return null
+  }
+
+  const start = new Date()
+  start.setHours(0, 0, 0, 0)
+  start.setDate(start.getDate() - periodDays - offsetDays + 1)
+  return start
+}
+
+function inPeriod(value: string, start: Date | null, end: Date | null) {
+  if (!start) {
+    return true
+  }
+
+  const date = new Date(value)
+  return date >= start && (!end || date < end)
+}
+
+type PipelineApplication = Awaited<ReturnType<typeof fetchPipelineBoard>>['applications'][number]
+type PipelineStage = Awaited<ReturnType<typeof fetchPipelineBoard>>['stages'][number]
+
+function isActiveApplication(application: PipelineApplication) {
+  return !TERMINAL_STATUSES.has(application.status_public)
+}
+
+function isInterviewApplication(application: PipelineApplication, stageById: Map<string, PipelineStage>) {
+  const stage = application.current_stage_id ? stageById.get(application.current_stage_id) : null
+  return application.status_public === 'interviewing' || isInterviewStage(stage?.code, stage?.name)
+}
+
+function isOfferApplication(application: PipelineApplication, stageById: Map<string, PipelineStage>) {
+  const stage = application.current_stage_id ? stageById.get(application.current_stage_id) : null
+  return application.status_public === 'offer' || isOfferStage(stage?.code, stage?.name)
+}
+
+function isHiredApplication(application: PipelineApplication, stageById: Map<string, PipelineStage>) {
+  const stage = application.current_stage_id ? stageById.get(application.current_stage_id) : null
+  return application.status_public === 'hired' || isHiredStage(stage?.code, stage?.name)
+}
+
+export async function fetchWorkspaceDashboardMetrics(
+  tenantId: string,
+  options?: { periodDays?: number }
+): Promise<WorkspaceDashboardMetrics> {
   const [board, jobs] = await Promise.all([fetchPipelineBoard(tenantId), listTenantJobs(tenantId)])
   const { stages, applications } = board
 
   const stageById = new Map(stages.map((stage) => [stage.id, stage]))
-  const totalApplications = applications.length
+  const periodStart = getPeriodStart(options?.periodDays)
+  const previousPeriodStart = getPeriodStart(options?.periodDays, options?.periodDays)
+  const periodApplications = applications.filter((application) => inPeriod(application.submitted_at, periodStart, null))
+  const previousApplications =
+    periodStart && previousPeriodStart
+      ? applications.filter((application) => inPeriod(application.submitted_at, previousPeriodStart, periodStart))
+      : []
+  const periodOpenJobs = periodStart
+    ? jobs.filter((job) => job.status === 'published' && inPeriod(job.published_at ?? job.updated_at, periodStart, null)).length
+    : jobs.filter((job) => job.status === 'published').length
+  const previousOpenJobs =
+    periodStart && previousPeriodStart
+      ? jobs.filter(
+          (job) =>
+            job.status === 'published' && inPeriod(job.published_at ?? job.updated_at, previousPeriodStart, periodStart)
+        ).length
+      : 0
+  const totalApplications = periodApplications.length
 
   const funnel: DashboardFunnelStage[] = stages.map((stage) => {
-    const count = applications.filter((application) => application.current_stage_id === stage.id).length
+    const count = periodApplications.filter((application) => application.current_stage_id === stage.id).length
     return {
       stageId: stage.id,
       name: stage.name,
@@ -68,18 +142,15 @@ export async function fetchWorkspaceDashboardMetrics(tenantId: string): Promise<
     }
   })
 
-  const openJobs = jobs.filter((job) => job.status === 'published').length
-  const activeCandidates = applications.filter((application) => !TERMINAL_STATUSES.has(application.status_public)).length
-  const interviews = applications.filter((application) => {
-    const stage = application.current_stage_id ? stageById.get(application.current_stage_id) : null
-    return application.status_public === 'interviewing' || isInterviewStage(stage?.code, stage?.name)
-  }).length
-  const offers = applications.filter((application) => {
-    const stage = application.current_stage_id ? stageById.get(application.current_stage_id) : null
-    return application.status_public === 'offer' || isOfferStage(stage?.code, stage?.name)
-  }).length
+  const activeCandidates = periodApplications.filter(isActiveApplication).length
+  const interviews = periodApplications.filter((application) => isInterviewApplication(application, stageById)).length
+  const offers = periodApplications.filter((application) => isOfferApplication(application, stageById)).length
+  const hired = periodApplications.filter((application) => isHiredApplication(application, stageById)).length
+  const previousActiveCandidates = previousApplications.filter(isActiveApplication).length
+  const previousInterviews = previousApplications.filter((application) => isInterviewApplication(application, stageById)).length
+  const previousOffers = previousApplications.filter((application) => isOfferApplication(application, stageById)).length
 
-  const recentApplications: DashboardRecentApplication[] = [...applications]
+  const recentApplications: DashboardRecentApplication[] = [...periodApplications]
     .sort((left, right) => new Date(right.submitted_at).getTime() - new Date(left.submitted_at).getTime())
     .slice(0, 30)
     .map((application) => {
@@ -101,7 +172,7 @@ export async function fetchWorkspaceDashboardMetrics(tenantId: string): Promise<
     })
 
   const activity: DashboardActivityItem[] = []
-  for (const application of applications) {
+  for (const application of periodApplications) {
     const candidateName = application.candidate_display_name_snapshot
     const jobTitle = application.job_posting?.title ?? 'Vacante'
     activity.push({
@@ -139,7 +210,13 @@ export async function fetchWorkspaceDashboardMetrics(tenantId: string): Promise<
     .slice(0, 30)
 
   return {
-    stats: { openJobs, activeCandidates, interviews, offers },
+    stats: { openJobs: periodOpenJobs, activeCandidates, interviews, offers, hired },
+    deltas: {
+      openJobs: periodOpenJobs - previousOpenJobs,
+      activeCandidates: activeCandidates - previousActiveCandidates,
+      interviews: interviews - previousInterviews,
+      offers: offers - previousOffers
+    },
     funnel,
     recentApplications,
     recentActivity
