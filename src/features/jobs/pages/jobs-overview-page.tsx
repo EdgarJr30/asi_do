@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
@@ -58,6 +58,7 @@ import { cn } from '@/lib/utils/cn'
 const PUBLIC_JOBS_QUERY_KEY = ['jobs', 'public'] as const
 const TENANT_JOBS_QUERY_KEY = ['jobs', 'tenant'] as const
 const JOB_CREATE_ACTION = 'create'
+const CREATE_JOB_SHEET_DELAY_MS = 220
 
 function shouldOpenCreateJobEditor(search: string) {
   return new URLSearchParams(search).get('action') === JOB_CREATE_ACTION
@@ -714,7 +715,7 @@ function WorkspaceJobsManager() {
   const isWorkspaceContext = location.pathname.startsWith('/workspace')
   const canManageJobs = session.permissions.includes('job:create') || session.permissions.includes('job:update')
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
-  const [isEditorOpen, setIsEditorOpen] = useState(() => shouldOpenCreateJobEditor(location.search))
+  const [isEditorOpen, setIsEditorOpen] = useState(false)
   const [statusTab, setStatusTab] = useState<'active' | 'inactive'>('active')
   const [search, setSearch] = useState('')
   const [employmentFilter, setEmploymentFilter] = useState('')
@@ -822,6 +823,22 @@ function WorkspaceJobsManager() {
   const safePage = Math.min(page, pageCount - 1)
   const pageStart = safePage * WORKSPACE_JOBS_PAGE_SIZE
   const pageJobs = filteredJobs.slice(pageStart, pageStart + WORKSPACE_JOBS_PAGE_SIZE)
+
+  useEffect(() => {
+    if (!shouldOpenCreateJobEditor(location.search)) {
+      return
+    }
+
+    const delay = shouldReduceMotion ? 0 : CREATE_JOB_SHEET_DELAY_MS
+    const timeoutId = window.setTimeout(() => {
+      setViewJobId(null)
+      setSelectedJobId(null)
+      setIsEditorOpen(true)
+      window.scrollTo({ top: 0, behavior: shouldReduceMotion ? 'auto' : 'smooth' })
+    }, delay)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [location.search, shouldReduceMotion])
 
   function resetToFirstPage() {
     setPage(0)
