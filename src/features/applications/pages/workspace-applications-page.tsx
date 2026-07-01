@@ -1,14 +1,12 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
-import { Activity, CalendarClock, ClipboardList, Search } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { Briefcase, KanbanSquare, Search, UserRound } from 'lucide-react'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { EmptyState } from '@/components/ui/empty-state'
 import { KebabMenu, KebabMenuItem } from '@/components/ui/kebab-menu'
 import { Pagination } from '@/components/ui/pagination'
 import { Select } from '@/components/ui/select'
@@ -18,17 +16,28 @@ import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 import { cn } from '@/lib/utils/cn'
 
-const STATUS_META: Record<string, { label: string; pill: string }> = {
-  submitted: { label: 'Aplicó', pill: 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300' },
-  in_review: { label: 'En revisión', pill: 'bg-sky-50 text-sky-700 dark:bg-sky-500/12 dark:text-sky-300' },
-  interviewing: { label: 'Entrevista', pill: 'bg-violet-50 text-violet-700 dark:bg-violet-500/12 dark:text-violet-300' },
-  offer: { label: 'Oferta', pill: 'bg-amber-50 text-amber-700 dark:bg-amber-500/12 dark:text-amber-300' },
-  hired: { label: 'Contratado', pill: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300' },
-  rejected: { label: 'Descartado', pill: 'bg-rose-50 text-rose-700 dark:bg-rose-500/12 dark:text-rose-300' },
-  withdrawn: { label: 'Retirado', pill: 'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400' }
+/** Etiqueta + color del punto/estado (columna "Estado"), alineado a los tokens del handoff. */
+const STATUS_META: Record<string, { label: string; dot: string; text: string }> = {
+  submitted: { label: 'Aplicó', dot: '#2d52a8', text: 'text-[#2d52a8] dark:text-[#9ec0ff]' },
+  in_review: { label: 'En revisión', dot: '#1f7aa8', text: 'text-[#1f7aa8] dark:text-[#7cc4e6]' },
+  interviewing: { label: 'En entrevista', dot: '#6b46c1', text: 'text-[#6b46c1] dark:text-[#c4b0f0]' },
+  offer: { label: 'Oferta', dot: '#c5820f', text: 'text-[#c5820f] dark:text-[#f3c56a]' },
+  hired: { label: 'Contratado', dot: '#1f9d61', text: 'text-[#1f9d61] dark:text-[#7ee1a8]' },
+  rejected: { label: 'Descartado', dot: '#d2455f', text: 'text-[#d2455f] dark:text-[#f0a0b0]' },
+  withdrawn: { label: 'Retirado', dot: '#8b97b0', text: 'text-(--app-text-subtle)' }
 }
 
-const APPLICATIONS_PAGE_SIZE = 9
+/** Chips de filtro por estado (incluye "Todas"). */
+const STATUS_FILTERS: Array<{ key: string; label: string }> = [
+  { key: '', label: 'Todas' },
+  { key: 'submitted', label: 'Aplicó' },
+  { key: 'in_review', label: 'En revisión' },
+  { key: 'interviewing', label: 'En entrevista' },
+  { key: 'hired', label: 'Contratado' },
+  { key: 'rejected', label: 'Descartado' }
+]
+
+const APPLICATIONS_PAGE_SIZE = 10
 
 function initialsFrom(value: string) {
   return (
@@ -57,13 +66,24 @@ function submittedWithinDays(value: string, days: number) {
   return Date.now() - new Date(value).getTime() <= days * 86_400_000
 }
 
+/** Avatar alterna entre marca y morado para dar variedad visual como en el diseño. */
+function avatarTint(id: string) {
+  let hash = 0
+  for (let index = 0; index < id.length; index += 1) {
+    hash = (hash * 31 + id.charCodeAt(index)) % 2
+  }
+  return hash === 0
+    ? 'bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200'
+    : 'bg-[#f1ecff] text-[#6b46c1] dark:bg-[#6b46c1]/16 dark:text-[#c4b0f0]'
+}
+
 export function WorkspaceApplicationsPage() {
   const session = useAppSession()
   const shouldReduceMotion = useReducedMotion()
   const tenantId = session.activeTenantId
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
-  const [sort, setSort] = useState<'recent' | 'oldest'>('recent')
+  const [sort, setSort] = useState<'recent' | 'oldest' | 'name'>('recent')
   const [page, setPage] = useState(0)
 
   const boardQuery = useQuery({
@@ -94,6 +114,14 @@ export function WorkspaceApplicationsPage() {
     recent: applications.filter((application) => submittedWithinDays(application.submitted_at, 7)).length
   }
 
+  const statusCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const application of applications) {
+      counts.set(application.status_public, (counts.get(application.status_public) ?? 0) + 1)
+    }
+    return counts
+  }, [applications])
+
   const filteredRows = useMemo(() => {
     const normalized = query.trim().toLowerCase()
     return applications
@@ -106,6 +134,9 @@ export function WorkspaceApplicationsPage() {
         return matchesQuery && matchesStatus
       })
       .sort((left, right) => {
+        if (sort === 'name') {
+          return left.candidate_display_name_snapshot.localeCompare(right.candidate_display_name_snapshot, 'es')
+        }
         const diff = new Date(right.submitted_at).getTime() - new Date(left.submitted_at).getTime()
         return sort === 'recent' ? diff : -diff
       })
@@ -135,144 +166,213 @@ export function WorkspaceApplicationsPage() {
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-5"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
     >
-      <motion.div variants={cardReveal}>
-        <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Aplicaciones</h1>
-        <p className="mt-1 text-sm text-(--app-text-muted)">
-          {stats.total} {stats.total === 1 ? 'postulación' : 'postulaciones'} en tus vacantes
-        </p>
+      <motion.div variants={cardReveal} className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Aplicaciones</h1>
+          <p className="mt-1 text-sm text-(--app-text-muted)">
+            <b className="font-semibold text-(--app-text)">{stats.total}</b>{' '}
+            {stats.total === 1 ? 'postulación' : 'postulaciones'} en tus vacantes
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 lg:flex lg:shrink-0">
+          <MetricChip dot="#2d52a8" value={loading ? '—' : stats.total} label="Total" />
+          <MetricChip dot="#6b46c1" value={loading ? '—' : stats.interviewing} label="En entrevista" />
+          <MetricChip dot="#1f9d61" value={loading ? '—' : stats.recent} label="Últimos 7 días" />
+        </div>
       </motion.div>
 
-      <motion.div variants={gridStagger} className="grid gap-3 sm:grid-cols-3">
-        <motion.div variants={cardReveal} className="h-full">
-          <AppStatCard icon={ClipboardList} accent="sky" label="Total aplicaciones" value={loading ? '—' : stats.total} helper="En todas tus vacantes" />
-        </motion.div>
-        <motion.div variants={cardReveal} className="h-full">
-          <AppStatCard icon={CalendarClock} accent="violet" label="En entrevista" value={loading ? '—' : stats.interviewing} helper="Candidatos en esta etapa" />
-        </motion.div>
-        <motion.div variants={cardReveal} className="h-full">
-          <AppStatCard icon={Activity} accent="emerald" label="Últimos 7 días" value={loading ? '—' : stats.recent} helper="Nuevas postulaciones" />
-        </motion.div>
-      </motion.div>
-
-      <motion.div variants={cardReveal} className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
-        <div className="flex flex-1 items-center gap-2.5 rounded-2xl border border-(--app-border) bg-(--app-surface) px-3.5">
-          <Search aria-hidden="true" className="size-4 text-(--app-text-subtle)" />
+      <motion.div variants={cardReveal} className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
+          <Search aria-hidden="true" className="size-4 shrink-0 text-(--app-text-subtle)" />
           <input
             value={query}
             onChange={(event) => {
               setQuery(event.target.value)
               resetToFirstPage()
             }}
-            placeholder="Buscar por candidato o posición..."
+            placeholder="Buscar por candidato o posición…"
             className="h-11 w-full bg-transparent text-sm text-(--app-text) outline-none placeholder:text-(--app-text-subtle)"
           />
         </div>
         <Select
-          className="lg:w-52"
-          value={statusFilter}
-          onChange={(event) => {
-            setStatusFilter(event.target.value)
-            resetToFirstPage()
-          }}
+          className="h-11 rounded-xl sm:w-48"
+          value={sort}
+          onChange={(event) => setSort(event.target.value as 'recent' | 'oldest' | 'name')}
         >
-          <option value="">Todos los estados</option>
-          {Object.entries(STATUS_META).map(([value, meta]) => (
-            <option key={value} value={value}>
-              {meta.label}
-            </option>
-          ))}
-        </Select>
-        <Select className="lg:w-48" value={sort} onChange={(event) => setSort(event.target.value as 'recent' | 'oldest')}>
           <option value="recent">Más recientes</option>
           <option value="oldest">Más antiguas</option>
+          <option value="name">Nombre A–Z</option>
         </Select>
       </motion.div>
 
+      <motion.div variants={cardReveal} className="flex flex-wrap gap-2">
+        {STATUS_FILTERS.map((filter) => {
+          const isActive = statusFilter === filter.key
+          const count = filter.key === '' ? applications.length : statusCounts.get(filter.key) ?? 0
+          return (
+            <button
+              key={filter.key || 'all'}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => {
+                setStatusFilter(filter.key)
+                resetToFirstPage()
+              }}
+              className={cn(
+                'inline-flex h-9 items-center gap-2 rounded-full px-3.5 text-[0.82rem] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)',
+                isActive
+                  ? 'bg-(--app-text) text-(--app-canvas)'
+                  : 'border border-(--app-border) bg-(--app-surface-elevated) text-(--app-text-muted) hover:border-(--app-text-subtle) hover:text-(--app-text)'
+              )}
+            >
+              {filter.label}
+              <span
+                className={cn(
+                  'text-[0.72rem] font-bold tabular-nums',
+                  isActive ? 'text-(--app-canvas)/70' : 'text-(--app-text-subtle)'
+                )}
+              >
+                {loading ? '·' : count}
+              </span>
+            </button>
+          )
+        })}
+      </motion.div>
+
       <motion.div variants={cardReveal} className="space-y-3">
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden rounded-2xl p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]">
+          <div className="hidden grid-cols-[minmax(0,2.2fr)_minmax(0,1.5fr)_1fr_1fr_0.9fr_2.5rem] items-center gap-4 border-b border-(--app-border) bg-(--app-surface-muted)/70 px-4 py-3 text-[0.7rem] font-bold uppercase tracking-[0.05em] text-(--app-text-subtle) lg:grid">
+            <span>Candidato</span>
+            <span className="hidden xl:block">Posición</span>
+            <span className="hidden 2xl:block">Etapa</span>
+            <span>Estado</span>
+            <span className="text-right">Aplicó</span>
+            <span className="sr-only">Acciones</span>
+          </div>
+
           {loading ? (
-            <div className="flex items-center gap-2.5 px-6 py-10 text-sm text-(--app-text-muted)">
+            <div className="flex items-center gap-2.5 px-4 py-12 text-sm text-(--app-text-muted)">
               <Spinner size="sm" /> Cargando aplicaciones…
             </div>
           ) : filteredRows.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[44rem] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-(--app-border) bg-(--app-surface-muted) text-left text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-(--app-text-subtle)">
-                    <th className="px-5 py-3 font-semibold">Candidato</th>
-                    <th className="px-4 py-3 font-semibold">Posición</th>
-                    <th className="px-4 py-3 font-semibold">Etapa</th>
-                    <th className="px-4 py-3 font-semibold">Estado</th>
-                    <th className="px-4 py-3 text-right font-semibold">Aplicó</th>
-                    <th className="px-3 py-3 text-right font-semibold">
-                      <span className="sr-only">Acciones</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pageRows.map((application) => {
-                    const statusMeta = STATUS_META[application.status_public] ?? {
-                      label: application.status_public,
-                      pill: 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300'
-                    }
-                    const stageName = application.current_stage_id ? stageNameById.get(application.current_stage_id) : null
+            <motion.ul
+              variants={gridStagger}
+              initial={shouldReduceMotion ? false : 'hidden'}
+              animate="show"
+              className="divide-y divide-(--app-border)"
+            >
+              {pageRows.map((application) => {
+                const statusMeta = STATUS_META[application.status_public] ?? {
+                  label: application.status_public,
+                  dot: '#8b97b0',
+                  text: 'text-(--app-text-subtle)'
+                }
+                const stageName = application.current_stage_id ? stageNameById.get(application.current_stage_id) : null
+                const jobSlug = application.job_posting?.slug
 
-                    return (
-                      <tr key={application.id} className="border-b border-(--app-border)/70 transition-colors last:border-0 hover:bg-(--app-surface-muted)/50">
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-2.5">
-                            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-(--app-surface-muted) text-[11px] font-semibold text-(--app-text-muted)">
-                              {initialsFrom(application.candidate_display_name_snapshot)}
-                            </span>
-                            <span className="truncate font-medium text-(--app-text)">{application.candidate_display_name_snapshot}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3.5 text-(--app-text-muted)">{application.job_posting?.title ?? 'Vacante'}</td>
-                        <td className="px-4 py-3.5">
-                          {stageName ? (
-                            <span className="inline-flex items-center rounded-full bg-(--app-surface-muted) px-2.5 py-1 text-[0.72rem] font-medium text-(--app-text-muted)">
-                              {stageName}
-                            </span>
-                          ) : (
-                            <span className="text-(--app-text-subtle)">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[0.72rem] font-semibold', statusMeta.pill)}>
-                            {statusMeta.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3.5 text-right tabular-nums text-(--app-text-muted)">{relativeDays(application.submitted_at)}</td>
-                        <td className="px-3 py-3.5">
-                          <div className="flex justify-end">
-                            <KebabMenu>
-                              <KebabMenuItem to={surfacePaths.workspace.pipeline}>Ver en pipeline</KebabMenuItem>
-                            </KebabMenu>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+                return (
+                  <motion.li
+                    key={application.id}
+                    variants={cardReveal}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3.5 transition-colors hover:bg-(--app-surface-muted)/55 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1.5fr)_1fr_1fr_0.9fr_2.5rem] lg:gap-4"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        className={cn(
+                          'flex size-9 shrink-0 items-center justify-center rounded-full text-[0.78rem] font-bold',
+                          avatarTint(application.id)
+                        )}
+                      >
+                        {initialsFrom(application.candidate_display_name_snapshot)}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-[0.9rem] font-semibold leading-tight text-(--app-text)">
+                          {application.candidate_display_name_snapshot}
+                        </p>
+                        <p className="mt-0.5 truncate text-[0.8rem] text-(--app-text-subtle) xl:hidden">
+                          {application.job_posting?.title ?? 'Vacante'}
+                        </p>
+                        {stageName ? (
+                          <p className="mt-0.5 hidden truncate text-[0.8rem] text-(--app-text-subtle) xl:block 2xl:hidden">
+                            {stageName}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <p className="hidden truncate text-sm text-(--app-text-muted) xl:block">
+                      {application.job_posting?.title ?? 'Vacante'}
+                    </p>
+
+                    <div className="hidden 2xl:block">
+                      {stageName ? (
+                        <span className="inline-flex items-center rounded-full bg-(--app-surface-muted) px-2.5 py-1 text-[0.74rem] font-semibold text-(--app-text-muted)">
+                          {stageName}
+                        </span>
+                      ) : (
+                        <span className="text-(--app-text-subtle)">—</span>
+                      )}
+                    </div>
+
+                    <span className={cn('col-start-1 inline-flex items-center gap-1.5 text-[0.84rem] font-semibold lg:col-auto', statusMeta.text)}>
+                      <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: statusMeta.dot }} />
+                      {statusMeta.label}
+                    </span>
+
+                    <span className="col-start-1 text-[0.82rem] text-(--app-text-subtle) lg:col-auto lg:text-right">
+                      {relativeDays(application.submitted_at)}
+                    </span>
+
+                    <div className="col-start-2 row-span-3 row-start-1 flex items-start justify-end self-start lg:col-auto lg:row-auto lg:self-center">
+                      <KebabMenu label={`Acciones para ${application.candidate_display_name_snapshot}`}>
+                        <KebabMenuItem to={surfacePaths.workspace.pipeline}>
+                          <KanbanSquare className="mr-2 size-4 text-(--app-text-subtle)" />
+                          Ver en pipeline
+                        </KebabMenuItem>
+                        <KebabMenuItem to={`${surfacePaths.workspace.talent}?candidate=${application.candidate_profile_id}`}>
+                          <UserRound className="mr-2 size-4 text-(--app-text-subtle)" />
+                          Ver candidato
+                        </KebabMenuItem>
+                        {jobSlug ? (
+                          <KebabMenuItem to={surfacePaths.public.jobDetail(jobSlug)}>
+                            <Briefcase className="mr-2 size-4 text-(--app-text-subtle)" />
+                            Ir a la vacante
+                          </KebabMenuItem>
+                        ) : null}
+                      </KebabMenu>
+                    </div>
+                  </motion.li>
+                )
+              })}
+            </motion.ul>
           ) : (
-            <div className="p-4">
-              <EmptyState title="Sin aplicaciones" description="Aún no hay postulaciones que coincidan con este criterio." />
+            <div className="px-5 py-16 text-center">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                <Search className="size-6" />
+              </div>
+              <h3 className="mt-4 text-base font-bold tracking-tight text-(--app-text)">Sin resultados</h3>
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-(--app-text-muted)">
+                {applications.length === 0
+                  ? 'Aún no hay postulaciones en tus vacantes. Cuando el talento aplique, aparecerá aquí.'
+                  : 'No encontramos aplicaciones que coincidan con tu búsqueda o filtros.'}
+              </p>
             </div>
           )}
         </Card>
 
         {!loading && filteredRows.length > 0 ? (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-(--app-text-muted)">
-              Mostrando {pageStart + 1} a {Math.min(pageStart + APPLICATIONS_PAGE_SIZE, filteredRows.length)} de {filteredRows.length}{' '}
-              {filteredRows.length === 1 ? 'aplicación' : 'aplicaciones'}
+              Mostrando{' '}
+              <b className="font-semibold text-(--app-text-muted)">
+                {pageStart + 1}–{Math.min(pageStart + APPLICATIONS_PAGE_SIZE, filteredRows.length)}
+              </b>{' '}
+              de {filteredRows.length} {filteredRows.length === 1 ? 'aplicación' : 'aplicaciones'}
             </p>
             {pageCount > 1 ? (
               <Pagination page={safePage} totalPages={pageCount} onPageChange={setPage} ariaLabel="Paginación de aplicaciones" />
@@ -284,35 +384,14 @@ export function WorkspaceApplicationsPage() {
   )
 }
 
-const appAccentClassName = {
-  sky: 'bg-sky-50 text-sky-600 dark:bg-sky-500/12 dark:text-sky-300',
-  violet: 'bg-violet-50 text-violet-600 dark:bg-violet-500/12 dark:text-violet-300',
-  emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/12 dark:text-emerald-300'
-} as const
-
-function AppStatCard({
-  icon: Icon,
-  accent,
-  label,
-  value,
-  helper
-}: {
-  icon: LucideIcon
-  accent: keyof typeof appAccentClassName
-  label: ReactNode
-  value: ReactNode
-  helper?: ReactNode
-}) {
+function MetricChip({ dot, value, label }: { dot: string; value: string | number; label: string }) {
   return (
-    <div className="h-full rounded-panel border border-(--app-border) bg-(--app-surface-elevated) px-3.5 py-3 shadow-[0_10px_26px_rgba(10,18,36,0.06)] dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]">
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">{label}</p>
-        <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-full', appAccentClassName[accent])}>
-          <Icon className="size-4" />
-        </span>
-      </div>
-      <p className="mt-2 text-[1.4rem] font-semibold tracking-tight text-(--app-text)">{value}</p>
-      {helper ? <p className="mt-1 text-[0.72rem] leading-4 text-(--app-text-muted)">{helper}</p> : null}
+    <div className="flex items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface-elevated) py-2 pl-3 pr-4">
+      <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: dot }} />
+      <span className="min-w-0">
+        <span className="block font-sans text-[1.18rem] font-bold leading-none tracking-tight text-(--app-text)">{value}</span>
+        <span className="mt-1 block text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-(--app-text-subtle)">{label}</span>
+      </span>
     </div>
   )
 }

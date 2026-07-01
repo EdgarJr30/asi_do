@@ -13,6 +13,7 @@ import {
   X
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useSearchParams } from 'react-router-dom'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { Button } from '@/components/ui/button'
@@ -71,7 +72,28 @@ export function TalentDirectoryPage() {
   const [sort, setSort] = useState<'relevance' | 'name'>('relevance')
   const [showFilters, setShowFilters] = useState(true)
   const [page, setPage] = useState(0)
-  const [selectedCandidateProfileId, setSelectedCandidateProfileId] = useState<string | null>(null)
+  // Permite deep-link desde Aplicaciones: `/workspace/talent?candidate=<id>` abre
+  // directamente el perfil del candidato que aplicó.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [selectedCandidateProfileId, setSelectedCandidateProfileId] = useState<string | null>(
+    () => searchParams.get('candidate')
+  )
+
+  function selectCandidate(candidateProfileId: string | null) {
+    setSelectedCandidateProfileId(candidateProfileId)
+    setSearchParams(
+      (params) => {
+        const next = new URLSearchParams(params)
+        if (candidateProfileId) {
+          next.set('candidate', candidateProfileId)
+        } else {
+          next.delete('candidate')
+        }
+        return next
+      },
+      { replace: true }
+    )
+  }
 
   const searchQuery = useQuery({
     queryKey: ['talent-directory', tenantId, query, skill, language, countryCode],
@@ -218,7 +240,7 @@ export function TalentDirectoryPage() {
                       return (
                         <tr
                           key={candidate.candidate_profile_id}
-                          onClick={() => setSelectedCandidateProfileId(candidate.candidate_profile_id)}
+                          onClick={() => selectCandidate(candidate.candidate_profile_id)}
                           className={cn(
                             'cursor-pointer border-b border-(--app-border)/70 transition-colors last:border-0',
                             isSelected ? 'bg-primary-50/70 dark:bg-primary-500/12' : 'hover:bg-(--app-surface-muted)/60'
@@ -298,7 +320,7 @@ export function TalentDirectoryPage() {
           ) : detailQuery.error || !detailQuery.data ? (
             <Card className="min-h-[280px] text-sm text-rose-600 dark:text-rose-300">{toErrorMessage(detailQuery.error)}</Card>
           ) : (
-            <CandidateDetailPanel data={detailQuery.data} onClose={() => setSelectedCandidateProfileId(null)} />
+            <CandidateDetailPanel data={detailQuery.data} onClose={() => selectCandidate(null)} />
           )}
         </div>
       </motion.section>
