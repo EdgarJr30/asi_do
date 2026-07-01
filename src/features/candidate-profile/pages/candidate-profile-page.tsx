@@ -1,4 +1,4 @@
-import { type Dispatch, type ReactNode, type SetStateAction, useState } from 'react'
+import { type Dispatch, type ReactNode, type SetStateAction, useEffect, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -77,6 +77,7 @@ import {
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import {
   CANDIDATE_RESUME_MIME_TYPES,
+  formatFileSize,
   MAX_UPLOAD_SIZE_LABEL,
   prepareUploadFile,
   UploadConstraintError
@@ -98,6 +99,14 @@ function normalizeCandidateResumeLabel(mimeType: string) {
   }
 
   return mimeType
+}
+
+function getCandidateResumeFileLabel(file: File) {
+  return normalizeCandidateResumeLabel(file.type) || file.name.split('.').pop()?.trim().toUpperCase() || 'Archivo'
+}
+
+function canPreviewCandidateResume(file: File) {
+  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
 }
 
 function toExperienceDrafts(bundle: CandidateProfileBundle) {
@@ -207,6 +216,10 @@ function formatUpdatedAt(value?: string | null) {
 
 type ProfileTab = 'general' | 'cv' | 'experience' | 'skills'
 type CandidateResume = CandidateProfileBundle['resumes'][number]
+type PendingResumeUpload = {
+  file: File
+  previewUrl: string
+}
 type PendingProfileDelete =
   | { kind: 'resume'; resume: CandidateResume }
   | { kind: 'experience'; id: string; label: string }
@@ -403,6 +416,86 @@ function QuickAction({ icon: Icon, title, description, onClick }: { icon: Lucide
   )
 }
 
+function ResumeUploadPreviewDialog({
+  pendingUpload,
+  loading,
+  onConfirm,
+  onCancel
+}: {
+  pendingUpload: PendingResumeUpload | null
+  loading: boolean
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  if (!pendingUpload) return null
+
+  const { file, previewUrl } = pendingUpload
+  const canPreview = canPreviewCandidateResume(file)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-4" role="dialog" aria-modal="true">
+      <button
+        aria-label="Cancelar carga de CV"
+        type="button"
+        className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm"
+        onClick={loading ? undefined : onCancel}
+      />
+      <Card className="relative z-10 flex max-h-[92svh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl p-0">
+        <CardHeader className="border-b border-(--app-border) px-4 py-4 sm:px-5">
+          <CardTitle>Revisar CV antes de guardar</CardTitle>
+          <CardDescription>Confirma que este es el archivo correcto antes de subirlo a tu perfil candidato.</CardDescription>
+        </CardHeader>
+        <CardContent className="mt-0 min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
+          <div className="flex flex-col gap-3 rounded-xl border border-(--app-border) bg-(--app-surface-muted)/55 p-3.5 sm:flex-row sm:items-center">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-primary-50 text-primary-600 dark:bg-primary-500/15 dark:text-primary-300">
+              <FileText className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-(--app-text)">{file.name}</p>
+              <p className="mt-0.5 text-[0.78rem] text-(--app-text-subtle)">
+                {getCandidateResumeFileLabel(file)} · {formatFileSize(file.size)}
+              </p>
+            </div>
+            <a
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-(--app-border) bg-(--app-surface) px-3 text-[0.78rem] font-semibold text-(--app-text) shadow-sm transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200"
+              href={previewUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              <Download className="size-3.5" />
+              Abrir
+            </a>
+          </div>
+
+          {canPreview ? (
+            <div className="overflow-hidden rounded-xl border border-(--app-border) bg-white">
+              <iframe className="h-[58svh] min-h-[360px] w-full" src={previewUrl} title={`Previsualización de ${file.name}`} />
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-(--app-border) px-4 py-8 text-center">
+              <span className="mx-auto flex size-12 items-center justify-center rounded-xl bg-(--app-surface-muted) text-(--app-text-subtle)">
+                <FileText className="size-6" />
+              </span>
+              <p className="mt-3 text-sm font-semibold text-(--app-text)">Vista previa no disponible para este formato</p>
+              <p className="mx-auto mt-1 max-w-md text-[0.8rem] leading-5 text-(--app-text-muted)">
+                El archivo aún no se ha subido. Verifica el nombre, tipo y tamaño; si necesitas revisar el contenido, abre el archivo seleccionado.
+              </p>
+            </div>
+          )}
+        </CardContent>
+        <div className="flex flex-col-reverse gap-2 border-t border-(--app-border) px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
+          <Button variant="outline" onClick={onCancel} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button onClick={onConfirm} disabled={loading}>
+            {loading ? 'Subiendo CV...' : 'Guardar y subir CV'}
+          </Button>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
 function CandidateProfileEditor({
   bundle,
   session
@@ -420,6 +513,7 @@ function CandidateProfileEditor({
   const [links, setLinks] = useState<CandidateLinkDraft[]>(() => toLinkDrafts(bundle))
   const [resumeFileError, setResumeFileError] = useState<string | null>(null)
   const [isResumeDragging, setIsResumeDragging] = useState(false)
+  const [pendingResumeUpload, setPendingResumeUpload] = useState<PendingResumeUpload | null>(null)
   const [isVisibleToRecruiters, setIsVisibleToRecruiters] = useState(() => bundle.profile?.is_visible_to_recruiters ?? false)
   const [pendingDelete, setPendingDelete] = useState<PendingProfileDelete | null>(null)
 
@@ -521,6 +615,7 @@ function CandidateProfileEditor({
       })
     },
     onSuccess: async () => {
+      setPendingResumeUpload(null)
       setResumeFileError(null)
       await queryClient.invalidateQueries({ queryKey: CANDIDATE_PROFILE_QUERY_KEY })
       toast.success('CV cargado', {
@@ -616,6 +711,14 @@ function CandidateProfileEditor({
 
   const resumes = bundle.resumes
 
+  useEffect(() => {
+    return () => {
+      if (pendingResumeUpload?.previewUrl) {
+        URL.revokeObjectURL(pendingResumeUpload.previewUrl)
+      }
+    }
+  }, [pendingResumeUpload?.previewUrl])
+
   function removeExperienceDraft(itemId: string) {
     setExperiences((current) =>
       current.length === 1 ? [createEmptyCandidateExperience()] : current.filter((item) => item.id !== itemId)
@@ -689,11 +792,55 @@ function CandidateProfileEditor({
       }
     : null
 
-  function handleResumeFile(file: File | null | undefined) {
-    if (file) {
-      setResumeFileError(null)
-      uploadResumeMutation.mutate(file)
+  async function handleResumeFile(file: File | null | undefined) {
+    if (!file) {
+      return
     }
+
+    setResumeFileError(null)
+
+    try {
+      const preparedFile = await prepareUploadFile(file, {
+        acceptedMimeTypes: CANDIDATE_RESUME_MIME_TYPES,
+        acceptedFormatsLabel: 'PDF, DOC o DOCX',
+        fieldLabel: 'El CV'
+      })
+
+      setPendingResumeUpload({
+        file: preparedFile,
+        previewUrl: URL.createObjectURL(preparedFile)
+      })
+    } catch (error) {
+      const description =
+        error instanceof UploadConstraintError ? error.userMessage : toErrorMessage(error)
+
+      setResumeFileError(description)
+      await reportErrorWithToast({
+        title: 'No pudimos preparar tu CV',
+        source: 'candidate-profile.resume-preview',
+        route: surfacePaths.candidate.profile,
+        userId: session.authUser?.id ?? null,
+        error,
+        description,
+        userMessage: description
+      })
+    }
+  }
+
+  function confirmPendingResumeUpload() {
+    if (!pendingResumeUpload) {
+      return
+    }
+
+    uploadResumeMutation.mutate(pendingResumeUpload.file)
+  }
+
+  function cancelPendingResumeUpload() {
+    if (uploadResumeMutation.isPending) {
+      return
+    }
+
+    setPendingResumeUpload(null)
   }
 
   async function openResume(storagePath: string) {
@@ -889,7 +1036,7 @@ function CandidateProfileEditor({
                   onDrop={(event) => {
                     event.preventDefault()
                     setIsResumeDragging(false)
-                    handleResumeFile(event.dataTransfer.files?.[0])
+                    void handleResumeFile(event.dataTransfer.files?.[0])
                   }}
                   className={cn(
                     'group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-[1.5px] border-dashed px-5 py-8 text-center transition-colors',
@@ -905,7 +1052,7 @@ function CandidateProfileEditor({
                     type="file"
                     disabled={uploadResumeMutation.isPending}
                     onChange={(event) => {
-                      handleResumeFile(event.target.files?.[0])
+                      void handleResumeFile(event.target.files?.[0])
                       event.currentTarget.value = ''
                     }}
                   />
@@ -913,9 +1060,9 @@ function CandidateProfileEditor({
                     <Upload className="size-5" />
                   </span>
                   <span className="text-sm font-semibold text-(--app-text)">
-                    {uploadResumeMutation.isPending ? 'Subiendo tu CV...' : 'Arrastra tu CV aquí o haz clic para subir'}
+                    {uploadResumeMutation.isPending ? 'Subiendo tu CV...' : 'Arrastra tu CV aquí o haz clic para revisar'}
                   </span>
-                  <span className="mt-1 text-[0.78rem] text-(--app-text-subtle)">PDF, DOC o DOCX · Tamaño máximo {MAX_UPLOAD_SIZE_LABEL}</span>
+                  <span className="mt-1 text-[0.78rem] text-(--app-text-subtle)">Lo verás antes de guardarlo · PDF, DOC o DOCX · Tamaño máximo {MAX_UPLOAD_SIZE_LABEL}</span>
                 </label>
                 {resumeFileError ? <p className="text-[0.72rem] font-medium text-rose-600 dark:text-rose-300">{resumeFileError}</p> : null}
 
@@ -1397,6 +1544,12 @@ function CandidateProfileEditor({
 
         </motion.aside>
       </div>
+      <ResumeUploadPreviewDialog
+        pendingUpload={pendingResumeUpload}
+        loading={uploadResumeMutation.isPending}
+        onConfirm={confirmPendingResumeUpload}
+        onCancel={cancelPendingResumeUpload}
+      />
       <ConfirmDialog
         open={Boolean(pendingDeleteCopy)}
         title={pendingDeleteCopy?.title ?? 'Eliminar elemento'}

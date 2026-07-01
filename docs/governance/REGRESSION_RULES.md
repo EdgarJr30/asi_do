@@ -362,6 +362,9 @@ Do not let the async-loaded content below the `Tu membresía` header rely only o
 ### R-098 — Candidate resume default promotion must clear the previous default first
 Do not reintroduce candidate resume default logic that marks a secondary CV as `is_default = true` while the previous default still remains true under `candidate_resumes_default_idx`. The database trigger may auto-default the first inserted CV, but updates that clear a previous default during promotion must be allowed to stay false so the unique partial index never sees two default resumes for the same candidate profile.
 
+### R-099 — Candidate CV upload must require pre-upload review
+Do not upload a candidate CV immediately when the user selects or drops a file. The candidate profile flow must first show a modal review step with a local PDF preview when available, or clear file metadata for DOC/DOCX, and only store the document after the user explicitly confirms the save/upload action.
+
 ---
 
 ## Maintenance rule

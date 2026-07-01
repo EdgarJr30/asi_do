@@ -287,6 +287,7 @@ Rules:
 3. Labels use nouns. Actions use verbs.
 4. Error text must state what happened and how to fix it.
 5. When an upload is rejected by size or type, the message should include the detected file size when relevant and a concrete next step such as compressing the file or uploading one of 5 MB or less.
+6. Candidate CV uploads must not happen immediately on file selection. Show a modal review step with local preview when the browser supports it, or clear file metadata when it does not, and require an explicit save/upload action.
 
 ---
 

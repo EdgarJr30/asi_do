@@ -44,6 +44,7 @@
 10. A candidate may stay hidden from tenant candidate search and still apply normally to opportunities.
 11. Candidate opportunity discovery, saved jobs, and application flows are not public guest experiences; they require approved ASI membership and an active subscription.
 12. A future anonymous opportunity preview is allowed as a deliberately limited public surface, but it must expose only non-sensitive summary information and must not include opportunity detail, saved jobs, application submission, candidate discovery, screening questions, or tenant-private workflow data.
+13. Candidate CV uploads must be reviewed by the candidate before storage; selecting or dropping a file may prepare a local preview, but it must not upload until the candidate explicitly confirms saving it.
 
 ---
 
@@ -178,6 +179,7 @@
 7. Modern web formats such as **SVG** and **WEBP** must be accepted where the use case allows them safely.
 8. Multimedia uploads must be optimized internally before storage when the file type supports safe compression or transcoding, especially for raster images.
 9. When an upload is rejected, the UI must explain the exact reason, include the detected file size when relevant, and suggest compressing the asset or uploading a file of **5 MB or less**.
+10. Candidate CV upload flows must show a pre-upload review step with local preview or file metadata before storing the document.
 
 ---
 
