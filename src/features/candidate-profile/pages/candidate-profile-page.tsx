@@ -28,6 +28,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { PageLoader } from '@/components/ui/loader'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -205,6 +206,14 @@ function formatUpdatedAt(value?: string | null) {
 }
 
 type ProfileTab = 'general' | 'cv' | 'experience' | 'skills'
+type CandidateResume = CandidateProfileBundle['resumes'][number]
+type PendingProfileDelete =
+  | { kind: 'resume'; resume: CandidateResume }
+  | { kind: 'experience'; id: string; label: string }
+  | { kind: 'education'; id: string; label: string }
+  | { kind: 'skill'; id: string; label: string }
+  | { kind: 'language'; id: string; label: string }
+  | { kind: 'link'; id: string; label: string }
 
 const PROFILE_TABS: Array<{ id: ProfileTab; label: string }> = [
   { id: 'general', label: 'Perfil general' },
@@ -215,6 +224,12 @@ const PROFILE_TABS: Array<{ id: ProfileTab; label: string }> = [
 
 const profileFieldClass = 'h-[46px] rounded-[10px] bg-(--app-surface) text-[0.9rem]'
 const profileTextareaClass = 'min-h-28 rounded-[10px] bg-(--app-surface) text-[0.9rem] leading-6'
+
+function textOrFallback(value: string | null | undefined, fallback: string) {
+  const normalized = value?.trim()
+
+  return normalized ? normalized : fallback
+}
 
 function CircularProgress({ value }: { value: number }) {
   const radius = 25
@@ -406,6 +421,7 @@ function CandidateProfileEditor({
   const [resumeFileError, setResumeFileError] = useState<string | null>(null)
   const [isResumeDragging, setIsResumeDragging] = useState(false)
   const [isVisibleToRecruiters, setIsVisibleToRecruiters] = useState(() => bundle.profile?.is_visible_to_recruiters ?? false)
+  const [pendingDelete, setPendingDelete] = useState<PendingProfileDelete | null>(null)
 
   const form = useForm<CandidateProfileFormValues>({
     resolver: zodResolver(candidateProfileSchema),
@@ -599,6 +615,79 @@ function CandidateProfileEditor({
   })
 
   const resumes = bundle.resumes
+
+  function removeExperienceDraft(itemId: string) {
+    setExperiences((current) =>
+      current.length === 1 ? [createEmptyCandidateExperience()] : current.filter((item) => item.id !== itemId)
+    )
+  }
+
+  function removeEducationDraft(itemId: string) {
+    setEducations((current) =>
+      current.length === 1 ? [createEmptyCandidateEducation()] : current.filter((item) => item.id !== itemId)
+    )
+  }
+
+  function removeSkillDraft(itemId: string) {
+    setSkills((current) => (current.length === 1 ? [createEmptyCandidateSkill()] : current.filter((item) => item.id !== itemId)))
+  }
+
+  function removeLanguageDraft(itemId: string) {
+    setLanguages((current) =>
+      current.length === 1 ? [createEmptyCandidateLanguage()] : current.filter((item) => item.id !== itemId)
+    )
+  }
+
+  function removeLinkDraft(itemId: string) {
+    setLinks((current) => (current.length === 1 ? [createEmptyCandidateLink()] : current.filter((item) => item.id !== itemId)))
+  }
+
+  function confirmPendingDelete() {
+    if (!pendingDelete) {
+      return
+    }
+
+    if (pendingDelete.kind === 'resume') {
+      deleteResumeMutation.mutate(pendingDelete.resume)
+      setPendingDelete(null)
+      return
+    }
+
+    if (pendingDelete.kind === 'experience') {
+      removeExperienceDraft(pendingDelete.id)
+    } else if (pendingDelete.kind === 'education') {
+      removeEducationDraft(pendingDelete.id)
+    } else if (pendingDelete.kind === 'skill') {
+      removeSkillDraft(pendingDelete.id)
+    } else if (pendingDelete.kind === 'language') {
+      removeLanguageDraft(pendingDelete.id)
+    } else {
+      removeLinkDraft(pendingDelete.id)
+    }
+
+    setPendingDelete(null)
+  }
+
+  const pendingDeleteCopy = pendingDelete
+    ? {
+        title:
+          pendingDelete.kind === 'resume'
+            ? 'Eliminar CV cargado'
+            : pendingDelete.kind === 'experience'
+              ? 'Eliminar experiencia de trabajo'
+              : pendingDelete.kind === 'education'
+                ? 'Eliminar educación'
+                : pendingDelete.kind === 'skill'
+                  ? 'Eliminar skill'
+                  : pendingDelete.kind === 'language'
+                    ? 'Eliminar idioma'
+                    : 'Eliminar link',
+        description:
+          pendingDelete.kind === 'resume'
+            ? `Vas a eliminar "${pendingDelete.resume.filename}". Esta acción quitará el archivo de tu perfil candidato.`
+            : `Vas a eliminar "${pendingDelete.label}" de tu perfil candidato. Este cambio se aplicará cuando guardes el perfil.`
+      }
+    : null
 
   function handleResumeFile(file: File | null | undefined) {
     if (file) {
@@ -865,7 +954,7 @@ function CandidateProfileEditor({
                           <Button
                             variant="ghost"
                             className="h-8 rounded-lg px-3 text-[0.78rem]"
-                            onClick={() => deleteResumeMutation.mutate(resume)}
+                            onClick={() => setPendingDelete({ kind: 'resume', resume })}
                             disabled={deleteResumeMutation.isPending}
                           >
                             Eliminar
@@ -997,9 +1086,11 @@ function CandidateProfileEditor({
                         type="button"
                         className="inline-flex items-center gap-2 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:text-rose-600"
                         onClick={() =>
-                          setExperiences((current) =>
-                            current.length === 1 ? [createEmptyCandidateExperience()] : current.filter((item) => item.id !== experience.id)
-                          )
+                          setPendingDelete({
+                            kind: 'experience',
+                            id: experience.id,
+                            label: textOrFallback(experience.roleTitle, 'esta experiencia de trabajo')
+                          })
                         }
                       >
                         <Trash2 className="size-4" />
@@ -1092,9 +1183,11 @@ function CandidateProfileEditor({
                         type="button"
                         className="inline-flex items-center gap-2 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:text-rose-600"
                         onClick={() =>
-                          setEducations((current) =>
-                            current.length === 1 ? [createEmptyCandidateEducation()] : current.filter((item) => item.id !== education.id)
-                          )
+                          setPendingDelete({
+                            kind: 'education',
+                            id: education.id,
+                            label: textOrFallback(education.degreeName || education.institutionName, 'esta educación')
+                          })
                         }
                       >
                         <Trash2 className="size-4" />
@@ -1146,7 +1239,11 @@ function CandidateProfileEditor({
                       type="button"
                       className="inline-flex h-[46px] items-center justify-center gap-2 self-end rounded-lg px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
                       onClick={() =>
-                        setSkills((current) => (current.length === 1 ? [createEmptyCandidateSkill()] : current.filter((item) => item.id !== skill.id)))
+                        setPendingDelete({
+                          kind: 'skill',
+                          id: skill.id,
+                          label: textOrFallback(skill.skillName, 'este skill')
+                        })
                       }
                     >
                       <Trash2 className="size-4" />
@@ -1185,9 +1282,11 @@ function CandidateProfileEditor({
                       type="button"
                       className="inline-flex h-[46px] items-center justify-center gap-2 self-end rounded-lg px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
                       onClick={() =>
-                        setLanguages((current) =>
-                          current.length === 1 ? [createEmptyCandidateLanguage()] : current.filter((item) => item.id !== language.id)
-                        )
+                        setPendingDelete({
+                          kind: 'language',
+                          id: language.id,
+                          label: textOrFallback(language.languageName, 'este idioma')
+                        })
                       }
                     >
                       <Trash2 className="size-4" />
@@ -1242,7 +1341,11 @@ function CandidateProfileEditor({
                         type="button"
                         className="inline-flex h-8 items-center gap-2 rounded-lg px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
                         onClick={() =>
-                          setLinks((current) => (current.length === 1 ? [createEmptyCandidateLink()] : current.filter((item) => item.id !== link.id)))
+                          setPendingDelete({
+                            kind: 'link',
+                            id: link.id,
+                            label: textOrFallback(link.label || link.url, 'este link')
+                          })
                         }
                       >
                         <Trash2 className="size-4" />
@@ -1294,6 +1397,17 @@ function CandidateProfileEditor({
 
         </motion.aside>
       </div>
+      <ConfirmDialog
+        open={Boolean(pendingDeleteCopy)}
+        title={pendingDeleteCopy?.title ?? 'Eliminar elemento'}
+        description={pendingDeleteCopy?.description}
+        confirmLabel="Sí, eliminar"
+        cancelLabel="Cancelar"
+        variant="danger"
+        loading={deleteResumeMutation.isPending}
+        onConfirm={confirmPendingDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </motion.div>
   )
 }
