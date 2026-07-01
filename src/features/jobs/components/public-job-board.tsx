@@ -38,6 +38,7 @@ import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candid
 import { getPublicJobBySlug, listPublicJobsPage, toggleSavedJob, type JobPostingBundle } from '@/features/jobs/lib/jobs-api'
 import { classifySector, getSectorLabel, sectorDefinitions } from '@/features/jobs/lib/sectors'
 import { getCompensationTypeLabel, getOpportunityTypeLabel, opportunityTypeOptions } from '@/features/opportunities/lib/opportunity-taxonomy'
+import { CompanyLogo } from '@/features/tenants/components/company-logo'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cn } from '@/lib/utils/cn'
@@ -62,19 +63,6 @@ const employmentLabels: Record<string, string> = {
   internship: 'Pasantía'
 }
 
-// Paleta rotativa para los logos de empresa (cuadros de color sólido con iniciales),
-// indexada de forma estable por el nombre para que cada empresa conserve su color.
-const LOGO_COLORS = ['#3b62b8', '#0e8a86', '#6b46c1', '#c2683a', '#1f9d61', '#b8456f', '#2d52a8', '#0f7a9c'] as const
-
-function logoColor(seed: string | null | undefined) {
-  const value = (seed ?? '').trim() || 'ASI'
-  let hash = 0
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0
-  }
-  return LOGO_COLORS[hash % LOGO_COLORS.length]
-}
-
 function workplaceLabel(value: string | null | undefined) {
   return value ? workplaceLabels[value] ?? value : ''
 }
@@ -83,11 +71,6 @@ function employmentLabel(value: string | null | undefined) {
 }
 function locationLabel(job: Pick<JobRow, 'city_name' | 'country_code'>) {
   return [job.city_name, job.country_code].filter(Boolean).join(', ') || 'Ubicación flexible'
-}
-function companyInitials(name: string | null | undefined) {
-  const value = (name ?? '').trim()
-  if (!value) return '·'
-  return value.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('')
 }
 function relativeDays(value: string | null | undefined) {
   if (!value) return ''
@@ -113,23 +96,6 @@ function salaryText(job: Pick<JobRow, 'compensation_type' | 'compensation_min_am
   const max = job.compensation_max_amount
   if (min && max) return `${currency} ${min.toLocaleString()} – ${max.toLocaleString()}`
   return `${currency} ${(min || max || 0).toLocaleString()}`
-}
-
-function CompanyLogo({ name, size = 'md' }: { name: string | null | undefined; size?: 'sm' | 'md' | 'lg' }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-xl font-bold leading-none tracking-tight text-white',
-        size === 'lg' && 'size-14 rounded-[13px] text-lg',
-        size === 'md' && 'size-11 text-sm',
-        size === 'sm' && 'size-[42px] text-[0.8rem]'
-      )}
-      style={{ backgroundColor: logoColor(name) }}
-    >
-      {companyInitials(name)}
-    </span>
-  )
 }
 
 interface Filters {
@@ -585,7 +551,7 @@ function JobListRow({
           : 'border-(--app-border) hover:border-primary-200 hover:shadow-[0_4px_14px_rgba(20,40,90,0.06)]'
       )}
     >
-      <CompanyLogo name={job.company_profile?.display_name} size="sm" />
+      <CompanyLogo name={job.company_profile?.display_name} logoPath={job.company_profile?.logo_path} size="sm" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <h3 className="truncate text-[0.92rem] font-semibold text-(--app-text)">{job.title}</h3>
@@ -725,7 +691,7 @@ function JobDetailPanel({
           <ArrowLeft aria-hidden className="size-4" /> Volver a resultados
         </button>
         <div className="flex items-start gap-4">
-          <CompanyLogo name={job.company_profile?.display_name} size="lg" />
+          <CompanyLogo name={job.company_profile?.display_name} logoPath={job.company_profile?.logo_path} size="lg" />
           <div className="min-w-0 flex-1">
             <h2 className="text-balance text-xl font-bold leading-tight tracking-tight text-(--app-text)">{job.title}</h2>
             <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-(--app-text-muted)">

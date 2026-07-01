@@ -371,6 +371,9 @@ Do not let shared visual tooltips stay visible after a user clicks or activates 
 ### R-101 — Workspace settings switches must use stable knob geometry
 Do not implement workspace settings toggles with unanchored absolute knobs, oversized tracks, or visually floating pills. Boolean settings such as `Perfil visible al público` must use a compact switch geometry aligned with the shared profile visibility pattern: fixed 44x26 track, 20px knob, explicit left/top anchoring, `role="switch"`, and `aria-checked`.
 
+### R-102 — Job and application surfaces must render uploaded company logos
+Do not show only generated initials for companies that have `company_profiles.logo_path`. Candidate-facing vacancy lists, vacancy details, application forms, and application history must map `logo_path` through the signed `company-assets` URL flow and render the uploaded image with an initials fallback only when the logo is missing or cannot load.
+
 ---
 
 ## Maintenance rule

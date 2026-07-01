@@ -22,6 +22,7 @@ import {
   type ApplicationFilter,
   type PublicApplicationStatus
 } from '@/features/applications/lib/application-overview-filters'
+import { CompanyLogo } from '@/features/tenants/components/company-logo'
 import { cn } from '@/lib/utils/cn'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import {
@@ -263,9 +264,12 @@ export function ApplicationsOverviewPage() {
                           className="group grid min-h-16 gap-x-3 gap-y-2 px-4 py-3.5 transition-colors hover:bg-(--app-surface-muted) sm:grid-cols-[minmax(0,1fr)_auto] sm:px-5 lg:grid-cols-[minmax(0,1.8fr)_9rem_10rem_9.5rem] lg:items-center lg:gap-4 lg:py-0 xl:grid-cols-[minmax(0,2fr)_10rem_11rem_10rem]"
                         >
                           <div className="flex min-w-0 items-center gap-3">
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
-                              <FileText className="size-4.5" />
-                            </span>
+                            <CompanyLogo
+                              name={application.job_posting?.company_profile?.display_name}
+                              logoPath={application.job_posting?.company_profile?.logo_path}
+                              size="sm"
+                              className="size-10"
+                            />
                             <div className="min-w-0">
                               <p className="truncate text-[0.9rem] font-semibold leading-tight text-(--app-text)">
                                 {application.job_posting?.title || 'Vacante'}

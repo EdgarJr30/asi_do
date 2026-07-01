@@ -27,6 +27,7 @@ import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { listMyApplications, submitApplication, updateApplicationResume } from '@/features/applications/lib/applications-api'
 import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
 import { getPublicJobBySlug } from '@/features/jobs/lib/jobs-api'
+import { CompanyLogo } from '@/features/tenants/components/company-logo'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
 
@@ -83,19 +84,6 @@ function clearApplicationDraft(key: string | null) {
   }
 
   window.localStorage.removeItem(key)
-}
-
-function initialsFor(value: string | null | undefined) {
-  const normalized = value?.trim()
-  if (!normalized) {
-    return 'AS'
-  }
-
-  return normalized
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((item) => item[0]?.toUpperCase())
-    .join('')
 }
 
 function formatFileSize(value: number) {
@@ -282,7 +270,6 @@ export function JobApplicationPage() {
 
   const selectedResume = profileBundle.resumes.find((resume) => resume.id === activeResumeId) ?? null
   const companyName = job.company_profile?.display_name || 'Empresa'
-  const companyInitials = initialsFor(companyName)
   const workplaceLabel = job.workplace_type ? workplaceLabels[job.workplace_type] ?? job.workplace_type : 'Modalidad flexible'
   const progress = `${((applicationSubmitted ? TOTAL_STEPS : currentStep + 1) / TOTAL_STEPS) * 100}%`
   const isResumeUpdateMode = Boolean(existingApplication && !applicationSubmitted)
@@ -369,9 +356,7 @@ export function JobApplicationPage() {
         </Link>
 
         <div className="flex items-center gap-3 rounded-xl border border-(--app-border) bg-(--app-surface-elevated) p-3 shadow-[0_1px_2px_rgba(20,40,90,0.04)]">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-sm font-bold text-white">
-            {companyInitials}
-          </div>
+          <CompanyLogo name={companyName} logoPath={job.company_profile?.logo_path} size="md" />
           <div className="min-w-0">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Postulas a</p>
             <p className="truncate text-sm font-semibold text-(--app-text)">{job.title}</p>

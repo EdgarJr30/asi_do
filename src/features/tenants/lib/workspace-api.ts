@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabase/client'
 import { prepareUploadFile, RECRUITER_LOGO_MIME_TYPES } from '@/lib/uploads/media'
 import type { Tables, TablesUpdate } from '@/shared/types/database'
 
+export { createCompanyAssetUrl as createWorkspaceAssetUrl } from '@/features/tenants/lib/company-assets-api'
+
 interface WorkspaceMembershipRow extends Tables<'memberships'> {
   user: Pick<
     Tables<'users'>,
@@ -168,17 +170,6 @@ export async function uploadWorkspaceLogo(input: {
   }
 
   return uploadResponse.data.path
-}
-
-export async function createWorkspaceAssetUrl(path: string) {
-  const client = requireSupabase()
-  const response = await client.storage.from('company-assets').createSignedUrl(path, 60 * 10)
-
-  if (response.error) {
-    throw response.error
-  }
-
-  return response.data.signedUrl
 }
 
 export async function replaceMembershipPrimaryRole(input: {

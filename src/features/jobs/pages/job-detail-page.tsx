@@ -29,6 +29,7 @@ import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
 import { getPublicJobBySlug, toggleSavedJob } from '@/features/jobs/lib/jobs-api'
 import { getCompensationTypeLabel, getOpportunityTypeLabel } from '@/features/opportunities/lib/opportunity-taxonomy'
+import { CompanyLogo } from '@/features/tenants/components/company-logo'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
@@ -77,19 +78,6 @@ function readStringList(metadata: Record<string, unknown>, keys: string[]) {
   }
 
   return []
-}
-
-function initialsFor(value: string | null | undefined) {
-  const normalized = value?.trim()
-  if (!normalized) {
-    return 'AS'
-  }
-
-  return normalized
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((item) => item[0]?.toUpperCase())
-    .join('')
 }
 
 function formatRelativeDate(value: string | null | undefined) {
@@ -204,7 +192,6 @@ export function JobDetailPage() {
   const opportunityLabel = getOpportunityTypeLabel(job.opportunity_type)
   const employmentLabel = employmentLabels[job.employment_type] ?? job.employment_type
   const companyName = job.company_profile?.display_name || 'Empresa'
-  const companyInitials = initialsFor(companyName)
   const existingApplication = (applicationsQuery.data ?? []).find((application) => application.job_posting_id === job.id) ?? null
   const applicationPath = session.isAuthenticated ? surfacePaths.public.jobApply(jobSlug) : surfacePaths.auth.signIn
   const applicationLabel = existingApplication
@@ -246,9 +233,7 @@ export function JobDetailPage() {
 
       <motion.header variants={cardReveal} className="border-b border-(--app-border) pb-6">
         <div className="flex flex-col gap-4 min-[860px]:flex-row min-[860px]:items-start">
-          <div className="flex size-15 shrink-0 items-center justify-center rounded-2xl bg-[#c2683a] text-lg font-bold text-white shadow-sm">
-            {companyInitials}
-          </div>
+          <CompanyLogo name={companyName} logoPath={job.company_profile?.logo_path} size="lg" className="size-15 rounded-2xl shadow-sm" />
           <div className="min-w-0 flex-1">
             <Badge className="gap-1.5 bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
               <Sparkles className="size-3.5" />
@@ -391,9 +376,7 @@ export function JobDetailPage() {
             <Card className="rounded-xl p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Sobre la empresa</p>
               <div className="mt-4 flex items-center gap-3">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-sm font-bold text-white">
-                  {companyInitials}
-                </div>
+                <CompanyLogo name={companyName} logoPath={job.company_profile?.logo_path} size="md" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-(--app-text)">{companyName}</p>
                   {job.company_profile?.industry ? (
