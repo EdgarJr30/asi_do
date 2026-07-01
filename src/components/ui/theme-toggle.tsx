@@ -7,12 +7,21 @@ import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils/cn'
 
 import { Button } from './button'
+import { Tooltip } from './tooltip'
 
 type ViewTransitionDocument = Document & {
   startViewTransition?: (callback: () => void) => { finished: Promise<void> }
 }
 
-export function ThemeToggle({ className, compact = false }: { className?: string; compact?: boolean }) {
+export function ThemeToggle({
+  className,
+  compact = false,
+  withTooltip = false
+}: {
+  className?: string
+  compact?: boolean
+  withTooltip?: boolean
+}) {
   const { resolvedTheme, theme, setTheme } = useTheme()
   const isDark = (resolvedTheme ?? theme) === 'dark'
   const label = isDark ? 'Modo claro' : 'Modo oscuro'
@@ -53,7 +62,7 @@ export function ThemeToggle({ className, compact = false }: { className?: string
     })
   }
 
-  return (
+  const button = (
     <Button
       aria-label={label}
       className={cn(compact ? 'size-11 min-w-11 rounded-full px-0 sm:size-11' : 'h-12 w-12 px-0 sm:w-auto sm:px-4', className)}
@@ -65,4 +74,10 @@ export function ThemeToggle({ className, compact = false }: { className?: string
       {compact ? null : <span className="hidden whitespace-nowrap sm:inline">{label}</span>}
     </Button>
   )
+
+  return withTooltip ? (
+    <Tooltip label={label} side="bottom">
+      {button}
+    </Tooltip>
+  ) : button
 }

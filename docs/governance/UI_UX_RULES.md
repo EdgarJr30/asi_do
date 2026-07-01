@@ -218,6 +218,7 @@ Rules:
 6. Loading, disabled, pressed, hover, and focus-visible states must be standardized across modules.
 7. Every actionable UI element that supports pointer input must expose a visible hover state. This includes buttons, icon buttons, navigation items, segmented controls, disclosure triggers, clickable cards, selectable rows, and summary toggles.
 8. Hover feedback must be perceptible without relying on the cursor alone. Prefer a clear visual change such as color, border, background, shadow, or controlled motion.
+9. Icon-only actions in shared app chrome, including notifications and theme controls, must retain an accessible `aria-label` and use the shared `Tooltip` when no visible text label is present.
 
 ### 6.4 Control spacing
 - minimum gap between adjacent touch controls: **8px**

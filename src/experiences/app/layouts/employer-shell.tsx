@@ -42,6 +42,7 @@ import { AppBottomNav, type AppNavGroup, type AppNavItem } from '@/components/ui
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/loader'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { Tooltip } from '@/components/ui/tooltip'
 import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api'
 import { fetchMyNotificationsPage, markAllNotificationsRead, markNotificationRead, markNotificationUnread, type AppNotification } from '@/lib/notifications/api'
 import { filterNavigationItems } from '@/lib/permissions/guards'
@@ -729,14 +730,16 @@ function SidebarFooter({
               </span>
               <ChevronRight className="size-4 shrink-0 text-white/42" />
             </button>
-            <button
-              aria-label="Abrir notificaciones"
-              className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-white/72 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
-              type="button"
-              onClick={onOpenNotifications}
-            >
-              <Bell className="size-4" />
-            </button>
+            <Tooltip label="Notificaciones" side="top">
+              <button
+                aria-label="Abrir notificaciones"
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-white/72 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
+                type="button"
+                onClick={onOpenNotifications}
+              >
+                <Bell className="size-4" />
+              </button>
+            </Tooltip>
           </div>
         </div>
       ) : null}
@@ -1541,27 +1544,29 @@ export function PlatformAppShell({
             {session.isAuthenticated ? (
               <div className="ml-auto flex items-center gap-2 sm:gap-3">
                 <div className="relative" ref={notificationPanelRef}>
-                  <button
-                    aria-expanded={notificationPanelOpen}
-                    aria-label="Abrir notificaciones"
-                    className="relative inline-flex size-11 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
-                    type="button"
-                    onClick={() => {
-                      setNotificationPanelOpen((current) => {
-                        const nextOpen = !current
-                        if (nextOpen) {
-                          setNotificationPage(1)
-                        }
-                        return nextOpen
-                      })
-                      setProfileMenuOpen(false)
-                    }}
-                  >
-                    <Bell className="size-5" />
-                    {notificationUnreadCount > 0 ? (
-                      <span className="absolute right-2.5 top-2.5 size-2 rounded-full bg-primary-500" />
-                    ) : null}
-                  </button>
+                  <Tooltip label="Notificaciones" side="bottom">
+                    <button
+                      aria-expanded={notificationPanelOpen}
+                      aria-label="Abrir notificaciones"
+                      className="relative inline-flex size-11 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
+                      type="button"
+                      onClick={() => {
+                        setNotificationPanelOpen((current) => {
+                          const nextOpen = !current
+                          if (nextOpen) {
+                            setNotificationPage(1)
+                          }
+                          return nextOpen
+                        })
+                        setProfileMenuOpen(false)
+                      }}
+                    >
+                      <Bell className="size-5" />
+                      {notificationUnreadCount > 0 ? (
+                        <span className="absolute right-2.5 top-2.5 size-2 rounded-full bg-primary-500" />
+                      ) : null}
+                    </button>
+                  </Tooltip>
 
                   {notificationPanelOpen ? (
                     <div
@@ -1593,6 +1598,7 @@ export function PlatformAppShell({
                 <ThemeToggle
                   className="size-11 rounded-2xl border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
                   compact
+                  withTooltip
                 />
 
                 <div aria-hidden="true" className="hidden h-6 w-px bg-slate-200 lg:block dark:bg-white/10" />
@@ -1660,6 +1666,7 @@ export function PlatformAppShell({
                 <ThemeToggle
                   className="size-11 rounded-2xl border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
                   compact
+                  withTooltip
                 />
                 {config.guestActions.map((action) => (
                   <Button
