@@ -178,7 +178,7 @@ export function WorkspaceReportsPage() {
 
   return (
     <motion.div
-      className="mx-auto w-full max-w-310 space-y-6 pb-8"
+      className="w-full space-y-6 pb-8"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
