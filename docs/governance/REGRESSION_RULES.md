@@ -374,6 +374,9 @@ Do not implement workspace settings toggles with unanchored absolute knobs, over
 ### R-102 — Job and application surfaces must render uploaded company logos
 Do not show only generated initials for companies that have `company_profiles.logo_path`. Candidate-facing vacancy lists, vacancy details, application forms, and application history must map `logo_path` through the signed `company-assets` URL flow and render the uploaded image with an initials fallback only when the logo is missing or cannot load.
 
+### R-103 — Selection board horizontal scroll must work over columns
+Do not regress the workspace `Proceso de selección` Kanban into a board that only scrolls horizontally from empty gaps or the scrollbar rail. Horizontal wheel and trackpad gestures, including `Shift + wheel`, must continue moving the board while the pointer is over a stage column, while normal vertical wheel gestures must keep scrolling that column's internal candidate list.
+
 ---
 
 ## Maintenance rule

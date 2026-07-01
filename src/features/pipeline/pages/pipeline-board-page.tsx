@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type WheelEvent } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
@@ -132,6 +132,7 @@ export function PipelineBoardPage() {
   const [visibleCardsByStageId, setVisibleCardsByStageId] = useState<Record<string, number>>({})
   const [loadingStageIds, setLoadingStageIds] = useState<Record<string, boolean>>({})
   const stageLoadTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const boardScrollRef = useRef<HTMLDivElement | null>(null)
 
   const boardQuery = useQuery({
     queryKey: ['pipeline-board', tenantId],
@@ -382,6 +383,25 @@ export function PipelineBoardPage() {
     }
   }
 
+  function handleStageListWheel(event: WheelEvent<HTMLDivElement>) {
+    const boardElement = boardScrollRef.current
+    const horizontalDelta = event.shiftKey ? event.deltaY : event.deltaX
+    const hasHorizontalIntent = event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)
+
+    if (!boardElement || !hasHorizontalIntent || horizontalDelta === 0) {
+      return
+    }
+
+    const maxScrollLeft = boardElement.scrollWidth - boardElement.clientWidth
+    const nextScrollLeft = Math.max(0, Math.min(maxScrollLeft, boardElement.scrollLeft + horizontalDelta))
+
+    if (nextScrollLeft !== boardElement.scrollLeft) {
+      event.preventDefault()
+      event.stopPropagation()
+      boardElement.scrollLeft = nextScrollLeft
+    }
+  }
+
   function handleMoveSelectedApplication() {
     if (!visibleSelectedApplication || !selectedStageId) {
       return
@@ -473,7 +493,11 @@ export function PipelineBoardPage() {
           No se encontraron candidatos con esos filtros.
         </motion.div>
       ) : (
-        <motion.div variants={gridStagger} className="tm-scrollbar flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4">
+        <motion.div
+          ref={boardScrollRef}
+          variants={gridStagger}
+          className="tm-scrollbar flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4"
+        >
           {visibleStages.map((stage, stageIndex) => {
             const stageApplications = filteredApplications.filter((application) => application.current_stage_id === stage.id)
             const visibleStageCardCount = visibleCardsByStageId[stage.id] ?? INITIAL_STAGE_CARD_COUNT
@@ -516,6 +540,7 @@ export function PipelineBoardPage() {
                 <div
                   className="tm-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-2.5 py-3"
                   onScroll={(event) => handleStageListScroll(stage.id, stageApplications.length, event.currentTarget)}
+                  onWheel={handleStageListWheel}
                 >
                   {stageApplications.length > 0 ? (
                     visibleStageApplications.map((application) => {
