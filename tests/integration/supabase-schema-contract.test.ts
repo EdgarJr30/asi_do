@@ -74,6 +74,10 @@ const membershipRenewalSettlementMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260624152000_harden_membership_renewal_settlement.sql'
 )
+const candidateResumeDefaultPromotionMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260701110000_fix_candidate_resume_default_promotion.sql'
+)
 
 describe('supabase schema contract', () => {
   it('keeps the identity, notification, and push workflow migrations in place', () => {
@@ -95,6 +99,7 @@ describe('supabase schema contract', () => {
     expect(existsSync(asiMembershipAuthorityMigrationPath)).toBe(true)
     expect(existsSync(closedRegistrationIntakeMigrationPath)).toBe(true)
     expect(existsSync(membershipRenewalSettlementMigrationPath)).toBe(true)
+    expect(existsSync(candidateResumeDefaultPromotionMigrationPath)).toBe(true)
   })
 
   it('defines the core identity, approval, and storage foundations', () => {
@@ -166,6 +171,16 @@ describe('supabase schema contract', () => {
     expect(migration).toContain("'candidate-resumes'")
     expect(migration).toContain('create or replace function public.set_candidate_profile_completeness()')
     expect(migration).toContain("select private.attach_audit_trigger('public', 'candidate_profiles')")
+  })
+
+  it('keeps candidate resume default promotion compatible with the unique default index', () => {
+    const migration = readFileSync(candidateResumeDefaultPromotionMigrationPath, 'utf8')
+
+    expect(migration).toContain('create or replace function public.ensure_candidate_resume_default()')
+    expect(migration).toContain('if new.is_default then')
+    expect(migration).toContain('set is_default = false')
+    expect(migration).toContain("if tg_op = 'INSERT'")
+    expect(migration).not.toContain('if not exists (')
   })
 
   it('keeps employer foundations and talent search opt-in aligned with the schema contract', () => {

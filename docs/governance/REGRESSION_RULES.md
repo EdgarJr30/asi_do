@@ -359,6 +359,9 @@ Do not mount `/account/membership` by passing the membership page as shell `fall
 ### R-097 — Membership status content must not depend only on inherited page animation
 Do not let the async-loaded content below the `Tu membresía` header rely only on the parent page stagger animation. The status-content branch must control its own mounted animation or render plainly so loading-to-content transitions cannot leave cards, tabs, renewal controls, or help panels stuck invisible after the membership query resolves.
 
+### R-098 — Candidate resume default promotion must clear the previous default first
+Do not reintroduce candidate resume default logic that marks a secondary CV as `is_default = true` while the previous default still remains true under `candidate_resumes_default_idx`. The database trigger may auto-default the first inserted CV, but updates that clear a previous default during promotion must be allowed to stay false so the unique partial index never sees two default resumes for the same candidate profile.
+
 ---
 
 ## Maintenance rule
