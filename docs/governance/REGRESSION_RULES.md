@@ -383,6 +383,9 @@ Do not reintroduce `Mi actividad` as a separate top-level workspace sidebar modu
 ### R-105 — Breadcrumbs must include route-meta drill-in pages
 Do not build authenticated shell breadcrumbs only from visible sidebar items. Candidate, workspace, storefront, and admin routes must combine the best sidebar parent with route metadata so secondary pages such as `/workspace/activity` render a navigable trail like `Mi empresa / Resumen / Actividad`, where parent crumbs navigate correctly and the current page remains non-clickable.
 
+### R-106 — Resumen publish CTA must deep-link into the job editor
+Do not make the workspace `Resumen` `Publicar vacante` CTA stop at the Vacantes list only. It must navigate to the workspace Vacantes module with an explicit create intent and open the job creation side sheet immediately, preserving the sheet animation and clearing that intent when the sheet closes or saves.
+
 ---
 
 ## Maintenance rule

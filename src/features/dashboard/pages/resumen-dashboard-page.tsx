@@ -94,6 +94,7 @@ function scoreVariant(score: number) {
 type ActivityKind = DashboardActivityItem['kind']
 type ActivityFilter = 'all' | ActivityKind
 type ActivityBucket = 'today' | 'week' | 'older'
+const WORKSPACE_JOB_CREATE_PATH = `${surfacePaths.workspace.jobs}?action=create`
 
 const ACTIVITY_FILTERS: { value: ActivityFilter; label: string }[] = [
   { value: 'all', label: 'Todo' },
@@ -267,7 +268,7 @@ export function ResumenDashboardPage() {
           <Button variant="outline" onClick={() => void navigate(surfacePaths.workspace.pipeline)}>
             Ver pipeline
           </Button>
-          <Button onClick={() => void navigate(surfacePaths.workspace.jobs)}>
+          <Button onClick={() => void navigate(WORKSPACE_JOB_CREATE_PATH)}>
             <Plus className="size-4" />
             Publicar vacante
           </Button>
@@ -323,7 +324,7 @@ export function ResumenDashboardPage() {
                 title="Publica tu primera vacante"
                 description="Crea una vacante y empieza a recibir postulaciones."
                 cta="Publicar vacante"
-                onClick={() => void navigate(surfacePaths.workspace.jobs)}
+                onClick={() => void navigate(WORKSPACE_JOB_CREATE_PATH)}
               />
               <FirstStepCard
                 icon={UsersRound}

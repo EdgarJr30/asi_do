@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { useForm, useWatch } from 'react-hook-form'
 import { Archive, Banknote, Ban, BriefcaseBusiness, Download, Eye, MapPin, Pencil, Plus, Search, Users, X } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { surfacePaths } from '@/app/router/surface-paths'
@@ -57,6 +57,11 @@ import { cn } from '@/lib/utils/cn'
 
 const PUBLIC_JOBS_QUERY_KEY = ['jobs', 'public'] as const
 const TENANT_JOBS_QUERY_KEY = ['jobs', 'tenant'] as const
+const JOB_CREATE_ACTION = 'create'
+
+function shouldOpenCreateJobEditor(search: string) {
+  return new URLSearchParams(search).get('action') === JOB_CREATE_ACTION
+}
 
 function relativeDays(value: string | null | undefined) {
   if (!value) {
@@ -704,11 +709,12 @@ function WorkspaceJobsManager() {
   const session = useAppSession()
   const queryClient = useQueryClient()
   const location = useLocation()
+  const navigate = useNavigate()
   const shouldReduceMotion = useReducedMotion()
   const isWorkspaceContext = location.pathname.startsWith('/workspace')
   const canManageJobs = session.permissions.includes('job:create') || session.permissions.includes('job:update')
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
-  const [isEditorOpen, setIsEditorOpen] = useState(false)
+  const [isEditorOpen, setIsEditorOpen] = useState(() => shouldOpenCreateJobEditor(location.search))
   const [statusTab, setStatusTab] = useState<'active' | 'inactive'>('active')
   const [search, setSearch] = useState('')
   const [employmentFilter, setEmploymentFilter] = useState('')
@@ -819,6 +825,29 @@ function WorkspaceJobsManager() {
 
   function resetToFirstPage() {
     setPage(0)
+  }
+
+  function clearCreateJobAction() {
+    if (!shouldOpenCreateJobEditor(location.search)) {
+      return
+    }
+
+    const params = new URLSearchParams(location.search)
+    params.delete('action')
+    const search = params.toString()
+    void navigate(
+      {
+        pathname: location.pathname,
+        search: search ? `?${search}` : ''
+      },
+      { replace: true }
+    )
+  }
+
+  function closeJobEditor() {
+    setSelectedJobId(null)
+    setIsEditorOpen(false)
+    clearCreateJobAction()
   }
 
   function openJobEditor(jobId: string | null) {
@@ -961,10 +990,7 @@ function WorkspaceJobsManager() {
         <motion.section variants={cardReveal} className="w-full space-y-4">
           <SideSheet
             open={isEditorOpen}
-            onClose={() => {
-              setSelectedJobId(null)
-              setIsEditorOpen(false)
-            }}
+            onClose={closeJobEditor}
             title={selectedJob ? 'Editar vacante' : 'Publicar vacante'}
             description={
               selectedJob
@@ -979,17 +1005,13 @@ function WorkspaceJobsManager() {
               selectedJob={selectedJob}
               session={session}
               workspace={workspaceQuery.data}
-              onClear={() => {
-                setSelectedJobId(null)
-                setIsEditorOpen(false)
-              }}
+              onClear={closeJobEditor}
               onSaved={async () => {
                 await Promise.all([
                   queryClient.invalidateQueries({ queryKey: PUBLIC_JOBS_QUERY_KEY }),
                   queryClient.invalidateQueries({ queryKey: TENANT_JOBS_QUERY_KEY })
                 ])
-                setSelectedJobId(null)
-                setIsEditorOpen(false)
+                closeJobEditor()
               }}
             />
           </SideSheet>
