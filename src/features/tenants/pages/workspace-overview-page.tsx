@@ -463,16 +463,26 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
             </div>
             <button
               type="button"
-              aria-label="Cambiar visibilidad pública del perfil de empresa"
-              aria-pressed={isPublic}
+              role="switch"
+              aria-checked={isPublic}
+              aria-label="Perfil visible al público"
+              disabled={saveProfileMutation.isPending}
               onClick={() => {
                 const nextIsPublic = !isPublic;
                 setIsPublic(nextIsPublic);
                 saveProfileMutation.mutate({ isPublic: nextIsPublic });
               }}
-              className={cn('relative h-7 w-12 shrink-0 rounded-full border transition-colors', isPublic ? 'border-primary-600 bg-primary-600' : 'border-(--app-border) bg-(--app-surface-muted)')}
+              className={cn(
+                'relative h-[26px] w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) disabled:opacity-60',
+                isPublic ? 'bg-primary-600' : 'bg-secondary-200 dark:bg-secondary-500'
+              )}
             >
-              <span className={cn('absolute top-1 size-5 rounded-full bg-white shadow transition-transform', isPublic ? 'translate-x-[22px]' : 'translate-x-1')} />
+              <span
+                className={cn(
+                  'absolute left-[3px] top-[3px] size-5 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.2)] transition-transform',
+                  isPublic ? 'translate-x-[18px]' : 'translate-x-0'
+                )}
+              />
             </button>
           </div>
         </motion.div>

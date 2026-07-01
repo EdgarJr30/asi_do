@@ -368,6 +368,9 @@ Do not upload a candidate CV immediately when the user selects or drops a file. 
 ### R-100 — Shared tooltips must dismiss on activation
 Do not let shared visual tooltips stay visible after a user clicks or activates their trigger, especially in platform chrome actions such as notifications and theme mode. Tooltips may appear on hover or keyboard focus, but activation must dismiss them immediately even when the trigger keeps focus.
 
+### R-101 — Workspace settings switches must use stable knob geometry
+Do not implement workspace settings toggles with unanchored absolute knobs, oversized tracks, or visually floating pills. Boolean settings such as `Perfil visible al público` must use a compact switch geometry aligned with the shared profile visibility pattern: fixed 44x26 track, 20px knob, explicit left/top anchoring, `role="switch"`, and `aria-checked`.
+
 ---
 
 ## Maintenance rule
