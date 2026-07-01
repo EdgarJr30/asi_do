@@ -437,6 +437,7 @@ Apple-inspired UI rules:
 4. Mobile list rows and tappable cards should provide at least **48px** row height or tap height.
 5. The `/platform/jobs` jobs board should use compact selectable rows plus a focused detail pane on desktop; avoid oversized repeated cards, and after filters or sort changes leave the detail pane unselected until the user chooses a vacancy.
 6. Workspace operational list screens such as `Vacantes`, `Postulaciones`, `Aplicaciones`, `Pipeline`, and comparable admin tables must use the full available shell content width by default. Do not constrain these dense management screens with narrow handoff-specific containers such as 1180px; constrain only reading/detail/form panes when line length or focus requires it.
+7. Internally scrollable app lists must use the shared `tm-scrollbar` treatment so scrollbars inherit semantic theme tokens and stay visually aligned with the platform style guide instead of falling back to browser-default gray rails.
 
 ### 11.2 Tables
 1. Tables are allowed for dense operational data on desktop.

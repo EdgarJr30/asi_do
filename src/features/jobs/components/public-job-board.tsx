@@ -503,7 +503,7 @@ export function PublicJobBoard() {
         >
           {/* Lista de vacantes con scroll independiente + carga infinita */}
           <div className={cn('min-w-0', detailOpen ? 'hidden lg:block' : 'block')}>
-            <div ref={listScrollRef} className="flex max-h-128 flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
+            <div ref={listScrollRef} className="tm-scrollbar flex max-h-128 flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
               <motion.ul
                 className="flex flex-col gap-2"
                 variants={gridStagger}
