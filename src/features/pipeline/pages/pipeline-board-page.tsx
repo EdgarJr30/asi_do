@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
@@ -32,6 +32,10 @@ import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 type PipelineBoard = Awaited<ReturnType<typeof fetchPipelineBoard>>
 type PipelineStage = PipelineBoard['stages'][number]
 type PipelineApplication = PipelineBoard['applications'][number]
+
+const INITIAL_STAGE_CARD_COUNT = 12
+const STAGE_CARD_BATCH_SIZE = 12
+const STAGE_LOAD_DELAY_MS = 360
 
 const STAGE_TONES = [
   {
@@ -125,6 +129,9 @@ export function PipelineBoardPage() {
   const [stageFilter, setStageFilter] = useState('')
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dragOverStageId, setDragOverStageId] = useState<string | null>(null)
+  const [visibleCardsByStageId, setVisibleCardsByStageId] = useState<Record<string, number>>({})
+  const [loadingStageIds, setLoadingStageIds] = useState<Record<string, boolean>>({})
+  const stageLoadTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   const boardQuery = useQuery({
     queryKey: ['pipeline-board', tenantId],
@@ -151,6 +158,12 @@ export function PipelineBoardPage() {
 
   const selectedApplication = boardQuery.data?.applications.find((application) => application.id === selectedApplicationId) ?? null
   const canExportApplications = session.permissions.includes('application:export')
+
+  useEffect(() => {
+    return () => {
+      Object.values(stageLoadTimersRef.current).forEach((timer) => clearTimeout(timer))
+    }
+  }, [])
 
   const moveMutation = useMutation({
     mutationFn: moveApplicationStage,
@@ -299,6 +312,28 @@ export function PipelineBoardPage() {
     ? getStageTone(selectedStage, boardQuery.data.stages.findIndex((stage) => stage.id === selectedStage.id))
     : STAGE_TONES[0]
 
+  function resetStageCardLoading() {
+    Object.values(stageLoadTimersRef.current).forEach((timer) => clearTimeout(timer))
+    stageLoadTimersRef.current = {}
+    setVisibleCardsByStageId({})
+    setLoadingStageIds({})
+  }
+
+  function applyCandidateQuery(value: string) {
+    setCandidateQuery(value)
+    resetStageCardLoading()
+  }
+
+  function applyJobFilter(value: string) {
+    setJobFilter(value)
+    resetStageCardLoading()
+  }
+
+  function applyStageFilter(value: string) {
+    setStageFilter(value)
+    resetStageCardLoading()
+  }
+
   function openApplication(application: PipelineApplication) {
     const latestRating = getLatestRating(application)
     setSelectedApplicationId(application.id)
@@ -314,6 +349,36 @@ export function PipelineBoardPage() {
     setDraggedId(null)
     if (application && application.current_stage_id !== stageId) {
       moveMutation.mutate({ applicationId: application.id, toStageId: stageId })
+    }
+  }
+
+  function requestMoreStageCards(stageId: string, totalCards: number) {
+    const visibleCount = visibleCardsByStageId[stageId] ?? INITIAL_STAGE_CARD_COUNT
+
+    if (visibleCount >= totalCards || loadingStageIds[stageId] || stageLoadTimersRef.current[stageId]) {
+      return
+    }
+
+    setLoadingStageIds((current) => ({ ...current, [stageId]: true }))
+    stageLoadTimersRef.current[stageId] = setTimeout(() => {
+      setVisibleCardsByStageId((current) => ({
+        ...current,
+        [stageId]: Math.min((current[stageId] ?? INITIAL_STAGE_CARD_COUNT) + STAGE_CARD_BATCH_SIZE, totalCards)
+      }))
+      setLoadingStageIds((current) => {
+        const next = { ...current }
+        delete next[stageId]
+        return next
+      })
+      delete stageLoadTimersRef.current[stageId]
+    }, STAGE_LOAD_DELAY_MS)
+  }
+
+  function handleStageListScroll(stageId: string, totalCards: number, element: HTMLDivElement) {
+    const distanceToBottom = element.scrollHeight - element.scrollTop - element.clientHeight
+
+    if (distanceToBottom <= 120) {
+      requestMoreStageCards(stageId, totalCards)
     }
   }
 
@@ -377,12 +442,12 @@ export function PipelineBoardPage() {
           <span className="sr-only">Buscar candidato o correo</span>
           <Input
             value={candidateQuery}
-            onChange={(event) => setCandidateQuery(event.target.value)}
             placeholder="Buscar candidato o correo..."
             className="h-full rounded-none border-0 bg-transparent px-0 shadow-none hover:border-0 focus:border-0 focus:bg-transparent focus:ring-0"
+            onChange={(event) => applyCandidateQuery(event.target.value)}
           />
         </label>
-        <Select className="rounded-xl lg:w-56" value={jobFilter} onChange={(event) => setJobFilter(event.target.value)}>
+        <Select className="rounded-xl lg:w-56" value={jobFilter} onChange={(event) => applyJobFilter(event.target.value)}>
           <option value="">Todas las vacantes</option>
           {tenantJobs.map((job) => (
             <option key={job.id} value={job.id}>
@@ -390,7 +455,7 @@ export function PipelineBoardPage() {
             </option>
           ))}
         </Select>
-        <Select className="rounded-xl lg:w-56" value={stageFilter} onChange={(event) => setStageFilter(event.target.value)}>
+        <Select className="rounded-xl lg:w-56" value={stageFilter} onChange={(event) => applyStageFilter(event.target.value)}>
           <option value="">Todas las etapas</option>
           {boardQuery.data.stages.map((stage) => (
             <option key={stage.id} value={stage.id}>
@@ -411,6 +476,10 @@ export function PipelineBoardPage() {
         <motion.div variants={gridStagger} className="tm-scrollbar flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4">
           {visibleStages.map((stage, stageIndex) => {
             const stageApplications = filteredApplications.filter((application) => application.current_stage_id === stage.id)
+            const visibleStageCardCount = visibleCardsByStageId[stage.id] ?? INITIAL_STAGE_CARD_COUNT
+            const visibleStageApplications = stageApplications.slice(0, visibleStageCardCount)
+            const hasMoreStageApplications = visibleStageCardCount < stageApplications.length
+            const isLoadingMoreStageApplications = Boolean(loadingStageIds[stage.id])
             const isDropTarget = dragOverStageId === stage.id
             const tone = getStageTone(stage, stageIndex)
 
@@ -427,7 +496,7 @@ export function PipelineBoardPage() {
                 onDragLeave={() => setDragOverStageId((current) => (current === stage.id ? null : current))}
                 onDrop={() => handleDropOnStage(stage.id)}
                 className={cn(
-                  'flex min-h-0 min-w-60 flex-1 shrink-0 flex-col rounded-panel border transition lg:min-w-64',
+                  'flex min-h-0 min-w-80 flex-1 shrink-0 flex-col rounded-panel border transition lg:min-w-88',
                   isDropTarget
                     ? 'border-primary-400 bg-primary-50/70 dark:bg-primary-500/10'
                     : 'border-(--app-border) bg-(--app-surface-muted)/80'
@@ -444,9 +513,12 @@ export function PipelineBoardPage() {
                 </div>
                 <div className={cn('mx-4 h-1 shrink-0 rounded-full', tone.trackClassName)} />
 
-                <div className="tm-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2.5 py-3">
+                <div
+                  className="tm-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-2.5 py-3"
+                  onScroll={(event) => handleStageListScroll(stage.id, stageApplications.length, event.currentTarget)}
+                >
                   {stageApplications.length > 0 ? (
-                    stageApplications.map((application) => {
+                    visibleStageApplications.map((application) => {
                       const latestRating = getLatestRating(application)
 
                       return (
@@ -494,6 +566,24 @@ export function PipelineBoardPage() {
                   ) : (
                     <div className="px-3 py-7 text-center text-xs text-(--app-text-subtle)">Sin candidatos</div>
                   )}
+                  {hasMoreStageApplications ? (
+                    <button
+                      type="button"
+                      className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-dashed border-(--app-border) bg-(--app-surface)/70 px-3 text-xs font-medium text-(--app-text-subtle) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:hover:bg-primary-500/12 dark:hover:text-primary-200"
+                      onClick={() => requestMoreStageCards(stage.id, stageApplications.length)}
+                      disabled={isLoadingMoreStageApplications}
+                    >
+                      {isLoadingMoreStageApplications ? (
+                        <>
+                          <Spinner size="sm" /> Cargando más candidatos...
+                        </>
+                      ) : (
+                        'Cargar más'
+                      )}
+                    </button>
+                  ) : stageApplications.length > INITIAL_STAGE_CARD_COUNT ? (
+                    <p className="py-2 text-center text-[0.72rem] text-(--app-text-subtle)">No hay más candidatos</p>
+                  ) : null}
                 </div>
               </motion.div>
             )
