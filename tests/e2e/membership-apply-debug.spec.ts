@@ -66,8 +66,10 @@ test('debug membership application for organizational for profit mobile', async 
   expect(pageErrors).toEqual([])
   expect(opacity).toBe('1')
   await expect(
-    page.getByRole('heading', { name: /Solicitud de membresía ASI/i })
+    page.getByRole('heading', { name: /Crea tu cuenta para enviar tu solicitud/i })
   ).toBeVisible()
+  await expect(page.getByRole('link', { name: /Crear mi cuenta/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Ya tengo cuenta, iniciar sesión/i })).toBeVisible()
 })
 
 test.describe('desktop viewport', () => {
@@ -101,8 +103,9 @@ test.describe('desktop viewport', () => {
     expect(pageErrors).toEqual([])
     expect(opacity).toBe('1')
     await expect(
-      page.getByRole('heading', { name: /Solicitud de membresía ASI/i })
+      page.getByRole('heading', { name: /Crea tu cuenta para enviar tu solicitud/i })
     ).toBeVisible()
-    await expect(page.getByLabel(/Nombre/i).first()).toBeVisible()
+    await expect(page.getByRole('link', { name: /Crear mi cuenta/i })).toBeVisible()
+    await expect(page.getByRole('link', { name: /Ya tengo cuenta, iniciar sesión/i })).toBeVisible()
   })
 })

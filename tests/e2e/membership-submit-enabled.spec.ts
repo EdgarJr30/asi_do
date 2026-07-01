@@ -1,9 +1,9 @@
 import { expect, test, type Page } from '@playwright/test'
 
 /**
- * Verifica que el envío de solicitudes de membresía está HABILITADO:
- * con MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED = false, el formulario ya no
- * muestra el banner de "recepción cerrada" ni el botón "Envío cerrado".
+ * Verifica que el flujo público de solicitud está habilitado:
+ * después de calificar, un visitante sin sesión debe llegar al gate de cuenta
+ * y no a una pantalla de recepción cerrada.
  */
 
 async function reachMembershipForm(page: Page) {
@@ -17,17 +17,20 @@ async function reachMembershipForm(page: Page) {
   await page.getByRole('button', { name: /Continuar con la solicitud/i }).click()
 }
 
-test.use({ viewport: { width: 1440, height: 1200 }, isMobile: false, hasTouch: false })
-
-test('el formulario de membresía permite enviar (gate liberado)', async ({ page }) => {
+test('el flujo de membresía permite continuar creando o iniciando sesión', async ({ page }) => {
   await reachMembershipForm(page)
 
-  await expect(page.getByRole('heading', { name: /Solicitud de membresía ASI/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Crea tu cuenta para enviar tu solicitud/i })).toBeVisible()
+  await expect(page.getByText(/Calificas para la membresía de Organizacional Con Fines de Lucro/i)).toBeVisible()
 
-  // El banner de "recepción cerrada" no debe aparecer.
   await expect(page.getByText(/recepci[óo]n de solicitudes de membres[ií]a est[áa] cerrada/i)).toHaveCount(0)
-  // Tampoco la etiqueta "Envío cerrado" del botón de submit.
   await expect(page.getByRole('button', { name: /Env[íi]o cerrado/i })).toHaveCount(0)
 
-  await page.screenshot({ path: 'tmp/membership-submit-enabled.png', fullPage: true })
+  const signUpHref = await page.getByRole('link', { name: /Crear mi cuenta/i }).getAttribute('href')
+  const signInHref = await page.getByRole('link', { name: /Ya tengo cuenta, iniciar sesión/i }).getAttribute('href')
+
+  expect(signUpHref).toContain('/auth/sign-up?next=')
+  expect(signInHref).toContain('/auth/sign-in?next=')
+  expect(decodeURIComponent(signUpHref ?? '')).toContain('/membership/apply?eligibilityToken=')
+  expect(decodeURIComponent(signInHref ?? '')).toContain('/membership/apply?eligibilityToken=')
 })
