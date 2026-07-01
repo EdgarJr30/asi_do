@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { Activity, BriefcaseBusiness, ChevronLeft, ChevronRight, Clipboard, Eye, FileText, Star, UserPlus } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -409,8 +410,30 @@ function ActivityDayGroup({ bucket, count, items }: { bucket: ActivityBucket; co
 function ActivityRow({ item }: { item: DashboardActivityItem }) {
   const meta = KIND_META[item.kind]
   const Icon = meta.icon
+
+  async function copyActivityLink() {
+    try {
+      const url =
+        typeof window === 'undefined'
+          ? ''
+          : `${window.location.origin}${window.location.pathname}${window.location.search}#${item.id}`
+
+      await navigator.clipboard.writeText(url)
+      toast.success('Enlace de actividad copiado', {
+        description: 'Ya puedes compartir este evento con tu equipo.'
+      })
+    } catch {
+      toast.error('No pudimos copiar el enlace', {
+        description: 'Tu navegador bloqueó el acceso al portapapeles. Inténtalo de nuevo.'
+      })
+    }
+  }
+
   return (
-    <li className="group flex items-center gap-3.5 rounded-xl px-3 py-2.5 transition-[background-color,box-shadow] duration-150 hover:bg-white hover:shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:hover:bg-white/6">
+    <li
+      id={item.id}
+      className="group scroll-mt-24 flex items-center gap-3.5 rounded-xl px-3 py-2.5 transition-[background-color,box-shadow] duration-150 hover:bg-white hover:shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:hover:bg-white/6"
+    >
       <span className={cn('flex size-[38px] shrink-0 items-center justify-center rounded-[11px]', accentClassName[meta.accent])}>
         <Icon className="size-[19px]" />
       </span>
@@ -437,7 +460,7 @@ function ActivityRow({ item }: { item: DashboardActivityItem }) {
               <BriefcaseBusiness className="mr-2 size-4 text-(--app-text-subtle)" />
               Ir a la vacante
             </KebabMenuItem>
-            <KebabMenuItem>
+            <KebabMenuItem onClick={() => void copyActivityLink()}>
               <Clipboard className="mr-2 size-4 text-(--app-text-subtle)" />
               Copiar enlace
             </KebabMenuItem>
