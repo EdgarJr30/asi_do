@@ -217,6 +217,34 @@ describe('surface access states', () => {
     expect(await screen.findByRole('button', { name: /Completar solicitud/i })).toBeInTheDocument()
   })
 
+  it('renders active account membership content when the user also has workspace access', async () => {
+    authState.session = { user: { id: 'user-active-member', email: 'active@example.com' } }
+    authState.snapshot = {
+      profile: completeProfile({ id: 'user-active-member', email: 'active@example.com' }),
+      memberships: [
+        {
+          id: 'membership-active',
+          tenantId: 'tenant-active',
+          tenantName: 'Empresa de prueba',
+          tenantSlug: 'empresa-prueba',
+          roleCodes: [],
+          roleNames: [],
+          permissions: ['workspace:read']
+        }
+      ],
+      permissions: ['workspace:read'],
+      platformPermissions: [],
+      isPlatformAdmin: false
+    }
+
+    renderRoute(surfacePaths.account.membership)
+
+    expect((await screen.findAllByText('Empresa de prueba')).length).toBeGreaterThan(0)
+    expect(await screen.findByRole('heading', { name: 'Tu membresía' })).toBeInTheDocument()
+    expect((await screen.findAllByText('Vigencia restante')).length).toBeGreaterThan(0)
+    expect(await screen.findByRole('link', { name: /Ir a contacto/i })).toBeInTheDocument()
+  })
+
   it('renders workspace forbidden inside the workspace shell', async () => {
     authState.session = { user: { id: 'user-2', email: 'recruiter@example.com' } }
     authState.snapshot = {

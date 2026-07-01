@@ -356,6 +356,9 @@ Do not let workspace users close or archive a vacancy directly from a button, me
 ### R-096 — Account membership must render through normal nested routing
 Do not mount `/account/membership` by passing the membership page as shell `fallbackContent`. The account membership page must remain a real child route rendered through the shared candidate shell `Outlet`, so direct entry and auth-guard redirects cannot leave the shell with a blank content area during first navigation.
 
+### R-097 — Membership status content must not depend only on inherited page animation
+Do not let the async-loaded content below the `Tu membresía` header rely only on the parent page stagger animation. The status-content branch must control its own mounted animation or render plainly so loading-to-content transitions cannot leave cards, tabs, renewal controls, or help panels stuck invisible after the membership query resolves.
+
 ---
 
 ## Maintenance rule

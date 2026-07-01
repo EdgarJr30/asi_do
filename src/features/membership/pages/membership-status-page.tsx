@@ -301,6 +301,9 @@ export function MembershipStatusPage() {
   const visibleOpenReceiptId = openReceiptId === undefined ? firstReceiptId : openReceiptId
   const membershipProgress = computeMembershipTermProgress(membershipActivatedAt, membershipExpiresAt)
   const activeTabPanelVariants = shouldReduceMotion ? reducedTabPanelReveal : tabPanelReveal
+  // Esta rama aparece después del query; no debe depender de un estado inicial
+  // oculto porque una transición perdida dejaría la pantalla visualmente en blanco.
+  const contentInitialState = false
 
   // Resultado del retorno de AZUL (?payment=approved|declined|cancelled|error): avisa y refresca.
   const [searchParams, setSearchParams] = useSearchParams()
@@ -394,8 +397,14 @@ export function MembershipStatusPage() {
           </Card>
         </motion.div>
       ) : (
-        <motion.div variants={gridStagger} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
-          <motion.section variants={gridStagger} className="space-y-6">
+        <motion.div
+          key="membership-status-content"
+          variants={gridStagger}
+          initial={contentInitialState}
+          animate="show"
+          className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]"
+        >
+          <motion.section variants={gridStagger} initial={contentInitialState} animate="show" className="space-y-6">
             <motion.div variants={cardReveal}>
               <MembershipOverviewCard
                 category={bundle.application?.category_name ?? 'Sin categoría'}
@@ -569,7 +578,7 @@ export function MembershipStatusPage() {
             </motion.div>
           </motion.section>
 
-          <motion.aside variants={gridStagger} className="space-y-5 lg:sticky lg:top-6">
+          <motion.aside variants={gridStagger} initial={contentInitialState} animate="show" className="space-y-5 lg:sticky lg:top-6">
             {session.hasActiveAsiAccess && bundle.application ? (
               <motion.div variants={cardReveal}>
                 <Card className="rounded-2xl p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
