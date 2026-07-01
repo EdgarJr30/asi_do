@@ -365,6 +365,9 @@ Do not reintroduce candidate resume default logic that marks a secondary CV as `
 ### R-099 — Candidate CV upload must require pre-upload review
 Do not upload a candidate CV immediately when the user selects or drops a file. The candidate profile flow must first show a modal review step with a local PDF preview when available, or clear file metadata for DOC/DOCX, and only store the document after the user explicitly confirms the save/upload action.
 
+### R-100 — Shared tooltips must dismiss on activation
+Do not let shared visual tooltips stay visible after a user clicks or activates their trigger, especially in platform chrome actions such as notifications and theme mode. Tooltips may appear on hover or keyboard focus, but activation must dismiss them immediately even when the trigger keeps focus.
+
 ---
 
 ## Maintenance rule
