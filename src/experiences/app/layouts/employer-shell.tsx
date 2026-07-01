@@ -83,6 +83,14 @@ type ShellConfig = {
   tenantName: string
   topbarEyebrow: string
 }
+type ShellRouteMeta = Pick<AppNavItem, 'title' | 'description'> & {
+  eyebrow: string
+  href?: string
+}
+type ShellBreadcrumbItem = {
+  title: string
+  href?: string
+}
 
 const workspaceIconByHref: Partial<Record<string, LucideIcon>> = {
   [surfacePaths.workspace.dashboard]: LayoutDashboard,
@@ -308,13 +316,14 @@ function getRouteMeta(
   eyebrow: string,
   routes: Record<string, Pick<AppNavItem, 'title' | 'description'>>,
   fallback: Pick<AppNavItem, 'title' | 'description'>
-) {
+): ShellRouteMeta {
   const entries = Object.entries(routes).sort((left, right) => right[0].length - left[0].length)
   const matchedEntry = entries.find(([href]) => pathname === href || pathname.startsWith(`${href}/`))
 
   if (matchedEntry) {
     return {
       eyebrow,
+      href: matchedEntry[0],
       title: matchedEntry[1].title,
       description: matchedEntry[1].description ?? fallback.description
     }
@@ -327,7 +336,7 @@ function getRouteMeta(
   }
 }
 
-function getRouteBreadcrumbs(groups: AppNavGroup[], pathname: string, fallbackTitle: string) {
+function getRouteBreadcrumbs(groups: AppNavGroup[], pathname: string, routeMeta: ShellRouteMeta) {
   let best: { group: AppNavGroup; item: AppNavItem } | null = null
 
   for (const group of groups) {
@@ -345,16 +354,21 @@ function getRouteBreadcrumbs(groups: AppNavGroup[], pathname: string, fallbackTi
   }
 
   if (best) {
-    const breadcrumbs = best.group.title ? [best.group.title] : []
+    const breadcrumbs: ShellBreadcrumbItem[] = best.group.title ? [{ title: best.group.title }] : []
+    const lastBreadcrumb = breadcrumbs.at(-1)
 
-    if (breadcrumbs.at(-1) !== best.item.title) {
-      breadcrumbs.push(best.item.title)
+    if (lastBreadcrumb?.title !== best.item.title) {
+      breadcrumbs.push({ title: best.item.title, href: best.item.href })
+    }
+
+    if (breadcrumbs.at(-1)?.title !== routeMeta.title) {
+      breadcrumbs.push({ title: routeMeta.title, href: routeMeta.href ?? pathname })
     }
 
     return breadcrumbs
   }
 
-  return [fallbackTitle]
+  return [{ title: routeMeta.title, href: routeMeta.href }]
 }
 
 function resolveActiveShellItemHref(groups: AppNavGroup[], pathname: string) {
@@ -1266,7 +1280,7 @@ export function PlatformAppShell({
   const isWorkspace = experience === 'workspace'
   const userIdentity = resolveUserIdentity(session)
   const routeMeta = getRouteMeta(location.pathname, config.topbarEyebrow, config.routeMeta, config.routeMetaDefault)
-  const breadcrumbs = getRouteBreadcrumbs(config.sidebarGroups, location.pathname, routeMeta.title)
+  const breadcrumbs = getRouteBreadcrumbs(config.sidebarGroups, location.pathname, routeMeta)
 
   const shellLayoutStyle = useMemo(
     () =>
@@ -1519,19 +1533,37 @@ export function PlatformAppShell({
 
             <div className={cn('min-w-0', isWorkspace ? 'shrink-0' : 'flex-1')}>
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                {breadcrumbs.map((crumb, index) => (
-                  <div key={`${crumb}-${index}`} className="flex min-w-0 items-center gap-2">
-                    {index > 0 ? <span className="text-sm text-slate-300">/</span> : null}
-                    <span
-                      className={cn(
-                        'truncate text-sm font-medium',
-                        index === breadcrumbs.length - 1 ? 'text-slate-950 dark:text-white' : 'text-slate-500 dark:text-slate-400'
-                      )}
-                    >
-                      {crumb}
-                    </span>
-                  </div>
-                ))}
+                <nav aria-label="Breadcrumb" className="flex min-w-0 flex-wrap items-center gap-2">
+                  {breadcrumbs.map((crumb, index) => {
+                    const isCurrentPage = index === breadcrumbs.length - 1
+                    const href = crumb.href
+
+                    return (
+                      <div key={`${href ?? crumb.title}-${index}`} className="flex min-w-0 items-center gap-2">
+                        {index > 0 ? <span className="text-sm text-slate-300">/</span> : null}
+                        {href && !isCurrentPage ? (
+                          <button
+                            type="button"
+                            className="min-w-0 truncate rounded-md text-sm font-medium text-slate-500 transition-colors hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50 dark:text-slate-400 dark:hover:text-white"
+                            onClick={() => handleActionNavigate(href)}
+                          >
+                            {crumb.title}
+                          </button>
+                        ) : (
+                          <span
+                            aria-current={isCurrentPage ? 'page' : undefined}
+                            className={cn(
+                              'truncate text-sm font-medium',
+                              isCurrentPage ? 'text-slate-950 dark:text-white' : 'text-slate-500 dark:text-slate-400'
+                            )}
+                          >
+                            {crumb.title}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </nav>
                 {!isWorkspace && routeMeta.description ? (
                   <>
                     <span className="hidden h-5 w-px bg-slate-200 lg:block dark:bg-white/10" />

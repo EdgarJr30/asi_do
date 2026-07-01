@@ -380,6 +380,9 @@ Do not regress the workspace `Proceso de selección` Kanban into a board that on
 ### R-104 — Workspace activity must remain integrated into Resumen
 Do not reintroduce `Mi actividad` as a separate top-level workspace sidebar module when it duplicates the activity feed already integrated into `Resumen`. The complete `/workspace/activity` view may remain available as `Actividad`, but it should be reached from the `Resumen` activity panel or other contextual drill-in links rather than promoted as a redundant persistent navigation item.
 
+### R-105 — Breadcrumbs must include route-meta drill-in pages
+Do not build authenticated shell breadcrumbs only from visible sidebar items. Candidate, workspace, storefront, and admin routes must combine the best sidebar parent with route metadata so secondary pages such as `/workspace/activity` render a navigable trail like `Mi empresa / Resumen / Actividad`, where parent crumbs navigate correctly and the current page remains non-clickable.
+
 ---
 
 ## Maintenance rule
