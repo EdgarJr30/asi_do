@@ -385,6 +385,7 @@ Apple-inspired UI rules:
 6. The employer sidebar should stay utility-first. Avoid promotional filler blocks or marketing copy inside the workspace navigation unless that content directly helps complete a current task.
 7. The mobile workspace sidebar must render only one compact profile card. Combine identity, profile access, and notification access into that single card instead of stacking duplicate user/profile cards.
 8. Mobile workspace overlays must own the viewport cleanly: notification panels should render as fixed, viewport-bounded panels, and an open mobile sidebar must lock page scroll behind it until it closes.
+9. Workspace `Resumen` is the employer hub for KPIs, funnel health, recent applications, and recent activity. Do not duplicate the same activity feed as a top-level sidebar module; keep the full `Actividad` page as a secondary drill-in destination from `Resumen` when users need the complete history.
 
 ### 9.3 IA rules
 1. Preserve core navigation order across tenants and roles whenever possible.
@@ -392,6 +393,7 @@ Apple-inspired UI rules:
 3. Navigation labels must use stable domain language: `Jobs`, `Applications`, `Candidates`, `Company`, `Roles`, `Settings`.
 4. Never force users to relearn the same workflow between mobile and desktop.
 5. In any sidebar or bottom navigation group, only the single best-matching destination may appear active at a time. Parent modules must not stay highlighted when the user is clearly inside a deeper sibling or child destination.
+6. Top-level workspace navigation should expose distinct jobs-to-be-done. If a page is mostly an expanded detail of the `Resumen` dashboard, link to it from the relevant dashboard panel instead of promoting it as a separate persistent module.
 
 ---
 

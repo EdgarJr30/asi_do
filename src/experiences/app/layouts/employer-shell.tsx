@@ -113,8 +113,8 @@ const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
     description: 'Estado general del reclutamiento de tu empresa'
   },
   [surfacePaths.workspace.activity]: {
-    title: 'Mi actividad',
-    description: 'Tu historial reciente de acciones dentro del workspace'
+    title: 'Actividad',
+    description: 'Historial completo de eventos del proceso de selección'
   },
   [surfacePaths.workspace.jobs]: {
     title: 'Vacantes',

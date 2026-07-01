@@ -75,14 +75,6 @@ export const employerNavigationItems: NavigationItem[] = [
     requiredPermission: 'workspace:read'
   },
   {
-    title: 'Mi actividad',
-    href: surfacePaths.workspace.activity,
-    description: 'Tu historial reciente en la plataforma',
-    group: 'dashboard',
-    requiresAuth: true,
-    requiredPermission: 'workspace:read'
-  },
-  {
     title: 'Vacantes',
     href: surfacePaths.workspace.jobs,
     description: 'Publica y organiza vacantes',

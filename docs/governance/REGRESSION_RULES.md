@@ -377,6 +377,9 @@ Do not show only generated initials for companies that have `company_profiles.lo
 ### R-103 — Selection board horizontal scroll must work over columns
 Do not regress the workspace `Proceso de selección` Kanban into a board that only scrolls horizontally from empty gaps or the scrollbar rail. Horizontal wheel and trackpad gestures, including `Shift + wheel`, must continue moving the board while the pointer is over a stage column, while normal vertical wheel gestures must keep scrolling that column's internal candidate list.
 
+### R-104 — Workspace activity must remain integrated into Resumen
+Do not reintroduce `Mi actividad` as a separate top-level workspace sidebar module when it duplicates the activity feed already integrated into `Resumen`. The complete `/workspace/activity` view may remain available as `Actividad`, but it should be reached from the `Resumen` activity panel or other contextual drill-in links rather than promoted as a redundant persistent navigation item.
+
 ---
 
 ## Maintenance rule
