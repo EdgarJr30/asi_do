@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
@@ -29,7 +29,11 @@ import {
   type DashboardActivityItem,
   type DashboardRecentApplication
 } from '@/features/dashboard/lib/dashboard-api'
-import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
+import {
+  smoothCardReveal as cardReveal,
+  smoothGridStagger as gridStagger,
+  smoothPageStagger as pageStagger
+} from '@/shared/ui/card-motion'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cn } from '@/lib/utils/cn'
 
@@ -278,25 +282,29 @@ export function ResumenDashboardPage() {
           <KpiStripCell
             accent="brand"
             label="Vacantes abiertas"
-            value={stats?.openJobs ?? '—'}
+            value={stats?.openJobs ?? 0}
+            loading={metricsQuery.isLoading}
             helper="Publicadas y recibiendo aplicaciones"
           />
           <KpiStripCell
             accent="violet"
             label="Candidatos activos"
-            value={stats?.activeCandidates ?? '—'}
+            value={stats?.activeCandidates ?? 0}
+            loading={metricsQuery.isLoading}
             helper="En proceso, sin descartar ni contratar"
           />
           <KpiStripCell
             accent="amber"
             label="Entrevistas"
-            value={stats?.interviews ?? '—'}
+            value={stats?.interviews ?? 0}
+            loading={metricsQuery.isLoading}
             helper="Candidatos en etapa de entrevista"
           />
           <KpiStripCell
             accent="green"
             label="Ofertas enviadas"
-            value={stats?.offers ?? '—'}
+            value={stats?.offers ?? 0}
+            loading={metricsQuery.isLoading}
             helper="Esperando respuesta del candidato"
           />
         </div>
@@ -359,7 +367,10 @@ export function ResumenDashboardPage() {
                       <div key={stage.stageId} className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5">
                         <span className="min-w-0 truncate text-[0.88rem] font-semibold text-(--app-text)">{stage.name}</span>
                         <span className="text-[0.82rem] tabular-nums text-(--app-text-muted)">
-                          <b className="font-semibold text-(--app-text)">{stage.count}</b> · {stage.percent}%
+                          <b className="font-semibold text-(--app-text)">
+                            <CountUp value={stage.count} duration={1300} />
+                          </b>{' '}
+                          · <CountUp value={stage.percent} suffix="%" duration={1300} />
                         </span>
                         <div className="col-span-2 h-2.5 overflow-hidden rounded-full bg-(--app-surface-muted)">
                           <motion.div
@@ -446,11 +457,13 @@ function KpiStripCell({
   accent,
   label,
   value,
+  loading,
   helper
 }: {
   accent: keyof typeof kpiDotClassName
   label: ReactNode
-  value: ReactNode
+  value: number
+  loading: boolean
   helper?: ReactNode
 }) {
   return (
@@ -459,9 +472,51 @@ function KpiStripCell({
         <span className={cn('size-2 shrink-0 rounded-[3px]', kpiDotClassName[accent])} />
         <p className="min-w-0 truncate text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-(--app-text-subtle)">{label}</p>
       </div>
-      <p className="mt-2 text-[1.55rem] font-bold leading-none tracking-tight text-(--app-text) tabular-nums">{value}</p>
+      <p className="mt-2 text-[1.55rem] font-bold leading-none tracking-tight text-(--app-text) tabular-nums">
+        {loading ? '—' : <CountUp value={value} />}
+      </p>
       {helper ? <p className="mt-1.5 text-[0.75rem] leading-4 text-(--app-text-subtle)">{helper}</p> : null}
     </div>
+  )
+}
+
+function CountUp({ value, suffix = '', duration = 1600 }: { value: number; suffix?: string; duration?: number }) {
+  const shouldReduceMotion = useReducedMotion()
+  const [display, setDisplay] = useState(0)
+
+  useEffect(() => {
+    if (shouldReduceMotion) {
+      return
+    }
+
+    let raf = 0
+    let start: number | undefined
+
+    const tick = (timestamp: number) => {
+      if (start === undefined) {
+        start = timestamp
+      }
+
+      const progress = Math.min(1, (timestamp - start) / duration)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setDisplay(Math.round(value * eased))
+
+      if (progress < 1) {
+        raf = requestAnimationFrame(tick)
+      }
+    }
+
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value, duration, shouldReduceMotion])
+
+  const shown = shouldReduceMotion ? value : display
+
+  return (
+    <>
+      {shown}
+      {suffix}
+    </>
   )
 }
 
