@@ -350,6 +350,9 @@ Do not show both clickable status summary cards and a separate segmented status 
 ### R-094 — Candidate tab panels must transition smoothly
 Do not let candidate-facing internal tabs, including `Tu membresía` tabs and `Mi perfil` editor tabs, switch content with abrupt unmount/remount jumps. Use the shared tab-panel motion variant with reduced-motion fallback so tab changes feel smooth without delaying task actions.
 
+### R-095 — Closing or archiving vacancies must require confirmation
+Do not let workspace users close or archive a vacancy directly from a button, menu item, quick action, or future bulk action. These actions must first open the shared confirmation dialog, name the affected vacancy, explain that the vacancy will stop showing publicly, and only execute the status mutation after the user confirms.
+
 ---
 
 ## Maintenance rule

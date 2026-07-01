@@ -74,6 +74,12 @@ function relativeDays(value: string | null | undefined) {
 
 const WORKSPACE_JOBS_PAGE_SIZE = 8
 
+type PendingStatusChange = {
+  jobId: string
+  jobTitle: string
+  action: 'close' | 'archive'
+}
+
 const EMPLOYMENT_LABELS: Record<string, string> = {
   full_time: 'Tiempo completo',
   part_time: 'Medio tiempo',
@@ -87,6 +93,13 @@ function employmentLabel(value: string | null | undefined) {
 }
 
 type TenantJobRow = JobPostingBundle['jobs'][number]
+
+function jobStatusSuccessLabel(status: TenantJobRow['status']) {
+  if (status === 'published') return 'Vacante publicada'
+  if (status === 'closed') return 'Vacante cerrada'
+  if (status === 'archived') return 'Vacante archivada'
+  return 'Vacante guardada como borrador'
+}
 
 const WORKPLACE_LABELS: Record<string, string> = {
   remote: 'Remote',
@@ -703,7 +716,7 @@ function WorkspaceJobsManager() {
   const [sort, setSort] = useState<'recent' | 'applications' | 'title'>('recent')
   const [page, setPage] = useState(0)
   const [viewJobId, setViewJobId] = useState<string | null>(null)
-  const [pendingStatusChange, setPendingStatusChange] = useState<{ jobId: string; action: 'close' | 'archive' } | null>(null)
+  const [pendingStatusChange, setPendingStatusChange] = useState<PendingStatusChange | null>(null)
 
   const workspaceQuery = useQuery({
     queryKey: ['workspace', 'jobs-page', session.activeTenantId],
@@ -817,6 +830,14 @@ function WorkspaceJobsManager() {
     }
   }
 
+  function requestStatusChange(job: TenantJobRow, action: PendingStatusChange['action']) {
+    setPendingStatusChange({
+      jobId: job.id,
+      jobTitle: job.title,
+      action
+    })
+  }
+
   const statusMutation = useMutation({
     mutationFn: updateJobPostingStatus,
     onSuccess: async (_, variables) => {
@@ -824,7 +845,7 @@ function WorkspaceJobsManager() {
         queryClient.invalidateQueries({ queryKey: PUBLIC_JOBS_QUERY_KEY }),
         queryClient.invalidateQueries({ queryKey: TENANT_JOBS_QUERY_KEY })
       ])
-      toast.success(`Vacante ${variables.status}`, {
+      toast.success(jobStatusSuccessLabel(variables.status), {
         description: 'El estado de la vacante ya fue actualizado.'
       })
     },
@@ -1129,7 +1150,7 @@ function WorkspaceJobsManager() {
                           Ver oportunidad
                         </KebabMenuItem>
                         {isPublished ? (
-                          <KebabMenuItem onClick={() => setPendingStatusChange({ jobId: job.id, action: 'close' })}>
+                          <KebabMenuItem onClick={() => requestStatusChange(job, 'close')}>
                             <Ban className="mr-2 size-4 text-(--app-text-subtle)" />
                             Cerrar
                           </KebabMenuItem>
@@ -1139,7 +1160,7 @@ function WorkspaceJobsManager() {
                             Publicar
                           </KebabMenuItem>
                         )}
-                        <KebabMenuItem danger onClick={() => setPendingStatusChange({ jobId: job.id, action: 'archive' })}>
+                        <KebabMenuItem danger onClick={() => requestStatusChange(job, 'archive')}>
                           <Archive className="mr-2 size-4" />
                           Archivar
                         </KebabMenuItem>
@@ -1218,12 +1239,12 @@ function WorkspaceJobsManager() {
                           Publicar
                         </Button>
                       ) : (
-                        <Button variant="outline" onClick={() => setPendingStatusChange({ jobId: job.id, action: 'close' })}>
+                        <Button variant="outline" onClick={() => requestStatusChange(job, 'close')}>
                           Cerrar
                         </Button>
                       )}
                       {job.status !== 'archived' ? (
-                        <Button variant="outline" onClick={() => setPendingStatusChange({ jobId: job.id, action: 'archive' })}>
+                        <Button variant="outline" onClick={() => requestStatusChange(job, 'archive')}>
                           Archivar
                         </Button>
                       ) : null}
@@ -1249,10 +1270,11 @@ function WorkspaceJobsManager() {
         title={pendingStatusChange?.action === 'archive' ? '¿Archivar esta vacante?' : '¿Cerrar esta vacante?'}
         description={
           pendingStatusChange?.action === 'archive'
-            ? 'La vacante saldrá del inventario visible y dejará de mostrarse públicamente. Podrás restaurarla desde datos administrativos si hace falta.'
-            : 'La vacante dejará de aceptar nuevas postulaciones y ya no se mostrará públicamente. Podrás volver a publicarla cuando quieras.'
+            ? `Antes de continuar, confirma si deseas archivar "${pendingStatusChange.jobTitle}". La vacante saldrá del inventario visible y dejará de mostrarse públicamente.`
+            : `Antes de continuar, confirma si deseas cerrar "${pendingStatusChange?.jobTitle ?? 'esta vacante'}". La vacante dejará de aceptar nuevas postulaciones y ya no se mostrará públicamente.`
         }
-        confirmLabel={pendingStatusChange?.action === 'archive' ? 'Archivar' : 'Cerrar vacante'}
+        confirmLabel={pendingStatusChange?.action === 'archive' ? 'Sí, archivar' : 'Sí, cerrar vacante'}
+        cancelLabel="No, mantener vacante"
         loading={statusMutation.isPending}
         onCancel={() => setPendingStatusChange(null)}
         onConfirm={() => {
