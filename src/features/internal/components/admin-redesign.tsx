@@ -45,7 +45,7 @@ export function AdminPage({
   superAdmin?: boolean
 }) {
   return (
-    <div className="mx-auto w-full max-w-310 space-y-5 pb-12">
+    <div className="w-full space-y-5 pb-12">
       <section className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2.5">
           <div

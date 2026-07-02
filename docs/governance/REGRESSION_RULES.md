@@ -386,6 +386,9 @@ Do not build authenticated shell breadcrumbs only from visible sidebar items. Ca
 ### R-106 — Resumen publish CTA must deep-link into the job editor
 Do not make the workspace `Resumen` `Publicar vacante` CTA stop at the Vacantes list only. It must navigate to the workspace Vacantes module with an explicit create intent, let the Vacantes route mount, then open the job creation side sheet through a short delayed state transition so the slide-over animation remains soft. Clear that intent when the sheet closes or saves.
 
+### R-107 — Admin modules must use full shell width
+Do not regress dense `/admin/*` operational modules back into a narrow centered content container. Administration dashboards, queues, tables, statbars, and configuration consoles should use the full available app-shell width inside the standard shell padding so their borders sit closer to the viewport edges and the layout feels operational rather than document-like. Reserve narrower containers only for focused detail, read-only, or form-only surfaces.
+
 ---
 
 ## Maintenance rule
