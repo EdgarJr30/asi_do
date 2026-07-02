@@ -1,137 +1,198 @@
+import type { ReactNode } from 'react'
+
+import { useQuery } from '@tanstack/react-query'
+import { Banknote, Bell, Building2, FileText, Gauge, Shield, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { FoundationSettingsForm } from '@/features/foundations/components/foundation-settings-form'
-import { NotificationCenter } from '@/features/notifications/components/notification-center'
+import {
+  AdminCard,
+  AdminInfoGrid,
+  AdminModuleCard,
+  AdminPage,
+  AdminSectionLabel,
+  AdminStat,
+  AdminStatBar
+} from '@/features/internal/components/admin-redesign'
+import { fetchPlatformOpsSnapshot } from '@/features/platform-ops/lib/platform-ops-api'
+import { approvalReviewPermissions } from '@/shared/constants/navigation'
+import type { PermissionCode } from '@/shared/constants/permissions'
 
-const adminTools = [
+const adminModules: Array<{
+  href: string
+  title: string
+  description: string
+  permission?: PermissionCode
+  anyPermission?: PermissionCode[]
+  icon: ReactNode
+  tone: 'blue' | 'green' | 'amber' | 'rose' | 'violet' | 'teal'
+  count?: (stats: Awaited<ReturnType<typeof fetchPlatformOpsSnapshot>> | undefined) => string
+}> = [
   {
     href: surfacePaths.admin.approvals,
-    title: 'Solicitudes de operador',
-    description: 'Revisa solicitudes de operador y provisiona acceso al workspace.',
-    permission: 'recruiter_request:review'
+    title: 'Aprobaciones',
+    description: 'Cola unificada de operador, pastoral, regional e invitaciones de autoridad territorial.',
+    anyPermission: approvalReviewPermissions,
+    icon: <Shield className="size-5" />,
+    tone: 'blue',
+    count: (stats) => `${stats?.pendingRecruiterRequests ?? 0} pend.`
+  },
+  {
+    href: surfacePaths.admin.membership,
+    title: 'Membresía',
+    description: 'Revisa solicitudes, valida comprobantes de pago y activa las cuentas de miembros.',
+    permission: 'membership_payment:verify',
+    icon: <Sparkles className="size-5" />,
+    tone: 'green'
   },
   {
     href: surfacePaths.admin.platform,
-    title: 'Platform ops',
-    description: 'Observa planes, flags, colas y counters operativos.',
-    permission: 'platform_dashboard:read'
+    title: 'Plataforma',
+    description: 'Salud operativa, planes, suscripciones y feature flags para gobernar el producto.',
+    permission: 'platform_dashboard:read',
+    icon: <Building2 className="size-5" />,
+    tone: 'blue'
   },
   {
     href: surfacePaths.admin.moderation,
-    title: 'Moderation',
-    description: 'Opera trust and safety, suspensiones y acciones de control.',
-    permission: 'moderation:read'
+    title: 'Moderación',
+    description: 'Trust & safety: abre casos, ejecuta acciones seguras y deja todo en auditoría.',
+    permission: 'moderation:read',
+    icon: <Gauge className="size-5" />,
+    tone: 'violet',
+    count: (stats) => `${stats?.openModerationCases ?? 0} casos`
   },
   {
     href: surfacePaths.admin.errors,
-    title: 'Error review',
-    description: 'Inspecciona errores de producto y su estado de remediacion.',
-    permission: 'audit_log:read'
+    title: 'Errores',
+    description: 'Bandeja de errores de producto: revisa, marca como corregido o reabre incidencias.',
+    permission: 'audit_log:read',
+    icon: <FileText className="size-5" />,
+    tone: 'rose'
+  },
+  {
+    href: surfacePaths.admin.finances,
+    title: 'Finanzas',
+    description: 'Datos de pago, cuotas por categoría y montos de donación visibles al público.',
+    permission: 'platform_dashboard:read',
+    icon: <Banknote className="size-5" />,
+    tone: 'amber'
+  },
+  {
+    href: surfacePaths.admin.communications,
+    title: 'Comunicaciones',
+    description: 'Pipeline de correos y centro de notificaciones in-app, push y preferencias de UI.',
+    permission: 'email:read',
+    icon: <Bell className="size-5" />,
+    tone: 'teal',
+    count: (stats) => `${stats?.pendingEmailHooks ?? 0} pend.`
   }
-] as const
+]
+
+function canSeeModule(module: (typeof adminModules)[number], permissions: PermissionCode[]) {
+  if (module.permission && !permissions.includes(module.permission)) return false
+  if (module.anyPermission && !module.anyPermission.some((permission) => permissions.includes(permission))) return false
+  return true
+}
 
 export function AdminConsolePage() {
   const navigate = useNavigate()
   const session = useAppSession()
-  const visibleAdminTools = adminTools.filter((tool) => session.permissions.includes(tool.permission))
+  const snapshotQuery = useQuery({
+    queryKey: ['platform-ops-snapshot'],
+    queryFn: fetchPlatformOpsSnapshot,
+    enabled: session.permissions.includes('platform_dashboard:read')
+  })
+
+  const stats = snapshotQuery.data
+  const visibleModules = adminModules.filter((module) => canSeeModule(module, session.permissions))
 
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden bg-(--app-surface-muted)">
-        <CardHeader className="space-y-3">
-          <Badge variant="soft">Admin only</Badge>
-          <CardTitle className="max-w-3xl text-2xl sm:text-3xl">
-            Centro interno para operaciones, observabilidad y gobierno de plataforma
-          </CardTitle>
-          <CardDescription className="max-w-2xl">
-            Esta zona no forma parte de la experiencia cliente. Solo la usan admins de plataforma y developers internos
-            para revisar incidencias, validar flujos sensibles y operar tareas restringidas.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-[24px] border border-white/70 bg-white/85 p-4 dark:border-zinc-800 dark:bg-zinc-950/75">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Acceso actual</p>
-            <p className="mt-2 text-lg font-semibold text-zinc-950 dark:text-zinc-50">
-              {session.isPlatformAdmin ? 'Platform admin' : 'Internal developer'}
-            </p>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              El flag interno no concede permisos tenant o plataforma por si solo.
-            </p>
-          </div>
-          <div className="rounded-[24px] border border-white/70 bg-white/85 p-4 dark:border-zinc-800 dark:bg-zinc-950/75">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Uso esperado</p>
-            <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-              Valida notificaciones, idioma, tema, errores operativos y accesos internos antes de exponer cambios al
-              cliente final.
-            </p>
-          </div>
-          <div className="rounded-[24px] border border-white/70 bg-white/85 p-4 dark:border-zinc-800 dark:bg-zinc-950/75">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Aislamiento</p>
-            <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
-              La landing comercial, oportunidades para miembros y flujos core ya quedan separados del tooling interno.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+    <AdminPage
+      eyebrow="Admin · Plataforma"
+      title="Centro operativo"
+      description="Zona interna para operaciones, observabilidad y gobierno de plataforma. No forma parte de la experiencia del cliente."
+      actions={<Badge variant="default" className="h-8 px-3">Platform admin</Badge>}
+    >
+      <div className="space-y-6">
+        <AdminInfoGrid
+          items={[
+            {
+              label: 'Acceso actual',
+              value: session.isPlatformAdmin ? 'Platform admin' : 'Internal developer',
+              helper: 'El flag interno no concede permisos de tenant por sí solo.'
+            },
+            {
+              label: 'Uso esperado',
+              value: 'Validación interna',
+              helper: 'Revisa notificaciones, idioma, tema, errores y accesos antes de exponer cambios.'
+            },
+            {
+              label: 'Aislamiento',
+              value: 'Separado del core',
+              helper: 'Landing comercial y flujos de miembros quedan aparte del tooling interno.'
+            }
+          ]}
+        />
 
-      {visibleAdminTools.length > 0 ? (
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {visibleAdminTools.map((tool) => (
-            <Card key={tool.href}>
-              <CardHeader>
-                <CardTitle className="text-lg">{tool.title}</CardTitle>
-                <CardDescription>{tool.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full" variant="outline" onClick={() => void navigate(tool.href)}>
-                  Abrir módulo
+        <div className="space-y-3">
+          <AdminSectionLabel title="Salud de plataforma" />
+          <AdminStatBar columns={6}>
+            <AdminStat label="Tenants activos" value={stats?.activeTenants ?? '—'} />
+            <AdminStat label="Subscripciones" value={stats?.activeSubscriptions ?? '—'} tone="green" />
+            <AdminStat label="Casos moderación" value={stats?.openModerationCases ?? '—'} tone="violet" />
+            <AdminStat label="Errores abiertos" value="—" tone="rose" helper="Ver módulo Errores" />
+            <AdminStat label="Emails pendientes" value={stats?.pendingEmailHooks ?? '—'} tone="amber" />
+            <AdminStat label="Feature flags" value={stats?.featureFlagsEnabled ?? '—'} tone="teal" />
+          </AdminStatBar>
+        </div>
+
+        <div className="space-y-3">
+          <AdminSectionLabel title="Módulos" count={visibleModules.length} />
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {visibleModules.map((module) => (
+              <AdminModuleCard
+                key={module.href}
+                href={module.href}
+                title={module.title}
+                description={module.description}
+                icon={module.icon}
+                tone={module.tone}
+                count={module.count?.(stats)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <AdminSectionLabel title="Acceso avanzado" />
+          <div className="grid gap-3 lg:grid-cols-2">
+            <AdminCard
+              title="Bootstrap de plataforma"
+              description="La inicialización del primer admin sale del flujo público de auth y queda disponible solo como acceso controlado."
+              tag={<Badge variant="outline">Controlado</Badge>}
+            >
+              <Button variant="outline" className="h-9 rounded-xl" onClick={() => void navigate(surfacePaths.admin.bootstrapOwner)}>
+                Abrir bootstrap owner
+              </Button>
+            </AdminCard>
+            {session.isPlatformAdmin ? (
+              <AdminCard
+                title="Arnés de estrés"
+                description="Genera datos sintéticos masivos y mide el comportamiento de la base. Solo entornos no productivos."
+                tag={<Badge variant="outline" className="border-violet-200 bg-violet-50 text-violet-700">Super admin</Badge>}
+              >
+                <Button variant="outline" className="h-9 rounded-xl" onClick={() => void navigate(surfacePaths.admin.stressHarness)}>
+                  Abrir arnés de estrés
                 </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </section>
-      ) : null}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Bootstrap de plataforma</CardTitle>
-          <CardDescription>
-            La inicializacion del primer admin sale del flujo publico de auth y queda disponible solo como acceso controlado.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" onClick={() => void navigate(surfacePaths.admin.bootstrapOwner)}>
-            Abrir bootstrap owner
-          </Button>
-        </CardContent>
-      </Card>
-
-      {session.isPlatformAdmin ? (
-        <Card className="border-amber-300/60 bg-amber-50/40 dark:border-amber-900/40 dark:bg-amber-950/15">
-          <CardHeader>
-            <Badge variant="soft">Super admin</Badge>
-            <CardTitle>Arnés de estrés</CardTitle>
-            <CardDescription>
-              Genera datos sintéticos masivos y mide el comportamiento de la base (p50/p95/p99, throughput, error rate).
-              Solo entornos no productivos; nunca toca datos reales.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" onClick={() => void navigate(surfacePaths.admin.stressHarness)}>
-              Abrir arnés de estrés
-            </Button>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      <FoundationSettingsForm />
-
-      <NotificationCenter />
-    </div>
+              </AdminCard>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </AdminPage>
   )
 }

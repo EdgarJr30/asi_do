@@ -15,6 +15,7 @@ import { PageLoader } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
 import { StatCard } from '@/components/ui/stat-card'
 import { Textarea } from '@/components/ui/textarea'
+import { AdminStat, AdminStatBar } from '@/features/internal/components/admin-redesign'
 import {
   createAuthorityInvitation,
   listAuthorityInvitations,
@@ -50,7 +51,7 @@ function statusMeta(invitation: AuthorityInvitation): { label: string; className
   }
 }
 
-export function AdminAuthorityInvitationsPage() {
+export function AdminAuthorityInvitationsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const queryClient = useQueryClient()
   const shouldReduceMotion = useReducedMotion()
   const [email, setEmail] = useState('')
@@ -109,17 +110,27 @@ export function AdminAuthorityInvitationsPage() {
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
     >
-      <motion.div variants={cardReveal}>
-        <PageHeader
-          eyebrow="Admin · Gobernanza"
-          title="Autorización territorial"
-          description="Genera invitaciones por link para que un usuario específico valide su autoridad pastoral o regional. Solo por invitación; con vencimiento y un solo uso."
-        >
-          <StatCard label="Pendientes" value={String(pendingCount)} helper="Invitaciones activas sin usar" />
-          <StatCard label="Usadas" value={String(usedCount)} helper="Solicitudes ya enviadas" />
-          <StatCard label="Total" value={String(invitations.length)} helper="Invitaciones generadas" />
-        </PageHeader>
-      </motion.div>
+      {!embedded ? (
+        <motion.div variants={cardReveal}>
+          <PageHeader
+            eyebrow="Admin · Gobernanza"
+            title="Autorización territorial"
+            description="Genera invitaciones por link para que un usuario específico valide su autoridad pastoral o regional. Solo por invitación; con vencimiento y un solo uso."
+          >
+            <StatCard label="Pendientes" value={String(pendingCount)} helper="Invitaciones activas sin usar" />
+            <StatCard label="Usadas" value={String(usedCount)} helper="Solicitudes ya enviadas" />
+            <StatCard label="Total" value={String(invitations.length)} helper="Invitaciones generadas" />
+          </PageHeader>
+        </motion.div>
+      ) : (
+        <motion.div variants={cardReveal}>
+          <AdminStatBar columns={3}>
+            <AdminStat label="Pendientes" value={pendingCount} helper="Invitaciones activas sin usar" />
+            <AdminStat label="Usadas" value={usedCount} tone="green" helper="Solicitudes ya enviadas" />
+            <AdminStat label="Total" value={invitations.length} tone="teal" helper="Invitaciones generadas" />
+          </AdminStatBar>
+        </motion.div>
+      )}
 
       <motion.div variants={cardReveal}>
         <Card>

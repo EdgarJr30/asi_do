@@ -101,7 +101,7 @@ const STATS_KEY = ['email-pipeline', 'stats'] as const
 const PAGE_KEY = ['email-pipeline', 'page'] as const
 const TEST_KEY = ['email-pipeline', 'test'] as const
 
-export function EmailPipelinePage() {
+export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } = {}) {
   const { permissions, authUser } = useAppSession()
   const canResend = permissions.includes('email:resend')
   const queryClient = useQueryClient()
@@ -139,21 +139,34 @@ export function EmailPipelinePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Plataforma"
-        title="Pipeline de correos"
-        description="Historial de correos transaccionales enviados por el sistema y módulo de prueba aislado."
-        actions={
-          <Button
-            variant="outline"
-            onClick={refreshAll}
-            disabled={pageQuery.isFetching || statsQuery.isFetching}
-          >
+      {!embedded ? (
+        <PageHeader
+          eyebrow="Plataforma"
+          title="Pipeline de correos"
+          description="Historial de correos transaccionales enviados por el sistema y módulo de prueba aislado."
+          actions={
+            <Button
+              variant="outline"
+              onClick={refreshAll}
+              disabled={pageQuery.isFetching || statsQuery.isFetching}
+            >
+              {pageQuery.isFetching || statsQuery.isFetching ? <Spinner size="sm" /> : <RefreshCw className="h-4 w-4" />}
+              Actualizar
+            </Button>
+          }
+        />
+      ) : (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-bold text-(--app-text)">Pipeline de correos</h2>
+            <p className="text-sm text-(--app-text-muted)">Historial transaccional y módulo de prueba aislado.</p>
+          </div>
+          <Button variant="outline" className="h-10 rounded-xl" onClick={refreshAll} disabled={pageQuery.isFetching || statsQuery.isFetching}>
             {pageQuery.isFetching || statsQuery.isFetching ? <Spinner size="sm" /> : <RefreshCw className="h-4 w-4" />}
             Actualizar
           </Button>
-        }
-      />
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total" value={stats.total} helper="Correos del pipeline real" />

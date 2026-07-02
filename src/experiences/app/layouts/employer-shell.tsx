@@ -1146,7 +1146,9 @@ const adminIconByHref: Partial<Record<string, LucideIcon>> = {
   [surfacePaths.admin.moderation]: Layers3,
   [surfacePaths.admin.errors]: FileText,
   [surfacePaths.admin.membership]: Sparkles,
-  [surfacePaths.admin.payments]: Banknote
+  [surfacePaths.admin.finances]: Banknote,
+  [surfacePaths.admin.communications]: Bell,
+  [surfacePaths.admin.stressHarness]: Activity
 }
 
 /**

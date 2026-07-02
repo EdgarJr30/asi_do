@@ -29,13 +29,7 @@ const BootstrapOwnerPage = lazy(() => import('@/features/auth/pages/bootstrap-ow
 const SignInPage = lazy(() => import('@/features/auth/pages/sign-in-page').then(({ SignInPage }) => ({ default: SignInPage })))
 const SignUpPage = lazy(() => import('@/features/auth/pages/sign-up-page').then(({ SignUpPage }) => ({ default: SignUpPage })))
 const AuthorityRequestPage = lazy(() => import('@/features/authority-requests/pages/authority-request-page').then(({ AuthorityRequestPage }) => ({ default: AuthorityRequestPage })))
-const AdminAuthorityInvitationsPage = lazy(() =>
-  import('@/features/authority-requests/pages/admin-authority-invitations-page').then(({ AdminAuthorityInvitationsPage }) => ({ default: AdminAuthorityInvitationsPage }))
-)
 const CandidateProfilePage = lazy(() => import('@/features/candidate-profile/pages/candidate-profile-page').then(({ CandidateProfilePage }) => ({ default: CandidateProfilePage })))
-const AdminDonationAmountsPage = lazy(() =>
-  import('@/features/donations/pages/admin-donation-amounts-page').then(({ AdminDonationAmountsPage }) => ({ default: AdminDonationAmountsPage }))
-)
 const CandidateHomePage = lazy(() => import('@/features/dashboard/pages/candidate-home-page').then(({ CandidateHomePage }) => ({ default: CandidateHomePage })))
 const ResumenDashboardPage = lazy(() => import('@/features/dashboard/pages/resumen-dashboard-page').then(({ ResumenDashboardPage }) => ({ default: ResumenDashboardPage })))
 const WorkspaceActivityPage = lazy(() => import('@/features/dashboard/pages/workspace-activity-page').then(({ WorkspaceActivityPage }) => ({ default: WorkspaceActivityPage })))
@@ -45,13 +39,13 @@ const WorkspaceSectionPlaceholderPage = lazy(() =>
 )
 const ErrorLogReviewPage = lazy(() => import('@/features/error-monitoring/pages/error-log-review-page').then(({ ErrorLogReviewPage }) => ({ default: ErrorLogReviewPage })))
 const AdminConsolePage = lazy(() => import('@/features/internal/pages/admin-console-page').then(({ AdminConsolePage }) => ({ default: AdminConsolePage })))
-const EmailPipelinePage = lazy(() => import('@/features/internal/pages/email-pipeline-page').then(({ EmailPipelinePage }) => ({ default: EmailPipelinePage })))
+const AdminCommunicationsPage = lazy(() =>
+  import('@/features/internal/pages/admin-communications-page').then(({ AdminCommunicationsPage }) => ({ default: AdminCommunicationsPage }))
+)
+const AdminFinancePage = lazy(() => import('@/features/internal/pages/admin-finance-page').then(({ AdminFinancePage }) => ({ default: AdminFinancePage })))
 const StressHarnessPage = lazy(() => import('@/features/internal/pages/stress-harness-page').then(({ StressHarnessPage }) => ({ default: StressHarnessPage })))
 const JobsOverviewPage = lazy(() => import('@/features/jobs/pages/jobs-overview-page').then(({ JobsOverviewPage }) => ({ default: JobsOverviewPage })))
 const MembershipConsolePage = lazy(() => import('@/features/membership/pages/membership-console-page').then(({ MembershipConsolePage }) => ({ default: MembershipConsolePage })))
-const MembershipPaymentsSettingsPage = lazy(() =>
-  import('@/features/membership/pages/membership-payments-settings-page').then(({ MembershipPaymentsSettingsPage }) => ({ default: MembershipPaymentsSettingsPage }))
-)
 const MembershipStatusPage = lazy(() => import('@/features/membership/pages/membership-status-page').then(({ MembershipStatusPage }) => ({ default: MembershipStatusPage })))
 const PastorMembershipQueuePage = lazy(() =>
   import('@/features/membership/pages/pastor-membership-queue-page').then(({ PastorMembershipQueuePage }) => ({ default: PastorMembershipQueuePage }))
@@ -417,40 +411,36 @@ export const applicationRoutes: RouteObject[] = [
       },
       {
         path: 'authority',
-        element: (
-          <RequireAnyPermission permissions={approvalReviewPermissions} surface="admin">
-            <RouteSuspense>
-              <AdminAuthorityInvitationsPage />
-            </RouteSuspense>
-          </RequireAnyPermission>
-        )
+        element: <Navigate replace to={`${surfacePaths.admin.approvals}?tab=authority`} />
       },
       {
         path: 'payments',
-        element: (
-          <RequirePermission permission="platform_dashboard:read" surface="admin">
-            <RouteSuspense>
-              <MembershipPaymentsSettingsPage />
-            </RouteSuspense>
-          </RequirePermission>
-        )
+        element: <Navigate replace to={`${surfacePaths.admin.finances}?tab=payments`} />
       },
       {
         path: 'donations',
+        element: <Navigate replace to={`${surfacePaths.admin.finances}?tab=donations`} />
+      },
+      {
+        path: 'finances',
         element: (
           <RequirePermission permission="platform_dashboard:read" surface="admin">
             <RouteSuspense>
-              <AdminDonationAmountsPage />
+              <AdminFinancePage />
             </RouteSuspense>
           </RequirePermission>
         )
       },
       {
         path: 'correos',
+        element: <Navigate replace to={`${surfacePaths.admin.communications}?tab=emails`} />
+      },
+      {
+        path: 'communications',
         element: (
           <RequirePermission permission="email:read" surface="admin">
             <RouteSuspense>
-              <EmailPipelinePage />
+              <AdminCommunicationsPage />
             </RouteSuspense>
           </RequirePermission>
         )

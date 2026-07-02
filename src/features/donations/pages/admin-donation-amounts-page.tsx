@@ -29,7 +29,7 @@ function formatMoney(amount: number, currency: string) {
   return `${currency} ${amount.toLocaleString('es-DO')}`
 }
 
-export function AdminDonationAmountsPage() {
+export function AdminDonationAmountsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const queryClient = useQueryClient()
   const shouldReduceMotion = useReducedMotion()
   const [newLabel, setNewLabel] = useState('')
@@ -88,17 +88,25 @@ export function AdminDonationAmountsPage() {
 
   return (
     <motion.div className="space-y-6" variants={pageStagger} initial={shouldReduceMotion ? false : 'hidden'} animate="show">
-      <motion.div variants={cardReveal}>
-        <PageHeader
-          eyebrow="Admin · Donaciones"
-          title="Montos de donación"
-          description="Define los montos sugeridos que verán los donantes en la página pública. Son la fuente de verdad: el frontend no decide montos."
-        >
+      {!embedded ? (
+        <motion.div variants={cardReveal}>
+          <PageHeader
+            eyebrow="Admin · Donaciones"
+            title="Montos de donación"
+            description="Define los montos sugeridos que verán los donantes en la página pública. Son la fuente de verdad: el frontend no decide montos."
+          >
+            <StatCard label="Activos" value={String(activeCount)} helper="Visibles para donantes" />
+            <StatCard label="Total" value={String(options.length)} helper="Montos configurados" />
+            <StatCard label="Moneda" value="DOP" helper="Pesos dominicanos" />
+          </PageHeader>
+        </motion.div>
+      ) : (
+        <motion.div variants={cardReveal} className="grid gap-3 sm:grid-cols-3">
           <StatCard label="Activos" value={String(activeCount)} helper="Visibles para donantes" />
           <StatCard label="Total" value={String(options.length)} helper="Montos configurados" />
           <StatCard label="Moneda" value="DOP" helper="Pesos dominicanos" />
-        </PageHeader>
-      </motion.div>
+        </motion.div>
+      )}
 
       <motion.div variants={cardReveal}>
         <Card>

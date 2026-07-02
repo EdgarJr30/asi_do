@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { AdminPage } from '@/features/internal/components/admin-redesign'
 import { applyModerationAction, listModerationCases, openModerationCase } from '@/features/moderation/lib/moderation-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 
@@ -79,23 +80,21 @@ export function ModerationOverviewPage() {
   })
 
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden bg-(--app-surface-muted)">
-        <CardHeader>
-          <Badge variant="soft">Moderation ops</Badge>
-          <CardTitle>Moderacion y trust operations</CardTitle>
-          <CardDescription>
-            Fase base para abrir casos, ejecutar acciones seguras y dejar toda decision registrada en auditoria.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-2">
+    <AdminPage
+      eyebrow="Admin · Moderación"
+      title="Moderación y trust operations"
+      description="Abre casos de trust & safety, ejecuta acciones seguras y deja toda decisión registrada en auditoría."
+    >
+      <div className="space-y-5">
+        <Card className="overflow-hidden bg-(--app-surface-muted)">
+          <CardContent className="mt-0 grid gap-3 md:grid-cols-2">
           {moderationGuardrails.map((rule) => (
             <div key={rule} className="rounded-[24px] border border-white/70 bg-white/80 px-4 py-4 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950/70 dark:text-zinc-300">
               {rule}
             </div>
           ))}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
       <section className="grid gap-4 xl:grid-cols-[0.88fr_1.12fr]">
         <Card>
@@ -266,6 +265,7 @@ export function ModerationOverviewPage() {
           </CardContent>
         </Card>
       </section>
-    </div>
+      </div>
+    </AdminPage>
   )
 }

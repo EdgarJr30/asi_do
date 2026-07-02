@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/loader'
 import { Textarea } from '@/components/ui/textarea'
+import { AdminAuthorityInvitationsPage } from '@/features/authority-requests/pages/admin-authority-invitations-page'
 import {
   createPrivateFileUrl,
   listPendingPastorAuthorityRequests,
@@ -22,11 +24,13 @@ import {
 } from '@/features/auth/lib/auth-api'
 import { getTenantKindLabel } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { RecruiterRequestStatusBadge } from '@/features/recruiter-requests/components/recruiter-request-status-badge'
+import { AdminPage, AdminStat, AdminStatBar, AdminTabs } from '@/features/internal/components/admin-redesign'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 
 const PENDING_RECRUITER_REQUESTS_QUERY_KEY = ['recruiter-requests', 'pending'] as const
 const PENDING_PASTOR_REQUESTS_QUERY_KEY = ['pastor-authority-requests', 'pending'] as const
 const PENDING_REGIONAL_REQUESTS_QUERY_KEY = ['regional-authority-requests', 'pending'] as const
+type ApprovalTab = 'queue' | 'authority'
 
 function getWorkflowBadgeClassName(status: string) {
   switch (status) {
@@ -91,7 +95,13 @@ function ApprovalActionRow({
 export function RecruiterReviewPage() {
   const session = useAppSession()
   const queryClient = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({})
+  const [tab, setTab] = useState<ApprovalTab>(searchParams.get('tab') === 'authority' ? 'authority' : 'queue')
+  const handleTabChange = (nextTab: ApprovalTab) => {
+    setTab(nextTab)
+    setSearchParams({ tab: nextTab }, { replace: true })
+  }
 
   const canReviewRecruiterRequests = session.permissions.includes('recruiter_request:review')
   const canReviewPastorRequests = session.permissions.includes('pastor_authority_request:review')
@@ -200,28 +210,31 @@ export function RecruiterReviewPage() {
     pendingRegionalRequests.length
 
   return (
-    <div className="space-y-4">
-      <Card className="bg-(--app-surface-muted)">
-        <CardHeader>
-          <Badge variant="soft">Revisión admin</Badge>
-          <CardTitle>Cola unificada de aprobaciones</CardTitle>
-          <CardDescription>
-            Esta vista consolida solicitudes de operador, expedientes institucionales y validaciones pastorales/regionales según tus permisos activos.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-3xl border border-zinc-200 bg-white/85 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-950/80">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Total pendientes</p>
-            <p className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{totalQueues}</p>
-          </div>
-          <div className="rounded-3xl border border-zinc-200 bg-white/85 px-4 py-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-400">
-            Operador: {pendingRecruiterRequests.length}
-          </div>
-          <div className="rounded-3xl border border-zinc-200 bg-white/85 px-4 py-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/80 dark:text-zinc-400">
-            Autoridad: {pendingPastorRequests.length + pendingRegionalRequests.length}
-          </div>
-        </CardContent>
-      </Card>
+    <AdminPage
+      eyebrow="Admin · Aprobaciones"
+      title="Aprobaciones"
+      description="Cola unificada de solicitudes y generación de invitaciones para validar autoridad pastoral o regional."
+    >
+      <div className="space-y-5">
+        <AdminTabs
+          value={tab}
+          onChange={handleTabChange}
+          tabs={[
+            { value: 'queue', label: 'Cola', count: totalQueues },
+            { value: 'authority', label: 'Autorización territorial' }
+          ]}
+        />
+
+        {tab === 'authority' ? <AdminAuthorityInvitationsPage embedded /> : null}
+
+        {tab === 'queue' ? (
+          <div className="space-y-4">
+            <AdminStatBar columns={4}>
+              <AdminStat label="Total pendientes" value={totalQueues} />
+              <AdminStat label="Operador" value={pendingRecruiterRequests.length} tone="blue" />
+              <AdminStat label="Pastoral" value={pendingPastorRequests.length} tone="teal" />
+              <AdminStat label="Regional" value={pendingRegionalRequests.length} tone="violet" />
+            </AdminStatBar>
 
       {canReviewRecruiterRequests ? (
         <Card>
@@ -498,6 +511,9 @@ export function RecruiterReviewPage() {
           </CardContent>
         </Card>
       ) : null}
-    </div>
+          </div>
+        ) : null}
+      </div>
+    </AdminPage>
   )
 }

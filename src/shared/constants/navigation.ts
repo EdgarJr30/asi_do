@@ -140,28 +140,28 @@ export const adminNavigationItems: NavigationItem[] = [
     requiresAuth: true
   },
   {
-    title: 'Approvals',
+    title: 'Aprobaciones',
     href: surfacePaths.admin.approvals,
     description: 'Operador, membresía y autoridad territorial',
     requiresAuth: true,
     requiredAnyPermission: approvalReviewPermissions
   },
   {
-    title: 'Platform',
+    title: 'Plataforma',
     href: surfacePaths.admin.platform,
-    description: 'Planes y ops',
+    description: 'Planes, suscripciones y feature flags',
     requiresAuth: true,
     requiredPermission: 'platform_dashboard:read'
   },
   {
-    title: 'Moderation',
+    title: 'Moderación',
     href: surfacePaths.admin.moderation,
     description: 'Trust and safety',
     requiresAuth: true,
     requiredPermission: 'moderation:read'
   },
   {
-    title: 'Errors',
+    title: 'Errores',
     href: surfacePaths.admin.errors,
     description: 'Error review',
     requiresAuth: true,
@@ -175,30 +175,16 @@ export const adminNavigationItems: NavigationItem[] = [
     requiredPermission: 'membership_payment:verify'
   },
   {
-    title: 'Autorización territorial',
-    href: surfacePaths.admin.authority,
-    description: 'Genera invitaciones por link para validar autoridad pastoral o regional',
-    requiresAuth: true,
-    requiredAnyPermission: approvalReviewPermissions
-  },
-  {
-    title: 'Datos de pago',
-    href: surfacePaths.admin.payments,
-    description: 'Datos bancarios y cuotas de membresía',
+    title: 'Finanzas',
+    href: surfacePaths.admin.finances,
+    description: 'Cobros, cuotas y donaciones',
     requiresAuth: true,
     requiredPermission: 'platform_dashboard:read'
   },
   {
-    title: 'Donaciones',
-    href: surfacePaths.admin.donations,
-    description: 'Montos sugeridos de donación',
-    requiresAuth: true,
-    requiredPermission: 'platform_dashboard:read'
-  },
-  {
-    title: 'Correos',
-    href: surfacePaths.admin.correos,
-    description: 'Pipeline de correos y modo de prueba',
+    title: 'Comunicaciones',
+    href: surfacePaths.admin.communications,
+    description: 'Correos, notificaciones y preferencias',
     requiresAuth: true,
     requiredPermission: 'email:read'
   },

@@ -66,7 +66,7 @@ const bankFields: Array<{ name: keyof PaymentSettingsForm; label: string; placeh
   { name: 'currency', label: 'Moneda', placeholder: 'DOP' }
 ]
 
-export function MembershipPaymentsSettingsPage() {
+export function MembershipPaymentsSettingsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const session = useAppSession()
   const queryClient = useQueryClient()
 
@@ -143,20 +143,26 @@ export function MembershipPaymentsSettingsPage() {
   const currency = watchedCurrency || settings?.currency || 'DOP'
 
   return (
-    <form className="space-y-6" onSubmit={(event) => void form.handleSubmit((values) => saveMutation.mutate(values))(event)}>
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="inline-flex items-center gap-2 text-[1.6rem] font-semibold tracking-tight text-(--app-text) sm:text-[1.9rem]">
-            <Banknote className="size-6 text-primary-600 dark:text-primary-300" /> Datos de pago y cuotas
-          </h1>
-          <p className="mt-1 text-sm text-(--app-text-muted)">
-            Estos datos se muestran a los miembros para su transferencia. Actualízalos cuando tengas la información real.
-          </p>
-        </div>
-        <Button type="submit" className="h-11 shrink-0" disabled={saveMutation.isPending || !settings}>
-          <Save className="size-4" /> {saveMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
-        </Button>
-      </header>
+    <form
+      id="membership-payments-settings-form"
+      className="space-y-5"
+      onSubmit={(event) => void form.handleSubmit((values) => saveMutation.mutate(values))(event)}
+    >
+      {!embedded ? (
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="inline-flex items-center gap-2 text-[1.6rem] font-semibold tracking-tight text-(--app-text) sm:text-[1.9rem]">
+              <Banknote className="size-6 text-primary-600 dark:text-primary-300" /> Datos de pago y cuotas
+            </h1>
+            <p className="mt-1 text-sm text-(--app-text-muted)">
+              Estos datos se muestran a los miembros para su transferencia. Actualízalos cuando tengas la información real.
+            </p>
+          </div>
+          <Button type="submit" className="h-11 shrink-0" disabled={saveMutation.isPending || !settings}>
+            <Save className="size-4" /> {saveMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
+          </Button>
+        </header>
+      ) : null}
 
       <Card>
         <CardHeader>
