@@ -389,6 +389,9 @@ Do not make the workspace `Resumen` `Publicar vacante` CTA stop at the Vacantes 
 ### R-107 — Admin modules must use full shell width
 Do not regress dense `/admin/*` operational modules back into a narrow centered content container. Administration dashboards, queues, tables, statbars, and configuration consoles should use the full available app-shell width inside the standard shell padding so their borders sit closer to the viewport edges and the layout feels operational rather than document-like. Reserve narrower containers only for focused detail, read-only, or form-only surfaces.
 
+### R-108 — Error review list must stay paginated
+Do not let `/admin/errors` render every matching error log as one long unbounded list. The error review module must keep a bounded page size and use the shared `Pagination` primitive after filtering so open, resolved, and all-error views remain scannable as `app_error_logs` grows.
+
 ---
 
 ## Maintenance rule

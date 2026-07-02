@@ -10,6 +10,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PageLoader } from '@/components/ui/loader'
+import { Pagination } from '@/components/ui/pagination'
 import {
   AdminCard,
   AdminMetaDetails,
@@ -23,6 +24,7 @@ import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import type { Tables } from '@/shared/types/database'
 
 const APP_ERROR_LOGS_QUERY_KEY = ['admin', 'app-error-logs'] as const
+const ERROR_LOGS_PAGE_SIZE = 10
 
 type ErrorFilter = 'open' | 'resolved' | 'all'
 
@@ -59,6 +61,7 @@ export function ErrorLogReviewPage() {
   const session = useAppSession()
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<ErrorFilter>('open')
+  const [page, setPage] = useState(0)
 
   const errorLogsQuery = useQuery({
     queryKey: APP_ERROR_LOGS_QUERY_KEY,
@@ -103,6 +106,17 @@ export function ErrorLogReviewPage() {
     if (filter === 'resolved') return errorLog.is_resolved
     return true
   })
+  const pageCount = Math.max(1, Math.ceil(filteredLogs.length / ERROR_LOGS_PAGE_SIZE))
+  const safePage = Math.min(page, pageCount - 1)
+  const pageStart = safePage * ERROR_LOGS_PAGE_SIZE
+  const paginatedLogs = filteredLogs.slice(pageStart, pageStart + ERROR_LOGS_PAGE_SIZE)
+  const visibleStart = filteredLogs.length === 0 ? 0 : pageStart + 1
+  const visibleEnd = Math.min(filteredLogs.length, pageStart + paginatedLogs.length)
+
+  function handleFilterChange(nextFilter: ErrorFilter) {
+    setFilter(nextFilter)
+    setPage(0)
+  }
 
   return (
     <AdminPage
@@ -120,7 +134,7 @@ export function ErrorLogReviewPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <AdminTabs
             value={filter}
-            onChange={setFilter}
+            onChange={handleFilterChange}
             tabs={[
               { value: 'open', label: 'Solo abiertos', count: openCount },
               { value: 'resolved', label: 'Solo corregidos', count: resolvedCount },
@@ -142,7 +156,7 @@ export function ErrorLogReviewPage() {
           </AdminCard>
         ) : (
           <div className="space-y-3">
-            {filteredLogs.map((errorLog) => (
+            {paginatedLogs.map((errorLog) => (
               <AdminCard key={errorLog.id}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-2">
@@ -195,6 +209,17 @@ export function ErrorLogReviewPage() {
                 </div>
               </AdminCard>
             ))}
+            <div className="flex flex-col gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-(--app-text-muted)">
+                Mostrando {visibleStart}-{visibleEnd} de {filteredLogs.length} errores
+              </p>
+              <Pagination
+                page={safePage}
+                totalPages={pageCount}
+                onPageChange={setPage}
+                ariaLabel="Paginación de errores"
+              />
+            </div>
           </div>
         )}
       </div>
