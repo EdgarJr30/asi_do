@@ -19,7 +19,6 @@ import {
   Layers3,
   ShieldCheck,
   Smartphone,
-  Sparkles,
   WalletCards,
   Workflow,
   X,
@@ -165,77 +164,49 @@ function LandingInteractiveSurface({
   );
 }
 
-const heroSignals = [
-  {
-    title: 'Vacantes que se entienden rápido',
-    description: 'Presenta cada oportunidad con más claridad y mejor contexto.',
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: 'Pipeline compartido',
-    description: 'Coordinadores y líderes avanzan sobre la misma información.',
-    icon: Workflow,
-  },
-  {
-    title: 'Marca empleadora más cuidada',
-    description: 'Tu proceso transmite más orden, confianza y profesionalismo.',
-    icon: Sparkles,
-  },
-] as const;
-
-const heroProofs = [
+const heroPoints = [
   {
     title: 'Un solo espacio',
-    description: 'vacantes, talento y feedback sin perseguir contexto',
+    description: 'Vacantes, talento y feedback sin perseguir contexto.',
   },
   {
-    title: 'Más claridad',
-    description: 'para evaluar mejor y mover cada proceso con orden',
+    title: 'Pipeline claro',
+    description: 'Etapas y feedback visibles para todo el equipo.',
   },
   {
-    title: 'Mejor presencia',
-    description: 'para atraer talento con una experiencia más cuidada',
+    title: 'Marca cuidada',
+    description: 'Tus vacantes se presentan con más orden.',
   },
 ] as const;
 
-const heroGalleryColumns = [
+const heroCollageImages = [
   {
-    offsetClassName: 'pt-14 sm:pt-24 lg:pt-20',
-    widthClassName: 'w-[4.25rem] sm:w-32 lg:w-36',
-    items: [
-      {
-        src: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=700&q=80',
-        alt: 'Equipo revisando ideas frente a una pizarra',
-        className: 'aspect-[4/5]',
-      },
-    ],
+    src: 'https://images.unsplash.com/photo-1485217988980-11786ced9454?auto=format&fit=crop&w=700&q=80',
+    alt: 'Profesional evaluando candidatos desde una laptop',
+    className: 'left-[182px] top-[92px] z-[3] h-[252px] w-[196px]',
+    float: { y: [0, -8, 0, 6, 0], rotate: [0, -0.8, 0, 0.6, 0] },
+    duration: 9.8,
   },
   {
-    offsetClassName: 'pt-4 sm:pt-10 lg:pt-8',
-    widthClassName: 'w-[4.75rem] sm:w-36 lg:w-40',
-    items: [
-      {
-        src: 'https://images.unsplash.com/photo-1485217988980-11786ced9454?auto=format&fit=crop&w=700&q=80',
-        alt: 'Profesional trabajando desde una laptop',
-        className: 'aspect-[4/5]',
-      },
-      {
-        src: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=700&q=80',
-        alt: 'Equipo colaborando en una oficina abierta',
-        className: 'aspect-[4/5]',
-      },
-    ],
+    src: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=700&q=80',
+    alt: 'Equipo revisando etapas de selección frente a una pizarra',
+    className: 'left-[22px] top-[176px] z-[1] h-[206px] w-[168px]',
+    float: { y: [0, 7, 0, -7, 0], rotate: [0, 0.7, 0, -0.5, 0] },
+    duration: 9.2,
   },
   {
-    offsetClassName: 'pt-0 sm:pt-4 lg:pt-0',
-    widthClassName: 'w-[4.25rem] sm:w-32 lg:w-36',
-    items: [
-      {
-        src: 'https://images.unsplash.com/photo-1670272504528-790c24957dda?auto=format&fit=crop&w=700&q=80',
-        alt: 'Personas conversando en un espacio colaborativo',
-        className: 'aspect-[4/5]',
-      },
-    ],
+    src: 'https://images.unsplash.com/photo-1670272504528-790c24957dda?auto=format&fit=crop&w=700&q=80',
+    alt: 'Personas conversando durante una evaluación colaborativa',
+    className: 'left-[372px] top-[18px] z-[1] h-[210px] w-[168px]',
+    float: { y: [0, -7, 0, 8, 0], rotate: [0, -0.6, 0, 0.5, 0] },
+    duration: 10.4,
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=700&q=80',
+    alt: 'Equipo colaborando en una oficina abierta',
+    className: 'left-[196px] top-[354px] z-[2] h-[256px] w-[200px]',
+    float: { y: [0, 8, 0, -6, 0], rotate: [0, 0.5, 0, -0.7, 0] },
+    duration: 10,
   },
 ] as const;
 
@@ -524,6 +495,237 @@ function renderTierValue(value: boolean | string, highlighted: boolean) {
   );
 }
 
+function HeroCollage({
+  shouldReduceMotion,
+}: {
+  shouldReduceMotion: boolean | null;
+}) {
+  const floatingCardMotion = shouldReduceMotion
+    ? undefined
+    : {
+        y: [0, -8, 0, 7, 0],
+        rotate: [0, -0.7, 0, 0.5, 0],
+      };
+
+  return (
+    <div className="relative h-[410px] w-full max-w-[358px] min-[480px]:h-[500px] min-[480px]:max-w-[437px] min-[601px]:h-[640px] min-[601px]:max-w-[560px]">
+      <motion.div
+        className="relative h-[640px] w-[560px] origin-top-left scale-[0.64] min-[480px]:scale-[0.78] min-[601px]:scale-100"
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
+        animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.64, ease: landingSoftEase, delay: 0.08 }}
+      >
+        {heroCollageImages.map((item, index) => (
+          <motion.div
+            key={item.src}
+            className={cn(
+              'absolute overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(20,40,90,0.05),0_20px_45px_-18px_rgba(20,40,90,0.28)]',
+              item.className
+            )}
+            animate={
+              shouldReduceMotion
+                ? undefined
+                : {
+                    y: [...item.float.y],
+                    rotate: [...item.float.rotate],
+                  }
+            }
+            transition={{
+              duration: item.duration,
+              ease: 'easeInOut',
+              repeat: Infinity,
+              delay: index * 0.22,
+            }}
+            whileHover={
+              shouldReduceMotion
+                ? undefined
+                : {
+                    scale: 1.035,
+                    y: -10,
+                    boxShadow: '0 26px 54px rgba(20,40,90,0.2)',
+                  }
+            }
+          >
+            <img
+              alt={item.alt}
+              className="h-full w-full object-cover"
+              loading={index === 0 ? 'eager' : 'lazy'}
+              src={item.src}
+            />
+            <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-black/5 ring-inset" />
+          </motion.div>
+        ))}
+
+        <motion.div
+          className="absolute left-[120px] top-[22px] z-[6] whitespace-nowrap rounded-[26px] bg-white px-[22px] py-[13px] text-[15px] font-medium text-[#16223c] shadow-[0_2px_6px_rgba(20,40,90,0.05),0_16px_40px_-12px_rgba(20,40,90,0.20)] ring-1 ring-[#e8ecf4]"
+          animate={floatingCardMotion}
+          transition={{
+            duration: 8.2,
+            ease: 'easeInOut',
+            repeat: Infinity,
+          }}
+          whileHover={
+            shouldReduceMotion
+              ? undefined
+              : {
+                  scale: 1.03,
+                  y: -10,
+                  boxShadow: '0 22px 46px rgba(20,40,90,0.18)',
+                }
+          }
+        >
+          Publica, evalúa y decide sin perder contexto
+        </motion.div>
+
+        <motion.div
+          className="absolute left-[-6px] top-[148px] z-[6] w-[236px] rounded-2xl bg-white px-5 py-4 shadow-[0_2px_6px_rgba(20,40,90,0.05),0_16px_40px_-12px_rgba(20,40,90,0.20)] ring-1 ring-[#e8ecf4]"
+          animate={
+            shouldReduceMotion
+              ? undefined
+              : { y: [0, 7, 0, -9, 0], rotate: [0, 0.5, 0, -0.7, 0] }
+          }
+          transition={{
+            duration: 9.3,
+            ease: 'easeInOut',
+            repeat: Infinity,
+            delay: 0.4,
+          }}
+          whileHover={
+            shouldReduceMotion
+              ? undefined
+              : {
+                  scale: 1.035,
+                  x: 4,
+                  y: -12,
+                  boxShadow: '0 24px 44px rgba(20,40,90,0.18)',
+                }
+          }
+        >
+          <p className="text-[11px] font-bold tracking-[0.16em] text-[#98a2b8] uppercase">
+            Pipeline claro
+          </p>
+          <p className="mt-1.5 text-[15.5px] leading-snug font-bold tracking-[-0.01em] text-[#16223c]">
+            Feedback y etapas visibles
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="absolute left-[292px] top-[236px] z-[6] w-[262px] rounded-2xl bg-white px-5 py-4 shadow-[0_2px_6px_rgba(20,40,90,0.05),0_16px_40px_-12px_rgba(20,40,90,0.20)] ring-1 ring-[#e8ecf4]"
+          animate={
+            shouldReduceMotion
+              ? undefined
+              : { y: [0, -8, 0, 8, 0], rotate: [0, -0.6, 0, 0.5, 0] }
+          }
+          transition={{
+            duration: 9.9,
+            ease: 'easeInOut',
+            repeat: Infinity,
+            delay: 0.9,
+          }}
+          whileHover={
+            shouldReduceMotion
+              ? undefined
+              : {
+                  scale: 1.035,
+                  x: -4,
+                  y: -12,
+                  boxShadow: '0 24px 44px rgba(20,40,90,0.18)',
+                }
+          }
+        >
+          <p className="text-[11px] font-bold tracking-[0.16em] text-[#98a2b8] uppercase">
+            Marca cuidada
+          </p>
+          <p className="mt-1.5 text-[15.5px] leading-snug font-bold tracking-[-0.01em] text-[#16223c]">
+            Tus vacantes se presentan mejor
+          </p>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
+function StorefrontHero({
+  onExploreJobs,
+  onPricingClick,
+  shouldReduceMotion,
+}: {
+  onExploreJobs: () => void;
+  onPricingClick: () => void;
+  shouldReduceMotion: boolean | null;
+}) {
+  return (
+    <section className="relative isolate overflow-hidden bg-[#f6f8fc]">
+      <LandingReveal
+        className="mx-auto grid min-w-0 max-w-[1280px] gap-10 px-4 pb-18 pt-34 sm:px-6 sm:pt-38 min-[981px]:grid-cols-[minmax(0,1fr)_560px] min-[981px]:items-center min-[981px]:gap-[88px] min-[981px]:px-11 min-[981px]:pb-[104px] min-[981px]:pt-38"
+        y={28}
+      >
+        <div className="min-w-0 max-w-[560px] min-[981px]:max-w-[520px]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#e8ecf4] bg-white py-1.5 pr-[13px] pl-2.5 text-[12px] font-semibold tracking-[0.01em] text-[#5a6987] shadow-[0_1px_2px_rgba(20,40,90,0.03)]">
+            <span className="size-1.5 rounded-full bg-[#2d52a8]" />
+            Workspace para equipos de selección
+          </span>
+
+          <h1 className="mt-7 text-[38px] leading-[1.06] font-bold tracking-[-0.028em] text-balance text-[#16223c] min-[981px]:text-[43px]">
+            Vacantes, talento y selección{' '}
+            <span className="block text-[#2d52a8]">en un solo lugar.</span>
+          </h1>
+
+          <p className="mt-[22px] max-w-[440px] text-[16.5px] leading-[1.62] text-[#5a6987]">
+            Reúne vacantes, feedback y seguimiento en una sola experiencia, con
+            más orden, más confianza y mejor colaboración al contratar.
+          </p>
+
+          <div className="mt-[30px] flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              className="h-12 rounded-[10px] border-[#2d52a8] bg-[#2d52a8] px-5 text-[14.5px] shadow-[0_1px_2px_rgba(45,82,168,0.24),0_8px_20px_rgba(45,82,168,0.16)] hover:border-[#21438e] hover:bg-[#21438e]"
+              onClick={onExploreJobs}
+            >
+              Explorar jobs
+            </Button>
+            <Button
+              className="h-12 rounded-[10px] border-transparent px-1 text-[14.5px] text-[#2d52a8] shadow-none hover:border-transparent hover:bg-transparent hover:text-[#21438e] hover:shadow-none [&_svg]:transition-transform hover:[&_svg]:translate-x-[3px]"
+              variant="ghost"
+              onClick={onPricingClick}
+            >
+              Ver pricing
+              <ArrowRight className="size-4" />
+            </Button>
+          </div>
+
+          <div className="mt-[18px] flex items-center gap-2 text-[13px] text-[#98a2b8]">
+            <Check className="size-4 shrink-0 text-[#1f9d61]" />
+            <span>
+              Sin tarjeta de crédito ·{' '}
+              <strong className="font-semibold text-[#5a6987]">
+                Listo en minutos
+              </strong>
+            </span>
+          </div>
+
+          <div className="mt-[42px] grid gap-5 border-t border-[#e8ecf4] pt-7 sm:grid-cols-3 sm:gap-[30px]">
+            {heroPoints.map((point) => (
+              <div key={point.title} className="min-w-0">
+                <p className="flex items-center gap-[7px] text-[13.5px] font-semibold text-[#16223c]">
+                  <Check className="size-4 shrink-0 text-[#2d52a8]" />
+                  {point.title}
+                </p>
+                <p className="mt-1.5 text-[12.5px] leading-[1.45] text-[#98a2b8]">
+                  {point.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="justify-self-center min-[981px]:justify-self-end">
+          <HeroCollage shouldReduceMotion={shouldReduceMotion} />
+        </div>
+      </LandingReveal>
+    </section>
+  );
+}
+
 export function HomePage() {
   const navigate = useNavigate();
   const session = useAppSession();
@@ -571,361 +773,11 @@ export function HomePage() {
 
   return (
     <div className="overflow-hidden bg-(--app-canvas)">
-      <section className="relative isolate overflow-hidden">
-        <div className="mx-auto max-w-392 px-4 pb-14 pt-36 sm:px-6 sm:pb-18 sm:pt-40 lg:px-8 lg:pb-18 lg:pt-40">
-          <LandingReveal y={28}>
-            <div className="relative overflow-hidden rounded-4xl border border-white/60 bg-white/90 p-5 shadow-(--app-shadow-floating) backdrop-blur-xl dark:border-white/8 dark:bg-(--app-surface-elevated) sm:rounded-[40px] sm:p-8 xl:p-9">
-              <div
-                aria-hidden="true"
-                className="absolute inset-y-0 right-0 hidden w-[46%] opacity-45 sm:block"
-                style={{
-                  backgroundImage:
-                    'linear-gradient(rgba(138,156,205,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(138,156,205,0.12) 1px, transparent 1px)',
-                  backgroundSize: '128px 128px',
-                }}
-              />
-
-              <div className="relative grid gap-9 sm:gap-10 lg:grid-cols-[minmax(0,0.84fr)_minmax(0,1.16fr)] lg:items-center xl:gap-14">
-                <div className="min-w-0 w-full lg:max-w-xl xl:max-w-2xl">
-                  <Badge
-                    className="max-w-full whitespace-nowrap text-left bg-white/82 text-(--app-text) shadow-(--app-shadow-card) backdrop-blur-sm dark:border-white/12 dark:bg-white/10 dark:text-white"
-                    variant="outline"
-                  >
-                    Workspace para equipos de selección
-                  </Badge>
-                  <h1 className="mt-5 max-w-[11ch] text-[2.9rem] font-semibold tracking-tight text-(--app-text) sm:text-[3.4rem] lg:text-[3.9rem] lg:leading-[1.02]">
-                    Vacantes, talento y selección en un solo lugar.
-                  </h1>
-                  <p className="mt-5 max-w-148 text-base leading-7 text-(--app-text-muted) sm:text-lg">
-                    Convierte vacantes, feedback y seguimiento dispersos en una
-                    experiencia que proyecta más orden, más confianza y mejor
-                    colaboración al contratar.
-                  </p>
-
-                  <div className="mt-7 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap">
-                    <Button
-                      className="w-full sm:min-w-44 sm:w-auto hover:shadow-[0_24px_44px_rgba(43,69,143,0.34)]"
-                      disabled={primaryAction.disabled}
-                      title={primaryAction.disabled ? PLATFORM_REGISTRATION_LOCKED_MESSAGE : undefined}
-                      onClick={() => void navigate(primaryAction.href)}
-                    >
-                      {primaryAction.label}
-                    </Button>
-                    <Button
-                      className="w-full sm:min-w-44 sm:w-auto hover:border-primary-400 hover:bg-white hover:shadow-[0_18px_34px_rgba(15,23,42,0.12)]"
-                      variant="outline"
-                      onClick={() => void navigate(surfacePaths.public.jobs)}
-                    >
-                      Explorar jobs
-                    </Button>
-                    <Button
-                      className="w-fit justify-start self-start rounded-full px-3 text-(--app-text) hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]"
-                      variant="ghost"
-                      onClick={() => scrollToSection('pricing')}
-                    >
-                      Ver pricing
-                      <ArrowRight className="size-4" />
-                    </Button>
-                  </div>
-
-                  <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
-                    {heroSignals.map((signal) => {
-                      const Icon = signal.icon;
-
-                      return (
-                        <LandingInteractiveSurface
-                          key={signal.title}
-                          className="rounded-[24px] border bg-white/78 p-4 shadow-(--app-shadow-card) backdrop-blur-sm dark:bg-white/6"
-                          delay={0.04}
-                          hoverScale={1.02}
-                          hoverShadow="0 24px 56px rgba(18, 31, 68, 0.12)"
-                        >
-                          <div className="flex size-10 items-center justify-center rounded-2xl bg-(--app-info-surface)">
-                            <Icon className="size-4 text-primary-700 dark:text-primary-200" />
-                          </div>
-                          <p className="mt-3 text-sm font-semibold text-(--app-text)">
-                            {signal.title}
-                          </p>
-                          <p className="mt-1 max-w-[24ch] text-sm leading-6 text-(--app-text-muted)">
-                            {signal.description}
-                          </p>
-                        </LandingInteractiveSurface>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="relative min-w-0">
-                  <motion.div
-                    aria-hidden="true"
-                    className="absolute -left-6 top-14 hidden h-28 w-28 rounded-full bg-primary-300/18 blur-3xl xl:block"
-                    animate={
-                      shouldReduceMotion
-                        ? undefined
-                        : {
-                            scale: [1, 1.08, 0.98, 1],
-                            opacity: [0.4, 0.65, 0.45, 0.4],
-                          }
-                    }
-                    transition={{
-                      duration: 9,
-                      ease: 'easeInOut',
-                      repeat: Infinity,
-                    }}
-                  />
-                  <motion.div
-                    aria-hidden="true"
-                    className="absolute -right-8 bottom-12 hidden h-36 w-36 rounded-full bg-peach-300/28 blur-3xl xl:block"
-                    animate={
-                      shouldReduceMotion
-                        ? undefined
-                        : {
-                            scale: [1, 0.94, 1.06, 1],
-                            opacity: [0.42, 0.58, 0.44, 0.42],
-                          }
-                    }
-                    transition={{
-                      duration: 10.5,
-                      ease: 'easeInOut',
-                      repeat: Infinity,
-                      delay: 0.8,
-                    }}
-                  />
-
-                  <div className="min-w-0 rounded-[30px] border bg-(--app-surface-elevated)/88 p-4 shadow-(--app-shadow-floating) backdrop-blur-sm sm:p-5">
-                    <div className="flex items-center justify-between gap-4 rounded-[22px] border bg-(--app-surface)/84 px-4 py-3 shadow-(--app-shadow-card)">
-                      <div>
-                        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-(--app-text-subtle)">
-                          Vista del producto
-                        </p>
-                        <p className="mt-1 text-base font-semibold text-(--app-text)">
-                          Más visual, más clara, más fácil de seguir
-                        </p>
-                      </div>
-                      <div className="hidden items-center gap-2 sm:flex">
-                        <span className="size-2 rounded-full bg-primary-300" />
-                        <span className="size-2 rounded-full bg-secondary-300" />
-                        <span className="size-2 rounded-full bg-peach-300" />
-                      </div>
-                    </div>
-
-                    <div className="relative mt-5 overflow-hidden rounded-[28px] px-1 pb-2 pt-2">
-                      <motion.div
-                        aria-hidden="true"
-                        className="pointer-events-none absolute left-1/2 top-1/2 hidden h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(159,182,255,0.44)_0%,rgba(159,182,255,0.16)_42%,transparent_72%)] blur-3xl md:block"
-                        animate={
-                          shouldReduceMotion
-                            ? undefined
-                            : {
-                                scale: [0.94, 1.05, 0.98, 0.94],
-                                opacity: [0.46, 0.68, 0.52, 0.46],
-                              }
-                        }
-                        transition={{
-                          duration: 8.5,
-                          ease: 'easeInOut',
-                          repeat: Infinity,
-                        }}
-                      />
-
-                      <motion.div className="absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 sm:block">
-                        <motion.div
-                          className="rounded-full border bg-white/92 px-4 py-2 text-xs font-semibold text-(--app-text) shadow-(--app-shadow-card) backdrop-blur dark:bg-(--app-surface)/92"
-                          animate={
-                            shouldReduceMotion
-                              ? undefined
-                              : {
-                                  y: [0, -8, 0, 6, 0],
-                                  rotate: [0, -1.1, 0, 0.8, 0],
-                                }
-                          }
-                          transition={{
-                            duration: 8.2,
-                            ease: 'easeInOut',
-                            repeat: Infinity,
-                          }}
-                          whileHover={
-                            shouldReduceMotion
-                              ? undefined
-                              : {
-                                  scale: 1.03,
-                                  y: -10,
-                                  boxShadow:
-                                    '0 20px 42px rgba(25, 42, 86, 0.16)',
-                                }
-                          }
-                        >
-                          Publica, evalúa y decide sin perder contexto
-                        </motion.div>
-                      </motion.div>
-
-                      <div className="flex justify-center gap-2 sm:gap-4 lg:gap-5">
-                        {heroGalleryColumns.map((column, columnIndex) => (
-                          <motion.div
-                            key={`hero-gallery-column-${columnIndex + 1}`}
-                            className={cn(
-                              'flex-none space-y-3 sm:space-y-4',
-                              column.widthClassName,
-                              column.offsetClassName
-                            )}
-                            animate={
-                              shouldReduceMotion
-                                ? undefined
-                                : {
-                                    y:
-                                      columnIndex === 0
-                                        ? [0, -9, 0, 7, 0]
-                                        : columnIndex === 1
-                                        ? [0, 10, 0, -8, 0]
-                                        : [0, -7, 0, 8, 0],
-                                  }
-                            }
-                            transition={{
-                              duration:
-                                columnIndex === 1 ? 9.8 : 8.8 + columnIndex,
-                              ease: 'easeInOut',
-                              repeat: Infinity,
-                              delay: columnIndex * 0.35,
-                            }}
-                          >
-                            {column.items.map((item) => (
-                              <motion.div
-                                key={item.src}
-                                className={cn(
-                                  'relative overflow-hidden rounded-[24px] shadow-(--app-shadow-floating)',
-                                  item.className
-                                )}
-                                whileHover={
-                                  shouldReduceMotion
-                                    ? undefined
-                                    : {
-                                        scale: 1.035,
-                                        y: -8,
-                                        rotate:
-                                          columnIndex === 1 ? -0.75 : 0.75,
-                                      }
-                                }
-                                transition={{
-                                  type: 'spring',
-                                  stiffness: 220,
-                                  damping: 18,
-                                }}
-                              >
-                                <img
-                                  alt={item.alt}
-                                  className="h-full w-full object-cover"
-                                  src={item.src}
-                                />
-                                <div className="pointer-events-none absolute inset-0 rounded-[24px] ring-1 ring-black/6 ring-inset dark:ring-white/10" />
-                              </motion.div>
-                            ))}
-                          </motion.div>
-                        ))}
-                      </div>
-
-                      <motion.div className="absolute left-0 top-24 hidden md:block">
-                        <motion.div
-                          className="rounded-panel border bg-white/90 px-4 py-3 shadow-(--app-shadow-card) backdrop-blur dark:bg-(--app-surface)/90"
-                          animate={
-                            shouldReduceMotion
-                              ? undefined
-                              : {
-                                  y: [0, 7, 0, -9, 0],
-                                  rotate: [0, 0.5, 0, -1, 0],
-                                }
-                          }
-                          transition={{
-                            duration: 9.3,
-                            ease: 'easeInOut',
-                            repeat: Infinity,
-                            delay: 0.4,
-                          }}
-                          whileHover={
-                            shouldReduceMotion
-                              ? undefined
-                              : {
-                                  scale: 1.035,
-                                  x: 4,
-                                  y: -12,
-                                  boxShadow:
-                                    '0 24px 44px rgba(25, 42, 86, 0.18)',
-                                }
-                          }
-                        >
-                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">
-                            Pipeline claro
-                          </p>
-                          <p className="mt-1 text-sm font-semibold text-(--app-text)">
-                            Feedback y etapas visibles
-                          </p>
-                        </motion.div>
-                      </motion.div>
-
-                      <motion.div className="absolute right-0 top-44 hidden md:block">
-                        <motion.div
-                          className="rounded-panel border bg-white/90 px-4 py-3 shadow-(--app-shadow-card) backdrop-blur dark:bg-(--app-surface)/90"
-                          animate={
-                            shouldReduceMotion
-                              ? undefined
-                              : {
-                                  y: [0, -8, 0, 8, 0],
-                                  rotate: [0, -0.8, 0, 0.6, 0],
-                                }
-                          }
-                          transition={{
-                            duration: 9.9,
-                            ease: 'easeInOut',
-                            repeat: Infinity,
-                            delay: 0.9,
-                          }}
-                          whileHover={
-                            shouldReduceMotion
-                              ? undefined
-                              : {
-                                  scale: 1.035,
-                                  x: -4,
-                                  y: -12,
-                                  boxShadow:
-                                    '0 24px 44px rgba(25, 42, 86, 0.18)',
-                                }
-                          }
-                        >
-                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">
-                            Marca cuidada
-                          </p>
-                          <p className="mt-1 text-sm font-semibold text-(--app-text)">
-                            Tus vacantes se presentan mejor
-                          </p>
-                        </motion.div>
-                      </motion.div>
-                    </div>
-
-                    <div className="mt-6 grid gap-3 rounded-[26px] border bg-(--app-surface)/88 p-3 shadow-(--app-shadow-card) sm:grid-cols-3 sm:gap-4 sm:p-4">
-                      {heroProofs.map((proof, proofIndex) => (
-                        <LandingInteractiveSurface
-                          key={proof.title}
-                          className="rounded-panel bg-(--app-surface-muted)/86 px-4 py-4 text-center sm:min-h-34 sm:px-5 sm:py-5 sm:text-left"
-                          delay={proofIndex * 0.04}
-                          hoverScale={1.01}
-                          hoverShadow="0 20px 42px rgba(18, 31, 68, 0.1)"
-                          hoverY={-4}
-                        >
-                          <p className="text-base font-semibold text-(--app-text)">
-                            {proof.title}
-                          </p>
-                          <p className="mt-2 max-w-[26ch] text-sm leading-6 text-(--app-text-muted) sm:max-w-none">
-                            {proof.description}
-                          </p>
-                        </LandingInteractiveSurface>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </LandingReveal>
-        </div>
-      </section>
+      <StorefrontHero
+        shouldReduceMotion={shouldReduceMotion}
+        onExploreJobs={() => void navigate(surfacePaths.public.jobs)}
+        onPricingClick={() => scrollToSection('pricing')}
+      />
 
       <section className="tm-landing-section bg-(--app-canvas)" id="features">
         <LandingReveal
