@@ -17,8 +17,7 @@ import {
   HandHeart,
   HeartHandshake,
   Layers3,
-  ShieldCheck,
-  Smartphone,
+  Search,
   WalletCards,
   Workflow,
   X,
@@ -210,26 +209,20 @@ const featureCards = [
   {
     name: 'Perfil que ahorra tiempo',
     description:
-      'Cada persona guarda su información una sola vez y la usa para aplicar con más confianza y menos fricción.',
+      'Cada persona guarda su información una vez y la reutiliza para aplicar con menos fricción.',
     icon: FileText,
   },
   {
     name: 'Vacantes que invitan a aplicar',
     description:
-      'Publica roles con una presentación más clara para que el talento entienda rápido la oportunidad y quiera seguir.',
+      'Publica roles con una presentación clara para que el talento entienda rápido la oportunidad.',
     icon: Building2,
   },
   {
     name: 'Trabajo en equipo sin caos',
     description:
-      'El equipo comparte comentarios, contexto y próximos pasos sin depender de mensajes sueltos o hojas paralelas.',
+      'El equipo comparte comentarios, contexto y próximos pasos en un mismo lugar, sin depender de mensajes sueltos ni hojas paralelas.',
     icon: Workflow,
-  },
-  {
-    name: 'Una experiencia lista para crecer',
-    description:
-      'La plataforma está pensada para crecer con candidatos, empresas y equipos sin perder claridad en el camino.',
-    icon: ShieldCheck,
   },
 ] as const;
 
@@ -245,11 +238,13 @@ const mobileWorkspaceItems = [
     title: 'Product Designer Senior',
     meta: 'Remoto · Entrevista hoy',
     state: 'En revisión',
+    tone: 'ok',
   },
   {
     title: 'Frontend Engineer',
-    meta: 'Santo Domingo · Feedback listo',
-    state: 'Siguiente paso',
+    meta: 'Híbrido · 3 candidatos',
+    state: 'Siguiente',
+    tone: 'neutral',
   },
 ] as const;
 
@@ -730,8 +725,7 @@ export function HomePage() {
   const [openFaqQuestion, setOpenFaqQuestion] = useState<string | null>(
     faqs[0]?.question ?? null
   );
-  const [profileFeature, jobsFeature, collaborationFeature, growthFeature] =
-    featureCards;
+  const [profileFeature, jobsFeature, collaborationFeature] = featureCards;
 
   const primaryAction = session.isAuthenticated
     ? {
@@ -769,249 +763,267 @@ export function HomePage() {
         onPricingClick={() => scrollToSection('pricing')}
       />
 
-      <section className="tm-landing-section bg-(--app-canvas)" id="features">
-        <LandingReveal
-          className="mx-auto max-w-392 px-4 sm:px-6 lg:px-8"
-          y={24}
-        >
-          <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:items-stretch">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-card-lg bg-white/72 dark:bg-white/6" />
-              <div className="relative flex h-full flex-col overflow-hidden rounded-card-lg border bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,249,255,0.92)_100%)] shadow-(--app-shadow-floating) backdrop-blur-sm dark:bg-[linear-gradient(180deg,rgba(18,29,58,0.92)_0%,rgba(12,21,42,0.88)_100%)]">
-                <div className="px-6 pt-6 pb-2 sm:px-8 sm:pt-8">
-                  <Badge variant="soft">Plataforma</Badge>
-                  <h2 className="mt-5 max-w-[12ch] text-3xl font-semibold tracking-tight text-balance text-(--app-text) sm:text-4xl">
-                    La plataforma también se siente bien en móvil
-                  </h2>
-                  <p className="mt-4 max-w-120 text-base leading-8 text-(--app-text-muted) sm:text-lg">
-                    Revisa perfiles, comparte feedback y mueve decisiones desde
-                    el teléfono con una vista clara y accionable.
-                  </p>
-                </div>
-
-                <div className="relative mx-auto mt-4 w-full max-w-sm grow px-4 pb-0 sm:px-6">
-                  <div className="absolute left-1/2 top-8 h-24 w-24 -translate-x-1/2 rounded-full bg-primary-300/18 blur-3xl" />
-                  <div className="relative mx-auto max-w-73 rounded-card-lg bg-[linear-gradient(180deg,#eef3ff_0%,#d9e1f1_38%,#c6cfdf_100%)] p-[0.72rem] shadow-[0_32px_72px_rgba(20,35,72,0.18)] ring-1 ring-white/82 dark:bg-[linear-gradient(180deg,#858fa1_0%,#596376_20%,#222b38_58%,#111827_100%)] dark:ring-white/18">
-                    <div className="rounded-card-lg bg-[linear-gradient(180deg,#101827_0%,#131f35_100%)] p-[0.48rem] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-1px_0_rgba(0,0,0,0.28)]">
-                      <div className="relative min-h-96 overflow-hidden rounded-card-lg bg-[linear-gradient(180deg,#111b31_0%,#172441_100%)] px-4 pb-4 pt-4 text-white ring-1 ring-white/7">
-                        <div className="mx-auto h-5 w-24 rounded-full bg-black/42 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]" />
-                        <div className="absolute left-[0.2rem] top-24 h-12 w-0.5 rounded-full bg-white/16" />
-                        <div className="absolute right-[0.2rem] top-32 h-16 w-0.5 rounded-full bg-white/14" />
-                        <div className="mt-4 flex items-center justify-between text-white/72">
-                          <div
-                            aria-hidden="true"
-                            className="flex size-10 items-center justify-center rounded-card bg-white/8"
-                          >
-                            <Layers3 className="size-4" />
-                          </div>
-                          <div className="rounded-full bg-primary-400/16 px-3 py-1 text-xs font-semibold text-primary-100">
-                            App de oportunidades
-                          </div>
-                          <div
-                            aria-hidden="true"
-                            className="flex size-10 items-center justify-center rounded-card bg-white/8"
-                          >
-                            <ArrowRight className="size-4" />
-                          </div>
-                        </div>
-
-                        <div className="mt-4 rounded-card border border-white/8 bg-white/6 p-3 backdrop-blur">
-                          <div className="flex items-center gap-3 text-sm text-white/66">
-                            <FileText className="size-4" />
-                            Buscar talento o vacantes
-                          </div>
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {mobileWorkspaceSteps.map((step, index) => (
-                            <span
-                              key={step}
-                              className={cn(
-                                'rounded-full px-3 py-1 text-xs font-semibold',
-                                index === 1
-                                  ? 'bg-primary-500 text-white'
-                                  : 'bg-white/8 text-white/72'
-                              )}
-                            >
-                              {step}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="mt-4 space-y-2.5">
-                          {mobileWorkspaceItems.map((item, index) => (
-                            <div
-                              key={item.title}
-                              className="rounded-card border border-white/8 bg-white/7 p-3.5 backdrop-blur"
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <div>
-                                  <p className="text-sm font-semibold text-white">
-                                    {item.title}
-                                  </p>
-                                  <p className="mt-1 text-xs leading-5 text-white/62">
-                                    {item.meta}
-                                  </p>
-                                </div>
-                                <span
-                                  className={cn(
-                                    'rounded-full px-3 py-1 text-[0.68rem] font-semibold',
-                                    index === 0 &&
-                                      'bg-emerald-400/16 text-emerald-200',
-                                    index === 1 && 'bg-sky-400/16 text-sky-200',
-                                    index === 2 && 'bg-white/10 text-white/72'
-                                  )}
-                                >
-                                  {item.state}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="absolute inset-x-4 bottom-4 rounded-card border border-white/8 bg-white/6 p-3 backdrop-blur">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
-                                Desde el teléfono
-                              </p>
-                              <p className="mt-1 text-sm font-semibold text-white">
-                                Seguimiento claro y accionable
-                              </p>
-                            </div>
-                            <div className="flex size-11 items-center justify-center rounded-card bg-primary-500">
-                              <Smartphone className="size-5 text-white" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline outline-black/5 dark:outline-white/10" />
+      <section
+        className="tm-landing-section bg-(--app-canvas)"
+        id="features"
+      >
+        <div className="mx-auto max-w-392 px-4 sm:px-6 lg:px-8">
+          <LandingReveal
+            className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end sm:gap-10"
+            y={24}
+          >
+            <div className="max-w-160">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2d52a8] dark:text-primary-300">
+                En cualquier lugar
+              </span>
+              <h2 className="mt-3 text-[26px] font-bold leading-[1.12] tracking-[-0.03em] text-balance text-(--app-text) sm:text-3xl">
+                Lleva tu proceso de talento en el bolsillo
+              </h2>
+              <p className="mt-3 max-w-[52ch] text-base leading-[1.55] text-(--app-text-muted)">
+                Revisa perfiles, comparte feedback y mueve decisiones desde el
+                teléfono, con la misma claridad del escritorio.
+              </p>
             </div>
 
-            <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
-              <LandingInteractiveSurface
-                className="relative"
-                delay={0.04}
-                hoverShadow="0 24px 56px rgba(18, 31, 68, 0.12)"
-              >
-                <div className="absolute inset-0 rounded-card-lg bg-white/72 dark:bg-white/6" />
-                <div className="relative flex h-full flex-col overflow-hidden rounded-card-lg border bg-(--app-surface)/92 p-5 shadow-(--app-shadow-card) backdrop-blur-sm sm:p-6">
-                  <div className="mb-4 flex size-12 items-center justify-center rounded-card bg-(--app-info-surface) shadow-(--app-shadow-card)">
-                    <profileFeature.icon className="size-5 text-primary-700 dark:text-primary-200" />
-                  </div>
-                  <p className="text-xl font-semibold tracking-tight text-(--app-text)">
-                    {profileFeature.name}
-                  </p>
-                  <p className="mt-3 text-base leading-7 text-(--app-text-muted)">
-                    {profileFeature.description}
-                  </p>
-                  <div className="mt-5 rounded-card border bg-(--app-surface-muted)/88 p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex size-10 items-center justify-center rounded-card bg-primary-500 text-sm font-semibold text-white">
-                        AP
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-(--app-text)">
-                          Ana Pérez
-                        </p>
-                        <p className="text-xs text-(--app-text-muted)">
-                          Perfil reutilizable listo para aplicar
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
-              </LandingInteractiveSurface>
+            <Button
+              className="h-12 shrink-0 rounded-control border-[#2d52a8] bg-[#2d52a8] px-[22px] text-[15px] shadow-[0_1px_2px_rgba(45,82,168,0.24),0_10px_24px_rgba(45,82,168,0.18)] hover:border-[#21438e] hover:bg-[#21438e] [&_svg]:transition-transform hover:[&_svg]:translate-x-[3px]"
+              disabled={primaryAction.disabled}
+              title={
+                primaryAction.disabled
+                  ? PLATFORM_REGISTRATION_LOCKED_MESSAGE
+                  : undefined
+              }
+              onClick={() => void navigate(primaryAction.href)}
+            >
+              Entrar a la aplicación
+              <ArrowRight className="size-4" />
+            </Button>
+          </LandingReveal>
 
-              <LandingInteractiveSurface
-                className="relative"
-                delay={0.08}
-                hoverShadow="0 24px 56px rgba(18, 31, 68, 0.12)"
-              >
-                <div className="absolute inset-0 rounded-card-lg bg-white/72 dark:bg-white/6" />
-                <div className="relative flex h-full flex-col overflow-hidden rounded-card-lg border bg-(--app-surface)/92 p-5 shadow-(--app-shadow-card) backdrop-blur-sm sm:p-6">
-                  <div className="mb-4 flex size-12 items-center justify-center rounded-card bg-(--app-info-surface) shadow-(--app-shadow-card)">
-                    <jobsFeature.icon className="size-5 text-primary-700 dark:text-primary-200" />
-                  </div>
-                  <p className="text-xl font-semibold tracking-tight text-(--app-text)">
-                    {jobsFeature.name}
-                  </p>
-                  <p className="mt-3 text-base leading-7 text-(--app-text-muted)">
-                    {jobsFeature.description}
-                  </p>
-                  <div className="mt-5 rounded-card border bg-(--app-info-surface)/84 p-4">
-                    <div className="rounded-card bg-(--app-surface) px-4 py-4 shadow-(--app-shadow-card)">
-                      <p className="text-sm font-semibold text-(--app-text)">
-                        Frontend Engineer
-                      </p>
-                      <div className="mt-3 rounded-full bg-primary-500 px-4 py-2 text-center text-sm font-semibold text-white">
-                        Aplicar ahora
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
-              </LandingInteractiveSurface>
+          <div className="mt-8 grid grid-cols-1 gap-4 min-[681px]:grid-cols-2 min-[961px]:grid-cols-[300px_minmax(0,1fr)_minmax(0,1fr)]">
+            {/* Showcase del teléfono */}
+            <LandingReveal
+              className="flex justify-center overflow-hidden rounded-card border bg-(--app-surface-muted) px-5 pt-8 min-[681px]:col-span-2 min-[961px]:col-span-1 min-[961px]:row-span-2 min-[961px]:items-end"
+              y={24}
+            >
+              <div className="w-[232px] rounded-t-[2rem] bg-[#0c1730] px-2 pt-2">
+                <div className="rounded-t-[1.5625rem] bg-[#0f1c33] px-[13px] pt-[15px] text-white">
+                  <div className="mx-auto mb-4 h-1 w-[68px] rounded-full bg-white/16" />
 
-              <LandingInteractiveSurface
-                className="relative lg:col-span-2"
-                delay={0.12}
-                hoverShadow="0 26px 60px rgba(18, 31, 68, 0.14)"
-              >
-                <div className="absolute inset-0 rounded-card-lg bg-white/72 dark:bg-white/6" />
-                <div className="relative flex h-full flex-col overflow-hidden rounded-card-lg border bg-(--app-surface)/92 p-5 shadow-(--app-shadow-card) backdrop-blur-sm sm:p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <div className="mb-4 flex size-12 items-center justify-center rounded-card bg-(--app-info-surface) shadow-(--app-shadow-card)">
-                        <collaborationFeature.icon className="size-5 text-primary-700 dark:text-primary-200" />
-                      </div>
-                      <p className="text-xl font-semibold tracking-tight text-(--app-text)">
-                        {collaborationFeature.name}
-                      </p>
-                      <p className="mt-3 max-w-152 text-base leading-7 text-(--app-text-muted)">
-                        {collaborationFeature.description}
-                      </p>
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="flex size-7 items-center justify-center rounded-control bg-white/8 text-[#cbd6ee]">
+                      <Layers3 className="size-[15px]" />
                     </div>
-
-                    <div className="rounded-card border bg-(--app-success-surface)/78 px-4 py-3">
-                      <p className="text-sm font-semibold text-(--app-text)">
-                        {growthFeature.name}
-                      </p>
-                      <p className="mt-1 max-w-[24ch] text-sm leading-6 text-(--app-text-muted)">
-                        {growthFeature.description}
-                      </p>
-                    </div>
+                    <p className="text-[11.5px] font-semibold leading-[1.15] text-[#eaf0fb]">
+                      App de
+                      <br />
+                      oportunidades
+                    </p>
+                    <ArrowRight className="ml-auto size-[15px] text-[#7f8db0]" />
                   </div>
 
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    {[
-                      ['Coordinador', 'Perfil fuerte para entrevista'],
-                      ['Revisor', 'Buen fit para el equipo'],
-                    ].map(([label, value]) => (
-                      <div
-                        key={label}
-                        className="rounded-card border bg-(--app-surface-muted)/88 p-4 shadow-(--app-shadow-card)"
+                  <div className="mb-3 flex items-center gap-[7px] rounded-[9px] bg-white/6 px-[10px] py-2 text-[11px] text-[#8290b2]">
+                    <Search className="size-[13px]" />
+                    Buscar talento o vacantes
+                  </div>
+
+                  <div className="mb-[13px] flex flex-wrap gap-[5px]">
+                    {mobileWorkspaceSteps.map((step, index) => (
+                      <span
+                        key={step}
+                        className={cn(
+                          'rounded-[7px] px-[10px] py-[5px] text-[11px] font-semibold',
+                          index === 1
+                            ? 'bg-[#2d52a8] text-white'
+                            : 'bg-white/[0.055] text-[#a9b5d2]'
+                        )}
                       >
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-(--app-text-subtle)">
-                          {label}
-                        </p>
-                        <p className="mt-2 text-base font-medium text-(--app-text)">
-                          {value}
+                        {step}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="pb-4">
+                    {mobileWorkspaceItems.map((item) => (
+                      <div
+                        key={item.title}
+                        className="mb-[9px] rounded-[11px] bg-white/[0.045] px-3 py-[11px] last:mb-0"
+                      >
+                        <div className="flex items-start gap-[9px]">
+                          <p className="text-[12.5px] font-bold leading-[1.2] text-[#f0f4fc]">
+                            {item.title}
+                          </p>
+                          <span
+                            className={cn(
+                              'ml-auto whitespace-nowrap rounded-[6px] px-2 py-[3px] text-[9.5px] font-semibold',
+                              item.tone === 'ok'
+                                ? 'bg-[rgba(31,157,97,0.2)] text-[#7fe3ac]'
+                                : 'bg-white/8 text-[#b9c4de]'
+                            )}
+                          >
+                            {item.state}
+                          </span>
+                        </div>
+                        <p className="mt-1.5 text-[10px] text-[#7f8db0]">
+                          {item.meta}
                         </p>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
-              </LandingInteractiveSurface>
-            </div>
+              </div>
+            </LandingReveal>
+
+            {/* Perfil que ahorra tiempo */}
+            <LandingInteractiveSurface
+              className="flex flex-col rounded-card border bg-(--app-surface) p-4"
+              delay={0.04}
+              hoverShadow="0 24px 56px rgba(18, 31, 68, 0.12)"
+            >
+              <div className="flex flex-1 flex-col justify-center rounded-[11px] border bg-(--app-surface-muted) p-3.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex size-8 items-center justify-center rounded-full bg-[#2d52a8] text-xs font-bold text-white">
+                    MR
+                  </div>
+                  <div>
+                    <p className="text-[12.5px] font-bold leading-[1.2] text-(--app-text)">
+                      María Rendón
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-(--app-text-subtle)">
+                      Product Designer
+                    </p>
+                  </div>
+                </div>
+
+                {['Experiencia', 'Portafolio'].map((field) => (
+                  <div
+                    key={field}
+                    className="mt-2 flex items-center gap-[9px] rounded-control border bg-(--app-surface) px-[11px] py-2 text-[11.5px] font-semibold text-(--app-text-muted) first-of-type:mt-3"
+                  >
+                    <Check className="size-3.5 shrink-0 text-[#1f9d61]" />
+                    {field}
+                    <span className="ml-auto text-[10px] font-bold text-[#1f9d61]">
+                      Guardado
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="px-2 pb-1.5 pt-3.5">
+                <h3 className="text-[17px] font-bold tracking-[-0.01em] text-(--app-text)">
+                  {profileFeature.name}
+                </h3>
+                <p className="mt-2 text-sm leading-[1.55] text-(--app-text-muted)">
+                  {profileFeature.description}
+                </p>
+              </div>
+            </LandingInteractiveSurface>
+
+            {/* Vacantes que invitan a aplicar */}
+            <LandingInteractiveSurface
+              className="flex flex-col rounded-card border bg-(--app-surface) p-4"
+              delay={0.08}
+              hoverShadow="0 24px 56px rgba(18, 31, 68, 0.12)"
+            >
+              <div className="flex flex-1 flex-col justify-center rounded-[11px] border bg-(--app-surface-muted) p-3.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex size-8 items-center justify-center rounded-[9px] bg-[#2d52a8] text-xs font-bold text-white">
+                    A
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[12.5px] font-bold leading-[1.2] text-(--app-text)">
+                      Frontend Engineer
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-(--app-text-subtle)">
+                      Acme · Remoto
+                    </p>
+                  </div>
+                  <span className="whitespace-nowrap rounded-[6px] bg-[rgba(31,157,97,0.12)] px-[9px] py-[3px] text-[10px] font-bold text-[#1f9d61]">
+                    Abierta
+                  </span>
+                </div>
+                <p className="mt-[11px] text-[11px] leading-[1.5] text-(--app-text-muted)">
+                  React, TypeScript y buen ojo para el detalle. Equipo de
+                  producto en crecimiento.
+                </p>
+                <div className="mt-3 rounded-control bg-[#2d52a8] py-2 text-center text-[11px] font-bold text-white">
+                  Aplicar ahora
+                </div>
+              </div>
+
+              <div className="px-2 pb-1.5 pt-3.5">
+                <h3 className="text-[17px] font-bold tracking-[-0.01em] text-(--app-text)">
+                  {jobsFeature.name}
+                </h3>
+                <p className="mt-2 text-sm leading-[1.55] text-(--app-text-muted)">
+                  {jobsFeature.description}
+                </p>
+              </div>
+            </LandingInteractiveSurface>
+
+            {/* Trabajo en equipo sin caos (ancha) */}
+            <LandingInteractiveSurface
+              className="grid grid-cols-1 items-center gap-6 rounded-card border bg-(--app-surface) p-[22px] min-[681px]:col-span-2 min-[961px]:grid-cols-[minmax(0,1fr)_320px]"
+              delay={0.12}
+              hoverShadow="0 26px 60px rgba(18, 31, 68, 0.14)"
+            >
+              <div>
+                <h3 className="text-[17px] font-bold text-(--app-text)">
+                  {collaborationFeature.name}
+                </h3>
+                <p className="mt-2 max-w-[48ch] text-sm leading-[1.55] text-(--app-text-muted)">
+                  {collaborationFeature.description}
+                </p>
+              </div>
+
+              <div className="rounded-[11px] border bg-(--app-surface-muted) p-3.5">
+                {[
+                  {
+                    initials: 'JL',
+                    name: 'Jorge L.',
+                    message: 'Buen fit para el equipo, avancemos a entrevista.',
+                    avatar: 'bg-[#2d52a8]',
+                    tag: null,
+                  },
+                  {
+                    initials: 'SP',
+                    name: 'Sofía P.',
+                    message: 'De acuerdo, coordino agenda.',
+                    avatar: 'bg-[#1f9d61]',
+                    tag: 'Siguiente paso',
+                  },
+                ].map((comment) => (
+                  <div
+                    key={comment.initials}
+                    className="flex items-start gap-2.5 [&:not(:first-child)]:mt-[9px]"
+                  >
+                    <div
+                      className={cn(
+                        'flex size-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white',
+                        comment.avatar
+                      )}
+                    >
+                      {comment.initials}
+                    </div>
+                    <div className="flex-1 rounded-[9px] border bg-(--app-surface) px-[11px] py-[9px]">
+                      <p className="text-[10.5px] font-bold text-(--app-text)">
+                        {comment.name}
+                      </p>
+                      <p className="mt-[3px] text-[11px] leading-[1.4] text-(--app-text-muted)">
+                        {comment.message}
+                      </p>
+                      {comment.tag ? (
+                        <span className="mt-[7px] inline-block whitespace-nowrap rounded-[6px] bg-[rgba(45,82,168,0.1)] px-[9px] py-[3px] text-[10px] font-bold text-[#2d52a8] dark:text-primary-300">
+                          {comment.tag}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </LandingInteractiveSurface>
           </div>
-        </LandingReveal>
+        </div>
       </section>
 
       <section className="tm-landing-section-tight overflow-hidden">
