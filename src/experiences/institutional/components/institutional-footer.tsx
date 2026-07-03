@@ -10,7 +10,19 @@ import {
 } from '@/experiences/institutional/content/payment-compliance-content';
 import { PaymentBrandStrip } from '@/shared/ui/payment-brand-strip';
 
-export function InstitutionalFooter() {
+type InstitutionalFooterProps = {
+  platformButton?: {
+    label: string;
+    to: string;
+  };
+};
+
+export function InstitutionalFooter({
+  platformButton = {
+    label: 'Plataforma ASI',
+    to: surfacePaths.public.home,
+  },
+}: InstitutionalFooterProps) {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -43,9 +55,9 @@ export function InstitutionalFooter() {
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <Link
                   className="asi-button asi-button-secondary w-full justify-center"
-                  to={surfacePaths.public.home}
+                  to={platformButton.to}
                 >
-                  Plataforma ASI
+                  {platformButton.label}
                 </Link>
                 <Link
                   className="asi-button asi-button-primary w-full justify-center"
