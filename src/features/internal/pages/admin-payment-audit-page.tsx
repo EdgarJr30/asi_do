@@ -352,8 +352,22 @@ function CardBrandLogo({ brand }: { brand: string | null }) {
 
   if (brand === 'AMEX') {
     return (
-      <span className="inline-flex h-[22px] w-10 items-center justify-center rounded-[5px] bg-[#1e7fc2] text-[0.52rem] font-black text-white shadow-sm" aria-label="American Express">
-        AMEX
+      <span
+        className="inline-flex h-[24px] w-[46px] items-center justify-center rounded-[5px] border border-slate-200 bg-white px-1 shadow-sm"
+        aria-label="American Express"
+      >
+        <img alt="" className="h-5 w-9 object-contain" decoding="async" loading="lazy" src="/payment/amex.svg" />
+      </span>
+    )
+  }
+
+  if (brand === 'DISCOVER') {
+    return (
+      <span
+        className="inline-flex h-[24px] w-[46px] items-center justify-center rounded-[5px] border border-slate-200 bg-white px-1 shadow-sm"
+        aria-label="Discover"
+      >
+        <img alt="" className="h-5 w-10 object-contain" decoding="async" loading="lazy" src="/payment/discover.svg" />
       </span>
     )
   }

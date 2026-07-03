@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 76" role="img" aria-label="Discover">
+  <rect width="180" height="76" rx="9" fill="#fff"/>
+  <rect x="0.5" y="0.5" width="179" height="75" rx="8.5" fill="none" stroke="#D8DEE8"/>
+  <circle cx="95" cy="38" r="27" fill="#F58220"/>
+  <path fill="#121820" d="M18 28h16c8 0 14 4 14 10s-6 10-14 10H18V28Zm8 6v8h7c4 0 7-1 7-4s-3-4-7-4h-7Zm27-6h8v20h-8V28Zm14 0h8v20h-8V28Zm17 0h9l9 12V28h8v20h-9l-9-12v12h-8V28Zm34 0h24v6h-16v2h15v5h-15v2h16v5h-24V28Zm29 0h18c7 0 11 3 11 8 0 3-2 6-6 7l7 5h-10l-6-5h-6v5h-8V28Zm8 6v4h8c3 0 5-1 5-2s-2-2-5-2h-8Z"/>
+  <path fill="#fff" d="M80 30h30v16H80z" opacity=".16"/>
+</svg>

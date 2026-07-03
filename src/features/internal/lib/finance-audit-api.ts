@@ -82,6 +82,9 @@ function normalizeCardBrand(raw: string | null): string | null {
   if (value.includes('AMEX') || value.includes('AMERICAN')) {
     return 'AMEX'
   }
+  if (value.includes('DISCOVER')) {
+    return 'DISCOVER'
+  }
   return value.slice(0, 8)
 }
 
@@ -103,6 +106,11 @@ function inferCardBrandFromNumber(maskedCard: string | null): string | null {
 
   if (digits.startsWith('34') || digits.startsWith('37')) {
     return 'AMEX'
+  }
+
+  const firstThree = Number(digits.slice(0, 3))
+  if (digits.startsWith('6011') || digits.startsWith('65') || (firstThree >= 644 && firstThree <= 649) || (firstSix >= 622126 && firstSix <= 622925)) {
+    return 'DISCOVER'
   }
 
   return null
