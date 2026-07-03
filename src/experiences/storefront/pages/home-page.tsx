@@ -695,16 +695,14 @@ function StorefrontHero({
             >
               Explorar jobs
             </Button>
-            {SHOW_PRICING_SECTION ? (
-              <Button
-                className="h-12 rounded-control border-transparent px-2 text-[15px] text-[#2d52a8] shadow-none hover:border-transparent hover:bg-transparent hover:text-[#21438e] hover:shadow-none [&_svg]:transition-transform hover:[&_svg]:translate-x-[3px]"
-                variant="ghost"
-                onClick={onPricingClick}
-              >
-                Ver pricing
-                <ArrowRight className="size-4" />
-              </Button>
-            ) : null}
+            <Button
+              className="h-12 rounded-control border-transparent px-2 text-[15px] text-[#2d52a8] shadow-none hover:border-transparent hover:bg-transparent hover:text-[#21438e] hover:shadow-none [&_svg]:transition-transform hover:[&_svg]:translate-x-[3px]"
+              variant="ghost"
+              onClick={onPricingClick}
+            >
+              Ver pricing
+              <ArrowRight className="size-4" />
+            </Button>
           </div>
         </div>
 
@@ -763,7 +761,7 @@ export function HomePage() {
       <StorefrontHero
         shouldReduceMotion={shouldReduceMotion}
         onExploreJobs={() => void navigate(surfacePaths.public.jobs)}
-        onPricingClick={() => scrollToSection('pricing')}
+        onPricingClick={() => void navigate(surfacePaths.institutional.membershipCategories)}
       />
 
       <section

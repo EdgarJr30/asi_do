@@ -213,7 +213,7 @@
 7. Error states must be actionable: the user should understand what failed, why it failed, and what to do next.
 8. User-facing platform errors must explain the real business or operational cause only when that cause is actually known from verified evidence. If the platform cannot determine the cause yet, the UI must say so explicitly and must not invent explanations.
 9. The public root experience under `/` must behave as an institutional portal, not as an internal control panel.
-10. The SaaS product landing under `/platform` may keep the pricing section implemented but hidden until product decides to expose plan packaging again. If pricing is hidden, navigation and CTAs must not point to the hidden pricing section.
+10. The SaaS product landing under `/platform` may keep the pricing section implemented but hidden until product decides to expose plan packaging again. If pricing is hidden, navigation and CTAs must not point to the hidden pricing section; visible pricing CTAs should route to the institutional membership dues at `/membership/categories`.
 11. Internal test, foundations, and launch-operations tooling must be visually and route-wise isolated from the customer-facing product experience.
 12. The product must keep three explicit top-level experiences: institutional portal, SaaS storefront, and authenticated application.
 13. The authenticated application experience must stay subdivided into `auth`, `candidate`, `workspace`, and `admin` route surfaces.

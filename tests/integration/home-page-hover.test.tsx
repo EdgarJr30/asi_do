@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 
 import { AppSessionProvider } from '@/app/providers/app-session-provider'
@@ -25,26 +25,48 @@ vi.mock('@/lib/supabase/client', () => ({
 }))
 
 describe('home page hover affordances', () => {
-  it('keeps hover affordances on active landing actions while pricing is hidden', async () => {
+  it('keeps hover affordances on active landing actions while product pricing is hidden', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/platform',
+          element: (
+            <AppSessionProvider>
+              <HomePage />
+            </AppSessionProvider>
+          )
+        },
+        {
+          path: '/membership/categories',
+          element: <h1>Cuotas Anuales de Membresía</h1>
+        }
+      ],
+      {
+        initialEntries: ['/platform']
+      }
+    )
+
     render(
-      <MemoryRouter>
-        <AppSessionProvider>
-          <HomePage />
-        </AppSessionProvider>
-      </MemoryRouter>
+      <RouterProvider router={router} />
     )
 
     const primaryCta = await screen.findByRole('button', { name: 'Entrar a la aplicación' })
     const faqCta = screen.getByRole('button', { name: 'Resolver dudas' })
+    const pricingCta = screen.getByRole('button', { name: 'Ver pricing' })
 
     expect(primaryCta).toBeEnabled()
     expect(primaryCta.className).toContain('hover:border-[#21438e]')
     expect(primaryCta.className).toContain('hover:bg-[#21438e]')
     expect(screen.queryByRole('heading', { name: /Planes claros/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Ver pricing' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Comparar planes/i })).not.toBeInTheDocument()
 
+    expect(pricingCta).toBeEnabled()
+    expect(pricingCta.className).toContain('hover:text-[#21438e]')
     expect(faqCta.className).toContain('hover:border-primary-400')
     expect(faqCta.className).toContain('hover:shadow-[0_18px_34px_rgba(15,23,42,0.12)]')
+
+    fireEvent.click(pricingCta)
+
+    expect(await screen.findByRole('heading', { name: 'Cuotas Anuales de Membresía' })).toBeInTheDocument()
   })
 })
