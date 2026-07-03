@@ -219,6 +219,11 @@ Para auditoría de pasarela, `/admin/finances?tab=audit` consolida cuotas de mem
 AZUL con fecha/hora, tarjeta enmascarada, autorización, monto y el `gateway_payload` completo en un
 modal JSON.
 
+El documento técnico de AZUL muestra que el callback puede incluir `CardNumber` enmascarado
+(`54241802****1732` o equivalente) junto con `DataVaultBrand`, `DataVaultToken` y `AzulOrderId`.
+El microservicio persiste solo `CardNumber` enmascarado, `DataVaultBrand`, `AzulOrderId` y el booleano
+`DataVaultTokenPresent`; no guarda el token DataVault crudo ni números de tarjeta completos.
+
 También se registran auditoría (`audit_logs`: `membership_payment.azul_initiated`,
 `membership_payment.azul_settled` y, para renovación, `member.renewed`) y notificaciones al miembro y a
 los admins.

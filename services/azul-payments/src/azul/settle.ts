@@ -10,6 +10,11 @@ import {
 export interface AzulResponse extends AzulResponseHashFields {
   ITBIS: string
   AuthHash: string
+  CustomOrderId: string
+  CardNumber: string
+  DataVaultTokenPresent: boolean
+  DataVaultBrand: string
+  AzulOrderId: string
 }
 
 /** Lee un valor del querystring tolerando variaciones de capitalización. */
@@ -26,8 +31,25 @@ function pick(source: Record<string, unknown>, ...keys: string[]): string {
   return ''
 }
 
+function maskCardNumber(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return ''
+  }
+  if (trimmed.includes('*') || trimmed.includes('...')) {
+    return trimmed
+  }
+
+  const digits = trimmed.replace(/\D/g, '')
+  if (digits.length < 8) {
+    return ''
+  }
+  return `${digits.slice(0, 6)}****${digits.slice(-4)}`
+}
+
 /** Normaliza el querystring del redirect de AZUL a un objeto de respuesta tipado. */
 export function parseAzulResponse(query: Record<string, unknown>): AzulResponse {
+  const dataVaultToken = pick(query, 'DataVaultToken', 'dataVaultToken')
   return {
     OrderNumber: pick(query, 'OrderNumber', 'orderNumber'),
     Amount: pick(query, 'Amount', 'amount'),
@@ -39,7 +61,12 @@ export function parseAzulResponse(query: Record<string, unknown>): AzulResponse 
     ResponseMessage: pick(query, 'ResponseMessage', 'responseMessage'),
     ErrorDescription: pick(query, 'ErrorDescription', 'errorDescription'),
     RRN: pick(query, 'RRN', 'Rrn', 'rrn'),
-    AuthHash: pick(query, 'AuthHash', 'authHash')
+    AuthHash: pick(query, 'AuthHash', 'authHash'),
+    CustomOrderId: pick(query, 'CustomOrderId', 'customOrderId'),
+    CardNumber: maskCardNumber(pick(query, 'CardNumber', 'cardNumber')),
+    DataVaultTokenPresent: !!dataVaultToken,
+    DataVaultBrand: pick(query, 'DataVaultBrand', 'dataVaultBrand'),
+    AzulOrderId: pick(query, 'AzulOrderId', 'azulOrderId')
   }
 }
 

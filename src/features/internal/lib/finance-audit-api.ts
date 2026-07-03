@@ -64,6 +64,10 @@ function getBoolean(payload: JsonRecord, key: string): boolean {
   return false
 }
 
+function hasSecureCardToken(payload: JsonRecord): boolean {
+  return getBoolean(payload, 'DataVaultTokenPresent') || !!getString(payload, ['DataVaultToken', 'DataVaultExpiration', 'DataVaultBrand'])
+}
+
 function normalizeCardBrand(raw: string | null): string | null {
   if (!raw) {
     return null
@@ -180,7 +184,7 @@ function normalizeMembershipPayment(
     sourceLabel: row.intent === 'renewal' ? 'Renovación de membresía' : 'Cuota de membresía',
     cardBrand,
     maskedCard: cardNumber,
-    hasSecureToken: !!getString(payload, ['DataVaultToken', 'DataVaultExpiration', 'DataVaultBrand']),
+    hasSecureToken: hasSecureCardToken(payload),
     status: statusFromPayment(row.status, payload),
     rawStatus: row.status,
     authorizationCode: row.authorization_code,
@@ -206,7 +210,7 @@ function normalizeDonation(row: DonationRow): FinanceAuditTransaction {
     sourceLabel: row.campaign_slug && row.campaign_slug !== 'general' ? `Donación · ${row.campaign_slug}` : 'Donación',
     cardBrand,
     maskedCard: cardNumber,
-    hasSecureToken: !!getString(payload, ['DataVaultToken', 'DataVaultExpiration', 'DataVaultBrand']),
+    hasSecureToken: hasSecureCardToken(payload),
     status: statusFromDonation(row.status, payload),
     rawStatus: row.status,
     authorizationCode: row.authorization_code,

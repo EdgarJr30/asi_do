@@ -34,6 +34,26 @@ describe('parseAzulResponse', () => {
     expect(parsed.IsoCode).toBe('00')
     expect(parsed.ResponseCode).toBe('Approved')
   })
+
+  it('conserva solo datos de tarjeta enmascarados y no persiste el token DataVault crudo', () => {
+    const parsed = parseAzulResponse({
+      CardNumber: '54241802****1732',
+      DataVaultToken: 'token-sensible',
+      DataVaultBrand: 'MASTERCARD',
+      AzulOrderId: '44297821'
+    })
+
+    expect(parsed.CardNumber).toBe('54241802****1732')
+    expect(parsed.DataVaultTokenPresent).toBe(true)
+    expect(parsed).not.toHaveProperty('DataVaultToken')
+    expect(parsed.DataVaultBrand).toBe('MASTERCARD')
+    expect(parsed.AzulOrderId).toBe('44297821')
+  })
+
+  it('enmascara defensivamente un número de tarjeta si el callback llegara sin máscara', () => {
+    const parsed = parseAzulResponse({ CardNumber: '5424180279791732' })
+    expect(parsed.CardNumber).toBe('542418****1732')
+  })
 })
 
 describe('verifyResponseAuthHash', () => {
