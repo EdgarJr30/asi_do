@@ -44,9 +44,9 @@ const employmentLabels: Record<string, string> = {
 }
 
 const linkButtonClassName =
-  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-primary-600 bg-primary-600 px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(43,69,143,0.2)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)'
+  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-control border border-primary-600 bg-primary-600 px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(43,69,143,0.2)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)'
 const outlineLinkButtonClassName =
-  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-(--app-border) bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas) dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200'
+  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-control border border-(--app-border) bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas) dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200'
 const tagClassName =
   'inline-flex min-h-8 items-center gap-1.5 rounded-full border border-(--app-border) bg-(--app-surface) px-3 py-1 text-[0.75rem] font-medium text-(--app-text-muted)'
 
@@ -99,7 +99,7 @@ function formatRelativeDate(value: string | null | undefined) {
 function SectionTitle({ icon: Icon, children }: { icon: typeof FileText; children: string }) {
   return (
     <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-(--app-text)">
-      <span className="flex size-7 items-center justify-center rounded-lg bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+      <span className="flex size-7 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
         <Icon className="size-4" />
       </span>
       {children}
@@ -205,7 +205,7 @@ export function JobDetailPage() {
     <Button
       type="button"
       variant="outline"
-      className="h-11 w-full rounded-xl"
+      className="h-11 w-full rounded-control"
       onClick={() => saveMutation.mutate(!job.isSaved)}
       disabled={isSaveDisabled}
     >
@@ -233,7 +233,7 @@ export function JobDetailPage() {
 
       <motion.header variants={cardReveal} className="border-b border-(--app-border) pb-6">
         <div className="flex flex-col gap-4 min-[860px]:flex-row min-[860px]:items-start">
-          <CompanyLogo name={companyName} logoPath={job.company_profile?.logo_path} size="lg" className="size-15 rounded-2xl shadow-sm" />
+          <CompanyLogo name={companyName} logoPath={job.company_profile?.logo_path} size="lg" className="size-15 rounded-card shadow-sm" />
           <div className="min-w-0 flex-1">
             <Badge className="gap-1.5 bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
               <Sparkles className="size-3.5" />
@@ -287,7 +287,7 @@ export function JobDetailPage() {
                 {responsibilities.map((responsibility) => (
                   <div
                     key={responsibility}
-                    className="flex items-start gap-3 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 py-3 text-sm shadow-[0_1px_2px_rgba(20,40,90,0.04)] transition hover:border-primary-200 hover:bg-primary-50/40 dark:hover:border-primary-500/30 dark:hover:bg-primary-500/8"
+                    className="flex items-start gap-3 rounded-control border border-(--app-border) bg-(--app-surface) px-3.5 py-3 text-sm shadow-[0_1px_2px_rgba(20,40,90,0.04)] transition hover:border-primary-200 hover:bg-primary-50/40 dark:hover:border-primary-500/30 dark:hover:bg-primary-500/8"
                   >
                     <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
                       <Check className="size-3.5" />
@@ -297,7 +297,7 @@ export function JobDetailPage() {
                 ))}
               </div>
             ) : (
-              <p className="rounded-xl border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
+              <p className="rounded-control border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
                 La empresa todavía no detalló responsabilidades específicas para esta vacante.
               </p>
             )}
@@ -311,9 +311,9 @@ export function JobDetailPage() {
                 job.job_screening_questions.map((question, index) => (
                   <div
                     key={question.id}
-                    className="flex items-start gap-3 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 py-3 text-sm shadow-[0_1px_2px_rgba(20,40,90,0.04)]"
+                    className="flex items-start gap-3 rounded-control border border-(--app-border) bg-(--app-surface) px-3.5 py-3 text-sm shadow-[0_1px_2px_rgba(20,40,90,0.04)]"
                   >
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-xs font-bold text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-control bg-primary-50 text-xs font-bold text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
                       {index + 1}
                     </span>
                     <span className="min-w-0">
@@ -328,7 +328,7 @@ export function JobDetailPage() {
                   </div>
                 ))
               ) : (
-                <p className="rounded-xl border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
+                <p className="rounded-control border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
                   Esta vacante no tiene preguntas de filtrado.
                 </p>
               )}
@@ -338,7 +338,7 @@ export function JobDetailPage() {
 
         <motion.aside variants={gridStagger} className="space-y-4 xl:sticky xl:top-4 xl:self-start">
           <motion.div variants={cardReveal} className="hidden min-[860px]:block">
-            <Card className="rounded-xl p-4">
+            <Card className="rounded-control p-4">
               <div className="flex flex-col gap-2">
                 <Link className={linkButtonClassName} to={applicationPath}>
                   {existingApplication ? <FileText className="size-4" /> : <SendHorizontal className="size-4" />}
@@ -346,7 +346,7 @@ export function JobDetailPage() {
                 </Link>
                 {session.isAuthenticated && !existingApplication ? saveButton : null}
                 {existingApplication ? (
-                  <p className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-medium leading-5 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
+                  <p className="rounded-control bg-emerald-50 px-3 py-2 text-xs font-medium leading-5 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
                     Ya aplicaste a esta vacante. Solo puedes actualizar el CV asociado.
                   </p>
                 ) : null}
@@ -373,7 +373,7 @@ export function JobDetailPage() {
           </motion.div>
 
           <motion.div variants={cardReveal}>
-            <Card className="rounded-xl p-4">
+            <Card className="rounded-control p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Sobre la empresa</p>
               <div className="mt-4 flex items-center gap-3">
                 <CompanyLogo name={companyName} logoPath={job.company_profile?.logo_path} size="md" />
@@ -407,7 +407,7 @@ export function JobDetailPage() {
           <Button
             type="button"
             variant="outline"
-            className="size-11 shrink-0 rounded-xl px-0"
+            className="size-11 shrink-0 rounded-control px-0"
             aria-label={job.isSaved ? 'Quitar guardado' : 'Guardar vacante'}
             onClick={() => saveMutation.mutate(!job.isSaved)}
             disabled={isSaveDisabled}

@@ -40,9 +40,9 @@ export function InstitutionalInteriorPage({
                   return (
                     <div
                       key={item.title}
-                      className="rounded-2xl bg-white/75 px-4 py-4 backdrop-blur-md"
+                      className="rounded-card bg-white/75 px-4 py-4 backdrop-blur-md"
                     >
-                      <div className="flex size-8 items-center justify-center rounded-xl bg-(--asi-surface-raised) text-(--asi-primary)">
+                      <div className="flex size-8 items-center justify-center rounded-control bg-(--asi-surface-raised) text-(--asi-primary)">
                         <Icon className="size-4" />
                       </div>
                       <p className="mt-3 text-sm font-semibold leading-snug tracking-tight text-(--asi-text)">
@@ -58,7 +58,7 @@ export function InstitutionalInteriorPage({
             </div>
             <img
               alt={content.hero.imageAlt ?? ''}
-              className="h-120 w-full rounded-[1.75rem] object-cover shadow-(--asi-shadow-soft)"
+              className="h-120 w-full rounded-card-lg object-cover shadow-(--asi-shadow-soft)"
               decoding="async"
               fetchPriority="high"
               loading="eager"
@@ -88,7 +88,7 @@ export function InstitutionalInteriorPage({
                     key={item.title}
                     className="bg-white/75 backdrop-blur-md"
                   >
-                    <div className="flex size-11 items-center justify-center rounded-2xl bg-(--asi-surface-raised) text-(--asi-primary)">
+                    <div className="flex size-11 items-center justify-center rounded-card bg-(--asi-surface-raised) text-(--asi-primary)">
                       <Icon className="size-5" />
                     </div>
                     <p className="mt-4 text-lg font-semibold tracking-tight text-(--asi-text)">
@@ -201,13 +201,13 @@ export function InstitutionalInteriorPage({
                           {item.image ? (
                             <img
                               alt={item.imageAlt ?? item.title}
-                              className="h-44 w-full rounded-2xl object-cover"
+                              className="h-44 w-full rounded-card object-cover"
                               loading="lazy"
                               src={item.image}
                             />
                           ) : null}
                           {Icon ? (
-                            <div className="flex size-11 items-center justify-center rounded-2xl bg-(--asi-surface-raised) text-(--asi-primary)">
+                            <div className="flex size-11 items-center justify-center rounded-card bg-(--asi-surface-raised) text-(--asi-primary)">
                               <Icon className="size-5" />
                             </div>
                           ) : null}
@@ -245,8 +245,8 @@ export function InstitutionalInteriorPage({
                           key={item.title}
                           className={
                             section.tone === 'brand'
-                              ? 'rounded-panel bg-white/10 px-5 py-4 backdrop-blur-md'
-                              : 'rounded-panel bg-(--asi-surface-panel) px-5 py-4'
+                              ? 'rounded-card bg-white/10 px-5 py-4 backdrop-blur-md'
+                              : 'rounded-card bg-(--asi-surface-panel) px-5 py-4'
                           }
                         >
                           <p
@@ -275,7 +275,7 @@ export function InstitutionalInteriorPage({
                   <div className="grid gap-5">
                     <img
                       alt={section.imageAlt}
-                      className="h-88 w-full rounded-[1.75rem] object-cover shadow-(--asi-shadow-soft)"
+                      className="h-88 w-full rounded-card-lg object-cover shadow-(--asi-shadow-soft)"
                       loading="lazy"
                       src={section.image}
                     />
@@ -375,7 +375,7 @@ export function InstitutionalInteriorPage({
                       <InstitutionalCard key={item.name}>
                         <img
                           alt={item.name}
-                          className="h-64 w-full rounded-2xl object-cover"
+                          className="h-64 w-full rounded-card object-cover"
                           loading="lazy"
                           src={item.image}
                         />

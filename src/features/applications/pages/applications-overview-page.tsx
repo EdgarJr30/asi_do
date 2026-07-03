@@ -194,11 +194,11 @@ export function ApplicationsOverviewPage() {
               onClick={() => applyFilter(stat.key)}
               aria-pressed={isActive}
               className={cn(
-                'flex min-h-16 items-center gap-3 rounded-xl border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-left transition-[border-color,background-color,box-shadow,transform] hover:border-primary-300 hover:bg-(--app-surface) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)',
+                'flex min-h-16 items-center gap-3 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-left transition-[border-color,background-color,box-shadow,transform] hover:border-primary-300 hover:bg-(--app-surface) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)',
                 isActive ? 'border-primary-300 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]' : ''
               )}
             >
-              <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-[9px]', stat.chipClassName)}>
+              <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-control', stat.chipClassName)}>
                 <Icon className="size-4.5" />
               </span>
               <span className="min-w-0">
@@ -213,7 +213,7 @@ export function ApplicationsOverviewPage() {
       </motion.div>
 
       <motion.div variants={cardReveal}>
-        <label className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface-elevated) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
+        <label className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
           <Search className="size-4.5 shrink-0 text-(--app-text-subtle)" />
           <span className="sr-only">Buscar por puesto o empresa</span>
           <Input
@@ -246,7 +246,7 @@ export function ApplicationsOverviewPage() {
 
           {filteredApplications.length ? (
             <>
-              <Card className="overflow-hidden rounded-[14px] p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+              <Card className="overflow-hidden rounded-control p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
                 <motion.ul
                   className="divide-y divide-(--app-border)"
                   variants={gridStagger}
@@ -294,7 +294,7 @@ export function ApplicationsOverviewPage() {
                             {applicationStatusLabel(status)}
                           </span>
 
-                          <span className="inline-flex h-11 w-11 items-center justify-center gap-1.5 justify-self-end whitespace-nowrap rounded-lg border border-(--app-border) bg-(--app-surface) text-[0.8rem] font-semibold text-(--app-text-muted) transition-[border-color,background-color,color] group-hover:border-primary-200 group-hover:bg-primary-50 group-hover:text-primary-700 sm:col-start-2 sm:w-auto sm:px-3.5 lg:col-start-auto lg:h-9 dark:group-hover:border-primary-400/40 dark:group-hover:bg-primary-500/12 dark:group-hover:text-primary-200">
+                          <span className="inline-flex h-11 w-11 items-center justify-center gap-1.5 justify-self-end whitespace-nowrap rounded-control border border-(--app-border) bg-(--app-surface) text-[0.8rem] font-semibold text-(--app-text-muted) transition-[border-color,background-color,color] group-hover:border-primary-200 group-hover:bg-primary-50 group-hover:text-primary-700 sm:col-start-2 sm:w-auto sm:px-3.5 lg:col-start-auto lg:h-9 dark:group-hover:border-primary-400/40 dark:group-hover:bg-primary-500/12 dark:group-hover:text-primary-200">
                             <span className="hidden sm:inline">Ver vacante</span>
                             <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                           </span>

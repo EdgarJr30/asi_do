@@ -53,8 +53,8 @@ import { CountryCodeSelect } from '@/shared/ui/location-selects';
 const WORKSPACE_QUERY_KEY = ['workspace', 'primary'] as const;
 const fieldLabelClassName = 'grid gap-2 text-sm';
 const fieldLabelTextClassName = 'text-[0.72rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)';
-const panelClassName = 'rounded-[14px] border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]';
-const softPanelClassName = 'rounded-[14px] border border-(--app-border) bg-(--app-surface-muted) p-4';
+const panelClassName = 'rounded-control border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]';
+const softPanelClassName = 'rounded-control border border-(--app-border) bg-(--app-surface-muted) p-4';
 
 const statAccentClassName = {
   sky: 'bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200',
@@ -101,7 +101,7 @@ function formatRoleNames(membership: WorkspaceBundle['memberships'][number]) {
 
 function InfoIcon({ icon: Icon, accent }: { icon: LucideIcon; accent: StatAccent }) {
   return (
-    <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-[11px]', statAccentClassName[accent])}>
+    <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-control', statAccentClassName[accent])}>
       <Icon className="size-4" />
     </span>
   );
@@ -424,7 +424,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
         <div className="flex flex-wrap gap-2">
           <Link
             to={surfacePaths.workspace.jobs}
-            className="inline-flex h-11 items-center justify-center rounded-2xl border bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_12px_24px_rgba(15,23,42,0.1)] dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200"
+            className="inline-flex h-11 items-center justify-center rounded-card border bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_12px_24px_rgba(15,23,42,0.1)] dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200"
           >
             Ver vacantes
           </Link>
@@ -539,12 +539,12 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
                 ))}
               </ul>
             ) : (
-              <p className="rounded-[14px] border border-dashed border-(--app-border) px-4 py-6 text-center text-sm text-(--app-text-muted)">Aún no hay miembros en este espacio.</p>
+              <p className="rounded-control border border-dashed border-(--app-border) px-4 py-6 text-center text-sm text-(--app-text-muted)">Aún no hay miembros en este espacio.</p>
             )}
 
             <Link
               to={surfacePaths.workspace.access}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-primary-100 bg-primary-50 px-4 text-sm font-bold text-primary-700 transition-colors hover:border-primary-200 hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/12 dark:text-primary-200"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-card border border-primary-100 bg-primary-50 px-4 text-sm font-bold text-primary-700 transition-colors hover:border-primary-200 hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/12 dark:text-primary-200"
             >
               Ver permisos y roles <ChevronRight className="size-4" />
             </Link>
@@ -685,14 +685,14 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
               </div>
             ) : hasLogo ? (
               <div className="flex items-center gap-3">
-                <div className="flex size-16 shrink-0 items-center justify-center rounded-[13px] border border-(--app-border) bg-white p-2">
+                <div className="flex size-16 shrink-0 items-center justify-center rounded-control border border-(--app-border) bg-white p-2">
                   {logoUrl ? <img src={logoUrl} alt="" className="max-h-full max-w-full object-contain" /> : <span className="text-sm font-bold text-primary-700">{initialsOf(workspaceName)}</span>}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-(--app-text)">Logo de empresa</p>
                   <Badge className="mt-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-200">Listo</Badge>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-xl border border-(--app-border) bg-(--app-surface) px-3 text-xs font-bold text-(--app-text) transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700">
+                    <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-control border border-(--app-border) bg-(--app-surface) px-3 text-xs font-bold text-(--app-text) transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700">
                       Reemplazar
                       <input type="file" accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml" className="sr-only" onChange={handleLogoChange} />
                     </label>
@@ -703,7 +703,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
                 </div>
               </div>
             ) : (
-              <label className="flex cursor-pointer flex-col items-center justify-center rounded-[13px] border border-dashed border-primary-200 bg-primary-50/60 px-5 py-8 text-center transition-colors hover:border-primary-400 hover:bg-primary-50 dark:border-primary-500/30 dark:bg-primary-500/10">
+              <label className="flex cursor-pointer flex-col items-center justify-center rounded-control border border-dashed border-primary-200 bg-primary-50/60 px-5 py-8 text-center transition-colors hover:border-primary-400 hover:bg-primary-50 dark:border-primary-500/30 dark:bg-primary-500/10">
                 <span className="flex size-12 items-center justify-center rounded-full bg-white text-primary-600 shadow-sm dark:bg-primary-500/15 dark:text-primary-200">
                   <UploadCloud className="size-5" />
                 </span>
@@ -714,15 +714,15 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
             )}
           </div>
 
-          <div className="overflow-hidden rounded-[14px] border border-(--app-border) bg-(--app-surface-elevated)">
+          <div className="overflow-hidden rounded-control border border-(--app-border) bg-(--app-surface-elevated)">
             <div className="flex items-center justify-between bg-(--app-surface-muted) px-4 py-3">
               <span className="text-[0.66rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">Vista previa</span>
               <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-600 dark:text-primary-300"><Eye className="size-3.5" /> Vacante pública</span>
             </div>
             <div className="p-4">
-              <div className="rounded-[14px] border border-(--app-border) bg-(--app-surface) p-4">
+              <div className="rounded-control border border-(--app-border) bg-(--app-surface) p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-[12px] border border-(--app-border) bg-white p-2 text-primary-700">
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-control border border-(--app-border) bg-white p-2 text-primary-700">
                     {logoUrl ? <img src={logoUrl} alt="" className="max-h-full max-w-full object-contain" /> : <span className="text-sm font-bold">{initialsOf(workspaceName)}</span>}
                   </div>
                   <div className="min-w-0 flex-1">

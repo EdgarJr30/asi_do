@@ -38,7 +38,7 @@ export function PaymentBrandStrip({
         <span
           key={asset.label}
           className={cn(
-            'inline-flex h-10 min-w-13 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 shadow-sm',
+            'inline-flex h-10 min-w-13 items-center justify-center rounded-control border border-slate-200 bg-white px-2 shadow-sm',
             itemClassName
           )}
           title={asset.label}

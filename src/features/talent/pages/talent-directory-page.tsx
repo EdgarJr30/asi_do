@@ -171,7 +171,7 @@ export function TalentDirectoryPage() {
 
       <motion.div variants={cardReveal} className="space-y-2.5">
         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-          <div className="flex flex-1 items-center gap-2.5 rounded-2xl border border-(--app-border) bg-(--app-surface) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-300 focus-within:ring-2 focus-within:ring-(--app-ring)">
+          <div className="flex flex-1 items-center gap-2.5 rounded-card border border-(--app-border) bg-(--app-surface) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-300 focus-within:ring-2 focus-within:ring-(--app-ring)">
             <Search aria-hidden="true" className="size-4 text-(--app-text-subtle)" />
             <input
               value={query}
@@ -310,13 +310,13 @@ export function TalentDirectoryPage() {
                             {visibleSkills.map((item) => (
                               <span
                                 key={item}
-                                className="inline-flex items-center rounded-lg bg-(--app-surface-muted) px-2.5 py-1 text-[0.72rem] font-medium text-(--app-text-muted)"
+                                className="inline-flex items-center rounded-control bg-(--app-surface-muted) px-2.5 py-1 text-[0.72rem] font-medium text-(--app-text-muted)"
                               >
                                 {item}
                               </span>
                             ))}
                             {extraSkills > 0 ? (
-                              <span className="inline-flex items-center rounded-lg px-2 py-1 text-[0.72rem] font-semibold text-(--app-text-subtle)">
+                              <span className="inline-flex items-center rounded-control px-2 py-1 text-[0.72rem] font-semibold text-(--app-text-subtle)">
                                 +{extraSkills}
                               </span>
                             ) : null}
@@ -412,7 +412,7 @@ function CandidateDetailSheet({
         </Button>
         <a
           href={`mailto:${profile.email}`}
-          className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-2xl border border-primary-600 bg-primary-600 px-4 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(43,69,143,0.18)] transition hover:border-primary-700 hover:bg-primary-700"
+          className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-card border border-primary-600 bg-primary-600 px-4 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(43,69,143,0.18)] transition hover:border-primary-700 hover:bg-primary-700"
         >
           <Mail className="size-4" /> Contactar
         </a>
@@ -470,7 +470,7 @@ function CandidateDetailSheet({
               {data.skills.map((item) => (
                 <span
                   key={item.id}
-                  className="inline-flex items-center rounded-lg bg-primary-50 px-2.5 py-1 text-[0.72rem] font-medium text-primary-700 dark:bg-primary-500/12 dark:text-primary-200"
+                  className="inline-flex items-center rounded-control bg-primary-50 px-2.5 py-1 text-[0.72rem] font-medium text-primary-700 dark:bg-primary-500/12 dark:text-primary-200"
                 >
                   {item.skill_name}
                 </span>
@@ -478,7 +478,7 @@ function CandidateDetailSheet({
               {data.languages.map((item) => (
                 <span
                   key={item.id}
-                  className="inline-flex items-center rounded-lg border border-(--app-border) px-2.5 py-1 text-[0.72rem] font-medium text-(--app-text-muted)"
+                  className="inline-flex items-center rounded-control border border-(--app-border) px-2.5 py-1 text-[0.72rem] font-medium text-(--app-text-muted)"
                 >
                   {item.language_name}
                 </span>

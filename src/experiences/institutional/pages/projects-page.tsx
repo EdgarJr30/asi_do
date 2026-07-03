@@ -165,7 +165,7 @@ function ProjectCard({ project }: { project: ProjectFeature }) {
       className="asi-card flex h-full flex-col overflow-hidden p-0"
       variants={itemVariants}
     >
-      <div className="relative h-56 overflow-hidden rounded-t-[1.5rem] bg-(--asi-surface-muted)">
+      <div className="relative h-56 overflow-hidden rounded-t-card-lg bg-(--asi-surface-muted)">
         <img
           alt={project.imageAlt}
           className="h-full w-full object-cover"
@@ -253,7 +253,7 @@ export function ProjectsPage() {
           </motion.div>
 
           <motion.div className="grid gap-5" variants={itemVariants}>
-            <div className="overflow-hidden rounded-[1.75rem] bg-[#08111f] shadow-2xl ring-1 ring-black/8">
+            <div className="overflow-hidden rounded-card-lg bg-[#08111f] shadow-2xl ring-1 ring-black/8">
               <LazyAutoplayVideo />
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
@@ -411,7 +411,7 @@ export function ProjectsPage() {
                 className="asi-card bg-white p-6 text-left"
                 variants={itemVariants}
               >
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-(--asi-primary)">
+                <div className="flex size-12 items-center justify-center rounded-card bg-(--asi-primary)/8 text-(--asi-primary)">
                   <Icon className="size-6" />
                 </div>
                 <p className="mt-5 text-lg font-semibold text-(--asi-text)">

@@ -501,7 +501,7 @@ function HeroCollage({
           <motion.div
             key={item.src}
             className={cn(
-              'absolute overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(20,40,90,0.05),0_20px_45px_-18px_rgba(20,40,90,0.28)]',
+              'absolute overflow-hidden rounded-card bg-white shadow-[0_1px_2px_rgba(20,40,90,0.05),0_20px_45px_-18px_rgba(20,40,90,0.28)]',
               item.className
             )}
             animate={
@@ -534,12 +534,12 @@ function HeroCollage({
               loading={index === 0 ? 'eager' : 'lazy'}
               src={item.src}
             />
-            <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-black/5 ring-inset" />
+            <div className="pointer-events-none absolute inset-0 rounded-card ring-1 ring-black/5 ring-inset" />
           </motion.div>
         ))}
 
         <motion.div
-          className="absolute left-[120px] top-[22px] z-[6] whitespace-nowrap rounded-[26px] bg-white px-[22px] py-[13px] text-[15px] font-medium text-[#16223c] shadow-[0_2px_6px_rgba(20,40,90,0.05),0_16px_40px_-12px_rgba(20,40,90,0.20)] ring-1 ring-[#e8ecf4]"
+          className="absolute left-[120px] top-[22px] z-[6] whitespace-nowrap rounded-card-lg bg-white px-[22px] py-[13px] text-[15px] font-medium text-[#16223c] shadow-[0_2px_6px_rgba(20,40,90,0.05),0_16px_40px_-12px_rgba(20,40,90,0.20)] ring-1 ring-[#e8ecf4]"
           animate={floatingCardMotion}
           transition={{
             duration: 8.2,
@@ -560,7 +560,7 @@ function HeroCollage({
         </motion.div>
 
         <motion.div
-          className="absolute left-[-6px] top-[148px] z-[6] w-[236px] rounded-2xl bg-white px-5 py-4 shadow-[0_2px_6px_rgba(20,40,90,0.05),0_16px_40px_-12px_rgba(20,40,90,0.20)] ring-1 ring-[#e8ecf4]"
+          className="absolute left-[-6px] top-[148px] z-[6] w-[236px] rounded-card bg-white px-5 py-4 shadow-[0_2px_6px_rgba(20,40,90,0.05),0_16px_40px_-12px_rgba(20,40,90,0.20)] ring-1 ring-[#e8ecf4]"
           animate={
             shouldReduceMotion
               ? undefined
@@ -592,7 +592,7 @@ function HeroCollage({
         </motion.div>
 
         <motion.div
-          className="absolute left-[292px] top-[236px] z-[6] w-[262px] rounded-2xl bg-white px-5 py-4 shadow-[0_2px_6px_rgba(20,40,90,0.05),0_16px_40px_-12px_rgba(20,40,90,0.20)] ring-1 ring-[#e8ecf4]"
+          className="absolute left-[292px] top-[236px] z-[6] w-[262px] rounded-card bg-white px-5 py-4 shadow-[0_2px_6px_rgba(20,40,90,0.05),0_16px_40px_-12px_rgba(20,40,90,0.20)] ring-1 ring-[#e8ecf4]"
           animate={
             shouldReduceMotion
               ? undefined
@@ -660,13 +660,13 @@ function StorefrontHero({
 
           <div className="mt-[30px] flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button
-              className="h-12 rounded-[10px] border-[#2d52a8] bg-[#2d52a8] px-5 text-[14.5px] shadow-[0_1px_2px_rgba(45,82,168,0.24),0_8px_20px_rgba(45,82,168,0.16)] hover:border-[#21438e] hover:bg-[#21438e]"
+              className="h-12 rounded-control border-[#2d52a8] bg-[#2d52a8] px-5 text-[14.5px] shadow-[0_1px_2px_rgba(45,82,168,0.24),0_8px_20px_rgba(45,82,168,0.16)] hover:border-[#21438e] hover:bg-[#21438e]"
               onClick={onExploreJobs}
             >
               Explorar jobs
             </Button>
             <Button
-              className="h-12 rounded-[10px] border-transparent px-1 text-[14.5px] text-[#2d52a8] shadow-none hover:border-transparent hover:bg-transparent hover:text-[#21438e] hover:shadow-none [&_svg]:transition-transform hover:[&_svg]:translate-x-[3px]"
+              className="h-12 rounded-control border-transparent px-1 text-[14.5px] text-[#2d52a8] shadow-none hover:border-transparent hover:bg-transparent hover:text-[#21438e] hover:shadow-none [&_svg]:transition-transform hover:[&_svg]:translate-x-[3px]"
               variant="ghost"
               onClick={onPricingClick}
             >
@@ -766,8 +766,8 @@ export function HomePage() {
         >
           <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:items-stretch">
             <div className="relative">
-              <div className="absolute inset-0 rounded-4xl bg-white/72 dark:bg-white/6" />
-              <div className="relative flex h-full flex-col overflow-hidden rounded-[31px] border bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,249,255,0.92)_100%)] shadow-(--app-shadow-floating) backdrop-blur-sm dark:bg-[linear-gradient(180deg,rgba(18,29,58,0.92)_0%,rgba(12,21,42,0.88)_100%)]">
+              <div className="absolute inset-0 rounded-card-lg bg-white/72 dark:bg-white/6" />
+              <div className="relative flex h-full flex-col overflow-hidden rounded-card-lg border bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,249,255,0.92)_100%)] shadow-(--app-shadow-floating) backdrop-blur-sm dark:bg-[linear-gradient(180deg,rgba(18,29,58,0.92)_0%,rgba(12,21,42,0.88)_100%)]">
                 <div className="px-6 pt-6 pb-2 sm:px-8 sm:pt-8">
                   <Badge variant="soft">Plataforma</Badge>
                   <h2 className="mt-5 max-w-[12ch] text-3xl font-semibold tracking-tight text-balance text-(--app-text) sm:text-4xl">
@@ -781,16 +781,16 @@ export function HomePage() {
 
                 <div className="relative mx-auto mt-4 w-full max-w-sm grow px-4 pb-0 sm:px-6">
                   <div className="absolute left-1/2 top-8 h-24 w-24 -translate-x-1/2 rounded-full bg-primary-300/18 blur-3xl" />
-                  <div className="relative mx-auto max-w-73 rounded-[2.9rem] bg-[linear-gradient(180deg,#eef3ff_0%,#d9e1f1_38%,#c6cfdf_100%)] p-[0.72rem] shadow-[0_32px_72px_rgba(20,35,72,0.18)] ring-1 ring-white/82 dark:bg-[linear-gradient(180deg,#858fa1_0%,#596376_20%,#222b38_58%,#111827_100%)] dark:ring-white/18">
-                    <div className="rounded-[2.35rem] bg-[linear-gradient(180deg,#101827_0%,#131f35_100%)] p-[0.48rem] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-1px_0_rgba(0,0,0,0.28)]">
-                      <div className="relative min-h-96 overflow-hidden rounded-[1.95rem] bg-[linear-gradient(180deg,#111b31_0%,#172441_100%)] px-4 pb-4 pt-4 text-white ring-1 ring-white/7">
+                  <div className="relative mx-auto max-w-73 rounded-card-lg bg-[linear-gradient(180deg,#eef3ff_0%,#d9e1f1_38%,#c6cfdf_100%)] p-[0.72rem] shadow-[0_32px_72px_rgba(20,35,72,0.18)] ring-1 ring-white/82 dark:bg-[linear-gradient(180deg,#858fa1_0%,#596376_20%,#222b38_58%,#111827_100%)] dark:ring-white/18">
+                    <div className="rounded-card-lg bg-[linear-gradient(180deg,#101827_0%,#131f35_100%)] p-[0.48rem] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-1px_0_rgba(0,0,0,0.28)]">
+                      <div className="relative min-h-96 overflow-hidden rounded-card-lg bg-[linear-gradient(180deg,#111b31_0%,#172441_100%)] px-4 pb-4 pt-4 text-white ring-1 ring-white/7">
                         <div className="mx-auto h-5 w-24 rounded-full bg-black/42 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]" />
                         <div className="absolute left-[0.2rem] top-24 h-12 w-0.5 rounded-full bg-white/16" />
                         <div className="absolute right-[0.2rem] top-32 h-16 w-0.5 rounded-full bg-white/14" />
                         <div className="mt-4 flex items-center justify-between text-white/72">
                           <div
                             aria-hidden="true"
-                            className="flex size-10 items-center justify-center rounded-2xl bg-white/8"
+                            className="flex size-10 items-center justify-center rounded-card bg-white/8"
                           >
                             <Layers3 className="size-4" />
                           </div>
@@ -799,13 +799,13 @@ export function HomePage() {
                           </div>
                           <div
                             aria-hidden="true"
-                            className="flex size-10 items-center justify-center rounded-2xl bg-white/8"
+                            className="flex size-10 items-center justify-center rounded-card bg-white/8"
                           >
                             <ArrowRight className="size-4" />
                           </div>
                         </div>
 
-                        <div className="mt-4 rounded-[1.35rem] border border-white/8 bg-white/6 p-3 backdrop-blur">
+                        <div className="mt-4 rounded-card border border-white/8 bg-white/6 p-3 backdrop-blur">
                           <div className="flex items-center gap-3 text-sm text-white/66">
                             <FileText className="size-4" />
                             Buscar talento o vacantes
@@ -832,7 +832,7 @@ export function HomePage() {
                           {mobileWorkspaceItems.map((item, index) => (
                             <div
                               key={item.title}
-                              className="rounded-[1.35rem] border border-white/8 bg-white/7 p-3.5 backdrop-blur"
+                              className="rounded-card border border-white/8 bg-white/7 p-3.5 backdrop-blur"
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div>
@@ -859,7 +859,7 @@ export function HomePage() {
                           ))}
                         </div>
 
-                        <div className="absolute inset-x-4 bottom-4 rounded-[1.3rem] border border-white/8 bg-white/6 p-3 backdrop-blur">
+                        <div className="absolute inset-x-4 bottom-4 rounded-card border border-white/8 bg-white/6 p-3 backdrop-blur">
                           <div className="flex items-center justify-between">
                             <div>
                               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
@@ -869,7 +869,7 @@ export function HomePage() {
                                 Seguimiento claro y accionable
                               </p>
                             </div>
-                            <div className="flex size-11 items-center justify-center rounded-2xl bg-primary-500">
+                            <div className="flex size-11 items-center justify-center rounded-card bg-primary-500">
                               <Smartphone className="size-5 text-white" />
                             </div>
                           </div>
@@ -879,7 +879,7 @@ export function HomePage() {
                   </div>
                 </div>
               </div>
-              <div className="pointer-events-none absolute inset-0 rounded-4xl shadow-(--app-shadow-card) outline outline-black/5 dark:outline-white/10" />
+              <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline outline-black/5 dark:outline-white/10" />
             </div>
 
             <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
@@ -888,9 +888,9 @@ export function HomePage() {
                 delay={0.04}
                 hoverShadow="0 24px 56px rgba(18, 31, 68, 0.12)"
               >
-                <div className="absolute inset-0 rounded-[30px] bg-white/72 dark:bg-white/6" />
-                <div className="relative flex h-full flex-col overflow-hidden rounded-[29px] border bg-(--app-surface)/92 p-5 shadow-(--app-shadow-card) backdrop-blur-sm sm:p-6">
-                  <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-(--app-info-surface) shadow-(--app-shadow-card)">
+                <div className="absolute inset-0 rounded-card-lg bg-white/72 dark:bg-white/6" />
+                <div className="relative flex h-full flex-col overflow-hidden rounded-card-lg border bg-(--app-surface)/92 p-5 shadow-(--app-shadow-card) backdrop-blur-sm sm:p-6">
+                  <div className="mb-4 flex size-12 items-center justify-center rounded-card bg-(--app-info-surface) shadow-(--app-shadow-card)">
                     <profileFeature.icon className="size-5 text-primary-700 dark:text-primary-200" />
                   </div>
                   <p className="text-xl font-semibold tracking-tight text-(--app-text)">
@@ -899,9 +899,9 @@ export function HomePage() {
                   <p className="mt-3 text-base leading-7 text-(--app-text-muted)">
                     {profileFeature.description}
                   </p>
-                  <div className="mt-5 rounded-panel border bg-(--app-surface-muted)/88 p-4">
+                  <div className="mt-5 rounded-card border bg-(--app-surface-muted)/88 p-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-10 items-center justify-center rounded-2xl bg-primary-500 text-sm font-semibold text-white">
+                      <div className="flex size-10 items-center justify-center rounded-card bg-primary-500 text-sm font-semibold text-white">
                         AP
                       </div>
                       <div>
@@ -915,7 +915,7 @@ export function HomePage() {
                     </div>
                   </div>
                 </div>
-                <div className="pointer-events-none absolute inset-0 rounded-[30px] shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
+                <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
               </LandingInteractiveSurface>
 
               <LandingInteractiveSurface
@@ -923,9 +923,9 @@ export function HomePage() {
                 delay={0.08}
                 hoverShadow="0 24px 56px rgba(18, 31, 68, 0.12)"
               >
-                <div className="absolute inset-0 rounded-[30px] bg-white/72 dark:bg-white/6" />
-                <div className="relative flex h-full flex-col overflow-hidden rounded-[29px] border bg-(--app-surface)/92 p-5 shadow-(--app-shadow-card) backdrop-blur-sm sm:p-6">
-                  <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-(--app-info-surface) shadow-(--app-shadow-card)">
+                <div className="absolute inset-0 rounded-card-lg bg-white/72 dark:bg-white/6" />
+                <div className="relative flex h-full flex-col overflow-hidden rounded-card-lg border bg-(--app-surface)/92 p-5 shadow-(--app-shadow-card) backdrop-blur-sm sm:p-6">
+                  <div className="mb-4 flex size-12 items-center justify-center rounded-card bg-(--app-info-surface) shadow-(--app-shadow-card)">
                     <jobsFeature.icon className="size-5 text-primary-700 dark:text-primary-200" />
                   </div>
                   <p className="text-xl font-semibold tracking-tight text-(--app-text)">
@@ -934,8 +934,8 @@ export function HomePage() {
                   <p className="mt-3 text-base leading-7 text-(--app-text-muted)">
                     {jobsFeature.description}
                   </p>
-                  <div className="mt-5 rounded-panel border bg-(--app-info-surface)/84 p-4">
-                    <div className="rounded-2xl bg-(--app-surface) px-4 py-4 shadow-(--app-shadow-card)">
+                  <div className="mt-5 rounded-card border bg-(--app-info-surface)/84 p-4">
+                    <div className="rounded-card bg-(--app-surface) px-4 py-4 shadow-(--app-shadow-card)">
                       <p className="text-sm font-semibold text-(--app-text)">
                         Frontend Engineer
                       </p>
@@ -945,7 +945,7 @@ export function HomePage() {
                     </div>
                   </div>
                 </div>
-                <div className="pointer-events-none absolute inset-0 rounded-[30px] shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
+                <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
               </LandingInteractiveSurface>
 
               <LandingInteractiveSurface
@@ -953,11 +953,11 @@ export function HomePage() {
                 delay={0.12}
                 hoverShadow="0 26px 60px rgba(18, 31, 68, 0.14)"
               >
-                <div className="absolute inset-0 rounded-[30px] bg-white/72 dark:bg-white/6" />
-                <div className="relative flex h-full flex-col overflow-hidden rounded-[29px] border bg-(--app-surface)/92 p-5 shadow-(--app-shadow-card) backdrop-blur-sm sm:p-6">
+                <div className="absolute inset-0 rounded-card-lg bg-white/72 dark:bg-white/6" />
+                <div className="relative flex h-full flex-col overflow-hidden rounded-card-lg border bg-(--app-surface)/92 p-5 shadow-(--app-shadow-card) backdrop-blur-sm sm:p-6">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-(--app-info-surface) shadow-(--app-shadow-card)">
+                      <div className="mb-4 flex size-12 items-center justify-center rounded-card bg-(--app-info-surface) shadow-(--app-shadow-card)">
                         <collaborationFeature.icon className="size-5 text-primary-700 dark:text-primary-200" />
                       </div>
                       <p className="text-xl font-semibold tracking-tight text-(--app-text)">
@@ -968,7 +968,7 @@ export function HomePage() {
                       </p>
                     </div>
 
-                    <div className="rounded-[18px] border bg-(--app-success-surface)/78 px-4 py-3">
+                    <div className="rounded-card border bg-(--app-success-surface)/78 px-4 py-3">
                       <p className="text-sm font-semibold text-(--app-text)">
                         {growthFeature.name}
                       </p>
@@ -985,7 +985,7 @@ export function HomePage() {
                     ].map(([label, value]) => (
                       <div
                         key={label}
-                        className="rounded-panel border bg-(--app-surface-muted)/88 p-4 shadow-(--app-shadow-card)"
+                        className="rounded-card border bg-(--app-surface-muted)/88 p-4 shadow-(--app-shadow-card)"
                       >
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-(--app-text-subtle)">
                           {label}
@@ -997,7 +997,7 @@ export function HomePage() {
                     ))}
                   </div>
                 </div>
-                <div className="pointer-events-none absolute inset-0 rounded-[30px] shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
+                <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
               </LandingInteractiveSurface>
             </div>
           </div>
@@ -1025,8 +1025,8 @@ export function HomePage() {
               delay={0.02}
               hoverShadow="0 30px 68px rgba(18, 31, 68, 0.16)"
             >
-              <div className="absolute inset-0 rounded-4xl bg-white/70 dark:bg-white/6" />
-              <div className="relative overflow-hidden rounded-[31px] border bg-(--app-surface)/94 shadow-(--app-shadow-floating) backdrop-blur-sm">
+              <div className="absolute inset-0 rounded-card-lg bg-white/70 dark:bg-white/6" />
+              <div className="relative overflow-hidden rounded-card-lg border bg-(--app-surface)/94 shadow-(--app-shadow-floating) backdrop-blur-sm">
                 <div className="relative h-72 overflow-hidden sm:h-80">
                   <img
                     alt="Equipo revisando una estrategia de contratación"
@@ -1037,7 +1037,7 @@ export function HomePage() {
                   <div className="absolute left-4 top-4 rounded-full border border-white/30 bg-white/14 px-3 py-1 text-xs font-semibold text-white backdrop-blur sm:left-5 sm:top-5">
                     Publicación más clara
                   </div>
-                  <div className="absolute inset-x-4 bottom-4 rounded-[24px] border border-white/18 bg-[rgba(12,21,42,0.72)] p-4 text-white shadow-(--app-shadow-floating) backdrop-blur sm:inset-x-5 sm:bottom-5">
+                  <div className="absolute inset-x-4 bottom-4 rounded-card-lg border border-white/18 bg-[rgba(12,21,42,0.72)] p-4 text-white shadow-(--app-shadow-floating) backdrop-blur sm:inset-x-5 sm:bottom-5">
                     <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-white/70">
                       Vacantes que convierten
                     </p>
@@ -1063,7 +1063,7 @@ export function HomePage() {
                   </div>
                 </div>
               </div>
-              <div className="pointer-events-none absolute inset-0 rounded-4xl shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
+              <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
             </LandingInteractiveSurface>
 
             <LandingInteractiveSurface
@@ -1071,8 +1071,8 @@ export function HomePage() {
               delay={0.06}
               hoverShadow="0 30px 68px rgba(18, 31, 68, 0.16)"
             >
-              <div className="absolute inset-0 rounded-4xl bg-white/70 dark:bg-white/6" />
-              <div className="relative overflow-hidden rounded-[31px] border bg-(--app-surface)/94 shadow-(--app-shadow-floating) backdrop-blur-sm">
+              <div className="absolute inset-0 rounded-card-lg bg-white/70 dark:bg-white/6" />
+              <div className="relative overflow-hidden rounded-card-lg border bg-(--app-surface)/94 shadow-(--app-shadow-floating) backdrop-blur-sm">
                 <div className="relative h-72 overflow-hidden sm:h-80">
                   <img
                     alt="Equipo colaborando en una oficina moderna"
@@ -1080,7 +1080,7 @@ export function HomePage() {
                     src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=1600&h=980&q=80"
                   />
                   <div className="absolute inset-0 bg-linear-to-t from-[rgba(9,17,39,0.68)] via-[rgba(9,17,39,0.18)] to-transparent" />
-                  <div className="absolute inset-x-4 top-4 rounded-[22px] border border-white/18 bg-[rgba(12,21,42,0.72)] p-4 text-white backdrop-blur sm:inset-x-5 sm:top-5">
+                  <div className="absolute inset-x-4 top-4 rounded-card-lg border border-white/18 bg-[rgba(12,21,42,0.72)] p-4 text-white backdrop-blur sm:inset-x-5 sm:top-5">
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-white/70">
@@ -1104,14 +1104,14 @@ export function HomePage() {
                       ].map((item) => (
                         <div
                           key={item}
-                          className="rounded-2xl border border-white/12 bg-white/10 px-3 py-2 text-sm font-medium text-white/88"
+                          className="rounded-card border border-white/12 bg-white/10 px-3 py-2 text-sm font-medium text-white/88"
                         >
                           {item}
                         </div>
                       ))}
                     </div>
                   </div>
-                  <div className="absolute bottom-4 right-4 rounded-[22px] border border-white/18 bg-[rgba(12,21,42,0.72)] p-4 text-white shadow-(--app-shadow-card) backdrop-blur sm:bottom-5 sm:right-5">
+                  <div className="absolute bottom-4 right-4 rounded-card-lg border border-white/18 bg-[rgba(12,21,42,0.72)] p-4 text-white shadow-(--app-shadow-card) backdrop-blur sm:bottom-5 sm:right-5">
                     <p className="text-sm font-semibold">
                       Una sola conversación
                     </p>
@@ -1121,7 +1121,7 @@ export function HomePage() {
                   </div>
                 </div>
               </div>
-              <div className="pointer-events-none absolute inset-0 rounded-4xl shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
+              <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
             </LandingInteractiveSurface>
 
             {valueBentoCards.map((panel, panelIndex) => {
@@ -1134,8 +1134,8 @@ export function HomePage() {
                   delay={panelIndex * 0.05}
                   hoverShadow="0 24px 56px rgba(18, 31, 68, 0.14)"
                 >
-                  <div className="absolute inset-0 rounded-[30px] bg-white/70 dark:bg-white/6" />
-                  <div className="relative flex h-full flex-col overflow-hidden rounded-[29px] border bg-(--app-surface)/94 shadow-(--app-shadow-card) backdrop-blur-sm">
+                  <div className="absolute inset-0 rounded-card-lg bg-white/70 dark:bg-white/6" />
+                  <div className="relative flex h-full flex-col overflow-hidden rounded-card-lg border bg-(--app-surface)/94 shadow-(--app-shadow-card) backdrop-blur-sm">
                     <div className="relative h-52 overflow-hidden">
                       <img
                         alt={panel.alt}
@@ -1143,7 +1143,7 @@ export function HomePage() {
                         src={panel.image}
                       />
                       <div className="absolute inset-0 bg-linear-to-t from-[rgba(9,17,39,0.58)] via-[rgba(9,17,39,0.1)] to-transparent" />
-                      <div className="absolute left-4 top-4 flex size-11 items-center justify-center rounded-2xl bg-white/84 shadow-(--app-shadow-card)">
+                      <div className="absolute left-4 top-4 flex size-11 items-center justify-center rounded-card bg-white/84 shadow-(--app-shadow-card)">
                         <Icon className="size-5 text-primary-700 dark:text-primary-200" />
                       </div>
                     </div>
@@ -1163,7 +1163,7 @@ export function HomePage() {
                       </p>
                     </div>
                   </div>
-                  <div className="pointer-events-none absolute inset-0 rounded-[30px] shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
+                  <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
                 </LandingInteractiveSurface>
               );
             })}
@@ -1298,7 +1298,7 @@ export function HomePage() {
                     <motion.div
                       key={plan.name}
                       className={cn(
-                        'relative cursor-pointer rounded-[28px] border p-8 xl:p-10',
+                        'relative cursor-pointer rounded-card-lg border p-8 xl:p-10',
                         isSelected
                           ? 'z-20 border-primary-200/80 bg-white ring-1 ring-primary-300 dark:border-primary-300/40 dark:bg-[linear-gradient(180deg,rgba(245,248,255,0.98)_0%,rgba(232,240,255,0.96)_100%)]'
                           : 'border-white/10 bg-white/7 text-white backdrop-blur-md hover:border-white/18 hover:bg-white/10 dark:border-white/10 dark:bg-white/6 dark:hover:bg-white/10'
@@ -1515,7 +1515,7 @@ export function HomePage() {
                             : 'border-(--app-border) bg-white/94 text-[#15203b] hover:border-primary-200 hover:text-primary-700 focus-visible:ring-white/50 dark:border-white/10 dark:hover:text-primary-200'
                         )}
                         style={{
-                          borderRadius: 30,
+                          borderRadius: 'var(--radius-card-lg)',
                         }}
                         transition={pricingComparisonLayoutTransition}
                         type="button"
@@ -1614,7 +1614,7 @@ export function HomePage() {
                           id="pricing-comparison-panel"
                           initial={shouldReduceMotion ? false : 'closed'}
                           style={{
-                            borderRadius: 32,
+                            borderRadius: 'var(--radius-card-lg)',
                             boxShadow: '0 32px 84px rgba(18, 31, 68, 0.14)',
                           }}
                           transition={pricingComparisonLayoutTransition}
@@ -1706,7 +1706,7 @@ export function HomePage() {
                                               <h4 className="text-sm font-semibold text-(--app-text)">
                                                 {section.name}
                                               </h4>
-                                              <div className="mt-5 rounded-[24px] border bg-(--app-surface) shadow-(--app-shadow-card)">
+                                              <div className="mt-5 rounded-card-lg border bg-(--app-surface) shadow-(--app-shadow-card)">
                                                 <dl className="divide-y text-sm leading-6">
                                                   {section.features.map(
                                                     (feature) => (
@@ -1799,9 +1799,9 @@ export function HomePage() {
                                           aria-hidden="true"
                                           className="absolute inset-x-8 inset-y-0 grid grid-cols-4 gap-x-8 before:block"
                                         >
-                                          <div className="rounded-[24px] bg-(--app-surface) shadow-(--app-shadow-card)" />
-                                          <div className="rounded-[24px] bg-(--app-surface) shadow-(--app-shadow-card)" />
-                                          <div className="rounded-[24px] bg-(--app-surface) shadow-(--app-shadow-card)" />
+                                          <div className="rounded-card-lg bg-(--app-surface) shadow-(--app-shadow-card)" />
+                                          <div className="rounded-card-lg bg-(--app-surface) shadow-(--app-shadow-card)" />
+                                          <div className="rounded-card-lg bg-(--app-surface) shadow-(--app-shadow-card)" />
                                         </div>
 
                                         <table className="relative w-full border-separate border-spacing-x-8">
@@ -1875,7 +1875,7 @@ export function HomePage() {
                                               <motion.div
                                                 key={plan.name}
                                                 className={cn(
-                                                  'rounded-[24px]',
+                                                  'rounded-card-lg',
                                                   isSelected
                                                     ? 'ring-2 ring-primary-500 shadow-[0_22px_48px_rgba(79,110,216,0.14)]'
                                                     : 'ring-1 ring-(--app-border)'
@@ -1904,9 +1904,9 @@ export function HomePage() {
                               </section>
 
                               <div className="mt-10 grid gap-5 lg:grid-cols-[1.25fr_0.75fr]">
-                                <div className="rounded-[30px] border bg-(--app-surface) p-6 shadow-(--app-shadow-card) sm:p-8">
+                                <div className="rounded-card-lg border bg-(--app-surface) p-6 shadow-(--app-shadow-card) sm:p-8">
                                   <div className="flex items-center gap-3">
-                                    <div className="flex size-12 items-center justify-center rounded-2xl bg-(--app-info-surface)">
+                                    <div className="flex size-12 items-center justify-center rounded-card bg-(--app-info-surface)">
                                       <WalletCards className="size-5 text-primary-700 dark:text-primary-200" />
                                     </div>
                                     <div>
@@ -1929,9 +1929,9 @@ export function HomePage() {
                                   </p>
                                 </div>
 
-                                <div className="rounded-[30px] border bg-(--app-warning-surface) p-6 shadow-(--app-shadow-card) sm:p-8">
+                                <div className="rounded-card-lg border bg-(--app-warning-surface) p-6 shadow-(--app-shadow-card) sm:p-8">
                                   <div className="flex items-center gap-3">
-                                    <div className="flex size-12 items-center justify-center rounded-2xl bg-white/80 shadow-(--app-shadow-card)">
+                                    <div className="flex size-12 items-center justify-center rounded-card bg-white/80 shadow-(--app-shadow-card)">
                                       <HandHeart className="size-5 text-(--app-text)" />
                                     </div>
                                     <div>
@@ -1975,7 +1975,7 @@ export function HomePage() {
         <LandingReveal className="tm-landing-container" y={22}>
           <div className="mx-auto max-w-4xl">
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-2xl bg-(--app-info-surface)">
+              <div className="flex size-10 items-center justify-center rounded-card bg-(--app-info-surface)">
                 <CircleHelp className="size-5 text-primary-700 dark:text-primary-200" />
               </div>
               <Badge variant="outline">FAQ</Badge>
@@ -1988,7 +1988,7 @@ export function HomePage() {
                 <LandingReveal key={faq.question} amount={0.08} y={18}>
                   <div className="py-7 first:pt-0 last:pb-0 sm:py-8">
                     <motion.button
-                      className="flex w-full cursor-pointer items-start justify-between gap-8 rounded-[24px] px-1 py-2 text-left text-(--app-text) hover:text-primary-700 dark:hover:text-primary-200 sm:py-3"
+                      className="flex w-full cursor-pointer items-start justify-between gap-8 rounded-card-lg px-1 py-2 text-left text-(--app-text) hover:text-primary-700 dark:hover:text-primary-200 sm:py-3"
                       transition={landingHoverSpring}
                       type="button"
                       whileHover={shouldReduceMotion ? undefined : { x: 2 }}
@@ -2053,7 +2053,7 @@ export function HomePage() {
 
       <section className="tm-landing-section overflow-hidden">
         <LandingReveal className="tm-landing-container" y={24}>
-          <div className="relative rounded-[36px] border bg-(--app-surface) px-6 py-8 shadow-(--app-shadow-floating) sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+          <div className="relative rounded-card-lg border bg-(--app-surface) px-6 py-8 shadow-(--app-shadow-floating) sm:px-8 sm:py-10 lg:px-12 lg:py-12">
             <div
               aria-hidden="true"
               className="absolute right-0 bottom-0 h-48 w-48 rounded-full blur-3xl"

@@ -135,7 +135,7 @@ export function NotificationCenter() {
               <Input {...register('actionUrl')} placeholder="/" />
             </label>
 
-            <div className="rounded-[24px] border border-zinc-200 bg-white/80 px-4 py-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/70 dark:text-zinc-400">
+            <div className="rounded-card-lg border border-zinc-200 bg-white/80 px-4 py-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/70 dark:text-zinc-400">
               {t('notifications.auditNote')}
             </div>
 
@@ -158,18 +158,18 @@ export function NotificationCenter() {
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
-            <div className="inline-flex items-center gap-2 rounded-[24px] bg-zinc-50 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900/80 dark:text-zinc-400">
+            <div className="inline-flex items-center gap-2 rounded-card-lg bg-zinc-50 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900/80 dark:text-zinc-400">
               <Spinner size="sm" /> {t('notifications.loading')}
             </div>
           ) : notifications.length === 0 ? (
-            <div className="rounded-[24px] bg-zinc-50 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900/80 dark:text-zinc-400">
+            <div className="rounded-card-lg bg-zinc-50 px-4 py-4 text-sm text-zinc-600 dark:bg-zinc-900/80 dark:text-zinc-400">
               {t('notifications.empty')}
             </div>
           ) : (
             notifications.map((notification) => (
               <article
                 key={notification.id}
-                className="rounded-[24px] border border-zinc-200 bg-zinc-50 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/80"
+                className="rounded-card-lg border border-zinc-200 bg-zinc-50 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/80"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
@@ -189,7 +189,7 @@ export function NotificationCenter() {
                     {notification.action_url ? (
                       <a
                         className={cn(
-                          'inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-px hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-primary-500 dark:hover:bg-primary-500/12 dark:hover:text-primary-300'
+                          'inline-flex h-11 items-center justify-center rounded-card border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-px hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-primary-500 dark:hover:bg-primary-500/12 dark:hover:text-primary-300'
                         )}
                         href={notification.action_url}
                       >

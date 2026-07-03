@@ -751,10 +751,10 @@ function Field({
 }
 
 const fieldInputClassName =
-  'h-[2.875rem] w-full rounded-[11px] border-[1.5px] border-[#dde3ec] bg-white px-3.5 text-[15px] text-[#14223b] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#8a96a8] hover:border-(--asi-primary)/55 focus:border-(--asi-primary) focus:ring-[3px] focus:ring-(--asi-primary)/12'
+  'h-[2.875rem] w-full rounded-control border-[1.5px] border-[#dde3ec] bg-white px-3.5 text-[15px] text-[#14223b] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#8a96a8] hover:border-(--asi-primary)/55 focus:border-(--asi-primary) focus:ring-[3px] focus:ring-(--asi-primary)/12'
 
 const fieldTextareaClassName =
-  'min-h-28 w-full rounded-[11px] border-[1.5px] border-[#dde3ec] bg-white px-3.5 py-3 text-[15px] leading-relaxed text-[#14223b] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#8a96a8] hover:border-(--asi-primary)/55 focus:border-(--asi-primary) focus:ring-[3px] focus:ring-(--asi-primary)/12'
+  'min-h-28 w-full rounded-control border-[1.5px] border-[#dde3ec] bg-white px-3.5 py-3 text-[15px] leading-relaxed text-[#14223b] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#8a96a8] hover:border-(--asi-primary)/55 focus:border-(--asi-primary) focus:ring-[3px] focus:ring-(--asi-primary)/12'
 
 function TextField({
   label,
@@ -985,7 +985,7 @@ function ChurchHierarchyPicker({
   }
 
   return (
-    <div className="rounded-2xl border border-(--asi-outline) bg-white p-4">
+    <div className="rounded-card border border-(--asi-outline) bg-white p-4">
       <p className="text-sm font-semibold text-(--asi-text)">Tu iglesia en la jerarquía</p>
       <p className="mt-1 text-sm text-(--asi-text-muted)">
         Selecciona tu unión, asociación, distrito e iglesia. Con esto enrutamos tu solicitud al pastor que te corresponde.
@@ -1113,7 +1113,7 @@ function RadioTileGroup({
               aria-checked={selected}
               onClick={() => onChange(option.value)}
               className={cn(
-                'flex items-center gap-2.5 rounded-[11px] border-[1.5px] px-3.5 py-3 text-[15px] font-semibold transition-colors duration-150',
+                'flex items-center gap-2.5 rounded-control border-[1.5px] px-3.5 py-3 text-[15px] font-semibold transition-colors duration-150',
                 selected
                   ? 'border-(--asi-primary) bg-(--asi-primary)/6 text-(--asi-primary)'
                   : 'border-[#dde3ec] bg-white text-[#5b687e] hover:border-(--asi-primary)/45'
@@ -1154,7 +1154,7 @@ function CheckboxCard({
   return (
     <label
       className={cn(
-        'flex cursor-pointer items-start gap-3 rounded-[13px] border-[1.5px] px-4 py-3.5 text-[14.5px] leading-[1.45] transition-colors',
+        'flex cursor-pointer items-start gap-3 rounded-control border-[1.5px] px-4 py-3.5 text-[14.5px] leading-[1.45] transition-colors',
         checked
           ? 'border-(--asi-primary) bg-[#f4f7fc] text-[#1b2a44]'
           : 'border-[#e2e7f0] bg-white text-[#28344b] hover:border-(--asi-primary)/45'
@@ -1258,7 +1258,7 @@ function ContextCard({
   requirements: string[]
 }) {
   return (
-    <div className="rounded-2xl border border-[#e7ebf2] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(16,40,80,0.04)]">
+    <div className="rounded-card border border-[#e7ebf2] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(16,40,80,0.04)]">
       <span className="inline-flex items-center gap-1.5 rounded-full border border-[#cfe8d8] bg-[#eef6f0] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.06em] text-[#1f9d57]">
         <Check className="size-3.5" /> Categoría verificada
       </span>
@@ -1303,7 +1303,7 @@ function VerticalStepper({
   onSelect: (index: number) => void
 }) {
   return (
-    <nav className="rounded-2xl border border-[#e7ebf2] bg-white p-3 shadow-[0_1px_2px_rgba(16,40,80,0.04)]">
+    <nav className="rounded-card border border-[#e7ebf2] bg-white p-3 shadow-[0_1px_2px_rgba(16,40,80,0.04)]">
       <p className="px-2 pb-2 pt-1 text-[11px] font-bold uppercase tracking-[0.07em] text-[#8a96a8]">Fases de la solicitud</p>
       <ol className="space-y-1">
         {steps.map((step, index) => {
@@ -1315,7 +1315,7 @@ function VerticalStepper({
                 onClick={() => onSelect(index)}
                 aria-current={state === 'active' ? 'step' : undefined}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-[13px] px-3 py-2.5 text-left transition-colors',
+                  'flex w-full items-center gap-3 rounded-control px-3 py-2.5 text-left transition-colors',
                   state === 'active'
                     ? 'bg-(--asi-primary) shadow-[0_9px_18px_-11px_var(--asi-primary)]'
                     : 'hover:bg-[#f4f7fc]'
@@ -1372,7 +1372,7 @@ function MobileStepBar({
   onSelect: (index: number) => void
 }) {
   return (
-    <div className="rounded-2xl border border-[#e7ebf2] bg-white p-4 shadow-[0_1px_2px_rgba(16,40,80,0.04)] lg:hidden">
+    <div className="rounded-card border border-[#e7ebf2] bg-white p-4 shadow-[0_1px_2px_rgba(16,40,80,0.04)] lg:hidden">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-[#8a96a8]">Fase {current + 1} de {steps.length}</p>
         <p className="text-[16px] font-extrabold text-(--asi-primary)">{percent}%</p>
@@ -1420,7 +1420,7 @@ function MobileStepBar({
 
 function WhatsNext() {
   return (
-    <div className="rounded-panel border border-[#e7ebf2] bg-white p-7 shadow-[0_1px_2px_rgba(16,40,80,0.04),0_18px_40px_-28px_rgba(16,40,80,0.22)]">
+    <div className="rounded-card border border-[#e7ebf2] bg-white p-7 shadow-[0_1px_2px_rgba(16,40,80,0.04),0_18px_40px_-28px_rgba(16,40,80,0.22)]">
       <p className="text-[15px] font-bold text-[#15233e]">¿Qué ocurre después?</p>
       <ol className="mt-4 space-y-3.5">
         {WHATS_NEXT_ITEMS.map((item, index) => (
@@ -1449,7 +1449,7 @@ function SubmissionSuccess({
   const isAuthenticated = Boolean(session.authUser?.id)
 
   return (
-    <div className="space-y-6 rounded-[1.75rem] border border-(--asi-outline) bg-(--asi-surface-raised) p-6 shadow-(--asi-shadow-soft) sm:p-8">
+    <div className="space-y-6 rounded-card-lg border border-(--asi-outline) bg-(--asi-surface-raised) p-6 shadow-(--asi-shadow-soft) sm:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-4">
           <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-green-50">
@@ -1481,7 +1481,7 @@ function SubmissionSuccess({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-(--asi-outline) bg-white p-4">
+        <div className="rounded-card border border-(--asi-outline) bg-white p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
             Solicitante
           </p>
@@ -1491,7 +1491,7 @@ function SubmissionSuccess({
           <p className="mt-1 text-sm text-(--asi-text-muted)">{summary.email}</p>
           <p className="mt-1 text-sm text-(--asi-text-muted)">{summary.cellPhone}</p>
         </div>
-        <div className="rounded-2xl border border-(--asi-outline) bg-white p-4">
+        <div className="rounded-card border border-(--asi-outline) bg-white p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
             Categoría y cuota
           </p>
@@ -1509,7 +1509,7 @@ function SubmissionSuccess({
                 }`}
           </p>
         </div>
-        <div className="rounded-2xl border border-(--asi-outline) bg-white p-4">
+        <div className="rounded-card border border-(--asi-outline) bg-white p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
             Referencia pastoral
           </p>
@@ -1519,7 +1519,7 @@ function SubmissionSuccess({
           <p className="mt-1 text-sm text-(--asi-text-muted)">{summary.pastorEmail}</p>
           <p className="mt-1 text-sm text-(--asi-text-muted)">{summary.pastorPhone}</p>
         </div>
-        <div className="rounded-2xl border border-(--asi-outline) bg-white p-4">
+        <div className="rounded-card border border-(--asi-outline) bg-white p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
             Dirección de facturación
           </p>
@@ -1531,7 +1531,7 @@ function SubmissionSuccess({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-dashed border-(--asi-outline) bg-white/70 p-4">
+      <div className="rounded-card border border-dashed border-(--asi-outline) bg-white/70 p-4">
         <p className="text-sm font-semibold text-(--asi-text)">Recordatorio</p>
         <p className="mt-2 text-sm leading-7 text-(--asi-text-muted)">
           Este paso organiza el expediente digital de la solicitud. El capítulo local seguirá con la autorización pastoral y la gestión de la membresía anual.
@@ -1846,7 +1846,7 @@ export function MembershipApplicationForm({
 
   if (!variant) {
     return (
-      <div className="rounded-[1.5rem] border border-red-200 bg-red-50 p-5 text-sm leading-7 text-red-700">
+      <div className="rounded-card-lg border border-red-200 bg-red-50 p-5 text-sm leading-7 text-red-700">
         No encontramos una variante de formulario para la categoría seleccionada. Reinicia la verificación de elegibilidad para continuar.
       </div>
     )
@@ -1865,7 +1865,7 @@ export function MembershipApplicationForm({
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-[30px]">
         {/* Rail izquierdo (escritorio) */}
         <aside className="hidden w-[330px] shrink-0 flex-col gap-4 lg:sticky lg:top-9 lg:flex">
-          <div className="rounded-2xl border border-[#e7ebf2] bg-white px-5 py-4 shadow-[0_1px_2px_rgba(16,40,80,0.04)]">
+          <div className="rounded-card border border-[#e7ebf2] bg-white px-5 py-4 shadow-[0_1px_2px_rgba(16,40,80,0.04)]">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-[#8a96a8]">Progreso general</p>
               <p className="text-[18px] font-extrabold text-(--asi-primary)">{progressPercent}%</p>
@@ -1894,19 +1894,19 @@ export function MembershipApplicationForm({
             </p>
           </div>
 
-          <div className="rounded-panel border border-[#e7ebf2] bg-white p-6 shadow-[0_1px_2px_rgba(16,40,80,0.04),0_18px_40px_-28px_rgba(16,40,80,0.22)] sm:p-8">
+          <div className="rounded-card border border-[#e7ebf2] bg-white p-6 shadow-[0_1px_2px_rgba(16,40,80,0.04),0_18px_40px_-28px_rgba(16,40,80,0.22)] sm:p-8">
             <span className="inline-flex w-fit rounded-full border border-[#e7ebf2] bg-[#f1f4f9] px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-[#8a96a8]">
               Fase {currentStepIndex + 1} de {applicationSteps.length}
             </span>
 
             {submitMutation.isError ? (
-              <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-700">
+              <div className="mt-5 rounded-card border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-700">
                 No pudimos guardar la solicitud real. Revisa los datos o vuelve a intentar.
               </div>
             ) : null}
 
             {MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED ? (
-              <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-7 text-amber-900">
+              <div className="mt-5 rounded-card border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-7 text-amber-900">
                 {MEMBERSHIP_APPLICATIONS_LOCKED_MESSAGE}
               </div>
             ) : null}
@@ -2752,7 +2752,7 @@ export function MembershipApplicationForm({
               }
             />
 
-            <div className="rounded-2xl border border-(--asi-outline) bg-white p-4">
+            <div className="rounded-card border border-(--asi-outline) bg-white p-4">
               <p className="text-sm font-semibold text-(--asi-text)">Tipo de pago</p>
               <p className="mt-2 text-base font-semibold text-(--asi-primary)">eCheck</p>
             </div>
@@ -2846,7 +2846,7 @@ export function MembershipApplicationForm({
             </div>
 
             <div className="grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-              <div className="rounded-2xl border border-(--asi-outline) bg-white p-4">
+              <div className="rounded-card border border-(--asi-outline) bg-white p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
                   Cuota de membresía
                 </p>
@@ -2879,7 +2879,7 @@ export function MembershipApplicationForm({
         ) : (
           <>
             <div className="grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-              <div className="rounded-2xl border border-(--asi-outline) bg-white p-4">
+              <div className="rounded-card border border-(--asi-outline) bg-white p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
                   Monto de membresía
                 </p>
@@ -2891,7 +2891,7 @@ export function MembershipApplicationForm({
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-dashed border-(--asi-outline) bg-white p-4">
+              <div className="rounded-card border border-dashed border-(--asi-outline) bg-white p-4">
                 <div className="flex gap-3">
                   <CircleAlert className="mt-0.5 size-5 shrink-0 text-(--asi-primary)" />
                   <p className="text-sm leading-7 text-(--asi-text-muted)">
@@ -3025,7 +3025,7 @@ export function MembershipApplicationForm({
           title="Compromiso"
           description="Al continuar, confirma que entiende el propósito de ASI y que su solicitud debe sostenerse en información veraz y actualizada."
         >
-        <div className="rounded-2xl border border-(--asi-outline) bg-white p-4">
+        <div className="rounded-card border border-(--asi-outline) bg-white p-4">
           <p className="text-sm leading-7 text-(--asi-text-muted)">
             Habiendo leído el propósito y los objetivos de ASI, y reconociendo que mi negocio o profesión es un ministerio, deseo y me comprometo a sostener los estándares y metas de ASI. Comprometo mi vida, mi oficina, mis talentos y mis fortalezas a compartir a Cristo en el mercado.
           </p>
@@ -3087,7 +3087,7 @@ export function MembershipApplicationForm({
                 type="button"
                 disabled={submitMutation.isPending}
                 onClick={handlePreviousStep}
-                className="inline-flex items-center gap-2 rounded-[13px] border-[1.5px] border-[#dde3ec] bg-white px-6 py-3 text-[15px] font-semibold text-(--asi-primary) transition-colors hover:border-(--asi-primary) disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex items-center gap-2 rounded-control border-[1.5px] border-[#dde3ec] bg-white px-6 py-3 text-[15px] font-semibold text-(--asi-primary) transition-colors hover:border-(--asi-primary) disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <ArrowLeft className="size-4" />
                 Anterior
@@ -3098,7 +3098,7 @@ export function MembershipApplicationForm({
               <button
                 type="submit"
                 disabled={submitMutation.isPending || MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED}
-                className="ml-auto inline-flex items-center gap-2 rounded-[13px] bg-(--asi-primary) px-6 py-3 text-[15px] font-semibold text-white shadow-[0_13px_26px_-13px_var(--asi-primary)] transition-[filter] hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
+                className="ml-auto inline-flex items-center gap-2 rounded-control bg-(--asi-primary) px-6 py-3 text-[15px] font-semibold text-white shadow-[0_13px_26px_-13px_var(--asi-primary)] transition-[filter] hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {submitMutation.isPending
                   ? 'Enviando solicitud...'
@@ -3113,7 +3113,7 @@ export function MembershipApplicationForm({
                 onClick={() => {
                   void handleNextStep()
                 }}
-                className="ml-auto inline-flex items-center gap-2 rounded-[13px] bg-(--asi-primary) px-6 py-3 text-[15px] font-semibold text-white shadow-[0_13px_26px_-13px_var(--asi-primary)] transition-[filter] hover:brightness-95"
+                className="ml-auto inline-flex items-center gap-2 rounded-control bg-(--asi-primary) px-6 py-3 text-[15px] font-semibold text-white shadow-[0_13px_26px_-13px_var(--asi-primary)] transition-[filter] hover:brightness-95"
               >
                 Siguiente
                 <ArrowRight className="size-4" />

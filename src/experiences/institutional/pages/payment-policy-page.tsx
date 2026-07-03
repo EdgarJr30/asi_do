@@ -65,7 +65,7 @@ export function PaymentPolicyPage({ kind }: { kind: PaymentPolicyKind }) {
                 </p>
                 <img
                   alt="Ejemplo de políticas de seguridad para website y pagos"
-                  className="mt-4 h-auto w-full rounded-2xl border border-slate-200 bg-white object-contain"
+                  className="mt-4 h-auto w-full rounded-card border border-slate-200 bg-white object-contain"
                   decoding="async"
                   height={515}
                   loading="lazy"
@@ -78,7 +78,7 @@ export function PaymentPolicyPage({ kind }: { kind: PaymentPolicyKind }) {
             {showReceiptModel ? <ReceiptModelCard /> : null}
           </div>
 
-          <aside className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,47,110,0.05)]">
+          <aside className="rounded-card-lg border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,47,110,0.05)]">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--asi-secondary)">
               Políticas relacionadas
             </p>
@@ -86,7 +86,7 @@ export function PaymentPolicyPage({ kind }: { kind: PaymentPolicyKind }) {
               {paymentPolicyLinks.map((link) => (
                 <Link
                   key={link.to}
-                  className="block rounded-2xl bg-(--asi-surface-muted) px-3 py-2.5 text-sm font-semibold text-(--asi-text) transition hover:bg-(--asi-surface-raised) hover:text-(--asi-primary)"
+                  className="block rounded-card bg-(--asi-surface-muted) px-3 py-2.5 text-sm font-semibold text-(--asi-text) transition hover:bg-(--asi-surface-raised) hover:text-(--asi-primary)"
                   to={link.to}
                 >
                   {link.label}
@@ -130,7 +130,7 @@ function ReceiptModelCard() {
   return (
     <InstitutionalCard className="bg-white/92" hoverMotion={false}>
       <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">Ejemplo de comprobante</h2>
-      <dl className="mt-4 space-y-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm">
+      <dl className="mt-4 space-y-1.5 rounded-card border border-slate-200 bg-slate-50 p-4 text-sm">
         {rows.map(([label, value]) => (
           <div key={label} className="flex items-start justify-between gap-4 border-t border-slate-200 pt-2 first:border-t-0 first:pt-0">
             <dt className="text-slate-500">{label}</dt>

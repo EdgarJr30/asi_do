@@ -99,7 +99,7 @@
 .institutional-home__carousel-viewport {
   width: 100%;
   background: transparent;
-  border-radius: 1.9rem;
+  border-radius: var(--radius-card-lg);
   isolation: isolate;
   touch-action: pan-y pinch-zoom;
   overscroll-behavior-x: contain;
@@ -144,7 +144,7 @@
   min-width: 0;
   border: 1px solid rgba(255, 255, 255, 0.24);
   box-shadow: 0 24px 54px rgba(0, 47, 110, 0.14);
-  border-radius: 1.9rem;
+  border-radius: var(--radius-card-lg);
 }
 
 .institutional-home__carousel-loop-card {
@@ -202,7 +202,7 @@
 }
 
 .institutional-home__event-caption {
-  border-radius: 1.15rem;
+  border-radius: var(--radius-card);
   background-color: rgba(8, 17, 31, 0.42);
 }
 
@@ -259,7 +259,7 @@
 }
 
 .institutional-home__device-frame {
-  border-radius: 1.45rem;
+  border-radius: var(--radius-card-lg);
   background-color: #08111f;
 }
 

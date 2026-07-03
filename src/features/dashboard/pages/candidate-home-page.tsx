@@ -202,7 +202,7 @@ export function CandidateHomePage() {
       {/* KPIs */}
       <motion.div
         variants={cardReveal}
-        className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-border) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] sm:grid-cols-2 xl:grid-cols-4 dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]"
+        className="grid grid-cols-1 gap-px overflow-hidden rounded-card border border-(--app-border) bg-(--app-border) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] sm:grid-cols-2 xl:grid-cols-4 dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]"
       >
         {metricCards.map((metric) => (
           <MetricCard key={metric.key} metric={metric} />
@@ -231,7 +231,7 @@ export function CandidateHomePage() {
           <>
             <motion.div
               variants={cardReveal}
-              className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]"
+              className="overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]"
             >
               <div className="hidden grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_110px_130px_40px] gap-x-4 border-b border-(--app-border) bg-(--app-surface-muted)/40 px-5 py-2.5 text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-(--app-text-subtle) sm:grid">
                 <span>Vacante</span>
@@ -249,7 +249,7 @@ export function CandidateHomePage() {
                     className="group grid w-full grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-3 text-left transition-colors hover:bg-(--app-surface-muted) sm:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_110px_130px_40px] sm:px-5"
                   >
                     <span className="flex min-w-0 items-center gap-3">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
                         <FileText className="size-4" />
                       </span>
                       <span className="truncate text-[0.85rem] font-semibold text-(--app-text)">
@@ -266,7 +266,7 @@ export function CandidateHomePage() {
                       <span className={cn('size-1.5 rounded-full', applicationStatusDotClass(application.status_public))} />
                       {applicationStatusLabel(application.status_public)}
                     </span>
-                    <span className="hidden size-8 items-center justify-center justify-self-end rounded-lg text-(--app-text-subtle) transition-colors group-hover:bg-primary-50 group-hover:text-primary-600 sm:flex dark:group-hover:bg-primary-500/12 dark:group-hover:text-primary-300">
+                    <span className="hidden size-8 items-center justify-center justify-self-end rounded-control text-(--app-text-subtle) transition-colors group-hover:bg-primary-50 group-hover:text-primary-600 sm:flex dark:group-hover:bg-primary-500/12 dark:group-hover:text-primary-300">
                       <ChevronRight className="size-4" />
                     </span>
                   </button>
@@ -285,7 +285,7 @@ export function CandidateHomePage() {
                     type="button"
                     onClick={() => setRecentPage((page) => Math.max(0, page - 1))}
                     disabled={recentPageSafe === 0}
-                    className="inline-flex size-8 items-center justify-center rounded-lg border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--app-border) disabled:hover:text-(--app-text-muted) dark:hover:border-primary-400 dark:hover:text-primary-200"
+                    className="inline-flex size-8 items-center justify-center rounded-control border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--app-border) disabled:hover:text-(--app-text-muted) dark:hover:border-primary-400 dark:hover:text-primary-200"
                     aria-label="Página anterior"
                   >
                     <ChevronLeft className="size-4" />
@@ -294,7 +294,7 @@ export function CandidateHomePage() {
                     type="button"
                     onClick={() => setRecentPage((page) => Math.min(recentTotalPages - 1, page + 1))}
                     disabled={recentPageSafe >= recentTotalPages - 1}
-                    className="inline-flex size-8 items-center justify-center rounded-lg border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--app-border) disabled:hover:text-(--app-text-muted) dark:hover:border-primary-400 dark:hover:text-primary-200"
+                    className="inline-flex size-8 items-center justify-center rounded-control border border-(--app-border) bg-(--app-surface) text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-(--app-border) disabled:hover:text-(--app-text-muted) dark:hover:border-primary-400 dark:hover:text-primary-200"
                     aria-label="Página siguiente"
                   >
                     <ChevronRight className="size-4" />
@@ -345,7 +345,7 @@ function DailyQuote() {
       onClick={() => void handleCopy()}
       title="Clic para copiar la frase"
       aria-label="Copiar frase del día"
-      className="group flex max-w-[40rem] items-start gap-2 rounded-lg text-left transition-colors hover:text-(--app-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50"
+      className="group flex max-w-[40rem] items-start gap-2 rounded-control text-left transition-colors hover:text-(--app-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50"
     >
       <Quote aria-hidden className="mt-0.5 size-4 shrink-0 text-primary-500/60 dark:text-primary-300/60" />
       <p className="text-[0.9rem] leading-relaxed">
@@ -397,7 +397,7 @@ function MetricCard({ metric }: { metric: MetricCardData }) {
   const Icon = metric.icon
   return (
     <div className="flex items-start gap-3 bg-(--app-surface-elevated) p-4 sm:p-[1.1rem]">
-      <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-xl', metric.chipClass)}>
+      <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-control', metric.chipClass)}>
         <Icon className="size-[1.1rem]" />
       </span>
       <div className="min-w-0">

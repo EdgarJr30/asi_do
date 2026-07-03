@@ -112,7 +112,7 @@ export function WhoWeArePage() {
                 {whoWeAreHeroHighlights.map((item) => (
                   <motion.li
                     key={item}
-                    className="rounded-panel bg-white px-4 py-3 text-sm font-semibold text-(--asi-text)"
+                    className="rounded-card bg-white px-4 py-3 text-sm font-semibold text-(--asi-text)"
                     variants={itemVariants}
                   >
                     {item}
@@ -134,7 +134,7 @@ export function WhoWeArePage() {
           </motion.div>
 
           <motion.div className="grid gap-4" variants={mediaVariants}>
-            <div className="overflow-hidden rounded-[1.75rem] shadow-2xl ring-1 ring-black/8">
+            <div className="overflow-hidden rounded-card-lg shadow-2xl ring-1 ring-black/8">
               <img
                 alt={whoWeAreHeroMedia.imageAlt}
                 className="aspect-4/3 w-full object-cover lg:aspect-square lg:max-h-110"
@@ -199,7 +199,7 @@ export function WhoWeArePage() {
                   className="asi-card bg-white px-5 py-5"
                   variants={itemVariants}
                 >
-                  <div className="flex size-11 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-(--asi-primary)">
+                  <div className="flex size-11 items-center justify-center rounded-card bg-(--asi-primary)/8 text-(--asi-primary)">
                     <Icon className="size-5" />
                   </div>
                   <p className="mt-4 text-lg font-semibold text-(--asi-text)">
@@ -239,7 +239,7 @@ export function WhoWeArePage() {
               {whoWeAreHistoryTimeline.map((item) => (
                 <div
                   key={item.year}
-                  className="rounded-panel bg-(--asi-surface-panel) px-5 py-4"
+                  className="rounded-card bg-(--asi-surface-panel) px-5 py-4"
                 >
                   <p className="text-sm font-semibold uppercase tracking-[0.14em] text-(--asi-secondary)">
                     {item.year}
@@ -258,7 +258,7 @@ export function WhoWeArePage() {
           <motion.div className="grid gap-5" variants={itemVariants}>
             <img
               alt="Reunión histórica e institucional con enfoque en legado y servicio"
-              className="h-88 w-full rounded-[1.75rem] object-cover shadow-(--asi-shadow-soft)"
+              className="h-88 w-full rounded-card-lg object-cover shadow-(--asi-shadow-soft)"
               decoding="async"
               loading="lazy"
               sizes="(max-width: 1023px) 100vw, 48vw"
@@ -318,7 +318,7 @@ export function WhoWeArePage() {
                   className="asi-card bg-white/10 text-white backdrop-blur-md"
                   variants={itemVariants}
                 >
-                  <div className="flex size-12 items-center justify-center rounded-2xl bg-white/12 text-white">
+                  <div className="flex size-12 items-center justify-center rounded-card bg-white/12 text-white">
                     <Icon className="size-6" />
                   </div>
                   <p className="mt-5 text-lg font-semibold text-white">
@@ -370,7 +370,7 @@ export function WhoWeArePage() {
                       }
                     >
                       <span className="flex items-center gap-4">
-                        <span className="flex size-11 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-(--asi-primary)">
+                        <span className="flex size-11 items-center justify-center rounded-card bg-(--asi-primary)/8 text-(--asi-primary)">
                           <Icon className="size-5" />
                         </span>
                         <span className="text-lg font-semibold leading-7">
@@ -457,7 +457,7 @@ export function WhoWeArePage() {
               return (
                 <motion.div
                   key={region.title}
-                  className="overflow-hidden rounded-panel outline-1 outline-(--asi-outline)"
+                  className="overflow-hidden rounded-card outline-1 outline-(--asi-outline)"
                   variants={itemVariants}
                 >
                   <button
@@ -578,7 +578,7 @@ export function WhoWeArePage() {
                 className="asi-card bg-white/10 text-white backdrop-blur-md"
                 variants={itemVariants}
               >
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-white/12 text-white">
+                <div className="flex size-12 items-center justify-center rounded-card bg-white/12 text-white">
                   <Icon className="size-6" />
                 </div>
                 <p className="mt-5 text-lg font-semibold text-white">

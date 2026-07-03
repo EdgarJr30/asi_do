@@ -67,7 +67,7 @@ export function AuthHeroPanel() {
           {statTiles.map((item) => (
             <div
               key={item.label}
-              className="rounded-lg border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm"
+              className="rounded-control border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm"
             >
               <div className="text-2xl font-bold text-white">
                 {item.value}

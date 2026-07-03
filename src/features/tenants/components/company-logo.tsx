@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils/cn'
 const LOGO_COLORS = ['#3b62b8', '#0e8a86', '#6b46c1', '#c2683a', '#1f9d61', '#b8456f', '#2d52a8', '#0f7a9c'] as const
 
 const logoSizeClassName = {
-  sm: 'size-[42px] rounded-xl text-[0.8rem]',
-  md: 'size-11 rounded-xl text-sm',
-  lg: 'size-14 rounded-[13px] text-lg'
+  sm: 'size-[42px] rounded-control text-[0.8rem]',
+  md: 'size-11 rounded-control text-sm',
+  lg: 'size-14 rounded-control text-lg'
 } as const
 
 type CompanyLogoSize = keyof typeof logoSizeClassName

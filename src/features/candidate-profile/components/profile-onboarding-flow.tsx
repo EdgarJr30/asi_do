@@ -95,7 +95,7 @@ function OnboardingFrame({
   const progress = Math.round((completedStepCount / steps.length) * 100)
 
   return (
-    <aside className="relative overflow-hidden rounded-[28px] border border-(--app-border) bg-(--app-surface-muted) p-4 shadow-[0_24px_64px_rgba(21,32,59,0.08)] sm:p-5 lg:sticky lg:top-24">
+    <aside className="relative overflow-hidden rounded-card-lg border border-(--app-border) bg-(--app-surface-muted) p-4 shadow-[0_24px_64px_rgba(21,32,59,0.08)] sm:p-5 lg:sticky lg:top-24">
       <div className="absolute inset-x-8 top-0 h-px bg-primary-300/60" />
       <div className="flex items-center justify-between gap-3">
         <Badge variant="soft" className="gap-1.5">
@@ -125,7 +125,7 @@ function OnboardingFrame({
             <div
               key={step.id}
               className={cn(
-                'flex items-center gap-3 rounded-[18px] border p-3 transition',
+                'flex items-center gap-3 rounded-card border p-3 transition',
                 isActive
                   ? 'border-primary-300 bg-primary-50 text-primary-700 dark:border-primary-500/30 dark:bg-primary-500/12 dark:text-primary-100'
                   : 'border-transparent bg-(--app-surface-elevated) text-(--app-text-muted)'
@@ -133,7 +133,7 @@ function OnboardingFrame({
             >
               <div
                 className={cn(
-                  'flex size-10 shrink-0 items-center justify-center rounded-[14px]',
+                  'flex size-10 shrink-0 items-center justify-center rounded-control',
                   isDone ? 'bg-primary-600 text-white' : 'bg-(--app-surface) text-current'
                 )}
               >
@@ -148,7 +148,7 @@ function OnboardingFrame({
         })}
       </div>
 
-      <div className="mt-6 rounded-[22px] border border-(--app-border) bg-(--app-surface-elevated) p-4">
+      <div className="mt-6 rounded-card-lg border border-(--app-border) bg-(--app-surface-elevated) p-4">
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary-600" />
           <p className="text-sm leading-6 text-(--app-text-muted)">
@@ -464,7 +464,7 @@ export function ProfileOnboardingFlow() {
           ) : null}
         </div>
 
-        <section className="overflow-hidden rounded-[30px] border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_24px_72px_rgba(21,32,59,0.08)]">
+        <section className="overflow-hidden rounded-card-lg border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_24px_72px_rgba(21,32,59,0.08)]">
           <div className="grid min-h-128 lg:grid-cols-[minmax(0,1fr)_18rem]">
             <div className="p-5 sm:p-7">
               <AnimatePresence mode="wait">
@@ -478,7 +478,7 @@ export function ProfileOnboardingFlow() {
                     transition={slideTransition}
                   >
                     <div>
-                      <div className="flex size-14 items-center justify-center rounded-panel bg-primary-600 text-white">
+                      <div className="flex size-14 items-center justify-center rounded-card bg-primary-600 text-white">
                         <CheckCircle2 className="size-7" />
                       </div>
                       <h2 className="mt-5 text-[1.65rem] font-bold leading-tight text-(--app-text) sm:text-[2rem]">
@@ -520,7 +520,7 @@ export function ProfileOnboardingFlow() {
                   >
                     <div>
                       <div className="flex items-center gap-3">
-                        <div className="flex size-12 items-center justify-center rounded-[18px] bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-100">
+                        <div className="flex size-12 items-center justify-center rounded-card bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-100">
                           <ActiveStepIcon className="size-5" />
                         </div>
                         <span className="text-xs font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">
@@ -542,7 +542,7 @@ export function ProfileOnboardingFlow() {
                               <span className="text-[13px] font-semibold text-(--app-text)">Nombre completo</span>
                               <Input
                                 autoComplete="name"
-                                className="h-13 rounded-2xl"
+                                className="h-13 rounded-card"
                                 placeholder="Ej. John Doe"
                                 {...form.register('fullName')}
                               />
@@ -552,7 +552,7 @@ export function ProfileOnboardingFlow() {
                             <label className="block space-y-1.5">
                               <span className="text-[13px] font-semibold text-(--app-text)">Nombre visible</span>
                               <Input
-                                className="h-13 rounded-2xl"
+                                className="h-13 rounded-card"
                                 placeholder="Ej. John D."
                                 {...form.register('displayName')}
                               />
@@ -565,7 +565,7 @@ export function ProfileOnboardingFlow() {
                           <div className="grid gap-4 sm:grid-cols-2">
                             <label className="block space-y-1.5">
                               <span className="text-[13px] font-semibold text-(--app-text)">Idioma</span>
-                              <Select className="h-13 rounded-2xl" {...form.register('locale')}>
+                              <Select className="h-13 rounded-card" {...form.register('locale')}>
                                 <option value="es">Espanol</option>
                                 <option value="en">English</option>
                               </Select>
@@ -573,7 +573,7 @@ export function ProfileOnboardingFlow() {
 
                             <label className="block space-y-1.5">
                               <span className="text-[13px] font-semibold text-(--app-text)">País</span>
-                              <CountryCodeSelect className="h-13 rounded-2xl" {...form.register('countryCode')} />
+                              <CountryCodeSelect className="h-13 rounded-card" {...form.register('countryCode')} />
                               <FieldError message={form.formState.errors.countryCode?.message} />
                             </label>
                           </div>
@@ -581,7 +581,7 @@ export function ProfileOnboardingFlow() {
 
                         {activeStep.id === 'avatar' ? (
                           <div className="space-y-4">
-                            <label className="flex cursor-pointer flex-col items-center justify-center rounded-[24px] border border-dashed border-primary-300 bg-primary-50/70 px-4 py-8 text-center transition hover:bg-primary-50 dark:border-primary-500/30 dark:bg-primary-500/10">
+                            <label className="flex cursor-pointer flex-col items-center justify-center rounded-card-lg border border-dashed border-primary-300 bg-primary-50/70 px-4 py-8 text-center transition hover:bg-primary-50 dark:border-primary-500/30 dark:bg-primary-500/10">
                               <UploadCloud className="size-8 text-primary-600 dark:text-primary-200" />
                               <span className="mt-3 text-sm font-semibold text-(--app-text)">Subir foto</span>
                               <span className="mt-1 max-w-xs text-xs leading-5 text-(--app-text-muted)">
@@ -605,7 +605,7 @@ export function ProfileOnboardingFlow() {
 
                     <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <Button
-                        className="h-12 rounded-2xl px-4"
+                        className="h-12 rounded-card px-4"
                         disabled={activeStepIndex === 0 || form.formState.isSubmitting}
                         variant="outline"
                         onClick={() => setActiveStepIndex((value) => Math.max(value - 1, 0))}
@@ -614,7 +614,7 @@ export function ProfileOnboardingFlow() {
                         Atras
                       </Button>
                       <Button
-                        className="h-12 rounded-2xl px-5"
+                        className="h-12 rounded-card px-5"
                         disabled={form.formState.isSubmitting || isPreparingAvatar}
                         onClick={() => void handleNext()}
                       >
@@ -631,9 +631,9 @@ export function ProfileOnboardingFlow() {
               <div className="flex h-full flex-col justify-between gap-5">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-(--app-text-subtle)">Vista viva</p>
-                  <div className="mt-4 rounded-[24px] border border-(--app-border) bg-(--app-surface-elevated) p-4">
+                  <div className="mt-4 rounded-card-lg border border-(--app-border) bg-(--app-surface-elevated) p-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-panel bg-primary-100 text-xs font-semibold text-primary-700">
+                      <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-card bg-primary-100 text-xs font-semibold text-primary-700">
                         {avatarPreviewUrl ? (
                           <img alt="Vista previa de avatar" className="h-full w-full object-cover" src={avatarPreviewUrl} />
                         ) : (
@@ -646,11 +646,11 @@ export function ProfileOnboardingFlow() {
                       </div>
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-                      <div className="rounded-[14px] bg-(--app-surface) p-3">
+                      <div className="rounded-control bg-(--app-surface) p-3">
                         <span className="block text-(--app-text-subtle)">Idioma</span>
                         <strong className="mt-1 block text-(--app-text)">{previewLocale}</strong>
                       </div>
-                      <div className="rounded-[14px] bg-(--app-surface) p-3">
+                      <div className="rounded-control bg-(--app-surface) p-3">
                         <span className="block text-(--app-text-subtle)">País</span>
                         <strong className="mt-1 block text-(--app-text)">{previewCountry.toUpperCase()}</strong>
                       </div>

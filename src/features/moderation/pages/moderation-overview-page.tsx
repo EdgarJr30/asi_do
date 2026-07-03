@@ -89,7 +89,7 @@ export function ModerationOverviewPage() {
         <Card className="overflow-hidden bg-(--app-surface-muted)">
           <CardContent className="mt-0 grid gap-3 md:grid-cols-2">
           {moderationGuardrails.map((rule) => (
-            <div key={rule} className="rounded-[24px] border border-white/70 bg-white/80 px-4 py-4 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950/70 dark:text-zinc-300">
+            <div key={rule} className="rounded-card-lg border border-white/70 bg-white/80 px-4 py-4 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950/70 dark:text-zinc-300">
               {rule}
             </div>
           ))}
@@ -149,7 +149,7 @@ export function ModerationOverviewPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {(casesQuery.data ?? []).map((caseItem) => (
-              <div key={caseItem.id} className="rounded-[24px] border border-zinc-200 bg-zinc-50 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/80">
+              <div key={caseItem.id} className="rounded-card-lg border border-zinc-200 bg-zinc-50 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/80">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
@@ -253,7 +253,7 @@ export function ModerationOverviewPage() {
                 {caseItem.actions && caseItem.actions.length > 0 ? (
                   <div className="mt-4 grid gap-2">
                     {caseItem.actions.slice(0, 3).map((action) => (
-                      <div key={action.id} className="rounded-2xl bg-white/80 px-3 py-3 text-sm text-zinc-600 dark:bg-zinc-950/70 dark:text-zinc-400">
+                      <div key={action.id} className="rounded-card bg-white/80 px-3 py-3 text-sm text-zinc-600 dark:bg-zinc-950/70 dark:text-zinc-400">
                         <span className="font-semibold text-zinc-900 dark:text-zinc-50">{action.action_type}</span>
                         {action.note ? ` · ${action.note}` : ''}
                       </div>

@@ -51,7 +51,7 @@ export function BrandMark({
   return (
     <span
       className={cn(
-        'flex size-12 shrink-0 items-center justify-center rounded-[18px] border border-primary-400/20 bg-primary-600 p-2.5 shadow-[0_16px_32px_rgba(43,69,143,0.22)]',
+        'flex size-12 shrink-0 items-center justify-center rounded-card border border-primary-400/20 bg-primary-600 p-2.5 shadow-[0_16px_32px_rgba(43,69,143,0.22)]',
         panelClassName
       )}
     >

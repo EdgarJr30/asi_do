@@ -219,7 +219,7 @@ function InstitutionalCarouselCard({
   return (
     <motion.article
       ref={cardRef}
-      className="institutional-home__carousel-card institutional-home__carousel-loop-card overflow-hidden rounded-3xl shadow-(--asi-shadow-soft)"
+      className="institutional-home__carousel-card institutional-home__carousel-loop-card overflow-hidden rounded-card-lg shadow-(--asi-shadow-soft)"
       style={{ x }}
     >
       {item.image ? (
@@ -1002,7 +1002,7 @@ export function InstitutionalHomePage() {
                         {homeHeroMetrics.map((metric) => (
                           <motion.div
                             key={metric.label}
-                            className="rounded-3xl border border-white/10 bg-white/12 p-3 backdrop-blur-md sm:p-4"
+                            className="rounded-card-lg border border-white/10 bg-white/12 p-3 backdrop-blur-md sm:p-4"
                             transition={{ duration: 0.3 }}
                             whileHover={
                               shouldReduceMotion
@@ -1166,7 +1166,7 @@ export function InstitutionalHomePage() {
               hoverMotion={false}
             >
               <FloatingEcosystemMedia floatIndex={0}>
-                <div className="relative h-full min-h-84 overflow-hidden rounded-[1.5rem]">
+                <div className="relative h-full min-h-84 overflow-hidden rounded-card-lg">
                   <img
                     alt={homeEcosystemCards[0].imageAlt}
                     className="h-full w-full object-cover"
@@ -1196,7 +1196,7 @@ export function InstitutionalHomePage() {
               >
                 {item.image ? (
                   <FloatingEcosystemMedia floatIndex={index + 1}>
-                    <div className="institutional-home__ecosystem-card-media relative overflow-hidden rounded-[1.5rem]">
+                    <div className="institutional-home__ecosystem-card-media relative overflow-hidden rounded-card-lg">
                       <img
                         alt={item.imageAlt ?? item.title}
                         className="h-full w-full object-cover"
@@ -1218,7 +1218,7 @@ export function InstitutionalHomePage() {
                   </FloatingEcosystemMedia>
                 ) : (
                   <div className="p-5">
-                    <div className="flex size-12 items-center justify-center rounded-2xl bg-(--asi-surface-muted) text-(--asi-primary)">
+                    <div className="flex size-12 items-center justify-center rounded-card bg-(--asi-surface-muted) text-(--asi-primary)">
                       <Quote className="size-5" />
                     </div>
                     <p className="institutional-home__card-title mt-4 font-semibold tracking-tight text-(--asi-text)">
@@ -1241,7 +1241,7 @@ export function InstitutionalHomePage() {
             transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
             whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
           >
-            <div className="institutional-home__device-shell overflow-hidden rounded-4xl p-3">
+            <div className="institutional-home__device-shell overflow-hidden rounded-card-lg p-3">
               <div className="institutional-home__device-frame overflow-hidden">
                 {platformVideoReady ? (
                   <LazyAutoplayVideo
@@ -1408,7 +1408,7 @@ export function InstitutionalHomePage() {
                 <motion.article
                   key={item.title}
                   className={cn(
-                    'institutional-home__testimonial-card rounded-3xl p-6 text-white',
+                    'institutional-home__testimonial-card rounded-card-lg p-6 text-white',
                     index > 0 && 'hidden lg:block'
                   )}
                   layout

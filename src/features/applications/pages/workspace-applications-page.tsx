@@ -187,7 +187,7 @@ export function WorkspaceApplicationsPage() {
       </motion.div>
 
       <motion.div variants={cardReveal} className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
+        <div className="flex flex-1 items-center gap-2.5 rounded-control border border-(--app-border) bg-(--app-surface) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
           <Search aria-hidden="true" className="size-4 shrink-0 text-(--app-text-subtle)" />
           <input
             value={query}
@@ -200,7 +200,7 @@ export function WorkspaceApplicationsPage() {
           />
         </div>
         <Select
-          className="h-11 rounded-xl sm:w-48"
+          className="h-11 rounded-control sm:w-48"
           value={sort}
           onChange={(event) => setSort(event.target.value as 'recent' | 'oldest' | 'name')}
         >
@@ -245,7 +245,7 @@ export function WorkspaceApplicationsPage() {
       </motion.div>
 
       <motion.div variants={cardReveal} className="space-y-3">
-        <Card className="overflow-hidden rounded-2xl p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]">
+        <Card className="overflow-hidden rounded-card p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]">
           <div className="hidden grid-cols-[minmax(0,2.2fr)_minmax(0,1.5fr)_1fr_1fr_0.9fr_2.5rem] items-center gap-4 border-b border-(--app-border) bg-(--app-surface-muted)/70 px-4 py-3 text-[0.7rem] font-bold uppercase tracking-[0.05em] text-(--app-text-subtle) lg:grid">
             <span>Candidato</span>
             <span className="hidden xl:block">Posición</span>
@@ -352,7 +352,7 @@ export function WorkspaceApplicationsPage() {
             </motion.ul>
           ) : (
             <div className="px-5 py-16 text-center">
-              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-card bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
                 <Search className="size-6" />
               </div>
               <h3 className="mt-4 text-base font-bold tracking-tight text-(--app-text)">Sin resultados</h3>
@@ -386,7 +386,7 @@ export function WorkspaceApplicationsPage() {
 
 function MetricChip({ dot, value, label }: { dot: string; value: string | number; label: string }) {
   return (
-    <div className="flex items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface-elevated) py-2 pl-3 pr-4">
+    <div className="flex items-center gap-2.5 rounded-control border border-(--app-border) bg-(--app-surface-elevated) py-2 pl-3 pr-4">
       <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: dot }} />
       <span className="min-w-0">
         <span className="block font-sans text-[1.18rem] font-bold leading-none tracking-tight text-(--app-text)">{value}</span>

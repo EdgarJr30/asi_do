@@ -277,7 +277,7 @@ export function ResumenDashboardPage() {
 
       <motion.div
         variants={cardReveal}
-        className="overflow-hidden rounded-[14px] border border-(--app-border) bg-(--app-border) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:shadow-[0_14px_32px_rgba(0,0,0,0.16)]"
+        className="overflow-hidden rounded-control border border-(--app-border) bg-(--app-border) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:shadow-[0_14px_32px_rgba(0,0,0,0.16)]"
       >
         <div className="grid gap-px sm:grid-cols-2 2xl:grid-cols-4">
           <KpiStripCell
@@ -543,8 +543,8 @@ function FirstStepCard({
   onClick: () => void
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface) p-4">
-      <span className="flex size-10 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+    <div className="flex flex-col gap-3 rounded-card border border-(--app-border) bg-(--app-surface) p-4">
+      <span className="flex size-10 items-center justify-center rounded-card bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
         <Icon className="size-5" />
       </span>
       <div className="space-y-1">
@@ -599,8 +599,8 @@ function ApplicationRow({ application, index }: { application: DashboardRecentAp
   const accent = stageAccent(application.stageCode, application.stageName)
 
   return (
-    <tr className="rounded-xl transition-colors hover:bg-(--app-surface-muted)">
-      <td className="rounded-l-xl px-3 py-2">
+    <tr className="rounded-control transition-colors hover:bg-(--app-surface-muted)">
+      <td className="rounded-l-control px-3 py-2">
         <div className="flex items-center gap-2.5">
           <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white', avatarColors[index % avatarColors.length])}>
             {initialsOf(application.candidateName)}
@@ -628,7 +628,7 @@ function ApplicationRow({ application, index }: { application: DashboardRecentAp
           <span className="text-(--app-text-subtle)">—</span>
         )}
       </td>
-      <td className="rounded-r-xl px-3 py-2 text-right text-[0.82rem] tabular-nums text-(--app-text-muted)">{relativeTime(application.submittedAt)}</td>
+      <td className="rounded-r-control px-3 py-2 text-right text-[0.82rem] tabular-nums text-(--app-text-muted)">{relativeTime(application.submittedAt)}</td>
     </tr>
   )
 }
@@ -669,7 +669,7 @@ function ActivitySummaryPanel({
             <Select
               value={filter}
               onChange={(event) => setFilter(event.target.value as ActivityFilter)}
-              className="h-9 w-38 appearance-none rounded-[10px] py-0 pr-8 text-[0.78rem] font-semibold text-(--app-text-muted)"
+              className="h-9 w-38 appearance-none rounded-control py-0 pr-8 text-[0.78rem] font-semibold text-(--app-text-muted)"
             >
               {ACTIVITY_FILTERS.map((option) => {
                 const count = option.value === 'all' ? counts.total : counts[option.value]
@@ -738,8 +738,8 @@ function ActivitySummaryRow({ item }: { item: DashboardActivityItem }) {
   const Icon = meta.icon
 
   return (
-    <li className="flex items-start gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-(--app-surface-muted)">
-      <span className={cn('mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-[10px]', activityAccentClassName[meta.accent])}>
+    <li className="flex items-start gap-3 rounded-control px-2 py-2 transition-colors hover:bg-(--app-surface-muted)">
+      <span className={cn('mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-control', activityAccentClassName[meta.accent])}>
         <Icon className="size-4" />
       </span>
       <div className="min-w-0 flex-1">

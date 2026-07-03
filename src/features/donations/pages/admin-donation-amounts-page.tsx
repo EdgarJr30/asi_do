@@ -162,7 +162,7 @@ export function AdminDonationAmountsPage({ embedded = false }: { embedded?: bool
             {optionsQuery.isLoading ? (
               <PageLoader inline label="Cargando montos" />
             ) : options.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-(--app-border) px-4 py-10 text-center text-sm text-(--app-text-muted)">
+              <div className="rounded-card-lg border border-dashed border-(--app-border) px-4 py-10 text-center text-sm text-(--app-text-muted)">
                 Aún no hay montos configurados. Agrega el primero arriba.
               </div>
             ) : (
@@ -201,7 +201,7 @@ export function AdminDonationAmountsPage({ embedded = false }: { embedded?: bool
             {donationsQuery.isLoading ? (
               <PageLoader inline label="Cargando donaciones" />
             ) : donations.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-(--app-border) px-4 py-10 text-center text-sm text-(--app-text-muted)">
+              <div className="rounded-card-lg border border-dashed border-(--app-border) px-4 py-10 text-center text-sm text-(--app-text-muted)">
                 Aún no se han registrado donaciones.
               </div>
             ) : (
@@ -209,7 +209,7 @@ export function AdminDonationAmountsPage({ embedded = false }: { embedded?: bool
                 {donations.map((donation) => {
                   const meta = donationStatusMeta(donation.status)
                   return (
-                    <motion.li key={donation.id} variants={cardReveal} className="rounded-2xl border border-(--app-border) bg-(--app-surface) p-4">
+                    <motion.li key={donation.id} variants={cardReveal} className="rounded-card border border-(--app-border) bg-(--app-surface) p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-(--app-text)">
@@ -276,7 +276,7 @@ function DonationAmountRow({
   const dirty = label !== option.label || amount !== String(option.amount) || order !== String(option.display_order)
 
   return (
-    <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface) p-4">
+    <div className="flex flex-wrap items-end gap-3 rounded-card border border-(--app-border) bg-(--app-surface) p-4">
       <label className="grid min-w-40 flex-1 gap-1 text-xs">
         <span className="font-medium uppercase tracking-wide text-(--app-text-subtle)">Etiqueta</span>
         <Input value={label} onChange={(event) => setLabel(event.target.value)} />

@@ -39,7 +39,7 @@ function donationReceiptLines(receipt: DonationReceipt): ReceiptLine[] {
 function DonationReceiptCard({ receipt }: { receipt: DonationReceipt }) {
   const lines = donationReceiptLines(receipt)
   return (
-    <div className="mt-4 rounded-[1.5rem] border border-emerald-200 bg-white px-5 py-4 text-sm">
+    <div className="mt-4 rounded-card-lg border border-emerald-200 bg-white px-5 py-4 text-sm">
       <p className="font-semibold text-emerald-900">Comprobante de tu donación</p>
       <dl className="mt-3 space-y-1.5">
         {lines.map(([key, value]) => (
@@ -53,14 +53,14 @@ function DonationReceiptCard({ receipt }: { receipt: DonationReceipt }) {
         <button
           type="button"
           onClick={() => printReceipt(DONATION_RECEIPT_TITLE, lines)}
-          className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+          className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-control border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
         >
           Descargar
         </button>
         <button
           type="button"
           onClick={() => void shareReceipt(DONATION_RECEIPT_TITLE, receiptPlainText(DONATION_RECEIPT_TITLE, lines))}
-          className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+          className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-control border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
         >
           Compartir
         </button>
@@ -219,7 +219,7 @@ export function DonationCheckoutSection() {
           {statusMessage ? (
             <div
               className={cn(
-                'mt-5 rounded-[1.5rem] border px-5 py-4 text-sm',
+                'mt-5 rounded-card-lg border px-5 py-4 text-sm',
                 statusMessage.tone === 'success' && 'border-emerald-200 bg-emerald-50 text-emerald-900',
                 statusMessage.tone === 'warning' && 'border-amber-200 bg-amber-50 text-amber-900',
                 statusMessage.tone === 'error' && 'border-rose-200 bg-rose-50 text-rose-900'
@@ -240,7 +240,7 @@ export function DonationCheckoutSection() {
                 variants={cardReveal}
                 onClick={() => setSelectedOptionId(option.id)}
                 className={cn(
-                  'rounded-[1.35rem] border bg-white px-4 py-4 text-left shadow-[0_10px_30px_rgba(0,47,110,0.06)] transition',
+                  'rounded-card border bg-white px-4 py-4 text-left shadow-[0_10px_30px_rgba(0,47,110,0.06)] transition',
                   effectiveSelectedOptionId === option.id
                     ? 'border-(--asi-primary) ring-2 ring-(--asi-primary)/18'
                     : 'border-slate-200 hover:border-(--asi-primary)/45'
@@ -256,7 +256,7 @@ export function DonationCheckoutSection() {
               variants={cardReveal}
               onClick={() => setSelectedOptionId(customSelection)}
               className={cn(
-                'rounded-[1.35rem] border border-dashed bg-white px-4 py-4 text-left shadow-[0_10px_30px_rgba(0,47,110,0.06)] transition',
+                'rounded-card border border-dashed bg-white px-4 py-4 text-left shadow-[0_10px_30px_rgba(0,47,110,0.06)] transition',
                 isCustom ? 'border-(--asi-primary) ring-2 ring-(--asi-primary)/18' : 'border-slate-300 hover:border-(--asi-primary)/45'
               )}
             >
@@ -266,7 +266,7 @@ export function DonationCheckoutSection() {
           </motion.div>
 
           {amountOptionsQuery.isError ? (
-            <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            <p className="mt-4 rounded-card border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
               No pudimos cargar los montos configurados. Revisa la conexión con Supabase o intenta nuevamente.
             </p>
           ) : null}
@@ -275,7 +275,7 @@ export function DonationCheckoutSection() {
         <motion.div variants={cardReveal}>
           <InstitutionalCard className="bg-white/92" hoverMotion={false}>
             <div className="flex items-center gap-3">
-              <span className="flex size-11 items-center justify-center rounded-2xl bg-(--asi-surface-raised) text-(--asi-primary)">
+              <span className="flex size-11 items-center justify-center rounded-card bg-(--asi-surface-raised) text-(--asi-primary)">
                 <CreditCard className="size-5" />
               </span>
               <div>
@@ -283,7 +283,7 @@ export function DonationCheckoutSection() {
               </div>
             </div>
 
-            <div className="mt-5 rounded-[1.35rem] bg-(--asi-surface-raised) px-4 py-4">
+            <div className="mt-5 rounded-card bg-(--asi-surface-raised) px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--asi-secondary)">Monto seleccionado</p>
               <p className="mt-2 text-3xl font-semibold tracking-tight text-(--asi-text)">
                 {selectedAmount > 0 ? formatDop(selectedAmount) : 'RD$0'}
@@ -294,7 +294,7 @@ export function DonationCheckoutSection() {
               <label className="mt-4 grid gap-2 text-sm font-medium text-(--asi-text)">
                 Monto personalizado
                 <input
-                  className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
+                  className="h-12 rounded-card border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
                   inputMode="numeric"
                   min={100}
                   max={1000000}
@@ -309,7 +309,7 @@ export function DonationCheckoutSection() {
               <label className="grid gap-2 text-sm font-medium text-(--asi-text)">
                 Nombre del donante
                 <input
-                  className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
+                  className="h-12 rounded-card border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
                   autoComplete="name"
                   value={donorName}
                   onChange={(event) => setDonorNameInput(event.target.value)}
@@ -318,7 +318,7 @@ export function DonationCheckoutSection() {
               <label className="grid gap-2 text-sm font-medium text-(--asi-text)">
                 Correo
                 <input
-                  className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
+                  className="h-12 rounded-card border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
                   autoComplete="email"
                   type="email"
                   value={donorEmail}
@@ -328,7 +328,7 @@ export function DonationCheckoutSection() {
               <label className="grid gap-2 text-sm font-medium text-(--asi-text)">
                 Teléfono
                 <input
-                  className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
+                  className="h-12 rounded-card border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
                   autoComplete="tel"
                   inputMode="tel"
                   type="tel"
@@ -339,7 +339,7 @@ export function DonationCheckoutSection() {
               <label className="grid gap-2 text-sm font-medium text-(--asi-text)">
                 Destino
                 <select
-                  className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
+                  className="h-12 rounded-card border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
                   value={designation}
                   onChange={(event) => setDesignation(event.target.value)}
                 >
@@ -352,7 +352,7 @@ export function DonationCheckoutSection() {
               </label>
             </div>
 
-            <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-(--asi-text-muted)">
+            <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-card border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-(--asi-text-muted)">
               <input
                 checked={acceptedPolicies}
                 className="mt-1 size-4 shrink-0 accent-(--asi-primary)"

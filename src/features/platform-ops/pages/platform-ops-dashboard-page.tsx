@@ -48,7 +48,7 @@ function PlanCard({ plan }: { plan: SubscriptionPlanRecord }) {
   const limits = Object.entries(plan.limits_json ?? {})
 
   return (
-    <div className="rounded-2xl border border-(--app-border) bg-(--app-surface-muted)/65 p-4">
+    <div className="rounded-card border border-(--app-border) bg-(--app-surface-muted)/65 p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-base font-bold text-(--app-text)">{plan.name}</p>
@@ -60,14 +60,14 @@ function PlanCard({ plan }: { plan: SubscriptionPlanRecord }) {
         {formatMoney(Number(plan.monthly_price_amount), plan.currency_code)}
         <span className="text-sm font-semibold text-(--app-text-muted)"> / mes</span>
       </p>
-      <div className="mt-4 divide-y divide-(--app-border)/70 rounded-xl border border-(--app-border) bg-(--app-surface)">
+      <div className="mt-4 divide-y divide-(--app-border)/70 rounded-control border border-(--app-border) bg-(--app-surface)">
         {limits.length === 0 ? (
           <div className="px-3 py-2 text-sm text-(--app-text-muted)">Sin límites configurados.</div>
         ) : (
           limits.map(([key, value]) => (
             <div key={key} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
               <span className="text-(--app-text-muted)">{readableLimitKey(key)}</span>
-              <code className="rounded-lg bg-(--app-surface-muted) px-2 py-1 text-xs font-bold text-(--app-text)">
+              <code className="rounded-control bg-(--app-surface-muted) px-2 py-1 text-xs font-bold text-(--app-text)">
                 {renderLimitValue(value)}
               </code>
             </div>
@@ -213,7 +213,7 @@ export function PlatformOpsDashboardPage() {
                   <span className="min-w-0">
                     <code className="text-sm font-bold text-(--app-text)">{flag.code}</code>
                     <span className="mt-1 block text-sm text-(--app-text-muted)">{flag.description}</span>
-                    <span className="mt-2 inline-flex rounded-lg bg-(--app-surface-muted) px-2 py-1 text-[0.68rem] font-bold uppercase text-(--app-text-subtle)">
+                    <span className="mt-2 inline-flex rounded-control bg-(--app-surface-muted) px-2 py-1 text-[0.68rem] font-bold uppercase text-(--app-text-subtle)">
                       {flag.scope_type}
                     </span>
                   </span>

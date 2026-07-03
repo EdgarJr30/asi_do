@@ -129,13 +129,13 @@ export function MembershipPage() {
           >
             <img
               alt={membershipHeroImage.alt}
-              className="aspect-4/3 w-full rounded-[1.75rem] object-cover shadow-2xl ring-1 ring-black/8 lg:aspect-square lg:max-h-110"
+              className="aspect-4/3 w-full rounded-card-lg object-cover shadow-2xl ring-1 ring-black/8 lg:aspect-square lg:max-h-110"
               fetchPriority="high"
               loading="eager"
               src={membershipHeroImage.src}
             />
             {/* Subtle gradient overlay at the bottom */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 rounded-b-[1.75rem] bg-linear-to-t from-black/18 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 rounded-b-card-lg bg-linear-to-t from-black/18 to-transparent" />
           </motion.div>
         </div>
       </InstitutionalSection>
@@ -153,13 +153,13 @@ export function MembershipPage() {
               return (
                 <div
                   key={card.title}
-                  className="flex flex-col rounded-[1.5rem] p-8 sm:p-10"
+                  className="flex flex-col rounded-card-lg p-8 sm:p-10"
                   style={{
                     background:
                       'linear-gradient(135deg, var(--asi-primary) 0%, var(--asi-primary-container) 100%)',
                   }}
                 >
-                  <div className="flex size-14 items-center justify-center rounded-2xl bg-white/10">
+                  <div className="flex size-14 items-center justify-center rounded-card bg-white/10">
                     <Icon className="size-7 text-white" />
                   </div>
                   <p className="mt-6 text-xl font-semibold tracking-tight text-white">
@@ -196,7 +196,7 @@ export function MembershipPage() {
           </h2>
           <div className="grid gap-8 lg:grid-cols-2">
             {membershipBenefitColumns.map((col) => (
-              <div key={col.title} className="flex flex-col gap-6 rounded-[1.5rem] bg-(--asi-surface-raised) p-8 shadow-(--asi-shadow-soft) outline-1 outline-(--asi-outline) sm:p-10">
+              <div key={col.title} className="flex flex-col gap-6 rounded-card-lg bg-(--asi-surface-raised) p-8 shadow-(--asi-shadow-soft) outline-1 outline-(--asi-outline) sm:p-10">
                 <div>
                   <p className="text-xl font-semibold tracking-tight text-(--asi-primary)">
                     {col.title}
@@ -377,7 +377,7 @@ export function MembershipPage() {
                         return (
                           <InstitutionalCard key={item.title}>
                             {Icon ? (
-                              <div className="flex size-11 items-center justify-center rounded-2xl bg-(--asi-surface-raised) text-(--asi-primary)">
+                              <div className="flex size-11 items-center justify-center rounded-card bg-(--asi-surface-raised) text-(--asi-primary)">
                                 <Icon className="size-5" />
                               </div>
                             ) : null}
@@ -428,13 +428,13 @@ export function MembershipPage() {
                           {item.image ? (
                             <img
                               alt={item.imageAlt ?? item.title}
-                              className="h-44 w-full rounded-2xl object-cover"
+                              className="h-44 w-full rounded-card object-cover"
                               loading="lazy"
                               src={item.image}
                             />
                           ) : null}
                           {Icon ? (
-                            <div className="flex size-11 items-center justify-center rounded-2xl bg-(--asi-surface-raised) text-(--asi-primary)">
+                            <div className="flex size-11 items-center justify-center rounded-card bg-(--asi-surface-raised) text-(--asi-primary)">
                               <Icon className="size-5" />
                             </div>
                           ) : null}

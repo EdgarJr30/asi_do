@@ -282,7 +282,7 @@ function PastorReceiptUpload({
   })
 
   return (
-    <div className="rounded-2xl border border-(--app-border) bg-(--app-surface-muted) p-4">
+    <div className="rounded-card border border-(--app-border) bg-(--app-surface-muted) p-4">
       <p className="text-sm font-semibold text-(--app-text)">Subir comprobante por el miembro</p>
       <p className="mt-0.5 text-xs text-(--app-text-muted)">PDF o imagen (PNG, JPG, WebP), máximo 10 MB.</p>
       <input
@@ -290,7 +290,7 @@ function PastorReceiptUpload({
         accept={ACCEPTED_RECEIPT_TYPES}
         onChange={(event) => setFile(event.target.files?.[0] ?? null)}
         disabled={uploadMutation.isPending}
-        className="mt-3 block w-full text-sm text-(--app-text-muted) file:mr-3 file:rounded-lg file:border-0 file:bg-(--app-surface) file:px-3 file:py-2 file:text-sm file:font-semibold file:text-(--app-text) hover:file:bg-(--app-border)"
+        className="mt-3 block w-full text-sm text-(--app-text-muted) file:mr-3 file:rounded-control file:border-0 file:bg-(--app-surface) file:px-3 file:py-2 file:text-sm file:font-semibold file:text-(--app-text) hover:file:bg-(--app-border)"
       />
       <input
         type="text"
@@ -298,7 +298,7 @@ function PastorReceiptUpload({
         onChange={(event) => setReferenceNote(event.target.value)}
         disabled={uploadMutation.isPending}
         placeholder="Referencia o número de transferencia (opcional)"
-        className="mt-3 block w-full rounded-lg border border-(--app-border) bg-(--app-surface) px-3 py-2 text-sm text-(--app-text) placeholder:text-(--app-text-subtle) focus:border-primary-500 focus:outline-none"
+        className="mt-3 block w-full rounded-control border border-(--app-border) bg-(--app-surface) px-3 py-2 text-sm text-(--app-text) placeholder:text-(--app-text-subtle) focus:border-primary-500 focus:outline-none"
       />
       <Button className="mt-3 h-10" disabled={!file || uploadMutation.isPending} onClick={() => uploadMutation.mutate()}>
         <UploadCloud className="size-4" /> {uploadMutation.isPending ? 'Subiendo…' : 'Enviar comprobante'}

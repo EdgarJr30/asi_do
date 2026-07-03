@@ -82,7 +82,7 @@ function ReportTable({ report }: { report: HarnessReport }) {
       </div>
 
       {modulesWithErrors.length > 0 ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-3 text-sm dark:border-rose-900/40 dark:bg-rose-950/15">
+        <div className="rounded-control border border-rose-200 bg-rose-50/60 p-3 text-sm dark:border-rose-900/40 dark:bg-rose-950/15">
           <p className="mb-2 flex items-center gap-2 font-semibold text-rose-700 dark:text-rose-300">
             <AlertTriangle className="h-4 w-4" /> Detalle de errores
           </p>
@@ -267,7 +267,7 @@ export function StressHarnessPage() {
               type="button"
               disabled={isRunning}
               onClick={() => setSendEmails((value) => !value)}
-              className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
+              className={`flex w-full items-start gap-3 rounded-control border p-3 text-left transition ${
                 sendEmails
                   ? 'border-emerald-300 bg-emerald-50/60 dark:border-emerald-900/40 dark:bg-emerald-950/15'
                   : 'border-zinc-200 bg-zinc-50/60 dark:border-zinc-800 dark:bg-zinc-900/40'
@@ -298,7 +298,7 @@ export function StressHarnessPage() {
             </button>
 
             {/* Postulaciones a nombre de un administrador real (no sintético). */}
-            <div className="space-y-3 rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
+            <div className="space-y-3 rounded-control border border-zinc-200 p-3 dark:border-zinc-800">
               <label className="block space-y-1.5">
                 <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   Postulaciones del administrador

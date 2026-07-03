@@ -61,7 +61,7 @@ export function SideSheet({
                     type="button"
                     onClick={onClose}
                     aria-label="Cerrar"
-                    className="flex size-8 shrink-0 items-center justify-center rounded-lg text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-control text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)"
                   >
                     <X className="size-4" />
                   </button>

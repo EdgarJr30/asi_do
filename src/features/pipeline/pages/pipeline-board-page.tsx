@@ -440,7 +440,7 @@ export function PipelineBoardPage() {
         <div className="flex flex-wrap gap-2.5">
           {canExportApplications ? (
             <Button
-              className="h-10 rounded-xl"
+              className="h-10 rounded-control"
               variant="outline"
               onClick={() => exportApplicationsCsv(filteredApplications, stageNameById)}
               disabled={filteredApplications.length === 0}
@@ -449,7 +449,7 @@ export function PipelineBoardPage() {
               Exportar CSV
             </Button>
           ) : null}
-          <Button className="h-10 rounded-xl" onClick={() => toast.info('Agregar candidato próximamente')}>
+          <Button className="h-10 rounded-control" onClick={() => toast.info('Agregar candidato próximamente')}>
             <Plus className="size-4" />
             Agregar candidato
           </Button>
@@ -457,7 +457,7 @@ export function PipelineBoardPage() {
       </motion.section>
 
       <motion.div variants={cardReveal} className="flex shrink-0 flex-col gap-3 pb-4 lg:flex-row lg:items-center">
-        <label className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-xl border border-(--app-border) bg-(--app-surface-elevated) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
+        <label className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
           <Search aria-hidden="true" className="size-4 shrink-0 text-(--app-text-subtle)" />
           <span className="sr-only">Buscar candidato o correo</span>
           <Input
@@ -467,7 +467,7 @@ export function PipelineBoardPage() {
             onChange={(event) => applyCandidateQuery(event.target.value)}
           />
         </label>
-        <Select className="rounded-xl lg:w-56" value={jobFilter} onChange={(event) => applyJobFilter(event.target.value)}>
+        <Select className="rounded-control lg:w-56" value={jobFilter} onChange={(event) => applyJobFilter(event.target.value)}>
           <option value="">Todas las vacantes</option>
           {tenantJobs.map((job) => (
             <option key={job.id} value={job.id}>
@@ -475,7 +475,7 @@ export function PipelineBoardPage() {
             </option>
           ))}
         </Select>
-        <Select className="rounded-xl lg:w-56" value={stageFilter} onChange={(event) => applyStageFilter(event.target.value)}>
+        <Select className="rounded-control lg:w-56" value={stageFilter} onChange={(event) => applyStageFilter(event.target.value)}>
           <option value="">Todas las etapas</option>
           {boardQuery.data.stages.map((stage) => (
             <option key={stage.id} value={stage.id}>
@@ -488,7 +488,7 @@ export function PipelineBoardPage() {
       {filteredApplications.length === 0 ? (
         <motion.div
           variants={cardReveal}
-          className="flex min-h-0 flex-1 items-center justify-center rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-elevated) px-6 text-center text-sm text-(--app-text-muted)"
+          className="flex min-h-0 flex-1 items-center justify-center rounded-card border border-dashed border-(--app-border) bg-(--app-surface-elevated) px-6 text-center text-sm text-(--app-text-muted)"
         >
           No se encontraron candidatos con esos filtros.
         </motion.div>
@@ -520,7 +520,7 @@ export function PipelineBoardPage() {
                 onDragLeave={() => setDragOverStageId((current) => (current === stage.id ? null : current))}
                 onDrop={() => handleDropOnStage(stage.id)}
                 className={cn(
-                  'flex min-h-0 min-w-80 flex-1 shrink-0 flex-col rounded-panel border transition lg:min-w-88',
+                  'flex min-h-0 min-w-80 flex-1 shrink-0 flex-col rounded-card border transition lg:min-w-88',
                   isDropTarget
                     ? 'border-primary-400 bg-primary-50/70 dark:bg-primary-500/10'
                     : 'border-(--app-border) bg-(--app-surface-muted)/80'
@@ -558,7 +558,7 @@ export function PipelineBoardPage() {
                           }}
                           onClick={() => openApplication(application)}
                           className={cn(
-                            'flex min-h-14 w-full cursor-grab items-center gap-3 rounded-xl border bg-(--app-surface) px-3 py-2.5 text-left transition-[border-color,box-shadow,transform] hover:-translate-y-px hover:border-[#c6d2ea] hover:shadow-[0_4px_14px_rgba(20,40,90,0.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) active:cursor-grabbing',
+                            'flex min-h-14 w-full cursor-grab items-center gap-3 rounded-control border bg-(--app-surface) px-3 py-2.5 text-left transition-[border-color,box-shadow,transform] hover:-translate-y-px hover:border-[#c6d2ea] hover:shadow-[0_4px_14px_rgba(20,40,90,0.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) active:cursor-grabbing',
                             selectedApplicationId === application.id
                               ? 'border-primary-300 ring-1 ring-primary-200'
                               : 'border-(--app-border)',
@@ -594,7 +594,7 @@ export function PipelineBoardPage() {
                   {hasMoreStageApplications ? (
                     <button
                       type="button"
-                      className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-dashed border-(--app-border) bg-(--app-surface)/70 px-3 text-xs font-medium text-(--app-text-subtle) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:hover:bg-primary-500/12 dark:hover:text-primary-200"
+                      className="flex min-h-11 items-center justify-center gap-2 rounded-control border border-dashed border-(--app-border) bg-(--app-surface)/70 px-3 text-xs font-medium text-(--app-text-subtle) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:hover:bg-primary-500/12 dark:hover:text-primary-200"
                       onClick={() => requestMoreStageCards(stage.id, stageApplications.length)}
                       disabled={isLoadingMoreStageApplications}
                     >
@@ -634,7 +634,7 @@ export function PipelineBoardPage() {
           description={visibleSelectedApplication.job_posting?.title ?? visibleSelectedApplication.candidate_email_snapshot}
         >
           <div className="space-y-3.5">
-            <section className="rounded-panel border border-(--app-border) bg-(--app-surface) p-4">
+            <section className="rounded-card border border-(--app-border) bg-(--app-surface) p-4">
               <h2 className="text-sm font-semibold text-(--app-text)">Mover etapa</h2>
               <Badge className={cn('mt-3 border', selectedStageTone.pillClassName)} variant="outline">
                 Etapa actual · {selectedStage?.name ?? 'Sin etapa'}
@@ -644,7 +644,7 @@ export function PipelineBoardPage() {
                 <label className="grid gap-1.5 text-xs font-semibold text-(--app-text-muted)">
                   Nueva etapa
                   <Select
-                    className="rounded-xl"
+                    className="rounded-control"
                     value={selectedStageId}
                     onChange={(event) => setSelectedStageId(event.target.value)}
                   >
@@ -661,7 +661,7 @@ export function PipelineBoardPage() {
                     Contexto del movimiento <span className="font-medium text-(--app-text-subtle)">(opcional)</span>
                   </span>
                   <Textarea
-                    className="rounded-xl"
+                    className="rounded-control"
                     rows={3}
                     value={stageNote}
                     onChange={(event) => setStageNote(event.target.value)}
@@ -669,7 +669,7 @@ export function PipelineBoardPage() {
                   />
                 </label>
                 <Button
-                  className="w-full rounded-xl"
+                  className="w-full rounded-control"
                   onClick={handleMoveSelectedApplication}
                   disabled={
                     moveMutation.isPending ||
@@ -682,12 +682,12 @@ export function PipelineBoardPage() {
               </div>
             </section>
 
-            <section className="rounded-panel border border-(--app-border) bg-(--app-surface) p-4">
+            <section className="rounded-card border border-(--app-border) bg-(--app-surface) p-4">
               <h2 className="text-sm font-semibold text-(--app-text)">Anotar colaboración</h2>
               <label className="mt-3 grid gap-1.5 text-xs font-semibold text-(--app-text-muted)">
                 Nota interna para el equipo
                 <Textarea
-                  className="rounded-xl"
+                  className="rounded-control"
                   rows={4}
                   value={newNote}
                   onChange={(event) => setNewNote(event.target.value)}
@@ -695,7 +695,7 @@ export function PipelineBoardPage() {
                 />
               </label>
               <Button
-                className="mt-3 w-full rounded-xl"
+                className="mt-3 w-full rounded-control"
                 variant="outline"
                 onClick={() => noteMutation.mutate()}
                 disabled={noteMutation.isPending || newNote.trim().length === 0}
@@ -704,10 +704,10 @@ export function PipelineBoardPage() {
               </Button>
             </section>
 
-            <section className="rounded-panel border border-(--app-border) bg-(--app-surface) p-4">
+            <section className="rounded-card border border-(--app-border) bg-(--app-surface) p-4">
               <h2 className="text-sm font-semibold text-(--app-text)">Rating rápido</h2>
               <div className="mt-3 flex gap-2.5">
-                <Select className="rounded-xl" value={score} onChange={(event) => setScore(event.target.value)}>
+                <Select className="rounded-control" value={score} onChange={(event) => setScore(event.target.value)}>
                   <option value="">Sin calificar</option>
                   <option value="1">1</option>
                   <option value="2">2</option>
@@ -716,7 +716,7 @@ export function PipelineBoardPage() {
                   <option value="5">5</option>
                 </Select>
                 <Button
-                  className="shrink-0 rounded-xl"
+                  className="shrink-0 rounded-control"
                   variant="outline"
                   onClick={() => ratingMutation.mutate()}
                   disabled={ratingMutation.isPending || !score}
@@ -726,7 +726,7 @@ export function PipelineBoardPage() {
               </div>
             </section>
 
-            <section className="rounded-panel border border-(--app-border) bg-(--app-surface) p-4">
+            <section className="rounded-card border border-(--app-border) bg-(--app-surface) p-4">
               <h2 className="text-sm font-semibold text-(--app-text)">Actividad reciente</h2>
               <div className="mt-3 space-y-3">
                 {activityQuery.isLoading ? (
@@ -738,7 +738,7 @@ export function PipelineBoardPage() {
                 ) : applicationActivity && (applicationActivity.history.length || applicationActivity.notes.length || applicationActivity.ratings.length) ? (
                   <>
                     {applicationActivity.history.map((event) => (
-                      <div key={event.id} className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
+                      <div key={event.id} className="rounded-control border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
                         <p className="font-medium text-(--app-text)">Cambio de etapa</p>
                         <p className="mt-1 text-(--app-text-muted)">
                           {(event.from_stage?.name ?? 'Inicio')} → {event.to_stage.name}
@@ -746,13 +746,13 @@ export function PipelineBoardPage() {
                       </div>
                     ))}
                     {applicationActivity.notes.map((event) => (
-                      <div key={event.id} className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
+                      <div key={event.id} className="rounded-control border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
                         <p className="font-medium text-(--app-text)">Nota interna</p>
                         <p className="mt-1 text-(--app-text-muted)">{event.body}</p>
                       </div>
                     ))}
                     {applicationActivity.ratings.map((event) => (
-                      <div key={event.id} className="rounded-xl border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
+                      <div key={event.id} className="rounded-control border border-(--app-border) bg-(--app-surface-muted) px-3 py-3 text-sm">
                         <p className="font-medium text-(--app-text)">Rating registrado</p>
                         <p className="mt-1 text-(--app-text-muted)">Score: {event.score}/5</p>
                       </div>

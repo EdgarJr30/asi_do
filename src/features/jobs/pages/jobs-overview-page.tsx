@@ -143,7 +143,7 @@ function jobPublishedTimeLabel(job: TenantJobRow) {
 }
 
 const linkButtonClassName =
-  'inline-flex h-11 items-center justify-center rounded-2xl border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-px hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-primary-500 dark:hover:bg-primary-500/12 dark:hover:text-primary-300'
+  'inline-flex h-11 items-center justify-center rounded-card border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-px hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-primary-500 dark:hover:bg-primary-500/12 dark:hover:text-primary-300'
 
 function JobStatusBadge({ status }: { status: string }) {
   const variant = status === 'published' ? 'soft' : status === 'draft' ? 'outline' : 'default'
@@ -321,7 +321,7 @@ function JobEditor({
                 ))}
               </Select>
             </label>
-            <div className="rounded-[24px] border border-(--app-border) bg-(--app-surface-muted) p-4 text-sm">
+            <div className="rounded-card-lg border border-(--app-border) bg-(--app-surface-muted) p-4 text-sm">
               <p className="font-semibold text-(--app-text)">Etapas sugeridas para {getOpportunityTypeLabel(opportunityType)}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {stageTemplatesQuery.data?.map((stage) => (
@@ -402,7 +402,7 @@ function JobEditor({
             </label>
           </div>
 
-          <div className="rounded-[24px] border border-(--app-border) bg-(--app-surface-muted) p-4">
+          <div className="rounded-card-lg border border-(--app-border) bg-(--app-surface-muted) p-4">
             <label className="flex items-center gap-3 text-sm">
               <input
                 type="checkbox"
@@ -480,7 +480,7 @@ function JobEditor({
             <Input type="date" {...form.register('expiresAt')} />
           </label>
 
-          <div className="space-y-3 rounded-[24px] border border-(--app-border) bg-(--app-surface-muted) p-4">
+          <div className="space-y-3 rounded-card-lg border border-(--app-border) bg-(--app-surface-muted) p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-(--app-text)">Preguntas de screening</p>
@@ -494,7 +494,7 @@ function JobEditor({
             </div>
 
             {questions.map((question) => (
-              <div key={question.id} className="grid gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) p-3">
+              <div key={question.id} className="grid gap-3 rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-3">
                 <label className="grid gap-2 text-sm">
                   <span>Pregunta</span>
                   <Input
@@ -527,7 +527,7 @@ function JobEditor({
                       <option value="single_select">Seleccion unica</option>
                     </Select>
                   </label>
-                  <label className="flex items-center gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-sm">
+                  <label className="flex items-center gap-3 rounded-card border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-sm">
                     <input
                       type="checkbox"
                       checked={question.isRequired}
@@ -625,7 +625,7 @@ function WorkspaceJobViewDialog({
       <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6">
         <DialogPanel
           transition
-          className="flex max-h-[88vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface) shadow-[0_24px_64px_rgba(15,30,70,0.28)] transition duration-200 ease-out data-[closed]:translate-y-3 data-[closed]:scale-[0.98] data-[closed]:opacity-0"
+          className="flex max-h-[88vh] w-full max-w-xl flex-col overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface) shadow-[0_24px_64px_rgba(15,30,70,0.28)] transition duration-200 ease-out data-[closed]:translate-y-3 data-[closed]:scale-[0.98] data-[closed]:opacity-0"
         >
           <header className="relative border-b border-(--app-border) px-5 py-5 sm:px-6">
             <span
@@ -646,7 +646,7 @@ function WorkspaceJobViewDialog({
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              className="absolute right-5 top-5 flex size-9 items-center justify-center rounded-xl text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)"
+              className="absolute right-5 top-5 flex size-9 items-center justify-center rounded-control text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)"
             >
               <X className="size-4" />
             </button>
@@ -930,11 +930,11 @@ function WorkspaceJobsManager() {
               <p className="mt-1 text-[0.92rem] text-(--app-text-muted)">Gestiona y publica las posiciones abiertas en tu empresa.</p>
             </div>
             <div className="flex w-full flex-wrap gap-2.5 sm:w-auto sm:flex-nowrap">
-              <Button className="h-10 flex-1 rounded-xl sm:flex-none" variant="outline" onClick={() => toast.info('Exportación próximamente')}>
+              <Button className="h-10 flex-1 rounded-control sm:flex-none" variant="outline" onClick={() => toast.info('Exportación próximamente')}>
                 <Download className="size-4" />
                 Exportar
               </Button>
-              <Button className="h-10 flex-1 rounded-xl sm:flex-none" onClick={() => openJobEditor(null)}>
+              <Button className="h-10 flex-1 rounded-control sm:flex-none" onClick={() => openJobEditor(null)}>
                 <Plus className="size-4" />
                 Publicar vacante
               </Button>
@@ -978,7 +978,7 @@ function WorkspaceJobsManager() {
           </div>
         </motion.section>
       ) : (
-        <section className="rounded-[30px] border border-(--app-border) bg-white px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] sm:px-7">
+        <section className="rounded-card-lg border border-(--app-border) bg-white px-6 py-6 shadow-[0_18px_44px_rgba(19,42,97,0.08)] sm:px-7">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-700">
@@ -994,7 +994,7 @@ function WorkspaceJobsManager() {
               </p>
             </div>
             {canManageJobs ? (
-              <div className="rounded-[22px] border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-right">
+              <div className="rounded-card-lg border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-right">
                 <p className="text-[0.76rem] font-medium text-(--app-text-muted)">Vacantes del workspace</p>
                 <p className="mt-1 text-[1.55rem] font-bold tracking-[-0.03em] text-(--app-text)">{tenantJobs.length}</p>
               </div>
@@ -1050,7 +1050,7 @@ function WorkspaceJobsManager() {
                   resetToFirstPage()
                 }}
                 placeholder="Busca por título, área o ubicación"
-                className="h-11 rounded-xl pl-10"
+                className="h-11 rounded-control pl-10"
               />
             </div>
             <div className="grid gap-2.5 sm:grid-cols-3 lg:flex lg:shrink-0">
@@ -1060,7 +1060,7 @@ function WorkspaceJobsManager() {
                   setEmploymentFilter(event.target.value)
                   resetToFirstPage()
                 }}
-                className="h-11 min-w-40 rounded-xl"
+                className="h-11 min-w-40 rounded-control"
               >
                 <option value="">Tipo de empleo</option>
                 {Object.entries(EMPLOYMENT_LABELS).map(([value, label]) => (
@@ -1075,7 +1075,7 @@ function WorkspaceJobsManager() {
                   setLocationFilter(event.target.value)
                   resetToFirstPage()
                 }}
-                className="h-11 min-w-40 rounded-xl"
+                className="h-11 min-w-40 rounded-control"
               >
                 <option value="">Ubicación</option>
                 {locationOptions.map((locationOption) => (
@@ -1087,7 +1087,7 @@ function WorkspaceJobsManager() {
               <Select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as 'recent' | 'applications' | 'title')}
-                className="h-11 min-w-48 rounded-xl"
+                className="h-11 min-w-48 rounded-control"
               >
                 <option value="recent">Ordenar por: Recientes</option>
                 <option value="applications">Más postulaciones</option>
@@ -1096,7 +1096,7 @@ function WorkspaceJobsManager() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]">
+          <div className="overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]">
             <div className="hidden grid-cols-[minmax(0,1fr)_180px_130px_116px] items-center gap-4 border-b border-(--app-border) bg-(--app-surface-muted)/70 px-5 py-3 text-[0.72rem] font-bold uppercase tracking-[0.05em] text-(--app-text-subtle) lg:grid">
               <span>Vacante</span>
               <span>Compensación</span>
@@ -1110,7 +1110,7 @@ function WorkspaceJobsManager() {
                 const isPublished = job.status === 'published'
                 const compensationIsMuted = isMutedCompensation(job)
                 const iconButtonClassName =
-                  'flex size-10 items-center justify-center rounded-xl text-(--app-text-muted) transition-colors hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:hover:bg-primary-500/12 dark:hover:text-primary-200'
+                  'flex size-10 items-center justify-center rounded-control text-(--app-text-muted) transition-colors hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:hover:bg-primary-500/12 dark:hover:text-primary-200'
 
                 return (
                   <motion.div
@@ -1179,7 +1179,7 @@ function WorkspaceJobsManager() {
                       >
                         <Pencil className="size-4" />
                       </button>
-                      <KebabMenu className="size-10 rounded-xl" label={`Más acciones para ${job.title}`}>
+                      <KebabMenu className="size-10 rounded-control" label={`Más acciones para ${job.title}`}>
                         <KebabMenuItem onClick={() => openJobEditor(job.id)}>
                           <Pencil className="mr-2 size-4 text-(--app-text-subtle)" />
                           Editar
@@ -1210,7 +1210,7 @@ function WorkspaceJobsManager() {
               })
             ) : (
               <div className="px-5 py-16 text-center">
-                <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                <div className="mx-auto flex size-14 items-center justify-center rounded-card bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
                   <Search className="size-6" />
                 </div>
                 <h3 className="mt-4 text-base font-bold tracking-tight text-(--app-text)">Sin resultados</h3>
@@ -1259,7 +1259,7 @@ function WorkspaceJobsManager() {
             <CardContent className="space-y-3">
               {tenantJobs.length ? (
                 tenantJobs.map((job) => (
-                  <div key={job.id} className="rounded-panel border border-(--app-border) bg-(--app-surface-muted) p-4">
+                  <div key={job.id} className="rounded-card border border-(--app-border) bg-(--app-surface-muted) p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-(--app-text)">{job.title}</p>
@@ -1294,7 +1294,7 @@ function WorkspaceJobsManager() {
                   </div>
                 ))
               ) : (
-                <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-6 text-sm text-(--app-text-muted)">
+                <div className="rounded-card border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-6 text-sm text-(--app-text-muted)">
                   Todavia no hay vacantes en este espacio.
                 </div>
               )}

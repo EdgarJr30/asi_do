@@ -29,7 +29,7 @@ function CategoryCard({ cat }: { cat: typeof membershipCategories[number] }) {
   return (
     <div
       className={cn(
-        'rounded-[1.5rem] bg-(--asi-surface-raised) outline-1 outline-(--asi-outline) shadow-(--asi-shadow-soft) transition-shadow duration-200',
+        'rounded-card-lg bg-(--asi-surface-raised) outline-1 outline-(--asi-outline) shadow-(--asi-shadow-soft) transition-shadow duration-200',
         open && 'shadow-md',
       )}
     >
@@ -161,7 +161,7 @@ export function MembershipCategoriesPage() {
             </p>
           </div>
 
-          <div className="mx-auto max-w-2xl overflow-hidden rounded-[1.5rem] outline-1 outline-(--asi-outline)">
+          <div className="mx-auto max-w-2xl overflow-hidden rounded-card-lg outline-1 outline-(--asi-outline)">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-(--asi-primary) text-white">

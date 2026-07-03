@@ -161,7 +161,7 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
             <h2 className="text-base font-bold text-(--app-text)">Pipeline de correos</h2>
             <p className="text-sm text-(--app-text-muted)">Historial transaccional y módulo de prueba aislado.</p>
           </div>
-          <Button variant="outline" className="h-10 rounded-xl" onClick={refreshAll} disabled={pageQuery.isFetching || statsQuery.isFetching}>
+          <Button variant="outline" className="h-10 rounded-control" onClick={refreshAll} disabled={pageQuery.isFetching || statsQuery.isFetching}>
             {pageQuery.isFetching || statsQuery.isFetching ? <Spinner size="sm" /> : <RefreshCw className="h-4 w-4" />}
             Actualizar
           </Button>
@@ -175,7 +175,7 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
         <StatCard label="Con problema" value={stats.problem} helper="Fallidos" />
       </div>
 
-      <div className="grid gap-3 rounded-panel border border-(--app-border) bg-(--app-surface-elevated) p-4 sm:grid-cols-[1fr_auto]">
+      <div className="grid gap-3 rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-4 sm:grid-cols-[1fr_auto]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--app-text-subtle)" />
           <Input
@@ -244,7 +244,7 @@ function DeliveryTable({
 }) {
   const colSpan = 6 + (forceControl ? 1 : 0) + (onResend ? 1 : 0)
   return (
-    <div className="overflow-x-auto rounded-panel border border-(--app-border) bg-(--app-surface-elevated)">
+    <div className="overflow-x-auto rounded-card border border-(--app-border) bg-(--app-surface-elevated)">
       <table className="w-full min-w-190 text-sm">
         <thead>
           <tr className="border-b border-(--app-border) text-left text-[0.68rem] uppercase tracking-[0.16em] text-(--app-text-subtle)">
@@ -292,14 +292,14 @@ function DeliveryTable({
                       {onResend ? (
                         <button
                           onClick={() => onResend(row)}
-                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/12"
+                          className="inline-flex items-center gap-1 rounded-control px-2.5 py-1.5 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/12"
                         >
                           <RefreshCw className="h-4 w-4" /> Reenviar
                         </button>
                       ) : null}
                       <button
                         onClick={() => onView(row)}
-                        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/12"
+                        className="inline-flex items-center gap-1 rounded-control px-2.5 py-1.5 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/12"
                       >
                         <Eye className="h-4 w-4" /> Ver
                       </button>
@@ -383,7 +383,7 @@ function TestPanel({ defaultTo, onView }: { defaultTo: string; onView: (row: Ema
     <Card className="overflow-hidden border-accent-200/70 bg-accent-50/40 dark:border-accent-500/6">
       <button onClick={() => setOpen((value) => !value)} className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left">
         <span className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-100 text-accent-600 dark:bg-accent-500/15 dark:text-accent-200">
+          <span className="flex h-10 w-10 items-center justify-center rounded-control bg-accent-100 text-accent-600 dark:bg-accent-500/15 dark:text-accent-200">
             <FlaskConical className="h-5 w-5" />
           </span>
           <span>
@@ -398,7 +398,7 @@ function TestPanel({ defaultTo, onView }: { defaultTo: string; onView: (row: Ema
 
       {open ? (
         <CardContent className="space-y-5 border-t border-accent-200/60 pt-5 dark:border-accent-500/20">
-          <div className="grid gap-4 rounded-panel border border-(--app-border) bg-(--app-surface-elevated) p-5 sm:grid-cols-2">
+          <div className="grid gap-4 rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-5 sm:grid-cols-2">
             <label className="space-y-1.5 text-sm">
               <span className="font-medium text-(--app-text)">Destinatario</span>
               <Input type="email" value={to} onChange={(event) => setTo(event.target.value)} placeholder="correo@ejemplo.com" />
@@ -539,7 +539,7 @@ function DetailModal({
           </div>
 
           {errorPayload && Object.keys(errorPayload).length > 0 ? (
-            <div className="rounded-panel border border-rose-300/50 bg-rose-50/60 p-4 dark:border-rose-500/25 dark:bg-rose-500/10">
+            <div className="rounded-card border border-rose-300/50 bg-rose-50/60 p-4 dark:border-rose-500/25 dark:bg-rose-500/10">
               <p className="text-[0.68rem] uppercase tracking-[0.16em] text-(--app-text-subtle)">Error</p>
               <pre className="mt-1 whitespace-pre-wrap wrap-break-word font-mono text-xs text-rose-600 dark:text-rose-300">
                 {JSON.stringify(errorPayload, null, 2)}
@@ -548,7 +548,7 @@ function DetailModal({
           ) : null}
 
           {timeline.length > 0 ? (
-            <div className="rounded-panel bg-(--app-surface-muted) p-4">
+            <div className="rounded-card bg-(--app-surface-muted) p-4">
               <p className="mb-2 text-[0.68rem] uppercase tracking-[0.16em] text-(--app-text-subtle)">Línea de tiempo</p>
               <ul className="space-y-1 text-sm">
                 {timeline.map((item) => (
@@ -564,7 +564,7 @@ function DetailModal({
           {log.notification?.body ? (
             <div>
               <p className="mb-1.5 text-[0.68rem] uppercase tracking-[0.16em] text-(--app-text-subtle)">Contenido</p>
-              <p className="rounded-panel border border-(--app-border) bg-(--app-surface-elevated) p-4 text-sm leading-6 text-(--app-text-muted)">
+              <p className="rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-4 text-sm leading-6 text-(--app-text-muted)">
                 {log.notification.body}
               </p>
             </div>

@@ -319,7 +319,7 @@ export function RecruiterRequestPage() {
         </CardHeader>
         <CardContent>
           {hasOpenRequest ? (
-            <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+            <div className="rounded-card-lg border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
               Ya tienes una solicitud abierta. Puedes seguir su estado en la columna derecha mientras el equipo admin la revisa.
             </div>
           ) : (
@@ -336,7 +336,7 @@ export function RecruiterRequestPage() {
                   </Select>
                 </label>
 
-                <div className="rounded-3xl border border-zinc-200 bg-white/75 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/70 dark:text-zinc-300">
+                <div className="rounded-card-lg border border-zinc-200 bg-white/75 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/70 dark:text-zinc-300">
                   <p className="font-semibold text-zinc-900 dark:text-zinc-50">Mínimos para {getTenantKindLabel(requestedTenantKind)}</p>
                   <ul className="mt-2 space-y-1">
                     {tenantKindRequirementSummary[requestedTenantKind].map((item) => (
@@ -495,7 +495,7 @@ export function RecruiterRequestPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {requests.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-zinc-300 px-4 py-6 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+              <div className="rounded-card-lg border border-dashed border-zinc-300 px-4 py-6 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
                 Aun no has enviado solicitudes de operador.
               </div>
             ) : (
@@ -504,7 +504,7 @@ export function RecruiterRequestPage() {
                 const verificationDocumentPath = request.verification_document_path
 
                 return (
-                  <div key={request.id} className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
+                  <div key={request.id} className="rounded-card-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{request.requested_company_name}</p>
@@ -520,7 +520,7 @@ export function RecruiterRequestPage() {
                     </p>
 
                     {request.review_notes ? (
-                      <p className="mt-2 rounded-2xl bg-white px-3 py-2 text-sm text-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+                      <p className="mt-2 rounded-card bg-white px-3 py-2 text-sm text-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
                         {request.review_notes}
                       </p>
                     ) : null}

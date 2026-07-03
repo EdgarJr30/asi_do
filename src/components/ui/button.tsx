@@ -31,7 +31,7 @@ export function Button({ className, type = 'button', variant = 'primary', ...pro
       animate={shouldReduceMotion || isDisabled ? undefined : { y: 0, scale: 1 }}
       type={type}
       className={cn(
-        'inline-flex h-11 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-2xl px-3.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas) disabled:cursor-not-allowed disabled:opacity-60',
+        'inline-flex h-11 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-card px-3.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas) disabled:cursor-not-allowed disabled:opacity-60',
         buttonVariants[variant],
         className
       )}

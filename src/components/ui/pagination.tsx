@@ -25,7 +25,7 @@ export function Pagination({
   const safePage = Math.min(Math.max(page, 0), totalPages - 1)
   const items = getPaginationItems(safePage, totalPages, siblingCount)
   const buttonClassName =
-    'inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-(--app-border) bg-(--app-surface) text-[0.8rem] font-semibold text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas) disabled:pointer-events-none disabled:opacity-45 dark:hover:border-primary-400 dark:hover:text-primary-200'
+    'inline-flex size-9 shrink-0 items-center justify-center rounded-control border border-(--app-border) bg-(--app-surface) text-[0.8rem] font-semibold text-(--app-text-muted) transition-colors hover:border-primary-300 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas) disabled:pointer-events-none disabled:opacity-45 dark:hover:border-primary-400 dark:hover:text-primary-200'
 
   return (
     <nav className={cn('flex flex-wrap items-center justify-end gap-1.5', className)} aria-label={ariaLabel}>

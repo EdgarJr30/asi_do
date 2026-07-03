@@ -22,9 +22,9 @@ const spinnerInsetBySize: Record<LoaderSize, string> = {
 }
 
 const spinnerBrandPanelBySize: Record<LoaderSize, string> = {
-  sm: 'size-4 rounded-md p-0.5 shadow-[0_6px_14px_rgba(43,69,143,0.22)]',
-  md: 'size-5 rounded-lg p-1 shadow-[0_8px_18px_rgba(43,69,143,0.24)]',
-  lg: 'size-7 rounded-xl p-1.5 shadow-[0_10px_22px_rgba(43,69,143,0.26)]'
+  sm: 'size-4 rounded-control p-0.5 shadow-[0_6px_14px_rgba(43,69,143,0.22)]',
+  md: 'size-5 rounded-control p-1 shadow-[0_8px_18px_rgba(43,69,143,0.24)]',
+  lg: 'size-7 rounded-control p-1.5 shadow-[0_10px_22px_rgba(43,69,143,0.26)]'
 }
 
 /**
@@ -105,7 +105,7 @@ export function PageLoader({
         <span className="absolute inset-[0.55rem] rounded-full border-[3px] border-accent-400/15 border-b-accent-400 animate-[loader-spin-reverse_1.6s_linear_infinite] motion-reduce:animate-none" />
         {/* Marca que respira */}
         <span className="animate-[loader-breathe_2s_ease-in-out_infinite] motion-reduce:animate-none">
-          <BrandMark className="size-7" panelClassName="size-12 rounded-2xl shadow-[0_12px_28px_rgba(43,69,143,0.28)]" />
+          <BrandMark className="size-7" panelClassName="size-12 rounded-card shadow-[0_12px_28px_rgba(43,69,143,0.28)]" />
         </span>
       </div>
 

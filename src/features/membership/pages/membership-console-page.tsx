@@ -194,7 +194,7 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
   const fullName = `${application.applicant_first_name} ${application.applicant_last_name}`.trim()
 
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-card">
       <CardHeader className="pb-1">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
@@ -233,7 +233,7 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
 
         {payment?.receipt_path ? <ReceiptViewLink receiptPath={payment.receipt_path} /> : null}
 
-        <Button variant="ghost" className="h-9 rounded-xl px-3" onClick={() => setNotesOpen((value) => !value)}>
+        <Button variant="ghost" className="h-9 rounded-control px-3" onClick={() => setNotesOpen((value) => !value)}>
           Notas
         </Button>
 
@@ -256,13 +256,13 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-(--app-text-subtle)">Solicitud</p>
             <div className="flex flex-wrap gap-2">
-              <Button className="h-9 rounded-xl px-3" disabled={busy} onClick={() => reviewMutation.mutate('approved')}>
+              <Button className="h-9 rounded-control px-3" disabled={busy} onClick={() => reviewMutation.mutate('approved')}>
                 <CheckCircle2 className="size-4" /> Aprobar
               </Button>
-              <Button className="h-9 rounded-xl px-3" variant="outline" disabled={busy} onClick={() => reviewMutation.mutate('needs_more_info')}>
+              <Button className="h-9 rounded-control px-3" variant="outline" disabled={busy} onClick={() => reviewMutation.mutate('needs_more_info')}>
                 Pedir más info
               </Button>
-              <Button className="h-9 rounded-xl px-3" variant="danger" disabled={busy} onClick={() => reviewMutation.mutate('rejected')}>
+              <Button className="h-9 rounded-control px-3" variant="danger" disabled={busy} onClick={() => reviewMutation.mutate('rejected')}>
                 Rechazar
               </Button>
             </div>
@@ -274,10 +274,10 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
           <div className="space-y-2 border-t border-(--app-border) pt-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-(--app-text-subtle)">Pago</p>
             <div className="flex flex-wrap gap-2">
-              <Button className="h-9 rounded-xl px-3" disabled={busy} onClick={() => paymentMutation.mutate('verified')}>
+              <Button className="h-9 rounded-control px-3" disabled={busy} onClick={() => paymentMutation.mutate('verified')}>
                 <Banknote className="size-4" /> Verificar pago
               </Button>
-              <Button className="h-9 rounded-xl px-3" variant="danger" disabled={busy} onClick={() => paymentMutation.mutate('rejected')}>
+              <Button className="h-9 rounded-control px-3" variant="danger" disabled={busy} onClick={() => paymentMutation.mutate('rejected')}>
                 Rechazar comprobante
               </Button>
             </div>
@@ -287,7 +287,7 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
         {/* Activación */}
         {!isActivated ? (
           <div className="border-t border-(--app-border) pt-3">
-            <Button className="h-9 rounded-xl px-3" disabled={busy || !canActivate} onClick={() => activateMutation.mutate()}>
+            <Button className="h-9 rounded-control px-3" disabled={busy || !canActivate} onClick={() => activateMutation.mutate()}>
               <Sparkles className="size-4" /> Activar cuenta
             </Button>
             {!canActivate ? (

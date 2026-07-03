@@ -258,7 +258,7 @@ export function RecruiterReviewPage() {
                     : {}
 
                 return (
-                  <div key={request.id} className="space-y-4 rounded-3xl border border-zinc-200 px-4 py-4 dark:border-zinc-800">
+                  <div key={request.id} className="space-y-4 rounded-card-lg border border-zinc-200 px-4 py-4 dark:border-zinc-800">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="space-y-1">
                         <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{request.requested_company_name}</p>
@@ -270,13 +270,13 @@ export function RecruiterReviewPage() {
                     </div>
 
                     <div className="grid gap-3 md:grid-cols-2">
-                      <div className="rounded-3xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300">
+                      <div className="rounded-card-lg bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300">
                         <p className="font-semibold text-zinc-900 dark:text-zinc-50">Contacto</p>
                         <p className="mt-1">{request.company_email || 'Sin email corporativo'}</p>
                         <p>{request.company_phone || 'Sin teléfono'}</p>
                         <p>{request.company_country_code || 'Sin país'}</p>
                       </div>
-                      <div className="rounded-3xl bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300">
+                      <div className="rounded-card-lg bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300">
                         <p className="font-semibold text-zinc-900 dark:text-zinc-50">Datos de tipo</p>
                         <p className="mt-1">Website: {request.company_website_url || 'Sin website'}</p>
                         {typeof requestMetadata.operating_scope === 'string' ? <p>Alcance: {requestMetadata.operating_scope}</p> : null}
@@ -361,7 +361,7 @@ export function RecruiterReviewPage() {
               <p className="text-sm text-zinc-500">No hay solicitudes pastorales pendientes.</p>
             ) : (
               pendingPastorRequests.map((request) => (
-                <div key={request.id} className="space-y-4 rounded-3xl border border-zinc-200 px-4 py-4 dark:border-zinc-800">
+                <div key={request.id} className="space-y-4 rounded-card-lg border border-zinc-200 px-4 py-4 dark:border-zinc-800">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
@@ -437,7 +437,7 @@ export function RecruiterReviewPage() {
               <p className="text-sm text-zinc-500">No hay solicitudes regionales pendientes.</p>
             ) : (
               pendingRegionalRequests.map((request) => (
-                <div key={request.id} className="space-y-4 rounded-3xl border border-zinc-200 px-4 py-4 dark:border-zinc-800">
+                <div key={request.id} className="space-y-4 rounded-card-lg border border-zinc-200 px-4 py-4 dark:border-zinc-800">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">

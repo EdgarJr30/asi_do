@@ -25,7 +25,7 @@ export function AuthShell() {
         <main className="flex min-h-screen flex-col px-5 py-5 sm:px-8 sm:py-8 lg:px-12 lg:py-10 xl:px-14">
           <div className="flex items-start justify-between gap-4">
             <button
-              className="rounded-[24px] p-1 transition hover:opacity-90"
+              className="rounded-card-lg p-1 transition hover:opacity-90"
               type="button"
               onClick={() => void navigate(surfacePaths.institutional.home)}
             >

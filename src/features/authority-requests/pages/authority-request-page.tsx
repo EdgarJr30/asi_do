@@ -435,17 +435,17 @@ export function AuthorityRequestPage() {
             </CardHeader>
             <CardContent>
               <motion.div variants={gridStagger} initial={shouldReduceMotion ? false : 'hidden'} animate="show" className="grid gap-3 sm:grid-cols-3">
-                <motion.div variants={cardReveal} className="rounded-2xl border border-(--app-border) bg-(--app-surface-muted) p-4">
+                <motion.div variants={cardReveal} className="rounded-card border border-(--app-border) bg-(--app-surface-muted) p-4">
                   <FileLock2 className="size-5 text-primary-600 dark:text-primary-300" />
                   <p className="mt-2 text-sm font-semibold text-(--app-text)">Documentos privados</p>
                   <p className="mt-0.5 text-xs text-(--app-text-muted)">Tu cédula y nombramientos quedan en storage privado.</p>
                 </motion.div>
-                <motion.div variants={cardReveal} className="rounded-2xl border border-(--app-border) bg-(--app-surface-muted) p-4">
+                <motion.div variants={cardReveal} className="rounded-card border border-(--app-border) bg-(--app-surface-muted) p-4">
                   <MapPinned className="size-5 text-primary-600 dark:text-primary-300" />
                   <p className="mt-2 text-sm font-semibold text-(--app-text)">Alcance por jerarquía</p>
                   <p className="mt-0.5 text-xs text-(--app-text-muted)">El alcance se asigna por unión, asociación, distrito o iglesias.</p>
                 </motion.div>
-                <motion.div variants={cardReveal} className="rounded-2xl border border-primary-200 bg-primary-50/60 p-4 dark:border-primary-500/25 dark:bg-primary-500/10">
+                <motion.div variants={cardReveal} className="rounded-card border border-primary-200 bg-primary-50/60 p-4 dark:border-primary-500/25 dark:bg-primary-500/10">
                   <ShieldCheck className="size-5 text-primary-600 dark:text-primary-300" />
                   <p className="mt-2 text-sm font-semibold text-(--app-text)">{requestTypeLabel}</p>
                   <p className="mt-0.5 text-xs text-(--app-text-muted)">{requestTypeDescription}</p>
@@ -470,7 +470,7 @@ export function AuthorityRequestPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {(pastorRequestsQuery.data ?? []).map((request) => (
-              <div key={request.id} className="rounded-2xl border border-(--app-border) px-4 py-4">
+              <div key={request.id} className="rounded-card border border-(--app-border) px-4 py-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-medium text-(--app-text)">Solicitud pastoral</p>
@@ -490,7 +490,7 @@ export function AuthorityRequestPage() {
             ))}
 
             {(regionalRequestsQuery.data ?? []).map((request) => (
-              <div key={request.id} className="rounded-2xl border border-(--app-border) px-4 py-4">
+              <div key={request.id} className="rounded-card border border-(--app-border) px-4 py-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-medium text-(--app-text)">Solicitud regional</p>
@@ -513,7 +513,7 @@ export function AuthorityRequestPage() {
             ))}
 
             {(pastorRequestsQuery.data?.length ?? 0) === 0 && (regionalRequestsQuery.data?.length ?? 0) === 0 ? (
-              <div className="rounded-2xl border border-dashed border-(--app-border) px-4 py-10 text-center text-sm text-(--app-text-muted)">
+              <div className="rounded-card border border-dashed border-(--app-border) px-4 py-10 text-center text-sm text-(--app-text-muted)">
                 Aún no tienes solicitudes enviadas.
               </div>
             ) : null}
@@ -619,7 +619,7 @@ export function AuthorityRequestPage() {
                 </option>
               ))}
             </Select>
-            <label className="flex items-start gap-3 rounded-2xl border border-(--app-border) px-4 py-3 text-sm text-(--app-text-muted)">
+            <label className="flex items-start gap-3 rounded-card border border-(--app-border) px-4 py-3 text-sm text-(--app-text-muted)">
               <input
                 type="checkbox"
                 checked={pastorStatusAttestation}
@@ -630,7 +630,7 @@ export function AuthorityRequestPage() {
               Confirmo que soy el pastor activo del distrito o iglesias seleccionadas.
             </label>
             <Textarea placeholder="Notas opcionales para el revisor" {...pastorForm.register('notes')} />
-            <div className="rounded-2xl border border-dashed border-(--app-border) px-4 py-4 text-sm text-(--app-text-muted)">
+            <div className="rounded-card border border-dashed border-(--app-border) px-4 py-4 text-sm text-(--app-text-muted)">
               <p className="inline-flex items-center gap-2 font-medium text-(--app-text)">
                 <UploadCloud className="size-4" /> Documento de identidad
               </p>
@@ -706,7 +706,7 @@ export function AuthorityRequestPage() {
             <Input placeholder="Cargo administrativo oficial" {...regionalForm.register('positionTitle')} />
             <Textarea placeholder="Notas opcionales para el revisor" {...regionalForm.register('notes')} />
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-dashed border-(--app-border) px-4 py-4 text-sm text-(--app-text-muted)">
+              <div className="rounded-card border border-dashed border-(--app-border) px-4 py-4 text-sm text-(--app-text-muted)">
                 <p className="font-medium text-(--app-text)">Documento de identidad</p>
                 <Input
                   type="file"
@@ -723,7 +723,7 @@ export function AuthorityRequestPage() {
                 {regionalIdentityFile ? <p className="mt-2 text-(--app-text)">{regionalIdentityFile.name}</p> : null}
                 {regionalIdentityFileError ? <p className="mt-2 text-rose-600">{regionalIdentityFileError}</p> : null}
               </div>
-              <div className="rounded-2xl border border-dashed border-(--app-border) px-4 py-4 text-sm text-(--app-text-muted)">
+              <div className="rounded-card border border-dashed border-(--app-border) px-4 py-4 text-sm text-(--app-text-muted)">
                 <p className="font-medium text-(--app-text)">Nombramiento o carta</p>
                 <Input
                   type="file"

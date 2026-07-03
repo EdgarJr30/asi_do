@@ -114,7 +114,7 @@ export function SignInPage() {
           <span className="text-[13px] font-semibold text-(--app-text)">Correo</span>
           <Input
             autoComplete="email"
-            className="h-12 rounded-[14px]"
+            className="h-12 rounded-control"
             placeholder="john.doe@empresa.com.do"
             type="email"
             {...form.register('email')}
@@ -141,7 +141,7 @@ export function SignInPage() {
           <div className="relative">
             <Input
               autoComplete="current-password"
-              className="h-12 rounded-[14px] pr-11"
+              className="h-12 rounded-control pr-11"
               placeholder="Tu contraseña"
               type={showPassword ? 'text' : 'password'}
               {...form.register('password')}
@@ -159,7 +159,7 @@ export function SignInPage() {
         </label>
 
         <Button
-          className="h-12 w-full rounded-[14px] text-sm"
+          className="h-12 w-full rounded-control text-sm"
           disabled={form.formState.isSubmitting}
           type="submit"
         >

@@ -425,14 +425,14 @@ function NotificationRow({
           type="button"
           onClick={handleActivate}
           className={cn(
-            'flex min-w-0 flex-1 items-start gap-3 rounded-xl text-left transition-colors',
+            'flex min-w-0 flex-1 items-start gap-3 rounded-control text-left transition-colors',
             'hover:bg-(--app-surface-muted) focus-visible:bg-(--app-surface-muted) focus-visible:outline-none',
             isUnread ? 'p-0' : '-m-1 p-1'
           )}
         >
           <span
             className={cn(
-              'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl',
+              'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-control',
               isUnread
                 ? 'bg-primary-100 text-primary-600 dark:bg-primary-500/16 dark:text-primary-300'
                 : 'bg-(--app-surface-muted) text-(--app-text-muted)'
@@ -460,7 +460,7 @@ function NotificationRow({
           aria-label={isUnread ? 'Marcar leida' : 'Marcar no leida'}
           disabled={isUpdatingReadState}
           onClick={() => (isUnread ? onMarkRead(notification.id) : onMarkUnread(notification.id))}
-          className="mt-0.5 shrink-0 rounded-lg px-2 py-1 text-[0.68rem] font-semibold text-primary-600 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-primary-300 dark:hover:bg-primary-500/12"
+          className="mt-0.5 shrink-0 rounded-control px-2 py-1 text-[0.68rem] font-semibold text-primary-600 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-primary-300 dark:hover:bg-primary-500/12"
         >
           {isUnread ? 'Leída' : 'No leída'}
         </button>
@@ -510,7 +510,7 @@ function WorkspaceNotificationPanel({
   const lastVisibleItem = Math.min(page * pageSize, totalCount)
 
   return (
-    <div className="flex max-h-[calc(100dvh-7rem)] w-full flex-col overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_28px_72px_rgba(8,12,24,0.22)] sm:max-h-[min(32rem,75vh)] sm:w-[min(23rem,calc(100vw-1.5rem))]">
+    <div className="flex max-h-[calc(100dvh-7rem)] w-full flex-col overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_28px_72px_rgba(8,12,24,0.22)] sm:max-h-[min(32rem,75vh)] sm:w-[min(23rem,calc(100vw-1.5rem))]">
       <div className="flex items-center justify-between gap-3 border-b border-(--app-border) px-4 py-3">
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-(--app-text)">Notificaciones</p>
@@ -525,7 +525,7 @@ function WorkspaceNotificationPanel({
             type="button"
             onClick={onMarkAllRead}
             disabled={isMarkingAll}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50 disabled:opacity-60 dark:text-primary-300 dark:hover:bg-primary-500/12"
+            className="inline-flex items-center gap-1.5 rounded-control px-2 py-1 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50 disabled:opacity-60 dark:text-primary-300 dark:hover:bg-primary-500/12"
           >
             {isMarkingAll ? <Spinner size="sm" /> : <CheckCheck className="size-3.5" />}
             {isMarkingAll ? 'Marcando…' : 'Marcar todas'}
@@ -537,10 +537,10 @@ function WorkspaceNotificationPanel({
         <div className="space-y-3 px-4 py-4">
           {[0, 1, 2].map((row) => (
             <div key={row} className="flex items-start gap-3">
-              <div className="size-9 shrink-0 animate-pulse rounded-xl bg-(--app-surface-muted)" />
+              <div className="size-9 shrink-0 animate-pulse rounded-control bg-(--app-surface-muted)" />
               <div className="flex-1 space-y-2 py-1">
-                <div className="h-3 w-2/3 animate-pulse rounded bg-(--app-surface-muted)" />
-                <div className="h-3 w-full animate-pulse rounded bg-(--app-surface-muted)" />
+                <div className="h-3 w-2/3 animate-pulse rounded-control bg-(--app-surface-muted)" />
+                <div className="h-3 w-full animate-pulse rounded-control bg-(--app-surface-muted)" />
               </div>
             </div>
           ))}
@@ -578,7 +578,7 @@ function WorkspaceNotificationPanel({
                 aria-label="Notificaciones anteriores"
                 disabled={!hasPreviousPage || isPaging}
                 onClick={onPreviousPage}
-                className="inline-flex size-9 items-center justify-center rounded-xl border border-(--app-border) text-(--app-text-muted) transition hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-45"
+                className="inline-flex size-9 items-center justify-center rounded-control border border-(--app-border) text-(--app-text-muted) transition hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-45"
               >
                 <ChevronLeft className="size-4" />
               </button>
@@ -590,7 +590,7 @@ function WorkspaceNotificationPanel({
                 aria-label="Notificaciones siguientes"
                 disabled={!hasNextPage || isPaging}
                 onClick={onNextPage}
-                className="inline-flex size-9 items-center justify-center rounded-xl border border-(--app-border) text-(--app-text-muted) transition hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-45"
+                className="inline-flex size-9 items-center justify-center rounded-control border border-(--app-border) text-(--app-text-muted) transition hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-45"
               >
                 <ChevronRight className="size-4" />
               </button>
@@ -606,7 +606,7 @@ function SidebarTooltip({ label }: { label: string }) {
   return (
     <span
       role="tooltip"
-      className="pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 z-50 -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-lg border border-white/10 bg-slate-900/95 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-[0_12px_28px_rgba(8,12,24,0.45)] backdrop-blur transition-[opacity,transform] duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+      className="pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 z-50 -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-control border border-white/10 bg-slate-900/95 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-[0_12px_28px_rgba(8,12,24,0.45)] backdrop-blur transition-[opacity,transform] duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
     >
       <span className="absolute -left-1 top-1/2 size-2 -translate-y-1/2 rotate-45 border-b border-l border-white/10 bg-slate-900/95" />
       {label}
@@ -618,7 +618,7 @@ function FloatingSidebarTooltip({ label, top }: { label: string; top: number }) 
   return (
     <span
       role="tooltip"
-      className="pointer-events-none fixed z-[60] -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-slate-900/95 px-2.5 py-1.5 text-xs font-medium text-white opacity-100 shadow-[0_12px_28px_rgba(8,12,24,0.45)] backdrop-blur"
+      className="pointer-events-none fixed z-[60] -translate-y-1/2 whitespace-nowrap rounded-control border border-white/10 bg-slate-900/95 px-2.5 py-1.5 text-xs font-medium text-white opacity-100 shadow-[0_12px_28px_rgba(8,12,24,0.45)] backdrop-blur"
       style={{
         left: DESKTOP_SIDEBAR_COLLAPSED_WIDTH + 12,
         top
@@ -664,7 +664,7 @@ function SidebarFooter({
       <div className="border-t border-white/10 px-2.5 py-3">
         <button
           className={cn(
-            'flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
+            'flex min-h-11 w-full items-center rounded-control text-left text-sm font-medium transition',
             showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
             'text-white/78 hover:bg-white/6 hover:text-white'
           )}
@@ -672,7 +672,7 @@ function SidebarFooter({
           type="button"
           onClick={() => onActionNavigate(config.publicActionHref)}
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/8 text-white/78">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-white/8 text-white/78">
             <Sparkles className="size-4.5" />
           </span>
           {!showCollapsedLabels ? <span>{config.publicActionLabel}</span> : <span className="sr-only">{config.publicActionLabel}</span>}
@@ -708,7 +708,7 @@ function SidebarFooter({
       {!config.hideFooterChrome ? (
         <button
           className={cn(
-            'flex min-h-11 w-full items-center rounded-xl text-left text-sm font-medium transition',
+            'flex min-h-11 w-full items-center rounded-control text-left text-sm font-medium transition',
             showCollapsedLabels ? 'justify-center px-2' : 'gap-3 px-3',
             'text-white/78 hover:bg-white/6 hover:text-white'
           )}
@@ -716,7 +716,7 @@ function SidebarFooter({
           type="button"
           onClick={() => onActionNavigate(config.publicActionHref)}
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/8 text-white/78">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-white/8 text-white/78">
             <BriefcaseBusiness className="size-4.5" />
           </span>
           {!showCollapsedLabels ? <span>{config.publicActionLabel}</span> : <span className="sr-only">{config.publicActionLabel}</span>}
@@ -725,13 +725,13 @@ function SidebarFooter({
 
       {!isDesktop ? (
         <div
-          className="mt-2 rounded-2xl border border-white/10 bg-white/8 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+          className="mt-2 rounded-card border border-white/10 bg-white/8 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
           data-testid="mobile-sidebar-profile-card"
         >
           <div className="flex items-center gap-2">
             <button
               aria-label={`Mi perfil: ${userName}`}
-              className="flex min-w-0 flex-1 items-center gap-2 rounded-xl px-2 py-1.5 text-left transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
+              className="flex min-w-0 flex-1 items-center gap-2 rounded-control px-2 py-1.5 text-left transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
               type="button"
               onClick={onOpenProfile}
             >
@@ -747,7 +747,7 @@ function SidebarFooter({
             <Tooltip label="Notificaciones" side="top">
               <button
                 aria-label="Abrir notificaciones"
-                className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-white/72 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-control text-white/72 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
                 type="button"
                 onClick={onOpenNotifications}
               >
@@ -764,7 +764,7 @@ function SidebarFooter({
           aria-label={`Abrir perfil de ${userName}`}
           onClick={onOpenProfile}
           className={cn(
-            'group relative mt-3 flex w-full items-center rounded-2xl outline-none transition-[background-color,border-color] duration-150 focus-visible:ring-2 focus-visible:ring-white/40',
+            'group relative mt-3 flex w-full items-center rounded-card outline-none transition-[background-color,border-color] duration-150 focus-visible:ring-2 focus-visible:ring-white/40',
             showCollapsedLabels ? 'justify-center py-1' : 'gap-3 px-2 py-2',
             !showCollapsedLabels && config.hideFooterChrome ? 'border border-white/10 bg-white/6 hover:border-white/16 hover:bg-white/10' : ''
           )}
@@ -789,7 +789,7 @@ function SidebarFooter({
       <button
         aria-label="Cerrar sesión"
         className={cn(
-          'group relative mt-1.5 flex w-full items-center rounded-xl text-left text-sm font-medium text-rose-200/90 outline-none transition-[background-color,color] duration-150 hover:bg-rose-400/12 hover:text-rose-100 focus-visible:ring-2 focus-visible:ring-rose-300/50',
+          'group relative mt-1.5 flex w-full items-center rounded-control text-left text-sm font-medium text-rose-200/90 outline-none transition-[background-color,color] duration-150 hover:bg-rose-400/12 hover:text-rose-100 focus-visible:ring-2 focus-visible:ring-rose-300/50',
           showCollapsedLabels ? 'h-11 justify-center px-0' : 'min-h-10 gap-3 px-3 py-2'
         )}
         type="button"
@@ -911,12 +911,12 @@ function WorkspaceSidebarContent({
       <div className="border-b border-white/10 px-3 py-3">
         <div className={cn('flex', showCollapsedLabels ? 'flex-col items-center gap-2.5' : 'items-center gap-2')}>
           {showCollapsedLabels ? (
-            <BrandMark panelClassName="size-10 rounded-[14px] border-white/12 bg-white/10 p-2 shadow-none" />
+            <BrandMark panelClassName="size-10 rounded-control border-white/12 bg-white/10 p-2 shadow-none" />
           ) : (
             <div
               className={cn(
                 'flex min-w-0 flex-1 flex-col justify-center',
-                config.hideFooterChrome ? '' : 'rounded-[18px] bg-white/6 px-3 py-2'
+                config.hideFooterChrome ? '' : 'rounded-card bg-white/6 px-3 py-2'
               )}
             >
               <BrandLockup className={config.hideFooterChrome ? 'w-20' : 'w-28'} surface="dark" />
@@ -934,7 +934,7 @@ function WorkspaceSidebarContent({
                   : `Contraer sidebar de ${config.mobileSidebarLabel}`
                 : `Cerrar sidebar de ${config.mobileSidebarLabel}`
             }
-            className="group relative inline-flex size-8 shrink-0 items-center justify-center self-center rounded-lg border border-white/10 bg-white/6 text-white/70 outline-none transition-[background-color,border-color,color] duration-150 hover:border-white/20 hover:bg-white/12 hover:text-white focus-visible:ring-2 focus-visible:ring-white/40"
+            className="group relative inline-flex size-8 shrink-0 items-center justify-center self-center rounded-control border border-white/10 bg-white/6 text-white/70 outline-none transition-[background-color,border-color,color] duration-150 hover:border-white/20 hover:bg-white/12 hover:text-white focus-visible:ring-2 focus-visible:ring-white/40"
             type="button"
             onClick={onToggleSidebar}
           >
@@ -964,7 +964,7 @@ function WorkspaceSidebarContent({
                   <button
                     type="button"
                     aria-expanded={!isGroupCollapsed}
-                    className="mb-1 flex min-h-8 w-full items-center justify-between rounded-xl px-3 text-left text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-white/42 outline-none transition-colors hover:bg-white/7 hover:text-white/70 focus-visible:ring-2 focus-visible:ring-white/35"
+                    className="mb-1 flex min-h-8 w-full items-center justify-between rounded-control px-3 text-left text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-white/42 outline-none transition-colors hover:bg-white/7 hover:text-white/70 focus-visible:ring-2 focus-visible:ring-white/35"
                     onClick={() => toggleGroup(groupId)}
                   >
                     <span className="truncate">{group.title}</span>
@@ -984,7 +984,7 @@ function WorkspaceSidebarContent({
                         aria-label={item.title}
                         aria-current={isActive ? 'page' : undefined}
                         className={cn(
-                          'group relative flex w-full items-center rounded-xl text-left text-[0.875rem] font-medium outline-none transition-[background-color,color] duration-150',
+                          'group relative flex w-full items-center rounded-control text-left text-[0.875rem] font-medium outline-none transition-[background-color,color] duration-150',
                           showCollapsedLabels ? 'h-11 justify-center px-0' : 'min-h-10 gap-3 px-3 py-2',
                           'focus-visible:ring-2 focus-visible:ring-white/40',
                           isActive ? 'bg-white/12 text-white' : 'text-white/60 hover:bg-white/8 hover:text-white'
@@ -1006,7 +1006,7 @@ function WorkspaceSidebarContent({
                         <span
                           className={cn(
                             'flex shrink-0 items-center justify-center transition-colors',
-                            showCollapsedLabels ? 'size-10 rounded-xl' : 'size-5',
+                            showCollapsedLabels ? 'size-10 rounded-control' : 'size-5',
                             showCollapsedLabels && isActive ? 'bg-white/12' : ''
                           )}
                         >
@@ -1526,7 +1526,7 @@ export function PlatformAppShell({
           <div className="flex min-h-18 items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
             <button
               aria-label={`Abrir sidebar de ${config.mobileSidebarLabel}`}
-              className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-slate-300 hover:bg-white lg:hidden dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/10"
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-card border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-slate-300 hover:bg-white lg:hidden dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/10"
               type="button"
               onClick={() => setMobileSidebarOpen(true)}
             >
@@ -1546,7 +1546,7 @@ export function PlatformAppShell({
                         {href && !isCurrentPage ? (
                           <button
                             type="button"
-                            className="min-w-0 truncate rounded-md text-sm font-medium text-slate-500 transition-colors hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50 dark:text-slate-400 dark:hover:text-white"
+                            className="min-w-0 truncate rounded-control text-sm font-medium text-slate-500 transition-colors hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400/50 dark:text-slate-400 dark:hover:text-white"
                             onClick={() => handleActionNavigate(href)}
                           >
                             {crumb.title}
@@ -1582,7 +1582,7 @@ export function PlatformAppShell({
                     <button
                       aria-expanded={notificationPanelOpen}
                       aria-label="Abrir notificaciones"
-                      className="relative inline-flex size-11 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
+                      className="relative inline-flex size-11 items-center justify-center rounded-card border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
                       type="button"
                       onClick={() => {
                         setNotificationPanelOpen((current) => {
@@ -1630,7 +1630,7 @@ export function PlatformAppShell({
                 </div>
 
                 <ThemeToggle
-                  className="size-11 rounded-2xl border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
+                  className="size-11 rounded-card border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
                   compact
                   withTooltip
                 />
@@ -1641,7 +1641,7 @@ export function PlatformAppShell({
                   <button
                     aria-expanded={profileMenuOpen}
                     aria-label="Abrir menu de perfil"
-                    className="flex items-center gap-3 rounded-2xl border border-transparent px-1.5 py-1.5 transition hover:border-slate-200 hover:bg-slate-50 dark:hover:border-white/10 dark:hover:bg-white/5"
+                    className="flex items-center gap-3 rounded-card border border-transparent px-1.5 py-1.5 transition hover:border-slate-200 hover:bg-slate-50 dark:hover:border-white/10 dark:hover:bg-white/5"
                     type="button"
                     onClick={() => {
                       setProfileMenuOpen((current) => !current)
@@ -1659,14 +1659,14 @@ export function PlatformAppShell({
                   </button>
 
                   {profileMenuOpen ? (
-                    <div className="absolute right-0 z-10 mt-2.5 w-56 origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_48px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-slate-900">
+                    <div className="absolute right-0 z-10 mt-2.5 w-56 origin-top-right rounded-card border border-slate-200 bg-white p-2 shadow-[0_24px_48px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-slate-900">
                       <div className="border-b border-slate-100 px-3 py-2 dark:border-white/10">
                         <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</p>
                         <p className="truncate text-xs text-slate-500 dark:text-slate-400">{userIdentity.email}</p>
                       </div>
 
                       <button
-                        className="mt-2 block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
+                        className="mt-2 block w-full rounded-control px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
                         type="button"
                         onClick={() => handleActionNavigate(config.profileHref)}
                       >
@@ -1677,7 +1677,7 @@ export function PlatformAppShell({
                         .map((item) => (
                           <button
                             key={item.href}
-                            className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
+                            className="block w-full rounded-control px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
                             type="button"
                             onClick={() => handleActionNavigate(item.href)}
                           >
@@ -1685,7 +1685,7 @@ export function PlatformAppShell({
                           </button>
                         ))}
                       <button
-                        className="block w-full rounded-xl px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
+                        className="block w-full rounded-control px-3 py-2 text-left text-sm text-slate-900 transition hover:bg-slate-50 dark:text-white dark:hover:bg-white/5"
                         type="button"
                         onClick={handleSignOut}
                       >
@@ -1698,7 +1698,7 @@ export function PlatformAppShell({
             ) : (
               <div className="ml-auto hidden items-center gap-2 lg:flex">
                 <ThemeToggle
-                  className="size-11 rounded-2xl border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
+                  className="size-11 rounded-card border-transparent bg-transparent px-0 text-slate-500 shadow-none hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/5 dark:hover:text-white"
                   compact
                   withTooltip
                 />

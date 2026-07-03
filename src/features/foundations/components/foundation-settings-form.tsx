@@ -214,7 +214,7 @@ export function FoundationSettingsForm() {
             </div>
 
             <div className="grid gap-3">
-              <label className="flex items-center justify-between rounded-3xl border border-zinc-200 bg-white/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950/80">
+              <label className="flex items-center justify-between rounded-card-lg border border-zinc-200 bg-white/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950/80">
                 <div>
                   <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                     {t('foundations.emailNotificationsLabel')}
@@ -223,12 +223,12 @@ export function FoundationSettingsForm() {
                 </div>
                 <input
                   type="checkbox"
-                  className="h-5 w-5 rounded border-zinc-300 accent-primary-500"
+                  className="h-5 w-5 rounded-control border-zinc-300 accent-primary-500"
                   {...register('emailNotifications')}
                 />
               </label>
 
-              <label className="flex items-center justify-between rounded-3xl border border-zinc-200 bg-white/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950/80">
+              <label className="flex items-center justify-between rounded-card-lg border border-zinc-200 bg-white/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950/80">
                 <div>
                   <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                     {t('foundations.pushNotificationsLabel')}
@@ -239,7 +239,7 @@ export function FoundationSettingsForm() {
                 </div>
                 <input
                   type="checkbox"
-                  className="h-5 w-5 rounded border-zinc-300 accent-primary-500"
+                  className="h-5 w-5 rounded-control border-zinc-300 accent-primary-500"
                   {...register('pushNotifications')}
                 />
               </label>

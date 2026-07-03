@@ -45,10 +45,10 @@ function ReportKpiTile({ item, loading }: { item: KpiItem; loading: boolean }) {
   const deltaIsNeutral = item.delta === 0
 
   return (
-    <div className="h-full rounded-xl border border-(--app-border) bg-(--app-surface-elevated) px-4 py-4 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-primary-300/60 hover:shadow-[0_10px_24px_rgba(20,40,90,0.07)] dark:hover:border-primary-500/40">
+    <div className="h-full rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-4 py-4 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-primary-300/60 hover:shadow-[0_10px_24px_rgba(20,40,90,0.07)] dark:hover:border-primary-500/40">
       <div className="flex items-start justify-between gap-3">
         <p className="text-[0.68rem] font-bold uppercase tracking-[0.12em] text-(--app-text-subtle)">{item.label}</p>
-        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
           <Icon aria-hidden="true" className="size-4" strokeWidth={1.8} />
         </span>
       </div>
@@ -190,7 +190,7 @@ export function WorkspaceReportsPage() {
         </div>
         <Select
           aria-label="Periodo de reportes"
-          className="h-10 rounded-xl text-[0.84rem] font-semibold sm:w-52"
+          className="h-10 rounded-control text-[0.84rem] font-semibold sm:w-52"
           value={periodDays}
           onChange={(event) => setPeriodDays(Number(event.target.value) as (typeof PERIOD_OPTIONS)[number]['value'])}
         >
@@ -270,7 +270,7 @@ export function WorkspaceReportsPage() {
                   </div>
                 </div>
               ))}
-              <div className="mt-1 flex items-center justify-between gap-3 rounded-xl bg-[#e9f7ef] px-4 py-3.5 dark:bg-[#1f9d61]/15">
+              <div className="mt-1 flex items-center justify-between gap-3 rounded-control bg-[#e9f7ef] px-4 py-3.5 dark:bg-[#1f9d61]/15">
                 <div>
                   <p className="text-sm font-bold text-[#166b45] dark:text-[#7ee1a8]">Contrataciones totales</p>
                   <p className="mt-0.5 text-xs text-[#3f9169] dark:text-[#9ee8b8]">en el periodo</p>

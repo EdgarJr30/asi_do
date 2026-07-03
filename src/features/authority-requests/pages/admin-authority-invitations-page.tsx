@@ -211,7 +211,7 @@ export function AdminAuthorityInvitationsPage({ embedded = false }: { embedded?:
             {invitationsQuery.isLoading ? (
               <PageLoader inline label="Cargando invitaciones" />
             ) : invitations.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-(--app-border) px-4 py-10 text-center text-sm text-(--app-text-muted)">
+              <div className="rounded-card-lg border border-dashed border-(--app-border) px-4 py-10 text-center text-sm text-(--app-text-muted)">
                 Aún no has generado invitaciones de autorización.
               </div>
             ) : (
@@ -223,7 +223,7 @@ export function AdminAuthorityInvitationsPage({ embedded = false }: { embedded?:
                     <motion.li
                       key={invitation.id}
                       variants={cardReveal}
-                      className="rounded-2xl border border-(--app-border) bg-(--app-surface) p-4"
+                      className="rounded-card border border-(--app-border) bg-(--app-surface) p-4"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0">

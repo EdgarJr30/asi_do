@@ -209,7 +209,7 @@ export function SurfaceStatusPage({
           {isNotFound ? (
             <form onSubmit={handleSearch} className="space-y-2">
               <label className="text-[0.82rem] font-medium text-(--app-text-muted)">¿Qué estás buscando?</label>
-              <div className="flex items-center gap-2.5 rounded-2xl border border-(--app-border) bg-(--app-surface) px-3.5 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-(--app-ring)">
+              <div className="flex items-center gap-2.5 rounded-card border border-(--app-border) bg-(--app-surface) px-3.5 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-(--app-ring)">
                 <Search aria-hidden="true" className="size-4 text-(--app-text-subtle)" />
                 <input
                   value={searchTerm}
@@ -232,18 +232,18 @@ export function SurfaceStatusPage({
         </motion.div>
 
         <motion.div variants={cardReveal} className="relative">
-          <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[30px] border border-(--app-border) bg-[linear-gradient(135deg,rgba(45,82,168,0.10),rgba(138,162,216,0.16))] dark:bg-[linear-gradient(135deg,rgba(45,82,168,0.18),rgba(20,28,52,0.4))]">
+          <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-card-lg border border-(--app-border) bg-[linear-gradient(135deg,rgba(45,82,168,0.10),rgba(138,162,216,0.16))] dark:bg-[linear-gradient(135deg,rgba(45,82,168,0.18),rgba(20,28,52,0.4))]">
             <div className="text-center">
               <p className="text-[5rem] font-black leading-none tracking-[-0.04em] text-primary-600 sm:text-[7rem] dark:text-primary-300">404</p>
               <p className="mt-1 text-sm font-semibold text-(--app-text-muted)">Página no encontrada</p>
             </div>
-            <span className="absolute left-6 top-7 flex size-11 items-center justify-center rounded-2xl border border-(--app-border) bg-(--app-surface) text-primary-600 shadow-[0_10px_26px_rgba(15,23,42,0.1)] dark:text-primary-300">
+            <span className="absolute left-6 top-7 flex size-11 items-center justify-center rounded-card border border-(--app-border) bg-(--app-surface) text-primary-600 shadow-[0_10px_26px_rgba(15,23,42,0.1)] dark:text-primary-300">
               <Compass className="size-5" />
             </span>
-            <span className="absolute bottom-8 left-10 flex size-10 items-center justify-center rounded-2xl border border-(--app-border) bg-(--app-surface) text-(--app-text-subtle) shadow-[0_10px_26px_rgba(15,23,42,0.1)]">
+            <span className="absolute bottom-8 left-10 flex size-10 items-center justify-center rounded-card border border-(--app-border) bg-(--app-surface) text-(--app-text-subtle) shadow-[0_10px_26px_rgba(15,23,42,0.1)]">
               <Search className="size-4" />
             </span>
-            <span className="absolute right-7 top-12 flex size-12 items-center justify-center rounded-2xl border border-(--app-border) bg-(--app-surface) text-(--app-text-subtle) shadow-[0_10px_26px_rgba(15,23,42,0.1)]">
+            <span className="absolute right-7 top-12 flex size-12 items-center justify-center rounded-card border border-(--app-border) bg-(--app-surface) text-(--app-text-subtle) shadow-[0_10px_26px_rgba(15,23,42,0.1)]">
               <FileQuestion className="size-5" />
             </span>
           </div>
@@ -257,9 +257,9 @@ export function SurfaceStatusPage({
             <motion.div key={link.title} variants={cardReveal} className="h-full">
               <Link
                 to={link.to}
-                className="group flex h-full flex-col gap-2 rounded-2xl border border-(--app-border) bg-(--app-surface) p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:hover:border-primary-500/40"
+                className="group flex h-full flex-col gap-2 rounded-card border border-(--app-border) bg-(--app-surface) p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-[0_14px_30px_rgba(15,23,42,0.08)] dark:hover:border-primary-500/40"
               >
-                <span className="flex size-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+                <span className="flex size-10 items-center justify-center rounded-control bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
                   <Icon className="size-5" />
                 </span>
                 <p className="mt-1 text-sm font-semibold text-(--app-text)">{link.title}</p>

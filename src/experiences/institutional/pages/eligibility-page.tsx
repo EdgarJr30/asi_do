@@ -179,7 +179,7 @@ function RadioOption({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        'w-full rounded-2xl border-2 bg-(--asi-surface-raised) p-5 text-left transition-all duration-150 active:scale-[0.99]',
+        'w-full rounded-card border-2 bg-(--asi-surface-raised) p-5 text-left transition-all duration-150 active:scale-[0.99]',
         selected
           ? 'border-(--asi-primary) bg-(--asi-primary)/5'
           : 'border-(--asi-outline) hover:border-(--asi-primary) hover:bg-(--asi-primary)/5',
@@ -306,7 +306,7 @@ function EligibleResult({
           <p className="max-w-[52ch] text-sm leading-7 text-(--asi-text-muted)">{result.message}</p>
         </div>
 
-        <div className="w-full max-w-sm rounded-2xl border border-(--asi-outline) bg-(--asi-surface-raised) p-5 text-left">
+        <div className="w-full max-w-sm rounded-card border border-(--asi-outline) bg-(--asi-surface-raised) p-5 text-left">
           <p className="text-xs font-semibold uppercase tracking-widest text-(--asi-text-muted)">
             Cuota anual
           </p>
@@ -378,7 +378,7 @@ function CountryCombobox({
           )}
           <ComboboxInput
             className={cn(
-              'w-full rounded-xl border border-(--asi-outline) bg-(--asi-surface-raised) py-3 pr-10 text-sm text-(--asi-text)',
+              'w-full rounded-control border border-(--asi-outline) bg-(--asi-surface-raised) py-3 pr-10 text-sm text-(--asi-text)',
               'placeholder:text-(--asi-text-muted)',
               'focus:border-(--asi-primary) focus:outline-none focus:ring-2 focus:ring-(--asi-primary)/20',
               selected ? 'pl-11' : 'pl-4',
@@ -392,7 +392,7 @@ function CountryCombobox({
           </ComboboxButton>
         </div>
 
-        <ComboboxOptions className="absolute z-20 mt-1.5 max-h-64 w-full overflow-y-auto rounded-2xl border border-(--asi-outline) bg-(--asi-surface-raised) py-1.5 shadow-lg focus:outline-none">
+        <ComboboxOptions className="absolute z-20 mt-1.5 max-h-64 w-full overflow-y-auto rounded-card border border-(--asi-outline) bg-(--asi-surface-raised) py-1.5 shadow-lg focus:outline-none">
           {filtered.length === 0 ? (
             <p className="px-4 py-3 text-sm text-(--asi-text-muted)">Sin resultados</p>
           ) : (
@@ -459,7 +459,7 @@ function OtherDivisionsStep({
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl border border-(--asi-outline) bg-(--asi-canvas) p-5"
+            className="rounded-card border border-(--asi-outline) bg-(--asi-canvas) p-5"
           >
             <div className="flex items-center gap-3">
               <span className="text-3xl leading-none">{isoToFlag(selected.iso)}</span>
@@ -472,7 +472,7 @@ function OtherDivisionsStep({
               href={selected.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-(--asi-primary) px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+              className="mt-4 inline-flex items-center gap-2 rounded-control bg-(--asi-primary) px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
             >
               Visitar sitio del capítulo
               <ExternalLink className="size-3.5" />
@@ -567,7 +567,7 @@ export function EligibilityPage() {
         </div>
 
         {/* Tarjeta del wizard */}
-        <div className="rounded-[1.75rem] bg-(--asi-surface-raised) p-8 shadow-(--asi-shadow-soft) outline-1 outline-(--asi-outline) sm:p-10">
+        <div className="rounded-card-lg bg-(--asi-surface-raised) p-8 shadow-(--asi-shadow-soft) outline-1 outline-(--asi-outline) sm:p-10">
           {(showBack || showProgress) && (
             <div className="mb-8 space-y-4">
               {showBack && (

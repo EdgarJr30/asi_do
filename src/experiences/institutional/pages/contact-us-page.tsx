@@ -96,7 +96,7 @@ export function ContactUsPage() {
       <InstitutionalSection className="overflow-hidden" reveal="mount">
         <motion.div className="space-y-8" {...revealProps}>
           <motion.div
-            className="relative overflow-hidden rounded-[1.75rem] shadow-2xl ring-1 ring-black/8"
+            className="relative overflow-hidden rounded-card-lg shadow-2xl ring-1 ring-black/8"
             variants={itemVariants}
           >
             <img
@@ -165,7 +165,7 @@ export function ContactUsPage() {
                     className="asi-card bg-white px-4 py-4 sm:px-5 sm:py-5"
                     variants={itemVariants}
                   >
-                    <div className="flex size-10 items-center justify-center rounded-2xl bg-(--asi-primary)/8 text-(--asi-primary)">
+                    <div className="flex size-10 items-center justify-center rounded-card bg-(--asi-primary)/8 text-(--asi-primary)">
                       <Icon className="size-4.5" />
                     </div>
                     <p className="mt-3 text-[0.98rem] font-semibold text-(--asi-text)">
@@ -201,7 +201,7 @@ export function ContactUsPage() {
                 }}
               />
               <motion.div className="hidden lg:block" variants={itemVariants}>
-                <div className="relative overflow-hidden rounded-[1.5rem] shadow-(--asi-shadow-soft) ring-1 ring-black/8">
+                <div className="relative overflow-hidden rounded-card-lg shadow-(--asi-shadow-soft) ring-1 ring-black/8">
                   <img
                     alt={contactFormImage.alt}
                     className="h-80 w-full object-cover"

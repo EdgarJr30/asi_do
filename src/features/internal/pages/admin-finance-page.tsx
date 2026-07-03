@@ -25,7 +25,7 @@ export function AdminFinancePage() {
       description="Configuración financiera visible a miembros y donantes: pasarela AZUL, datos bancarios, cuotas por categoría y montos sugeridos."
       actions={
         tab === 'payments' ? (
-          <Button type="submit" form="membership-payments-settings-form" className="h-10 rounded-xl">
+          <Button type="submit" form="membership-payments-settings-form" className="h-10 rounded-control">
             <Save className="size-4" /> Guardar cambios
           </Button>
         ) : null

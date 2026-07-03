@@ -222,7 +222,7 @@ export function WorkspaceActivityPage() {
 
       <motion.div
         variants={cardReveal}
-        className="grid overflow-hidden rounded-[14px] border border-[#e9edf5] bg-white shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:border-white/10 dark:bg-(--app-surface-elevated)"
+        className="grid overflow-hidden rounded-control border border-[#e9edf5] bg-white shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:border-white/10 dark:bg-(--app-surface-elevated)"
       >
         <div className="grid sm:grid-cols-3">
           <ActivityStatCell
@@ -249,7 +249,7 @@ export function WorkspaceActivityPage() {
       <motion.section variants={cardReveal} aria-labelledby="workspace-activity-feed">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div
-            className="inline-flex w-full flex-wrap items-center gap-1 rounded-[11px] bg-[#eef1f7] p-1 sm:w-auto dark:bg-white/8"
+            className="inline-flex w-full flex-wrap items-center gap-1 rounded-control bg-[#eef1f7] p-1 sm:w-auto dark:bg-white/8"
             aria-label="Filtrar actividad"
             role="tablist"
           >
@@ -267,7 +267,7 @@ export function WorkspaceActivityPage() {
                     setPage(1)
                   }}
                   className={cn(
-                    'inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[0.84rem] font-semibold transition-[background-color,color,box-shadow] sm:flex-none',
+                    'inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-control px-3 text-[0.84rem] font-semibold transition-[background-color,color,box-shadow] sm:flex-none',
                     isActive
                       ? 'bg-white text-[#2d52a8] shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:bg-white/12 dark:text-primary-200'
                       : 'text-[#5a6987] hover:text-(--app-text) dark:text-(--app-text-muted)'
@@ -296,7 +296,7 @@ export function WorkspaceActivityPage() {
                 setSort(event.target.value as 'recent' | 'oldest')
                 setPage(1)
               }}
-              className="h-10 w-full appearance-none rounded-[11px] border border-[#e9edf5] bg-white px-3.5 pr-9 text-[0.84rem] font-semibold text-[#5a6987] outline-none transition-colors hover:border-[#cdd6e8] focus-visible:ring-2 focus-visible:ring-(--app-ring) sm:w-44 dark:border-white/10 dark:bg-(--app-surface-elevated) dark:text-(--app-text-muted)"
+              className="h-10 w-full appearance-none rounded-control border border-[#e9edf5] bg-white px-3.5 pr-9 text-[0.84rem] font-semibold text-[#5a6987] outline-none transition-colors hover:border-[#cdd6e8] focus-visible:ring-2 focus-visible:ring-(--app-ring) sm:w-44 dark:border-white/10 dark:bg-(--app-surface-elevated) dark:text-(--app-text-muted)"
             >
               <option value="recent">Más recientes</option>
               <option value="oldest">Más antiguos</option>
@@ -307,7 +307,7 @@ export function WorkspaceActivityPage() {
 
         <div className="mt-5">
           {metricsQuery.isLoading ? (
-            <div className="flex items-center gap-2.5 rounded-[14px] border border-dashed border-[#e9edf5] bg-white px-4 py-5 text-sm text-(--app-text-muted) dark:border-white/10 dark:bg-(--app-surface-elevated)">
+            <div className="flex items-center gap-2.5 rounded-control border border-dashed border-[#e9edf5] bg-white px-4 py-5 text-sm text-(--app-text-muted) dark:border-white/10 dark:bg-(--app-surface-elevated)">
               <Spinner size="sm" /> Cargando actividad…
             </div>
           ) : visibleActivity.length > 0 ? (
@@ -330,7 +330,7 @@ export function WorkspaceActivityPage() {
                     type="button"
                     onClick={() => goToPage(Math.max(1, boundedPage - 1))}
                     disabled={boundedPage <= 1}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-[#e9edf5] bg-white px-3 text-[0.84rem] font-semibold text-[#5a6987] transition-colors hover:border-[#cdd6e8] hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-(--app-surface-elevated) dark:text-(--app-text-muted)"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-control border border-[#e9edf5] bg-white px-3 text-[0.84rem] font-semibold text-[#5a6987] transition-colors hover:border-[#cdd6e8] hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-(--app-surface-elevated) dark:text-(--app-text-muted)"
                   >
                     <ChevronLeft className="size-4" /> Anterior
                   </button>
@@ -341,7 +341,7 @@ export function WorkspaceActivityPage() {
                     type="button"
                     onClick={() => goToPage(Math.min(totalPages, boundedPage + 1))}
                     disabled={boundedPage >= totalPages}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-[#e9edf5] bg-white px-3 text-[0.84rem] font-semibold text-[#5a6987] transition-colors hover:border-[#cdd6e8] hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-(--app-surface-elevated) dark:text-(--app-text-muted)"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-control border border-[#e9edf5] bg-white px-3 text-[0.84rem] font-semibold text-[#5a6987] transition-colors hover:border-[#cdd6e8] hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-(--app-surface-elevated) dark:text-(--app-text-muted)"
                   >
                     Siguiente <ChevronRight className="size-4" />
                   </button>
@@ -377,7 +377,7 @@ function ActivityStatCell({
 }) {
   return (
     <div className="relative flex items-center gap-3.5 border-t border-[#e9edf5] px-5 py-4 first:border-t-0 sm:border-l sm:border-t-0 sm:first:border-l-0 dark:border-white/10">
-      <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-[11px]', accentClassName[accent])}>
+      <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-control', accentClassName[accent])}>
         <Icon className="size-5" />
       </span>
       <div className="min-w-0">
@@ -432,9 +432,9 @@ function ActivityRow({ item }: { item: DashboardActivityItem }) {
   return (
     <li
       id={item.id}
-      className="group scroll-mt-24 flex items-center gap-3.5 rounded-xl px-3 py-2.5 transition-[background-color,box-shadow] duration-150 hover:bg-white hover:shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:hover:bg-white/6"
+      className="group scroll-mt-24 flex items-center gap-3.5 rounded-control px-3 py-2.5 transition-[background-color,box-shadow] duration-150 hover:bg-white hover:shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:hover:bg-white/6"
     >
-      <span className={cn('flex size-[38px] shrink-0 items-center justify-center rounded-[11px]', accentClassName[meta.accent])}>
+      <span className={cn('flex size-[38px] shrink-0 items-center justify-center rounded-control', accentClassName[meta.accent])}>
         <Icon className="size-[19px]" />
       </span>
       <div className="min-w-0 flex-1">
@@ -451,7 +451,7 @@ function ActivityRow({ item }: { item: DashboardActivityItem }) {
       <div className="flex shrink-0 items-center gap-1">
         <span className="hidden whitespace-nowrap text-[0.78rem] text-[#8b97b0] sm:inline dark:text-(--app-text-subtle)">{relativeTime(item.occurredAt)}</span>
         <span className="opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-          <KebabMenu className="size-8 rounded-[9px]" label={`Acciones para ${item.candidateName}`}>
+          <KebabMenu className="size-8 rounded-control" label={`Acciones para ${item.candidateName}`}>
             <KebabMenuItem>
               <Eye className="mr-2 size-4 text-(--app-text-subtle)" />
               Ver detalle
@@ -474,7 +474,7 @@ function ActivityRow({ item }: { item: DashboardActivityItem }) {
 function ActivityEmptyState() {
   return (
     <div className="px-4 py-14 text-center">
-      <span className="mx-auto flex size-[54px] items-center justify-center rounded-[15px] bg-[#eef3fc] text-[#2d52a8] dark:bg-primary-500/16 dark:text-primary-200">
+      <span className="mx-auto flex size-[54px] items-center justify-center rounded-card bg-[#eef3fc] text-[#2d52a8] dark:bg-primary-500/16 dark:text-primary-200">
         <Activity className="size-6" />
       </span>
       <h3 className="mt-4 text-[1.03rem] font-bold tracking-tight text-(--app-text)">Sin actividad todavía</h3>

@@ -80,7 +80,7 @@ export function AdminSectionLabel({ title, count }: { title: string; count?: Rea
 
 export function AdminInfoGrid({ items }: { items: Array<{ label: string; value: ReactNode; helper: ReactNode }> }) {
   return (
-    <div className="grid overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) sm:grid-cols-3">
+    <div className="grid overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) sm:grid-cols-3">
       {items.map((item) => (
         <div key={item.label} className="border-b border-(--app-border)/70 px-4 py-4 last:border-b-0 sm:border-r sm:border-b-0 sm:last:border-r-0">
           <p className="text-[0.68rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">{item.label}</p>
@@ -101,7 +101,7 @@ export function AdminStatBar({ children, columns = 4 }: { children: ReactNode; c
   }[columns]
 
   return (
-    <div className={cn('grid overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) sm:grid-cols-2', columnClass)}>
+    <div className={cn('grid overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) sm:grid-cols-2', columnClass)}>
       {children}
     </div>
   )
@@ -130,7 +130,7 @@ export function AdminTabs<T extends string>({
   onChange: (value: T) => void
 }) {
   return (
-    <div className="inline-flex w-full gap-1 overflow-x-auto rounded-2xl bg-(--app-surface-muted) p-1 sm:w-auto">
+    <div className="inline-flex w-full gap-1 overflow-x-auto rounded-card bg-(--app-surface-muted) p-1 sm:w-auto">
       {tabs.map((tab) => {
         const active = tab.value === value
         return (
@@ -138,7 +138,7 @@ export function AdminTabs<T extends string>({
             key={tab.value}
             type="button"
             className={cn(
-              'inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-bold transition-colors',
+              'inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-control px-3 text-sm font-bold transition-colors',
               active ? 'bg-(--app-surface) text-(--app-text) shadow-sm' : 'text-(--app-text-muted) hover:text-(--app-text)'
             )}
             onClick={() => onChange(tab.value)}
@@ -174,10 +174,10 @@ export function AdminModuleCard({
   return (
     <Link
       to={href}
-      className="group rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) p-4 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(20,40,90,0.14)]"
+      className="group rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-4 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(20,40,90,0.14)]"
     >
       <div className="flex items-center gap-3">
-        <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-xl border', toneClasses[tone])}>{icon}</span>
+        <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-control border', toneClasses[tone])}>{icon}</span>
         <span className="min-w-0 flex-1 text-[0.96rem] font-bold text-(--app-text)">{title}</span>
         {count != null ? <Badge variant="outline" className="shrink-0 px-2 py-0.5">{count}</Badge> : null}
       </div>
@@ -191,7 +191,7 @@ export function AdminModuleCard({
 
 export function AdminEmpty({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-(--app-border) bg-(--app-surface-muted)/60 px-4 py-8 text-center">
+    <div className="rounded-card border border-dashed border-(--app-border) bg-(--app-surface-muted)/60 px-4 py-8 text-center">
       <p className="text-sm font-bold text-(--app-text)">{title}</p>
       <p className="mt-1 text-sm text-(--app-text-muted)">{description}</p>
     </div>
@@ -200,7 +200,7 @@ export function AdminEmpty({ title, description }: { title: string; description:
 
 export function AdminMetaDetails({ title = 'Metadata', children }: { title?: string; children: ReactNode }) {
   return (
-    <details className="rounded-2xl border border-(--app-border) bg-(--app-surface-muted)/70 px-4 py-3">
+    <details className="rounded-card border border-(--app-border) bg-(--app-surface-muted)/70 px-4 py-3">
       <summary className="cursor-pointer text-sm font-bold text-(--app-text)">{title}</summary>
       <div className="mt-3 overflow-x-auto text-xs text-(--app-text-muted)">{children}</div>
     </details>
@@ -223,7 +223,7 @@ export function AdminToggle({ on, disabled }: { on: boolean; disabled?: boolean 
 
 export function AdminCard({ title, description, tag, children, className }: { title?: ReactNode; description?: ReactNode; tag?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <Card className={cn('rounded-2xl shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]', className)}>
+    <Card className={cn('rounded-card shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]', className)}>
       {(title || description || tag) ? (
         <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1.5">

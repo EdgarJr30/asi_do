@@ -97,7 +97,7 @@ function WorkspaceSidebarContent({
   return (
     <div className="relative flex h-full flex-col overflow-y-auto border-r border-slate-200 bg-white px-6 pb-5 dark:border-white/10 dark:bg-slate-950">
       <div className="flex h-16 shrink-0 items-center gap-3">
-        <BrandMark panelClassName="size-10 rounded-[14px] border-primary-200/60 bg-primary-600 p-2 shadow-none dark:border-white/10 dark:bg-white/10" />
+        <BrandMark panelClassName="size-10 rounded-control border-primary-200/60 bg-primary-600 p-2 shadow-none dark:border-white/10 dark:bg-white/10" />
         <div className="min-w-0">
           <p className="truncate text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
             {brand}
@@ -131,7 +131,7 @@ function WorkspaceSidebarContent({
                       <button
                         aria-current={isActive ? 'page' : undefined}
                         className={cn(
-                          'group flex w-full items-center gap-x-3 rounded-md p-2 text-left text-sm/6 font-semibold transition-colors',
+                          'group flex w-full items-center gap-x-3 rounded-control p-2 text-left text-sm/6 font-semibold transition-colors',
                           isActive
                             ? 'bg-slate-100 text-primary-700 dark:bg-white/5 dark:text-white'
                             : 'text-slate-700 hover:bg-slate-50 hover:text-primary-700 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white'
@@ -278,7 +278,7 @@ export function AppSidebarNav({
   const activeItemHref = resolveActiveItemHref(items, activeHref);
 
   return (
-    <aside className="hidden w-74 shrink-0 rounded-[28px] border bg-(--app-surface-elevated) p-5 shadow-(--app-shadow-soft) lg:flex lg:flex-col">
+    <aside className="hidden w-74 shrink-0 rounded-card-lg border bg-(--app-surface-elevated) p-5 shadow-(--app-shadow-soft) lg:flex lg:flex-col">
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           {brandMark ?? null}
@@ -304,7 +304,7 @@ export function AppSidebarNav({
               aria-current={isActive ? 'page' : undefined}
               key={item.href}
               className={cn(
-                'flex items-start gap-3 rounded-panel px-4 py-3 text-left transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-px',
+                'flex items-start gap-3 rounded-card px-4 py-3 text-left transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-px',
                 isActive
                   ? 'border border-primary-200 bg-primary-50 text-primary-700 shadow-sm hover:border-primary-300 hover:bg-primary-50/90 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] dark:border-primary-500/18 dark:bg-primary-500/10 dark:text-primary-200 dark:hover:border-primary-500/24 dark:hover:bg-primary-500/14'
                   : 'border border-transparent text-(--app-text-muted) hover:border-(--app-border) hover:bg-(--app-surface-muted) hover:text-(--app-text) hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]'
@@ -313,7 +313,7 @@ export function AppSidebarNav({
               type="button"
               onClick={() => void onNavigate(item.href)}
             >
-              <span className="mt-0.5 rounded-2xl bg-(--app-surface) p-2 text-current shadow-sm">
+              <span className="mt-0.5 rounded-card bg-(--app-surface) p-2 text-current shadow-sm">
                 <Icon className="h-4 w-4" />
               </span>
               <span className="min-w-0 flex-1">
@@ -372,7 +372,7 @@ export function AppBottomNav({
               aria-current={isActive ? 'page' : undefined}
               key={item.href}
               className={cn(
-                'flex min-h-12 flex-col items-center justify-center gap-1 rounded-[18px] px-2 py-2 text-[0.7rem] font-semibold transition-[transform,box-shadow,background-color,color] duration-200 ease-out hover:-translate-y-px',
+                'flex min-h-12 flex-col items-center justify-center gap-1 rounded-card px-2 py-2 text-[0.7rem] font-semibold transition-[transform,box-shadow,background-color,color] duration-200 ease-out hover:-translate-y-px',
                 variant === 'workspace'
                   ? isActive
                     ? 'bg-white/10 text-white hover:bg-white/12 hover:shadow-[0_14px_28px_rgba(15,23,42,0.18)]'

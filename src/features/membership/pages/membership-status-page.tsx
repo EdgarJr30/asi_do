@@ -427,7 +427,7 @@ export function MembershipStatusPage() {
 
             {!session.hasActiveAsiAccess ? (
               <motion.div variants={cardReveal}>
-                <Card className="rounded-2xl border-(--app-border) bg-(--app-surface-elevated) p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+                <Card className="rounded-card border-(--app-border) bg-(--app-surface-elevated) p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
                   <CardContent className="mt-0 space-y-3">
                     <div>
                       <CardTitle>{currentStep?.title ?? 'Próximo paso'}</CardTitle>
@@ -468,7 +468,7 @@ export function MembershipStatusPage() {
 
             <motion.div variants={cardReveal}>
               <nav
-                className="inline-flex max-w-full gap-0.5 overflow-x-auto rounded-xl border border-(--app-border) bg-(--app-surface-elevated) p-1 shadow-sm"
+                className="inline-flex max-w-full gap-0.5 overflow-x-auto rounded-control border border-(--app-border) bg-(--app-surface-elevated) p-1 shadow-sm"
                 aria-label="Secciones de membresía"
               >
                   {[
@@ -483,7 +483,7 @@ export function MembershipStatusPage() {
                         type="button"
                         onClick={() => setActiveTab(tab.key as MembershipTab)}
                         className={cn(
-                          'inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-lg px-4 text-sm font-semibold transition',
+                          'inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-control px-4 text-sm font-semibold transition',
                           activeTab === tab.key
                             ? 'bg-primary-600 text-white shadow-sm'
                             : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
@@ -505,7 +505,7 @@ export function MembershipStatusPage() {
                       initial="hidden"
                       animate="show"
                       exit="exit"
-                      className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]"
+                      className="overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]"
                     >
                       <SummaryRow
                         icon={FileText}
@@ -533,7 +533,7 @@ export function MembershipStatusPage() {
                       initial="hidden"
                       animate="show"
                       exit="exit"
-                      className="overflow-hidden rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) px-5 py-2 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]"
+                      className="overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) px-5 py-2 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]"
                     >
                       {steps.map((step) => (
                         <MembershipStep
@@ -582,7 +582,7 @@ export function MembershipStatusPage() {
                           />
                         </>
                       ) : (
-                        <div className="rounded-panel border border-dashed border-(--app-border) bg-(--app-surface-muted) p-5 text-sm text-(--app-text-muted)">
+                        <div className="rounded-card border border-dashed border-(--app-border) bg-(--app-surface-muted) p-5 text-sm text-(--app-text-muted)">
                           Aún no hay comprobantes verificados disponibles. Cuando un pago sea aprobado, aparecerá aquí.
                         </div>
                       )}
@@ -596,7 +596,7 @@ export function MembershipStatusPage() {
           <motion.aside variants={gridStagger} initial={contentInitialState} animate="show" className="space-y-5 lg:sticky lg:top-6">
             {session.hasActiveAsiAccess && bundle.application ? (
               <motion.div variants={cardReveal}>
-                <Card className="rounded-2xl p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+                <Card className="rounded-card p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
                   <CardContent className="mt-0">
                     <CardTitle>Renovar membresía</CardTitle>
                     <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
@@ -619,10 +619,10 @@ export function MembershipStatusPage() {
             ) : null}
 
             <motion.div variants={cardReveal}>
-              <Card className="rounded-2xl p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+              <Card className="rounded-card p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
                 <CardContent className="mt-0">
                   <div className="flex items-center gap-3">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
                       <AlertCircle className="size-4" />
                     </span>
                     <CardTitle>¿Necesitas ayuda?</CardTitle>
@@ -632,7 +632,7 @@ export function MembershipStatusPage() {
                   </p>
                   <Link
                     to={surfacePaths.institutional.contactUs}
-                    className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-(--app-border) bg-(--app-surface) px-3.5 text-sm font-semibold text-(--app-text) shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:bg-primary-500/12"
+                    className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-control border border-(--app-border) bg-(--app-surface) px-3.5 text-sm font-semibold text-(--app-text) shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:bg-primary-500/12"
                   >
                     Ir a contacto <ArrowRight className="size-4" />
                   </Link>
@@ -680,10 +680,10 @@ function MembershipOverviewCard({
   isActive: boolean
 }) {
   return (
-    <Card className="rounded-2xl border-(--app-border) bg-(--app-surface-elevated) p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] sm:p-6">
+    <Card className="rounded-card border-(--app-border) bg-(--app-surface-elevated) p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] sm:p-6">
       <CardContent className="mt-0">
         <div className="flex items-center gap-4">
-          <span className="flex size-13 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 to-primary-400 text-white shadow-sm">
+          <span className="flex size-13 shrink-0 items-center justify-center rounded-card bg-gradient-to-br from-primary-600 to-primary-400 text-white shadow-sm">
             <Sparkles className="size-6" />
           </span>
           <div className="min-w-0">
@@ -759,7 +759,7 @@ function SummaryRow({
 }) {
   return (
     <div className="flex items-center gap-4 border-t border-(--app-border) px-5 py-4 first:border-t-0">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-(--app-border) bg-(--app-surface-muted) text-(--app-text-muted)">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-control border border-(--app-border) bg-(--app-surface-muted) text-(--app-text-muted)">
         <Icon className="size-4" />
       </span>
       <span className="min-w-0 flex-1 text-sm text-(--app-text-muted)">{label}</span>
@@ -811,7 +811,7 @@ function MembershipStep({
       </div>
       <StatusPill label={meta.label} tone={tone} />
       {step.key === 'application' && step.state === 'current' ? (
-        <Button className="hidden h-9 rounded-xl px-3 text-xs sm:inline-flex" onClick={onStartApplication}>
+        <Button className="hidden h-9 rounded-control px-3 text-xs sm:inline-flex" onClick={onStartApplication}>
           Iniciar <ArrowRight className="size-3.5" />
         </Button>
       ) : null}
@@ -860,7 +860,7 @@ function AzulPayCard({
 
   if (!azulEnabled) {
     return (
-      <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+      <div className="mt-3 rounded-card border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
         El pago en línea aún no está disponible. Inténtalo más tarde o contacta a un administrador.
       </div>
     )
@@ -869,7 +869,7 @@ function AzulPayCard({
   // Un intento 'initiated' no bloquea la tarjeta: avisamos pero dejamos reintentar
   // (si lo cancelaste/cerraste no llega callback y quedaría colgado para siempre).
   const processingNotice = processing ? (
-    <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+    <div className="mt-3 rounded-control border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
       <p className="inline-flex items-center gap-2 text-xs font-semibold text-amber-800 dark:text-amber-200">
         <Clock className="size-3.5" /> Tienes un intento de pago sin completar
       </p>
@@ -890,7 +890,7 @@ function AzulPayCard({
         onChange={(event) => setYears(Number(event.target.value))}
         disabled={payMutation.isPending}
         className={cn(
-          'h-11 rounded-xl border border-(--app-border) bg-(--app-surface) px-3 text-sm font-medium text-(--app-text) focus:border-primary-500 focus:outline-none focus:ring-3 focus:ring-primary-500/12',
+          'h-11 rounded-control border border-(--app-border) bg-(--app-surface) px-3 text-sm font-medium text-(--app-text) focus:border-primary-500 focus:outline-none focus:ring-3 focus:ring-primary-500/12',
           compact ? 'w-full' : 'min-w-34'
         )}
       >
@@ -905,7 +905,7 @@ function AzulPayCard({
 
   const button = (
     <Button
-      className={compact ? 'mt-4 h-12 w-full rounded-xl' : 'mt-3 h-10'}
+      className={compact ? 'mt-4 h-12 w-full rounded-control' : 'mt-3 h-10'}
       disabled={payMutation.isPending || !acceptedPolicies}
       onClick={() => payMutation.mutate()}
     >
@@ -941,7 +941,7 @@ function AzulPayCard({
   }
 
   return (
-    <div className="mt-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) p-4">
+    <div className="mt-3 rounded-card border border-(--app-border) bg-(--app-surface-muted) p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-(--app-text)">Pago seguro con tarjeta</p>
         {totalLabel ? (
@@ -976,7 +976,7 @@ function AzulPayCard({
         </p>
       ) : null}
       {button}
-      <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-(--app-surface) px-3 py-2 text-xs text-(--app-text-muted)">
+      <p className="mt-3 inline-flex items-center gap-1.5 rounded-control bg-(--app-surface) px-3 py-2 text-xs text-(--app-text-muted)">
         <ShieldCheck className="size-3.5" /> Transacción procesada por AZUL. No almacenamos los datos de tu tarjeta.
       </p>
     </div>
@@ -993,7 +993,7 @@ function CheckoutComplianceBox({
   compact?: boolean
 }) {
   return (
-    <div className={cn('rounded-2xl border border-(--app-border) bg-(--app-surface) p-3', compact ? 'mt-3' : 'mt-3')}>
+    <div className={cn('rounded-card border border-(--app-border) bg-(--app-surface) p-3', compact ? 'mt-3' : 'mt-3')}>
       <label className="flex cursor-pointer items-start gap-2 text-xs leading-5 text-(--app-text-muted)">
         <input
           checked={accepted}
@@ -1060,7 +1060,7 @@ function MembershipReceiptCard({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-2xl border bg-(--app-surface-elevated) transition-[border-color,box-shadow]',
+        'overflow-hidden rounded-card border bg-(--app-surface-elevated) transition-[border-color,box-shadow]',
         isOpen
           ? 'border-primary-200 shadow-[0_4px_14px_rgba(20,40,90,0.06)] dark:border-primary-500/25'
           : 'border-(--app-border) hover:border-primary-200 hover:shadow-[0_4px_14px_rgba(20,40,90,0.06)]'
@@ -1072,7 +1072,7 @@ function MembershipReceiptCard({
         className="flex w-full cursor-pointer items-center gap-4 p-4 text-left"
         onClick={onToggle}
       >
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/12 dark:text-emerald-300">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-emerald-50 text-emerald-600 dark:bg-emerald-500/12 dark:text-emerald-300">
           <FileText className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
@@ -1100,7 +1100,7 @@ function MembershipReceiptCard({
           </div>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <Button
-              className="h-10 flex-1 rounded-xl"
+              className="h-10 flex-1 rounded-control"
               onClick={(event) => {
                 event.stopPropagation()
                 printReceipt(RECEIPT_TITLE, lines)
@@ -1110,7 +1110,7 @@ function MembershipReceiptCard({
             </Button>
             <Button
               variant="outline"
-              className="h-10 flex-1 rounded-xl"
+              className="h-10 flex-1 rounded-control"
               onClick={(event) => {
                 event.stopPropagation()
                 void shareReceipt(RECEIPT_TITLE, receiptPlainText(RECEIPT_TITLE, lines))
@@ -1145,7 +1145,7 @@ function NeedsMoreInfoResponse({
   })
 
   return (
-    <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+    <div className="mt-3 rounded-card border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
       {reviewNote ? (
         <div className="mb-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">Nota de tu pastor</p>

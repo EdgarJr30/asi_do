@@ -37,9 +37,12 @@
   --color-peach-400: #93acff;
   --color-peach-500: #6f89ef;
 
-  --radius-card: 1.5rem;
-  --radius-panel: 1.25rem;
-  --radius-pill: 999px;
+  /* Escala unificada de radios (estilo Apple: pocos pasos, esquinas concéntricas).
+     Cambiar la base aquí re-escala toda la app de una sola línea. */
+  --radius-control: 0.75rem; /* 12px — controles pequeños: botones, inputs, chips, ítems de menú */
+  --radius-card: 1rem;       /* 16px — base universal: cards, paneles, diálogos, hojas */
+  --radius-card-lg: 1.5rem;  /* 24px — superficies grandes: heros, modales grandes, contenedores de sección */
+  --radius-pill: 999px;      /* píldoras/círculos: badges, tags, avatares, toggles */
 }
 
 :root {
@@ -363,7 +366,7 @@
   }
 
   .asi-card {
-    @apply rounded-[1.5rem] p-5 sm:p-6;
+    @apply rounded-card p-5 sm:p-6;
     background: var(--asi-surface-panel);
     box-shadow: var(--asi-shadow-soft);
     outline: 1px solid var(--asi-outline);
@@ -377,7 +380,7 @@
   }
 
   .asi-button {
-    @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-300;
+    @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-card px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-300;
     line-height: 1;
   }
 

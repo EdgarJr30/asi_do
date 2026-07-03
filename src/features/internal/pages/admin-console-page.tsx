@@ -175,7 +175,7 @@ export function AdminConsolePage() {
               description="La inicialización del primer admin sale del flujo público de auth y queda disponible solo como acceso controlado."
               tag={<Badge variant="outline">Controlado</Badge>}
             >
-              <Button variant="outline" className="h-9 rounded-xl" onClick={() => void navigate(surfacePaths.admin.bootstrapOwner)}>
+              <Button variant="outline" className="h-9 rounded-control" onClick={() => void navigate(surfacePaths.admin.bootstrapOwner)}>
                 Abrir bootstrap owner
               </Button>
             </AdminCard>
@@ -185,7 +185,7 @@ export function AdminConsolePage() {
                 description="Genera datos sintéticos masivos y mide el comportamiento de la base. Solo entornos no productivos."
                 tag={<Badge variant="outline" className="border-violet-200 bg-violet-50 text-violet-700">Super admin</Badge>}
               >
-                <Button variant="outline" className="h-9 rounded-xl" onClick={() => void navigate(surfacePaths.admin.stressHarness)}>
+                <Button variant="outline" className="h-9 rounded-control" onClick={() => void navigate(surfacePaths.admin.stressHarness)}>
                   Abrir arnés de estrés
                 </Button>
               </AdminCard>

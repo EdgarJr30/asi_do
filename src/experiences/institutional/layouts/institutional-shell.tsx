@@ -106,7 +106,7 @@ export function InstitutionalShell() {
       >
         <div className="asi-container px-0">
           <motion.div
-            className="rounded-[1.7rem] border px-4 py-3 transition-all duration-300 ease-out sm:px-5"
+            className="rounded-card-lg border px-4 py-3 transition-all duration-300 ease-out sm:px-5"
             style={{
               WebkitBackdropFilter: `blur(${headerBackdropBlur}px)`,
               backdropFilter: `blur(${headerBackdropBlur}px)`,
@@ -121,7 +121,7 @@ export function InstitutionalShell() {
                 : {
                     paddingTop: isCondensed ? 10 : 12,
                     paddingBottom: isCondensed ? 10 : 12,
-                    borderRadius: isCondensed ? 24 : 28,
+                    borderRadius: 'var(--radius-card-lg)',
                   }
             }
           >
@@ -197,7 +197,7 @@ export function InstitutionalShell() {
               </nav>
 
               <div className="hidden min-w-60 flex-1 justify-end xl:flex">
-                <label className="flex h-11 w-full max-w-70 items-center gap-2 rounded-2xl bg-white/92 px-4 text-sm text-(--asi-text-muted) shadow-[0_10px_24px_rgba(0,47,110,0.06)]">
+                <label className="flex h-11 w-full max-w-70 items-center gap-2 rounded-card bg-white/92 px-4 text-sm text-(--asi-text-muted) shadow-[0_10px_24px_rgba(0,47,110,0.06)]">
                   <Search className="size-4 text-(--asi-secondary)" />
                   <span>Buscar</span>
                 </label>
@@ -253,7 +253,7 @@ export function InstitutionalShell() {
           >
             <div className="asi-container pt-30 pb-6 sm:pt-32 sm:pb-7">
               <motion.div
-                className="rounded-[1.9rem] bg-white p-6 shadow-(--asi-shadow-strong) sm:p-7"
+                className="rounded-card-lg bg-white p-6 shadow-(--asi-shadow-strong) sm:p-7"
                 id="institutional-mobile-nav"
                 initial={shouldReduceMotion ? false : { opacity: 0, y: -14 }}
                 transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -268,7 +268,7 @@ export function InstitutionalShell() {
                   {institutionalNavigation.map((item) => (
                     <Link
                       key={item.to}
-                      className="flex items-center justify-between rounded-[1.15rem] bg-(--asi-surface-muted) px-4 py-3 text-sm font-semibold text-(--asi-text)"
+                      className="flex items-center justify-between rounded-card bg-(--asi-surface-muted) px-4 py-3 text-sm font-semibold text-(--asi-text)"
                       to={item.to}
                       onClick={() => setMobileMenuOpen(false)}
                     >

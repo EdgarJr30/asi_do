@@ -327,7 +327,7 @@ export function PublicJobBoard() {
       {/* Búsqueda: una sola barra blanca con dos campos separados por un divisor */}
       <motion.form
         variants={cardReveal}
-        className="flex flex-col gap-2 rounded-panel border border-(--app-border) bg-(--app-surface) p-1.5 pl-3 shadow-sm md:flex-row md:items-center md:gap-1"
+        className="flex flex-col gap-2 rounded-card border border-(--app-border) bg-(--app-surface) p-1.5 pl-3 shadow-sm md:flex-row md:items-center md:gap-1"
         onSubmit={(event) => {
           event.preventDefault()
           clearSelectedJob()
@@ -356,7 +356,7 @@ export function PublicJobBoard() {
             onChange={(event) => patchFilters({ location: event.target.value })}
           />
         </div>
-        <Button type="submit" className="h-11 shrink-0 rounded-[0.7rem] px-5 text-sm">
+        <Button type="submit" className="h-11 shrink-0 rounded-control px-5 text-sm">
           <Search className="size-4" /> Buscar
         </Button>
       </motion.form>
@@ -364,7 +364,7 @@ export function PublicJobBoard() {
       {/* Toolbar: filtros inline + chips de búsqueda + contador + orden */}
       <motion.div variants={cardReveal} className="flex flex-wrap items-center gap-2">
         <Select
-          className="h-[34px] w-auto rounded-lg text-[0.82rem]"
+          className="h-[34px] w-auto rounded-control text-[0.82rem]"
           value={filters.sector}
           onChange={(event) => applyFilters({ sector: event.target.value })}
           aria-label="Filtrar por sector"
@@ -377,7 +377,7 @@ export function PublicJobBoard() {
           ))}
         </Select>
         <Select
-          className="h-[34px] w-auto rounded-lg text-[0.82rem]"
+          className="h-[34px] w-auto rounded-control text-[0.82rem]"
           value={filters.workplace}
           onChange={(event) => applyFilters({ workplace: event.target.value })}
           aria-label="Filtrar por modalidad"
@@ -388,7 +388,7 @@ export function PublicJobBoard() {
           <option value="on_site">Presencial</option>
         </Select>
         <Select
-          className="h-[34px] w-auto rounded-lg text-[0.82rem]"
+          className="h-[34px] w-auto rounded-control text-[0.82rem]"
           value={filters.type}
           onChange={(event) => applyFilters({ type: event.target.value })}
           aria-label="Filtrar por tipo"
@@ -406,7 +406,7 @@ export function PublicJobBoard() {
             key={chip.key}
             type="button"
             onClick={chip.clear}
-            className="inline-flex h-[34px] items-center gap-1.5 rounded-lg border border-primary-200 bg-primary-50 px-3 text-[0.82rem] font-medium text-primary-700 transition hover:bg-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:border-primary-500/30 dark:bg-primary-500/12 dark:text-primary-300"
+            className="inline-flex h-[34px] items-center gap-1.5 rounded-control border border-primary-200 bg-primary-50 px-3 text-[0.82rem] font-medium text-primary-700 transition hover:bg-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:border-primary-500/30 dark:bg-primary-500/12 dark:text-primary-300"
           >
             {chip.label}
             <X aria-hidden className="size-3" />
@@ -434,7 +434,7 @@ export function PublicJobBoard() {
 
         <label className="ml-auto flex items-center gap-2 text-[0.82rem] text-(--app-text-subtle)">
           Ordenar por
-          <Select className="h-[34px] w-auto rounded-lg text-[0.82rem]" value={sort} onChange={(event) => applySort(event.target.value as 'recent' | 'salary')} aria-label="Ordenar resultados">
+          <Select className="h-[34px] w-auto rounded-control text-[0.82rem]" value={sort} onChange={(event) => applySort(event.target.value as 'recent' | 'salary')} aria-label="Ordenar resultados">
             <option value="recent">Más recientes</option>
             <option value="salary">Salario</option>
           </Select>
@@ -449,7 +449,7 @@ export function PublicJobBoard() {
       ) : jobsQuery.error ? (
         <motion.div
           variants={cardReveal}
-          className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-6 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+          className="rounded-card border border-rose-200 bg-rose-50 px-4 py-6 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
         >
           {toErrorMessage(jobsQuery.error)}
         </motion.div>
@@ -545,7 +545,7 @@ function JobListRow({
       onClick={onSelect}
       aria-current={active ? 'true' : undefined}
       className={cn(
-        'flex h-24 w-full items-center gap-3 rounded-xl border bg-(--app-surface) px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
+        'flex h-24 w-full items-center gap-3 rounded-control border bg-(--app-surface) px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
         active
           ? 'border-primary-600 shadow-[0_0_0_3px_rgba(45,82,168,0.12)] dark:border-primary-400'
           : 'border-(--app-border) hover:border-primary-200 hover:shadow-[0_4px_14px_rgba(20,40,90,0.06)]'
@@ -590,9 +590,9 @@ function DetailEmptyState() {
       animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
       exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, filter: 'blur(6px)' }}
       transition={shouldReduceMotion ? { duration: 0.2 } : { duration: 0.95, ease: softEase }}
-      className="flex min-h-80 flex-col items-center justify-center rounded-panel border border-(--app-border) bg-(--app-surface) p-10 text-center shadow-sm lg:min-h-128"
+      className="flex min-h-80 flex-col items-center justify-center rounded-card border border-(--app-border) bg-(--app-surface) p-10 text-center shadow-sm lg:min-h-128"
     >
-      <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+      <span className="mb-4 flex size-14 items-center justify-center rounded-card bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
         <Briefcase className="size-6" />
       </span>
       <h3 className="text-base font-semibold text-(--app-text)">Selecciona una vacante</h3>
@@ -604,7 +604,7 @@ function DetailEmptyState() {
 }
 
 const detailTagClass =
-  'inline-flex h-[30px] items-center gap-1.5 rounded-lg border border-(--app-border) bg-(--app-surface-muted) px-3 text-[0.78rem] font-medium text-(--app-text-muted)'
+  'inline-flex h-[30px] items-center gap-1.5 rounded-control border border-(--app-border) bg-(--app-surface-muted) px-3 text-[0.78rem] font-medium text-(--app-text-muted)'
 
 // Entrada suave del panel de detalle: el card entra con un sutil desenfoque,
 // escala y desplazamiento, y su contenido se asienta en cascada.
@@ -626,7 +626,7 @@ const detailBlockVariants: Variants = {
 }
 
 const applyLinkClass =
-  'inline-flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-primary-600 bg-primary-600 px-5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(43,69,143,0.18)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2'
+  'inline-flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-control border border-primary-600 bg-primary-600 px-5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(43,69,143,0.18)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2'
 
 function JobDetailPanel({
   job,
@@ -684,7 +684,7 @@ function JobDetailPanel({
     <motion.article
       {...panelMotion}
       style={{ willChange: 'transform, filter, opacity' }}
-      className="overflow-hidden rounded-panel border border-(--app-border) bg-(--app-surface) shadow-sm lg:sticky lg:top-4 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto"
+      className="overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface) shadow-sm lg:sticky lg:top-4 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto"
     >
       <motion.div variants={blockVariants} className="border-b border-(--app-border) p-6">
         <button type="button" onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-(--app-text-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) lg:hidden">
@@ -730,7 +730,7 @@ function JobDetailPanel({
           <Tooltip label={saved ? 'Quitar de guardadas' : 'Guardar vacante'}>
             <Button
               variant="outline"
-              className="size-11 shrink-0 rounded-xl p-0"
+              className="size-11 shrink-0 rounded-control p-0"
               aria-label={saved ? 'Quitar de guardadas' : 'Guardar vacante'}
               onClick={() => onToggleSave(!saved)}
               disabled={savePending || !canSave}
@@ -740,7 +740,7 @@ function JobDetailPanel({
           </Tooltip>
         ) : null}
         <Tooltip label="Compartir">
-          <Button variant="outline" className="size-11 shrink-0 rounded-xl p-0" aria-label="Compartir vacante" onClick={() => void handleShare()}>
+          <Button variant="outline" className="size-11 shrink-0 rounded-control p-0" aria-label="Compartir vacante" onClick={() => void handleShare()}>
             <Share2 className="size-5" />
           </Button>
         </Tooltip>

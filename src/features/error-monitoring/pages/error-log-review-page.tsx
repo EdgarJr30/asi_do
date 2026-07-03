@@ -141,7 +141,7 @@ export function ErrorLogReviewPage() {
               { value: 'all', label: 'Ver todo', count: errorLogs.length }
             ]}
           />
-          <Button variant="ghost" className="h-10 rounded-xl" onClick={() => void queryClient.invalidateQueries({ queryKey: APP_ERROR_LOGS_QUERY_KEY })}>
+          <Button variant="ghost" className="h-10 rounded-control" onClick={() => void queryClient.invalidateQueries({ queryKey: APP_ERROR_LOGS_QUERY_KEY })}>
             Refrescar
           </Button>
         </div>
@@ -170,7 +170,7 @@ export function ErrorLogReviewPage() {
                     <p className="text-sm leading-5 text-(--app-text-muted)">{errorLog.error_message}</p>
                   </div>
                   <Button
-                    className="h-9 rounded-xl"
+                    className="h-9 rounded-control"
                     variant={errorLog.is_resolved ? 'outline' : 'secondary'}
                     disabled={resolutionMutation.isPending}
                     onClick={() =>
@@ -209,7 +209,7 @@ export function ErrorLogReviewPage() {
                 </div>
               </AdminCard>
             ))}
-            <div className="flex flex-col gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-card border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-(--app-text-muted)">
                 Mostrando {visibleStart}-{visibleEnd} de {filteredLogs.length} errores
               </p>
@@ -229,7 +229,7 @@ export function ErrorLogReviewPage() {
 
 function InfoBlock({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-2xl bg-(--app-surface-muted) px-4 py-3 text-sm text-(--app-text-muted)">
+    <div className="rounded-card bg-(--app-surface-muted) px-4 py-3 text-sm text-(--app-text-muted)">
       <p className="font-bold text-(--app-text)">{title}</p>
       <div className="mt-1 space-y-0.5">{children}</div>
     </div>

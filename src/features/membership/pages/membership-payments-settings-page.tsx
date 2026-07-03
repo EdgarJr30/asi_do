@@ -134,7 +134,7 @@ export function MembershipPaymentsSettingsPage({ embedded = false }: { embedded?
 
   if (settingsQuery.error) {
     return (
-      <div className="rounded-panel border border-rose-200 bg-rose-50 px-4 py-6 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+      <div className="rounded-card border border-rose-200 bg-rose-50 px-4 py-6 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
         {toErrorMessage(settingsQuery.error)}
       </div>
     )
@@ -173,7 +173,7 @@ export function MembershipPaymentsSettingsPage({ embedded = false }: { embedded?
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <label className="flex items-start gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-4 py-3">
+          <label className="flex items-start gap-3 rounded-card border border-(--app-border) bg-(--app-surface-muted) px-4 py-3">
             <input type="checkbox" className="mt-1 size-4 accent-primary-600" {...form.register('azulEnabled')} />
             <span>
               <span className="block text-sm font-medium text-(--app-text)">Habilitar pago con tarjeta (AZUL)</span>
@@ -191,7 +191,7 @@ export function MembershipPaymentsSettingsPage({ embedded = false }: { embedded?
             <label className="grid gap-1.5 text-sm">
               <span className="font-medium text-(--app-text-muted)">Ambiente</span>
               <select
-                className="h-10 rounded-lg border border-(--app-border) bg-(--app-surface) px-3 text-sm text-(--app-text) focus:border-primary-500 focus:outline-none"
+                className="h-10 rounded-control border border-(--app-border) bg-(--app-surface) px-3 text-sm text-(--app-text) focus:border-primary-500 focus:outline-none"
                 {...form.register('azulEnvironment')}
               >
                 <option value="test">Pruebas</option>
@@ -240,7 +240,7 @@ export function MembershipPaymentsSettingsPage({ embedded = false }: { embedded?
             {membershipCategories.map((category) => (
               <div
                 key={category.slug}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--app-border) bg-(--app-surface-muted) px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-(--app-border) bg-(--app-surface-muted) px-4 py-3"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-(--app-text)">{category.name}</p>

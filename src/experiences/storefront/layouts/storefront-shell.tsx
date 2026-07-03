@@ -62,7 +62,7 @@ export function StorefrontShell() {
             className={cn(
               'flex items-center justify-between gap-3 sm:gap-5',
               isLanding
-                ? 'rounded-[26px] border bg-(--app-surface-elevated)/96 px-3 py-2.5 shadow-(--app-shadow-floating) backdrop-blur-xl sm:rounded-[30px] sm:px-5 sm:py-3'
+                ? 'rounded-card-lg border bg-(--app-surface-elevated)/96 px-3 py-2.5 shadow-(--app-shadow-floating) backdrop-blur-xl sm:rounded-card-lg sm:px-5 sm:py-3'
                 : 'py-5'
             )}
           >
@@ -70,7 +70,7 @@ export function StorefrontShell() {
               className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4 text-left"
               to={surfacePaths.storefront.home}
             >
-              <span className="shrink-0 rounded-[18px] border border-white/70 bg-white/92 px-2.5 py-2 shadow-(--app-shadow-card) backdrop-blur sm:rounded-[22px] sm:px-3 sm:py-2 dark:border-white/10 dark:bg-[#0f1831]">
+              <span className="shrink-0 rounded-card border border-white/70 bg-white/92 px-2.5 py-2 shadow-(--app-shadow-card) backdrop-blur sm:rounded-card-lg sm:px-3 sm:py-2 dark:border-white/10 dark:bg-[#0f1831]">
                 <BrandLockup className="w-16 sm:w-22" surface="auto" />
               </span>
               <div className="hidden min-w-0 md:block lg:min-w-92 xl:min-w-108">
@@ -150,7 +150,7 @@ export function StorefrontShell() {
 
         {mobileMenuOpen ? (
           <div className="fixed inset-0 z-50 bg-(--app-text)/12 backdrop-blur-sm lg:hidden">
-            <div className="absolute inset-x-4 top-4 rounded-[28px] border bg-(--app-surface-elevated) p-5 shadow-(--app-shadow-floating)">
+            <div className="absolute inset-x-4 top-4 rounded-card-lg border bg-(--app-surface-elevated) p-5 shadow-(--app-shadow-floating)">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold text-(--app-text)">
@@ -161,7 +161,7 @@ export function StorefrontShell() {
                   </p>
                 </div>
                 <Button
-                  className="h-11 w-11 rounded-2xl p-0"
+                  className="h-11 w-11 rounded-card p-0"
                   variant="outline"
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -174,7 +174,7 @@ export function StorefrontShell() {
                 {storefrontNavigation.map((item) => (
                   <Link
                     key={item.label}
-                    className="flex items-center justify-between rounded-panel border bg-(--app-surface) px-4 py-3 text-sm font-semibold text-(--app-text)"
+                    className="flex items-center justify-between rounded-card border bg-(--app-surface) px-4 py-3 text-sm font-semibold text-(--app-text)"
                     to={item.to}
                     onClick={() => setMobileMenuOpen(false)}
                   >

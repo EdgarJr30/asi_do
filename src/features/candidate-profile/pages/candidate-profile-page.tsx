@@ -235,8 +235,8 @@ const PROFILE_TABS: Array<{ id: ProfileTab; label: string }> = [
   { id: 'skills', label: 'Skills, idiomas y links' }
 ]
 
-const profileFieldClass = 'h-[46px] rounded-[10px] bg-(--app-surface) text-[0.9rem]'
-const profileTextareaClass = 'min-h-28 rounded-[10px] bg-(--app-surface) text-[0.9rem] leading-6'
+const profileFieldClass = 'h-[46px] rounded-control bg-(--app-surface) text-[0.9rem]'
+const profileTextareaClass = 'min-h-28 rounded-control bg-(--app-surface) text-[0.9rem] leading-6'
 
 function textOrFallback(value: string | null | undefined, fallback: string) {
   const normalized = value?.trim()
@@ -272,8 +272,8 @@ function CircularProgress({ value }: { value: number }) {
 
 function ProfileStatTile({ icon: Icon, value, label, className }: { icon: LucideIcon; value: ReactNode; label: string; className?: string }) {
   return (
-    <div className={cn('flex min-w-[140px] flex-1 items-center gap-3 rounded-xl border border-(--app-border) bg-(--app-surface) px-4 py-3', className)}>
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-[9px] bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+    <div className={cn('flex min-w-[140px] flex-1 items-center gap-3 rounded-control border border-(--app-border) bg-(--app-surface) px-4 py-3', className)}>
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
         <Icon className="size-4" />
       </span>
       <div className="leading-tight">
@@ -300,9 +300,9 @@ function ProfileSection({
   children: ReactNode
 }) {
   return (
-    <Card className="rounded-[14px] p-6 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+    <Card className="rounded-control p-6 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
       <div className="mb-5 flex items-start gap-3">
-        <span className="flex size-[38px] shrink-0 items-center justify-center rounded-[10px] bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+        <span className="flex size-[38px] shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
           <Icon className="size-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
@@ -313,7 +313,7 @@ function ProfileSection({
           <button
             type="button"
             onClick={onAction}
-            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[9px] border border-(--app-border) bg-(--app-surface) px-3.5 text-[0.8rem] font-semibold text-primary-600 transition-colors hover:border-primary-200 hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-500/12"
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-control border border-(--app-border) bg-(--app-surface) px-3.5 text-[0.8rem] font-semibold text-primary-600 transition-colors hover:border-primary-200 hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-500/12"
           >
             <Plus className="size-3.5" />
             {actionLabel}
@@ -364,9 +364,9 @@ function AccordionSection({
 }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <Card className="overflow-hidden rounded-[14px] p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+    <Card className="overflow-hidden rounded-control p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
       <div className="flex items-center gap-3 px-6 py-[18px]">
-        <span className="flex size-[38px] shrink-0 items-center justify-center rounded-[10px] bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
+        <span className="flex size-[38px] shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
           <Icon className="size-[18px]" />
         </span>
         <button type="button" onClick={() => setOpen((value) => !value)} className="min-w-0 flex-1 text-left">
@@ -379,7 +379,7 @@ function AccordionSection({
             onAdd()
             setOpen(true)
           }}
-          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[9px] border border-(--app-border) bg-(--app-surface) px-3.5 text-[0.8rem] font-semibold text-primary-600 transition-colors hover:border-primary-200 hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-500/12"
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-control border border-(--app-border) bg-(--app-surface) px-3.5 text-[0.8rem] font-semibold text-primary-600 transition-colors hover:border-primary-200 hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-500/12"
         >
           <Plus className="size-3.5" /> {actionLabel}
         </button>
@@ -387,7 +387,7 @@ function AccordionSection({
           type="button"
           onClick={() => setOpen((value) => !value)}
           aria-label={open ? 'Contraer' : 'Expandir'}
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted)"
+          className="flex size-8 shrink-0 items-center justify-center rounded-control text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted)"
         >
           <ChevronDown className={cn('size-4 transition-transform', open && 'rotate-180')} />
         </button>
@@ -402,9 +402,9 @@ function QuickAction({ icon: Icon, title, description, onClick }: { icon: Lucide
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-[11px] px-3.5 py-3 text-left transition-colors hover:bg-(--app-surface-muted)"
+      className="flex w-full items-center gap-3 rounded-control px-3.5 py-3 text-left transition-colors hover:bg-(--app-surface-muted)"
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-(--app-border) bg-(--app-surface-muted) text-(--app-text-muted)">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-control border border-(--app-border) bg-(--app-surface-muted) text-(--app-text-muted)">
         <Icon className="size-4" />
       </span>
       <span className="min-w-0 flex-1">
@@ -440,14 +440,14 @@ function ResumeUploadPreviewDialog({
         className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm"
         onClick={loading ? undefined : onCancel}
       />
-      <Card className="relative z-10 flex max-h-[92svh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl p-0">
+      <Card className="relative z-10 flex max-h-[92svh] w-full max-w-3xl flex-col overflow-hidden rounded-card p-0">
         <CardHeader className="border-b border-(--app-border) px-4 py-4 sm:px-5">
           <CardTitle>Revisar CV antes de guardar</CardTitle>
           <CardDescription>Confirma que este es el archivo correcto antes de subirlo a tu perfil candidato.</CardDescription>
         </CardHeader>
         <CardContent className="mt-0 min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
-          <div className="flex flex-col gap-3 rounded-xl border border-(--app-border) bg-(--app-surface-muted)/55 p-3.5 sm:flex-row sm:items-center">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-primary-50 text-primary-600 dark:bg-primary-500/15 dark:text-primary-300">
+          <div className="flex flex-col gap-3 rounded-control border border-(--app-border) bg-(--app-surface-muted)/55 p-3.5 sm:flex-row sm:items-center">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-600 dark:bg-primary-500/15 dark:text-primary-300">
               <FileText className="size-5" />
             </span>
             <div className="min-w-0 flex-1">
@@ -457,7 +457,7 @@ function ResumeUploadPreviewDialog({
               </p>
             </div>
             <a
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-(--app-border) bg-(--app-surface) px-3 text-[0.78rem] font-semibold text-(--app-text) shadow-sm transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-control border border-(--app-border) bg-(--app-surface) px-3 text-[0.78rem] font-semibold text-(--app-text) shadow-sm transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200"
               href={previewUrl}
               rel="noreferrer"
               target="_blank"
@@ -468,12 +468,12 @@ function ResumeUploadPreviewDialog({
           </div>
 
           {canPreview ? (
-            <div className="overflow-hidden rounded-xl border border-(--app-border) bg-white">
+            <div className="overflow-hidden rounded-control border border-(--app-border) bg-white">
               <iframe className="h-[58svh] min-h-[360px] w-full" src={previewUrl} title={`Previsualización de ${file.name}`} />
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-(--app-border) px-4 py-8 text-center">
-              <span className="mx-auto flex size-12 items-center justify-center rounded-xl bg-(--app-surface-muted) text-(--app-text-subtle)">
+            <div className="rounded-control border border-dashed border-(--app-border) px-4 py-8 text-center">
+              <span className="mx-auto flex size-12 items-center justify-center rounded-control bg-(--app-surface-muted) text-(--app-text-subtle)">
                 <FileText className="size-6" />
               </span>
               <p className="mt-3 text-sm font-semibold text-(--app-text)">Vista previa no disponible para este formato</p>
@@ -899,7 +899,7 @@ function CandidateProfileEditor({
           </p>
         </div>
         <Button
-          className="h-[42px] w-full shrink-0 rounded-[10px] px-5 text-sm sm:w-auto"
+          className="h-[42px] w-full shrink-0 rounded-control px-5 text-sm sm:w-auto"
           disabled={saveMutation.isPending}
           onClick={() => void saveAll()}
         >
@@ -913,7 +913,7 @@ function CandidateProfileEditor({
         <ProfileStatTile icon={Sparkles} value={skillCount} label="Skills" />
         <ProfileStatTile icon={LanguagesIcon} value={languageCount} label="Idiomas" />
         <ProfileStatTile icon={Briefcase} value={experienceCount} label="Experiencia" />
-        <div className="flex min-w-[230px] flex-1 items-center justify-between gap-4 rounded-xl border border-(--app-border) bg-(--app-surface) px-4 py-3">
+        <div className="flex min-w-[230px] flex-1 items-center justify-between gap-4 rounded-control border border-(--app-border) bg-(--app-surface) px-4 py-3">
           <div className="min-w-0">
             <p className="text-[0.84rem] font-semibold text-(--app-text)">Visible para empresas</p>
             <p className="mt-0.5 text-xs text-(--app-text-subtle)">
@@ -950,7 +950,7 @@ function CandidateProfileEditor({
         <motion.div variants={cardReveal} className="min-w-0 space-y-[18px]">
           <div
             id="candidate-profile-tabs"
-            className="flex gap-1 overflow-x-auto rounded-[11px] border border-(--app-border) bg-(--app-surface) p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex gap-1 overflow-x-auto rounded-control border border-(--app-border) bg-(--app-surface) p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {PROFILE_TABS.map((tab) => (
               <button
@@ -959,7 +959,7 @@ function CandidateProfileEditor({
                 onClick={() => handleTabSelect(tab.id)}
                 aria-current={activeTab === tab.id ? 'page' : undefined}
                 className={cn(
-                  'inline-flex h-[38px] shrink-0 items-center justify-center gap-2 rounded-lg px-4 text-[0.84rem] font-semibold transition-colors',
+                  'inline-flex h-[38px] shrink-0 items-center justify-center gap-2 rounded-control px-4 text-[0.84rem] font-semibold transition-colors',
                   activeTab === tab.id
                     ? 'bg-primary-600 text-white'
                     : 'text-(--app-text-muted) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
@@ -1039,7 +1039,7 @@ function CandidateProfileEditor({
                     void handleResumeFile(event.dataTransfer.files?.[0])
                   }}
                   className={cn(
-                    'group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-[1.5px] border-dashed px-5 py-8 text-center transition-colors',
+                    'group relative flex cursor-pointer flex-col items-center justify-center rounded-control border-[1.5px] border-dashed px-5 py-8 text-center transition-colors',
                     isResumeDragging
                       ? 'border-primary-400 bg-primary-50/80 dark:bg-primary-500/10'
                       : 'border-secondary-200 bg-(--app-surface-muted)/40 hover:border-primary-300 hover:bg-primary-50/50 dark:hover:bg-primary-500/10',
@@ -1056,7 +1056,7 @@ function CandidateProfileEditor({
                       event.currentTarget.value = ''
                     }}
                   />
-                  <span className="mb-3 flex size-11 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-transform group-hover:scale-105 dark:bg-primary-500/15 dark:text-primary-300">
+                  <span className="mb-3 flex size-11 items-center justify-center rounded-control bg-primary-50 text-primary-600 transition-transform group-hover:scale-105 dark:bg-primary-500/15 dark:text-primary-300">
                     <Upload className="size-5" />
                   </span>
                   <span className="text-sm font-semibold text-(--app-text)">
@@ -1068,13 +1068,13 @@ function CandidateProfileEditor({
 
                 <div className="space-y-3">
                   {resumes.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-(--app-border) px-4 py-6 text-sm text-(--app-text-muted)">
+                    <div className="rounded-control border border-dashed border-(--app-border) px-4 py-6 text-sm text-(--app-text-muted)">
                       Todavía no has subido CVs. El primero quedará como principal.
                     </div>
                   ) : (
                     resumes.map((resume) => (
-                      <div key={resume.id} className="flex flex-col gap-3 rounded-xl border border-(--app-border) p-3.5 sm:flex-row sm:items-center">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-(--app-success-surface) text-emerald-600 dark:text-emerald-300">
+                      <div key={resume.id} className="flex flex-col gap-3 rounded-control border border-(--app-border) p-3.5 sm:flex-row sm:items-center">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-(--app-success-surface) text-emerald-600 dark:text-emerald-300">
                           <FileText className="size-5" />
                         </span>
                         <div className="min-w-0 flex-1">
@@ -1085,13 +1085,13 @@ function CandidateProfileEditor({
                         </div>
                         {resume.is_default ? <Badge variant="soft">Principal</Badge> : <Badge variant="outline">Secundario</Badge>}
                         <div className="flex flex-wrap gap-2 sm:justify-end">
-                          <Button variant="outline" className="h-8 rounded-lg px-3 text-[0.78rem]" onClick={() => void openResume(resume.storage_path)}>
+                          <Button variant="outline" className="h-8 rounded-control px-3 text-[0.78rem]" onClick={() => void openResume(resume.storage_path)}>
                             Abrir
                           </Button>
                           {!resume.is_default ? (
                             <Button
                               variant="outline"
-                              className="h-8 rounded-lg px-3 text-[0.78rem]"
+                              className="h-8 rounded-control px-3 text-[0.78rem]"
                               onClick={() => setDefaultResumeMutation.mutate(resume.id)}
                               disabled={setDefaultResumeMutation.isPending}
                             >
@@ -1100,7 +1100,7 @@ function CandidateProfileEditor({
                           ) : null}
                           <Button
                             variant="ghost"
-                            className="h-8 rounded-lg px-3 text-[0.78rem]"
+                            className="h-8 rounded-control px-3 text-[0.78rem]"
                             onClick={() => setPendingDelete({ kind: 'resume', resume })}
                             disabled={deleteResumeMutation.isPending}
                           >
@@ -1112,7 +1112,7 @@ function CandidateProfileEditor({
                   )}
                 </div>
 
-                <label className="flex items-start gap-3 rounded-xl bg-(--app-surface-muted) px-4 py-3 text-[0.82rem] text-(--app-text)">
+                <label className="flex items-start gap-3 rounded-control bg-(--app-surface-muted) px-4 py-3 text-[0.82rem] text-(--app-text)">
                   <input
                     type="checkbox"
                     className="mt-1 size-4 accent-primary-600"
@@ -1153,7 +1153,7 @@ function CandidateProfileEditor({
                 onAction={() => setExperiences((current) => [...current, createEmptyCandidateExperience()])}
               >
                 {experiences.map((experience) => (
-                  <div key={experience.id} className="rounded-xl border border-(--app-border) p-4">
+                  <div key={experience.id} className="rounded-control border border-(--app-border) p-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <ProfileField label="Empresa">
                         <Input
@@ -1256,7 +1256,7 @@ function CandidateProfileEditor({
                 onAction={() => setEducations((current) => [...current, createEmptyCandidateEducation()])}
               >
                 {educations.map((education) => (
-                  <div key={education.id} className="rounded-xl border border-(--app-border) p-4">
+                  <div key={education.id} className="rounded-control border border-(--app-border) p-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <ProfileField label="Institución">
                         <Input
@@ -1365,7 +1365,7 @@ function CandidateProfileEditor({
                 defaultOpen
               >
                 {skills.map((skill) => (
-                  <div key={skill.id} className="grid gap-4 rounded-xl border border-(--app-border) p-4 md:grid-cols-[minmax(0,1fr)_minmax(10rem,0.65fr)_auto]">
+                  <div key={skill.id} className="grid gap-4 rounded-control border border-(--app-border) p-4 md:grid-cols-[minmax(0,1fr)_minmax(10rem,0.65fr)_auto]">
                     <ProfileField label="Skill">
                       <Input
                         className={profileFieldClass}
@@ -1384,7 +1384,7 @@ function CandidateProfileEditor({
                     </ProfileField>
                     <button
                       type="button"
-                      className="inline-flex h-[46px] items-center justify-center gap-2 self-end rounded-lg px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
+                      className="inline-flex h-[46px] items-center justify-center gap-2 self-end rounded-control px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
                       onClick={() =>
                         setPendingDelete({
                           kind: 'skill',
@@ -1408,7 +1408,7 @@ function CandidateProfileEditor({
                 onAdd={() => setLanguages((current) => [...current, createEmptyCandidateLanguage()])}
               >
                 {languages.map((language) => (
-                  <div key={language.id} className="grid gap-4 rounded-xl border border-(--app-border) p-4 md:grid-cols-[minmax(0,1fr)_minmax(10rem,0.65fr)_auto]">
+                  <div key={language.id} className="grid gap-4 rounded-control border border-(--app-border) p-4 md:grid-cols-[minmax(0,1fr)_minmax(10rem,0.65fr)_auto]">
                     <ProfileField label="Idioma">
                       <Input
                         className={profileFieldClass}
@@ -1427,7 +1427,7 @@ function CandidateProfileEditor({
                     </ProfileField>
                     <button
                       type="button"
-                      className="inline-flex h-[46px] items-center justify-center gap-2 self-end rounded-lg px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
+                      className="inline-flex h-[46px] items-center justify-center gap-2 self-end rounded-control px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
                       onClick={() =>
                         setPendingDelete({
                           kind: 'language',
@@ -1451,7 +1451,7 @@ function CandidateProfileEditor({
                 onAdd={() => setLinks((current) => [...current, createEmptyCandidateLink()])}
               >
                 {links.map((link) => (
-                  <div key={link.id} className="space-y-4 rounded-xl border border-(--app-border) p-4">
+                  <div key={link.id} className="space-y-4 rounded-control border border-(--app-border) p-4">
                     <div className="grid gap-4 md:grid-cols-[0.7fr_1fr]">
                       <ProfileField label="Tipo">
                         <Select
@@ -1486,7 +1486,7 @@ function CandidateProfileEditor({
                     <div className="flex justify-end">
                       <button
                         type="button"
-                        className="inline-flex h-8 items-center gap-2 rounded-lg px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
+                        className="inline-flex h-8 items-center gap-2 rounded-control px-3 text-[0.82rem] font-semibold text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-rose-600"
                         onClick={() =>
                           setPendingDelete({
                             kind: 'link',
@@ -1508,7 +1508,7 @@ function CandidateProfileEditor({
         </motion.div>
 
         <motion.aside variants={cardReveal} className="flex h-full flex-col gap-4">
-          <Card className="rounded-[14px] p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+          <Card className="rounded-control p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
             <h2 className="text-[0.95rem] font-bold tracking-tight text-(--app-text)">Resumen de tu perfil</h2>
             <div className="mt-4 flex items-center gap-4">
               <CircularProgress value={completionPercent} />
@@ -1533,7 +1533,7 @@ function CandidateProfileEditor({
             </div>
           </Card>
 
-          <Card className="rounded-[14px] p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+          <Card className="rounded-control p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
             <h2 className="text-[0.95rem] font-bold tracking-tight text-(--app-text)">Acciones rápidas</h2>
             <div className="mt-4 divide-y divide-(--app-border)">
               <QuickAction icon={Upload} title="Subir nuevo CV" description="Actualiza tu CV privado actual." onClick={() => handleTabSelect('cv')} />

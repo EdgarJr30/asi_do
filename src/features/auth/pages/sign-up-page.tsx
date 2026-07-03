@@ -123,13 +123,13 @@ export function SignUpPage() {
         <div className="grid gap-2.5 sm:grid-cols-2">
           <label className="block space-y-0.5">
             <span className="text-xs font-semibold text-(--app-text)">Nombre</span>
-            <Input className="h-[2.375rem] rounded-[12px]" placeholder="John" {...form.register('firstName')} />
+            <Input className="h-[2.375rem] rounded-control" placeholder="John" {...form.register('firstName')} />
             <FieldError message={form.formState.errors.firstName?.message} />
           </label>
 
           <label className="block space-y-0.5">
             <span className="text-xs font-semibold text-(--app-text)">Apellido</span>
-            <Input className="h-[2.375rem] rounded-[12px]" placeholder="Doe" {...form.register('lastName')} />
+            <Input className="h-[2.375rem] rounded-control" placeholder="Doe" {...form.register('lastName')} />
             <FieldError message={form.formState.errors.lastName?.message} />
           </label>
         </div>
@@ -138,7 +138,7 @@ export function SignUpPage() {
           <span className="text-xs font-semibold text-(--app-text)">Correo</span>
           <Input
             autoComplete="email"
-            className="h-[2.375rem] rounded-[12px]"
+            className="h-[2.375rem] rounded-control"
             placeholder="tu@empresa.com.do"
             type="email"
             {...form.register('email')}
@@ -152,7 +152,7 @@ export function SignUpPage() {
             <div className="relative">
               <Input
                 autoComplete="new-password"
-                className="h-[2.375rem] rounded-[12px] pr-10"
+                className="h-[2.375rem] rounded-control pr-10"
                 placeholder="Crea una contraseña segura"
                 type={showPassword ? 'text' : 'password'}
                 {...form.register('password')}
@@ -201,7 +201,7 @@ export function SignUpPage() {
             <div className="relative">
               <Input
                 autoComplete="new-password"
-                className="h-[2.375rem] rounded-[12px] pr-10"
+                className="h-[2.375rem] rounded-control pr-10"
                 placeholder="Repite tu contraseña"
                 type={showConfirmPassword ? 'text' : 'password'}
                 {...form.register('confirmPassword')}
@@ -220,7 +220,7 @@ export function SignUpPage() {
         </div>
 
         <Button
-          className="h-9 w-full rounded-[12px] text-sm"
+          className="h-9 w-full rounded-control text-sm"
           disabled={form.formState.isSubmitting}
           type="submit"
         >
@@ -241,7 +241,7 @@ export function SignUpPage() {
       </p>
 
       {PLATFORM_REGISTRATION_LOCKED ? (
-        <div className="mt-3 rounded-[14px] border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-xs leading-5 text-(--app-text-subtle)">
+        <div className="mt-3 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-xs leading-5 text-(--app-text-subtle)">
           {PLATFORM_REGISTRATION_LOCKED_MESSAGE}
         </div>
       ) : null}

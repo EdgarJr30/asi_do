@@ -244,11 +244,11 @@ export function RbacOverviewPage() {
                 {domain.resources.map((resource) => (
                   <div
                     key={resource.resource}
-                    className="rounded-[14px] border border-(--app-border) bg-(--app-surface-elevated) p-4 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]"
+                    className="rounded-control border border-(--app-border) bg-(--app-surface-elevated) p-4 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)]"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-2">
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-[11px] bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
                           <ShieldCheck className="size-4" />
                         </span>
                         <h3 className="truncate text-sm font-bold text-(--app-text)">{resource.label}</h3>
@@ -274,7 +274,7 @@ export function RbacOverviewPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-[14px] border border-dashed border-(--app-border) bg-(--app-surface-elevated) px-6 py-10 text-center">
+        <div className="rounded-control border border-dashed border-(--app-border) bg-(--app-surface-elevated) px-6 py-10 text-center">
           <p className="text-sm font-semibold text-(--app-text)">No se encontraron permisos para "{searchTerm}".</p>
           <p className="mt-1 text-sm text-(--app-text-muted)">Prueba con otro recurso, acción o dominio.</p>
         </div>
