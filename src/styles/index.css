@@ -594,3 +594,35 @@ html.theme-transition-active::view-transition-new(root) {
     animation: none;
   }
 }
+
+/* ---------- Centro legal: aislar el documento activo al imprimir ---------- */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  [data-legal-print],
+  [data-legal-print] * {
+    visibility: visible;
+  }
+
+  /* La navegación entre documentos, TOC, acciones e identidad legal no se imprimen. */
+  [data-legal-chrome] {
+    display: none !important;
+  }
+
+  [data-legal-print] {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+  }
+
+  [data-legal-print] header {
+    background: none !important;
+    border: none !important;
+  }
+
+  [data-legal-print] section {
+    break-inside: avoid;
+  }
+}

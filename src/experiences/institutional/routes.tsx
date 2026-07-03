@@ -24,8 +24,11 @@ const MembershipCategoriesPage = lazy(() =>
 )
 const MembershipPage = lazy(() => import('@/experiences/institutional/pages/membership-page').then(({ MembershipPage }) => ({ default: MembershipPage })))
 const NewsPage = lazy(() => import('@/experiences/institutional/pages/news-page').then(({ NewsPage }) => ({ default: NewsPage })))
-const PaymentPolicyPage = lazy(() =>
-  import('@/experiences/institutional/pages/payment-policy-page').then(({ PaymentPolicyPage }) => ({ default: PaymentPolicyPage }))
+const LegalCenterPage = lazy(() =>
+  import('@/experiences/institutional/pages/legal-center-page').then(({ LegalCenterPage }) => ({ default: LegalCenterPage }))
+)
+const LegalDocumentPage = lazy(() =>
+  import('@/experiences/institutional/pages/legal-document-page').then(({ LegalDocumentPage }) => ({ default: LegalDocumentPage }))
 )
 const ProjectFundingPage = lazy(() =>
   import('@/experiences/institutional/pages/project-funding-page').then(({ ProjectFundingPage }) => ({ default: ProjectFundingPage }))
@@ -115,10 +118,18 @@ export const institutionalRoutes: RouteObject[] = [
         )
       },
       {
+        path: 'legal',
+        element: (
+          <RouteSuspense>
+            <LegalCenterPage />
+          </RouteSuspense>
+        )
+      },
+      {
         path: 'terms',
         element: (
           <RouteSuspense>
-            <PaymentPolicyPage kind="terms" />
+            <LegalDocumentPage kind="terms" />
           </RouteSuspense>
         )
       },
@@ -126,7 +137,7 @@ export const institutionalRoutes: RouteObject[] = [
         path: 'privacy',
         element: (
           <RouteSuspense>
-            <PaymentPolicyPage kind="privacy" />
+            <LegalDocumentPage kind="privacy" />
           </RouteSuspense>
         )
       },
@@ -134,7 +145,7 @@ export const institutionalRoutes: RouteObject[] = [
         path: 'refunds-cancellations',
         element: (
           <RouteSuspense>
-            <PaymentPolicyPage kind="refunds" />
+            <LegalDocumentPage kind="refunds" />
           </RouteSuspense>
         )
       },
@@ -142,7 +153,7 @@ export const institutionalRoutes: RouteObject[] = [
         path: 'delivery-policy',
         element: (
           <RouteSuspense>
-            <PaymentPolicyPage kind="delivery" />
+            <LegalDocumentPage kind="delivery" />
           </RouteSuspense>
         )
       },
@@ -150,7 +161,7 @@ export const institutionalRoutes: RouteObject[] = [
         path: 'payment-security',
         element: (
           <RouteSuspense>
-            <PaymentPolicyPage kind="security" />
+            <LegalDocumentPage kind="security" />
           </RouteSuspense>
         )
       },

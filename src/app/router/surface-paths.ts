@@ -18,6 +18,7 @@ export const surfacePaths = {
     projects: '/projects',
     projectFunding: '/projects/funding',
     donate: '/donate',
+    legalCenter: '/legal',
     terms: '/terms',
     privacy: '/privacy',
     refunds: '/refunds-cancellations',
