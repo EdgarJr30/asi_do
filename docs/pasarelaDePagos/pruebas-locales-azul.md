@@ -215,6 +215,10 @@ Campos útiles tras la liquidación: `status`, `order_number`, `amount`, `author
 Puedes verlo desde el panel admin `/admin/membership`, o consultando la tabla en Supabase
 (Studio / SQL) filtrando por `order_number` (formato `ASI-AAMMDD-xxxxxxxx`).
 
+Para auditoría de pasarela, `/admin/finances?tab=audit` consolida cuotas de membresía y donaciones
+AZUL con fecha/hora, tarjeta enmascarada, autorización, monto y el `gateway_payload` completo en un
+modal JSON.
+
 También se registran auditoría (`audit_logs`: `membership_payment.azul_initiated`,
 `membership_payment.azul_settled` y, para renovación, `member.renewed`) y notificaciones al miembro y a
 los admins.

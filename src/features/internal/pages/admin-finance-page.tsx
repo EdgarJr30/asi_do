@@ -7,12 +7,20 @@ import { Button } from '@/components/ui/button'
 import { AdminDonationAmountsPage } from '@/features/donations/pages/admin-donation-amounts-page'
 import { MembershipPaymentsSettingsPage } from '@/features/membership/pages/membership-payments-settings-page'
 import { AdminPage, AdminTabs } from '@/features/internal/components/admin-redesign'
+import { AdminPaymentAuditPage } from '@/features/internal/pages/admin-payment-audit-page'
 
-type FinanceTab = 'payments' | 'donations'
+type FinanceTab = 'payments' | 'donations' | 'audit'
+
+function resolveFinanceTab(value: string | null): FinanceTab {
+  if (value === 'donations' || value === 'audit') {
+    return value
+  }
+  return 'payments'
+}
 
 export function AdminFinancePage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [tab, setTab] = useState<FinanceTab>(searchParams.get('tab') === 'donations' ? 'donations' : 'payments')
+  const [tab, setTab] = useState<FinanceTab>(resolveFinanceTab(searchParams.get('tab')))
   const handleTabChange = (nextTab: FinanceTab) => {
     setTab(nextTab)
     setSearchParams({ tab: nextTab }, { replace: true })
@@ -37,10 +45,13 @@ export function AdminFinancePage() {
           onChange={handleTabChange}
           tabs={[
             { value: 'payments', label: 'Cobros y cuotas' },
-            { value: 'donations', label: 'Donaciones' }
+            { value: 'donations', label: 'Donaciones' },
+            { value: 'audit', label: 'Auditoría de pagos AZUL' }
           ]}
         />
-        {tab === 'payments' ? <MembershipPaymentsSettingsPage embedded /> : <AdminDonationAmountsPage embedded />}
+        {tab === 'payments' ? <MembershipPaymentsSettingsPage embedded /> : null}
+        {tab === 'donations' ? <AdminDonationAmountsPage embedded /> : null}
+        {tab === 'audit' ? <AdminPaymentAuditPage /> : null}
       </div>
     </AdminPage>
   )

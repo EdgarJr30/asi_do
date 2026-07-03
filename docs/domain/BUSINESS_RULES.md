@@ -222,6 +222,7 @@
 17. Authenticated users with incomplete base profile setup must be redirected to `/candidate/profile` before workspace, admin, or other candidate surfaces. The guided first-run setup is a profile state, not a standalone module. Required base data is useful full name, useful display name, supported locale, and two-letter country code; avatar, CV, candidate depth, and company/operator requests are optional follow-up work.
 18. Visible product language must use `Responsable de oportunidad`, `Coordinador de oportunidad`, and `Revisor de aplicaciones` for tenant-side opportunity workflows instead of `recruiter` or `hiring manager`.
 19. Legacy technical identifiers such as `recruiter_request`, `recruiter_request:review`, route names, table names, and migration history may remain until a deliberate schema/refactor task changes them safely; they must not leak into new user-facing copy.
+20. Payment support and reconciliation workflows must read AZUL evidence from the stored payment records (`membership_payments.gateway_payload` and `donations.gateway_payload`) and display card numbers only in masked form. The raw gateway payload is for authorized admin audit/support context, not public member or donor surfaces.
 
 ---
 

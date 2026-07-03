@@ -308,6 +308,8 @@ The individual candidate-only user who applies to opportunities but does not pub
 
 Renewal payments by already active members must extend the active membership/subscription term automatically from the current expiration date, record the new payment as the latest comprobante, and notify the member plus platform admins. Initial membership payments still require the governed admin activation step before protected access is granted.
 
+Platform admins must be able to audit AZUL card transactions from Administración › Finanzas, including membership dues and donations, with exact transaction timestamp, order/tracking identifiers, masked card data, status, authorization code, approved amount, and the complete stored gateway payload in a detail modal for support and reconciliation.
+
 ### FR-13 Error transparency and diagnostics
 Meaningful user-facing failures must provide actionable feedback in the UI and also be logged to Supabase so platform admins can investigate the root cause later.
 
