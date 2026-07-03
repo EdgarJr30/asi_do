@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
 
 const hasLiveAuth = Boolean(process.env.E2E_SIGNUP_EMAIL && process.env.E2E_SIGNUP_PASSWORD)
-const candidateProfilePath = '/candidate/profile'
-const candidateRecruiterRequestPath = '/candidate/recruiter-request'
-const candidateApplicationsPath = '/candidate/applications'
+const candidateProfilePath = '/account/profile'
+const candidateRecruiterRequestPath = '/account/recruiter-request'
+const candidateApplicationsPath = '/account/applications'
 const workspacePipelinePath = '/workspace/pipeline'
 
 test.describe('public shell smoke', () => {
@@ -16,9 +16,9 @@ test.describe('public shell smoke', () => {
       page.getByRole('heading', { name: /Vacantes, talento y selección en un solo lugar/i })
     ).toBeVisible()
 
-    // El job board (/platform/jobs) está detrás de RequireActiveAsiAccess: un
+    // El job board (/account/jobs) está detrás de RequireActiveAsiAccess: un
     // visitante sin sesión activa es redirigido a iniciar sesión.
-    await page.goto('/platform/jobs')
+    await page.goto('/account/jobs')
     await page.waitForURL('**/auth/sign-in**', { timeout: 15_000 })
     await expect(page.getByRole('heading', { name: /Bienvenida de vuelta/i })).toBeVisible()
   })

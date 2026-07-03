@@ -47,19 +47,19 @@ export const candidateNavigationItems: NavigationItem[] = [
   },
   {
     title: 'Postulaciones',
-    href: '/candidate/applications',
+    href: surfacePaths.account.applications,
     description: 'Sigue tus procesos',
     requiresAuth: true
   },
   {
     title: 'Perfil',
-    href: '/candidate/profile',
+    href: surfacePaths.account.profile,
     description: 'Tu perfil, tu CV y tu presencia',
     requiresAuth: true
   },
   {
     title: 'Reclutar con mi empresa',
-    href: '/candidate/recruiter-request',
+    href: surfacePaths.account.recruiterRequest,
     description: 'Lleva tu empresa a la plataforma y publica vacantes',
     requiresAuth: true
   }

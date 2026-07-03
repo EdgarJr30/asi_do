@@ -230,7 +230,7 @@ describe('surface access states', () => {
       isPlatformAdmin: false
     }
 
-    renderRoute('/candidate/nope')
+    renderRoute('/account/nope')
 
     expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
     expect(await screen.findByRole('heading', { name: 'Ups, esta página no está disponible' })).toBeInTheDocument()

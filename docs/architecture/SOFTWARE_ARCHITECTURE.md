@@ -302,7 +302,7 @@ The modular monolith must expose three top-level product experiences with explic
 
 Inside `app`, the runtime must remain route-split:
 - `auth`: account access and recovery under `/auth/*`
-- `candidate`: authenticated talent workflows under `/candidate/*`
+- `account`: authenticated user-owned talent workflows under `/account/*`
 - `workspace`: authenticated employer tenant workflows under `/workspace/*`
 - `admin`: restricted platform console under `/admin/*`
 

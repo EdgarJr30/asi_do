@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { lazy } from 'react'
 import type { RouteObject } from 'react-router-dom'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useParams } from 'react-router-dom'
 
 import { RouteSuspense } from '@/app/router/route-suspense'
 import {
@@ -44,6 +44,8 @@ const AdminCommunicationsPage = lazy(() =>
 )
 const AdminFinancePage = lazy(() => import('@/features/internal/pages/admin-finance-page').then(({ AdminFinancePage }) => ({ default: AdminFinancePage })))
 const StressHarnessPage = lazy(() => import('@/features/internal/pages/stress-harness-page').then(({ StressHarnessPage }) => ({ default: StressHarnessPage })))
+const JobApplicationPage = lazy(() => import('@/features/applications/pages/job-application-page').then(({ JobApplicationPage }) => ({ default: JobApplicationPage })))
+const JobDetailPage = lazy(() => import('@/features/jobs/pages/job-detail-page').then(({ JobDetailPage }) => ({ default: JobDetailPage })))
 const JobsOverviewPage = lazy(() => import('@/features/jobs/pages/jobs-overview-page').then(({ JobsOverviewPage }) => ({ default: JobsOverviewPage })))
 const MembershipConsolePage = lazy(() => import('@/features/membership/pages/membership-console-page').then(({ MembershipConsolePage }) => ({ default: MembershipConsolePage })))
 const MembershipStatusPage = lazy(() => import('@/features/membership/pages/membership-status-page').then(({ MembershipStatusPage }) => ({ default: MembershipStatusPage })))
@@ -65,6 +67,24 @@ const AuthShell = lazy(() => import('@/experiences/app/layouts/auth-shell').then
 const CandidateShell = lazy(() => import('@/experiences/app/layouts/candidate-shell').then(({ CandidateShell }) => ({ default: CandidateShell })))
 const EmployerShell = lazy(() => import('@/experiences/app/layouts/employer-shell').then(({ EmployerShell }) => ({ default: EmployerShell })))
 const AppEntryRedirect = lazy(() => import('@/experiences/app/routes/app-entry-redirect').then(({ AppEntryRedirect }) => ({ default: AppEntryRedirect })))
+
+function LegacyAuthorityRequestRedirect() {
+  const { token } = useParams()
+
+  return <Navigate replace to={token ? surfacePaths.account.authorityRequestLink(token) : surfacePaths.account.authorityRequest} />
+}
+
+function LegacyJobDetailRedirect() {
+  const { jobSlug } = useParams()
+
+  return <Navigate replace to={jobSlug ? surfacePaths.account.jobDetail(jobSlug) : surfacePaths.account.jobs} />
+}
+
+function LegacyJobApplyRedirect() {
+  const { jobSlug } = useParams()
+
+  return <Navigate replace to={jobSlug ? surfacePaths.account.jobApply(jobSlug) : surfacePaths.account.jobs} />
+}
 
 export const applicationRoutes: RouteObject[] = [
   {
@@ -126,31 +146,7 @@ export const applicationRoutes: RouteObject[] = [
     )
   },
   {
-    // Panel de membresía: destino de los usuarios autenticados aún no activos.
-    // No exige membresía activa (evita el loop con RequireActiveAsiAccess).
-    path: surfacePaths.account.membership,
-    element: (
-      <RequireAuth>
-        <RequireCompletedBaseOnboarding>
-          <RouteSuspense>
-            <CandidateShell />
-          </RouteSuspense>
-        </RequireCompletedBaseOnboarding>
-      </RequireAuth>
-    ),
-    children: [
-      {
-        index: true,
-        element: (
-          <RouteSuspense>
-            <MembershipStatusPage />
-          </RouteSuspense>
-        )
-      }
-    ]
-  },
-  {
-    path: surfacePaths.candidate.root,
+    path: surfacePaths.account.root,
     element: (
       <RequireAuth>
         <RequireCompletedBaseOnboarding>
@@ -172,7 +168,47 @@ export const applicationRoutes: RouteObject[] = [
       {
         // Legacy alias only. First-run setup now lives inside the profile surface.
         path: 'onboarding',
-        element: <Navigate replace to={surfacePaths.candidate.profile} />
+        element: <Navigate replace to={surfacePaths.account.profile} />
+      },
+      {
+        path: 'jobs',
+        element: (
+          <RequireActiveAsiAccess surface="candidate">
+            <RouteSuspense>
+              <JobsOverviewPage />
+            </RouteSuspense>
+          </RequireActiveAsiAccess>
+        )
+      },
+      {
+        path: 'jobs/:jobSlug',
+        element: (
+          <RequireActiveAsiAccess surface="candidate">
+            <RouteSuspense>
+              <JobDetailPage />
+            </RouteSuspense>
+          </RequireActiveAsiAccess>
+        )
+      },
+      {
+        path: 'jobs/:jobSlug/apply',
+        element: (
+          <RequireActiveAsiAccess surface="candidate">
+            <RouteSuspense>
+              <JobApplicationPage />
+            </RouteSuspense>
+          </RequireActiveAsiAccess>
+        )
+      },
+      {
+        // Panel de membresía: destino de los usuarios autenticados aún no activos.
+        // No exige membresía activa (evita el loop con RequireActiveAsiAccess).
+        path: 'membership',
+        element: (
+          <RouteSuspense>
+            <MembershipStatusPage />
+          </RouteSuspense>
+        )
       },
       {
         path: 'recruiter-request',
@@ -222,6 +258,60 @@ export const applicationRoutes: RouteObject[] = [
       {
         path: '*',
         element: <LazySurfaceStatusPage kind="not-found" surface="candidate" />
+      }
+    ]
+  },
+  {
+    path: surfacePaths.legacy.candidateRoot,
+    children: [
+      {
+        index: true,
+        element: <Navigate replace to={surfacePaths.account.home} />
+      },
+      {
+        path: 'onboarding',
+        element: <Navigate replace to={surfacePaths.account.profile} />
+      },
+      {
+        path: 'recruiter-request',
+        element: <Navigate replace to={surfacePaths.account.recruiterRequest} />
+      },
+      {
+        path: 'authority-request/:token',
+        element: <LegacyAuthorityRequestRedirect />
+      },
+      {
+        path: 'membership-queue',
+        element: <Navigate replace to={surfacePaths.account.membershipQueue} />
+      },
+      {
+        path: 'profile',
+        element: <Navigate replace to={surfacePaths.account.profile} />
+      },
+      {
+        path: 'applications',
+        element: <Navigate replace to={surfacePaths.account.applications} />
+      },
+      {
+        path: '*',
+        element: <Navigate replace to={surfacePaths.account.home} />
+      }
+    ]
+  },
+  {
+    path: surfacePaths.legacy.platformJobsRoot,
+    children: [
+      {
+        index: true,
+        element: <Navigate replace to={surfacePaths.account.jobs} />
+      },
+      {
+        path: ':jobSlug',
+        element: <LegacyJobDetailRedirect />
+      },
+      {
+        path: ':jobSlug/apply',
+        element: <LegacyJobApplyRedirect />
       }
     ]
   },

@@ -4,19 +4,19 @@
 - Registro de usuario base en `/auth`
 - Aprobacion administrativa de usuario, membresia ASI y suscripcion activa antes de acceder a contenido protegido
 - Callback de confirmacion de email en `/auth/confirm`
-- Perfil inicial guiado en `/candidate/profile`
-- Solicitud de operador en `/candidate/recruiter-request`
+- Perfil inicial guiado en `/account/profile`
+- Solicitud de operador en `/account/recruiter-request`
 - Aprobacion admin en `/admin/approvals`
 - Workspace employer en `/workspace`
-- Creacion y publish de job en `/platform/jobs` con listado protegido para miembros aprobados
-- Apply flow en `/platform/jobs/:slug/apply`
+- Creacion y publish de job en `/account/jobs` con listado protegido para miembros aprobados
+- Apply flow en `/account/jobs/:slug/apply`
 - Pipeline de coordinadores en `/workspace/pipeline`
 
 ## PWA readiness
 - Manifest instalable visible en mobile
 - Service worker registra sin errores
 - `/offline` responde como fallback cuando la app pierde red
-- Navegacion movil principal sigue usable en `home`, `jobs`, `candidate/applications`, `workspace/pipeline`, `workspace`
+- Navegacion movil principal sigue usable en `account`, `account/jobs`, `account/applications`, `workspace/pipeline`, `workspace`
 
 ## Storage and private media
 - Avatar, logos y documentos privados respetan el limite de 5 MB

@@ -217,7 +217,7 @@ Keep the frontend split into three explicit top-level experiences:
 
 Inside the authenticated app experience, keep explicit route surfaces:
 - auth routes under `/auth/*`
-- candidate app routes under `/candidate/*`
+- user account app routes under `/account/*`
 - employer workspace routes under `/workspace/*`
 - admin console routes for operational tooling under `/admin/*`
 

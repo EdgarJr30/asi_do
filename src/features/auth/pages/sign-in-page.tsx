@@ -55,7 +55,7 @@ export function SignInPage() {
 
   // Mientras se determina/hidrata la sesión, mostramos el loader a pantalla
   // completa. No decidimos el destino hasta que el perfil y los permisos estén
-  // listos: así un usuario ya registrado entra a su home (no a /candidate/profile)
+  // listos: así un usuario ya registrado entra a su home (no a /account/profile)
   // y el sidebar/menú llega cargado antes de darle entrada.
   if (session.isLoading) {
     return <PageLoader label="Preparando tu plataforma" hint="Cargando tu menú y tu cuenta" />

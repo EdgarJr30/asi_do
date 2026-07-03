@@ -1,6 +1,6 @@
 import type { Variants } from 'motion/react'
 
-// Curva de entrada suave compartida por los módulos rediseñados (/candidate, /platform/jobs, …).
+// Curva de entrada suave compartida por los módulos rediseñados (/account, /account/jobs, ...).
 export const softEase = [0.22, 1, 0.36, 1] as const
 
 // Contenedor de página: escalona la entrada de cada bloque en cascada de arriba a abajo.

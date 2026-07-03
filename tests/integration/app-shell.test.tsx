@@ -3,10 +3,8 @@ import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppProviders } from '@/app/providers/app-providers'
-import { surfacePaths } from '@/app/router/surface-paths'
 import { appRoutes } from '@/app/router/routes'
 import { StorefrontShell } from '@/experiences/storefront/layouts/storefront-shell'
-import { StorefrontPlatformShell } from '@/experiences/storefront/layouts/storefront-platform-shell'
 import { PLATFORM_REGISTRATION_LOCKED } from '@/shared/config/launch-access'
 
 const guestRegistrationActionName = PLATFORM_REGISTRATION_LOCKED ? 'Registro cerrado' : 'Crear cuenta'
@@ -84,32 +82,6 @@ function renderPublicShell(initialEntry = '/platform') {
           {
             index: true,
             element: <div>Public content</div>
-          }
-        ]
-      }
-    ],
-    {
-      initialEntries: [initialEntry]
-    }
-  )
-
-  renderWithProviders(router)
-}
-
-function renderPlatformJobsShell(initialEntry = surfacePaths.storefront.jobs) {
-  const router = createMemoryRouter(
-    [
-      {
-        path: surfacePaths.storefront.jobsRoot,
-        element: <StorefrontPlatformShell />,
-        children: [
-          {
-            index: true,
-            element: <div>Jobs publicos</div>
-          },
-          {
-            path: ':jobSlug',
-            element: <div>Detalle del job</div>
           }
         ]
       }
@@ -223,15 +195,4 @@ describe('route shells', () => {
     expect(screen.queryByRole('button', { name: 'Ver pricing' })).not.toBeInTheDocument()
   })
 
-  it('renders the shared platform shell for platform jobs routes', async () => {
-    renderPlatformJobsShell()
-
-    expect(await screen.findByText('Plataforma ASI')).toBeInTheDocument()
-    expect(screen.getAllByText('Jobs').length).toBeGreaterThan(0)
-    expect(screen.getAllByRole('button', { name: 'ASI institucional' }).length).toBeGreaterThan(0)
-    const guestRegistrationActions = screen.getAllByRole('button', { name: guestRegistrationActionName })
-    expect(guestRegistrationActions.length).toBeGreaterThan(0)
-    expect(guestRegistrationActions.every((button) => button.hasAttribute('disabled'))).toBe(PLATFORM_REGISTRATION_LOCKED)
-    expect(screen.getAllByRole('button', { name: 'Iniciar sesión' }).length).toBeGreaterThan(0)
-  })
 })

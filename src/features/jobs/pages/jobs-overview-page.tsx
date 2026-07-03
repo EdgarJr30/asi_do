@@ -1332,7 +1332,7 @@ function WorkspaceJobsManager() {
 }
 
 /**
- * `/platform/jobs` muestra solo el board del candidato (buscar y aplicar).
+ * `/account/jobs` muestra solo el board del usuario (buscar y aplicar).
  * La gestión de vacantes del empleador vive en `/workspace/jobs`.
  */
 export function JobsOverviewPage() {

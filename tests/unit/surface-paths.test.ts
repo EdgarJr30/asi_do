@@ -4,7 +4,7 @@ import { getAuthenticatedHomePath, surfacePaths } from '@/app/router/surface-pat
 
 describe('surface paths', () => {
   it('resolves the authenticated home for candidate-only users', () => {
-    expect(getAuthenticatedHomePath(false)).toBe(surfacePaths.candidate.home)
+    expect(getAuthenticatedHomePath(false)).toBe(surfacePaths.account.home)
   })
 
   it('resolves the authenticated home for workspace users', () => {
@@ -12,7 +12,7 @@ describe('surface paths', () => {
   })
 
   it('routes incomplete users to profile setup before any authenticated home', () => {
-    expect(getAuthenticatedHomePath(false, false)).toBe(surfacePaths.candidate.profile)
-    expect(getAuthenticatedHomePath(true, false)).toBe(surfacePaths.candidate.profile)
+    expect(getAuthenticatedHomePath(false, false)).toBe(surfacePaths.account.profile)
+    expect(getAuthenticatedHomePath(true, false)).toBe(surfacePaths.account.profile)
   })
 })

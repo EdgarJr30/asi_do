@@ -13,9 +13,14 @@ describe('app route contract', () => {
     expect(findTopLevelRoute(surfacePaths.public.home)).toBeDefined()
     expect(findTopLevelRoute(surfacePaths.auth.root)).toBeDefined()
     expect(findTopLevelRoute(surfacePaths.app.home)).toBeDefined()
-    expect(findTopLevelRoute(surfacePaths.candidate.root)).toBeDefined()
+    expect(findTopLevelRoute(surfacePaths.account.root)).toBeDefined()
     expect(findTopLevelRoute(surfacePaths.workspace.root)).toBeDefined()
     expect(findTopLevelRoute(surfacePaths.admin.root)).toBeDefined()
+  })
+
+  it('keeps legacy candidate and platform jobs aliases as redirects', () => {
+    expect(findTopLevelRoute(surfacePaths.legacy.candidateRoot)).toBeDefined()
+    expect(findTopLevelRoute(surfacePaths.legacy.platformJobsRoot)).toBeDefined()
   })
 
   it('does not keep legacy route families in the top-level route contract', () => {
@@ -39,14 +44,14 @@ describe('app route contract', () => {
     const institutionalRoute = findTopLevelRoute(surfacePaths.institutional.home)
     const publicRoute = findTopLevelRoute(surfacePaths.public.home)
     const authRoute = findTopLevelRoute(surfacePaths.auth.root)
-    const candidateRoute = findTopLevelRoute(surfacePaths.candidate.root)
+    const accountRoute = findTopLevelRoute(surfacePaths.account.root)
     const workspaceRoute = findTopLevelRoute(surfacePaths.workspace.root)
     const adminRoute = findTopLevelRoute(surfacePaths.admin.root)
 
     expect(institutionalRoute?.children?.some((route) => route.path === '*')).toBe(true)
     expect(publicRoute?.children?.some((route) => route.path === '*')).toBe(true)
     expect(authRoute?.children?.some((route) => route.path === '*')).toBe(true)
-    expect(candidateRoute?.children?.some((route) => route.path === '*')).toBe(true)
+    expect(accountRoute?.children?.some((route) => route.path === '*')).toBe(true)
     expect(workspaceRoute?.children?.some((route) => route.path === '*')).toBe(true)
     expect(adminRoute?.children?.some((route) => route.path === '*')).toBe(true)
   })

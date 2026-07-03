@@ -124,7 +124,7 @@ The MVP should **not** initially include:
 - role-scope model that separates super administrator, platform support, platform moderator, readonly platform auditor, regional administrator, pastor administrator, tenant owner, tenant member, tenant billing contact, Joven Profesional candidate-only users, and other individual ASI members
 - two-step authorization model where pastors or regional administrators may authorize normal users and provide scoped endorsement for company/operator requests within scope, while final license activation remains permission-driven and stays with super administrator, platform support, or another platform admin explicitly granted `license:activate` by a super administrator
 - avatar and document uploads with modern web formats, 5 MB guardrails, and clear validation feedback
-- authenticated app entry redirect that sends any incomplete base profile to `/candidate/profile` before workspace, admin, or other candidate surfaces
+- authenticated app entry redirect that sends any incomplete base profile to `/account/profile` before workspace, admin, or other account surfaces
 - guided initial profile setup with short mobile-first steps for required identity, locale, and country data; avatar, CV, candidate depth, and company/operator requests remain optional follow-up work
 
 ## 8.2 Candidate profile
@@ -166,7 +166,7 @@ The MVP should **not** initially include:
 - screening questions
 - tenant-side candidate directory for visible opt-in profiles
 - full candidate profile review from employer side without requiring an application first
-- protected `/platform/jobs` listing and `/platform/jobs/:slug` detail routes that require an approved user, ASI membership, and active subscription
+- protected `/account/jobs` listing and `/account/jobs/:slug` detail routes that require an approved user, ASI membership, and active subscription
 - opportunity scope covers jobs, projects, volunteering, and professional services
 - opportunity stage templates vary by opportunity type while sharing one MVP application model
 - future stage UX should keep one shared ATS shell with type-aware presets, labels, and optional per-type checklists instead of splitting into separate pipeline applications too early

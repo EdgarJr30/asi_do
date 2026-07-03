@@ -29,9 +29,9 @@ async function signInAndOpenBoard(page: Page, candidate: ProvisionedCandidate) {
   await page.getByPlaceholder('john.doe@empresa.com.do').fill(candidate.email)
   await page.getByPlaceholder('Tu contraseña').fill(candidate.password)
   await page.getByRole('button', { name: /Iniciar sesión/i }).click()
-  // Usuario nuevo: puede aterrizar en /candidate o /candidate/profile (onboarding).
-  await page.waitForURL(/\/candidate/, { timeout: 30_000 })
-  await page.goto('/platform/jobs')
+  // Usuario nuevo: puede aterrizar en /account o /account/profile (onboarding).
+  await page.waitForURL(/\/account/, { timeout: 30_000 })
+  await page.goto('/account/jobs')
   await expect(page.getByText(DEMO_JOB_TITLE).first()).toBeVisible({ timeout: 30_000 })
   // A partir de aquí, ninguna sesión debe recargarse: lo verificamos al final.
   await page.evaluate(() => ((window as unknown as { __noReload: boolean }).__noReload = true))

@@ -57,7 +57,7 @@ flowchart TB
     subgraph AUTHED["🔒 Autenticadas"]
         ENTRY["/app<br/>(AppEntryRedirect)"]
         MEMB["/account/membership<br/>(panel de membresía)"]
-        CAND["/candidate/*<br/>(CandidateShell)"]
+        CAND["/account/*<br/>(CandidateShell)"]
         WORK["/workspace/*<br/>(EmployerShell)"]
         ADMIN["/admin/*<br/>(AdminShell)"]
     end
@@ -81,9 +81,9 @@ flowchart TB
 | Shell | Ruta | Quién |
 |---|---|---|
 | `InstitutionalShell` | `/` | Público (sitio institucional ASI) |
-| `StorefrontShell` | `/platform` | Público (producto + empleos) |
+| `StorefrontShell` | `/platform` | Público (producto) |
 | `AuthShell` | `/auth` | Sin sesión |
-| `CandidateShell` (= `PlatformAppShell`) | `/candidate` + `/account/membership` | Todo usuario autenticado |
+| `CandidateShell` (= `PlatformAppShell`) | `/account/*` | Todo usuario autenticado |
 | `EmployerShell` (= `PlatformAppShell`) | `/workspace` | Con `workspace:read` |
 | `AdminShell` | `/admin` | Con acceso a consola admin |
 
@@ -162,7 +162,7 @@ flowchart TB
     G0 -->|"no"| G1{"RequireAuth:<br/>isAuthenticated?"}
     G1 -->|"no"| SIGNIN["→ /auth/sign-in"]
     G1 -->|"sí"| G2{"RequireCompletedBaseOnboarding:<br/>full_name+display_name+locale+country?"}
-    G2 -->|"no (y no es /profile)"| PROFILE["→ /candidate/profile"]
+    G2 -->|"no (y no es /profile)"| PROFILE["→ /account/profile"]
     G2 -->|"sí"| G3{"¿Ruta exige ATS activo?<br/>RequireActiveAsiAccess"}
     G3 -->|"sí y NO activo"| MEMBPANEL["→ /account/membership"]
     G3 -->|"ok / no aplica"| G4{"¿Exige permiso?<br/>RequirePermission / RequireAnyPermission"}
@@ -174,9 +174,9 @@ flowchart TB
 
 | Guard | Falla → | Usado en |
 |---|---|---|
-| `RequireAuth` | `/auth/sign-in` | Todo `/app`, `/account`, `/candidate`, `/workspace`, `/admin` |
-| `RequireCompletedBaseOnboarding` | `/candidate/profile` | Shells autenticados |
-| `RequireActiveAsiAccess` | `/account/membership` | `/candidate/applications`, `/workspace/*` |
+| `RequireAuth` | `/auth/sign-in` | Todo `/app`, `/account`, `/workspace`, `/admin` |
+| `RequireCompletedBaseOnboarding` | `/account/profile` | Shells autenticados |
+| `RequireActiveAsiAccess` | `/account/membership` | `/account/jobs*`, `/account/applications`, `/workspace/*` |
 | `RequirePermission` | `forbidden` en shell | Rutas con permiso único |
 | `RequireAnyPermission` | `forbidden` en shell | `/admin/approvals` |
 | `RequireAdminAccess` | `forbidden` admin | Todo `/admin` |
@@ -196,7 +196,7 @@ flowchart TD
 
     SIGNUP --> CONFIRM["Confirmación de email"]
     CONFIRM --> ONB{"¿Onboarding base<br/>completo?"}
-    ONB -->|"no"| PROFILE["Completar perfil<br/>(/candidate/profile)"]
+    ONB -->|"no"| PROFILE["Completar perfil<br/>(/account/profile)"]
     PROFILE --> GATE
     ONB -->|"sí"| GATE{"¿hasActiveAsiAccess?"}
 
@@ -244,16 +244,16 @@ sequenceDiagram
     SES->>RT: refresh()
     RT->>RT: getAuthenticatedHomePath(workspace?, onboarding?)
     alt onboarding incompleto
-        RT-->>U: /candidate/profile
+        RT-->>U: /account/profile
     else workspace:read
         RT-->>U: /workspace
     else
-        RT-->>U: /candidate
+        RT-->>U: /account
     end
 ```
 
 **Onboarding base** = `full_name` + `display_name` + `locale ∈ {es,en}` + `country_code` (2 letras).
-Mientras falte, `RequireCompletedBaseOnboarding` fuerza `/candidate/profile`.
+Mientras falte, `RequireCompletedBaseOnboarding` fuerza `/account/profile`.
 
 🗂️ **Estructura de tablas:** [`users`](arquitectura-db.md#users)
 
@@ -270,7 +270,7 @@ stateDiagram-v2
     Pendiente --> Activo: admin activa (exige aprobado + pago verificado)
     Activo: status=active, approval=approved,<br/>asi_membership=active,<br/>subscription=active, +1 año
     Activo --> ATS: hasActiveAsiAccess = true
-    ATS: Acceso a /candidate/applications,<br/>/workspace/*
+    ATS: Acceso a /account/jobs*, /account/applications,<br/>/workspace/*
     Activo --> Activo: renovación con tarjeta (AZUL extiende +N años)
     Activo --> GracePeriod: vence membership_expires_at
     GracePeriod --> Activo: renovación con tarjeta
@@ -435,14 +435,14 @@ Un pastor primero **obtiene alcance**, luego **revisa la cola** de sus iglesias.
 ```mermaid
 flowchart TD
     subgraph ALTA["A. Obtener autoridad"]
-        REG["Pastor se registra<br/>(usuario normal)"] --> AREQ["/candidate/authority-request<br/>(elige iglesias)"]
+        REG["Pastor se registra<br/>(usuario normal)"] --> AREQ["/account/authority-request<br/>(elige iglesias)"]
         AREQ --> ADMINREV{"Admin revisa<br/>review_pastor_authority_request"}
         ADMINREV -->|"aprueba"| SCOPE["INSERT user_authority_scope<br/>(pastor_administrator + church_ids)"]
     end
 
     subgraph COLA["B. Cola de revisión"]
         SCOPE --> DETECT["session.isMembershipReviewerPastor = true<br/>(activePastorScopeCount > 0)"]
-        DETECT --> NAV["Aparece nav 'Solicitudes de mi iglesia'<br/>/candidate/membership-queue"]
+        DETECT --> NAV["Aparece nav 'Solicitudes de mi iglesia'<br/>/account/membership-queue"]
         NAV --> QUEUE["fetchPastorMembershipQueue<br/>(RLS limita a SUS iglesias)"]
         QUEUE --> ACTIONS{"Por solicitud"}
         ACTIONS -->|"Aprobar"| APR["review RPC → approved + endorsed"]
@@ -507,7 +507,7 @@ sequenceDiagram
     actor A as Admin
     participant DB as BD (review_recruiter_request)
 
-    C->>DB: /candidate/recruiter-request<br/>(datos de empresa + slug)
+    C->>DB: /account/recruiter-request<br/>(datos de empresa + slug)
     Note over DB: recruiter_request.status = submitted
     A->>DB: review_recruiter_request(approved)
     DB->>DB: INSERT tenant + company_profile
@@ -538,9 +538,9 @@ Dos lados: el **candidato** que aplica y el **empleador** que gestiona el pipeli
 ```mermaid
 flowchart LR
     subgraph CANDIDATE["🧑 Candidato (requiere ATS activo)"]
-        BOARD["Job board público<br/>/platform/jobs"] --> JOB["Detalle de vacante"]
+        BOARD["Job board protegido<br/>/account/jobs"] --> JOB["Detalle de vacante"]
         JOB --> APPLY2["Aplicar (submitApplication)"]
-        APPLY2 --> TRACK["/candidate/applications<br/>(seguimiento status_public)"]
+        APPLY2 --> TRACK["/account/applications<br/>(seguimiento status_public)"]
     end
 
     subgraph EMPLOYER["🏢 Empleador (workspace:read)"]

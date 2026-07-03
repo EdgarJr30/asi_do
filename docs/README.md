@@ -71,6 +71,6 @@ The modular monolith is organized around three top-level product experiences:
 
 Inside `app`, the canonical route surfaces remain:
 - `auth` under `/auth/*`
-- `candidate` under `/candidate/*`
+- user account under `/account/*`
 - `workspace` under `/workspace/*`
 - `admin` under `/admin/*`

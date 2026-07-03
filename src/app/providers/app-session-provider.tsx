@@ -132,7 +132,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     // Leemos la sesión viva del SDK en lugar del estado del closure (que puede
     // estar desfasado justo después de iniciar sesión). Así evitamos hidratar con
     // un usuario nulo y dejar `isLoading=false` con `profile=null`, lo que causaba
-    // un redirect prematuro a /candidate/profile antes de cargar el perfil real.
+    // un redirect prematuro a /account/profile antes de cargar el perfil real.
     const client = clientRef.current ?? (await loadSupabaseClient())
     clientRef.current = client
 

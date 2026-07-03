@@ -4,15 +4,15 @@ const email = process.env.E2E_SIGNUP_EMAIL!
 const password = process.env.E2E_SIGNUP_PASSWORD!
 const shotDir = process.env.E2E_SHOT_DIR ?? 'test-results/tmp'
 
-test('candidate first login lands on /candidate home, not the profile form', async ({ page }, testInfo) => {
+test('candidate first login lands on /account home, not the profile form', async ({ page }, testInfo) => {
   await page.goto('/auth/sign-in')
   await page.getByPlaceholder('john.doe@empresa.com.do').fill(email)
   await page.getByPlaceholder('Tu contraseña').fill(password)
   await page.getByRole('button', { name: /Iniciar sesión/i }).click()
 
-  // Debe aterrizar en el home del candidato (/candidate), NO en /candidate/profile.
-  await page.waitForURL('**/candidate', { timeout: 20_000 })
-  expect(new URL(page.url()).pathname).toBe('/candidate')
+  // Debe aterrizar en el home del usuario (/account), NO en /account/profile.
+  await page.waitForURL('**/account', { timeout: 20_000 })
+  expect(new URL(page.url()).pathname).toBe('/account')
 
   // Encabezado del home + banner de perfil incompleto (usuario nuevo).
   await expect(page.getByText('Inicio · Tu espacio')).toBeVisible()
@@ -31,7 +31,7 @@ test('sidebar copy: Inicio present, "Acceso operador" gone', async ({ page }, te
   await page.getByPlaceholder('john.doe@empresa.com.do').fill(email)
   await page.getByPlaceholder('Tu contraseña').fill(password)
   await page.getByRole('button', { name: /Iniciar sesión/i }).click()
-  await page.waitForURL('**/candidate', { timeout: 20_000 })
+  await page.waitForURL('**/account', { timeout: 20_000 })
 
   // El texto críptico anterior no debe existir en ninguna parte.
   await expect(page.getByText('Acceso operador')).toHaveCount(0)

@@ -80,7 +80,7 @@ autoridad a pastores.
    - ✅ **Envío habilitado + validado e2e de punta a punta** (`tests/e2e/membership-full-submission.spec.ts`): flag `MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED=false`; un miembro logueado completa el formulario real de 6 pasos (categoría `retired`) y lo envía → se crea la solicitud con `requester_user_id` correcto (RLS insert_self), `church_id` del picker y **auto-ruteo al pastor** (`assigned_queue=pastor`). Los CTAs de registro del storefront/app derivan de `PLATFORM_REGISTRATION_LOCKED`.
 3. **Cola del pastor** — bandeja scoped, aprobar/más-info/rechazar, subir comprobante. **✅ COMPLETA**
    - ✅ Detección del pastor en sesión: `activePastorScopeCount` en `SessionSnapshot` (cuenta de `user_authority_scopes` activos `pastor_administrator`) → `session.isMembershipReviewerPastor`.
-   - ✅ Página `PastorMembershipQueuePage` en `/candidate/membership-queue` (dentro del shell; sin requerir ATS activo). Item de nav "Solicitudes de mi iglesia" (grupo Pastoral) solo visible para pastores.
+   - ✅ Página `PastorMembershipQueuePage` en `/account/membership-queue` (dentro del shell; sin requerir ATS activo). Item de nav "Solicitudes de mi iglesia" (grupo Pastoral) solo visible para pastores.
    - ✅ Bandeja scoped: `fetchPastorMembershipQueue()` (pendientes + `church_id not null`; RLS limita a sus iglesias) con último pago por solicitud.
    - ✅ Acciones aprobar/más-info/rechazar vía RPC `review_membership_application` (autoriza por scope + audita); aprobar fija referencia pastoral `endorsed`, rechazar `declined`.
    - ✅ Pastor puede ver el comprobante (URL firmada) y subirlo por el miembro.

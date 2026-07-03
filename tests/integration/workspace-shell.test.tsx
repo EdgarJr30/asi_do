@@ -298,7 +298,7 @@ describe('workspace shell', () => {
     expect(screen.getAllByText('Resumen').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Vacantes').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Candidatos').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Pipeline').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Proceso de selección').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Abrir notificaciones' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Abrir menu de perfil' })).toBeInTheDocument()
   })
@@ -623,7 +623,7 @@ describe('workspace shell', () => {
     seedWorkspaceSession(['workspace:read'])
     renderCandidateShell(surfacePaths.candidate.applications)
 
-    const applicationsButtons = await screen.findAllByRole('button', { name: 'Aplicaciones' })
+    const applicationsButtons = await screen.findAllByRole('button', { name: 'Postulaciones' })
     const dashboardButtons = screen.getAllByRole('button', { name: 'Resumen' })
 
     expect(applicationsButtons.some((button) => isActiveNavigationButton(button))).toBe(true)

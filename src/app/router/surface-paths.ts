@@ -1,9 +1,9 @@
 const storefrontPaths = {
   home: '/platform',
-  jobs: '/platform/jobs',
-  jobsRoot: '/platform/jobs',
-  jobDetail: (jobSlug: string) => `/platform/jobs/${jobSlug}`,
-  jobApply: (jobSlug: string) => `/platform/jobs/${jobSlug}/apply`,
+  jobs: '/account/jobs',
+  jobsRoot: '/account/jobs',
+  jobDetail: (jobSlug: string) => `/account/jobs/${jobSlug}`,
+  jobApply: (jobSlug: string) => `/account/jobs/${jobSlug}/apply`,
   offline: '/platform/offline'
 } as const
 
@@ -41,18 +41,45 @@ export const surfacePaths = {
     home: '/app'
   },
   account: {
-    membership: '/account/membership'
+    root: '/account',
+    home: '/account',
+    jobs: '/account/jobs',
+    jobsRoot: '/account/jobs',
+    jobDetail: (jobSlug: string) => `/account/jobs/${jobSlug}`,
+    jobApply: (jobSlug: string) => `/account/jobs/${jobSlug}/apply`,
+    membership: '/account/membership',
+    profile: '/account/profile',
+    applications: '/account/applications',
+    onboarding: '/account/onboarding',
+    recruiterRequest: '/account/recruiter-request',
+    authorityRequest: '/account/authority-request',
+    authorityRequestLink: (token: string) => `/account/authority-request/${token}`,
+    membershipQueue: '/account/membership-queue'
   },
   candidate: {
-    root: '/candidate',
-    home: '/candidate',
-    profile: '/candidate/profile',
-    applications: '/candidate/applications',
-    onboarding: '/candidate/onboarding',
-    recruiterRequest: '/candidate/recruiter-request',
-    authorityRequest: '/candidate/authority-request',
-    authorityRequestLink: (token: string) => `/candidate/authority-request/${token}`,
-    membershipQueue: '/candidate/membership-queue'
+    root: '/account',
+    home: '/account',
+    profile: '/account/profile',
+    applications: '/account/applications',
+    onboarding: '/account/onboarding',
+    recruiterRequest: '/account/recruiter-request',
+    authorityRequest: '/account/authority-request',
+    authorityRequestLink: (token: string) => `/account/authority-request/${token}`,
+    membershipQueue: '/account/membership-queue'
+  },
+  legacy: {
+    candidateRoot: '/candidate',
+    candidateHome: '/candidate',
+    candidateProfile: '/candidate/profile',
+    candidateApplications: '/candidate/applications',
+    candidateOnboarding: '/candidate/onboarding',
+    candidateRecruiterRequest: '/candidate/recruiter-request',
+    candidateAuthorityRequest: '/candidate/authority-request',
+    candidateAuthorityRequestLink: (token: string) => `/candidate/authority-request/${token}`,
+    candidateMembershipQueue: '/candidate/membership-queue',
+    platformJobsRoot: '/platform/jobs',
+    platformJobDetail: (jobSlug: string) => `/platform/jobs/${jobSlug}`,
+    platformJobApply: (jobSlug: string) => `/platform/jobs/${jobSlug}/apply`
   },
   workspace: {
     root: '/workspace',
@@ -88,8 +115,8 @@ export const surfacePaths = {
 
 export function getAuthenticatedHomePath(hasWorkspaceAccess: boolean, hasCompletedOnboarding = true) {
   if (!hasCompletedOnboarding) {
-    return surfacePaths.candidate.profile
+    return surfacePaths.account.profile
   }
 
-  return hasWorkspaceAccess ? surfacePaths.workspace.root : surfacePaths.candidate.home
+  return hasWorkspaceAccess ? surfacePaths.workspace.root : surfacePaths.account.home
 }

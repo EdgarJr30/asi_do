@@ -13,7 +13,7 @@ Inside `app/`, the runtime is still divided by route surface:
 
 ```text
 auth/       access and account recovery flows under `/auth/*`
-candidate/  talent workflows under `/candidate/*`
+candidate/  user account talent workflows under `/account/*`
 workspace/  employer tenant workflows under `/workspace/*`
 admin/      restricted platform console under `/admin/*`
 ```

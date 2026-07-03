@@ -74,7 +74,7 @@ Security includes protecting:
 14. Candidate CV files must stay in a private bucket with ownership-based path policies and signed URL access.
 15. Email workflow processors must authenticate with a server-side secret or equivalent non-browser credential and must keep provider keys only in Edge Function secrets.
 16. Internal QA, foundations, and operational tooling must never be publicly exposed by default in the customer-facing app shell or landing routes.
-17. Protected opportunity discovery, including `/platform/jobs*`, must require approved user status, ASI membership, and active subscription status before returning full job data.
+17. Protected opportunity discovery, including `/account/jobs*`, must require approved user status, ASI membership, and active subscription status before returning full job data. Historical `/platform/jobs*` URLs may redirect there, but must not expose full job data as guest-visible public browsing.
 18. Pastor and regional administrator validation must be form-backed, admin-reviewed, and auditable before elevated access or tenant-operational privileges are granted.
 19. Anonymous database access to job postings, screening questions, saved jobs, and job alerts must remain revoked while opportunity discovery is member-gated.
 20. Pastor and regional administrator evidence files, including cedula and appointment documents, must live in private storage and be readable only by the requester and authorized reviewers.

@@ -39,7 +39,7 @@ test('el pastor ve su cola scoped y aprueba la solicitud de su iglesia', async (
   await expect(page).not.toHaveURL(/\/auth\/sign-in/, { timeout: 20_000 })
 
   // 2. Entra a la cola del pastor
-  await page.goto('/candidate/membership-queue')
+  await page.goto('/account/membership-queue')
 
   await expect(
     page.getByRole('heading', { name: /Solicitudes de membres[ií]a de tus iglesias/i })
@@ -76,7 +76,7 @@ test('un pastor de otra iglesia NO ve las solicitudes ajenas (RLS scoped)', asyn
 
   // Pastor B tiene alcance sobre una iglesia distinta (Gazcue), no la de María/Marcos.
   await signIn(page, PASTOR2_EMAIL, PASTOR2_PASSWORD)
-  await page.goto('/candidate/membership-queue')
+  await page.goto('/account/membership-queue')
 
   // Es pastor, así que ve la cola; pero NO las solicitudes de la iglesia de otro pastor.
   await expect(
