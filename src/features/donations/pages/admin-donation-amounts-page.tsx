@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageLoader } from '@/components/ui/loader'
+import { Pagination } from '@/components/ui/pagination'
 import { StatCard } from '@/components/ui/stat-card'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import {
@@ -24,6 +25,7 @@ import {
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 
 const QUERY_KEY = ['donation-amount-options', 'admin'] as const
+const DONATIONS_PAGE_SIZE = 8
 
 function formatMoney(amount: number, currency: string) {
   return `${currency} ${amount.toLocaleString('es-DO')}`
@@ -44,6 +46,15 @@ export function AdminDonationAmountsPage({ embedded = false }: { embedded?: bool
   const totalRaised = donations
     .filter((donation) => donation.status === 'verified')
     .reduce((sum, donation) => sum + Number(donation.amount), 0)
+  const [donationsPage, setDonationsPage] = useState(0)
+  const donationPageCount = Math.max(1, Math.ceil(donations.length / DONATIONS_PAGE_SIZE))
+  const safeDonationsPage = Math.min(donationsPage, donationPageCount - 1)
+  const paginatedDonations = donations.slice(
+    safeDonationsPage * DONATIONS_PAGE_SIZE,
+    safeDonationsPage * DONATIONS_PAGE_SIZE + DONATIONS_PAGE_SIZE
+  )
+  const firstVisibleDonation = donations.length === 0 ? 0 : safeDonationsPage * DONATIONS_PAGE_SIZE + 1
+  const lastVisibleDonation = Math.min(donations.length, (safeDonationsPage + 1) * DONATIONS_PAGE_SIZE)
 
   function invalidate() {
     void queryClient.invalidateQueries({ queryKey: QUERY_KEY })
@@ -205,34 +216,48 @@ export function AdminDonationAmountsPage({ embedded = false }: { embedded?: bool
                 Aún no se han registrado donaciones.
               </div>
             ) : (
-              <motion.ul variants={gridStagger} initial={shouldReduceMotion ? false : 'hidden'} animate="show" className="space-y-3">
-                {donations.map((donation) => {
-                  const meta = donationStatusMeta(donation.status)
-                  return (
-                    <motion.li key={donation.id} variants={cardReveal} className="rounded-card border border-(--app-border) bg-(--app-surface) p-4">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-(--app-text)">
-                            {formatMoney(Number(donation.amount), donation.currency)}
-                            {donation.custom_amount ? <span className="ml-2 text-xs font-normal text-(--app-text-muted)">(personalizado)</span> : null}
-                          </p>
-                          <p className="mt-0.5 text-xs text-(--app-text-muted)">
-                            {donation.donor_name || donation.donor_email || 'Donante anónimo'} · {donation.order_number}
-                          </p>
-                          <p className="mt-0.5 text-xs text-(--app-text-subtle)">
-                            {new Date(donation.created_at).toLocaleString('es-DO')}
-                            {donation.campaign_slug && donation.campaign_slug !== 'general' ? ` · ${donation.campaign_slug}` : ''}
-                            {donation.authorization_code ? ` · Aut. ${donation.authorization_code}` : ''}
-                          </p>
+              <div className="space-y-4">
+                <motion.ul variants={gridStagger} initial={shouldReduceMotion ? false : 'hidden'} animate="show" className="space-y-3">
+                  {paginatedDonations.map((donation) => {
+                    const meta = donationStatusMeta(donation.status)
+                    return (
+                      <motion.li key={donation.id} variants={cardReveal} className="rounded-card border border-(--app-border) bg-(--app-surface) p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-(--app-text)">
+                              {formatMoney(Number(donation.amount), donation.currency)}
+                              {donation.custom_amount ? <span className="ml-2 text-xs font-normal text-(--app-text-muted)">(personalizado)</span> : null}
+                            </p>
+                            <p className="mt-0.5 text-xs text-(--app-text-muted)">
+                              {donation.donor_name || donation.donor_email || 'Donante anónimo'} · {donation.order_number}
+                            </p>
+                            <p className="mt-0.5 text-xs text-(--app-text-subtle)">
+                              {new Date(donation.created_at).toLocaleString('es-DO')}
+                              {donation.campaign_slug && donation.campaign_slug !== 'general' ? ` · ${donation.campaign_slug}` : ''}
+                              {donation.authorization_code ? ` · Aut. ${donation.authorization_code}` : ''}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className={meta.className}>
+                            {meta.label}
+                          </Badge>
                         </div>
-                        <Badge variant="outline" className={meta.className}>
-                          {meta.label}
-                        </Badge>
-                      </div>
-                    </motion.li>
-                  )
-                })}
-              </motion.ul>
+                      </motion.li>
+                    )
+                  })}
+                </motion.ul>
+
+                <div className="flex flex-col gap-3 border-t border-(--app-border) pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs font-medium text-(--app-text-muted)">
+                    Mostrando {firstVisibleDonation}-{lastVisibleDonation} de {donations.length} donaciones
+                  </p>
+                  <Pagination
+                    page={safeDonationsPage}
+                    totalPages={donationPageCount}
+                    onPageChange={setDonationsPage}
+                    ariaLabel="Paginación de donaciones"
+                  />
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
