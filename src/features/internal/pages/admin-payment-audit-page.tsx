@@ -300,10 +300,10 @@ function CardBrandLogo({ brand }: { brand: string | null }) {
   if (brand === 'VISA') {
     return (
       <span
-        className="inline-flex h-[22px] w-10 items-center justify-center rounded-[5px] border border-[#d7def2] bg-white text-[0.62rem] font-black italic tracking-[0.04em] text-[#1a1f71] shadow-sm"
+        className="inline-flex h-[24px] w-[46px] items-center justify-center rounded-[5px] border border-slate-200 bg-white px-1.5 shadow-sm"
         aria-label="Visa"
       >
-        VISA
+        <img alt="" className="h-4 w-9 object-contain" decoding="async" loading="lazy" src="/payment/visa.webp" />
       </span>
     )
   }
@@ -311,11 +311,10 @@ function CardBrandLogo({ brand }: { brand: string | null }) {
   if (brand === 'MASTERCARD') {
     return (
       <span
-        className="relative inline-flex h-[22px] w-10 items-center justify-center rounded-[5px] border border-[#eed7c8] bg-white shadow-sm"
+        className="inline-flex h-[24px] w-[46px] items-center justify-center rounded-[5px] border border-slate-200 bg-white px-1.5 shadow-sm"
         aria-label="Mastercard"
       >
-        <span className="absolute left-[7px] size-[14px] rounded-full bg-[#eb001b]" />
-        <span className="absolute right-[7px] size-[14px] rounded-full bg-[#f79e1b] mix-blend-multiply" />
+        <img alt="" className="h-5 w-8 object-contain" decoding="async" loading="lazy" src="/payment/mastercard.webp" />
       </span>
     )
   }
