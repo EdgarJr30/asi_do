@@ -18,11 +18,10 @@ export const paymentPolicyLinks = [
   { label: 'Privacidad', to: surfacePaths.institutional.privacy },
   { label: 'Devoluciones y cancelaciones', to: surfacePaths.institutional.refunds },
   { label: 'Entrega del servicio', to: surfacePaths.institutional.delivery },
-  { label: 'Seguridad de pagos', to: surfacePaths.institutional.paymentSecurity },
-  { label: 'Modelo de comprobante', to: surfacePaths.institutional.receiptModel }
+  { label: 'Seguridad de pagos', to: surfacePaths.institutional.paymentSecurity }
 ] as const
 
-export type PaymentPolicyKind = 'terms' | 'privacy' | 'refunds' | 'delivery' | 'security' | 'receipt'
+export type PaymentPolicyKind = 'terms' | 'privacy' | 'refunds' | 'delivery' | 'security'
 
 export const paymentPolicyContent: Record<
   PaymentPolicyKind,
@@ -176,32 +175,6 @@ export const paymentPolicyContent: Record<
         body: [
           'Cuando el emisor lo requiere, la transacción puede usar autenticación 3D Secure mediante Visa Secure o Mastercard ID Check.',
           'El tarjetahabiente debe seguir las instrucciones del banco emisor para completar la autenticación.'
-        ]
-      }
-    ]
-  },
-  receipt: {
-    eyebrow: 'Comprobante posterior al pago',
-    title: 'Modelo de recibo o comprobante de pago',
-    description:
-      'Este es el modelo de información que se muestra o envía al cliente después de una transacción aprobada.',
-    sections: [
-      {
-        title: 'Campos del comprobante',
-        body: [
-          `Comercio: ${merchantCompliance.businessName}`,
-          'Tipo: Membresía, renovación o donación',
-          'Número de orden: código único generado para la transacción',
-          'Monto: expresado en RD$ / DOP$',
-          'Resultado: aprobado, declinado, cancelado o en proceso',
-          'Código de autorización, referencia/RRN, fecha y hora cuando AZUL los devuelve'
-        ]
-      },
-      {
-        title: 'Entrega del comprobante',
-        body: [
-          'El comprobante se muestra en pantalla al volver de AZUL cuando la transacción fue aprobada.',
-          'El usuario puede descargar o compartir el comprobante desde el panel de membresía o desde la confirmación de donación.'
         ]
       }
     ]

@@ -155,14 +155,6 @@ export const institutionalRoutes: RouteObject[] = [
         )
       },
       {
-        path: 'payment-receipt-model',
-        element: (
-          <RouteSuspense>
-            <PaymentPolicyPage kind="receipt" />
-          </RouteSuspense>
-        )
-      },
-      {
         path: 'who-we-are',
         element: (
           <RouteSuspense>

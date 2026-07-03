@@ -23,7 +23,6 @@ export const surfacePaths = {
     refunds: '/refunds-cancellations',
     delivery: '/delivery-policy',
     paymentSecurity: '/payment-security',
-    receiptModel: '/payment-receipt-model',
     whoWeAre: '/who-we-are',
     contactUs: '/contact-us',
     directory: '/directory',

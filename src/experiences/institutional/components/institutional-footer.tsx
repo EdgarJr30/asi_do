@@ -139,10 +139,6 @@ export function InstitutionalFooter({
                     </Link>
                   ))}
                 </div>
-                <div className="mt-4 rounded-card bg-white/6 px-3.5 py-3 text-xs leading-5 text-white/72">
-                  Servicio al Cliente: {merchantCompliance.email} ·{' '}
-                  {merchantCompliance.phone}
-                </div>
               </div>
             </div>
           </div>

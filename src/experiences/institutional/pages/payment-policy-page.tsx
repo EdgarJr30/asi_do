@@ -12,7 +12,6 @@ import {
 export function PaymentPolicyPage({ kind }: { kind: PaymentPolicyKind }) {
   const content = paymentPolicyContent[kind]
   const showSecurityExample = kind === 'security'
-  const showReceiptModel = kind === 'receipt'
 
   return (
     <div>
@@ -74,8 +73,6 @@ export function PaymentPolicyPage({ kind }: { kind: PaymentPolicyKind }) {
                 />
               </InstitutionalCard>
             ) : null}
-
-            {showReceiptModel ? <ReceiptModelCard /> : null}
           </div>
 
           <aside className="rounded-card-lg border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(0,47,110,0.05)]">
@@ -112,32 +109,5 @@ function PolicyMeta({ label, value }: { label: string; value: string }) {
       <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</dt>
       <dd className="mt-1 font-semibold leading-6 text-(--asi-text)">{value}</dd>
     </div>
-  )
-}
-
-function ReceiptModelCard() {
-  const rows = [
-    ['Comercio', merchantCompliance.businessName],
-    ['Tipo', 'Membresía / renovación / donación'],
-    ['Número de orden', 'ASI-260624-1234abcd'],
-    ['Monto', 'RD$ 1,500'],
-    ['Resultado', 'Aprobado'],
-    ['Autorización', 'OK0190'],
-    ['Referencia', '2026062415220044297821'],
-    ['Fecha', '24 de junio de 2026, 3:22 p. m.']
-  ]
-
-  return (
-    <InstitutionalCard className="bg-white/92" hoverMotion={false}>
-      <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">Ejemplo de comprobante</h2>
-      <dl className="mt-4 space-y-1.5 rounded-card border border-slate-200 bg-slate-50 p-4 text-sm">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex items-start justify-between gap-4 border-t border-slate-200 pt-2 first:border-t-0 first:pt-0">
-            <dt className="text-slate-500">{label}</dt>
-            <dd className="text-right font-semibold text-slate-900">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    </InstitutionalCard>
   )
 }
