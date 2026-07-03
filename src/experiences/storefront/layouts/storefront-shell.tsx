@@ -54,43 +54,38 @@ export function StorefrontShell() {
       >
         <div
           className={cn(
-            'mx-auto px-4 sm:px-6 lg:px-8',
-            isLanding ? 'max-w-392 pt-3 sm:pt-5' : 'max-w-7xl'
+            'mx-auto',
+            isLanding
+              ? 'max-w-[1600px] px-4 pt-4 sm:px-6 sm:pt-6 lg:px-[1.4rem]'
+              : 'max-w-7xl px-4 sm:px-6 lg:px-8'
           )}
         >
           <div
             className={cn(
               'flex items-center justify-between gap-3 sm:gap-5',
               isLanding
-                ? 'rounded-card-lg border bg-(--app-surface-elevated)/96 px-3 py-2.5 shadow-(--app-shadow-floating) backdrop-blur-xl sm:rounded-card-lg sm:px-5 sm:py-3'
+                ? 'rounded-full border bg-(--app-surface-elevated)/90 px-3 py-2 shadow-(--app-shadow-card) backdrop-blur-xl sm:px-4'
                 : 'py-5'
             )}
           >
             <Link
-              className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4 text-left"
+              className="flex min-w-0 items-center gap-2.5 text-left"
               to={surfacePaths.storefront.home}
             >
-              <span className="shrink-0 rounded-card border border-white/70 bg-white/92 px-2.5 py-2 shadow-(--app-shadow-card) backdrop-blur sm:rounded-card-lg sm:px-3 sm:py-2 dark:border-white/10 dark:bg-[#0f1831]">
-                <BrandLockup className="w-16 sm:w-22" surface="auto" />
+              <BrandLockup className="w-14 shrink-0 sm:w-16" surface="auto" />
+              <span className="hidden text-sm font-semibold tracking-tight text-(--app-text) sm:block">
+                Plataforma ASI
               </span>
-              <div className="hidden min-w-0 md:block lg:min-w-92 xl:min-w-108">
-                <p className="text-sm font-semibold tracking-tight text-(--app-text)">
-                  Plataforma ASI
-                </p>
-                <p className="mt-0.5 whitespace-nowrap text-xs text-(--app-text-muted)">
-                  Talento, vacantes y trabajo en equipo en una sola plataforma
-                </p>
-              </div>
             </Link>
 
             <nav
               aria-label="Public"
-              className="hidden items-center gap-1 rounded-full border bg-(--app-surface)/84 p-1 shadow-(--app-shadow-card) backdrop-blur lg:flex"
+              className="hidden items-center gap-0.5 lg:flex"
             >
               {storefrontNavigation.map((item) => (
                 <Link
                   key={item.label}
-                  className="rounded-full px-5 py-2 text-sm font-medium whitespace-nowrap text-(--app-text-muted) transition hover:bg-(--app-canvas) hover:text-(--app-text)"
+                  className="rounded-full px-3.5 py-2 text-[13px] font-medium whitespace-nowrap text-(--app-text-muted) transition hover:bg-(--app-surface-muted) hover:text-(--app-text)"
                   to={item.to}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -99,10 +94,10 @@ export function StorefrontShell() {
               ))}
             </nav>
 
-            <div className="hidden shrink-0 items-center gap-2 lg:flex">
+            <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
               <ThemeToggle compact className="shadow-none" />
               <Button
-                className="rounded-full px-5"
+                className="h-9 rounded-full px-3.5 text-[13px]"
                 variant="ghost"
                 onClick={() => void navigate(surfacePaths.institutional.home)}
               >
@@ -110,7 +105,7 @@ export function StorefrontShell() {
               </Button>
               {showGuestAction ? (
                 <Button
-                  className="rounded-full px-5"
+                  className="h-9 rounded-full px-4 text-[13px]"
                   variant="outline"
                   disabled={PLATFORM_REGISTRATION_LOCKED}
                   onClick={() => void navigate(surfacePaths.auth.signUp)}
@@ -119,7 +114,7 @@ export function StorefrontShell() {
                 </Button>
               ) : null}
               <Button
-                className="rounded-full px-5"
+                className="h-9 rounded-full px-4 text-[13px]"
                 onClick={() => void navigate(primaryAction.href)}
               >
                 {primaryAction.label}
@@ -131,7 +126,7 @@ export function StorefrontShell() {
               <Button
                 aria-controls="public-mobile-menu"
                 aria-expanded={mobileMenuOpen}
-                className="h-11 w-11 rounded-full p-0"
+                className="h-10 w-10 rounded-full p-0"
                 variant="outline"
                 onClick={() => setMobileMenuOpen((current) => !current)}
               >
