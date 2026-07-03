@@ -77,12 +77,35 @@ function normalizeCardBrand(raw: string | null): string | null {
     return 'VISA'
   }
   if (value.includes('MASTER') || value === 'MC') {
-    return 'MC'
+    return 'MASTERCARD'
   }
   if (value.includes('AMEX') || value.includes('AMERICAN')) {
     return 'AMEX'
   }
   return value.slice(0, 8)
+}
+
+function inferCardBrandFromNumber(maskedCard: string | null): string | null {
+  if (!maskedCard) {
+    return null
+  }
+
+  const digits = maskedCard.replace(/\D/g, '')
+  if (digits.startsWith('4')) {
+    return 'VISA'
+  }
+
+  const firstTwo = Number(digits.slice(0, 2))
+  const firstSix = Number(digits.slice(0, 6))
+  if ((firstTwo >= 51 && firstTwo <= 55) || (firstSix >= 222100 && firstSix <= 272099)) {
+    return 'MASTERCARD'
+  }
+
+  if (digits.startsWith('34') || digits.startsWith('37')) {
+    return 'AMEX'
+  }
+
+  return null
 }
 
 function maskCard(raw: string | null): string | null {
@@ -170,8 +193,8 @@ function normalizeMembershipPayment(
   memberById: Map<string, Pick<Tables<'users'>, 'full_name' | 'email'>>
 ): FinanceAuditTransaction {
   const payload = isRecord(row.gateway_payload) ? row.gateway_payload : fallbackPayload(row)
-  const cardBrand = normalizeCardBrand(getString(payload, ['CardBrand', 'DataVaultBrand', 'Brand']))
   const cardNumber = maskCard(getString(payload, ['CardNumber', 'DataVaultCardNumber', 'MaskedCardNumber', 'card_number']))
+  const cardBrand = normalizeCardBrand(getString(payload, ['CardBrand', 'DataVaultBrand', 'Brand'])) ?? inferCardBrandFromNumber(cardNumber)
   const member = memberById.get(row.member_user_id)
 
   return {
@@ -197,8 +220,8 @@ function normalizeMembershipPayment(
 
 function normalizeDonation(row: DonationRow): FinanceAuditTransaction {
   const payload = isRecord(row.gateway_payload) ? row.gateway_payload : fallbackPayload(row)
-  const cardBrand = normalizeCardBrand(getString(payload, ['CardBrand', 'DataVaultBrand', 'Brand']))
   const cardNumber = maskCard(getString(payload, ['CardNumber', 'DataVaultCardNumber', 'MaskedCardNumber', 'card_number']))
+  const cardBrand = normalizeCardBrand(getString(payload, ['CardBrand', 'DataVaultBrand', 'Brand'])) ?? inferCardBrandFromNumber(cardNumber)
 
   return {
     id: `donation:${row.id}`,

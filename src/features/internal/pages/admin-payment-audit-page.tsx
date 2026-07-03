@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageLoader } from '@/components/ui/loader'
-import { cn } from '@/lib/utils/cn'
 import {
   AdminCard,
   AdminEmpty,
@@ -95,19 +94,6 @@ function transactionSearchText(transaction: FinanceAuditTransaction) {
     .filter(Boolean)
     .join(' ')
     .toLowerCase()
-}
-
-function cardBrandClass(brand: string | null) {
-  if (brand === 'VISA') {
-    return 'bg-[#1a1f71]'
-  }
-  if (brand === 'MC') {
-    return 'bg-[#eb5b1e]'
-  }
-  if (brand === 'AMEX') {
-    return 'bg-[#1e7fc2]'
-  }
-  return 'bg-slate-700 dark:bg-slate-500'
 }
 
 export function AdminPaymentAuditPage() {
@@ -303,12 +289,49 @@ function AuditMobileRow({
 function PaymentCardCell({ transaction }: { transaction: FinanceAuditTransaction }) {
   return (
     <div className="flex items-center gap-2">
-      <span className={cn('inline-flex h-5 w-[30px] items-center justify-center rounded-[4px] text-[0.55rem] font-extrabold text-white', cardBrandClass(transaction.cardBrand))}>
-        {transaction.cardBrand ?? 'CARD'}
-      </span>
+      <CardBrandLogo brand={transaction.cardBrand} />
       <span className="font-mono text-xs font-semibold tabular-nums text-(--app-text)">{transaction.maskedCard ?? '—'}</span>
       {transaction.hasSecureToken ? <LockKeyhole className="size-3.5 text-emerald-600 dark:text-emerald-300" aria-label="Token seguro DataVault" /> : null}
     </div>
+  )
+}
+
+function CardBrandLogo({ brand }: { brand: string | null }) {
+  if (brand === 'VISA') {
+    return (
+      <span
+        className="inline-flex h-[22px] w-10 items-center justify-center rounded-[5px] border border-[#d7def2] bg-white text-[0.62rem] font-black italic tracking-[0.04em] text-[#1a1f71] shadow-sm"
+        aria-label="Visa"
+      >
+        VISA
+      </span>
+    )
+  }
+
+  if (brand === 'MASTERCARD') {
+    return (
+      <span
+        className="relative inline-flex h-[22px] w-10 items-center justify-center rounded-[5px] border border-[#eed7c8] bg-white shadow-sm"
+        aria-label="Mastercard"
+      >
+        <span className="absolute left-[7px] size-[14px] rounded-full bg-[#eb001b]" />
+        <span className="absolute right-[7px] size-[14px] rounded-full bg-[#f79e1b] mix-blend-multiply" />
+      </span>
+    )
+  }
+
+  if (brand === 'AMEX') {
+    return (
+      <span className="inline-flex h-[22px] w-10 items-center justify-center rounded-[5px] bg-[#1e7fc2] text-[0.52rem] font-black text-white shadow-sm" aria-label="American Express">
+        AMEX
+      </span>
+    )
+  }
+
+  return (
+    <span className="inline-flex h-[22px] w-10 items-center justify-center rounded-[5px] bg-slate-700 text-[0.5rem] font-bold text-white shadow-sm dark:bg-slate-500" aria-label="Marca de tarjeta no identificada">
+      CARD
+    </span>
   )
 }
 
