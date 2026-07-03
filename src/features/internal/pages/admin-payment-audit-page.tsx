@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PageLoader } from '@/components/ui/loader'
+import { Pagination } from '@/components/ui/pagination'
 import {
   AdminCard,
   AdminEmpty,
@@ -25,6 +26,7 @@ type AuditFilter = 'all' | FinanceAuditStatus
 
 const AUDIT_QUERY_KEY = ['admin', 'finance', 'azul-audit'] as const
 const EMPTY_TRANSACTIONS: FinanceAuditTransaction[] = []
+const PAGE_SIZE = 10
 
 const statusMeta: Record<FinanceAuditStatus, { label: string; className: string }> = {
   approved: {
@@ -99,6 +101,7 @@ function transactionSearchText(transaction: FinanceAuditTransaction) {
 export function AdminPaymentAuditPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<AuditFilter>('all')
+  const [page, setPage] = useState(0)
   const [selected, setSelected] = useState<FinanceAuditTransaction | null>(null)
 
   const auditQuery = useQuery({
@@ -129,6 +132,22 @@ export function AdminPaymentAuditPage() {
     })
   }, [filter, search, transactions])
 
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages - 1)
+  const paginatedTransactions = filteredTransactions.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
+  const firstVisible = filteredTransactions.length === 0 ? 0 : safePage * PAGE_SIZE + 1
+  const lastVisible = Math.min(filteredTransactions.length, (safePage + 1) * PAGE_SIZE)
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    setPage(0)
+  }
+
+  const handleFilterChange = (value: AuditFilter) => {
+    setFilter(value)
+    setPage(0)
+  }
+
   return (
     <div className="space-y-5">
       <AdminStatBar columns={4}>
@@ -152,10 +171,10 @@ export function AdminPaymentAuditPage() {
                 className="pl-9"
                 placeholder="Buscar por tracking, orden AZUL, autorizacion, tarjeta o persona"
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => handleSearchChange(event.target.value)}
               />
             </label>
-            <AdminTabs value={filter} tabs={filterTabs} onChange={setFilter} />
+            <AdminTabs value={filter} tabs={filterTabs} onChange={handleFilterChange} />
           </div>
 
           {auditQuery.isLoading ? (
@@ -185,7 +204,7 @@ export function AdminPaymentAuditPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTransactions.map((transaction) => (
+                    {paginatedTransactions.map((transaction) => (
                       <AuditTableRow key={transaction.id} transaction={transaction} onOpen={setSelected} />
                     ))}
                   </tbody>
@@ -193,9 +212,21 @@ export function AdminPaymentAuditPage() {
               </div>
 
               <div className="space-y-3 lg:hidden">
-                {filteredTransactions.map((transaction) => (
+                {paginatedTransactions.map((transaction) => (
                   <AuditMobileRow key={transaction.id} transaction={transaction} onOpen={setSelected} />
                 ))}
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-(--app-border) pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs font-medium text-(--app-text-muted)">
+                  Mostrando {firstVisible}-{lastVisible} de {filteredTransactions.length} transacciones
+                </p>
+                <Pagination
+                  page={safePage}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  ariaLabel="Paginación del histórico de pagos AZUL"
+                />
               </div>
             </>
           )}

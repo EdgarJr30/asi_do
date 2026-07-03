@@ -392,6 +392,9 @@ Do not regress dense `/admin/*` operational modules back into a narrow centered 
 ### R-108 — Error review list must stay paginated
 Do not let `/admin/errors` render every matching error log as one long unbounded list. The error review module must keep a bounded page size and use the shared `Pagination` primitive after filtering so open, resolved, and all-error views remain scannable as `app_error_logs` grows.
 
+### R-109 — AZUL payment audit must stay paginated
+Do not let `/admin/finances?tab=audit` render the full AZUL payment history as one long unbounded table or mobile list. The audit view must paginate the filtered/search results with the shared `Pagination` primitive so membership and donation payment history remains scannable as transaction volume grows.
+
 ---
 
 ## Maintenance rule
