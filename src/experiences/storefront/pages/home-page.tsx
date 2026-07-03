@@ -8,14 +8,12 @@ import {
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
-  BriefcaseBusiness,
   ChevronDown,
   Building2,
   Check,
   CircleHelp,
   FileText,
   HandHeart,
-  HeartHandshake,
   Layers3,
   Search,
   WalletCards,
@@ -246,33 +244,6 @@ const mobileWorkspaceItems = [
     meta: 'Híbrido · 3 candidatos',
     state: 'Siguiente',
     tone: 'neutral',
-  },
-] as const;
-
-const valueBentoCards = [
-  {
-    title: 'Atracción que convierte',
-    body: 'Muestra tus vacantes de forma clara y dale al talento un camino rápido para aplicar.',
-    icon: BriefcaseBusiness,
-    image:
-      'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1200&h=900&q=80',
-    alt: 'Equipo revisando una estrategia de trabajo en una oficina',
-  },
-  {
-    title: 'Equipo alineado',
-    body: 'Coordinadores y líderes encuentran la misma información sin perseguir contexto por varios canales.',
-    icon: Layers3,
-    image:
-      'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=1200&h=900&q=80',
-    alt: 'Equipo colaborando en una oficina abierta',
-  },
-  {
-    title: 'Seguimiento con ritmo',
-    body: 'Cada oportunidad avanza con claridad para que nadie se quede preguntando qué sigue.',
-    icon: HeartHandshake,
-    image:
-      'https://images.unsplash.com/photo-1485217988980-11786ced9454?auto=format&fit=crop&w=1200&h=900&q=80',
-    alt: 'Profesional trabajando desde una laptop con contexto claro',
   },
 ] as const;
 
@@ -744,14 +715,6 @@ export function HomePage() {
         disabled: PLATFORM_REGISTRATION_LOCKED,
       };
 
-  function scrollToSection(sectionId: string) {
-    const section = document.getElementById(sectionId);
-    section?.scrollIntoView({
-      behavior: shouldReduceMotion ? 'auto' : 'smooth',
-      block: 'start',
-    });
-  }
-
   function togglePricingComparison() {
     setPricingComparisonOpen((current) => !current);
   }
@@ -1023,192 +986,6 @@ export function HomePage() {
                 ))}
               </div>
             </LandingInteractiveSurface>
-          </div>
-        </div>
-      </section>
-
-      <section className="tm-landing-section-tight overflow-hidden">
-        <div className="mx-auto max-w-392 px-4 sm:px-6 lg:px-8">
-          <LandingReveal className="max-w-2xl text-left lg:max-w-2xl" y={24}>
-            <Badge className="w-fit" variant="outline">
-              Valor del producto
-            </Badge>
-            <h2 className="mt-5 max-w-[17ch] text-3xl font-semibold tracking-tight text-balance text-(--app-text) sm:text-4xl lg:max-w-[16ch]">
-              Así se entiende mejor el producto
-            </h2>
-            <p className="mt-4 max-w-152 text-base leading-8 text-(--app-text-muted) sm:text-lg">
-              Menos explicación abstracta y más escenas claras de cómo se ve
-              publicar, colaborar y mover procesos en la plataforma.
-            </p>
-          </LandingReveal>
-
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:mt-10 sm:gap-5 lg:grid-cols-6">
-            <LandingInteractiveSurface
-              className="relative lg:col-span-3"
-              delay={0.02}
-              hoverShadow="0 30px 68px rgba(18, 31, 68, 0.16)"
-            >
-              <div className="absolute inset-0 rounded-card-lg bg-white/70 dark:bg-white/6" />
-              <div className="relative overflow-hidden rounded-card-lg border bg-(--app-surface)/94 shadow-(--app-shadow-floating) backdrop-blur-sm">
-                <div className="relative h-72 overflow-hidden sm:h-80">
-                  <img
-                    alt="Equipo revisando una estrategia de contratación"
-                    className="block h-full w-full object-cover"
-                    src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1600&h=980&q=80"
-                  />
-                  <div className="absolute inset-0 bg-linear-to-t from-[rgba(9,17,39,0.64)] via-[rgba(9,17,39,0.18)] to-transparent" />
-                  <div className="absolute left-4 top-4 rounded-full border border-white/30 bg-white/14 px-3 py-1 text-xs font-semibold text-white backdrop-blur sm:left-5 sm:top-5">
-                    Publicación más clara
-                  </div>
-                  <div className="absolute inset-x-4 bottom-4 rounded-card-lg border border-white/18 bg-[rgba(12,21,42,0.72)] p-4 text-white shadow-(--app-shadow-floating) backdrop-blur sm:inset-x-5 sm:bottom-5">
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-white/70">
-                      Vacantes que convierten
-                    </p>
-                    <p className="mt-2 text-xl font-semibold tracking-tight">
-                      Más contexto desde el primer vistazo
-                    </p>
-                    <p className="mt-2 max-w-[34ch] text-sm leading-6 text-white/78">
-                      Roles bien presentados, mensaje consistente y acceso
-                      visible para aplicar sin fricción.
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {['Remoto', 'Brief claro', 'Aplicación visible'].map(
-                        (tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-full border border-white/14 bg-white/10 px-3 py-1 text-xs font-medium text-white/88"
-                          >
-                            {tag}
-                          </span>
-                        )
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
-            </LandingInteractiveSurface>
-
-            <LandingInteractiveSurface
-              className="relative lg:col-span-3"
-              delay={0.06}
-              hoverShadow="0 30px 68px rgba(18, 31, 68, 0.16)"
-            >
-              <div className="absolute inset-0 rounded-card-lg bg-white/70 dark:bg-white/6" />
-              <div className="relative overflow-hidden rounded-card-lg border bg-(--app-surface)/94 shadow-(--app-shadow-floating) backdrop-blur-sm">
-                <div className="relative h-72 overflow-hidden sm:h-80">
-                  <img
-                    alt="Equipo colaborando en una oficina moderna"
-                    className="block h-full w-full object-cover"
-                    src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=1600&h=980&q=80"
-                  />
-                  <div className="absolute inset-0 bg-linear-to-t from-[rgba(9,17,39,0.68)] via-[rgba(9,17,39,0.18)] to-transparent" />
-                  <div className="absolute inset-x-4 top-4 rounded-card-lg border border-white/18 bg-[rgba(12,21,42,0.72)] p-4 text-white backdrop-blur sm:inset-x-5 sm:top-5">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-white/70">
-                          Equipo alineado
-                        </p>
-                        <p className="mt-1 text-lg font-semibold tracking-tight">
-                          Comentarios donde toca
-                        </p>
-                      </div>
-                      <div className="hidden items-center gap-2 sm:flex">
-                        <span className="size-2 rounded-full bg-primary-300" />
-                        <span className="size-2 rounded-full bg-secondary-300" />
-                        <span className="size-2 rounded-full bg-peach-300" />
-                      </div>
-                    </div>
-                    <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                      {[
-                        'Feedback compartido',
-                        'Decisión visible',
-                        'Siguiente paso claro',
-                      ].map((item) => (
-                        <div
-                          key={item}
-                          className="rounded-card border border-white/12 bg-white/10 px-3 py-2 text-sm font-medium text-white/88"
-                        >
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="absolute bottom-4 right-4 rounded-card-lg border border-white/18 bg-[rgba(12,21,42,0.72)] p-4 text-white shadow-(--app-shadow-card) backdrop-blur sm:bottom-5 sm:right-5">
-                    <p className="text-sm font-semibold">
-                      Una sola conversación
-                    </p>
-                    <p className="mt-1 max-w-[20ch] text-sm leading-6 text-white/76">
-                      Coordinadores y líderes avanzan sobre la misma información.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
-            </LandingInteractiveSurface>
-
-            {valueBentoCards.map((panel, panelIndex) => {
-              const Icon = panel.icon;
-
-              return (
-                <LandingInteractiveSurface
-                  key={panel.title}
-                  className="relative lg:col-span-2"
-                  delay={panelIndex * 0.05}
-                  hoverShadow="0 24px 56px rgba(18, 31, 68, 0.14)"
-                >
-                  <div className="absolute inset-0 rounded-card-lg bg-white/70 dark:bg-white/6" />
-                  <div className="relative flex h-full flex-col overflow-hidden rounded-card-lg border bg-(--app-surface)/94 shadow-(--app-shadow-card) backdrop-blur-sm">
-                    <div className="relative h-52 overflow-hidden">
-                      <img
-                        alt={panel.alt}
-                        className="block h-full w-full object-cover"
-                        src={panel.image}
-                      />
-                      <div className="absolute inset-0 bg-linear-to-t from-[rgba(9,17,39,0.58)] via-[rgba(9,17,39,0.1)] to-transparent" />
-                      <div className="absolute left-4 top-4 flex size-11 items-center justify-center rounded-card bg-white/84 shadow-(--app-shadow-card)">
-                        <Icon className="size-5 text-primary-700 dark:text-primary-200" />
-                      </div>
-                    </div>
-                    <div className="p-5 sm:p-6">
-                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-(--app-text-subtle)">
-                        {panelIndex === 0
-                          ? 'Atracción'
-                          : panelIndex === 1
-                          ? 'Colaboración'
-                          : 'Seguimiento'}
-                      </p>
-                      <p className="mt-3 text-2xl font-semibold tracking-tight text-(--app-text)">
-                        {panel.title}
-                      </p>
-                      <p className="mt-3 text-base leading-7 text-(--app-text-muted)">
-                        {panel.body}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="pointer-events-none absolute inset-0 rounded-card-lg shadow-(--app-shadow-card) outline-1 outline-black/5 dark:outline-white/10" />
-                </LandingInteractiveSurface>
-              );
-            })}
-          </div>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button
-              className="hover:shadow-[0_24px_44px_rgba(43,69,143,0.34)]"
-              disabled={primaryAction.disabled}
-              title={primaryAction.disabled ? PLATFORM_REGISTRATION_LOCKED_MESSAGE : undefined}
-              onClick={() => void navigate(primaryAction.href)}
-            >
-              {primaryAction.label}
-              <ArrowRight className="size-4" />
-            </Button>
-            <Button
-              className="hover:border-primary-400 hover:bg-white hover:shadow-[0_18px_34px_rgba(15,23,42,0.12)]"
-              variant="outline"
-              onClick={() => scrollToSection('faq')}
-            >
-              Resolver dudas
-            </Button>
           </div>
         </div>
       </section>
