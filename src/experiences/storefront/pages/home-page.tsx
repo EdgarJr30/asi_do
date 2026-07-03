@@ -362,10 +362,6 @@ const pricingSections = [
     name: 'Publicación',
     features: [
       {
-        name: 'Oportunidades para miembros',
-        tiers: { Starter: true, Growth: true, Scale: true },
-      },
-      {
         name: 'Vacantes activas incluidas',
         tiers: { Starter: '2', Growth: '10', Scale: 'Ilimitadas' },
       },
@@ -457,13 +453,6 @@ const footerNavigation = [
   { label: 'FAQ', section: 'faq' },
   { label: 'Jobs', route: surfacePaths.public.jobs },
   { label: PLATFORM_REGISTRATION_LOCKED ? 'Registro cerrado' : 'Crear cuenta', route: '/auth/sign-up', disabled: PLATFORM_REGISTRATION_LOCKED },
-] as const;
-
-const footerSignals = [
-  { label: 'Lista para móvil', icon: Smartphone },
-  { label: 'Oportunidades para miembros', icon: BriefcaseBusiness },
-  { label: 'Perfiles reutilizables', icon: Layers3 },
-  { label: 'Equipos coordinados', icon: ShieldCheck },
 ] as const;
 
 function renderTierValue(value: boolean | string, highlighted: boolean) {
@@ -2163,33 +2152,9 @@ export function HomePage() {
             )}
           </nav>
 
-          <div className="mt-12 flex flex-wrap justify-center gap-4">
-            {footerSignals.map((item, index) => {
-              const Icon = item.icon;
-
-              return (
-                <LandingInteractiveSurface
-                  key={item.label}
-                  className="inline-flex"
-                  delay={index * 0.03}
-                  hoverScale={1.01}
-                  hoverY={-3}
-                >
-                  <div className="inline-flex items-center gap-3 rounded-full border border-white/8 bg-(--app-surface) px-4 py-2.5 text-sm text-(--app-text-muted) shadow-(--app-shadow-card)">
-                    <span className="flex size-7 items-center justify-center rounded-full bg-primary-500/10 ring-1 ring-inset ring-primary-300/14">
-                      <Icon className="size-3.5 text-primary-300" />
-                    </span>
-                    <span className="leading-6">{item.label}</span>
-                  </div>
-                </LandingInteractiveSurface>
-              );
-            })}
-          </div>
-
           <p className="mt-10 text-center text-sm leading-6 text-(--app-text-muted)">
-            &copy; {footerYear} ASI Rep. Dominicana. Oportunidades para miembros,
-            perfiles reutilizables y trabajo en equipo en una experiencia de
-            selección mucho más clara.
+            &copy; {footerYear} ASI Rep. Dominicana. Una experiencia de
+            selección clara para candidatos, empresas y equipos.
           </p>
         </LandingReveal>
       </footer>
