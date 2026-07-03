@@ -165,8 +165,8 @@ function LandingInteractiveSurface({
 
 const heroGalleryColumns = [
   {
-    offsetClassName: 'pt-14 sm:pt-24 lg:pt-24',
-    widthClassName: 'w-[4.25rem] sm:w-32 lg:w-48',
+    offsetClassName: 'pt-10 sm:pt-20 lg:pt-24',
+    widthClassName: 'w-24 sm:w-40 lg:w-52',
     items: [
       {
         src: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=700&q=80',
@@ -176,8 +176,8 @@ const heroGalleryColumns = [
     ],
   },
   {
-    offsetClassName: 'pt-4 sm:pt-10 lg:pt-10',
-    widthClassName: 'w-[4.75rem] sm:w-36 lg:w-56',
+    offsetClassName: 'pt-0',
+    widthClassName: 'w-28 sm:w-44 lg:w-64',
     items: [
       {
         src: 'https://images.unsplash.com/photo-1485217988980-11786ced9454?auto=format&fit=crop&w=700&q=80',
@@ -187,13 +187,14 @@ const heroGalleryColumns = [
       {
         src: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=700&q=80',
         alt: 'Equipo colaborando en una oficina abierta',
-        className: 'aspect-[4/5]',
+        className:
+          'aspect-[4/5] sm:aspect-[16/10] sm:w-[132%] sm:-ml-[16%] sm:max-w-none',
       },
     ],
   },
   {
-    offsetClassName: 'pt-0 sm:pt-4 lg:pt-0',
-    widthClassName: 'w-[4.25rem] sm:w-32 lg:w-48',
+    offsetClassName: 'pt-14 sm:pt-24 lg:pt-28',
+    widthClassName: 'w-24 sm:w-40 lg:w-52',
     items: [
       {
         src: 'https://images.unsplash.com/photo-1670272504528-790c24957dda?auto=format&fit=crop&w=700&q=80',
@@ -384,27 +385,27 @@ const pricingSections = [
 
 const faqs = [
   {
-    question: 'Qué hace diferente a ASI?',
+    question: '¿Qué hace diferente a ASI?',
     answer:
       'Reúne candidatos, vacantes y trabajo en equipo en una experiencia más clara para aplicar, contratar y dar seguimiento sin tantas vueltas.',
   },
   {
-    question: 'Pueden participar candidatos y empresas en la misma plataforma?',
+    question: '¿Pueden participar candidatos y empresas en la misma plataforma?',
     answer:
       'Sí. El producto está pensado para que el talento y los equipos trabajen en el mismo ecosistema con recorridos claros para cada tipo de usuario.',
   },
   {
-    question: 'Qué pasa si más adelante quiero sumar a mi empresa?',
+    question: '¿Qué pasa si más adelante quiero sumar a mi empresa?',
     answer:
       'Puedes empezar con tu cuenta personal y después pedir acceso para tu empresa cuando quieras abrir vacantes y trabajar con tu equipo.',
   },
   {
-    question: 'Puedo usarla cómodamente desde el teléfono?',
+    question: '¿Puedo usarla cómodamente desde el teléfono?',
     answer:
       'Sí. La experiencia está pensada para que descubrir vacantes, revisar perfiles y mover procesos se sienta natural también en móvil.',
   },
   {
-    question: 'La sección de donación o sponsorship ya procesa pagos?',
+    question: '¿La sección de donación o sponsorship ya procesa pagos?',
     answer:
       'Todavía no. Esa superficie ya está visible para validar la experiencia comercial, pero el procesamiento de pagos sigue desactivado por ahora.',
   },
@@ -593,7 +594,7 @@ function HeroCollage({
         </motion.div>
       </motion.div>
 
-      <motion.div className="absolute right-0 top-44 hidden md:block">
+      <motion.div className="absolute right-0 top-28 hidden md:block">
         <motion.div
           className="rounded-card border bg-white/90 px-4 py-3 shadow-(--app-shadow-card) backdrop-blur dark:bg-(--app-surface)/90"
           animate={
@@ -643,18 +644,18 @@ function StorefrontHero({
   shouldReduceMotion: boolean | null;
 }) {
   return (
-    <section className="relative isolate overflow-hidden bg-[#f6f8fc]">
+    <section className="relative isolate overflow-hidden bg-(--app-canvas)">
       <LandingReveal
         className="mx-auto grid min-w-0 max-w-[1600px] gap-10 px-4 pb-18 pt-40 sm:px-6 sm:pt-44 min-[981px]:grid-cols-[minmax(0,1fr)_760px] min-[981px]:items-center min-[981px]:gap-[80px] min-[981px]:px-10 min-[981px]:pb-[104px] min-[981px]:pt-48"
         y={28}
       >
         <div className="min-w-0 max-w-[560px] min-[981px]:max-w-[600px]">
-          <h1 className="text-[44px] leading-[1.02] font-bold tracking-[-0.03em] text-balance text-[#16223c] min-[981px]:text-[60px]">
+          <h1 className="text-[44px] leading-[1.02] font-bold tracking-[-0.03em] text-balance text-(--app-text) min-[981px]:text-[60px]">
             Vacantes, talento y selección{' '}
-            <span className="text-[#2d52a8]">en un solo lugar.</span>
+            <span className="text-[#2d52a8] dark:text-[#7c9cf0]">en un solo lugar.</span>
           </h1>
 
-          <p className="mt-6 max-w-[500px] text-[17px] leading-[1.6] text-[#5a6987] min-[981px]:text-[18px]">
+          <p className="mt-6 max-w-[500px] text-[17px] leading-[1.6] text-(--app-text-muted) min-[981px]:text-[18px]">
             Reúne vacantes, feedback y seguimiento en una sola experiencia, con
             más orden, más confianza y mejor colaboración al contratar.
           </p>
@@ -667,7 +668,7 @@ function StorefrontHero({
               Explorar jobs
             </Button>
             <Button
-              className="h-12 rounded-control border-transparent px-2 text-[15px] text-[#2d52a8] shadow-none hover:border-transparent hover:bg-transparent hover:text-[#21438e] hover:shadow-none [&_svg]:transition-transform hover:[&_svg]:translate-x-[3px]"
+              className="h-12 rounded-control border-transparent px-2 text-[15px] text-[#2d52a8] shadow-none hover:border-transparent hover:bg-transparent hover:text-[#21438e] hover:shadow-none dark:text-[#7c9cf0] dark:hover:text-[#9fb6f5] [&_svg]:transition-transform hover:[&_svg]:translate-x-[3px]"
               variant="ghost"
               onClick={onPricingClick}
             >

@@ -271,10 +271,57 @@
     --asi-text-muted: #4f5665;
     --asi-shadow-soft: 0 12px 40px rgba(0, 47, 110, 0.08);
     --asi-shadow-strong: 0 20px 60px rgba(0, 47, 110, 0.12);
+    /* RGB base del panel flotante del header (usado con alpha animada). */
+    --asi-header-rgb: 248 249 250;
     color-scheme: light;
     background: linear-gradient(180deg, #f8f9fa 0%, #f8f9fa 100%);
     color: var(--asi-text);
     font-family: 'Inter', 'Segoe UI', sans-serif;
+  }
+
+  /*
+   * Modo oscuro SOLO para el navbar de la plataforma. Se limita a
+   * `.asi-site-platform` (que solo usa el StorefrontShell), por lo que la web
+   * institucional —que usa `.asi-site` a secas— permanece siempre en claro
+   * aunque el tema global sea oscuro.
+   */
+  .dark .asi-site-platform {
+    --asi-primary: #9fb6f0;
+    --asi-primary-container: #6f93e6;
+    --asi-surface: #101d3f;
+    --asi-surface-muted: #152551;
+    --asi-surface-panel: rgba(16, 29, 63, 0.92);
+    --asi-surface-raised: #101d3f;
+    --asi-secondary: #92a2c8;
+    --asi-outline: rgba(255, 255, 255, 0.1);
+    --asi-text: #f4f7ff;
+    --asi-text-muted: #c9d3ee;
+    --asi-shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.45);
+    --asi-shadow-strong: 0 20px 60px rgba(0, 0, 0, 0.55);
+    --asi-header-rgb: 16 29 63;
+    color-scheme: dark;
+  }
+
+  /* Botones del navbar de plataforma legibles sobre el panel oscuro. */
+  .dark .asi-site-platform .asi-button-primary {
+    background: linear-gradient(135deg, #2a4fb0 0%, #3a63d6 100%);
+    color: #ffffff;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  .dark .asi-site-platform .asi-button-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--asi-text);
+    box-shadow: none;
+  }
+
+  .dark .asi-site-platform .asi-button-ghost {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--asi-text);
+  }
+
+  .dark .asi-site-platform .asi-button-ghost:hover {
+    background: rgba(255, 255, 255, 0.12);
   }
 
   .asi-hero-frame {

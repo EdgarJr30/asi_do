@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Menu, MoveRight, Search, X } from 'lucide-react';
+import { Menu, MoveRight, X } from 'lucide-react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { RouteScrollManager } from '@/app/router/route-scroll-manager';
@@ -196,14 +196,7 @@ export function InstitutionalShell() {
                 ))}
               </nav>
 
-              <div className="hidden min-w-60 flex-1 justify-end xl:flex">
-                <label className="flex h-11 w-full max-w-70 items-center gap-2 rounded-card bg-white/92 px-4 text-sm text-(--asi-text-muted) shadow-[0_10px_24px_rgba(0,47,110,0.06)]">
-                  <Search className="size-4 text-(--asi-secondary)" />
-                  <span>Buscar</span>
-                </label>
-              </div>
-
-              <div className="hidden items-center gap-3 lg:flex">
+              <div className="hidden flex-1 items-center justify-end gap-3 lg:flex">
                 <Link
                   className="asi-button asi-button-ghost"
                   to={surfacePaths.public.home}
