@@ -43,6 +43,7 @@ const landingHoverSpring = {
   damping: 26,
   mass: 0.72,
 } as const;
+const SHOW_PRICING_SECTION = false;
 
 const pricingComparisonLayoutTransition = {
   type: 'spring',
@@ -694,14 +695,16 @@ function StorefrontHero({
             >
               Explorar jobs
             </Button>
-            <Button
-              className="h-12 rounded-control border-transparent px-2 text-[15px] text-[#2d52a8] shadow-none hover:border-transparent hover:bg-transparent hover:text-[#21438e] hover:shadow-none [&_svg]:transition-transform hover:[&_svg]:translate-x-[3px]"
-              variant="ghost"
-              onClick={onPricingClick}
-            >
-              Ver pricing
-              <ArrowRight className="size-4" />
-            </Button>
+            {SHOW_PRICING_SECTION ? (
+              <Button
+                className="h-12 rounded-control border-transparent px-2 text-[15px] text-[#2d52a8] shadow-none hover:border-transparent hover:bg-transparent hover:text-[#21438e] hover:shadow-none [&_svg]:transition-transform hover:[&_svg]:translate-x-[3px]"
+                variant="ghost"
+                onClick={onPricingClick}
+              >
+                Ver pricing
+                <ArrowRight className="size-4" />
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -1212,10 +1215,11 @@ export function HomePage() {
         </div>
       </section>
 
-      <section
-        className="group/tiers relative isolate overflow-hidden"
-        id="pricing"
-      >
+      {SHOW_PRICING_SECTION ? (
+        <section
+          className="group/tiers relative isolate overflow-hidden"
+          id="pricing"
+        >
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10"
@@ -1991,7 +1995,8 @@ export function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+        </section>
+      ) : null}
 
       <section className="tm-landing-section bg-(--app-canvas)" id="faq">
         <LandingReveal className="tm-landing-container" y={22}>

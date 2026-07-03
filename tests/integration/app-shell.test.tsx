@@ -111,6 +111,7 @@ describe('route shells', () => {
 
     expect(await screen.findByRole('link', { name: /Plataforma ASI/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Jobs' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Pricing' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'ASI institucional' })).toBeInTheDocument()
     const guestRegistrationAction = screen.getByRole('button', { name: guestRegistrationActionName })
     expect(guestRegistrationAction).toBeInTheDocument()

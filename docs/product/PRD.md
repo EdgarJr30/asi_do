@@ -222,7 +222,7 @@ The MVP should **not** initially include:
 - resilient loading and retry states
 - actionable error states with technical logging for admin follow-up
 - public product landing with client-ready positioning
-- visible SaaS pricing section for commercial review, even before billing is connected
+- SaaS pricing section kept implemented but hidden from the public landing until plan packaging is ready to expose again
 - donation section with AZUL checkout, immediate approved-payment confirmation, and donor receipt email
 - admin console isolated from the client-facing product experience
 - canonical product experiences for `institutional`, `storefront`, and `app`

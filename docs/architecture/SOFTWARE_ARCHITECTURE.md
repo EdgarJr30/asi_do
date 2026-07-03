@@ -297,7 +297,7 @@ This keeps logic close to the business domain.
 ### 7.2 Experience and route ownership
 The modular monolith must expose three top-level product experiences with explicit ownership:
 - `institutional`: portal, membership, projects, donation, news, media, and contact under `/`
-- `storefront`: product landing, pricing, member-gated job entry, and acquisition flows under `/platform`
+- `storefront`: product landing, hidden pricing module, member-gated job entry, and acquisition flows under `/platform`
 - `app`: authenticated product usage
 
 Inside `app`, the runtime must remain route-split:

@@ -212,7 +212,7 @@ Avoid using a client state store as a shadow backend.
 ### Product experience strategy
 Keep the frontend split into three explicit top-level experiences:
 - institutional portal routes under `/`
-- storefront routes for product landing, pricing, and member-gated job entry under `/platform`
+- storefront routes for product landing, hidden pricing module, and member-gated job entry under `/platform`
 - authenticated app routes for product usage
 
 Inside the authenticated app experience, keep explicit route surfaces:

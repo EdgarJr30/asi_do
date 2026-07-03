@@ -25,7 +25,7 @@ vi.mock('@/lib/supabase/client', () => ({
 }))
 
 describe('home page hover affordances', () => {
-  it('keeps locked registration and hover affordances on active landing actions', async () => {
+  it('keeps hover affordances on active landing actions while pricing is hidden', async () => {
     render(
       <MemoryRouter>
         <AppSessionProvider>
@@ -34,18 +34,17 @@ describe('home page hover affordances', () => {
       </MemoryRouter>
     )
 
-    const primaryCta = (await screen.findAllByRole('button', { name: 'Registro cerrado' }))[0]
-    const comparisonTrigger = screen.getByRole('button', { name: /Comparar planes/i })
-    const footerPricing = screen.getByRole('button', { name: 'Pricing' })
+    const primaryCta = await screen.findByRole('button', { name: 'Entrar a la aplicación' })
+    const faqCta = screen.getByRole('button', { name: 'Resolver dudas' })
 
-    expect(primaryCta).toBeDisabled()
+    expect(primaryCta).toBeEnabled()
+    expect(primaryCta.className).toContain('hover:border-[#21438e]')
+    expect(primaryCta.className).toContain('hover:bg-[#21438e]')
+    expect(screen.queryByRole('heading', { name: /Planes claros/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Ver pricing' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Comparar planes/i })).not.toBeInTheDocument()
 
-    expect(comparisonTrigger.className).toContain('cursor-pointer')
-    expect(comparisonTrigger.className).toContain('hover:border-primary-200')
-    expect(comparisonTrigger.className).toContain('hover:text-primary-700')
-
-    expect(footerPricing.className).toContain('cursor-pointer')
-    expect(footerPricing.className).toContain('hover:bg-(--app-surface)')
-    expect(footerPricing.className).toContain('hover:shadow-(--app-shadow-card)')
+    expect(faqCta.className).toContain('hover:border-primary-400')
+    expect(faqCta.className).toContain('hover:shadow-[0_18px_34px_rgba(15,23,42,0.12)]')
   })
 })

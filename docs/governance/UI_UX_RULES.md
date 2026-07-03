@@ -333,7 +333,7 @@ Apple-inspired UI rules:
 - hero
 - audience/value framing
 - workflow or feature explanation
-- pricing section
+- pricing section may remain implemented but hidden; if hidden, public navigation and CTAs must not point to it
 - final CTA region
 3. Donation checkout must stay focused on the current contribution: do not show donor-facing historical donation lists on `/donate`; send approved donation receipts by email and keep operational history in admin surfaces.
 4. Internal QA, launch-readiness, or foundations tools must never appear in the public landing experience for standard users.

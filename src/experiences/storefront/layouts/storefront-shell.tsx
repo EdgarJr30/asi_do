@@ -14,9 +14,13 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils/cn';
 import { PLATFORM_REGISTRATION_LOCKED } from '@/shared/config/launch-access';
 
+const SHOW_PRICING_SECTION = false;
+
 const storefrontNavigation = [
   { label: 'Como funciona', to: `${surfacePaths.storefront.home}#features` },
-  { label: 'Pricing', to: `${surfacePaths.storefront.home}#pricing` },
+  ...(SHOW_PRICING_SECTION
+    ? [{ label: 'Pricing', to: `${surfacePaths.storefront.home}#pricing` }]
+    : []),
   { label: 'FAQ', to: `${surfacePaths.storefront.home}#faq` },
   { label: 'Jobs', to: surfacePaths.storefront.jobsRoot },
 ] as const;
@@ -152,7 +156,7 @@ export function StorefrontShell() {
                     Explora el producto
                   </p>
                   <p className="mt-1 text-sm text-(--app-text-muted)">
-                    Pricing visible y acceso claro para candidatos y empresas.
+                    Acceso claro para candidatos, empresas y oportunidades.
                   </p>
                 </div>
                 <Button

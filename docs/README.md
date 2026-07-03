@@ -66,7 +66,7 @@ This folder contains the canonical Markdown documentation for the repository.
 ## Canonical product experiences
 The modular monolith is organized around three top-level product experiences:
 - `institutional` for the ASI portal under `/`
-- `storefront` for the product landing, pricing, and member-gated job entry under `/platform`
+- `storefront` for the product landing, hidden pricing module, and member-gated job entry under `/platform`
 - `app` for authenticated product usage
 
 Inside `app`, the canonical route surfaces remain:
