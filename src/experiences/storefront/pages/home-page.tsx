@@ -31,6 +31,7 @@ import {
 } from '@/app/router/surface-paths';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { InstitutionalFooter } from '@/experiences/institutional/components/institutional-footer';
 import { cn } from '@/lib/utils/cn';
 import { PLATFORM_REGISTRATION_LOCKED, PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access';
 
@@ -447,14 +448,6 @@ const faqs = [
   },
 ] as const;
 
-const footerNavigation = [
-  { label: 'Como funciona', section: 'features' },
-  { label: 'Pricing', section: 'pricing' },
-  { label: 'FAQ', section: 'faq' },
-  { label: 'Jobs', route: surfacePaths.public.jobs },
-  { label: PLATFORM_REGISTRATION_LOCKED ? 'Registro cerrado' : 'Crear cuenta', route: '/auth/sign-up', disabled: PLATFORM_REGISTRATION_LOCKED },
-] as const;
-
 function renderTierValue(value: boolean | string, highlighted: boolean) {
   if (typeof value === 'string') {
     return (
@@ -745,8 +738,6 @@ export function HomePage() {
         href: surfacePaths.auth.signUp,
         disabled: PLATFORM_REGISTRATION_LOCKED,
       };
-
-  const footerYear = new Date().getFullYear();
 
   function scrollToSection(sectionId: string) {
     const section = document.getElementById(sectionId);
@@ -2107,57 +2098,7 @@ export function HomePage() {
         </LandingReveal>
       </section>
 
-      <footer className="border-t bg-(--app-canvas)">
-        <LandingReveal
-          className="mx-auto max-w-7xl overflow-hidden px-4 py-12 sm:px-6 sm:py-14 lg:px-8"
-          y={18}
-        >
-          <nav
-            aria-label="Footer"
-            className="-mb-6 flex flex-wrap justify-center gap-x-10 gap-y-3 text-sm leading-6"
-          >
-            {footerNavigation.map((item) =>
-              'section' in item ? (
-                <motion.button
-                  key={item.label}
-                  className="cursor-pointer rounded-full px-3 py-1.5 text-(--app-text-muted) hover:bg-(--app-surface) hover:text-(--app-text) hover:shadow-(--app-shadow-card)"
-                  transition={landingHoverSpring}
-                  type="button"
-                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                  whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
-                  onClick={() => scrollToSection(item.section)}
-                >
-                  {item.label}
-                </motion.button>
-              ) : (
-                <motion.button
-                  key={item.label}
-                  className={cn(
-                    'rounded-full px-3 py-1.5 text-(--app-text-muted)',
-                    'disabled:cursor-not-allowed disabled:opacity-65',
-                    !('disabled' in item && item.disabled) &&
-                      'cursor-pointer hover:bg-(--app-surface) hover:text-(--app-text) hover:shadow-(--app-shadow-card)'
-                  )}
-                  disabled={'disabled' in item ? item.disabled : false}
-                  title={'disabled' in item && item.disabled ? PLATFORM_REGISTRATION_LOCKED_MESSAGE : undefined}
-                  transition={landingHoverSpring}
-                  type="button"
-                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                  whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
-                  onClick={() => void navigate(item.route)}
-                >
-                  {item.label}
-                </motion.button>
-              )
-            )}
-          </nav>
-
-          <p className="mt-10 text-center text-sm leading-6 text-(--app-text-muted)">
-            &copy; {footerYear} ASI Rep. Dominicana. Una experiencia de
-            selección clara para candidatos, empresas y equipos.
-          </p>
-        </LandingReveal>
-      </footer>
+      <InstitutionalFooter />
     </div>
   );
 }
