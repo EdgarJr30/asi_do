@@ -40,7 +40,7 @@ notificaciones, audit log, RPCs de revisión de autoridad, `hasActiveAsiAccess()
 2. **`membership_payments`** — `application_id`, `member_user_id`, `category_slug`, `amount`, `currency`, `period_start/end`, `method='bank_transfer'`, `receipt_path`, `status` (`submitted/verified/rejected`), `uploaded_by_user_id`, `verified_by_user_id`, `verified_at`, `notes`.
 3. **Vínculo a jerarquía real** en `institutional_membership_applications`: `church_id` (FK), `assigned_pastor_user_id`, `assigned_queue` (`pastor`/`admin`).
 4. **Bucket de storage privado** para comprobantes (RLS: dueño + pastor asignado + admin).
-5. **RPCs** (RLS/scope + audit): `review_membership_application` (pastor/admin), `verify_membership_payment` (admin), `activate_member` (admin; exige aprobado + pago verificado).
+5. **RPCs** (RLS/scope + audit): `review_membership_application` (pastor/admin), `verify_membership_payment` (admin), `activate_member` (admin; exige aprobado + pago verificado), `deactivate_member` (admin; inactiva una membresía activa).
 6. **Permisos**: `membership_application:review` (pastor+admin), `membership_payment:verify` (admin), `user:activate` (admin). ✅ creados y otorgados a `platform_owner`/`platform_admin`; el pastor autoriza por `user_authority_scope` (no por estos permisos).
 
 ## 4. Flujos (pipelines)
@@ -51,7 +51,7 @@ notificaciones, audit log, RPCs de revisión de autoridad, `hasActiveAsiAccess()
 **⛪ Pastor:** signup → solicita autoridad (elige iglesias) → admin otorga alcance → cola con **solo** las solicitudes de
 sus iglesias → aprueba / pide más info / rechaza; puede subir comprobante por el miembro.
 
-**🛡️ Admin:** ve **toda** solicitud y pago → valida comprobantes → **activa cuentas** → gestiona jerarquía y otorga
+**🛡️ Admin:** ve **toda** solicitud y pago → valida comprobantes → **activa/inactiva membresías** → gestiona jerarquía y otorga
 autoridad a pastores.
 
 ## 5. Gating (enforcement)
@@ -90,9 +90,9 @@ autoridad a pastores.
    - ✅ **RLS verificada a nivel de datos** (JWT real por pastor vía PostgREST): pastor A ve el pago y la solicitud de su miembro (1/1); pastor B (otra iglesia) ve **0/0**. Confirma `pastor_has_scope_over_member` en `membership_payments` e `institutional_membership_applications`.
    - ✅ **RLS del bucket (signed URL) verificada**: con un comprobante real subido, firmar la URL (`POST /storage/v1/object/sign/...`) da **HTTP 200** para el pastor de la iglesia y **HTTP 404 (oculto por RLS)** para un pastor de otra iglesia.
    - Nota: el helper se refactorizó en `20260622140000` (join directo contra `user_authority_scopes`, equivalente; no corrige bug — un falso negativo en pruebas se debió a un usuario sembrado que fue eliminado, lo que dejó la solicitud sin `requester` y borró su pago en cascada).
-4. **Consola admin** — solicitudes + pagos, validar pago, botón Activar, módulo de datos bancarios, audit. **✅ COMPLETA**
-   - ✅ Página `MembershipConsolePage` en `/admin/membership` (gateada por `membership_payment:verify`); nav admin "Membresía". Lista cada solicitud accionable con su último pago y el estado de la cuenta del miembro.
-   - ✅ Acciones por solicitud: revisar (aprobar/más-info/rechazar) vía RPC `review_membership_application`; verificar/rechazar pago vía `verify_membership_payment`; ver comprobante (URL firmada); **Activar cuenta** vía `activate_member` (habilitado solo con solicitud aprobada + pago verificado; flip de flags + `+1 año`). Todo audita.
+4. **Consola admin** — solicitudes + pagos, validar pago, botón Activar/Inactivar, módulo de datos bancarios, audit. **✅ COMPLETA**
+   - ✅ Página `MembershipConsolePage` en `/admin/membership` (gateada por `membership_payment:verify`); nav admin "Administrar membresías". Lista cada solicitud accionable con su último pago y el estado de la cuenta del miembro, con filtros de activas/inactivas y paginación.
+   - ✅ Acciones por solicitud: revisar (aprobar/más-info/rechazar) vía RPC `review_membership_application`; verificar/rechazar pago vía `verify_membership_payment`; ver comprobante (URL firmada); **Activar membresía** vía `activate_member` (habilitado solo con solicitud aprobada + pago verificado; flip de flags + `+1 año`); **Inactivar membresía** vía `deactivate_member` (retira acceso protegido con auditoría). Todo audita.
    - ✅ Consolidación: se retiró la sección de membresía de `RecruiterReviewPage` (`/admin/approvals`) que usaba un UPDATE directo sin auditoría; se eliminaron las funciones muertas `reviewInstitutionalMembershipApplication`/`listPendingInstitutionalMembershipApplications`. El módulo de datos bancarios ya existía en `/admin/payments`.
    - ✅ **Validado e2e** (`tests/e2e/membership-admin-console.spec.ts`): un admin de plataforma aprueba → verifica pago → activa; confirmado en BD (flags del miembro a `active`/`approved`, `+1 año`) y en `audit_logs` (`membership_payment.verified`, `member.activated`, actor=admin).
 5. **Notificaciones + pulido** — eventos por transición; recordatorios de renovación (después). **✅ COMPLETA (envío automático)**

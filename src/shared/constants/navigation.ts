@@ -168,9 +168,9 @@ export const adminNavigationItems: NavigationItem[] = [
     requiredPermission: 'audit_log:read'
   },
   {
-    title: 'Membresía',
+    title: 'Administrar membresías',
     href: surfacePaths.admin.membership,
-    description: 'Revisar solicitudes, validar pagos y activar cuentas',
+    description: 'Revisar solicitudes, validar pagos, activar e inactivar membresías',
     requiresAuth: true,
     requiredPermission: 'membership_payment:verify'
   },

@@ -3427,6 +3427,44 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      deactivate_member: {
+        Args: {
+          p_notes?: string
+          p_user_id: string
+        }
+        Returns: {
+          approval_reviewed_at: string | null
+          approval_reviewed_by_user_id: string | null
+          asi_membership_status: Database["public"]["Enums"]["asi_membership_status"]
+          avatar_path: string | null
+          country_code: string | null
+          created_at: string
+          display_name: string
+          email: string | null
+          full_name: string
+          id: string
+          is_internal_developer: boolean
+          last_sign_in_at: string | null
+          locale: string | null
+          manual_access_override_by_user_id: string | null
+          manual_access_override_reason: string | null
+          manual_access_override_until: string | null
+          membership_activated_at: string | null
+          membership_expires_at: string | null
+          phone: string | null
+          status: Database["public"]["Enums"]["user_status"]
+          subscription_expires_at: string | null
+          updated_at: string
+          user_approval_status: Database["public"]["Enums"]["user_approval_status"]
+          user_subscription_status: Database["public"]["Enums"]["user_subscription_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "users"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_create_authority_invitation: {
         Args: {
           p_authority_type: string

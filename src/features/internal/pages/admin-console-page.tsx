@@ -42,8 +42,8 @@ const adminModules: Array<{
   },
   {
     href: surfacePaths.admin.membership,
-    title: 'Membresía',
-    description: 'Revisa solicitudes, valida comprobantes de pago y activa las cuentas de miembros.',
+    title: 'Administrar membresías',
+    description: 'Revisa solicitudes, valida pagos, activa membresías e inactiva accesos activos cuando aplique.',
     permission: 'membership_payment:verify',
     icon: <Sparkles className="size-5" />,
     tone: 'green'

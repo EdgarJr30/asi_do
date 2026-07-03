@@ -174,7 +174,10 @@ export type MembershipPaymentDecision = Extract<MembershipPayment['status'], 've
 export interface AdminMembershipRow {
   application: MembershipApplication
   payment: MembershipPayment | null
-  member: Pick<Tables<'users'>, 'id' | 'full_name' | 'email' | 'asi_membership_status' | 'status'> | null
+  member: Pick<
+    Tables<'users'>,
+    'id' | 'full_name' | 'email' | 'asi_membership_status' | 'user_subscription_status' | 'membership_expires_at' | 'status'
+  > | null
 }
 
 /**
@@ -205,7 +208,10 @@ export async function fetchAdminMembershipApplications(): Promise<AdminMembershi
   const [paymentsResponse, membersResponse] = await Promise.all([
     client.from('membership_payments').select('*').in('application_id', applicationIds).order('created_at', { ascending: false }),
     memberIds.length
-      ? client.from('users').select('id, full_name, email, asi_membership_status, status').in('id', memberIds)
+      ? client
+          .from('users')
+          .select('id, full_name, email, asi_membership_status, user_subscription_status, membership_expires_at, status')
+          .in('id', memberIds)
       : Promise.resolve({ data: [], error: null })
   ])
 
@@ -264,6 +270,20 @@ export async function activateMember(input: {
     p_application_id: input.applicationId,
     p_notes: input.notes?.trim() || undefined,
     p_membership_months: input.membershipMonths ?? undefined
+  })
+
+  if (error) {
+    throw error
+  }
+  return data
+}
+
+/** Admin inactiva una membresía ASI activa sin bloquear la cuenta completa. */
+export async function deactivateMember(input: { userId: string; notes?: string }): Promise<Tables<'users'>> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('deactivate_member', {
+    p_user_id: input.userId,
+    p_notes: input.notes?.trim() || undefined
   })
 
   if (error) {
