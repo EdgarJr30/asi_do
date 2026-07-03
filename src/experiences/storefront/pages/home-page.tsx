@@ -2073,53 +2073,6 @@ export function HomePage() {
         </LandingReveal>
       </section>
 
-      <section className="tm-landing-section overflow-hidden">
-        <LandingReveal className="tm-landing-container" y={24}>
-          <div className="relative rounded-card-lg border bg-(--app-surface) px-6 py-8 shadow-(--app-shadow-floating) sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-            <div
-              aria-hidden="true"
-              className="absolute right-0 bottom-0 h-48 w-48 rounded-full blur-3xl"
-              style={{
-                background:
-                  'radial-gradient(circle at center, rgba(57, 85, 184, 0.2), transparent 64%)',
-              }}
-            />
-            <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div className="max-w-2xl">
-                <Badge variant="soft">Siguiente paso</Badge>
-                <h2 className="mt-5 text-3xl font-semibold tracking-tight text-balance text-(--app-text) sm:text-4xl">
-                  Comparte la landing, empieza demos y abre procesos desde una
-                  base que ya se siente premium
-                </h2>
-                <p className="mt-5 text-base leading-7 text-(--app-text-muted)">
-                  Desde aquí puedes llevar usuarios a jobs, signup o al espacio
-                  de trabajo sin sacrificar claridad ni mezclar herramientas
-                  internas con la experiencia del cliente.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-                <Button
-                  className="hover:shadow-[0_24px_44px_rgba(43,69,143,0.34)]"
-                  disabled={primaryAction.disabled}
-                  title={primaryAction.disabled ? PLATFORM_REGISTRATION_LOCKED_MESSAGE : undefined}
-                  onClick={() => void navigate(primaryAction.href)}
-                >
-                  {primaryAction.label}
-                </Button>
-                <Button
-                  className="hover:border-primary-400 hover:bg-white hover:shadow-[0_18px_34px_rgba(15,23,42,0.12)]"
-                  variant="outline"
-                  onClick={() => void navigate(surfacePaths.public.jobs)}
-                >
-                  Explorar jobs
-                </Button>
-              </div>
-            </div>
-          </div>
-        </LandingReveal>
-      </section>
-
       <InstitutionalFooter
         platformButton={{
           label: 'Página institucional',
