@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowRight, Check, Eye, EyeOff } from 'lucide-react'
+import { ArrowRight, Check, Eye, EyeOff, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -26,9 +26,9 @@ function FieldError({ message }: { message?: string }) {
 }
 
 const passwordRules = [
-  { label: 'Mínimo 8 caracteres', test: (value: string) => value.length >= 8 },
-  { label: 'Una letra mayúscula', test: (value: string) => /[A-Z]/.test(value) },
-  { label: 'Un número', test: (value: string) => /\d/.test(value) }
+  { short: '8+ caracteres', test: (value: string) => value.length >= 8 },
+  { short: 'Una mayúscula', test: (value: string) => /[A-Z]/.test(value) },
+  { short: 'Un número', test: (value: string) => /\d/.test(value) }
 ] as const
 
 export function SignUpPage() {
@@ -50,6 +50,9 @@ export function SignUpPage() {
     }
   })
   const passwordValue = useWatch({ control: form.control, name: 'password' }) ?? ''
+  const confirmValue = useWatch({ control: form.control, name: 'confirmPassword' }) ?? ''
+  const confirmTouched = confirmValue.length > 0
+  const passwordsMatch = confirmTouched && confirmValue === passwordValue
 
   if (!session.isSupabaseConfigured) {
     return (
@@ -65,7 +68,7 @@ export function SignUpPage() {
   }
 
   if (session.isLoading) {
-    return <PageLoader label="Preparando tu plataforma" hint="Cargando tu menú y tu cuenta" />
+    return <PageLoader className="min-h-full" label="Preparando tu plataforma" hint="Cargando tu menú y tu cuenta" />
   }
 
   if (session.isAuthenticated) {
@@ -153,7 +156,7 @@ export function SignUpPage() {
               <Input
                 autoComplete="new-password"
                 className="h-[2.375rem] rounded-control pr-10"
-                placeholder="Crea una contraseña segura"
+                placeholder="Tu contraseña"
                 type={showPassword ? 'text' : 'password'}
                 {...form.register('password')}
               />
@@ -167,7 +170,7 @@ export function SignUpPage() {
               </button>
             </div>
             <FieldError message={form.formState.errors.password?.message} />
-            <ul className="grid gap-1 pt-0.5">
+            <ul className="flex flex-wrap gap-x-2 gap-y-1 pt-0.5">
               {passwordRules.map((rule) => {
                 const passed = rule.test(passwordValue)
 
@@ -176,20 +179,15 @@ export function SignUpPage() {
                     key={rule.label}
                     className={
                       passed
-                        ? 'flex items-center gap-1 text-[11px] leading-4 text-emerald-600 dark:text-emerald-400'
-                        : 'flex items-center gap-1 text-[11px] leading-4 text-(--app-text-subtle)'
+                        ? 'inline-flex items-center gap-1 rounded-pill bg-emerald-50 px-1.5 py-0.5 text-[11px] leading-4 font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+                        : 'inline-flex items-center gap-1 rounded-pill bg-(--app-surface-elevated) px-1.5 py-0.5 text-[11px] leading-4 text-(--app-text-subtle)'
                     }
                   >
-                    <span
-                      className={
-                        passed
-                          ? 'flex size-3.5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300'
-                          : 'flex size-3.5 items-center justify-center rounded-full border border-(--app-border)'
-                      }
-                    >
-                      {passed ? <Check className="size-2.5" strokeWidth={3} /> : null}
-                    </span>
-                    {rule.label}
+                    <Check
+                      className={passed ? 'size-3 text-emerald-600 dark:text-emerald-400' : 'size-3 text-(--app-text-subtle)/60'}
+                      strokeWidth={3}
+                    />
+                    {rule.short}
                   </li>
                 )
               })}
@@ -201,11 +199,29 @@ export function SignUpPage() {
             <div className="relative">
               <Input
                 autoComplete="new-password"
-                className="h-[2.375rem] rounded-control pr-10"
+                className={
+                  confirmTouched
+                    ? passwordsMatch
+                      ? 'h-[2.375rem] rounded-control pr-16 border-emerald-400 focus-visible:ring-emerald-400/40 dark:border-emerald-500/50'
+                      : 'h-[2.375rem] rounded-control pr-16 border-rose-400 focus-visible:ring-rose-400/40 dark:border-rose-500/50'
+                    : 'h-[2.375rem] rounded-control pr-16'
+                }
                 placeholder="Repite tu contraseña"
                 type={showConfirmPassword ? 'text' : 'password'}
                 {...form.register('confirmPassword')}
               />
+              {confirmTouched ? (
+                <span
+                  aria-hidden
+                  className={
+                    passwordsMatch
+                      ? 'pointer-events-none absolute inset-y-0 right-10 flex items-center text-emerald-600 dark:text-emerald-400'
+                      : 'pointer-events-none absolute inset-y-0 right-10 flex items-center text-rose-500 dark:text-rose-400'
+                  }
+                >
+                  {passwordsMatch ? <Check className="size-4" strokeWidth={3} /> : <X className="size-4" strokeWidth={3} />}
+                </span>
+              ) : null}
               <button
                 aria-label={showConfirmPassword ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
                 className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-(--app-text-subtle) transition hover:text-(--app-text)"
@@ -215,7 +231,19 @@ export function SignUpPage() {
                 {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
-            <FieldError message={form.formState.errors.confirmPassword?.message} />
+            {confirmTouched ? (
+              <p
+                className={
+                  passwordsMatch
+                    ? 'text-[11px] leading-4 font-medium text-emerald-600 dark:text-emerald-400'
+                    : 'text-[11px] leading-4 font-medium text-rose-500 dark:text-rose-400'
+                }
+              >
+                {passwordsMatch ? 'Las contraseñas coinciden' : 'Las contraseñas no coinciden'}
+              </p>
+            ) : (
+              <FieldError message={form.formState.errors.confirmPassword?.message} />
+            )}
           </label>
         </div>
 
