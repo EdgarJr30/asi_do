@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type DragEvent } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   ArrowLeft,
   ArrowRight,
   Camera,
+  Check,
   CheckCircle2,
   CreditCard,
   Globe2,
@@ -33,6 +34,7 @@ import {
 import { onboardingSchema, type OnboardingValues } from '@/features/auth/lib/auth-schemas'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
+import { getCountryOptionByCode } from '@/shared/geo/location-options'
 import { captureClientError } from '@/lib/errors/client-error-logger'
 import {
   MAX_UPLOAD_SIZE_LABEL,
@@ -76,6 +78,23 @@ const steps = [
 
 type StepId = (typeof steps)[number]['id'] | 'done'
 
+function getInitials(value: string) {
+  const words = value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (words.length === 0) {
+    return 'TU'
+  }
+
+  return words
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase()
+}
+
 function FieldError({ message }: { message?: string }) {
   if (!message) {
     return null
@@ -86,72 +105,78 @@ function FieldError({ message }: { message?: string }) {
 
 function OnboardingFrame({
   activeStep,
-  completedStepCount
+  completedStepCount,
+  onStepSelect
 }: {
   activeStep: StepId
   completedStepCount: number
+  onStepSelect?: (stepIndex: number) => void
 }) {
   const activeIndex = activeStep === 'done' ? steps.length : steps.findIndex((step) => step.id === activeStep)
   const progress = Math.round((completedStepCount / steps.length) * 100)
 
   return (
-    <aside className="relative overflow-hidden rounded-card-lg border border-(--app-border) bg-(--app-surface-muted) p-4 shadow-[0_24px_64px_rgba(21,32,59,0.08)] sm:p-5 lg:sticky lg:top-24">
-      <div className="absolute inset-x-8 top-0 h-px bg-primary-300/60" />
+    <aside className="relative overflow-hidden rounded-card-lg border border-(--app-border) bg-(--app-surface-elevated) p-4 shadow-[0_6px_22px_rgba(29,54,120,0.07)] sm:p-5 xl:sticky xl:top-24">
       <div className="flex items-center justify-between gap-3">
-        <Badge variant="soft" className="gap-1.5">
-          <Sparkles className="size-3.5" />
-          Tour guiado
-        </Badge>
-        <span className="text-xs font-semibold text-(--app-text-muted)">{progress}%</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-100">
+            <Sparkles className="size-3.5" />
+          </span>
+          <p className="text-sm font-bold text-(--app-text)">Tour guiado</p>
+        </div>
+        <span className="text-sm font-bold text-primary-700 dark:text-primary-200">{progress}%</span>
       </div>
 
-      <div className="mt-5">
-        <div className="h-2 overflow-hidden rounded-full bg-(--app-surface)">
+      <div className="mt-4">
+        <div className="h-2 overflow-hidden rounded-full bg-primary-100/80 dark:bg-primary-500/12">
           <motion.div
-            className="h-full rounded-full bg-primary-600"
+            className="h-full rounded-full bg-linear-to-r from-primary-500 to-primary-700"
             animate={{ width: `${progress}%` }}
-            transition={{ type: 'spring', stiffness: 180, damping: 24 }}
+            transition={{ duration: 0.56, ease: [0.22, 0.61, 0.36, 1] }}
           />
         </div>
       </div>
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-5 hidden space-y-1.5 md:block">
         {steps.map((step, index) => {
           const Icon = step.icon
           const isActive = index === activeIndex
           const isDone = index < completedStepCount || activeStep === 'done'
 
           return (
-            <div
+            <button
               key={step.id}
+              aria-current={isActive ? 'step' : undefined}
               className={cn(
-                'flex items-center gap-3 rounded-card border p-3 transition',
+                'flex w-full items-start gap-3 rounded-card border p-3 text-left transition',
                 isActive
-                  ? 'border-primary-300 bg-primary-50 text-primary-700 dark:border-primary-500/30 dark:bg-primary-500/12 dark:text-primary-100'
-                  : 'border-transparent bg-(--app-surface-elevated) text-(--app-text-muted)'
+                  ? 'border-primary-300/70 bg-primary-50 text-primary-700 dark:border-primary-500/30 dark:bg-primary-500/12 dark:text-primary-100'
+                  : 'border-transparent text-(--app-text-muted) hover:bg-primary-50/70 hover:text-(--app-text) dark:hover:bg-primary-500/10'
               )}
+              disabled={activeStep === 'done'}
+              onClick={() => onStepSelect?.(index)}
             >
               <div
                 className={cn(
-                  'flex size-10 shrink-0 items-center justify-center rounded-control',
-                  isDone ? 'bg-primary-600 text-white' : 'bg-(--app-surface) text-current'
+                  'flex size-10 shrink-0 items-center justify-center rounded-control transition',
+                  isDone || isActive ? 'bg-primary-600 text-white' : 'bg-primary-50 text-(--app-text-subtle)'
                 )}
               >
-                {isDone ? <CheckCircle2 className="size-4" /> : <Icon className="size-4" />}
+                {isDone ? <Check className="size-4" /> : <Icon className="size-4" />}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-current">{step.label}</p>
-                <p className="truncate text-xs text-(--app-text-muted)">{step.description}</p>
+                <p className="mt-0.5 text-xs leading-5 text-(--app-text-muted)">{step.description}</p>
               </div>
-            </div>
+            </button>
           )
         })}
       </div>
 
-      <div className="mt-6 rounded-card-lg border border-(--app-border) bg-(--app-surface-elevated) p-4">
+      <div className="mt-5 hidden rounded-card border border-(--app-border) bg-primary-50/70 p-4 dark:bg-primary-500/10 md:block">
         <div className="flex items-start gap-3">
-          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary-600" />
-          <p className="text-sm leading-6 text-(--app-text-muted)">
+          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary-700 dark:text-primary-200" />
+          <p className="text-xs leading-5 text-(--app-text-muted)">
             Con tus datos base ya tienes acceso. El CV y la experiencia los completas después.
           </p>
         </div>
@@ -270,10 +295,15 @@ export function ProfileOnboardingFlow() {
   const activeStep = steps[activeStepIndex]
   const ActiveStepIcon = activeStep.icon
   const completedStepCount = isComplete ? steps.length : activeStepIndex
-  const previewName = form.watch('displayName') || form.watch('fullName') || session.authUser?.email || 'Tu nombre'
+  const watchedFullName = form.watch('fullName')
+  const watchedDisplayName = form.watch('displayName')
+  const previewName = watchedDisplayName || watchedFullName || session.authUser?.email || 'Tu nombre'
+  const previewInitials = getInitials(previewName)
   const previewCountry = form.watch('countryCode') || 'DO'
-  const previewLocale = form.watch('locale') === 'en' ? 'English' : 'Espanol'
+  const previewCountryLabel = getCountryOptionByCode(previewCountry)?.label ?? previewCountry.toUpperCase()
+  const previewLocale = form.watch('locale') === 'en' ? 'English' : 'Español'
   const isLastStep = activeStepIndex === steps.length - 1
+  const primaryActionLabel = form.formState.isSubmitting ? 'Guardando...' : isLastStep ? 'Guardar y entrar' : 'Continuar'
 
   // Refresca la sesión (para que el guard de onboarding completo deje pasar) y
   // navega. Idempotente: el countdown, el botón de pago y "Completar después"
@@ -299,11 +329,6 @@ export function ProfileOnboardingFlow() {
 
   function goToMembership() {
     void refreshAndNavigate(surfacePaths.account.membership)
-  }
-
-  // "Completar después": cancela el auto-redirect al pago y lleva al perfil.
-  function skipToProfile() {
-    void refreshAndNavigate(surfacePaths.candidate.profile)
   }
 
   // Mantén el ref del countdown apuntando siempre a la última versión, sin
@@ -367,6 +392,11 @@ export function ProfileOnboardingFlow() {
     } finally {
       setIsPreparingAvatar(false)
     }
+  }
+
+  function handleAvatarDrop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault()
+    void handleAvatarChange(event.dataTransfer.files?.[0] ?? null)
   }
 
   async function submitProfile(values: OnboardingValues) {
@@ -436,244 +466,307 @@ export function ProfileOnboardingFlow() {
     setActiveStepIndex((value) => Math.min(value + 1, steps.length - 1))
   }
 
+  async function goToStep(stepIndex: number) {
+    if (stepIndex <= activeStepIndex) {
+      setActiveStepIndex(stepIndex)
+      return
+    }
+
+    const fieldsToValidate = steps
+      .slice(activeStepIndex, stepIndex)
+      .flatMap((step) => step.fields)
+    const isValid = await form.trigger(fieldsToValidate)
+
+    if (isValid) {
+      setActiveStepIndex(stepIndex)
+    }
+  }
+
   const slideTransition = shouldReduceMotion
     ? { duration: 0 }
     : { type: 'spring' as const, stiffness: 230, damping: 28, mass: 0.85 }
 
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-5 lg:grid-cols-[minmax(0,1fr)_21rem]">
-      <main className="min-w-0">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <Badge variant="soft">Perfil inicial</Badge>
-            <h1 className="mt-3 text-[1.85rem] font-bold leading-tight text-(--app-text) sm:text-[2.25rem]">
-              Dejemos tu cuenta lista
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-(--app-text-muted)">
-              Un recorrido corto, obligatorio solo en lo esencial.
-            </p>
-          </div>
-          {isComplete ? (
-            <Button
-              className="h-11 rounded-full px-4"
-              variant="ghost"
-              onClick={() => void skipToProfile()}
-            >
-              Completar despues
-            </Button>
-          ) : null}
-        </div>
+    <div className="mx-auto w-full max-w-300 pb-24 md:pb-0">
+      <div className="mb-7 max-w-2xl">
+        <Badge variant="soft" className="gap-2">
+          Perfil inicial
+        </Badge>
+        <h1 className="mt-4 text-[2rem] font-bold leading-[1.04] tracking-tight text-(--app-text) sm:text-[2.5rem]">
+          Dejemos tu cuenta lista
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-(--app-text-muted) sm:text-base">
+          Un recorrido corto y opcional. Solo pedimos lo esencial para activar tu espacio; el resto lo completas cuando quieras.
+        </p>
+      </div>
 
-        <section className="overflow-hidden rounded-card-lg border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_24px_72px_rgba(21,32,59,0.08)]">
-          <div className="grid min-h-128 lg:grid-cols-[minmax(0,1fr)_18rem]">
-            <div className="p-5 sm:p-7">
-              <AnimatePresence mode="wait">
-                {isComplete ? (
-                  <motion.div
-                    key="done"
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex min-h-108 flex-col justify-between"
-                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -10 }}
-                    initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 14 }}
-                    transition={slideTransition}
-                  >
-                    <div>
-                      <div className="flex size-14 items-center justify-center rounded-card bg-primary-600 text-white">
-                        <CheckCircle2 className="size-7" />
-                      </div>
-                      <h2 className="mt-5 text-[1.65rem] font-bold leading-tight text-(--app-text) sm:text-[2rem]">
-                        Listo, {previewName.split(' ')[0]}
-                      </h2>
-                      <p className="mt-2 max-w-xl text-sm leading-6 text-(--app-text-muted)">
-                        El último paso es activar tu membresía. Es lo que habilita el acceso completo a ASI, así que te
-                        llevamos directo al pago.
-                      </p>
-                    </div>
-
-                    <div className="mt-8">
-                      <Button className="h-12 w-full rounded-full px-5 sm:w-auto" onClick={goToMembership}>
-                        <CreditCard className="size-5" />
-                        Pagar mi membresía ahora
-                        <ArrowRight className="size-5" />
-                      </Button>
-
-                      {justSubmitted ? (
-                        <p
-                          aria-live="polite"
-                          className="mt-3 text-xs leading-5 text-(--app-text-muted)"
-                          role="status"
-                        >
-                          Te llevaremos al pago automáticamente en {redirectCountdown}{' '}
-                          {redirectCountdown === 1 ? 'segundo' : 'segundos'}.
-                        </p>
-                      ) : null}
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key={activeStep.id}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex min-h-108 flex-col justify-between"
-                    exit={{ opacity: 0, x: shouldReduceMotion ? 0 : -18 }}
-                    initial={{ opacity: 0, x: shouldReduceMotion ? 0 : 18 }}
-                    transition={slideTransition}
-                  >
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex size-12 items-center justify-center rounded-card bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-100">
-                          <ActiveStepIcon className="size-5" />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_328px]">
+        <main className="min-w-0">
+          <section className="overflow-hidden rounded-card-lg border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_6px_22px_rgba(29,54,120,0.07)]">
+            <div className="grid md:grid-cols-[minmax(0,1fr)_300px]">
+              <div className="min-h-[470px] p-5 sm:p-8">
+                <AnimatePresence mode="wait">
+                  {isComplete ? (
+                    <motion.div
+                      key="done"
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex min-h-[414px] flex-col justify-between"
+                      exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -10 }}
+                      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 14 }}
+                      transition={slideTransition}
+                    >
+                      <div>
+                        <div className="flex size-14 items-center justify-center rounded-card bg-primary-600 text-white">
+                          <CheckCircle2 className="size-7" />
                         </div>
-                        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-(--app-text-subtle)">
-                          Paso {activeStepIndex + 1} de {steps.length}
+                        <h2 className="mt-5 text-[1.7rem] font-bold leading-tight tracking-tight text-(--app-text) sm:text-[2rem]">
+                          Listo, {previewName.split(' ')[0]}
+                        </h2>
+                        <p className="mt-2 max-w-xl text-sm leading-6 text-(--app-text-muted)">
+                          El último paso es activar tu membresía. Es lo que habilita el acceso completo a ASI, así que te llevamos directo al pago.
+                        </p>
+                      </div>
+
+                      <div className="mt-8">
+                        <Button className="h-12 w-full rounded-card px-5 sm:w-auto" onClick={goToMembership}>
+                          <CreditCard className="size-5" />
+                          Pagar mi membresía ahora
+                          <ArrowRight className="size-5" />
+                        </Button>
+
+                        {justSubmitted ? (
+                          <p aria-live="polite" className="mt-3 text-xs leading-5 text-(--app-text-muted)" role="status">
+                            Te llevaremos al pago automáticamente en {redirectCountdown}{' '}
+                            {redirectCountdown === 1 ? 'segundo' : 'segundos'}.
+                          </p>
+                        ) : null}
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key={activeStep.id}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex min-h-[414px] flex-col justify-between"
+                      exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -10 }}
+                      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
+                      transition={slideTransition}
+                    >
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-[46px] shrink-0 items-center justify-center rounded-card bg-primary-50 text-primary-700 shadow-[inset_0_0_0_1px_rgba(45,82,168,0.08)] dark:bg-primary-500/12 dark:text-primary-100">
+                            <ActiveStepIcon className="size-5" />
+                          </div>
+                          <span className="text-xs font-bold uppercase tracking-[0.14em] text-(--app-text-subtle)">
+                            Paso {activeStepIndex + 1} de {steps.length}
+                          </span>
+                        </div>
+
+                        <h2 className="mt-7 text-[1.7rem] font-bold leading-[1.12] tracking-tight text-(--app-text)">
+                          {activeStep.title}
+                        </h2>
+                        <p className="mt-2 max-w-xl text-sm leading-6 text-(--app-text-muted)">
+                          {activeStep.description}
+                        </p>
+
+                        <form className="mt-7 space-y-5" onSubmit={(event) => event.preventDefault()}>
+                          {activeStep.id === 'identity' ? (
+                            <>
+                              <label className="block space-y-2">
+                                <span className="text-[13px] font-semibold text-(--app-text)">Nombre completo</span>
+                                <Input
+                                  autoComplete="name"
+                                  className="h-[50px] rounded-control"
+                                  placeholder="Ej. John Doe"
+                                  {...form.register('fullName')}
+                                />
+                                <FieldError message={form.formState.errors.fullName?.message} />
+                              </label>
+
+                              <label className="block space-y-2">
+                                <span className="text-[13px] font-semibold text-(--app-text)">
+                                  Nombre visible{' '}
+                                  <span className="font-normal text-(--app-text-subtle)">· así te verán los demás</span>
+                                </span>
+                                <Input
+                                  className="h-[50px] rounded-control"
+                                  placeholder="Ej. John D."
+                                  {...form.register('displayName')}
+                                />
+                                <FieldError message={form.formState.errors.displayName?.message} />
+                              </label>
+                            </>
+                          ) : null}
+
+                          {activeStep.id === 'context' ? (
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              <label className="block space-y-2">
+                                <span className="text-[13px] font-semibold text-(--app-text)">Idioma</span>
+                                <Select className="h-[50px] rounded-control" {...form.register('locale')}>
+                                  <option value="es">Español</option>
+                                  <option value="en">English</option>
+                                </Select>
+                              </label>
+
+                              <label className="block space-y-2">
+                                <span className="text-[13px] font-semibold text-(--app-text)">País</span>
+                                <CountryCodeSelect className="h-[50px] rounded-control" {...form.register('countryCode')} />
+                                <FieldError message={form.formState.errors.countryCode?.message} />
+                              </label>
+                            </div>
+                          ) : null}
+
+                          {activeStep.id === 'avatar' ? (
+                            <div className="space-y-4">
+                              <label
+                                className={cn(
+                                  'flex cursor-pointer flex-col items-center rounded-card border border-dashed px-5 py-10 text-center transition',
+                                  avatarFile
+                                    ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-400/60 dark:bg-emerald-500/10 dark:text-emerald-200'
+                                    : 'border-primary-300 bg-primary-50/70 text-primary-700 hover:bg-primary-50 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-100'
+                                )}
+                                onDragOver={(event) => event.preventDefault()}
+                                onDrop={handleAvatarDrop}
+                              >
+                                <span className="flex size-[54px] items-center justify-center rounded-full bg-(--app-surface-elevated) shadow-sm">
+                                  {avatarFile ? <CheckCircle2 className="size-7" /> : <UploadCloud className="size-7" />}
+                                </span>
+                                <span className="mt-4 text-sm font-semibold text-(--app-text)">
+                                  {avatarFile ? avatarFile.name : 'Subir foto'}
+                                </span>
+                                <span className="mt-1 max-w-xs text-xs leading-5 text-(--app-text-muted)">
+                                  SVG, PNG, JPG o WEBP · hasta {MAX_UPLOAD_SIZE_LABEL}.
+                                </span>
+                                <input
+                                  accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
+                                  className="sr-only"
+                                  type="file"
+                                  onChange={(event) => void handleAvatarChange(event.target.files?.[0] ?? null)}
+                                />
+                              </label>
+                              <p className="text-xs leading-5 text-(--app-text-subtle)">
+                                Sin foto usaremos tus iniciales.{' '}
+                                <button
+                                  className="font-semibold text-(--app-text-muted) underline underline-offset-2"
+                                  type="button"
+                                  onClick={() => void handleNext()}
+                                >
+                                  Omitir por ahora
+                                </button>
+                              </p>
+                              {isPreparingAvatar ? (
+                                <p className="text-xs text-(--app-text-subtle)">Optimizando foto...</p>
+                              ) : null}
+                              {avatarFileError ? <p className="text-xs text-rose-600 dark:text-rose-300">{avatarFileError}</p> : null}
+                            </div>
+                          ) : null}
+                        </form>
+                      </div>
+
+                      <div className="mt-8 hidden items-center justify-between border-t border-(--app-border) pt-6 md:flex">
+                        <Button
+                          className="h-12 rounded-card px-5"
+                          disabled={activeStepIndex === 0 || form.formState.isSubmitting}
+                          variant="outline"
+                          onClick={() => setActiveStepIndex((value) => Math.max(value - 1, 0))}
+                        >
+                          <ArrowLeft className="size-4" />
+                          Atrás
+                        </Button>
+                        <Button
+                          className="h-12 rounded-card px-5"
+                          disabled={form.formState.isSubmitting || isPreparingAvatar}
+                          onClick={() => void handleNext()}
+                        >
+                          {primaryActionLabel}
+                          <ArrowRight className="size-4" />
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div className="border-t border-(--app-border) bg-linear-to-b from-(--app-surface-elevated) to-(--app-surface-muted) p-5 md:border-l md:border-t-0 md:p-6">
+                <div className="flex h-full flex-col justify-between gap-5">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-(--app-text-subtle)">Vista viva</p>
+                    <div className="mt-4 overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_6px_22px_rgba(29,54,120,0.07)]">
+                      <div className="flex h-[46px] items-center justify-between bg-linear-to-br from-primary-700 to-primary-500 px-4 text-white">
+                        <div className="leading-none">
+                          <p className="text-lg font-extrabold italic tracking-tight">asi</p>
+                          <p className="mt-0.5 text-[6.5px] font-bold uppercase tracking-[0.2em] text-white/70">Talent</p>
+                        </div>
+                        <span className="rounded-[5px] border border-white/40 px-2 py-1 text-[9.5px] font-bold uppercase tracking-[0.1em] text-white/85">
+                          Perfil
                         </span>
                       </div>
-
-                      <h2 className="mt-5 text-[1.65rem] font-bold leading-tight text-(--app-text) sm:text-[2rem]">
-                        {activeStep.title}
-                      </h2>
-                      <p className="mt-2 max-w-xl text-sm leading-6 text-(--app-text-muted)">
-                        {activeStep.description}
-                      </p>
-
-                      <form className="mt-7 space-y-5" onSubmit={(event) => event.preventDefault()}>
-                        {activeStep.id === 'identity' ? (
-                          <>
-                            <label className="block space-y-1.5">
-                              <span className="text-[13px] font-semibold text-(--app-text)">Nombre completo</span>
-                              <Input
-                                autoComplete="name"
-                                className="h-13 rounded-card"
-                                placeholder="Ej. John Doe"
-                                {...form.register('fullName')}
-                              />
-                              <FieldError message={form.formState.errors.fullName?.message} />
-                            </label>
-
-                            <label className="block space-y-1.5">
-                              <span className="text-[13px] font-semibold text-(--app-text)">Nombre visible</span>
-                              <span className="block text-[12px] text-(--app-text-muted)">
-                                Así te verán los demás en la plataforma.
-                              </span>
-                              <Input
-                                className="h-13 rounded-card"
-                                placeholder="Ej. John D."
-                                {...form.register('displayName')}
-                              />
-                              <FieldError message={form.formState.errors.displayName?.message} />
-                            </label>
-                          </>
-                        ) : null}
-
-                        {activeStep.id === 'context' ? (
-                          <div className="grid gap-4 sm:grid-cols-2">
-                            <label className="block space-y-1.5">
-                              <span className="text-[13px] font-semibold text-(--app-text)">Idioma</span>
-                              <Select className="h-13 rounded-card" {...form.register('locale')}>
-                                <option value="es">Espanol</option>
-                                <option value="en">English</option>
-                              </Select>
-                            </label>
-
-                            <label className="block space-y-1.5">
-                              <span className="text-[13px] font-semibold text-(--app-text)">País</span>
-                              <CountryCodeSelect className="h-13 rounded-card" {...form.register('countryCode')} />
-                              <FieldError message={form.formState.errors.countryCode?.message} />
-                            </label>
+                      <div className="p-[18px]">
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-[54px] shrink-0 items-center justify-center overflow-hidden rounded-card bg-linear-to-br from-primary-500 to-primary-300 text-lg font-bold text-white shadow-sm">
+                            {avatarPreviewUrl ? (
+                              <img alt="Vista previa de avatar" className="h-full w-full object-cover" src={avatarPreviewUrl} />
+                            ) : (
+                              previewInitials
+                            )}
                           </div>
-                        ) : null}
-
-                        {activeStep.id === 'avatar' ? (
-                          <div className="space-y-4">
-                            <label className="flex cursor-pointer flex-col items-center justify-center rounded-card-lg border border-dashed border-primary-300 bg-primary-50/70 px-4 py-8 text-center transition hover:bg-primary-50 dark:border-primary-500/30 dark:bg-primary-500/10">
-                              <UploadCloud className="size-8 text-primary-600 dark:text-primary-200" />
-                              <span className="mt-3 text-sm font-semibold text-(--app-text)">Subir foto</span>
-                              <span className="mt-1 max-w-xs text-xs leading-5 text-(--app-text-muted)">
-                                SVG, PNG, JPG o WEBP. Limite {MAX_UPLOAD_SIZE_LABEL}.
-                              </span>
-                              <input
-                                accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
-                                className="sr-only"
-                                type="file"
-                                onChange={(event) => void handleAvatarChange(event.target.files?.[0] ?? null)}
-                              />
-                            </label>
-                            {isPreparingAvatar ? (
-                              <p className="text-xs text-(--app-text-subtle)">Optimizando foto...</p>
-                            ) : null}
-                            {avatarFileError ? <p className="text-xs text-rose-600 dark:text-rose-300">{avatarFileError}</p> : null}
+                          <div className="min-w-0">
+                            <p className="truncate text-[17px] font-bold tracking-tight text-(--app-text)">{previewName}</p>
+                            <p className="truncate text-xs text-(--app-text-subtle)">{session.authUser?.email ?? 'correo@asi.do'}</p>
                           </div>
-                        ) : null}
-                      </form>
-                    </div>
-
-                    <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <Button
-                        className="h-12 rounded-card px-4"
-                        disabled={activeStepIndex === 0 || form.formState.isSubmitting}
-                        variant="outline"
-                        onClick={() => setActiveStepIndex((value) => Math.max(value - 1, 0))}
-                      >
-                        <ArrowLeft className="size-4" />
-                        Atras
-                      </Button>
-                      <Button
-                        className="h-12 rounded-card px-5"
-                        disabled={form.formState.isSubmitting || isPreparingAvatar}
-                        onClick={() => void handleNext()}
-                      >
-                        {form.formState.isSubmitting ? 'Guardando...' : isLastStep ? 'Guardar y entrar' : 'Continuar'}
-                        <ArrowRight className="size-4" />
-                      </Button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div className="border-t border-(--app-border) bg-(--app-surface-muted) p-5 lg:border-t-0 lg:border-l">
-              <div className="flex h-full flex-col justify-between gap-5">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-(--app-text-subtle)">Vista viva</p>
-                  <div className="mt-4 rounded-card-lg border border-(--app-border) bg-(--app-surface-elevated) p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-card bg-primary-100 text-xs font-semibold text-primary-700">
-                        {avatarPreviewUrl ? (
-                          <img alt="Vista previa de avatar" className="h-full w-full object-cover" src={avatarPreviewUrl} />
-                        ) : (
-                          'Foto'
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-(--app-text)">{previewName}</p>
-                        <p className="truncate text-xs text-(--app-text-muted)">{session.authUser?.email ?? 'correo@asi.do'}</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-                      <div className="rounded-control bg-(--app-surface) p-3">
-                        <span className="block text-(--app-text-subtle)">Idioma</span>
-                        <strong className="mt-1 block text-(--app-text)">{previewLocale}</strong>
-                      </div>
-                      <div className="rounded-control bg-(--app-surface) p-3">
-                        <span className="block text-(--app-text-subtle)">País</span>
-                        <strong className="mt-1 block text-(--app-text)">{previewCountry.toUpperCase()}</strong>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-dashed border-(--app-border) pt-4">
+                          <div>
+                            <span className="block text-[10.5px] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Idioma</span>
+                            <strong className="mt-1 block text-sm font-semibold text-(--app-text)">{previewLocale}</strong>
+                          </div>
+                          <div>
+                            <span className="block text-[10.5px] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">País</span>
+                            <strong className="mt-1 block truncate text-sm font-semibold text-(--app-text)">
+                              {previewCountryLabel}
+                            </strong>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <p className="text-xs leading-5 text-(--app-text-subtle)">
-                  Este tour guarda solo lo necesario para activar la navegacion. Lo demas queda disponible en tu perfil.
-                </p>
+                  <p className="text-xs leading-5 text-(--app-text-subtle)">
+                    Este tour guarda solo lo necesario para activar la navegación. Lo demás queda disponible en tu perfil.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      </main>
+          </section>
+        </main>
 
-      <OnboardingFrame
-        activeStep={isComplete ? 'done' : activeStep.id}
-        completedStepCount={completedStepCount}
-      />
+        <OnboardingFrame
+          activeStep={isComplete ? 'done' : activeStep.id}
+          completedStepCount={completedStepCount}
+          onStepSelect={(stepIndex) => void goToStep(stepIndex)}
+        />
+      </div>
+
+      {!isComplete ? (
+        <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-(--app-border) bg-(--app-surface-elevated)/90 px-4 py-3 shadow-[0_-18px_34px_rgba(21,32,59,0.12)] backdrop-blur md:hidden">
+          <Button
+            aria-label="Atrás"
+            className="h-12 w-14 shrink-0 rounded-card px-0"
+            disabled={activeStepIndex === 0 || form.formState.isSubmitting}
+            variant="outline"
+            onClick={() => setActiveStepIndex((value) => Math.max(value - 1, 0))}
+          >
+            <ArrowLeft className="size-5" />
+          </Button>
+          <Button
+            className="h-12 min-w-0 flex-1 rounded-card px-4"
+            disabled={form.formState.isSubmitting || isPreparingAvatar}
+            onClick={() => void handleNext()}
+          >
+            <span className="truncate">{primaryActionLabel}</span>
+            <ArrowRight className="size-4 shrink-0" />
+          </Button>
+        </div>
+      ) : null}
     </div>
   )
 }
