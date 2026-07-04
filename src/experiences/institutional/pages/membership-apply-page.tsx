@@ -157,6 +157,17 @@ function MembershipAuthGate({ token }: { token: EligibilityToken }) {
           Tu membresía se vincula a tu cuenta para gestionar el pago, la aprobación y la renovación.
         </p>
       </div>
+
+      <p className="mx-auto mt-6 max-w-xl text-center text-xs leading-6 text-(--asi-text-muted)">
+        ¿Tiene preguntas?{' '}
+        <Link
+          to={surfacePaths.institutional.contactUs}
+          className="font-semibold text-(--asi-primary) hover:underline"
+        >
+          Contáctenos
+        </Link>{' '}
+        para recibir orientación.
+      </p>
     </InstitutionalSection>
   );
 }
