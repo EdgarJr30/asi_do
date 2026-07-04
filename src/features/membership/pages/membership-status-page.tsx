@@ -376,12 +376,6 @@ export function MembershipStatusPage() {
             Mantén tu membresía ASI al día, renueva con facilidad y conserva tus comprobantes en un solo lugar.
           </p>
         </div>
-
-        {!session.hasActiveAsiAccess ? (
-          <Button className="h-10 w-fit" onClick={() => void navigate(surfacePaths.institutional.eligibility)}>
-            Completar solicitud <ArrowRight className="size-4" />
-          </Button>
-        ) : null}
       </motion.header>
 
       {statusQuery.isLoading ? (
@@ -457,7 +451,7 @@ export function MembershipStatusPage() {
                     ) : null}
 
                     {!session.hasActiveAsiAccess && currentStep?.key === 'application' && currentStep.state === 'current' ? (
-                      <Button className="h-10" onClick={() => void navigate(surfacePaths.institutional.eligibility)}>
+                      <Button className="h-10" onClick={() => void navigate(surfacePaths.institutional.membershipApply)}>
                         Iniciar mi solicitud <ArrowRight className="size-4" />
                       </Button>
                     ) : null}
@@ -539,7 +533,7 @@ export function MembershipStatusPage() {
                         <MembershipStep
                           key={step.key}
                           step={step}
-                          onStartApplication={() => void navigate(surfacePaths.institutional.eligibility)}
+                          onStartApplication={() => void navigate(surfacePaths.institutional.membershipApply)}
                         />
                       ))}
                     </motion.div>

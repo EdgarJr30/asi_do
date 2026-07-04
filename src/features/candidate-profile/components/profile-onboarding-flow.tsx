@@ -51,7 +51,7 @@ const steps = [
   {
     id: 'identity',
     label: 'Identidad',
-    title: 'Como te presentamos',
+    title: '¿Cómo te presentamos?',
     description: 'Dos nombres claros. Nada más.',
     icon: UserRound,
     fields: ['fullName', 'displayName'] satisfies FieldPath<OnboardingValues>[]
@@ -60,7 +60,7 @@ const steps = [
     id: 'context',
     label: 'Contexto',
     title: 'Idioma y país',
-    description: 'ASI ajusta la experiencia inicial con estos datos.',
+    description: 'Ajustamos tu experiencia inicial.',
     icon: Globe2,
     fields: ['locale', 'countryCode'] satisfies FieldPath<OnboardingValues>[]
   },
@@ -68,7 +68,7 @@ const steps = [
     id: 'avatar',
     label: 'Foto',
     title: 'Una foto ayuda, pero no bloquea',
-    description: 'Puedes subirla ahora u omitirla sin perder progreso.',
+    description: 'Súbela ahora u omítela.',
     icon: Camera,
     fields: [] satisfies FieldPath<OnboardingValues>[]
   }
@@ -152,7 +152,7 @@ function OnboardingFrame({
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary-600" />
           <p className="text-sm leading-6 text-(--app-text-muted)">
-            Tus datos base habilitan el acceso. El CV, experiencia y solicitud de empresa pueden completarse despues.
+            Con tus datos base ya tienes acceso. El CV y la experiencia los completas después.
           </p>
         </div>
       </div>
@@ -551,6 +551,9 @@ export function ProfileOnboardingFlow() {
 
                             <label className="block space-y-1.5">
                               <span className="text-[13px] font-semibold text-(--app-text)">Nombre visible</span>
+                              <span className="block text-[12px] text-(--app-text-muted)">
+                                Así te verán los demás en la plataforma.
+                              </span>
                               <Input
                                 className="h-13 rounded-card"
                                 placeholder="Ej. John D."
