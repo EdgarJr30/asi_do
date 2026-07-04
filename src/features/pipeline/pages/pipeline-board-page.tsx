@@ -416,7 +416,7 @@ export function PipelineBoardPage() {
 
   return (
     <motion.div
-      className="flex h-[calc(100svh-13.5rem)] min-h-0 flex-col overflow-hidden lg:h-[calc(100svh-8.5rem)]"
+      className="flex min-h-0 flex-col lg:h-[calc(100svh-8.5rem)] lg:overflow-hidden"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
@@ -496,7 +496,7 @@ export function PipelineBoardPage() {
         <motion.div
           ref={boardScrollRef}
           variants={gridStagger}
-          className="tm-scrollbar flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4"
+          className="tm-scrollbar flex min-h-0 flex-1 flex-col gap-4 pb-4 lg:flex-row lg:overflow-x-auto"
         >
           {visibleStages.map((stage, stageIndex) => {
             const stageApplications = filteredApplications.filter((application) => application.current_stage_id === stage.id)
@@ -520,7 +520,7 @@ export function PipelineBoardPage() {
                 onDragLeave={() => setDragOverStageId((current) => (current === stage.id ? null : current))}
                 onDrop={() => handleDropOnStage(stage.id)}
                 className={cn(
-                  'flex min-h-0 min-w-80 flex-1 shrink-0 flex-col rounded-card border transition lg:min-w-88',
+                  'flex min-h-0 w-full flex-col rounded-card border transition lg:w-auto lg:min-w-88 lg:flex-1 lg:shrink-0',
                   isDropTarget
                     ? 'border-primary-400 bg-primary-50/70 dark:bg-primary-500/10'
                     : 'border-(--app-border) bg-(--app-surface-muted)/80'
@@ -538,7 +538,7 @@ export function PipelineBoardPage() {
                 <div className={cn('mx-4 h-1 shrink-0 rounded-full', tone.trackClassName)} />
 
                 <div
-                  className="tm-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-2.5 py-3"
+                  className="tm-scrollbar flex min-h-0 flex-col gap-2 px-2.5 py-3 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain"
                   onScroll={(event) => handleStageListScroll(stage.id, stageApplications.length, event.currentTarget)}
                   onWheel={handleStageListWheel}
                 >

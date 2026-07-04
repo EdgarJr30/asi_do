@@ -1523,7 +1523,7 @@ export function PlatformAppShell({
 
       <div className="min-w-0 transition-[padding] duration-200 ease-out lg:pl-(--shell-sidebar-width)">
         <header className="sticky top-0 z-40 border-b border-(--app-border) bg-white/94 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
-          <div className="flex min-h-18 items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex min-h-18 items-center gap-2 px-4 py-3 sm:gap-4 sm:px-6 lg:px-8">
             <button
               aria-label={`Abrir sidebar de ${config.mobileSidebarLabel}`}
               className="inline-flex size-11 shrink-0 items-center justify-center rounded-card border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-slate-300 hover:bg-white lg:hidden dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/10"
@@ -1533,16 +1533,19 @@ export function PlatformAppShell({
               <Menu className="size-5" />
             </button>
 
-            <div className={cn('min-w-0', isWorkspace ? 'shrink-0' : 'flex-1')}>
+            <div className="min-w-0 flex-1">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <nav aria-label="Breadcrumb" className="flex min-w-0 flex-wrap items-center gap-2">
+                <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2">
                   {breadcrumbs.map((crumb, index) => {
                     const isCurrentPage = index === breadcrumbs.length - 1
                     const href = crumb.href
 
                     return (
-                      <div key={`${href ?? crumb.title}-${index}`} className="flex min-w-0 items-center gap-2">
-                        {index > 0 ? <span className="text-sm text-slate-300">/</span> : null}
+                      <div
+                        key={`${href ?? crumb.title}-${index}`}
+                        className={cn('min-w-0 items-center gap-2', isCurrentPage ? 'flex' : 'hidden sm:flex')}
+                      >
+                        {index > 0 ? <span className="hidden text-sm text-slate-300 sm:inline">/</span> : null}
                         {href && !isCurrentPage ? (
                           <button
                             type="button"
@@ -1576,7 +1579,7 @@ export function PlatformAppShell({
             </div>
 
             {session.isAuthenticated ? (
-              <div className="ml-auto flex items-center gap-2 sm:gap-3">
+              <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3">
                 <div className="relative" ref={notificationPanelRef}>
                   <Tooltip label="Notificaciones" side="bottom">
                     <button

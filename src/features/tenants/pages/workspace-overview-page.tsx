@@ -444,7 +444,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
         <StatCell label="Visibilidad" value={isPublic ? 'Perfil público' : 'Perfil privado'} sublabel="presencia actual de la empresa" />
       </motion.section>
 
-      <motion.section variants={gridStagger} className="grid gap-5 xl:grid-cols-[1.25fr_1fr]">
+      <motion.section variants={gridStagger} className="grid gap-5 [&>*]:min-w-0 xl:grid-cols-[1.25fr_1fr]">
         <motion.div variants={cardReveal} className={panelClassName}>
           <div className="border-b border-(--app-border) px-4 py-4">
             <h2 className="text-base font-bold tracking-tight text-(--app-text)">Datos de la empresa</h2>
