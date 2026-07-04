@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { surfacePaths } from '@/app/router/surface-paths'
+import { useAppSession } from '@/app/providers/app-session-provider'
 import {
   LegalClauseSection,
   LegalDocActions,
@@ -22,6 +23,9 @@ export function LegalDocumentPage({ kind }: { kind: LegalDocKind }) {
   const document = legalDocuments[kind]
   const clauseIds = useMemo(() => document.clauses.map((clause) => clause.id), [document])
   const activeClauseId = useScrollSpy(clauseIds)
+  // La metadata operativa (vigencia, versión, imprimir, historial de cambios) es
+  // ruido para el público general; solo la exponemos a quienes administran la consola.
+  const { canAccessAdminConsole } = useAppSession()
 
   return (
     <div className="pb-6" data-legal-print>
@@ -39,11 +43,13 @@ export function LegalDocumentPage({ kind }: { kind: LegalDocKind }) {
           <h1 className="asi-heading-lg mt-3.5 max-w-[20ch] text-[clamp(1.9rem,4vw,2.6rem)]">{document.title}</h1>
           <p className="asi-copy mt-4 max-w-[62ch] text-[1.05rem]">{document.lede}</p>
           <div className="mt-6">
-            <LegalMetaPills document={document} />
+            <LegalMetaPills document={document} includeOperational={canAccessAdminConsole} />
           </div>
-          <div className="mt-5" data-legal-chrome>
-            <LegalDocActions document={document} />
-          </div>
+          {canAccessAdminConsole ? (
+            <div className="mt-5" data-legal-chrome>
+              <LegalDocActions document={document} />
+            </div>
+          ) : null}
         </div>
       </header>
 

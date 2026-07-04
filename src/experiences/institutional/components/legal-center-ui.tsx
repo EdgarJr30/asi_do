@@ -92,10 +92,22 @@ export function LegalDocTabs({ activeKind }: { activeKind: LegalDocument['kind']
 /* ------------------------------------------------------------------ */
 /* Metadata pills — effective date, version, reading time.             */
 /* ------------------------------------------------------------------ */
-export function LegalMetaPills({ document }: { document: LegalDocument }) {
+export function LegalMetaPills({
+  document,
+  includeOperational = true
+}: {
+  document: LegalDocument
+  // La vigencia y la versión son metadata operativa (solo admin); el tiempo de
+  // lectura sí es útil para cualquier lector, así que se muestra siempre.
+  includeOperational?: boolean
+}) {
   const pills = [
-    { icon: metaPillIcons.date, label: 'Vigente desde', value: document.effectiveDate },
-    { icon: metaPillIcons.version, label: 'Versión', value: document.version },
+    ...(includeOperational
+      ? [
+          { icon: metaPillIcons.date, label: 'Vigente desde', value: document.effectiveDate },
+          { icon: metaPillIcons.version, label: 'Versión', value: document.version }
+        ]
+      : []),
     { icon: metaPillIcons.reading, label: 'Lectura', value: document.readingTime }
   ]
 

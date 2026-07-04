@@ -292,25 +292,25 @@ function EligibleResult({
 }) {
   return (
     <StepWrapper stepKey="result-eligible">
-      <div className="flex flex-col items-center gap-6 py-4 text-center">
-        <div className="flex size-16 items-center justify-center rounded-full bg-green-50">
-          <CheckCircle2 className="size-8 text-green-600" />
+      <div className="flex flex-col items-center gap-4 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-green-50">
+          <CheckCircle2 className="size-6 text-green-600" />
         </div>
-        <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-widest text-(--asi-secondary)">
+        <div className="space-y-1.5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-(--asi-secondary)">
             Usted califica
           </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-(--asi-text)">
+          <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
             {result.category}
           </h2>
-          <p className="max-w-[52ch] text-sm leading-7 text-(--asi-text-muted)">{result.message}</p>
+          <p className="max-w-[52ch] text-sm leading-6 text-(--asi-text-muted)">{result.message}</p>
         </div>
 
-        <div className="w-full max-w-sm rounded-card border border-(--asi-outline) bg-(--asi-surface-raised) p-5 text-left">
+        <div className="flex w-full max-w-sm items-center justify-between rounded-card border border-(--asi-outline) bg-(--asi-surface-raised) px-4 py-3 text-left">
           <p className="text-xs font-semibold uppercase tracking-widest text-(--asi-text-muted)">
             Cuota anual
           </p>
-          <p className="mt-1 text-3xl font-semibold tracking-tight text-(--asi-primary)">
+          <p className="text-2xl font-semibold tracking-tight text-(--asi-primary)">
             {result.dues}
           </p>
         </div>
@@ -559,8 +559,7 @@ export function EligibilityPage() {
       <div className="mx-auto max-w-xl">
         {/* Encabezado */}
         <div className="mb-8 text-center">
-          <p className="asi-kicker">Membresía</p>
-          <h1 className="asi-heading-lg mt-3">Verificación de Elegibilidad</h1>
+          <h1 className="asi-heading-lg">Verificación de Elegibilidad</h1>
           <p className="asi-copy mt-3 mx-auto max-w-[52ch]">
             Responda algunas preguntas para determinar qué categoría de membresía ASI es la adecuada para usted.
           </p>
