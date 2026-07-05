@@ -1,7 +1,7 @@
 import type { CSSProperties, FocusEvent, MouseEvent as ReactMouseEvent, ReactNode } from 'react'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Activity,
   Banknote,
@@ -470,44 +470,65 @@ function NotificationRow({
 }
 
 function WorkspaceNotificationPanel({
+  hasNextPage,
   isLoading,
-  isPaging,
+  isFetchingNextPage,
   isUpdatingReadState,
   notifications,
-  page,
-  pageSize,
   totalCount,
-  totalPages,
   unreadCount,
+  onLoadMore,
   onMarkRead,
   onMarkAllRead,
   onMarkUnread,
-  onNextPage,
   onOpenNotification,
-  onPreviousPage,
   isMarkingAll
 }: {
+  hasNextPage: boolean
   isLoading: boolean
-  isPaging: boolean
+  isFetchingNextPage: boolean
   isUpdatingReadState: boolean
   notifications: AppNotification[]
-  page: number
-  pageSize: number
   totalCount: number
-  totalPages: number
   unreadCount: number
+  onLoadMore: () => void
   onMarkRead: (notificationId: string) => void
   onMarkAllRead: () => void
   onMarkUnread: (notificationId: string) => void
-  onNextPage: () => void
   onOpenNotification: (notification: AppNotification) => void
-  onPreviousPage: () => void
   isMarkingAll: boolean
 }) {
-  const hasPreviousPage = page > 1
-  const hasNextPage = page < totalPages
-  const firstVisibleItem = totalCount === 0 ? 0 : (page - 1) * pageSize + 1
-  const lastVisibleItem = Math.min(page * pageSize, totalCount)
+  const listScrollRef = useRef<HTMLUListElement | null>(null)
+  const sentinelRef = useRef<HTMLLIElement | null>(null)
+  const visibleCount = notifications.length
+
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      onLoadMore()
+    }
+  }, [hasNextPage, isFetchingNextPage, onLoadMore])
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore()
+        }
+      },
+      {
+        root: listScrollRef.current,
+        rootMargin: '96px'
+      }
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [loadMore, visibleCount])
 
   return (
     <div className="flex max-h-[min(26rem,calc(100dvh-5rem))] w-full flex-col overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_22px_56px_rgba(8,12,24,0.2)] sm:max-h-[min(32rem,75vh)] sm:w-[min(23rem,calc(100vw-1.5rem))] sm:shadow-[0_28px_72px_rgba(8,12,24,0.22)]">
@@ -555,46 +576,38 @@ function WorkspaceNotificationPanel({
         </div>
       ) : (
         <>
-          <ul className="flex-1 divide-y divide-(--app-border) overflow-y-auto overscroll-contain">
+          <ul ref={listScrollRef} className="flex-1 divide-y divide-(--app-border) overflow-y-auto overscroll-contain">
             {notifications.map((notification) => (
               <NotificationRow
                 key={notification.id}
-                isUpdatingReadState={isPaging || isUpdatingReadState}
+                isUpdatingReadState={isFetchingNextPage || isUpdatingReadState}
                 notification={notification}
                 onMarkRead={onMarkRead}
                 onMarkUnread={onMarkUnread}
                 onOpenNotification={onOpenNotification}
               />
             ))}
+            {hasNextPage ? (
+              <li ref={sentinelRef} className="flex items-center justify-center px-3 py-3">
+                {isFetchingNextPage ? (
+                  <span className="inline-flex items-center gap-2 text-xs font-medium text-(--app-text-muted)">
+                    <Spinner size="sm" />
+                    Cargando más
+                  </span>
+                ) : (
+                  <span className="h-px w-full" aria-hidden />
+                )}
+              </li>
+            ) : null}
           </ul>
 
           <div className="flex items-center justify-between gap-2 border-t border-(--app-border) px-3 py-2">
             <p className="text-xs text-(--app-text-muted)">
-              {firstVisibleItem}-{lastVisibleItem} de {totalCount}
+              {visibleCount} de {totalCount}
             </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                aria-label="Notificaciones anteriores"
-                disabled={!hasPreviousPage || isPaging}
-                onClick={onPreviousPage}
-                className="inline-flex size-8 items-center justify-center rounded-control border border-(--app-border) text-(--app-text-muted) transition hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-45 sm:size-9"
-              >
-                <ChevronLeft className="size-4" />
-              </button>
-              <span className="min-w-14 text-center text-xs font-medium text-(--app-text-muted)">
-                {page}/{totalPages}
-              </span>
-              <button
-                type="button"
-                aria-label="Notificaciones siguientes"
-                disabled={!hasNextPage || isPaging}
-                onClick={onNextPage}
-                className="inline-flex size-8 items-center justify-center rounded-control border border-(--app-border) text-(--app-text-muted) transition hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-45 sm:size-9"
-              >
-                <ChevronRight className="size-4" />
-              </button>
-            </div>
+            <p className="text-xs font-medium text-(--app-text-subtle)">
+              {hasNextPage ? 'Sigue bajando' : 'Todas cargadas'}
+            </p>
           </div>
         </>
       )}
@@ -1273,7 +1286,6 @@ export function PlatformAppShell({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(getInitialSidebarCollapsed)
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false)
-  const [notificationPage, setNotificationPage] = useState(1)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const notificationPanelRef = useRef<HTMLDivElement | null>(null)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
@@ -1292,23 +1304,26 @@ export function PlatformAppShell({
     [isDesktopSidebarCollapsed]
   )
 
-  const notificationsQuery = useQuery({
-    queryKey: [...WORKSPACE_NOTIFICATION_QUERY_KEY, experience, session.authUser?.id, notificationPage],
-    queryFn: () =>
+  const notificationsQuery = useInfiniteQuery({
+    queryKey: [...WORKSPACE_NOTIFICATION_QUERY_KEY, experience, session.authUser?.id],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) =>
       fetchMyNotificationsPage({
-        page: notificationPage,
+        page: pageParam,
         pageSize: NOTIFICATION_PAGE_SIZE,
         recipientUserId: session.authUser?.id
       }),
-    enabled: session.isAuthenticated && Boolean(session.authUser?.id)
+    enabled: session.isAuthenticated && Boolean(session.authUser?.id),
+    getNextPageParam: (lastPage, allPages) => {
+      const loadedCount = allPages.reduce((total, page) => total + page.notifications.length, 0)
+
+      return loadedCount < lastPage.totalCount ? allPages.length + 1 : undefined
+    }
   })
-  const notificationPageData = notificationsQuery.data
-  const notifications = notificationPageData?.notifications ?? []
-  const notificationTotalCount = notificationPageData?.totalCount ?? 0
-  const notificationTotalPages = notificationPageData
-    ? Math.max(1, Math.ceil(notificationTotalCount / NOTIFICATION_PAGE_SIZE))
-    : notificationPage
-  const notificationUnreadCount = notificationPageData?.unreadCount ?? 0
+  const notificationPages = notificationsQuery.data?.pages ?? []
+  const notifications = notificationPages.flatMap((page) => page.notifications)
+  const notificationTotalCount = notificationPages[0]?.totalCount ?? 0
+  const notificationUnreadCount = notificationPages[0]?.unreadCount ?? 0
 
   const invalidateNotifications = () =>
     queryClient.invalidateQueries({
@@ -1478,10 +1493,7 @@ export function PlatformAppShell({
           userInitials={userIdentity.initials}
           userName={userIdentity.displayName}
           onActionNavigate={handleActionNavigate}
-          onOpenNotifications={() => {
-            setNotificationPage(1)
-            setNotificationPanelOpen(true)
-          }}
+          onOpenNotifications={() => setNotificationPanelOpen(true)}
           onOpenProfile={() => handleActionNavigate(config.profileHref)}
           onSignOut={handleSignOut}
           onToggleSidebar={() => setIsDesktopSidebarCollapsed((current) => !current)}
@@ -1510,7 +1522,6 @@ export function PlatformAppShell({
               onActionNavigate={handleActionNavigate}
               onOpenNotifications={() => {
                 setMobileSidebarOpen(false)
-                setNotificationPage(1)
                 setNotificationPanelOpen(true)
               }}
               onOpenProfile={() => handleActionNavigate(config.profileHref)}
@@ -1589,11 +1600,7 @@ export function PlatformAppShell({
                       type="button"
                       onClick={() => {
                         setNotificationPanelOpen((current) => {
-                          const nextOpen = !current
-                          if (nextOpen) {
-                            setNotificationPage(1)
-                          }
-                          return nextOpen
+                          return !current
                         })
                         setProfileMenuOpen(false)
                       }}
@@ -1611,21 +1618,18 @@ export function PlatformAppShell({
                       data-testid="notification-panel-positioner"
                     >
                       <WorkspaceNotificationPanel
+                        hasNextPage={notificationsQuery.hasNextPage}
                         isLoading={notificationsQuery.isLoading}
-                        isPaging={notificationsQuery.isFetching}
+                        isFetchingNextPage={notificationsQuery.isFetchingNextPage}
                         isUpdatingReadState={markReadMutation.isPending || markUnreadMutation.isPending}
                         notifications={notifications}
-                        page={notificationPage}
-                        pageSize={NOTIFICATION_PAGE_SIZE}
                         totalCount={notificationTotalCount}
-                        totalPages={notificationTotalPages}
                         unreadCount={notificationUnreadCount}
+                        onLoadMore={() => void notificationsQuery.fetchNextPage()}
                         onMarkRead={handleMarkRead}
                         onMarkAllRead={handleMarkAllRead}
                         onMarkUnread={handleMarkUnread}
-                        onNextPage={() => setNotificationPage((current) => Math.min(notificationTotalPages, current + 1))}
                         onOpenNotification={(notification) => void handleOpenNotification(notification)}
-                        onPreviousPage={() => setNotificationPage((current) => Math.max(1, current - 1))}
                         isMarkingAll={markAllReadMutation.isPending}
                       />
                     </div>
