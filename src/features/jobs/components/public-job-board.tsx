@@ -877,7 +877,7 @@ function DetailEmptyState() {
 }
 
 const detailTagClass =
-  'inline-flex h-[30px] items-center gap-1.5 rounded-control border border-(--app-border) bg-(--app-surface-muted) px-3 text-[0.78rem] font-medium text-(--app-text-muted)'
+  'inline-flex min-h-7 items-center gap-1 rounded-control border border-(--app-border) bg-(--app-surface-muted) px-2.5 py-0.5 text-[0.7rem] font-medium text-(--app-text-muted) sm:min-h-[30px] sm:gap-1.5 sm:px-3 sm:text-[0.78rem]'
 
 // Entrada suave del panel de detalle: el card entra con un sutil desenfoque,
 // escala y desplazamiento, y su contenido se asienta en cascada.
@@ -899,7 +899,7 @@ const detailBlockVariants: Variants = {
 }
 
 const applyLinkClass =
-  'inline-flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-control border border-primary-600 bg-primary-600 px-5 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(43,69,143,0.18)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2'
+  'inline-flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-control border border-primary-600 bg-primary-600 px-3.5 text-[0.85rem] font-semibold text-white shadow-[0_8px_18px_rgba(43,69,143,0.16)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 sm:px-5 sm:text-sm'
 
 function JobDetailPanel({
   job,
@@ -959,26 +959,26 @@ function JobDetailPanel({
       style={{ willChange: 'transform, filter, opacity' }}
       className="overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface) shadow-sm lg:sticky lg:top-4 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto"
     >
-      <motion.div variants={blockVariants} className="border-b border-(--app-border) p-6">
-        <button type="button" onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-(--app-text-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) lg:hidden">
-          <ArrowLeft aria-hidden className="size-4" /> Volver a resultados
+      <motion.div variants={blockVariants} className="border-b border-(--app-border) p-3.5 sm:p-5 lg:p-6">
+        <button type="button" onClick={onBack} className="mb-2.5 inline-flex items-center gap-1.5 text-[0.78rem] font-medium text-(--app-text-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) sm:mb-3 sm:text-[0.82rem] lg:hidden">
+          <ArrowLeft aria-hidden className="size-3.5 sm:size-4" /> Volver a resultados
         </button>
-        <div className="flex items-start gap-4">
-          <CompanyLogo name={job.company_profile?.display_name} logoPath={job.company_profile?.logo_path} size="lg" />
+        <div className="flex items-start gap-2.5 sm:gap-4">
+          <CompanyLogo name={job.company_profile?.display_name} logoPath={job.company_profile?.logo_path} size="lg" className="size-10 sm:size-12 lg:size-14" />
           <div className="min-w-0 flex-1">
-            <h2 className="text-balance text-xl font-bold leading-tight tracking-tight text-(--app-text)">{job.title}</h2>
-            <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-(--app-text-muted)">
-              <Building2 aria-hidden className="size-4" /> {job.company_profile?.display_name || 'Empresa'}
+            <h2 className="text-balance text-[1.08rem] font-bold leading-tight tracking-tight text-(--app-text) sm:text-lg lg:text-xl">{job.title}</h2>
+            <p className="mt-1 inline-flex items-center gap-1.5 text-[0.8rem] font-medium text-(--app-text-muted) sm:mt-1.5 sm:text-sm">
+              <Building2 aria-hidden className="size-3.5 sm:size-4" /> {job.company_profile?.display_name || 'Empresa'}
             </p>
             {applied ? (
-              <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[0.72rem] font-semibold text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/12 dark:text-emerald-300">
-                <Check aria-hidden className="size-3.5" /> Ya aplicaste a esta vacante
+              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[0.68rem] font-semibold text-emerald-700 sm:mt-2.5 sm:px-2.5 sm:py-1 sm:text-[0.72rem] dark:border-emerald-500/25 dark:bg-emerald-500/12 dark:text-emerald-300">
+                <Check aria-hidden className="size-3 sm:size-3.5" /> Ya aplicaste
               </span>
             ) : null}
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:mt-4 sm:gap-2">
           <span className={detailTagClass}><MapPin aria-hidden className="size-3.5 text-(--app-text-subtle)" /> {locationLabel(job)}</span>
           {job.workplace_type ? <span className={detailTagClass}><Clock3 aria-hidden className="size-3.5 text-(--app-text-subtle)" /> {workplaceLabel(job.workplace_type)}</span> : null}
           <span className={detailTagClass}><Briefcase aria-hidden className="size-3.5 text-(--app-text-subtle)" /> {employmentLabel(job.employment_type) || getOpportunityTypeLabel(job.opportunity_type)}</span>
@@ -990,7 +990,7 @@ function JobDetailPanel({
       </motion.div>
 
       {/* Barra de acciones */}
-      <motion.div variants={blockVariants} className="flex items-center gap-2.5 border-b border-(--app-border) px-6 py-4">
+      <motion.div variants={blockVariants} className="flex items-center gap-2 border-b border-(--app-border) px-3.5 py-2.5 sm:gap-2.5 sm:px-5 sm:py-3.5 lg:px-6 lg:py-4">
         {applied ? (
           <Link className={applyLinkClass} to={surfacePaths.public.jobApply(job.slug)}>
             <FileText className="size-4" /> Actualizar CV
@@ -1013,48 +1013,48 @@ function JobDetailPanel({
               onClick={() => onToggleSave(!saved)}
               disabled={savePending || !canSave}
             >
-              {saved ? <BookmarkCheck className="size-5" /> : <Bookmark className="size-5" />}
+              {saved ? <BookmarkCheck className="size-4.5" /> : <Bookmark className="size-4.5" />}
             </Button>
           </Tooltip>
         ) : null}
         <Tooltip label="Compartir">
           <Button variant="outline" className="size-11 shrink-0 rounded-control p-0" aria-label="Compartir vacante" onClick={() => void handleShare()}>
-            <Share2 className="size-5" />
+            <Share2 className="size-4.5" />
           </Button>
         </Tooltip>
       </motion.div>
 
       <motion.div variants={blockVariants} className="divide-y divide-(--app-border)">
-        <section className="px-6 py-5">
-          <h4 className="mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Descripción del puesto</h4>
+        <section className="px-3.5 py-3.5 sm:px-5 sm:py-4 lg:px-6 lg:py-5">
+          <h4 className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle) sm:mb-3 sm:text-[0.7rem]">Descripción del puesto</h4>
           {job.summary ? (
-            <p className="text-sm leading-7 text-(--app-text-muted)">{job.summary}</p>
+            <p className="text-[0.86rem] leading-6 text-(--app-text-muted) sm:text-sm sm:leading-7">{job.summary}</p>
           ) : (
-            <p className="line-clamp-4 whitespace-pre-wrap text-sm leading-7 text-(--app-text-muted)">
+            <p className="line-clamp-3 whitespace-pre-wrap text-[0.86rem] leading-6 text-(--app-text-muted) sm:line-clamp-4 sm:text-sm sm:leading-7">
               {job.description || 'La empresa aún no agregó una descripción detallada.'}
             </p>
           )}
           <Link
             to={surfacePaths.public.jobDetail(job.slug)}
-            className="mt-3 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-primary-600 hover:underline dark:text-primary-300"
+            className="mt-2 inline-flex items-center gap-1.5 text-[0.78rem] font-medium text-primary-600 hover:underline sm:mt-3 sm:text-[0.82rem] dark:text-primary-300"
           >
             Ver vacante completa <ArrowRight aria-hidden className="size-3.5" />
           </Link>
         </section>
 
-        <section className="px-6 py-5">
-          <h4 className="mb-3 inline-flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">
+        <section className="px-3.5 py-3.5 sm:px-5 sm:py-4 lg:px-6 lg:py-5">
+          <h4 className="mb-2 inline-flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle) sm:mb-3 sm:gap-2 sm:text-[0.7rem]">
             <Building2 aria-hidden className="size-3.5" /> Sobre la empresa
           </h4>
           {sector ? (
-            <span className="mb-2 inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-[0.7rem] font-semibold text-primary-700 dark:bg-primary-500/12 dark:text-primary-300">
+            <span className="mb-1.5 inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[0.68rem] font-semibold text-primary-700 sm:mb-2 sm:px-2.5 sm:text-[0.7rem] dark:bg-primary-500/12 dark:text-primary-300">
               {getSectorLabel(sector)}
             </span>
           ) : null}
-          <p className="text-[0.85rem] font-medium text-(--app-text)">{job.company_profile?.display_name || 'Empresa'}</p>
-          {job.company_profile?.industry ? <p className="mt-0.5 text-[0.8rem] text-(--app-text-muted)">{job.company_profile.industry}</p> : null}
+          <p className="text-[0.82rem] font-medium text-(--app-text) sm:text-[0.85rem]">{job.company_profile?.display_name || 'Empresa'}</p>
+          {job.company_profile?.industry ? <p className="mt-0.5 text-[0.76rem] text-(--app-text-muted) sm:text-[0.8rem]">{job.company_profile.industry}</p> : null}
           {detail?.company_profile?.website_url ? (
-            <a className="mt-3 inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-primary-600 hover:underline dark:text-primary-300" href={detail.company_profile.website_url} rel="noreferrer" target="_blank">
+            <a className="mt-2 inline-flex items-center gap-1.5 text-[0.78rem] font-medium text-primary-600 hover:underline sm:mt-3 sm:text-[0.82rem] dark:text-primary-300" href={detail.company_profile.website_url} rel="noreferrer" target="_blank">
               <Globe aria-hidden className="size-4" /> Visitar sitio web
             </a>
           ) : null}

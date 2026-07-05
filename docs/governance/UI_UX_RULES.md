@@ -532,6 +532,7 @@ Rules:
 12. Administration screens should stay consolidated by operational domain: Aprobaciones includes territorial authority invitations, Finanzas includes payments plus donations, Comunicaciones includes email pipeline plus notifications, and Administrar membresías includes review, payment validation, activation, and inactivation of member access. Prefer action-oriented navigation labels, compact statbars, tabs, list rows, pagination, and collapsible metadata over large KPI cards, duplicated settings modules, or inline raw JSON blocks. Payment gateway payloads may expose formatted JSON only inside a focused detail modal for support/conciliation. Dense admin modules should use the full shell width within the standard shell padding instead of a second centered max-width container.
 13. Candidate `Inicio` should stay dense on mobile: KPI cards use a compact two-column rhythm, recent-application rows keep company identity small, and submitted date plus public status share one metadata line instead of stacking into tall cards.
 14. Public vacancy detail pages should avoid oversized hero treatments. Keep the full job view compact on mobile and desktop with restrained logo/title scale, tight tags, concise section rows, and a mobile action bar that does not consume excessive vertical space.
+15. The mobile jobs-board vacancy preview should be denser than the full detail page: compact header, small company logo, tight chips, short description/company sections, and touch-safe but low-padding actions.
 
 ---
 
