@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   applicationMatchesFilter,
+  applicationStatusesForFilter,
   buildApplicationFilterCounts,
   type PublicApplicationStatus
 } from '@/features/applications/lib/application-overview-filters'
@@ -30,5 +31,12 @@ describe('application overview filters', () => {
     expect(applicationMatchesFilter('rejected', 'all')).toBe(true)
     expect(applicationMatchesFilter('rejected', 'review')).toBe(false)
     expect(applicationMatchesFilter('withdrawn', 'sent')).toBe(false)
+  })
+
+  it('maps compact candidate tabs to database status filters', () => {
+    expect(applicationStatusesForFilter('all')).toBeNull()
+    expect(applicationStatusesForFilter('sent')).toEqual(['submitted'])
+    expect(applicationStatusesForFilter('review')).toEqual(['in_review', 'interviewing', 'offer'])
+    expect(applicationStatusesForFilter('hired')).toEqual(['hired'])
   })
 })

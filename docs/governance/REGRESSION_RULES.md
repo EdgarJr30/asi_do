@@ -407,6 +407,9 @@ Do not let the mobile vacancy preview opened from the jobs board become an overs
 ### R-113 — Candidate Postulaciones cards must stay compact on mobile
 Do not let the candidate `Postulaciones` application cards return to tall mobile layouts with date, status, and action controls stacked as separate rows. Mobile rows should keep a small company logo, tight title/company text, and a single metadata line that combines the submitted date with the public status badge while preserving the compact icon-only vacancy action.
 
+### R-114 — Candidate Postulaciones must use database-backed infinite scroll
+Do not restore button-based local pagination or fetch the full candidate application history up front in `Postulaciones`. The page should append rows through infinite scroll while each batch is loaded with a real Supabase `range` query, keeping status/search filters in the query key and preserving count queries for filter stats without loading every application row.
+
 ---
 
 ## Maintenance rule

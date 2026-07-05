@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { ArrowRight, CalendarDays, Check, Clock3, FileText, Search, Send } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -10,14 +10,12 @@ import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/loader'
-import { Pagination } from '@/components/ui/pagination'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
-import { listMyApplications } from '@/features/applications/lib/applications-api'
+import { countMyApplications, listMyApplicationsPage } from '@/features/applications/lib/applications-api'
 import { applicationStatusLabel } from '@/features/applications/lib/application-status'
 import {
-  applicationMatchesFilter,
   buildApplicationFilterCounts,
   type ApplicationFilter,
   type PublicApplicationStatus
@@ -98,75 +96,83 @@ function applicationStatusPillClass(status: PublicApplicationStatus) {
   }
 }
 
-function applicationMatchesQuery(
-  application: Awaited<ReturnType<typeof listMyApplications>>[number],
-  query: string
-) {
-  const normalizedQuery = query.trim().toLowerCase()
-
-  if (!normalizedQuery) {
-    return true
-  }
-
-  const title = application.job_posting?.title?.toLowerCase() ?? ''
-  const company = application.job_posting?.company_profile?.display_name?.toLowerCase() ?? ''
-
-  return title.includes(normalizedQuery) || company.includes(normalizedQuery)
-}
-
 export function ApplicationsOverviewPage() {
   const navigate = useNavigate()
   const session = useAppSession()
   const shouldReduceMotion = useReducedMotion()
-  const [page, setPage] = useState(0)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
   const [activeFilter, setActiveFilter] = useState<ApplicationFilter>('all')
   const [query, setQuery] = useState('')
+  const userId = session.authUser?.id ?? null
 
-  const myApplicationsQuery = useQuery({
-    queryKey: ['applications', 'mine', session.authUser?.id ?? null],
+  const filterCountsQuery = useQuery({
+    queryKey: ['applications', 'mine', userId, 'overview-counts', query],
     enabled: session.isAuthenticated,
-    queryFn: async () => listMyApplications(session.authUser!.id)
+    queryFn: async () => countMyApplications({ userId: session.authUser!.id, query })
   })
+
+  const myApplicationsQuery = useInfiniteQuery({
+    queryKey: ['applications', 'mine', userId, 'overview', activeFilter, query],
+    enabled: session.isAuthenticated,
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) =>
+      listMyApplicationsPage({
+        userId: session.authUser!.id,
+        filter: activeFilter,
+        query,
+        limit: PAGE_SIZE,
+        offset: pageParam
+      }),
+    getNextPageParam: (lastPage) => lastPage.nextOffset
+  })
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = myApplicationsQuery
 
   // En vivo: el candidato ve cambiar el estado de sus postulaciones en el momento
   // en que la empresa las mueve de etapa. RLS limita los eventos a sus filas.
   useRealtimeSync(
     'my-applications',
-    [{ table: 'applications', invalidate: [['applications', 'mine', session.authUser?.id ?? null]] }],
+    [{ table: 'applications', invalidate: [['applications', 'mine', userId]] }],
     { enabled: session.isAuthenticated }
   )
 
-  const applications = useMemo(() => myApplicationsQuery.data ?? [], [myApplicationsQuery.data])
-  const filterCounts = useMemo(
-    () => buildApplicationFilterCounts(applications.map((application) => application.status_public)),
-    [applications]
-  )
-  const filteredApplications = useMemo(
-    () =>
-      applications.filter(
-        (application) =>
-          applicationMatchesFilter(application.status_public, activeFilter) && applicationMatchesQuery(application, query)
-      ),
-    [activeFilter, applications, query]
-  )
-  const totalPages = Math.max(1, Math.ceil(filteredApplications.length / PAGE_SIZE))
-  const safePage = Math.min(page, totalPages - 1)
-  const paginatedApplications = useMemo(
-    () => filteredApplications.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE),
-    [filteredApplications, safePage]
-  )
-  const firstVisible = filteredApplications.length ? safePage * PAGE_SIZE + 1 : 0
-  const lastVisible = Math.min(filteredApplications.length, safePage * PAGE_SIZE + PAGE_SIZE)
+  const pages = useMemo(() => myApplicationsQuery.data?.pages ?? [], [myApplicationsQuery.data])
+  const visibleApplications = useMemo(() => pages.flatMap((page) => page.applications), [pages])
+  const totalCount = pages[0]?.totalCount ?? 0
+  const filterCounts = filterCountsQuery.data ?? buildApplicationFilterCounts([])
+  const hasLoadedFirstPage = pages.length > 0
 
   function applyFilter(filter: ApplicationFilter) {
     setActiveFilter(filter)
-    setPage(0)
   }
 
   function applyQuery(value: string) {
     setQuery(value)
-    setPage(0)
   }
+
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage()
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore()
+        }
+      },
+      { rootMargin: '180px' }
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [loadMore, visibleApplications.length])
 
   return (
     <motion.div
@@ -208,7 +214,7 @@ export function ApplicationsOverviewPage() {
                   <Icon className="size-3 sm:size-3.5" />
                 </span>
                 <span className="font-sans text-base font-bold leading-none text-(--app-text) sm:text-xl">
-                  {myApplicationsQuery.isLoading ? '...' : filterCounts[stat.key]}
+                  {filterCountsQuery.isLoading ? '...' : filterCounts[stat.key]}
                 </span>
               </span>
               <span className="text-[0.64rem] leading-tight text-(--app-text-subtle) sm:text-[0.7rem]">
@@ -232,7 +238,7 @@ export function ApplicationsOverviewPage() {
         </label>
       </motion.div>
 
-      {myApplicationsQuery.isLoading ? (
+      {myApplicationsQuery.isLoading && !hasLoadedFirstPage ? (
         <motion.div variants={cardReveal}>
           <Card className="flex items-center gap-2.5 text-[0.82rem] text-(--app-text-muted)">
             <Spinner size="sm" /> Cargando historial...
@@ -242,16 +248,16 @@ export function ApplicationsOverviewPage() {
         <motion.div variants={cardReveal}>
           <Card className="text-[0.86rem] text-rose-600">{toErrorMessage(myApplicationsQuery.error)}</Card>
         </motion.div>
-      ) : applications.length ? (
+      ) : totalCount > 0 || visibleApplications.length > 0 ? (
         <motion.div variants={cardReveal} className="space-y-1">
           <div className="flex items-baseline justify-between px-0.5 pt-2">
             <p className="text-[0.82rem] text-(--app-text-subtle)">
-              <b className="font-semibold text-(--app-text)">{paginatedApplications.length}</b> de{' '}
-              <b className="font-semibold text-(--app-text)">{filteredApplications.length}</b> procesos
+              <b className="font-semibold text-(--app-text)">{visibleApplications.length}</b> de{' '}
+              <b className="font-semibold text-(--app-text)">{totalCount}</b> procesos
             </p>
           </div>
 
-          {filteredApplications.length ? (
+          {visibleApplications.length ? (
             <>
               <Card className="overflow-hidden rounded-control p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
                 <motion.ul
@@ -260,7 +266,7 @@ export function ApplicationsOverviewPage() {
                   initial={shouldReduceMotion ? false : 'hidden'}
                   animate="show"
                 >
-                  {paginatedApplications.map((application) => {
+                  {visibleApplications.map((application) => {
                     const status = application.status_public
                     const detailPath = getJobDetailPath(application.job_posting?.slug)
 
@@ -325,14 +331,17 @@ export function ApplicationsOverviewPage() {
                 </motion.ul>
               </Card>
 
-              <PaginationFooter
-                page={safePage}
-                totalPages={totalPages}
-                firstVisible={firstVisible}
-                lastVisible={lastVisible}
-                totalItems={filteredApplications.length}
-                onGo={setPage}
-              />
+              <div ref={sentinelRef} className="flex min-h-12 items-center justify-center px-2 py-3">
+                {myApplicationsQuery.isFetchingNextPage ? (
+                  <span className="inline-flex items-center gap-2 text-[0.8rem] text-(--app-text-muted)">
+                    <Spinner size="sm" /> Cargando más postulaciones...
+                  </span>
+                ) : myApplicationsQuery.hasNextPage ? (
+                  <span className="text-[0.76rem] text-(--app-text-subtle)">Desplázate para cargar más</span>
+                ) : (
+                  <span className="text-[0.76rem] text-(--app-text-subtle)">No hay más postulaciones</span>
+                )}
+              </div>
             </>
           ) : (
             <div className="py-2">
@@ -359,32 +368,5 @@ export function ApplicationsOverviewPage() {
         </motion.div>
       )}
     </motion.div>
-  )
-}
-
-function PaginationFooter({
-  page,
-  totalPages,
-  firstVisible,
-  lastVisible,
-  totalItems,
-  onGo
-}: {
-  page: number
-  totalPages: number
-  firstVisible: number
-  lastVisible: number
-  totalItems: number
-  onGo: (page: number) => void
-}) {
-  if (totalPages <= 1) return null
-
-  return (
-    <div className="flex flex-col gap-3 px-0.5 pt-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-[0.82rem] text-(--app-text-subtle)">
-        Mostrando {firstVisible}-{lastVisible} de {totalItems}
-      </p>
-      <Pagination page={page} totalPages={totalPages} onPageChange={onGo} ariaLabel="Paginación de aplicaciones" />
-    </div>
   )
 }

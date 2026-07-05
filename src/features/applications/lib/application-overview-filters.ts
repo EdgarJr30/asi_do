@@ -6,6 +6,19 @@ export type ApplicationFilter = 'all' | 'sent' | 'review' | 'hired'
 
 const REVIEW_STATUSES = new Set<PublicApplicationStatus>(['in_review', 'interviewing', 'offer'])
 
+export function applicationStatusesForFilter(filter: ApplicationFilter) {
+  switch (filter) {
+    case 'sent':
+      return ['submitted'] satisfies PublicApplicationStatus[]
+    case 'review':
+      return Array.from(REVIEW_STATUSES)
+    case 'hired':
+      return ['hired'] satisfies PublicApplicationStatus[]
+    default:
+      return null
+  }
+}
+
 export function applicationMatchesFilter(status: PublicApplicationStatus, filter: ApplicationFilter) {
   switch (filter) {
     case 'sent':
