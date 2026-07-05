@@ -971,7 +971,7 @@ function JobDetailPanel({
               <Building2 aria-hidden className="size-3.5 sm:size-4" /> {job.company_profile?.display_name || 'Empresa'}
             </p>
             {applied ? (
-              <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[0.68rem] font-semibold text-emerald-700 sm:mt-3.5 sm:px-2.5 sm:py-1 sm:text-[0.72rem] dark:border-emerald-500/25 dark:bg-emerald-500/12 dark:text-emerald-300">
+              <span className="mt-3 flex w-fit items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[0.68rem] font-semibold text-emerald-700 sm:mt-3.5 sm:px-2.5 sm:py-1 sm:text-[0.72rem] dark:border-emerald-500/25 dark:bg-emerald-500/12 dark:text-emerald-300">
                 <Check aria-hidden className="size-3 sm:size-3.5" /> Ya aplicaste
               </span>
             ) : null}
