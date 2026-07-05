@@ -402,7 +402,7 @@ Do not let the candidate `Inicio` dashboard return to oversized single-column KP
 Do not let the public vacancy detail page return to an oversized hero, large logo block, tall tag stack, or overly spaced content sections. The full vacancy view should keep a compact mobile-first hierarchy with smaller heading scale, tighter section spacing, concise responsibility/question rows, and a lightweight sticky action bar on mobile.
 
 ### R-112 — Mobile jobs board preview must stay compact
-Do not let the mobile vacancy preview opened from the jobs board become an oversized pseudo-detail page. The preview panel should keep a compact header, small company logo, tight metadata chips, restrained description/company blocks, and a short action area while preserving touch-safe primary actions. Status badges such as `Ya aplicaste` should still keep visible breathing room from the company name line.
+Do not let the mobile vacancy preview opened from the jobs board become an oversized pseudo-detail page. The preview panel should keep a compact header, small company logo, tight metadata chips, restrained description/company blocks, and a short action area while preserving touch-safe primary actions. Status badges such as `Ya aplicaste` should keep visible breathing room from the company name line, and sector badges should not sit tight against section headings such as `Sobre la empresa`.
 
 ---
 

@@ -1043,7 +1043,7 @@ function JobDetailPanel({
         </section>
 
         <section className="px-3.5 py-3.5 sm:px-5 sm:py-4 lg:px-6 lg:py-5">
-          <h4 className="mb-2 inline-flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle) sm:mb-3 sm:gap-2 sm:text-[0.7rem]">
+          <h4 className="mb-3 flex w-fit items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle) sm:mb-3.5 sm:gap-2 sm:text-[0.7rem]">
             <Building2 aria-hidden className="size-3.5" /> Sobre la empresa
           </h4>
           {sector ? (
