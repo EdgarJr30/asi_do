@@ -10,10 +10,9 @@ import {
   HelpCircle,
   MessageSquareText,
   SendHorizontal,
-  Upload,
-  UserRound
+  Upload
 } from 'lucide-react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -34,6 +33,8 @@ import { cn } from '@/lib/utils/cn'
 const TOTAL_STEPS = 4
 
 const workplaceLabels: Record<string, string> = { remote: 'Remoto', hybrid: 'Híbrido', on_site: 'Presencial' }
+
+const AUTO_REDIRECT_SECONDS = 8
 
 const steps = [
   { name: 'Tu CV', subtitle: 'Elige el documento a enviar' },
@@ -127,6 +128,7 @@ function InlineError({ children }: { children: string }) {
 
 export function JobApplicationPage() {
   const { jobSlug = '' } = useParams()
+  const navigate = useNavigate()
   const session = useAppSession()
   const queryClient = useQueryClient()
   const draftKey = applicationDraftKey(jobSlug, session.authUser?.id)
@@ -140,6 +142,27 @@ export function JobApplicationPage() {
   const [questionErrors, setQuestionErrors] = useState<Record<string, boolean>>({})
   const [applicationSubmitted, setApplicationSubmitted] = useState(false)
   const [successKind, setSuccessKind] = useState<'submitted' | 'updated'>('submitted')
+  const [autoRedirect, setAutoRedirect] = useState(true)
+  const [redirectCountdown, setRedirectCountdown] = useState(AUTO_REDIRECT_SECONDS)
+
+  useEffect(() => {
+    if (!applicationSubmitted || !autoRedirect) {
+      return
+    }
+
+    const interval = window.setInterval(() => {
+      setRedirectCountdown((seconds) => {
+        if (seconds <= 1) {
+          window.clearInterval(interval)
+          navigate(surfacePaths.candidate.applications)
+          return 0
+        }
+        return seconds - 1
+      })
+    }, 1_000)
+
+    return () => window.clearInterval(interval)
+  }, [applicationSubmitted, autoRedirect, navigate])
 
   const candidateProfileQuery = useQuery({
     queryKey: ['candidate-profile', 'mine', 'apply'],
@@ -366,12 +389,8 @@ export function JobApplicationPage() {
           </div>
         </div>
 
-        {isResumeUpdateMode ? (
-          <div className="rounded-control border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/12 dark:text-emerald-200">
-            <p className="font-semibold">Ya aplicaste a esta vacante</p>
-            <p className="mt-1 leading-6">Desde aquí solo puedes actualizar el CV enviado. La carta y las respuestas originales se mantienen.</p>
-          </div>
-        ) : (
+        {isResumeUpdateMode ? null : (
+          <div>
           <ol className="relative flex gap-1 overflow-x-auto pb-1 lg:block lg:overflow-visible lg:pb-0 lg:before:absolute lg:before:bottom-4 lg:before:left-4 lg:before:top-4 lg:before:w-px lg:before:bg-(--app-border)">
             {steps.map((step, index) => {
               const isActive = currentStep === index && !applicationSubmitted
@@ -397,14 +416,14 @@ export function JobApplicationPage() {
               )
             })}
           </ol>
+          <div className="mt-2 h-0.5 overflow-hidden rounded-full bg-(--app-border)">
+            <div className="h-full rounded-full bg-primary-600 transition-[width] duration-300 ease-out" style={{ width: progress }} />
+          </div>
+          </div>
         )}
       </aside>
 
-      <main className="mx-auto w-full max-w-145">
-        <div className="mb-6 h-1 overflow-hidden rounded-full bg-(--app-border)">
-          <div className="h-full rounded-full bg-primary-600 transition-[width] duration-300 ease-out" style={{ width: progress }} />
-        </div>
-
+      <main className="mx-auto w-full min-w-0 max-w-145">
         {applicationSubmitted ? (
           <section className="rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-6 text-center shadow-[0_1px_2px_rgba(20,40,90,0.04)] sm:p-8">
             <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300">
@@ -413,7 +432,7 @@ export function JobApplicationPage() {
             <h1 className="mt-5 text-2xl font-semibold tracking-tight text-(--app-text)">
               {successKind === 'updated' ? 'CV actualizado' : 'Postulación enviada'}
             </h1>
-            <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+            <p className="mt-1.5 text-sm leading-5 text-(--app-text-muted)">
               {successKind === 'updated'
                 ? `Actualizamos el CV enviado al equipo de ${companyName}.`
                 : `Enviamos tu perfil, CV y respuestas al equipo de ${companyName}. Puedes revisar el estado desde tus postulaciones.`}
@@ -432,20 +451,33 @@ export function JobApplicationPage() {
                 Ir a mis postulaciones
               </Link>
             </div>
+            {autoRedirect ? (
+              <p className="mt-4 text-xs text-(--app-text-subtle)">
+                Te llevaremos a tus postulaciones en {redirectCountdown}s ·{' '}
+                <button
+                  type="button"
+                  className="font-semibold text-primary-700 hover:text-primary-800 dark:text-primary-200"
+                  onClick={() => setAutoRedirect(false)}
+                >
+                  Quedarme aquí
+                </button>
+              </p>
+            ) : null}
           </section>
         ) : isResumeUpdateMode ? (
           <section>
             <span className="text-xs font-bold uppercase tracking-[0.08em] text-primary-700 dark:text-primary-200">Postulación existente</span>
-            <h1 className="mt-2 text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text)">Actualizar CV enviado</h1>
-            <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+            <h1 className="mt-1 text-xl font-semibold leading-tight tracking-tight text-(--app-text)">Actualizar CV enviado</h1>
+            <p className="mt-1.5 text-sm leading-5 text-(--app-text-muted)">
               Ya aplicaste a esta vacante. Para evitar cambios accidentales, solo puedes reemplazar el CV asociado a la postulación.
             </p>
 
-            <div className="mt-6 rounded-control border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-sm text-(--app-text-muted)">
-              CV actual: <span className="font-semibold text-(--app-text)">{existingApplication?.submitted_resume_filename ?? 'Sin CV registrado'}</span>
+            <div className="mt-4 rounded-control border border-(--app-border) bg-(--app-surface-muted) px-4 py-2.5 text-sm text-(--app-text-muted)">
+              <span className="text-(--app-text-muted)">CV actual:</span>{' '}
+              <span className="block truncate font-semibold text-(--app-text)">{existingApplication?.submitted_resume_filename ?? 'Sin CV registrado'}</span>
             </div>
 
-            <div className="mt-6 space-y-2.5">
+            <div className="mt-4 space-y-2">
               {profileBundle.resumes.length ? (
                 profileBundle.resumes.map((resume) => {
                   const isSelected = activeResumeId === resume.id
@@ -454,7 +486,7 @@ export function JobApplicationPage() {
                       key={resume.id}
                       type="button"
                       className={cn(
-                        'flex min-h-17 w-full items-center gap-3 rounded-control border bg-(--app-surface) px-4 py-3 text-left transition hover:border-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
+                        'flex min-h-14 w-full items-center gap-3 rounded-control border bg-(--app-surface) px-4 py-2.5 text-left transition hover:border-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
                         isSelected
                           ? 'border-primary-600 shadow-[0_0_0_3px_rgba(57,85,184,0.16)]'
                           : 'border-(--app-border)'
@@ -464,8 +496,8 @@ export function JobApplicationPage() {
                         setShowResumeError(false)
                       }}
                     >
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
-                        <FileText className="size-5" />
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                        <FileText className="size-4.5" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold text-(--app-text)">{resume.filename}</span>
@@ -501,7 +533,7 @@ export function JobApplicationPage() {
             </Link>
             {showResumeError ? <InlineError>Selecciona un CV para actualizar la postulación.</InlineError> : null}
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link to={surfacePaths.public.jobDetail(jobSlug)}>
                 <Button variant="outline" className="rounded-control">Volver a la vacante</Button>
               </Link>
@@ -521,12 +553,12 @@ export function JobApplicationPage() {
             {currentStep === 0 ? (
               <div>
                 <span className="text-xs font-bold uppercase tracking-[0.08em] text-primary-700 dark:text-primary-200">Paso 1 de 4</span>
-                <h1 className="mt-2 text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text)">Tu CV</h1>
-                <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                <h1 className="mt-1 text-xl font-semibold leading-tight tracking-tight text-(--app-text)">Tu CV</h1>
+                <p className="mt-1.5 text-sm leading-5 text-(--app-text-muted)">
                   Usa uno de tus documentos guardados. Tu perfil de ASI viaja con la postulación, así no repites tus datos.
                 </p>
 
-                <div className="mt-6 space-y-2.5">
+                <div className="mt-4 space-y-2">
                   {profileBundle.resumes.length ? (
                     profileBundle.resumes.map((resume) => {
                       const isSelected = activeResumeId === resume.id
@@ -535,7 +567,7 @@ export function JobApplicationPage() {
                           key={resume.id}
                           type="button"
                           className={cn(
-                            'flex min-h-17 w-full items-center gap-3 rounded-control border bg-(--app-surface) px-4 py-3 text-left transition hover:border-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
+                            'flex min-h-14 w-full items-center gap-3 rounded-control border bg-(--app-surface) px-4 py-2.5 text-left transition hover:border-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
                             isSelected
                               ? 'border-primary-600 shadow-[0_0_0_3px_rgba(57,85,184,0.16)]'
                               : 'border-(--app-border)'
@@ -582,7 +614,7 @@ export function JobApplicationPage() {
                 </Link>
                 {showResumeError ? <InlineError>Selecciona un CV para continuar.</InlineError> : null}
 
-                <div className="mt-8 flex flex-wrap items-center gap-3">
+                <div className="mt-6 flex flex-wrap items-center gap-3">
                   <Link to={surfacePaths.public.jobDetail(jobSlug)}>
                     <Button variant="outline" className="rounded-control">Cancelar</Button>
                   </Link>
@@ -596,24 +628,24 @@ export function JobApplicationPage() {
             {currentStep === 1 ? (
               <div>
                 <span className="text-xs font-bold uppercase tracking-[0.08em] text-primary-700 dark:text-primary-200">Paso 2 de 4</span>
-                <h1 className="mt-2 text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text)">Presentación</h1>
-                <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                <h1 className="mt-1 text-xl font-semibold leading-tight tracking-tight text-(--app-text)">Presentación</h1>
+                <p className="mt-1.5 text-sm leading-5 text-(--app-text-muted)">
                   Una nota breve y honesta marca la diferencia. Es opcional, pero suele ayudar al equipo que revisa.
                 </p>
 
-                <div className="mt-6 flex gap-3 rounded-control bg-primary-50 p-4 text-sm leading-6 text-primary-900 dark:bg-primary-500/12 dark:text-primary-100">
-                  <MessageSquareText className="mt-0.5 size-5 shrink-0 text-primary-700 dark:text-primary-200" />
+                <div className="mt-4 flex gap-2.5 rounded-control bg-primary-50 p-3 text-sm leading-5 text-primary-900 dark:bg-primary-500/12 dark:text-primary-100">
+                  <MessageSquareText className="mt-0.5 size-4.5 shrink-0 text-primary-700 dark:text-primary-200" />
                   <p>Enfócate en disponibilidad, motivación y experiencia relevante. Evita repetir tu CV completo.</p>
                 </div>
 
-                <label className="mt-6 block">
+                <label className="mt-4 block">
                   <span className="text-sm font-semibold text-(--app-text)">
                     Carta de presentación <span className="font-medium text-(--app-text-subtle)">· opcional</span>
                   </span>
                   <Textarea
-                    className="mt-2 min-h-42 rounded-control"
+                    className="mt-1.5 min-h-32 rounded-control"
                     maxLength={900}
-                    rows={7}
+                    rows={6}
                     value={coverLetter}
                     onChange={(event) => setCoverLetter(event.target.value)}
                     placeholder="Hola, me interesa esta posición porque..."
@@ -621,7 +653,7 @@ export function JobApplicationPage() {
                   <span className="mt-1 block text-right text-xs text-(--app-text-subtle)">{coverLetter.length} / 900</span>
                 </label>
 
-                <div className="mt-8 flex flex-wrap items-center gap-3">
+                <div className="mt-6 flex flex-wrap items-center gap-3">
                   <Button variant="outline" className="rounded-control" onClick={() => goToStep(0)}>
                     <ArrowLeft className="size-4" /> Atrás
                   </Button>
@@ -635,12 +667,12 @@ export function JobApplicationPage() {
             {currentStep === 2 ? (
               <div>
                 <span className="text-xs font-bold uppercase tracking-[0.08em] text-primary-700 dark:text-primary-200">Paso 3 de 4</span>
-                <h1 className="mt-2 text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text)">Preguntas</h1>
-                <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                <h1 className="mt-1 text-xl font-semibold leading-tight tracking-tight text-(--app-text)">Preguntas</h1>
+                <p className="mt-1.5 text-sm leading-5 text-(--app-text-muted)">
                   {companyName} quiere conocerte mejor. Responde con tus palabras.
                 </p>
 
-                <div className="mt-6 space-y-5">
+                <div className="mt-4 space-y-4">
                   {job.job_screening_questions?.length ? (
                     job.job_screening_questions.map((question, index) => (
                       <label key={question.id} className="block">
@@ -659,7 +691,7 @@ export function JobApplicationPage() {
                         </span>
                         <Textarea
                           className="mt-2 rounded-control"
-                          rows={question.answer_type === 'long_text' ? 5 : 4}
+                          rows={question.answer_type === 'long_text' ? 4 : 3}
                           value={answers[question.id] ?? ''}
                           onChange={(event) => updateAnswer(question.id, event.target.value)}
                           placeholder="Escribe tu respuesta"
@@ -669,12 +701,12 @@ export function JobApplicationPage() {
                     ))
                   ) : (
                     <div className="rounded-control border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
-                      Esta vacante no tiene screening. Puedes revisar y enviar la postulación.
+                      Esta vacante no tiene preguntas. Puedes revisar y enviar la postulación.
                     </div>
                   )}
                 </div>
 
-                <div className="mt-8 flex flex-wrap items-center gap-3">
+                <div className="mt-6 flex flex-wrap items-center gap-3">
                   <Button variant="outline" className="rounded-control" onClick={() => goToStep(1)}>
                     <ArrowLeft className="size-4" /> Atrás
                   </Button>
@@ -688,23 +720,23 @@ export function JobApplicationPage() {
             {currentStep === 3 ? (
               <div>
                 <span className="text-xs font-bold uppercase tracking-[0.08em] text-primary-700 dark:text-primary-200">Paso 4 de 4</span>
-                <h1 className="mt-2 text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text)">Revisar y enviar</h1>
-                <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+                <h1 className="mt-1 text-xl font-semibold leading-tight tracking-tight text-(--app-text)">Revisar y enviar</h1>
+                <p className="mt-1.5 text-sm leading-5 text-(--app-text-muted)">
                   Confirma que todo esté correcto. Podrás ver el estado en Postulaciones.
                 </p>
 
-                <div className="mt-6 divide-y divide-(--app-border)">
-                  <div className="flex gap-3 py-4 first:pt-0">
+                <div className="mt-4 divide-y divide-(--app-border)">
+                  <div className="flex gap-3 py-3 first:pt-0">
                     <FileText className="mt-0.5 size-5 shrink-0 text-(--app-text-subtle)" />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">CV a enviar</p>
-                      <p className="mt-1 text-sm font-semibold text-(--app-text)">{selectedResume?.filename ?? 'Pendiente'}</p>
+                      <p className="mt-1 truncate text-sm font-semibold text-(--app-text)">{selectedResume?.filename ?? 'Pendiente'}</p>
                     </div>
                     <button type="button" className="text-xs font-semibold text-primary-700 hover:text-primary-800" onClick={() => goToStep(0)}>
                       Editar
                     </button>
                   </div>
-                  <div className="flex gap-3 py-4">
+                  <div className="flex gap-3 py-3">
                     <MessageSquareText className="mt-0.5 size-5 shrink-0 text-(--app-text-subtle)" />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Carta de presentación</p>
@@ -716,10 +748,10 @@ export function JobApplicationPage() {
                       Editar
                     </button>
                   </div>
-                  <div className="flex gap-3 py-4">
+                  <div className="flex gap-3 py-3">
                     <HelpCircle className="mt-0.5 size-5 shrink-0 text-(--app-text-subtle)" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Respuestas de screening</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Respuestas a las preguntas</p>
                       <div className="mt-1 space-y-1 text-sm leading-6 text-(--app-text)">
                         {job.job_screening_questions?.length ? (
                           job.job_screening_questions.map((question, index) => (
@@ -738,15 +770,11 @@ export function JobApplicationPage() {
                   </div>
                 </div>
 
-                <div className="mt-8 flex flex-wrap items-center gap-3">
+                <div className="mt-6 flex flex-wrap items-center gap-3">
                   <Button variant="outline" className="rounded-control" onClick={() => goToStep(2)}>
                     <ArrowLeft className="size-4" /> Atrás
                   </Button>
-                  <span className="ml-auto hidden items-center gap-1.5 text-xs font-semibold text-emerald-700 sm:inline-flex dark:text-emerald-300">
-                    <Check className="size-3.5" />
-                    Borrador local
-                  </span>
-                  <Button className="rounded-control" onClick={submit} disabled={applyMutation.isPending}>
+                  <Button className="ml-auto rounded-control" onClick={submit} disabled={applyMutation.isPending}>
                     {applyMutation.isPending ? (
                       'Enviando...'
                     ) : (
@@ -761,10 +789,6 @@ export function JobApplicationPage() {
           </section>
         )}
 
-        <div className="mt-8 flex items-center gap-2 rounded-control border border-(--app-border) bg-(--app-surface-muted) px-4 py-3 text-xs text-(--app-text-muted)">
-          <UserRound className="size-4 shrink-0" />
-          Se enviará tu perfil candidato activo: {session.profile?.display_name ?? session.profile?.full_name ?? 'Perfil ASI'}.
-        </div>
       </main>
     </div>
   )
