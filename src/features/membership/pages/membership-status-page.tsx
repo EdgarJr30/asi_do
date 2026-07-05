@@ -373,7 +373,7 @@ export function MembershipStatusPage() {
         <div className="max-w-3xl">
           <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Tu membresía</h1>
           <p className="max-w-2xl text-[0.84rem] leading-relaxed text-(--app-text-muted)">
-            Mantén tu membresía ASI al día, renueva con facilidad y conserva tus comprobantes en un solo lugar.
+            Mantén tu membresía al día y renueva con facilidad.
           </p>
         </div>
       </motion.header>
