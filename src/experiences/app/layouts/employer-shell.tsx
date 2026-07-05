@@ -414,10 +414,10 @@ function NotificationRow({
 
   return (
     <li className="relative">
-      {isUnread ? <span aria-hidden className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-primary-500" /> : null}
+      {isUnread ? <span aria-hidden className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary-500 sm:w-[3px]" /> : null}
       <div
         className={cn(
-          'flex items-start gap-2 px-4 py-3 transition-colors',
+          'flex items-start gap-1.5 px-3 py-2 transition-colors sm:gap-2 sm:px-4 sm:py-3',
           isUnread && 'bg-primary-50/45 dark:bg-primary-500/8'
         )}
       >
@@ -432,24 +432,24 @@ function NotificationRow({
         >
           <span
             className={cn(
-              'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-control',
+              'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-control sm:size-9',
               isUnread
                 ? 'bg-primary-100 text-primary-600 dark:bg-primary-500/16 dark:text-primary-300'
                 : 'bg-(--app-surface-muted) text-(--app-text-muted)'
             )}
           >
-            <NotificationTypeIcon type={notification.type} className="size-4.5" />
+            <NotificationTypeIcon type={notification.type} className="size-4 sm:size-4.5" />
           </span>
 
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-2">
-              <span className={cn('min-w-0 flex-1 truncate text-sm', isUnread ? 'font-semibold text-(--app-text)' : 'font-medium text-(--app-text)')}>
+              <span className={cn('min-w-0 flex-1 truncate text-[0.82rem] leading-5 sm:text-sm', isUnread ? 'font-semibold text-(--app-text)' : 'font-medium text-(--app-text)')}>
                 {notification.title}
               </span>
               {isUnread ? <span className="size-2 shrink-0 rounded-full bg-primary-500" /> : null}
             </span>
-            <span className="mt-0.5 line-clamp-2 block text-[0.82rem] leading-5 text-(--app-text-muted)">{notification.body}</span>
-            <span className="mt-1 flex items-center gap-1.5 text-[0.72rem] text-(--app-text-subtle)">
+            <span className="mt-0.5 line-clamp-1 block text-xs leading-4 text-(--app-text-muted) sm:line-clamp-2 sm:text-[0.82rem] sm:leading-5">{notification.body}</span>
+            <span className="mt-0.5 flex items-center gap-1 text-[0.68rem] text-(--app-text-subtle) sm:mt-1 sm:gap-1.5 sm:text-[0.72rem]">
               {formatNotificationTimestamp(notification.created_at)}
               {hasAction ? <span className="text-(--app-text-subtle)">· abrir →</span> : null}
             </span>
@@ -460,7 +460,7 @@ function NotificationRow({
           aria-label={isUnread ? 'Marcar leida' : 'Marcar no leida'}
           disabled={isUpdatingReadState}
           onClick={() => (isUnread ? onMarkRead(notification.id) : onMarkUnread(notification.id))}
-          className="mt-0.5 shrink-0 rounded-control px-2 py-1 text-[0.68rem] font-semibold text-primary-600 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-primary-300 dark:hover:bg-primary-500/12"
+          className="mt-0.5 shrink-0 rounded-control px-1.5 py-0.5 text-[0.64rem] font-semibold text-primary-600 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-primary-300 dark:hover:bg-primary-500/12 sm:px-2 sm:py-1 sm:text-[0.68rem]"
         >
           {isUnread ? 'Leída' : 'No leída'}
         </button>
@@ -510,8 +510,8 @@ function WorkspaceNotificationPanel({
   const lastVisibleItem = Math.min(page * pageSize, totalCount)
 
   return (
-    <div className="flex max-h-[calc(100dvh-7rem)] w-full flex-col overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_28px_72px_rgba(8,12,24,0.22)] sm:max-h-[min(32rem,75vh)] sm:w-[min(23rem,calc(100vw-1.5rem))]">
-      <div className="flex items-center justify-between gap-3 border-b border-(--app-border) px-4 py-3">
+    <div className="flex max-h-[min(26rem,calc(100dvh-5rem))] w-full flex-col overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_22px_56px_rgba(8,12,24,0.2)] sm:max-h-[min(32rem,75vh)] sm:w-[min(23rem,calc(100vw-1.5rem))] sm:shadow-[0_28px_72px_rgba(8,12,24,0.22)]">
+      <div className="flex items-center justify-between gap-2 border-b border-(--app-border) px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-(--app-text)">Notificaciones</p>
           {unreadCount > 0 ? (
@@ -525,7 +525,7 @@ function WorkspaceNotificationPanel({
             type="button"
             onClick={onMarkAllRead}
             disabled={isMarkingAll}
-            className="inline-flex items-center gap-1.5 rounded-control px-2 py-1 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50 disabled:opacity-60 dark:text-primary-300 dark:hover:bg-primary-500/12"
+            className="inline-flex items-center gap-1 rounded-control px-1.5 py-1 text-[0.7rem] font-semibold text-primary-600 transition-colors hover:bg-primary-50 disabled:opacity-60 dark:text-primary-300 dark:hover:bg-primary-500/12 sm:gap-1.5 sm:px-2 sm:text-xs"
           >
             {isMarkingAll ? <Spinner size="sm" /> : <CheckCheck className="size-3.5" />}
             {isMarkingAll ? 'Marcando…' : 'Marcar todas'}
@@ -534,10 +534,10 @@ function WorkspaceNotificationPanel({
       </div>
 
       {isLoading ? (
-        <div className="space-y-3 px-4 py-4">
+        <div className="space-y-2.5 px-3 py-3 sm:space-y-3 sm:px-4 sm:py-4">
           {[0, 1, 2].map((row) => (
             <div key={row} className="flex items-start gap-3">
-              <div className="size-9 shrink-0 animate-pulse rounded-control bg-(--app-surface-muted)" />
+              <div className="size-8 shrink-0 animate-pulse rounded-control bg-(--app-surface-muted) sm:size-9" />
               <div className="flex-1 space-y-2 py-1">
                 <div className="h-3 w-2/3 animate-pulse rounded-control bg-(--app-surface-muted)" />
                 <div className="h-3 w-full animate-pulse rounded-control bg-(--app-surface-muted)" />
@@ -546,9 +546,9 @@ function WorkspaceNotificationPanel({
           ))}
         </div>
       ) : notifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">
-          <span className="flex size-11 items-center justify-center rounded-full bg-(--app-surface-muted) text-(--app-text-muted)">
-            <BellOff className="size-5" />
+        <div className="flex flex-col items-center justify-center gap-2 px-5 py-7 text-center sm:px-6 sm:py-10">
+          <span className="flex size-10 items-center justify-center rounded-full bg-(--app-surface-muted) text-(--app-text-muted) sm:size-11">
+            <BellOff className="size-4.5 sm:size-5" />
           </span>
           <p className="text-sm font-medium text-(--app-text)">Sin notificaciones</p>
           <p className="text-xs text-(--app-text-muted)">Te avisaremos aquí cuando haya novedades en tu cuenta.</p>
@@ -568,7 +568,7 @@ function WorkspaceNotificationPanel({
             ))}
           </ul>
 
-          <div className="flex items-center justify-between gap-3 border-t border-(--app-border) px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2 border-t border-(--app-border) px-3 py-2">
             <p className="text-xs text-(--app-text-muted)">
               {firstVisibleItem}-{lastVisibleItem} de {totalCount}
             </p>
@@ -578,7 +578,7 @@ function WorkspaceNotificationPanel({
                 aria-label="Notificaciones anteriores"
                 disabled={!hasPreviousPage || isPaging}
                 onClick={onPreviousPage}
-                className="inline-flex size-9 items-center justify-center rounded-control border border-(--app-border) text-(--app-text-muted) transition hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-45"
+                className="inline-flex size-8 items-center justify-center rounded-control border border-(--app-border) text-(--app-text-muted) transition hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-45 sm:size-9"
               >
                 <ChevronLeft className="size-4" />
               </button>
@@ -590,7 +590,7 @@ function WorkspaceNotificationPanel({
                 aria-label="Notificaciones siguientes"
                 disabled={!hasNextPage || isPaging}
                 onClick={onNextPage}
-                className="inline-flex size-9 items-center justify-center rounded-control border border-(--app-border) text-(--app-text-muted) transition hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-45"
+                className="inline-flex size-8 items-center justify-center rounded-control border border-(--app-border) text-(--app-text-muted) transition hover:bg-(--app-surface-muted) hover:text-(--app-text) disabled:cursor-not-allowed disabled:opacity-45 sm:size-9"
               >
                 <ChevronRight className="size-4" />
               </button>
@@ -1607,7 +1607,7 @@ export function PlatformAppShell({
 
                   {notificationPanelOpen ? (
                     <div
-                      className="fixed inset-x-3 top-20 z-50 sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+0.75rem)]"
+                      className="fixed right-3 top-16 z-50 w-[min(21rem,calc(100vw-1.5rem))] sm:absolute sm:right-0 sm:top-[calc(100%+0.75rem)] sm:w-auto"
                       data-testid="notification-panel-positioner"
                     >
                       <WorkspaceNotificationPanel
