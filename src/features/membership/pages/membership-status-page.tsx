@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Sparkles
 } from 'lucide-react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -23,7 +24,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
-import { PageLoader } from '@/components/ui/loader'
+import { PageLoader, Spinner } from '@/components/ui/loader'
 import { Pagination } from '@/components/ui/pagination'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -70,6 +71,17 @@ function formatDate(value: string | null | undefined): string {
     return '—'
   }
   return date.toLocaleDateString('es-DO', { day: '2-digit', month: 'long', year: 'numeric' })
+}
+
+function formatShortDate(value: string | null | undefined): string {
+  if (!value) {
+    return '—'
+  }
+  const date = new Date(value)
+  if (!Number.isFinite(date.getTime())) {
+    return '—'
+  }
+  return date.toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function latestDateValue(...values: Array<string | null | undefined>): string | null {
@@ -244,6 +256,7 @@ export function MembershipStatusPage() {
   const userId = session.authUser?.id ?? null
   const [activeTab, setActiveTab] = useState<MembershipTab>('summary')
   const [openReceiptId, setOpenReceiptId] = useState<string | null>(null)
+  const [detailsOpen, setDetailsOpen] = useState(false)
   const [receiptsPage, setReceiptsPage] = useState(0)
   const lastHandledPaymentResultRef = useRef<string | null>(null)
 
@@ -309,9 +322,9 @@ export function MembershipStatusPage() {
   )
   const membershipProgress = computeMembershipTermProgress(membershipActivatedAt, membershipExpiresAt)
   const activeTabPanelVariants = shouldReduceMotion ? reducedTabPanelReveal : tabPanelReveal
-  // Esta rama aparece después del query; no debe depender de un estado inicial
-  // oculto porque una transición perdida dejaría la pantalla visualmente en blanco.
-  const contentInitialState = false
+  // Esta rama aparece después del query: anima su entrada con el mismo stagger que
+  // el resto de módulos, pero respeta la preferencia de movimiento reducido.
+  const contentInitialState = shouldReduceMotion ? false : 'hidden'
 
   // Resultado del retorno de AZUL (?payment=approved|declined|cancelled|error): avisa y refresca.
   const [searchParams, setSearchParams] = useSearchParams()
@@ -461,6 +474,20 @@ export function MembershipStatusPage() {
             ) : null}
 
             <motion.div variants={cardReveal}>
+              <button
+                type="button"
+                onClick={() => setDetailsOpen((open) => !open)}
+                aria-expanded={detailsOpen}
+                className="flex h-11 w-full items-center justify-between gap-2 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-4 text-sm font-semibold text-(--app-text) shadow-sm transition hover:bg-(--app-surface-muted) lg:hidden"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <FileText className="size-4 text-(--app-text-muted)" />
+                  Ver detalles de mi membresía
+                </span>
+                <ChevronDown className={cn('size-4 shrink-0 text-(--app-text-muted) transition-transform', detailsOpen && 'rotate-180')} />
+              </button>
+
+              <div className={cn('mt-3 lg:mt-0 lg:block', detailsOpen ? 'block' : 'hidden')}>
               <nav
                 className="inline-flex max-w-full gap-0.5 overflow-x-auto rounded-control border border-(--app-border) bg-(--app-surface-elevated) p-1 shadow-sm"
                 aria-label="Secciones de membresía"
@@ -584,6 +611,7 @@ export function MembershipStatusPage() {
                   ) : null}
                 </AnimatePresence>
               </div>
+              </div>
             </motion.div>
           </motion.section>
 
@@ -594,7 +622,7 @@ export function MembershipStatusPage() {
                   <CardContent className="mt-0">
                     <CardTitle>Renovar membresía</CardTitle>
                     <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
-                      Renueva por 1 a 5 años. Tu membresía actual se conserva y el monto se calcula automáticamente.
+                      Renueva por 1 a 5 años y extiende tu vigencia actual.
                     </p>
                     <AzulPayCard
                       applicationId={bundle.application.id}
@@ -674,23 +702,23 @@ function MembershipOverviewCard({
   isActive: boolean
 }) {
   return (
-    <Card className="rounded-card border-(--app-border) bg-(--app-surface-elevated) p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] sm:p-6">
+    <Card className="rounded-card border-(--app-border) bg-(--app-surface-elevated) p-4 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] sm:p-6">
       <CardContent className="mt-0">
-        <div className="flex items-center gap-4">
-          <span className="flex size-13 shrink-0 items-center justify-center rounded-card bg-gradient-to-br from-primary-600 to-primary-400 text-white shadow-sm">
-            <Sparkles className="size-6" />
+        <div className="flex items-center gap-3 sm:gap-4">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-card bg-gradient-to-br from-primary-600 to-primary-400 text-white shadow-sm sm:size-13">
+            <Sparkles className="size-5 sm:size-6" />
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.06em] text-(--app-text-subtle)">Categoría</p>
-            <p className="mt-0.5 truncate text-xl font-bold tracking-tight text-(--app-text)">{category}</p>
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.06em] text-(--app-text-subtle) sm:text-xs">Categoría</p>
+            <p className="mt-0.5 truncate text-base font-bold tracking-tight text-(--app-text) sm:text-xl">{category}</p>
           </div>
           <StatusPill className="ml-auto shrink-0" label={statusLabel} tone={isActive ? 'success' : 'neutral'} />
         </div>
 
-        <div className="mt-6">
+        <div className="mt-4 sm:mt-6">
           <div className="mb-2 flex items-baseline justify-between gap-4">
-            <span className="text-sm text-(--app-text-muted)">Vigencia restante</span>
-            <span className="text-right text-sm font-semibold text-(--app-text)">{remaining}</span>
+            <span className="text-[0.8rem] text-(--app-text-muted) sm:text-sm">Vigencia restante</span>
+            <span className="text-right text-[0.8rem] font-semibold text-(--app-text) sm:text-sm">{remaining}</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-(--app-border)">
             <div
@@ -698,9 +726,9 @@ function MembershipOverviewCard({
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="mt-2 flex items-center justify-between gap-4 text-xs text-(--app-text-subtle)">
-            <span>Activación · {formatDate(activatedAt)}</span>
-            <span className="text-right">Vence · {formatDate(expiresAt)}</span>
+          <div className="mt-2 flex items-center justify-between gap-4 text-[0.7rem] text-(--app-text-subtle) sm:text-xs">
+            <span>Activación · {formatShortDate(activatedAt)}</span>
+            <span className="text-right">Vence · {formatShortDate(expiresAt)}</span>
           </div>
         </div>
       </CardContent>
@@ -842,15 +870,65 @@ function AzulPayCard({
 }) {
   const [years, setYears] = useState(1)
   const [acceptedPolicies, setAcceptedPolicies] = useState(false)
+  const [showTermsError, setShowTermsError] = useState(false)
+  // `redirecting` cubre TODO el traspaso: la petición al backend + la navegación
+  // full-page a AZUL (que puede tardar). Se activa al pulsar y solo se apaga si algo
+  // falla; en éxito el browser abandona la página, así que el overlay persiste.
+  const [redirecting, setRedirecting] = useState(false)
   const processing = paymentStatus === 'initiated'
   const total = annualAmount != null ? annualAmount * years : null
   const totalLabel = total != null ? formatMoney(total, currency) : null
 
   const payMutation = useMutation({
     mutationFn: async () => payMembershipWithAzul({ applicationId, intent, years }),
-    onError: (error) => toast.error(toErrorMessage(error))
+    onError: (error) => {
+      setRedirecting(false)
+      toast.error(toErrorMessage(error))
+    }
     // En éxito, el browser navega a AZUL (no hay onSuccess que renderizar).
   })
+
+  const startPayment = () => {
+    if (!acceptedPolicies) {
+      setShowTermsError(true)
+      toast.error('Debes aceptar los términos antes de continuar con el pago.')
+      return
+    }
+    setRedirecting(true)
+    payMutation.mutate()
+  }
+
+  const redirectOverlay = redirecting
+    ? createPortal(
+        <motion.div
+          role="status"
+          aria-live="assertive"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-(--app-canvas)/70 px-6 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.24, ease: 'easeOut' }}
+            className="flex w-full max-w-xs flex-col items-center gap-5 rounded-card border border-(--app-border) bg-(--app-surface-elevated) px-8 py-9 text-center shadow-[0_8px_40px_rgba(20,40,90,0.16)]"
+          >
+            <Spinner size="lg" />
+            <div className="space-y-1.5">
+              <p className="text-base font-semibold text-(--app-text)">Conectando con AZUL</p>
+              <p className="text-sm leading-6 text-(--app-text-muted)">
+                Te llevamos a la pasarela de pago segura. No cierres esta ventana.
+              </p>
+            </div>
+            <p className="inline-flex items-center gap-1.5 text-xs text-(--app-text-subtle)">
+              <ShieldCheck className="size-3.5" /> Conexión cifrada
+            </p>
+          </motion.div>
+        </motion.div>,
+        document.body
+      )
+    : null
 
   if (!azulEnabled) {
     return (
@@ -900,11 +978,11 @@ function AzulPayCard({
   const button = (
     <Button
       className={compact ? 'mt-4 h-12 w-full rounded-control' : 'mt-3 h-10'}
-      disabled={payMutation.isPending || !acceptedPolicies}
-      onClick={() => payMutation.mutate()}
+      disabled={payMutation.isPending || redirecting}
+      onClick={startPayment}
     >
       <CreditCard className="size-4" />
-      {payMutation.isPending
+      {payMutation.isPending || redirecting
         ? 'Redirigiendo…'
         : intent === 'renewal'
           ? `Renovar${totalLabel ? ` · ${totalLabel}` : ''}`
@@ -915,6 +993,7 @@ function AzulPayCard({
   if (compact) {
     return (
       <div className="mt-4">
+        {redirectOverlay}
         {processingNotice}
         {yearSelector}
         <div className="mt-4 flex items-baseline justify-between gap-4 border-y border-(--app-border) py-4">
@@ -923,7 +1002,11 @@ function AzulPayCard({
         </div>
         <CheckoutComplianceBox
           accepted={acceptedPolicies}
-          onAcceptedChange={setAcceptedPolicies}
+          onAcceptedChange={(value) => {
+            setAcceptedPolicies(value)
+            if (value) setShowTermsError(false)
+          }}
+          showError={showTermsError}
           compact
         />
         {button}
@@ -936,6 +1019,7 @@ function AzulPayCard({
 
   return (
     <div className="mt-3 rounded-card border border-(--app-border) bg-(--app-surface-muted) p-4">
+      {redirectOverlay}
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-(--app-text)">Pago seguro con tarjeta</p>
         {totalLabel ? (
@@ -961,7 +1045,14 @@ function AzulPayCard({
         Serás redirigido a la página de pago de AZUL para completar la transacción con tu tarjeta de crédito o
         débito. Al terminar, volverás aquí automáticamente.
       </p>
-      <CheckoutComplianceBox accepted={acceptedPolicies} onAcceptedChange={setAcceptedPolicies} />
+      <CheckoutComplianceBox
+        accepted={acceptedPolicies}
+        onAcceptedChange={(value) => {
+          setAcceptedPolicies(value)
+          if (value) setShowTermsError(false)
+        }}
+        showError={showTermsError}
+      />
       {paymentStatus === 'failed' || paymentStatus === 'rejected' || paymentStatus === 'declined' || paymentStatus === 'cancelled' || paymentStatus === 'error' ? (
         <p className="mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">
           {paymentStatus === 'cancelled'
@@ -980,14 +1071,24 @@ function AzulPayCard({
 function CheckoutComplianceBox({
   accepted,
   onAcceptedChange,
+  showError = false,
   compact = false
 }: {
   accepted: boolean
   onAcceptedChange: (accepted: boolean) => void
+  showError?: boolean
   compact?: boolean
 }) {
   return (
-    <div className={cn('rounded-card border border-(--app-border) bg-(--app-surface) p-3', compact ? 'mt-3' : 'mt-3')}>
+    <div
+      className={cn(
+        'rounded-card border p-3',
+        showError
+          ? 'border-rose-400 bg-rose-50 dark:border-rose-500/40 dark:bg-rose-500/10'
+          : 'border-(--app-border) bg-(--app-surface)',
+        compact ? 'mt-3' : 'mt-3'
+      )}
+    >
       <label className="flex cursor-pointer items-start gap-2 text-xs leading-5 text-(--app-text-muted)">
         <input
           checked={accepted}
@@ -1003,6 +1104,11 @@ function CheckoutComplianceBox({
           , privacidad, entrega, devoluciones/cancelaciones y seguridad de pagos antes de continuar a AZUL.
         </span>
       </label>
+      {showError ? (
+        <p className="mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">
+          Debes aceptar los términos para continuar con el pago.
+        </p>
+      ) : null}
     </div>
   )
 }
