@@ -369,10 +369,10 @@ export function MembershipStatusPage() {
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
     >
-      <motion.header variants={cardReveal} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <motion.header variants={cardReveal} className="space-y-1.5">
         <div className="max-w-3xl">
-          <h1 className="text-2xl font-bold tracking-tight text-(--app-text)">Tu membresía</h1>
-          <p className="mt-1 max-w-2xl text-[0.9rem] leading-6 text-(--app-text-muted)">
+          <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Tu membresía</h1>
+          <p className="max-w-2xl text-[0.84rem] leading-relaxed text-(--app-text-muted)">
             Mantén tu membresía ASI al día, renueva con facilidad y conserva tus comprobantes en un solo lugar.
           </p>
         </div>

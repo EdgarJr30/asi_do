@@ -410,6 +410,9 @@ Do not let the candidate `Postulaciones` application cards return to tall mobile
 ### R-114 — Candidate Postulaciones must use database-backed infinite scroll
 Do not restore button-based local pagination or fetch the full candidate application history up front in `Postulaciones`. The page should append rows through infinite scroll while each batch is loaded with a real Supabase `range` query, keeping status/search filters in the query key and preserving count queries for filter stats without loading every application row.
 
+### R-115 — Candidate page titles must use the compact app heading rhythm
+Do not let candidate account pages such as `Tu membresía` drift back to oversized bold dashboard titles when sibling modules such as `Postulaciones` use the compact app heading rhythm. Primary candidate page titles should use the shared `text-xl font-semibold sm:text-[1.6rem]` scale unless the screen is intentionally a marketing or onboarding hero.
+
 ---
 
 ## Maintenance rule

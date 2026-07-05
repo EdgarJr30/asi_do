@@ -535,6 +535,7 @@ Rules:
 15. The mobile jobs-board vacancy preview should be denser than the full detail page: compact header, small company logo, tight chips, short description/company sections, and touch-safe but low-padding actions.
 16. Candidate `Postulaciones` rows should stay compact on mobile: small company logo, tight job/company text, status and submitted date in one metadata line, and an icon-only vacancy action until there is room for the full label.
 17. Growing candidate histories such as `Postulaciones` should prefer infinite scroll only when backed by real database pagination. Do not simulate it by loading all rows and slicing locally.
+18. Candidate account page titles such as `Postulaciones` and `Tu membresía` should share the compact app heading rhythm (`text-xl font-semibold` with `sm:text-[1.6rem]`) unless the page is intentionally an onboarding or marketing hero.
 
 ---
 
