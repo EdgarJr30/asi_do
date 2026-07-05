@@ -10,7 +10,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
-  FileText,
   Layers,
   Percent,
   Quote,
@@ -28,6 +27,7 @@ import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Spinner } from '@/components/ui/loader'
 import { applicationStatusDotClass, applicationStatusLabel } from '@/features/applications/lib/application-status'
+import { CompanyLogo } from '@/features/tenants/components/company-logo'
 import {
   smoothCardReveal as cardReveal,
   smoothGridStagger as gridStagger,
@@ -202,7 +202,7 @@ export function CandidateHomePage() {
       {/* KPIs */}
       <motion.div
         variants={cardReveal}
-        className="grid grid-cols-1 gap-px overflow-hidden rounded-card border border-(--app-border) bg-(--app-border) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] sm:grid-cols-2 xl:grid-cols-4 dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]"
+        className="grid grid-cols-2 gap-px overflow-hidden rounded-card border border-(--app-border) bg-(--app-border) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] xl:grid-cols-4 dark:shadow-[0_14px_30px_rgba(0,0,0,0.16)]"
       >
         {metricCards.map((metric) => (
           <MetricCard key={metric.key} metric={metric} />
@@ -246,23 +246,37 @@ export function CandidateHomePage() {
                   <button
                     type="button"
                     onClick={() => void navigate(getApplicationDetailPath(application))}
-                    className="group grid w-full grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-3 text-left transition-colors hover:bg-(--app-surface-muted) sm:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_110px_130px_40px] sm:px-5"
+                    className="group grid w-full grid-cols-1 items-center gap-x-4 gap-y-1 px-3 py-2.5 text-left transition-colors hover:bg-(--app-surface-muted) sm:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_110px_130px_40px] sm:px-5 sm:py-3"
                   >
-                    <span className="flex min-w-0 items-center gap-3">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-600 dark:bg-primary-500/12 dark:text-primary-300">
-                        <FileText className="size-4" />
-                      </span>
-                      <span className="truncate text-[0.85rem] font-semibold text-(--app-text)">
-                        {application.job_posting?.title || 'Vacante'}
+                    <span className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+                      <CompanyLogo
+                        name={application.job_posting?.company_profile?.display_name}
+                        logoPath={application.job_posting?.company_profile?.logo_path}
+                        size="sm"
+                        className="size-7 text-[0.62rem] sm:size-8"
+                      />
+                      <span className="min-w-0">
+                        <span className="block truncate text-[0.82rem] font-semibold text-(--app-text) sm:text-[0.85rem]">
+                          {application.job_posting?.title || 'Vacante'}
+                        </span>
+                        <span className="mt-0.5 block truncate text-[0.7rem] text-(--app-text-muted) sm:hidden">
+                          {application.job_posting?.company_profile?.display_name || 'Empresa'}
+                        </span>
                       </span>
                     </span>
-                    <span className="truncate text-right text-[0.78rem] text-(--app-text-muted) sm:text-left">
+                    <span className="hidden truncate text-[0.78rem] text-(--app-text-muted) sm:block">
                       {application.job_posting?.company_profile?.display_name || '—'}
                     </span>
-                    <span className="col-span-2 text-[0.76rem] tabular-nums text-(--app-text-subtle) sm:col-span-1">
+                    <span className="flex min-w-0 items-center gap-1.5 pl-[2.375rem] text-[0.7rem] text-(--app-text-subtle) sm:hidden">
+                      <span className="truncate tabular-nums">{formatApplicationDate(application.submitted_at)}</span>
+                      <span aria-hidden>·</span>
+                      <span className={cn('size-1.5 shrink-0 rounded-full', applicationStatusDotClass(application.status_public))} />
+                      <span className="truncate">{applicationStatusLabel(application.status_public)}</span>
+                    </span>
+                    <span className="hidden text-[0.76rem] tabular-nums text-(--app-text-subtle) sm:block">
                       {formatApplicationDate(application.submitted_at)}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-[0.78rem] text-(--app-text)">
+                    <span className="hidden items-center gap-1.5 text-[0.78rem] text-(--app-text) sm:inline-flex">
                       <span className={cn('size-1.5 rounded-full', applicationStatusDotClass(application.status_public))} />
                       {applicationStatusLabel(application.status_public)}
                     </span>
@@ -396,22 +410,22 @@ function CountUp({ value, suffix = '', duration = 1600 }: { value: number; suffi
 function MetricCard({ metric }: { metric: MetricCardData }) {
   const Icon = metric.icon
   return (
-    <div className="flex items-start gap-3 bg-(--app-surface-elevated) p-4 sm:p-[1.1rem]">
-      <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-control', metric.chipClass)}>
-        <Icon className="size-[1.1rem]" />
+    <div className="flex min-w-0 items-start gap-2.5 bg-(--app-surface-elevated) p-3 sm:gap-3 sm:p-[1.1rem]">
+      <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-control sm:size-9', metric.chipClass)}>
+        <Icon className="size-4 sm:size-[1.1rem]" />
       </span>
       <div className="min-w-0">
-        <p className="text-[0.72rem] font-semibold text-(--app-text-subtle)">{metric.label}</p>
-        <p className="mt-1.5 text-[1.55rem] font-semibold leading-none tracking-tight tabular-nums text-(--app-text)">
+        <p className="text-[0.66rem] font-semibold leading-tight text-(--app-text-subtle) sm:text-[0.72rem]">{metric.label}</p>
+        <p className="mt-1 text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums text-(--app-text) sm:mt-1.5 sm:text-[1.55rem]">
           {metric.loading ? '—' : <CountUp value={metric.value} suffix={metric.suffix} />}
         </p>
         <p
           className={cn(
-            'mt-1.5 flex items-center gap-1 text-[0.72rem]',
+            'mt-1 flex items-center gap-1 text-[0.66rem] leading-tight sm:mt-1.5 sm:text-[0.72rem]',
             metric.trendUp ? 'font-semibold text-emerald-600 dark:text-emerald-400' : 'text-(--app-text-muted)'
           )}
         >
-          {metric.trendUp ? <TrendingUp aria-hidden className="size-3.5" /> : null}
+          {metric.trendUp ? <TrendingUp aria-hidden className="size-3 shrink-0 sm:size-3.5" /> : null}
           {metric.sub}
         </p>
       </div>

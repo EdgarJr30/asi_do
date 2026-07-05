@@ -395,6 +395,9 @@ Do not let `/admin/errors` render every matching error log as one long unbounded
 ### R-109 — AZUL payment audit must stay paginated
 Do not let `/admin/finances?tab=audit` render the full AZUL payment history as one long unbounded table or mobile list. The audit view must paginate the filtered/search results with the shared `Pagination` primitive so membership and donation payment history remains scannable as transaction volume grows.
 
+### R-110 — Candidate Inicio must stay compact on mobile
+Do not let the candidate `Inicio` dashboard return to oversized single-column KPI cards or tall recent-application rows on mobile. KPI cards should stay compact and scannable in a two-column mobile rhythm, recent applications should use small company logos instead of generic document icons, and the submitted date plus public status label should remain on the same mobile metadata line.
+
 ---
 
 ## Maintenance rule

@@ -530,6 +530,7 @@ Rules:
 10. Country, province/state, and city fields must reuse the shared geo selectors/data helpers. Do not ask users to type ISO country codes manually when a select can use the canonical country catalog.
 11. Sidebar navigation groups should be ordered by user task priority and remain collapsible when multiple product scopes share the same shell.
 12. Administration screens should stay consolidated by operational domain: Aprobaciones includes territorial authority invitations, Finanzas includes payments plus donations, Comunicaciones includes email pipeline plus notifications, and Administrar membresías includes review, payment validation, activation, and inactivation of member access. Prefer action-oriented navigation labels, compact statbars, tabs, list rows, pagination, and collapsible metadata over large KPI cards, duplicated settings modules, or inline raw JSON blocks. Payment gateway payloads may expose formatted JSON only inside a focused detail modal for support/conciliation. Dense admin modules should use the full shell width within the standard shell padding instead of a second centered max-width container.
+13. Candidate `Inicio` should stay dense on mobile: KPI cards use a compact two-column rhythm, recent-application rows keep company identity small, and submitted date plus public status share one metadata line instead of stacking into tall cards.
 
 ---
 
