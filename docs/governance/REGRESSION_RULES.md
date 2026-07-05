@@ -404,6 +404,9 @@ Do not let the public vacancy detail page return to an oversized hero, large log
 ### R-112 — Mobile jobs board preview must stay compact
 Do not let the mobile vacancy preview opened from the jobs board become an oversized pseudo-detail page. The preview panel should keep a compact header, small company logo, tight metadata chips, restrained description/company blocks, and a short action area while preserving touch-safe primary actions. Status badges such as `Ya aplicaste` should render as their own spaced block below the company name line, and sector badges should not sit tight against section headings such as `Sobre la empresa`.
 
+### R-113 — Candidate Postulaciones cards must stay compact on mobile
+Do not let the candidate `Postulaciones` application cards return to tall mobile layouts with date, status, and action controls stacked as separate rows. Mobile rows should keep a small company logo, tight title/company text, and a single metadata line that combines the submitted date with the public status badge while preserving the compact icon-only vacancy action.
+
 ---
 
 ## Maintenance rule

@@ -178,11 +178,11 @@ export function ApplicationsOverviewPage() {
       <motion.header variants={cardReveal} className="space-y-1.5">
         <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Postulaciones</h1>
         <p className="max-w-2xl text-[0.84rem] leading-relaxed text-(--app-text-muted)">
-          Revisa tus postulaciones, el estado actual de cada proceso y vuelve al detalle de la vacante cuando lo necesites.
+          Revisa tus postulaciones y el estado actual de cada proceso.
         </p>
       </motion.header>
 
-      <motion.div variants={cardReveal} className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+      <motion.div variants={cardReveal} className="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-2.5 xl:grid-cols-4">
         {FILTER_STATS.map((stat) => {
           const Icon = stat.icon
           const isActive = stat.key === activeFilter
@@ -194,18 +194,25 @@ export function ApplicationsOverviewPage() {
               onClick={() => applyFilter(stat.key)}
               aria-pressed={isActive}
               className={cn(
-                'flex min-h-16 items-center gap-3 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 text-left transition-[border-color,background-color,box-shadow,transform] hover:border-primary-300 hover:bg-(--app-surface) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)',
+                'flex flex-col items-center justify-center gap-1 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-1.5 py-2 text-center transition-[border-color,background-color,box-shadow,transform] hover:border-primary-300 hover:bg-(--app-surface) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas) sm:min-h-14 sm:py-3',
                 isActive ? 'border-primary-300 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]' : ''
               )}
             >
-              <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-control', stat.chipClassName)}>
-                <Icon className="size-4.5" />
-              </span>
-              <span className="min-w-0">
-                <span className="block font-sans text-[1.18rem] font-bold leading-none text-(--app-text)">
+              <span className="flex items-center gap-1">
+                <span
+                  className={cn(
+                    'flex size-5 shrink-0 items-center justify-center rounded-control sm:size-6',
+                    stat.chipClassName
+                  )}
+                >
+                  <Icon className="size-3 sm:size-3.5" />
+                </span>
+                <span className="font-sans text-base font-bold leading-none text-(--app-text) sm:text-xl">
                   {myApplicationsQuery.isLoading ? '...' : filterCounts[stat.key]}
                 </span>
-                <span className="mt-1 block text-[0.78rem] text-(--app-text-subtle)">{stat.label}</span>
+              </span>
+              <span className="text-[0.64rem] leading-tight text-(--app-text-subtle) sm:text-[0.7rem]">
+                {stat.label}
               </span>
             </button>
           )
@@ -261,32 +268,45 @@ export function ApplicationsOverviewPage() {
                       <motion.li key={application.id} variants={cardReveal}>
                         <Link
                           to={detailPath}
-                          className="group grid min-h-16 gap-x-3 gap-y-2 px-4 py-3.5 transition-colors hover:bg-(--app-surface-muted) sm:grid-cols-[minmax(0,1fr)_auto] sm:px-5 lg:grid-cols-[minmax(0,1.8fr)_9rem_10rem_9.5rem] lg:items-center lg:gap-4 lg:py-0 xl:grid-cols-[minmax(0,2fr)_10rem_11rem_10rem]"
+                          className="group grid grid-cols-[minmax(0,1fr)_2.25rem] items-center gap-x-2.5 gap-y-1 px-3 py-2.5 transition-colors hover:bg-(--app-surface-muted) sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-x-3 sm:gap-y-2 sm:px-5 sm:py-3.5 lg:min-h-16 lg:grid-cols-[minmax(0,1.8fr)_9rem_10rem_9.5rem] lg:gap-4 lg:py-0 xl:grid-cols-[minmax(0,2fr)_10rem_11rem_10rem]"
                         >
-                          <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
                             <CompanyLogo
                               name={application.job_posting?.company_profile?.display_name}
                               logoPath={application.job_posting?.company_profile?.logo_path}
                               size="sm"
-                              className="size-10"
+                              className="size-8 text-[0.68rem] sm:size-10 sm:text-[0.8rem]"
                             />
                             <div className="min-w-0">
-                              <p className="truncate text-[0.9rem] font-semibold leading-tight text-(--app-text)">
+                              <p className="truncate text-[0.84rem] font-semibold leading-tight text-(--app-text) sm:text-[0.9rem]">
                                 {application.job_posting?.title || 'Vacante'}
                               </p>
-                              <p className="mt-0.5 truncate text-[0.82rem] text-(--app-text-muted)">
+                              <p className="mt-0.5 truncate text-[0.74rem] text-(--app-text-muted) sm:text-[0.82rem]">
                                 {application.job_posting?.company_profile?.display_name || 'Empresa'}
                               </p>
+                              <span className="mt-1 flex min-w-0 items-center gap-1.5 text-[0.7rem] text-(--app-text-subtle) sm:hidden">
+                                <CalendarDays className="size-3.5 shrink-0" />
+                                <span className="truncate tabular-nums">{formatSubmittedAt(application.submitted_at)}</span>
+                                <span
+                                  className={cn(
+                                    'inline-flex h-5 shrink-0 items-center gap-1 rounded-full px-2 text-[0.66rem] font-semibold',
+                                    applicationStatusPillClass(status)
+                                  )}
+                                >
+                                  <span className="size-1.5 rounded-full bg-current" />
+                                  {applicationStatusLabel(status)}
+                                </span>
+                              </span>
                             </div>
                           </div>
 
-                          <span className="inline-flex items-center gap-1.5 text-[0.82rem] text-(--app-text-subtle) sm:col-start-1 lg:col-start-auto">
+                          <span className="hidden items-center gap-1.5 text-[0.82rem] text-(--app-text-subtle) sm:col-start-1 sm:inline-flex lg:col-start-auto">
                             <CalendarDays className="size-3.5 shrink-0" /> {formatSubmittedAt(application.submitted_at)}
                           </span>
 
                           <span
                             className={cn(
-                              'inline-flex h-7 w-fit items-center gap-1.5 justify-self-end rounded-full px-3 text-[0.78rem] font-semibold sm:col-start-2 sm:row-start-1 lg:col-start-auto lg:row-start-auto lg:justify-self-start',
+                              'hidden h-7 w-fit items-center gap-1.5 justify-self-end rounded-full px-3 text-[0.78rem] font-semibold sm:col-start-2 sm:row-start-1 sm:inline-flex lg:col-start-auto lg:row-start-auto lg:justify-self-start',
                               applicationStatusPillClass(status)
                             )}
                           >
@@ -294,7 +314,7 @@ export function ApplicationsOverviewPage() {
                             {applicationStatusLabel(status)}
                           </span>
 
-                          <span className="inline-flex h-11 w-11 items-center justify-center gap-1.5 justify-self-end whitespace-nowrap rounded-control border border-(--app-border) bg-(--app-surface) text-[0.8rem] font-semibold text-(--app-text-muted) transition-[border-color,background-color,color] group-hover:border-primary-200 group-hover:bg-primary-50 group-hover:text-primary-700 sm:col-start-2 sm:w-auto sm:px-3.5 lg:col-start-auto lg:h-9 dark:group-hover:border-primary-400/40 dark:group-hover:bg-primary-500/12 dark:group-hover:text-primary-200">
+                          <span className="row-span-2 inline-flex size-9 items-center justify-center gap-1.5 justify-self-end whitespace-nowrap rounded-control border border-(--app-border) bg-(--app-surface) text-[0.8rem] font-semibold text-(--app-text-muted) transition-[border-color,background-color,color] group-hover:border-primary-200 group-hover:bg-primary-50 group-hover:text-primary-700 sm:col-start-2 sm:row-span-1 sm:size-auto sm:h-11 sm:w-auto sm:px-3.5 lg:col-start-auto lg:h-9 dark:group-hover:border-primary-400/40 dark:group-hover:bg-primary-500/12 dark:group-hover:text-primary-200">
                             <span className="hidden sm:inline">Ver vacante</span>
                             <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                           </span>
