@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import type { Variants } from 'motion/react'
@@ -18,6 +19,7 @@ import {
   MapPin,
   Search,
   Share2,
+  SlidersHorizontal,
   Sparkles,
   X
 } from 'lucide-react'
@@ -120,6 +122,7 @@ export function PublicJobBoard() {
   const [sort, setSort] = useState<'recent' | 'salary'>('recent')
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(false) // controla móvil: lista ↔ detalle
+  const [filtersSheetOpen, setFiltersSheetOpen] = useState(false) // móvil: hoja de búsqueda + filtros
 
   const listScrollRef = useRef<HTMLDivElement | null>(null)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
@@ -255,6 +258,15 @@ export function PublicJobBoard() {
     setSubmitted({ search: '', location: '' })
   }
 
+  // Móvil: confirma la búsqueda/ubicación escritas en la hoja y la cierra. Los
+  // selects (sector/modalidad/tipo/orden) ya aplican en vivo, así que aquí sólo
+  // falta comprometer el texto libre y devolver el foco al catálogo.
+  function applyMobileFilters() {
+    clearSelectedJob()
+    setSubmitted({ search: filters.search.trim(), location: filters.location.trim() })
+    setFiltersSheetOpen(false)
+  }
+
   const saveJobMutation = useMutation({
     mutationFn: async (input: { jobId: string; shouldSave: boolean }) => {
       if (!candidateProfileId) throw new Error('Necesitas un perfil candidato para guardar vacantes.')
@@ -324,10 +336,77 @@ export function PublicJobBoard() {
         </p>
       </motion.header>
 
-      {/* Búsqueda: una sola barra blanca con dos campos separados por un divisor */}
+      {/* Móvil: el catálogo es el foco. Búsqueda y filtros se acceden desde una
+          barra compacta que abre una hoja inferior (bottom sheet). */}
+      <motion.div variants={cardReveal} className="space-y-2 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setFiltersSheetOpen(true)}
+          className="flex h-11 w-full items-center gap-2.5 rounded-card border border-(--app-border) bg-(--app-surface) pl-3 pr-1.5 text-left shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)"
+        >
+          <Search aria-hidden className="size-4.5 shrink-0 text-(--app-text-subtle)" />
+          <span className={cn('min-w-0 flex-1 truncate text-sm', submitted.search || submitted.location ? 'text-(--app-text)' : 'text-(--app-text-subtle)')}>
+            {submitted.search || submitted.location
+              ? [submitted.search, submitted.location].filter(Boolean).join(' · ')
+              : 'Buscar cargo, empresa o lugar'}
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-control bg-(--app-surface-muted) px-2.5 py-1.5 text-[0.78rem] font-semibold text-(--app-text)">
+            <SlidersHorizontal aria-hidden className="size-4" />
+            Filtros
+            {activeChips.length > 0 ? (
+              <span className="inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-primary-600 px-1 text-[0.68rem] font-semibold leading-none text-white">
+                {activeChips.length}
+              </span>
+            ) : null}
+          </span>
+        </button>
+
+        <div className="flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-2 text-[0.82rem] text-(--app-text-subtle)">
+            {jobsQuery.isLoading ? (
+              <>
+                <Spinner size="sm" /> Cargando…
+              </>
+            ) : (
+              <>
+                <b className="font-semibold text-(--app-text)">{resultCount}</b> {resultCount === 1 ? 'empleo' : 'empleos'}
+              </>
+            )}
+          </span>
+          <label className="flex items-center gap-1.5 text-[0.82rem] text-(--app-text-subtle)">
+            Ordenar
+            <Select className="h-[34px] w-auto rounded-control text-[0.82rem]" value={sort} onChange={(event) => applySort(event.target.value as 'recent' | 'salary')} aria-label="Ordenar resultados">
+              <option value="recent">Más recientes</option>
+              <option value="salary">Salario</option>
+            </Select>
+          </label>
+        </div>
+
+        {activeChips.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {activeChips.map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={chip.clear}
+                className="inline-flex h-8 items-center gap-1.5 rounded-control border border-(--app-border) bg-(--app-surface) px-2.5 text-[0.78rem] font-medium text-(--app-text-muted) transition hover:text-(--app-text) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)"
+              >
+                {chip.label}
+                <X aria-hidden className="size-3" />
+                <span className="sr-only">Quitar filtro</span>
+              </button>
+            ))}
+            <button type="button" onClick={resetFilters} className="px-1 text-[0.78rem] font-medium text-(--app-text-muted) underline-offset-2 hover:underline">
+              Limpiar
+            </button>
+          </div>
+        ) : null}
+      </motion.div>
+
+      {/* Búsqueda (escritorio): una sola barra blanca con dos campos separados por un divisor */}
       <motion.form
         variants={cardReveal}
-        className="flex flex-col gap-2 rounded-card border border-(--app-border) bg-(--app-surface) p-1.5 pl-3 shadow-sm md:flex-row md:items-center md:gap-1"
+        className="hidden gap-1 rounded-card border border-(--app-border) bg-(--app-surface) p-1.5 pl-3 shadow-sm lg:flex lg:flex-row lg:items-center"
         onSubmit={(event) => {
           event.preventDefault()
           clearSelectedJob()
@@ -345,8 +424,8 @@ export function PublicJobBoard() {
             onChange={(event) => patchFilters({ search: event.target.value })}
           />
         </div>
-        <span aria-hidden className="hidden h-6 w-px shrink-0 bg-(--app-border) md:block" />
-        <div className="relative md:w-56">
+        <span aria-hidden className="hidden h-6 w-px shrink-0 bg-(--app-border) lg:block" />
+        <div className="relative lg:w-56">
           <MapPin aria-hidden className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
           <Input
             className="h-11 border-transparent bg-transparent pl-8 text-sm shadow-none focus:bg-transparent focus-visible:ring-0"
@@ -361,8 +440,8 @@ export function PublicJobBoard() {
         </Button>
       </motion.form>
 
-      {/* Toolbar: filtros inline + chips de búsqueda + contador + orden */}
-      <motion.div variants={cardReveal} className="flex flex-wrap items-center gap-2">
+      {/* Toolbar (escritorio): filtros inline + chips de búsqueda + contador + orden */}
+      <motion.div variants={cardReveal} className="hidden flex-wrap items-center gap-2 lg:flex">
         <Select
           className="h-[34px] w-auto rounded-control text-[0.82rem]"
           value={filters.sector}
@@ -522,7 +601,169 @@ export function PublicJobBoard() {
           </div>
         </motion.div>
       )}
+
+      <MobileFilterSheet
+        open={filtersSheetOpen}
+        onClose={() => setFiltersSheetOpen(false)}
+        filters={filters}
+        onPatch={patchFilters}
+        onApplyFilter={applyFilters}
+        sort={sort}
+        onSort={applySort}
+        sectorOptions={sectorOptions}
+        resultCount={resultCount}
+        isLoading={jobsQuery.isLoading}
+        hasActive={activeChips.length > 0}
+        onApply={applyMobileFilters}
+        onReset={resetFilters}
+      />
     </motion.div>
+  )
+}
+
+function MobileFilterSheet({
+  open,
+  onClose,
+  filters,
+  onPatch,
+  onApplyFilter,
+  sort,
+  onSort,
+  sectorOptions,
+  resultCount,
+  isLoading,
+  hasActive,
+  onApply,
+  onReset
+}: {
+  open: boolean
+  onClose: () => void
+  filters: Filters
+  onPatch: (patch: Partial<Filters>) => void
+  onApplyFilter: (patch: Partial<Filters>) => void
+  sort: 'recent' | 'salary'
+  onSort: (next: 'recent' | 'salary') => void
+  sectorOptions: Array<{ id: string; label: string; count: number }>
+  resultCount: number
+  isLoading: boolean
+  hasActive: boolean
+  onApply: () => void
+  onReset: () => void
+}) {
+  return (
+    <Dialog open={open} onClose={onClose} className="relative z-50 lg:hidden">
+      <DialogBackdrop
+        transition
+        className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm transition-opacity duration-300 ease-out data-[closed]:opacity-0"
+      />
+      <div className="fixed inset-x-0 bottom-0 flex max-h-[90dvh] flex-col justify-end">
+        <DialogPanel
+          transition
+          className="flex max-h-[90dvh] flex-col rounded-t-card border-t border-(--app-border) bg-(--app-surface) shadow-[0_-20px_60px_rgba(15,23,42,0.28)] transition duration-300 ease-out data-[closed]:translate-y-full"
+        >
+          <header className="shrink-0 border-b border-(--app-border) px-5 pb-3 pt-2.5">
+            <span aria-hidden className="mx-auto mb-3 block h-1.5 w-10 rounded-full bg-(--app-border)" />
+            <div className="flex items-center justify-between gap-4">
+              <DialogTitle className="text-[1.05rem] font-semibold tracking-tight text-(--app-text)">Buscar y filtrar</DialogTitle>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Cerrar"
+                className="flex size-8 shrink-0 items-center justify-center rounded-control text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          </header>
+
+          <form
+            id="mobile-filters-form"
+            className="flex-1 space-y-4 overflow-y-auto px-5 py-4"
+            onSubmit={(event) => {
+              event.preventDefault()
+              onApply()
+            }}
+          >
+            <label className="block space-y-1.5">
+              <span className="text-[0.8rem] font-medium text-(--app-text)">Búsqueda</span>
+              <div className="relative">
+                <Search aria-hidden className="pointer-events-none absolute left-2.5 top-1/2 size-4.5 -translate-y-1/2 text-(--app-text-subtle)" />
+                <Input
+                  className="h-11 pl-9 text-sm"
+                  placeholder="Cargo, empresa o palabra clave"
+                  value={filters.search}
+                  onChange={(event) => onPatch({ search: event.target.value })}
+                />
+              </div>
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-[0.8rem] font-medium text-(--app-text)">Ubicación</span>
+              <div className="relative">
+                <MapPin aria-hidden className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
+                <Input
+                  className="h-11 pl-8 text-sm"
+                  placeholder="Ciudad o país"
+                  value={filters.location}
+                  onChange={(event) => onPatch({ location: event.target.value })}
+                />
+              </div>
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-[0.8rem] font-medium text-(--app-text)">Sector</span>
+              <Select className="h-11 w-full rounded-control text-sm" value={filters.sector} onChange={(event) => onApplyFilter({ sector: event.target.value })}>
+                <option value="">Todos los sectores</option>
+                {sectorOptions.map((sector) => (
+                  <option key={sector.id} value={sector.id}>
+                    {sector.label} ({sector.count})
+                  </option>
+                ))}
+              </Select>
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-[0.8rem] font-medium text-(--app-text)">Modalidad</span>
+              <Select className="h-11 w-full rounded-control text-sm" value={filters.workplace} onChange={(event) => onApplyFilter({ workplace: event.target.value })}>
+                <option value="">Cualquier modalidad</option>
+                <option value="remote">Remoto</option>
+                <option value="hybrid">Híbrido</option>
+                <option value="on_site">Presencial</option>
+              </Select>
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-[0.8rem] font-medium text-(--app-text)">Tipo</span>
+              <Select className="h-11 w-full rounded-control text-sm" value={filters.type} onChange={(event) => onApplyFilter({ type: event.target.value })}>
+                <option value="">Todos los tipos</option>
+                {opportunityTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            </label>
+
+            <label className="block space-y-1.5">
+              <span className="text-[0.8rem] font-medium text-(--app-text)">Ordenar por</span>
+              <Select className="h-11 w-full rounded-control text-sm" value={sort} onChange={(event) => onSort(event.target.value as 'recent' | 'salary')}>
+                <option value="recent">Más recientes</option>
+                <option value="salary">Salario</option>
+              </Select>
+            </label>
+          </form>
+
+          <footer className="flex shrink-0 items-center gap-3 border-t border-(--app-border) px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+            <Button type="button" variant="outline" className="h-11 rounded-control px-4" onClick={onReset} disabled={!hasActive}>
+              Limpiar
+            </Button>
+            <Button type="submit" form="mobile-filters-form" className="h-11 flex-1 rounded-control">
+              {isLoading ? <Spinner size="sm" /> : `Ver ${resultCount} ${resultCount === 1 ? 'empleo' : 'empleos'}`}
+            </Button>
+          </footer>
+        </DialogPanel>
+      </div>
+    </Dialog>
   )
 }
 
