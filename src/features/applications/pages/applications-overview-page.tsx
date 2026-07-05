@@ -28,6 +28,7 @@ import {
   smoothGridStagger as gridStagger,
   smoothPageStagger as pageStagger
 } from '@/shared/ui/card-motion'
+import { CountUp } from '@/shared/ui/count-up'
 
 const PAGE_SIZE = 10
 const dateFormatter = new Intl.DateTimeFormat('es', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -213,8 +214,8 @@ export function ApplicationsOverviewPage() {
                 >
                   <Icon className="size-3 sm:size-3.5" />
                 </span>
-                <span className="font-sans text-base font-bold leading-none text-(--app-text) sm:text-xl">
-                  {filterCountsQuery.isLoading ? '...' : filterCounts[stat.key]}
+                <span className="font-sans text-base font-bold leading-none tabular-nums text-(--app-text) sm:text-xl">
+                  {filterCountsQuery.isLoading ? '...' : <CountUp value={filterCounts[stat.key]} />}
                 </span>
               </span>
               <span className="text-[0.64rem] leading-tight text-(--app-text-subtle) sm:text-[0.7rem]">

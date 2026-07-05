@@ -329,9 +329,9 @@ export function PublicJobBoard() {
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
     >
-      <motion.header variants={cardReveal}>
-        <h1 className="text-2xl font-bold tracking-tight text-(--app-text)">Vacantes</h1>
-        <p className="mt-1.5 text-sm text-(--app-text-muted)">
+      <motion.header variants={cardReveal} className="space-y-1.5">
+        <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Vacantes</h1>
+        <p className="max-w-2xl text-[0.84rem] leading-relaxed text-(--app-text-muted)">
           Descubre oportunidades abiertas y postúlate en minutos.
         </p>
       </motion.header>

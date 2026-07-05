@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
@@ -33,6 +33,7 @@ import {
   smoothGridStagger as gridStagger,
   smoothPageStagger as pageStagger
 } from '@/shared/ui/card-motion'
+import { CountUp } from '@/shared/ui/count-up'
 import { listMyApplications } from '@/features/applications/lib/applications-api'
 import { listPublicJobs } from '@/features/jobs/lib/jobs-api'
 import type { Database } from '@/shared/types/database'
@@ -376,34 +377,6 @@ function DailyQuote() {
         </span>
       </p>
     </button>
-  )
-}
-
-function CountUp({ value, suffix = '', duration = 1600 }: { value: number; suffix?: string; duration?: number }) {
-  const shouldReduceMotion = useReducedMotion()
-  const [display, setDisplay] = useState(0)
-
-  useEffect(() => {
-    if (shouldReduceMotion) return
-    let raf = 0
-    let start: number | undefined
-    const tick = (timestamp: number) => {
-      if (start === undefined) start = timestamp
-      const progress = Math.min(1, (timestamp - start) / duration)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setDisplay(Math.round(value * eased))
-      if (progress < 1) raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [value, duration, shouldReduceMotion])
-
-  const shown = shouldReduceMotion ? value : display
-  return (
-    <>
-      {shown}
-      {suffix}
-    </>
   )
 }
 
