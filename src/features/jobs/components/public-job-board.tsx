@@ -332,7 +332,7 @@ export function PublicJobBoard() {
       <motion.header variants={cardReveal}>
         <h1 className="text-2xl font-bold tracking-tight text-(--app-text)">Vacantes</h1>
         <p className="mt-1.5 text-sm text-(--app-text-muted)">
-          Descubre oportunidades abiertas y postúlate con tu perfil en minutos.
+          Descubre oportunidades abiertas y postúlate en minutos.
         </p>
       </motion.header>
 
