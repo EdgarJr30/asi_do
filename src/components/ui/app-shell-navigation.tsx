@@ -372,21 +372,21 @@ export function AppBottomNav({
               aria-current={isActive ? 'page' : undefined}
               key={item.href}
               className={cn(
-                'flex min-h-12 flex-col items-center justify-center gap-1 rounded-card px-2 py-2 text-[0.7rem] font-semibold transition-[transform,box-shadow,background-color,color] duration-200 ease-out hover:-translate-y-px',
+                'flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-card px-2 py-2 text-[0.7rem] font-semibold transition-[background-color,color] duration-150 ease-out',
                 variant === 'workspace'
                   ? isActive
-                    ? 'bg-white/10 text-white hover:bg-white/12 hover:shadow-[0_14px_28px_rgba(15,23,42,0.18)]'
-                    : 'text-white/58 hover:bg-white/6 hover:text-white hover:shadow-[0_14px_28px_rgba(15,23,42,0.16)]'
+                    ? 'bg-white/10 text-white hover:bg-white/14'
+                    : 'text-white/58 hover:bg-white/6 hover:text-white'
                   : isActive
-                  ? 'bg-primary-50 text-primary-700 hover:bg-primary-100 hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)] dark:bg-primary-500/10 dark:text-primary-200 dark:hover:bg-primary-500/16'
-                  : 'text-(--app-text-subtle) hover:bg-(--app-surface-muted) hover:text-(--app-text) hover:shadow-[0_14px_28px_rgba(15,23,42,0.08)]'
+                  ? 'bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-200 dark:hover:bg-primary-500/16'
+                  : 'text-(--app-text-subtle) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
               )}
               data-active={isActive ? 'true' : 'false'}
               type="button"
               onClick={() => void onNavigate(item.href)}
             >
-              <Icon className="h-4 w-4" />
-              <span className="truncate">{item.title}</span>
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="w-full truncate text-center">{item.title}</span>
             </button>
           );
         })}
