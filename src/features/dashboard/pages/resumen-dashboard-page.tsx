@@ -279,7 +279,7 @@ export function ResumenDashboardPage() {
         variants={cardReveal}
         className="overflow-hidden rounded-control border border-(--app-border) bg-(--app-border) shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] dark:shadow-[0_14px_32px_rgba(0,0,0,0.16)]"
       >
-        <div className="grid gap-px sm:grid-cols-2 2xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-px 2xl:grid-cols-4">
           <KpiStripCell
             accent="brand"
             label="Vacantes abiertas"
@@ -468,15 +468,15 @@ function KpiStripCell({
   helper?: ReactNode
 }) {
   return (
-    <div className="min-w-0 bg-(--app-surface-elevated) px-4 py-3.5 sm:px-5">
-      <div className="flex min-w-0 items-center gap-2">
-        <span className={cn('size-2 shrink-0 rounded-[3px]', kpiDotClassName[accent])} />
-        <p className="min-w-0 truncate text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-(--app-text-subtle)">{label}</p>
+    <div className="min-w-0 bg-(--app-surface-elevated) px-3 py-3 sm:px-5 sm:py-3.5">
+      <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+        <span className={cn('size-1.5 shrink-0 rounded-[3px] sm:size-2', kpiDotClassName[accent])} />
+        <p className="min-w-0 truncate text-[0.62rem] font-semibold uppercase tracking-[0.05em] text-(--app-text-subtle) sm:text-[0.7rem]">{label}</p>
       </div>
-      <p className="mt-2 text-[1.55rem] font-bold leading-none tracking-tight text-(--app-text) tabular-nums">
+      <p className="mt-1.5 text-[1.25rem] font-bold leading-none tracking-tight text-(--app-text) tabular-nums sm:mt-2 sm:text-[1.55rem]">
         {loading ? '—' : <CountUp value={value} />}
       </p>
-      {helper ? <p className="mt-1.5 text-[0.75rem] leading-4 text-(--app-text-subtle)">{helper}</p> : null}
+      {helper ? <p className="mt-1 hidden text-[0.75rem] leading-4 text-(--app-text-subtle) sm:mt-1.5 sm:block">{helper}</p> : null}
     </div>
   )
 }
