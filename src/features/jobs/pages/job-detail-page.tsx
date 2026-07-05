@@ -44,11 +44,11 @@ const employmentLabels: Record<string, string> = {
 }
 
 const linkButtonClassName =
-  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-control border border-primary-600 bg-primary-600 px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(43,69,143,0.2)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)'
+  'inline-flex h-10 w-full items-center justify-center gap-2 rounded-control border border-primary-600 bg-primary-600 px-3.5 text-[0.85rem] font-semibold text-white shadow-[0_10px_20px_rgba(43,69,143,0.18)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas) sm:h-11 sm:px-4 sm:text-sm'
 const outlineLinkButtonClassName =
   'inline-flex h-11 w-full items-center justify-center gap-2 rounded-control border border-(--app-border) bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas) dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200'
 const tagClassName =
-  'inline-flex min-h-8 items-center gap-1.5 rounded-full border border-(--app-border) bg-(--app-surface) px-3 py-1 text-[0.75rem] font-medium text-(--app-text-muted)'
+  'inline-flex min-h-7 items-center gap-1.5 rounded-full border border-(--app-border) bg-(--app-surface) px-2.5 py-0.5 text-[0.7rem] font-medium text-(--app-text-muted) sm:min-h-8 sm:px-3 sm:py-1 sm:text-[0.75rem]'
 
 function parseMetadata(value: unknown) {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -98,9 +98,9 @@ function formatRelativeDate(value: string | null | undefined) {
 
 function SectionTitle({ icon: Icon, children }: { icon: typeof FileText; children: string }) {
   return (
-    <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-(--app-text)">
-      <span className="flex size-7 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
-        <Icon className="size-4" />
+    <h2 className="flex items-center gap-2 text-[0.95rem] font-semibold tracking-tight text-(--app-text) sm:text-base">
+      <span className="flex size-6 items-center justify-center rounded-control bg-primary-50 text-primary-700 sm:size-7 dark:bg-primary-500/12 dark:text-primary-200">
+        <Icon className="size-3.5 sm:size-4" />
       </span>
       {children}
     </h2>
@@ -216,7 +216,7 @@ export function JobDetailPage() {
 
   return (
     <motion.div
-      className="mx-auto max-w-280 pb-24 lg:pb-4"
+      className="mx-auto max-w-260 pb-20 lg:pb-4"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
@@ -224,16 +224,16 @@ export function JobDetailPage() {
       <motion.div variants={cardReveal}>
         <Link
           to={surfacePaths.public.jobs}
-          className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-(--app-text-muted) transition hover:text-primary-700 dark:hover:text-primary-200"
+          className="mb-3 inline-flex items-center gap-1.5 text-[0.82rem] font-semibold text-(--app-text-muted) transition hover:text-primary-700 dark:hover:text-primary-200 sm:mb-4 sm:text-sm"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-3.5 sm:size-4" />
           Volver a vacantes
         </Link>
       </motion.div>
 
-      <motion.header variants={cardReveal} className="border-b border-(--app-border) pb-6">
-        <div className="flex flex-col gap-4 min-[860px]:flex-row min-[860px]:items-start">
-          <CompanyLogo name={companyName} logoPath={job.company_profile?.logo_path} size="lg" className="size-15 rounded-card shadow-sm" />
+      <motion.header variants={cardReveal} className="border-b border-(--app-border) pb-4 sm:pb-5">
+        <div className="flex flex-col gap-3 min-[860px]:flex-row min-[860px]:items-start">
+          <CompanyLogo name={companyName} logoPath={job.company_profile?.logo_path} size="lg" className="size-11 rounded-card shadow-sm sm:size-12" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="gap-1.5 bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
@@ -247,17 +247,17 @@ export function JobDetailPage() {
                 </Badge>
               ) : null}
             </div>
-            <h1 className="mt-3 max-w-3xl text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text) sm:text-[1.7rem]">
+            <h1 className="mt-2 max-w-3xl text-[1.22rem] font-semibold leading-tight tracking-tight text-(--app-text) sm:text-[1.5rem]">
               {job.title}
             </h1>
-            <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm font-medium text-(--app-text-muted)">
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[0.82rem] font-medium text-(--app-text-muted) sm:text-sm">
               <span className="inline-flex items-center gap-1.5">
-                <Building2 className="size-4 text-(--app-text-subtle)" /> {companyName}
+                <Building2 className="size-3.5 text-(--app-text-subtle) sm:size-4" /> {companyName}
               </span>
               <span className="size-1 rounded-full bg-(--app-text-subtle)" />
               <span>{opportunityLabel}</span>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2">
               <span className={tagClassName}>
                 <MapPin className="size-3.5" /> {locationLabel}
               </span>
@@ -277,51 +277,51 @@ export function JobDetailPage() {
         </div>
       </motion.header>
 
-      <motion.div variants={gridStagger} className="mt-7 grid gap-7 xl:grid-cols-[1fr_19.5rem]">
-        <motion.main variants={gridStagger} className="space-y-8">
-          <motion.section variants={cardReveal} className="space-y-3">
+      <motion.div variants={gridStagger} className="mt-5 grid gap-5 xl:grid-cols-[1fr_18rem]">
+        <motion.main variants={gridStagger} className="space-y-5 sm:space-y-6">
+          <motion.section variants={cardReveal} className="space-y-2.5">
             <SectionTitle icon={FileText}>Descripción del puesto</SectionTitle>
-            <div className="space-y-3 text-[0.94rem] leading-7 text-(--app-text-muted)">
+            <div className="space-y-2.5 text-[0.88rem] leading-6 text-(--app-text-muted) sm:text-[0.94rem]">
               {descriptionParagraphs.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
               ))}
             </div>
           </motion.section>
 
-          <motion.section variants={cardReveal} className="space-y-3">
+          <motion.section variants={cardReveal} className="space-y-2.5">
             <SectionTitle icon={Check}>Responsabilidades</SectionTitle>
             {responsibilities.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5 sm:space-y-2">
                 {responsibilities.map((responsibility) => (
                   <div
                     key={responsibility}
-                    className="flex items-start gap-3 rounded-control border border-(--app-border) bg-(--app-surface) px-3.5 py-3 text-sm shadow-[0_1px_2px_rgba(20,40,90,0.04)] transition hover:border-primary-200 hover:bg-primary-50/40 dark:hover:border-primary-500/30 dark:hover:bg-primary-500/8"
+                    className="flex items-start gap-2.5 rounded-control border border-(--app-border) bg-(--app-surface) px-3 py-2.5 text-[0.86rem] shadow-[0_1px_2px_rgba(20,40,90,0.04)] transition hover:border-primary-200 hover:bg-primary-50/40 sm:gap-3 sm:px-3.5 sm:py-3 sm:text-sm dark:hover:border-primary-500/30 dark:hover:bg-primary-500/8"
                   >
-                    <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
-                      <Check className="size-3.5" />
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-700 sm:size-6 dark:bg-primary-500/12 dark:text-primary-200">
+                      <Check className="size-3 sm:size-3.5" />
                     </span>
-                    <span className="font-medium leading-6 text-(--app-text)">{responsibility}</span>
+                    <span className="font-medium leading-5 text-(--app-text) sm:leading-6">{responsibility}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="rounded-control border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
+              <p className="rounded-control border border-dashed border-(--app-border) bg-(--app-surface-muted) px-3.5 py-4 text-sm text-(--app-text-muted)">
                 La empresa todavía no detalló responsabilidades específicas para esta vacante.
               </p>
             )}
           </motion.section>
 
-          <motion.section variants={cardReveal} className="space-y-3">
+          <motion.section variants={cardReveal} className="space-y-2.5">
             <SectionTitle icon={HelpCircle}>Preguntas de filtrado</SectionTitle>
-            <p className="text-sm text-(--app-text-muted)">Visibles desde ahora; las responderás al aplicar a la vacante.</p>
-            <div className="space-y-2">
+            <p className="text-[0.86rem] text-(--app-text-muted) sm:text-sm">Visibles desde ahora; las responderás al aplicar a la vacante.</p>
+            <div className="space-y-1.5 sm:space-y-2">
               {job.job_screening_questions?.length ? (
                 job.job_screening_questions.map((question, index) => (
                   <div
                     key={question.id}
-                    className="flex items-start gap-3 rounded-control border border-(--app-border) bg-(--app-surface) px-3.5 py-3 text-sm shadow-[0_1px_2px_rgba(20,40,90,0.04)]"
+                    className="flex items-start gap-2.5 rounded-control border border-(--app-border) bg-(--app-surface) px-3 py-2.5 text-[0.86rem] shadow-[0_1px_2px_rgba(20,40,90,0.04)] sm:gap-3 sm:px-3.5 sm:py-3 sm:text-sm"
                   >
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-control bg-primary-50 text-xs font-bold text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-control bg-primary-50 text-[0.68rem] font-bold text-primary-700 sm:size-6 sm:text-xs dark:bg-primary-500/12 dark:text-primary-200">
                       {index + 1}
                     </span>
                     <span className="min-w-0">
@@ -336,7 +336,7 @@ export function JobDetailPage() {
                   </div>
                 ))
               ) : (
-                <p className="rounded-control border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-sm text-(--app-text-muted)">
+                <p className="rounded-control border border-dashed border-(--app-border) bg-(--app-surface-muted) px-3.5 py-4 text-sm text-(--app-text-muted)">
                   Esta vacante no tiene preguntas de filtrado.
                 </p>
               )}
@@ -344,9 +344,9 @@ export function JobDetailPage() {
           </motion.section>
         </motion.main>
 
-        <motion.aside variants={gridStagger} className="space-y-4 xl:sticky xl:top-4 xl:self-start">
+        <motion.aside variants={gridStagger} className="space-y-3.5 xl:sticky xl:top-4 xl:self-start">
           <motion.div variants={cardReveal} className="hidden min-[860px]:block">
-            <Card className="rounded-control p-4">
+            <Card className="rounded-control p-3.5">
               <div className="flex flex-col gap-2">
                 <Link className={linkButtonClassName} to={applicationPath}>
                   {existingApplication ? <FileText className="size-4" /> : <SendHorizontal className="size-4" />}
@@ -359,20 +359,20 @@ export function JobDetailPage() {
                   </p>
                 ) : null}
               </div>
-              <dl className="mt-4 divide-y divide-(--app-border)">
-                <div className="flex items-center justify-between gap-3 py-3 text-sm">
+              <dl className="mt-3 divide-y divide-(--app-border)">
+                <div className="flex items-center justify-between gap-3 py-2.5 text-[0.86rem]">
                   <dt className="text-(--app-text-subtle)">Modalidad</dt>
                   <dd className="font-semibold text-(--app-text)">{workplaceLabel}</dd>
                 </div>
-                <div className="flex items-center justify-between gap-3 py-3 text-sm">
+                <div className="flex items-center justify-between gap-3 py-2.5 text-[0.86rem]">
                   <dt className="text-(--app-text-subtle)">Tipo</dt>
                   <dd className="text-right font-semibold text-(--app-text)">{employmentLabel}</dd>
                 </div>
-                <div className="flex items-center justify-between gap-3 py-3 text-sm">
+                <div className="flex items-center justify-between gap-3 py-2.5 text-[0.86rem]">
                   <dt className="text-(--app-text-subtle)">Oportunidad</dt>
                   <dd className="text-right font-semibold text-(--app-text)">{opportunityLabel}</dd>
                 </div>
-                <div className="flex items-center justify-between gap-3 py-3 text-sm">
+                <div className="flex items-center justify-between gap-3 py-2.5 text-[0.86rem]">
                   <dt className="text-(--app-text-subtle)">Preguntas</dt>
                   <dd className="font-semibold text-(--app-text)">{job.job_screening_questions?.length ?? 0}</dd>
                 </div>
@@ -381,10 +381,10 @@ export function JobDetailPage() {
           </motion.div>
 
           <motion.div variants={cardReveal}>
-            <Card className="rounded-control p-4">
+            <Card className="rounded-control p-3.5">
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-(--app-text-subtle)">Sobre la empresa</p>
-              <div className="mt-4 flex items-center gap-3">
-                <CompanyLogo name={companyName} logoPath={job.company_profile?.logo_path} size="md" />
+              <div className="mt-3 flex items-center gap-2.5">
+                <CompanyLogo name={companyName} logoPath={job.company_profile?.logo_path} size="md" className="size-9" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-(--app-text)">{companyName}</p>
                   {job.company_profile?.industry ? (
@@ -393,11 +393,11 @@ export function JobDetailPage() {
                 </div>
               </div>
               {job.company_profile?.description ? (
-                <p className="mt-3 line-clamp-4 text-sm leading-6 text-(--app-text-muted)">{job.company_profile.description}</p>
+                <p className="mt-2.5 line-clamp-3 text-[0.86rem] leading-5 text-(--app-text-muted)">{job.company_profile.description}</p>
               ) : null}
               {job.company_profile?.website_url ? (
                 <a
-                  className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary-700 transition hover:text-primary-800 dark:text-primary-200 dark:hover:text-primary-100"
+                  className="mt-3 inline-flex items-center gap-2 text-[0.86rem] font-semibold text-primary-700 transition hover:text-primary-800 dark:text-primary-200 dark:hover:text-primary-100"
                   href={job.company_profile.website_url}
                   rel="noreferrer"
                   target="_blank"
@@ -410,12 +410,12 @@ export function JobDetailPage() {
         </motion.aside>
       </motion.div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-(--app-border) bg-(--app-surface)/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur min-[860px]:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-(--app-border) bg-(--app-surface)/95 px-3 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] backdrop-blur min-[860px]:hidden">
         {session.isAuthenticated && !existingApplication ? (
           <Button
             type="button"
             variant="outline"
-            className="size-11 shrink-0 rounded-control px-0"
+            className="size-10 shrink-0 rounded-control px-0"
             aria-label={job.isSaved ? 'Quitar guardado' : 'Guardar vacante'}
             onClick={() => saveMutation.mutate(!job.isSaved)}
             disabled={isSaveDisabled}

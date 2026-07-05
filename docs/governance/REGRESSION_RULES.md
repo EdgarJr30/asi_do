@@ -398,6 +398,9 @@ Do not let `/admin/finances?tab=audit` render the full AZUL payment history as o
 ### R-110 — Candidate Inicio must stay compact on mobile
 Do not let the candidate `Inicio` dashboard return to oversized single-column KPI cards or tall recent-application rows on mobile. KPI cards should stay compact and scannable in a two-column mobile rhythm, recent applications should use small company logos instead of generic document icons, and the submitted date plus public status label should remain on the same mobile metadata line.
 
+### R-111 — Public job detail must stay compact
+Do not let the public vacancy detail page return to an oversized hero, large logo block, tall tag stack, or overly spaced content sections. The full vacancy view should keep a compact mobile-first hierarchy with smaller heading scale, tighter section spacing, concise responsibility/question rows, and a lightweight sticky action bar on mobile.
+
 ---
 
 ## Maintenance rule
