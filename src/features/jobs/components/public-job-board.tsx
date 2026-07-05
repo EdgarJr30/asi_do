@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'motion/react'
 import type { Variants } from 'motion/react'
 import {
   ArrowLeft,
@@ -650,31 +650,61 @@ function MobileFilterSheet({
   onApply: () => void
   onReset: () => void
 }) {
+  // La barrita superior (grabber) inicia el arrastre; el cuerpo con scroll no,
+  // para que deslizar sobre el formulario no cierre la hoja por accidente.
+  const dragControls = useDragControls()
+
   return (
-    <Dialog open={open} onClose={onClose} className="relative z-50 lg:hidden">
-      <DialogBackdrop
-        transition
-        className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm transition-opacity duration-300 ease-out data-[closed]:opacity-0"
-      />
-      <div className="fixed inset-x-0 bottom-0 flex max-h-[90dvh] flex-col justify-end">
-        <DialogPanel
-          transition
-          className="flex max-h-[90dvh] flex-col rounded-t-card border-t border-(--app-border) bg-(--app-surface) shadow-[0_-20px_60px_rgba(15,23,42,0.28)] transition duration-300 ease-out data-[closed]:translate-y-full"
-        >
-          <header className="shrink-0 border-b border-(--app-border) px-5 pb-3 pt-2.5">
-            <span aria-hidden className="mx-auto mb-3 block h-1.5 w-10 rounded-full bg-(--app-border)" />
-            <div className="flex items-center justify-between gap-4">
-              <DialogTitle className="text-[1.05rem] font-semibold tracking-tight text-(--app-text)">Buscar y filtrar</DialogTitle>
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Cerrar"
-                className="flex size-8 shrink-0 items-center justify-center rounded-control text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)"
+    <AnimatePresence>
+      {open ? (
+        <Dialog static open onClose={onClose} className="relative z-50 lg:hidden">
+          <motion.div
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: softEase }}
+          />
+          <div className="fixed inset-x-0 bottom-0 flex max-h-[90dvh] flex-col justify-end">
+            <DialogPanel
+              as={motion.div}
+              drag="y"
+              dragControls={dragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.9 }}
+              onDragEnd={(_event, info) => {
+                // Cierra si el usuario baja lo suficiente o hace un flick rápido.
+                if (info.offset.y > 140 || info.velocity.y > 700) onClose()
+              }}
+              variants={{
+                hidden: { y: '100%' },
+                visible: { y: 0, transition: { type: 'spring', damping: 34, stiffness: 340 } },
+                exit: { y: '100%', transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } }
+              }}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="flex max-h-[90dvh] flex-col rounded-t-card border-t border-(--app-border) bg-(--app-surface) shadow-[0_-20px_60px_rgba(15,23,42,0.28)]"
+            >
+              <header
+                onPointerDown={(event) => dragControls.start(event)}
+                className="shrink-0 cursor-grab touch-none select-none border-b border-(--app-border) px-5 pb-3 pt-2.5 active:cursor-grabbing"
               >
-                <X className="size-4" />
-              </button>
-            </div>
-          </header>
+                <span aria-hidden className="mx-auto mb-3 block h-1.5 w-10 rounded-full bg-(--app-border)" />
+                <div className="flex items-center justify-between gap-4">
+                  <DialogTitle className="text-[1.05rem] font-semibold tracking-tight text-(--app-text)">Buscar y filtrar</DialogTitle>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    aria-label="Cerrar"
+                    className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-control text-(--app-text-subtle) transition-colors hover:bg-(--app-surface-muted) hover:text-(--app-text)"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              </header>
 
           <form
             id="mobile-filters-form"
@@ -761,9 +791,11 @@ function MobileFilterSheet({
               {isLoading ? <Spinner size="sm" /> : `Ver ${resultCount} ${resultCount === 1 ? 'empleo' : 'empleos'}`}
             </Button>
           </footer>
-        </DialogPanel>
-      </div>
-    </Dialog>
+            </DialogPanel>
+          </div>
+        </Dialog>
+      ) : null}
+    </AnimatePresence>
   )
 }
 
@@ -938,6 +970,11 @@ function JobDetailPanel({
             <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm font-medium text-(--app-text-muted)">
               <Building2 aria-hidden className="size-4" /> {job.company_profile?.display_name || 'Empresa'}
             </p>
+            {applied ? (
+              <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[0.72rem] font-semibold text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/12 dark:text-emerald-300">
+                <Check aria-hidden className="size-3.5" /> Ya aplicaste a esta vacante
+              </span>
+            ) : null}
           </div>
         </div>
 

@@ -235,10 +235,18 @@ export function JobDetailPage() {
         <div className="flex flex-col gap-4 min-[860px]:flex-row min-[860px]:items-start">
           <CompanyLogo name={companyName} logoPath={job.company_profile?.logo_path} size="lg" className="size-15 rounded-card shadow-sm" />
           <div className="min-w-0 flex-1">
-            <Badge className="gap-1.5 bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
-              <Sparkles className="size-3.5" />
-              Oportunidad ASI
-            </Badge>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="gap-1.5 bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
+                <Sparkles className="size-3.5" />
+                Oportunidad ASI
+              </Badge>
+              {existingApplication ? (
+                <Badge className="gap-1.5 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/12 dark:text-emerald-300">
+                  <Check className="size-3.5" />
+                  Ya aplicaste
+                </Badge>
+              ) : null}
+            </div>
             <h1 className="mt-3 max-w-3xl text-[1.45rem] font-semibold leading-tight tracking-tight text-(--app-text) sm:text-[1.7rem]">
               {job.title}
             </h1>
