@@ -46,6 +46,7 @@ import {
 } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { fetchPipelineBoard } from '@/features/pipeline/lib/pipeline-api'
 import { fetchWorkspaceBundle, type WorkspaceBundle } from '@/features/tenants/lib/workspace-api'
+import { useUrlParamState } from '@/hooks/use-url-param-state'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import {
@@ -55,6 +56,10 @@ import {
 } from '@/shared/ui/card-motion'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
 import { cn } from '@/lib/utils/cn'
+
+type JobsSort = 'recent' | 'applications' | 'title'
+/** Valores válidos de orden; normaliza un `?sort=` manipulado en la URL. */
+const JOBS_SORTS: readonly JobsSort[] = ['recent', 'applications', 'title']
 
 const PUBLIC_JOBS_QUERY_KEY = ['jobs', 'public'] as const
 const TENANT_JOBS_QUERY_KEY = ['jobs', 'tenant'] as const
@@ -886,11 +891,17 @@ function WorkspaceJobsManager() {
   const canManageJobs = session.permissions.includes('job:create') || session.permissions.includes('job:update')
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
   const [isEditorOpen, setIsEditorOpen] = useState(false)
-  const [statusTab, setStatusTab] = useState<'active' | 'inactive'>('active')
-  const [search, setSearch] = useState('')
-  const [employmentFilter, setEmploymentFilter] = useState('')
-  const [locationFilter, setLocationFilter] = useState('')
-  const [sort, setSort] = useState<'recent' | 'applications' | 'title'>('recent')
+  // Filtros/tab/búsqueda/orden respaldados por la URL: sobreviven a navegación,
+  // back/forward y recarga, y son compartibles por enlace
+  // (?tab=&q=&employment=&location=&sort=). La página es paginación efímera de
+  // cliente (se reinicia con cada filtro), por eso queda en estado local.
+  const [statusTabParam, setStatusTab] = useUrlParamState<'active' | 'inactive'>('tab', 'active')
+  const statusTab: 'active' | 'inactive' = statusTabParam === 'inactive' ? 'inactive' : 'active'
+  const [search, setSearch] = useUrlParamState('q')
+  const [employmentFilter, setEmploymentFilter] = useUrlParamState('employment')
+  const [locationFilter, setLocationFilter] = useUrlParamState('location')
+  const [sortParam, setSort] = useUrlParamState<JobsSort>('sort', 'recent')
+  const sort: JobsSort = JOBS_SORTS.includes(sortParam) ? sortParam : 'recent'
   const [page, setPage] = useState(0)
   const [viewJobId, setViewJobId] = useState<string | null>(null)
   const [pendingStatusChange, setPendingStatusChange] = useState<PendingStatusChange | null>(null)
@@ -1035,7 +1046,7 @@ function WorkspaceJobsManager() {
             }
           : null
       ].filter(Boolean) as Array<{ key: string; label: string; clear: () => void }>,
-    [employmentFilter, locationFilter]
+    [employmentFilter, locationFilter, setEmploymentFilter, setLocationFilter]
   )
   const hasActiveFilters = Boolean(search || employmentFilter || locationFilter || sort !== 'recent')
 

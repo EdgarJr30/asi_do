@@ -24,6 +24,7 @@ import {
   moveApplicationStage,
   upsertApplicationRating
 } from '@/features/pipeline/lib/pipeline-api'
+import { useUrlParamState } from '@/hooks/use-url-param-state'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cn } from '@/lib/utils/cn'
@@ -124,9 +125,11 @@ export function PipelineBoardPage() {
   const [stageNote, setStageNote] = useState('')
   const [newNote, setNewNote] = useState('')
   const [score, setScore] = useState('')
-  const [candidateQuery, setCandidateQuery] = useState('')
-  const [jobFilter, setJobFilter] = useState('')
-  const [stageFilter, setStageFilter] = useState('')
+  // Filtros/búsqueda respaldados por la URL: sobreviven a navegación, back/forward
+  // y recarga, y son compartibles por enlace (?q=&job=&stage=).
+  const [candidateQuery, setCandidateQuery] = useUrlParamState('q')
+  const [jobFilter, setJobFilter] = useUrlParamState('job')
+  const [stageFilter, setStageFilter] = useUrlParamState('stage')
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dragOverStageId, setDragOverStageId] = useState<string | null>(null)
   const [visibleCardsByStageId, setVisibleCardsByStageId] = useState<Record<string, number>>({})

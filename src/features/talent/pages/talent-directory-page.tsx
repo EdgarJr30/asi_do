@@ -31,12 +31,16 @@ import {
   type CandidateDirectoryRow,
   type CandidateDirectorySort
 } from '@/features/talent/lib/talent-api'
+import { useUrlParamState } from '@/hooks/use-url-param-state'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cardReveal, gridStagger, pageStagger, softEase } from '@/shared/ui/card-motion'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
 import { cn } from '@/lib/utils/cn'
 
 const TALENT_PAGE_SIZE = 12
+
+/** Valores válidos de orden; normaliza un `?sort=` manipulado en la URL. */
+const CANDIDATE_SORTS: readonly CandidateDirectorySort[] = ['relevance', 'score', 'name', 'experience']
 
 function candidateInitials(value: string) {
   return (
@@ -64,11 +68,15 @@ export function TalentDirectoryPage() {
   const session = useAppSession()
   const shouldReduceMotion = useReducedMotion()
   const tenantId = session.activeTenantId
-  const [query, setQuery] = useState('')
-  const [skill, setSkill] = useState('')
-  const [language, setLanguage] = useState('')
-  const [countryCode, setCountryCode] = useState('')
-  const [sort, setSort] = useState<CandidateDirectorySort>('relevance')
+  // Filtros y orden respaldados por la URL: sobreviven a navegación, back/forward
+  // y recarga, y son compartibles por enlace (?q=&skill=&lang=&country=&sort=).
+  const [query, setQuery] = useUrlParamState('q')
+  const [skill, setSkill] = useUrlParamState('skill')
+  const [language, setLanguage] = useUrlParamState('lang')
+  const [countryCode, setCountryCode] = useUrlParamState('country')
+  const [sortParam, setSort] = useUrlParamState<CandidateDirectorySort>('sort', 'relevance')
+  // Normaliza el valor de la URL: si viene manipulado (?sort=xxx) cae a 'relevance'.
+  const sort: CandidateDirectorySort = CANDIDATE_SORTS.includes(sortParam) ? sortParam : 'relevance'
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false)
   // Permite deep-link desde Aplicaciones: `/workspace/talent?candidate=<id>` abre
   // directamente el perfil del candidato que aplicó.
@@ -167,7 +175,7 @@ export function TalentDirectoryPage() {
         language.trim() ? { key: 'language', label: language.trim(), clear: () => setLanguage('') } : null,
         countryCode.trim() ? { key: 'country', label: countryCode.trim(), clear: () => setCountryCode('') } : null
       ].filter(Boolean) as Array<{ key: string; label: string; clear: () => void }>,
-    [skill, language, countryCode]
+    [skill, language, countryCode, setSkill, setLanguage, setCountryCode]
   )
   const hasActiveFilters = Boolean(
     query.trim() || skill.trim() || language.trim() || countryCode.trim() || sort !== 'relevance'
