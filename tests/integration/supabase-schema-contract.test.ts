@@ -78,6 +78,10 @@ const candidateResumeDefaultPromotionMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260701110000_fix_candidate_resume_default_promotion.sql'
 )
+const platformOwnerAccessControlMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260706120000_platform_owner_access_control.sql'
+)
 
 describe('supabase schema contract', () => {
   it('keeps the identity, notification, and push workflow migrations in place', () => {
@@ -100,6 +104,7 @@ describe('supabase schema contract', () => {
     expect(existsSync(closedRegistrationIntakeMigrationPath)).toBe(true)
     expect(existsSync(membershipRenewalSettlementMigrationPath)).toBe(true)
     expect(existsSync(candidateResumeDefaultPromotionMigrationPath)).toBe(true)
+    expect(existsSync(platformOwnerAccessControlMigrationPath)).toBe(true)
   })
 
   it('defines the core identity, approval, and storage foundations', () => {
@@ -326,5 +331,21 @@ describe('supabase schema contract', () => {
     expect(migration).toContain("'member_invited'")
     expect(migration).toContain("'member_invite_revoked'")
     expect(migration).toContain("grant execute on function public.invite_tenant_member(uuid, text, uuid) to authenticated;")
+  })
+
+  it('keeps platform-owner access control owner-only and audited', () => {
+    const migration = readFileSync(platformOwnerAccessControlMigrationPath, 'utf8')
+
+    expect(migration).toContain('create or replace function public.is_platform_owner()')
+    expect(migration).toContain('create or replace function public.admin_platform_rbac_snapshot(')
+    expect(migration).toContain('create or replace function public.admin_create_platform_role(')
+    expect(migration).toContain('create or replace function public.admin_update_platform_role(')
+    expect(migration).toContain('create or replace function public.admin_assign_platform_role(')
+    expect(migration).toContain('create or replace function public.admin_revoke_platform_role(')
+    expect(migration).toContain("raise exception 'Only platform_owner can assign platform roles'")
+    expect(migration).toContain("raise exception 'Platform roles can only be assigned to active users'")
+    expect(migration).toContain("raise exception 'Cannot revoke the last active platform_owner'")
+    expect(migration).toContain("'platform_role.assigned'")
+    expect(migration).toContain("'platform_rbac'")
   })
 })

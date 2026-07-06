@@ -154,6 +154,14 @@ export const adminNavigationItems: NavigationItem[] = [
     requiredPermission: 'platform_dashboard:read'
   },
   {
+    title: 'Usuarios y roles',
+    href: surfacePaths.admin.accessControl,
+    description: 'Roles de plataforma, asignaciones, reportes y auditoría',
+    requiresAuth: true,
+    requiredPermission: 'platform_dashboard:read',
+    requiresPlatformOwner: true
+  },
+  {
     title: 'Moderación',
     href: surfacePaths.admin.moderation,
     description: 'Trust and safety',

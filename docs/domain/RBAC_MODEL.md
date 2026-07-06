@@ -174,6 +174,7 @@ A future anonymous opportunity preview may exist only as a separate public summa
 15. Final license activation is separate from pastor/regional authorization and is granted by default only to super administrators and platform support; any extra holder of `license:activate` requires explicit super-administrator assignment.
 16. Only company tenants may receive job creation and publishing permissions for employment job postings.
 17. The full role and scope taxonomy is defined in `docs/domain/ROLE_SCOPE_MODEL.md`.
+18. Platform role administration after bootstrap must use the owner-only `/admin/access-control` workflow and audited SQL RPCs. A `platform_admin` may operate allowed admin modules, but only an active `platform_owner` may create custom platform roles, assign/revoke platform roles, delete custom platform roles, or inspect the platform RBAC report/audit snapshot.
 
 ---
 
@@ -225,11 +226,17 @@ RBAC must align with Supabase authorization patterns:
 
 Recommended helper functions:
 - `is_platform_admin()`
+- `is_platform_owner()`
 - `has_platform_permission(permission_code text)`
 - `has_tenant_permission(p_tenant_id uuid, permission_code text)`
 - `my_tenant_ids()`
 - `bootstrap_first_platform_owner()`
 - `review_recruiter_request(p_request_id uuid, p_decision recruiter_request_status, p_review_notes text)`
+- `admin_platform_rbac_snapshot(p_user_query text, p_user_limit integer)`
+- `admin_create_platform_role(p_code text, p_name text, p_description text, p_permission_codes text[])`
+- `admin_update_platform_role(p_role_id uuid, p_name text, p_description text, p_permission_codes text[])`
+- `admin_assign_platform_role(p_user_id uuid, p_role_id uuid, p_notes text)`
+- `admin_revoke_platform_role(p_assignment_id uuid, p_notes text)`
 
 All permission changes must remain aligned with `docs/governance/SECURITY_RULES.md`, `docs/governance/TESTING_RULES.md`, and `docs/governance/DOCUMENTATION_RULES.md`.
 

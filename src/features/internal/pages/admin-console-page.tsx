@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
-import { Banknote, Bell, Building2, FileText, Gauge, Shield, Sparkles } from 'lucide-react'
+import { Banknote, Bell, Building2, FileText, Gauge, KeyRound, Shield, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -27,6 +27,7 @@ const adminModules: Array<{
   description: string
   permission?: PermissionCode
   anyPermission?: PermissionCode[]
+  ownerOnly?: boolean
   icon: ReactNode
   tone: 'blue' | 'green' | 'amber' | 'rose' | 'violet' | 'teal'
   count?: (stats: Awaited<ReturnType<typeof fetchPlatformOpsSnapshot>> | undefined) => string
@@ -55,6 +56,15 @@ const adminModules: Array<{
     permission: 'platform_dashboard:read',
     icon: <Building2 className="size-5" />,
     tone: 'blue'
+  },
+  {
+    href: surfacePaths.admin.accessControl,
+    title: 'Usuarios y roles',
+    description: 'Control owner-only de roles de plataforma, asignaciones, auditoría y riesgos SoD.',
+    permission: 'platform_dashboard:read',
+    ownerOnly: true,
+    icon: <KeyRound className="size-5" />,
+    tone: 'violet'
   },
   {
     href: surfacePaths.admin.moderation,
@@ -92,7 +102,8 @@ const adminModules: Array<{
   }
 ]
 
-function canSeeModule(module: (typeof adminModules)[number], permissions: PermissionCode[]) {
+function canSeeModule(module: (typeof adminModules)[number], permissions: PermissionCode[], isPlatformOwner: boolean) {
+  if (module.ownerOnly && !isPlatformOwner) return false
   if (module.permission && !permissions.includes(module.permission)) return false
   if (module.anyPermission && !module.anyPermission.some((permission) => permissions.includes(permission))) return false
   return true
@@ -108,7 +119,7 @@ export function AdminConsolePage() {
   })
 
   const stats = snapshotQuery.data
-  const visibleModules = adminModules.filter((module) => canSeeModule(module, session.permissions))
+  const visibleModules = adminModules.filter((module) => canSeeModule(module, session.permissions, session.isPlatformOwner))
 
   return (
     <AdminPage

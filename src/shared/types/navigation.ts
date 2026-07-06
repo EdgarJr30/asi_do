@@ -12,4 +12,5 @@ export interface NavigationItem {
   requiresAuth?: boolean
   requiredPermission?: PermissionCode
   requiredAnyPermission?: PermissionCode[]
+  requiresPlatformOwner?: boolean
 }

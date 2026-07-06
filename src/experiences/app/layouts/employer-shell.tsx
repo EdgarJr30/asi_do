@@ -19,6 +19,7 @@ import {
   FileText,
   Inbox,
   KanbanSquare,
+  KeyRound,
   LayoutDashboard,
   Layers3,
   LogOut,
@@ -1156,6 +1157,7 @@ const adminIconByHref: Partial<Record<string, LucideIcon>> = {
   [surfacePaths.admin.root]: LayoutDashboard,
   [surfacePaths.admin.approvals]: Shield,
   [surfacePaths.admin.platform]: Building2,
+  [surfacePaths.admin.accessControl]: KeyRound,
   [surfacePaths.admin.moderation]: Layers3,
   [surfacePaths.admin.errors]: FileText,
   [surfacePaths.admin.membership]: Sparkles,
@@ -1199,7 +1201,7 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
     : []
 
   const adminItems: AppNavItem[] = session.canAccessAdminConsole
-    ? filterNavigationItems(adminNavigationItems, permissions, isAuthenticated).map((item) => ({
+    ? filterNavigationItems(adminNavigationItems, permissions, isAuthenticated, { isPlatformOwner: session.isPlatformOwner }).map((item) => ({
         href: item.href,
         title: item.title,
         icon: adminIconByHref[item.href] ?? Shield

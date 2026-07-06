@@ -99,6 +99,7 @@ export const surfacePaths = {
     root: '/admin',
     approvals: '/admin/approvals',
     platform: '/admin/platform',
+    accessControl: '/admin/access-control',
     moderation: '/admin/moderation',
     errors: '/admin/errors',
     membership: '/admin/membership',

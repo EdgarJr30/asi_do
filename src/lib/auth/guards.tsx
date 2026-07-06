@@ -154,3 +154,21 @@ export function RequirePlatformAdmin({ children }: PropsWithChildren) {
 
   return children
 }
+
+export function RequirePlatformOwner({ children }: PropsWithChildren) {
+  const session = useAppSession()
+
+  if (session.isLoading) {
+    return <RoutePending fullScreen label="Validando acceso de owner" hint="Comprobando tu rol de plataforma" />
+  }
+
+  if (!session.isAuthenticated) {
+    return <Navigate replace to="/auth/sign-in" />
+  }
+
+  if (!session.isPlatformOwner) {
+    return <GuardFallbackShell surface="admin" />
+  }
+
+  return children
+}

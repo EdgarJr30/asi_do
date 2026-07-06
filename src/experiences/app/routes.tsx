@@ -11,7 +11,8 @@ import {
   RequireAuth,
   RequireCompletedBaseOnboarding,
   RequirePermission,
-  RequirePlatformAdmin
+  RequirePlatformAdmin,
+  RequirePlatformOwner
 } from '@/lib/auth/guards'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { LazySurfaceStatusPage } from '@/app/router/routes/lazy-surface-status-page'
@@ -56,6 +57,9 @@ const ModerationOverviewPage = lazy(() => import('@/features/moderation/pages/mo
 const PipelineBoardPage = lazy(() => import('@/features/pipeline/pages/pipeline-board-page').then(({ PipelineBoardPage }) => ({ default: PipelineBoardPage })))
 const PlatformOpsDashboardPage = lazy(() =>
   import('@/features/platform-ops/pages/platform-ops-dashboard-page').then(({ PlatformOpsDashboardPage }) => ({ default: PlatformOpsDashboardPage }))
+)
+const PlatformAccessControlPage = lazy(() =>
+  import('@/features/platform-ops/pages/platform-access-control-page').then(({ PlatformAccessControlPage }) => ({ default: PlatformAccessControlPage }))
 )
 const RbacOverviewPage = lazy(() => import('@/features/rbac/pages/rbac-overview-page').then(({ RbacOverviewPage }) => ({ default: RbacOverviewPage })))
 const RecruiterRequestPage = lazy(() => import('@/features/recruiter-requests/pages/recruiter-request-page').then(({ RecruiterRequestPage }) => ({ default: RecruiterRequestPage })))
@@ -467,6 +471,16 @@ export const applicationRoutes: RouteObject[] = [
               <PlatformOpsDashboardPage />
             </RouteSuspense>
           </RequirePermission>
+        )
+      },
+      {
+        path: 'access-control',
+        element: (
+          <RequirePlatformOwner>
+            <RouteSuspense>
+              <PlatformAccessControlPage />
+            </RouteSuspense>
+          </RequirePlatformOwner>
         )
       },
       {

@@ -26,10 +26,15 @@ export function hasAnyPermission(permissions: Iterable<PermissionCode>, required
 export function filterNavigationItems(
   items: NavigationItem[],
   permissions: Iterable<PermissionCode>,
-  isAuthenticated: boolean
+  isAuthenticated: boolean,
+  options: { isPlatformOwner?: boolean } = {}
 ) {
   return items.filter((item) => {
     if (item.requiresAuth && !isAuthenticated) {
+      return false
+    }
+
+    if (item.requiresPlatformOwner && !options.isPlatformOwner) {
       return false
     }
 

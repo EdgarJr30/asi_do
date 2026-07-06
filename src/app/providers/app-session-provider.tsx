@@ -36,6 +36,7 @@ interface AppSessionContextValue {
   activeMembership: AppMembership | null
   hasMultipleWorkspaceMemberships: boolean
   isPlatformAdmin: boolean
+  isPlatformOwner: boolean
   isInternalDeveloper: boolean
   hasActiveAsiAccess: boolean
   canAccessAdminConsole: boolean
@@ -68,6 +69,7 @@ function emptyState(session: Session | null): AppSessionContextValue {
     activeMembership,
     hasMultipleWorkspaceMemberships: false,
     isPlatformAdmin: false,
+    isPlatformOwner: false,
     isInternalDeveloper: false,
     hasActiveAsiAccess: false,
     canAccessAdminConsole: false,
@@ -85,6 +87,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
   const [permissions, setPermissions] = useState<PermissionCode[]>([])
   const [platformPermissions, setPlatformPermissions] = useState<PermissionCode[]>([])
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
+  const [isPlatformOwner, setIsPlatformOwner] = useState(false)
   const [isInternalDeveloper, setIsInternalDeveloper] = useState(false)
   const [activePastorScopeCount, setActivePastorScopeCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -101,6 +104,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
       setPermissions([])
       setPlatformPermissions([])
       setIsPlatformAdmin(false)
+      setIsPlatformOwner(false)
       setIsInternalDeveloper(false)
       setActivePastorScopeCount(0)
       setIsLoading(false)
@@ -121,6 +125,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
       setPermissions(snapshot.permissions)
       setPlatformPermissions(snapshot.platformPermissions)
       setIsPlatformAdmin(snapshot.isPlatformAdmin)
+      setIsPlatformOwner(Boolean(snapshot.isPlatformOwner))
       setIsInternalDeveloper(Boolean(snapshot.profile?.is_internal_developer))
       setActivePastorScopeCount(snapshot.activePastorScopeCount)
     } finally {
@@ -229,6 +234,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     permissions,
     platformPermissions,
     isPlatformAdmin,
+    isPlatformOwner,
     isInternalDeveloper,
     hasActiveAsiAccess: hasActiveAsiAccess(profile),
     canAccessAdminConsole: isPlatformAdmin || isInternalDeveloper || hasAdminConsolePermission,

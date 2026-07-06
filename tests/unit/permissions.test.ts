@@ -31,24 +31,40 @@ describe('permission guards', () => {
       'Inicio',
       'Membresía',
       'Jobs',
-      'Aplicaciones',
+      'Postulaciones',
       'Perfil',
       'Reclutar con mi empresa',
       'Resumen',
-      'Mi actividad',
       'Vacantes',
       'Aplicaciones',
       'Candidatos',
       'Banco de talento',
-      'Tablero Kanban',
+      'Proceso de selección',
       'Reportes',
       'Configuración',
       'Overview',
-      'Platform',
-      'Errors',
-      'Datos de pago',
-      'Donaciones'
+      'Plataforma',
+      'Errores',
+      'Finanzas',
+      'Arnés de estrés'
     ])
+  })
+
+  it('hides owner-only admin navigation unless the session is platform owner', () => {
+    const visibleForAdmin = filterNavigationItems(
+      adminNavigationItems,
+      ['platform_dashboard:read'],
+      true
+    )
+    const visibleForOwner = filterNavigationItems(
+      adminNavigationItems,
+      ['platform_dashboard:read'],
+      true,
+      { isPlatformOwner: true }
+    )
+
+    expect(visibleForAdmin.map((item) => item.title)).not.toContain('Usuarios y roles')
+    expect(visibleForOwner.map((item) => item.title)).toContain('Usuarios y roles')
   })
 
   it('keeps internal navigation restricted when platform permissions are missing', () => {
@@ -72,8 +88,7 @@ describe('permission guards', () => {
 
     expect(visibleInternal.map((item) => item.title)).toEqual([
       'Overview',
-      'Approvals',
-      'Autorización territorial'
+      'Aprobaciones'
     ])
   })
 })

@@ -3721,6 +3721,7 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: never; Returns: boolean }
+      is_platform_owner: { Args: never; Returns: boolean }
       is_tenant_member: { Args: { p_tenant_id: string }; Returns: boolean }
       list_active_donation_amount_options: {
         Args: never

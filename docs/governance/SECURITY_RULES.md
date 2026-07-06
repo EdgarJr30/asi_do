@@ -88,6 +88,7 @@ Security includes protecting:
 28. Admin approval queues must require explicit approval/review permission at navigation and route-guard level; generic admin-console visibility is not enough to open approval workflows.
 29. Email-only transactional records may use nullable `notifications.recipient_user_id` only when the recipient is not a platform user; the email processor must use an explicit payload recipient and the payload must stay limited to non-card, non-tenant-private receipt data.
 30. Candidate self-service updates to an existing application must be narrowly scoped. Replacing the submitted CV must be enforced by a server-side/RPC path that verifies the authenticated user owns both the application candidate profile and the selected CV; it must not become a broad client-side application update permission.
+31. Platform role governance after first bootstrap must be owner-only and RPC-backed. Creating custom platform roles, editing platform role permissions, assigning/revoking platform roles, deleting custom roles, and reading the platform RBAC/audit snapshot must require `is_platform_owner()` server-side, emit semantic audit events, and prevent revoking the last active `platform_owner`.
 
 ### Supabase MCP rules for LLM-assisted development
 - Supabase MCP may be used only as an internal developer tool, never as an end-user or customer-facing capability.

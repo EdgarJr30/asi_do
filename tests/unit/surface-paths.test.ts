@@ -15,4 +15,8 @@ describe('surface paths', () => {
     expect(getAuthenticatedHomePath(false, false)).toBe(surfacePaths.account.profile)
     expect(getAuthenticatedHomePath(true, false)).toBe(surfacePaths.account.profile)
   })
+
+  it('keeps platform access control under the admin surface', () => {
+    expect(surfacePaths.admin.accessControl).toBe('/admin/access-control')
+  })
 })

@@ -61,4 +61,10 @@ describe('app route contract', () => {
 
     expect(adminRoute?.children?.some((route) => route.path === 'bootstrap-owner')).toBe(true)
   })
+
+  it('keeps platform access control as an explicit admin-only route', () => {
+    const adminRoute = findTopLevelRoute(surfacePaths.admin.root)
+
+    expect(adminRoute?.children?.some((route) => route.path === 'access-control')).toBe(true)
+  })
 })

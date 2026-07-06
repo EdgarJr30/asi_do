@@ -413,6 +413,9 @@ Do not restore button-based local pagination or fetch the full candidate applica
 ### R-115 — Candidate page titles must use the compact app heading rhythm
 Do not let candidate account pages such as `Tu membresía` drift back to oversized bold dashboard titles when sibling modules such as `Postulaciones` use the compact app heading rhythm. Primary candidate page titles should use the shared `text-xl font-semibold sm:text-[1.6rem]` scale unless the screen is intentionally a marketing or onboarding hero.
 
+### R-116 — Platform role governance must stay owner-only and audited
+Do not manage platform administrators through ad hoc table edits, client-only checks, or broad `platform_admin` access. The post-bootstrap path for creating custom platform roles, assigning or revoking `platform_roles`, deleting custom roles, and inspecting RBAC/audit reports must stay inside `/admin/access-control`, require active `platform_owner` authority server-side, emit semantic audit events, and prevent revoking the last active `platform_owner`.
+
 ---
 
 ## Maintenance rule
