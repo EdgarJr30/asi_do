@@ -26,6 +26,7 @@ import {
   type MembershipReviewDecision
 } from '@/features/membership/lib/membership-api'
 import { useInfiniteScroll } from '@/shared/ui/use-infinite-scroll'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 
 const CONSOLE_QUERY_KEY = ['membership', 'admin-console'] as const
 const CONSOLE_COUNTS_QUERY_KEY = ['membership', 'admin-console-counts'] as const
@@ -99,6 +100,14 @@ export function MembershipConsolePage() {
       queryClient.invalidateQueries({ queryKey: CONSOLE_QUERY_KEY }),
       queryClient.invalidateQueries({ queryKey: CONSOLE_COUNTS_QUERY_KEY })
     ])
+
+  // Actualiza la consola en vivo cuando llegan solicitudes/pagos nuevos o cuando
+  // otro admin actúa sobre la misma cola, sin que nadie tenga que recargar.
+  useRealtimeSync('admin-membership-console', [
+    { table: 'institutional_membership_applications', invalidate: [CONSOLE_QUERY_KEY, CONSOLE_COUNTS_QUERY_KEY] },
+    { table: 'membership_payments', invalidate: [CONSOLE_QUERY_KEY, CONSOLE_COUNTS_QUERY_KEY] },
+    { table: 'memberships', invalidate: [CONSOLE_QUERY_KEY, CONSOLE_COUNTS_QUERY_KEY] }
+  ])
 
   return (
     <AdminPage

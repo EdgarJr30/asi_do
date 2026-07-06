@@ -71,8 +71,12 @@ con el prefijo (`['talent-directory']`) para refrescar todas las variantes.
 
 Para que una tabla emita eventos debe estar en la publicación
 `supabase_realtime` y tener `REPLICA IDENTITY FULL`. Esto se versiona en
-migraciones — ver
-[`20260622200000_enable_realtime_live_surfaces.sql`](../../supabase/migrations/20260622200000_enable_realtime_live_surfaces.sql).
+migraciones — cada una añade un lote de tablas siguiendo la misma plantilla:
+
+- [`20260622200000_enable_realtime_live_surfaces.sql`](../../supabase/migrations/20260622200000_enable_realtime_live_surfaces.sql) — job board, aplicaciones, pipeline, perfiles.
+- [`20260623150000_realtime_membership.sql`](../../supabase/migrations/20260623150000_realtime_membership.sql) — pagos y solicitudes de membresía, `users`.
+- [`20260706130000_realtime_notifications_memberships.sql`](../../supabase/migrations/20260706130000_realtime_notifications_memberships.sql) — inbox de notificaciones y membresías de workspace.
+- [`20260706140000_realtime_review_queues.sql`](../../supabase/migrations/20260706140000_realtime_review_queues.sql) — notas/calificaciones de aplicaciones, moderación y colas de solicitudes de reclutador/autoridad.
 
 **Al agregar una nueva superficie en vivo sobre una tabla que aún no está
 publicada, crea una migración que la añada.** Plantilla:
@@ -91,8 +95,18 @@ alter publication supabase_realtime add table public.<tabla>;
 | Dashboard / Resumen del workspace  | `applications`, `application_stage_history`, `job_postings` |
 | Pipeline (tablero)                 | `applications`, `application_stage_history`              |
 | Aplicaciones del workspace         | `applications`, `application_stage_history`              |
+| Actividad del workspace            | `applications`, `application_stage_history`, `application_notes`, `application_ratings` |
 | Mis aplicaciones (candidato)       | `applications`                                           |
 | Directorio de talento              | `candidate_profiles`                                     |
+| Sesión / notificaciones (global)   | `users`, `notifications`, `memberships`                  |
+| Estado de membresía (candidato)    | `membership_payments`                                    |
+| Consola de membresía (admin)       | `institutional_membership_applications`, `membership_payments`, `memberships` |
+| Cola de membresía (pastor)         | `institutional_membership_applications`, `membership_payments` |
+| Moderación                         | `moderation_cases`                                       |
+| Revisión de reclutador/autoridad (admin) | `recruiter_requests`, `pastor_authority_requests`, `regional_administrator_authority_requests` |
+| Mi solicitud de reclutador (usuario) | `recruiter_requests`                                   |
+| Mi solicitud de autoridad (usuario) | `pastor_authority_requests`, `regional_administrator_authority_requests` |
+| Invitaciones de autoridad (admin)  | `authority_request_invitations`                          |
 
 ## Prueba de regresión
 

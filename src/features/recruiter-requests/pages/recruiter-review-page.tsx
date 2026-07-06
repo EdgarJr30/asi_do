@@ -26,6 +26,7 @@ import { getTenantKindLabel } from '@/features/opportunities/lib/opportunity-tax
 import { RecruiterRequestStatusBadge } from '@/features/recruiter-requests/components/recruiter-request-status-badge'
 import { AdminPage, AdminStat, AdminStatBar, AdminTabs } from '@/features/internal/components/admin-redesign'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 
 const PENDING_RECRUITER_REQUESTS_QUERY_KEY = ['recruiter-requests', 'pending'] as const
 const PENDING_PASTOR_REQUESTS_QUERY_KEY = ['pastor-authority-requests', 'pending'] as const
@@ -124,6 +125,18 @@ export function RecruiterReviewPage() {
     queryFn: listPendingRegionalAuthorityRequests,
     enabled: canReviewRegionalRequests,
   })
+
+  // Las colas de aprobación se llenan en vivo cuando un usuario envía una solicitud
+  // (o cuando otro revisor la resuelve), sin recargar.
+  useRealtimeSync(
+    'recruiter-authority-review',
+    [
+      { table: 'recruiter_requests', invalidate: [PENDING_RECRUITER_REQUESTS_QUERY_KEY] },
+      { table: 'pastor_authority_requests', invalidate: [PENDING_PASTOR_REQUESTS_QUERY_KEY] },
+      { table: 'regional_administrator_authority_requests', invalidate: [PENDING_REGIONAL_REQUESTS_QUERY_KEY] }
+    ],
+    { enabled: canReviewRecruiterRequests || canReviewPastorRequests || canReviewRegionalRequests }
+  )
 
   const recruiterReviewMutation = useMutation({
     mutationFn: async (values: { requestId: string; decision: 'approved' | 'rejected'; reviewNotes: string }) =>

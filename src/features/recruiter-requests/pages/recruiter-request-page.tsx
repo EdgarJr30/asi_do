@@ -27,6 +27,7 @@ import { getTenantKindLabel, tenantKindOptions, tenantKindRequirementSummary } f
 import { RecruiterRequestStatusBadge } from '@/features/recruiter-requests/components/recruiter-request-status-badge'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
 import { captureClientError } from '@/lib/errors/client-error-logger'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import {
   MAX_UPLOAD_SIZE_LABEL,
   prepareUploadFile,
@@ -101,6 +102,14 @@ export function RecruiterRequestPage() {
     },
     enabled: session.authUser !== null
   })
+
+  // El solicitante ve el cambio de estado (aprobada / rechazada / más información) en
+  // vivo cuando un admin la revisa, sin recargar. RLS acota a sus propias solicitudes.
+  useRealtimeSync(
+    'my-recruiter-requests',
+    [{ table: 'recruiter_requests', invalidate: [MY_REQUESTS_QUERY_KEY] }],
+    { enabled: session.authUser !== null }
+  )
 
   const submitMutation = useMutation({
     mutationFn: async (values: RecruiterRequestValues) => {

@@ -40,6 +40,7 @@ import {
   type RegionalAuthorityRequestValues,
 } from '@/features/auth/lib/auth-schemas'
 import { captureClientError } from '@/lib/errors/client-error-logger'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import {
   MAX_UPLOAD_SIZE_LABEL,
   prepareUploadFile,
@@ -158,6 +159,17 @@ export function AuthorityRequestPage() {
     queryFn: async () => (session.authUser ? listMyRegionalAuthorityRequests(session.authUser.id) : []),
     enabled: session.authUser !== null,
   })
+
+  // El solicitante ve en vivo cuando un admin resuelve su solicitud de autoridad
+  // (pastoral o regional), sin recargar. RLS acota a sus propias filas.
+  useRealtimeSync(
+    'my-authority-requests',
+    [
+      { table: 'pastor_authority_requests', invalidate: [MY_PASTOR_REQUESTS_QUERY_KEY] },
+      { table: 'regional_administrator_authority_requests', invalidate: [MY_REGIONAL_REQUESTS_QUERY_KEY] }
+    ],
+    { enabled: session.authUser !== null }
+  )
 
   const unions = hierarchyQuery.data?.unions ?? EMPTY_ITEMS
   const associations = hierarchyQuery.data?.associations ?? EMPTY_ITEMS

@@ -20,6 +20,7 @@ import {
   type ModerationStatusFilter
 } from '@/features/moderation/lib/moderation-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { useInfiniteScroll } from '@/shared/ui/use-infinite-scroll'
 
 const MODERATION_PAGE_SIZE = 12
@@ -50,6 +51,12 @@ export function ModerationOverviewPage() {
       listModerationCasesPage({ filter: statusFilter, limit: MODERATION_PAGE_SIZE, offset: pageParam }),
     getNextPageParam: (lastPage) => lastPage.nextOffset
   })
+
+  // Varios moderadores/admins trabajan la misma cola: refléjala en vivo cuando alguien
+  // abre un caso o aplica una acción, sin recargar.
+  useRealtimeSync('moderation-cases', [
+    { table: 'moderation_cases', invalidate: [['moderation-cases']] }
+  ])
 
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = casesQuery
   const casePages = useMemo(() => casesQuery.data?.pages ?? [], [casesQuery.data])

@@ -25,6 +25,7 @@ import {
   type AuthorityInvitationType,
 } from '@/features/auth/lib/auth-api'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 
 const INVITATIONS_QUERY_KEY = ['authority-invitations', 'admin'] as const
 
@@ -64,6 +65,12 @@ export function AdminAuthorityInvitationsPage({ embedded = false }: { embedded?:
     queryKey: INVITATIONS_QUERY_KEY,
     queryFn: listAuthorityInvitations,
   })
+
+  // La lista de invitaciones se actualiza en vivo cuando alguien consume una (pasa a
+  // "usada") u otro admin emite/revoca, sin recargar.
+  useRealtimeSync('admin-authority-invitations', [
+    { table: 'authority_request_invitations', invalidate: [INVITATIONS_QUERY_KEY] }
+  ])
 
   const createMutation = useMutation({
     mutationFn: async () =>

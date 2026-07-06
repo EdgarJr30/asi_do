@@ -31,6 +31,7 @@ import {
   type MembershipReviewDecision,
   type PastorQueueItem
 } from '@/features/membership/lib/membership-api'
+import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 
 const QUEUE_QUERY_KEY = ['membership', 'pastor-queue'] as const
 
@@ -72,6 +73,17 @@ export function PastorMembershipQueuePage() {
     enabled: session.isMembershipReviewerPastor,
     queryFn: fetchPastorMembershipQueue
   })
+
+  // La cola del pastor se refresca en vivo cuando un miembro envía su solicitud o
+  // sube un comprobante, sin necesidad de recargar.
+  useRealtimeSync(
+    'pastor-membership-queue',
+    [
+      { table: 'institutional_membership_applications', invalidate: [QUEUE_QUERY_KEY] },
+      { table: 'membership_payments', invalidate: [QUEUE_QUERY_KEY] }
+    ],
+    { enabled: session.isMembershipReviewerPastor }
+  )
 
   const items = queueQuery.data ?? []
 
