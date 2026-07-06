@@ -446,6 +446,72 @@ export async function deactivateMember(input: { userId: string; notes?: string }
   return data
 }
 
+/**
+ * Un usuario en el buscador de activación manual, con su estado de membresía y el
+ * override de acceso vigente (si lo tiene). Lo alimenta `admin_search_users_for_access`.
+ */
+export interface ManualAccessUser {
+  id: string
+  full_name: string
+  display_name: string | null
+  email: string | null
+  status: string
+  asi_membership_status: string
+  membership_expires_at: string | null
+  manual_access_override_until: string | null
+  manual_access_override_reason: string | null
+}
+
+/** Busca usuarios para conceder/revocar acceso manual (gate = admin de plataforma). */
+export async function searchUsersForManualAccess(query: string): Promise<ManualAccessUser[]> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('admin_search_users_for_access' as never, {
+    p_query: query.trim() || undefined
+  } as never)
+
+  if (error) {
+    throw error
+  }
+  return (data ?? []) as unknown as ManualAccessUser[]
+}
+
+/**
+ * Un platform_owner / platform_admin / super_administrator concede acceso ASI a un
+ * usuario sin exigir solicitud, pago ni aprobación pastoral. `months` null = acceso
+ * indefinido (hasta revocarlo). Reutiliza `manual_access_override_until`.
+ */
+export async function grantManualAccess(input: {
+  userId: string
+  months: number | null
+  reason?: string
+}): Promise<Tables<'users'>> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('admin_set_manual_access_override' as never, {
+    p_user_id: input.userId,
+    p_months: input.months ?? undefined,
+    p_reason: input.reason?.trim() || undefined
+  } as never)
+
+  if (error) {
+    throw error
+  }
+  return data as unknown as Tables<'users'>
+}
+
+/** Revoca el acceso manual concedido a un usuario (no toca la membresía del pipeline). */
+export async function revokeManualAccess(input: { userId: string; reason?: string }): Promise<Tables<'users'>> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('admin_clear_manual_access_override' as never, {
+    p_user_id: input.userId,
+    p_reason: input.reason?.trim() || undefined
+  } as never)
+
+  if (error) {
+    throw error
+  }
+  return data as unknown as Tables<'users'>
+}
+
 /** Una solicitud de la cola del pastor con su último pago asociado (si existe). */
 export interface PastorQueueItem {
   application: MembershipApplication

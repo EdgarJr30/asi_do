@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Banknote, CheckCircle2, Paperclip, Power, Search, Sparkles } from 'lucide-react'
+import { Banknote, CheckCircle2, Infinity as InfinityIcon, Paperclip, Power, Search, ShieldCheck, Sparkles, UserPlus, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -20,10 +20,14 @@ import {
   deactivateMember,
   fetchAdminMembershipCounts,
   fetchAdminMembershipPage,
+  grantManualAccess,
+  revokeManualAccess,
   reviewMembershipApplication,
+  searchUsersForManualAccess,
   verifyMembershipPayment,
   type AdminMembershipFilter,
   type AdminMembershipRow,
+  type ManualAccessUser,
   type MembershipReviewDecision
 } from '@/features/membership/lib/membership-api'
 import { useInfiniteScroll } from '@/shared/ui/use-infinite-scroll'
@@ -126,6 +130,8 @@ export function MembershipConsolePage() {
           <AdminStat label="Activas" value={counts?.active ?? '—'} tone="teal" />
           <AdminStat label="Inactivas" value={counts?.inactive ?? '—'} tone="rose" />
         </AdminStatBar>
+
+        <ManualAccessPanel />
 
         <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
           <AdminTabs
@@ -381,6 +387,222 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
           </div>
         )}
       </CardContent>
+    </Card>
+  )
+}
+
+function overrideIsActive(user: ManualAccessUser) {
+  if (!user.manual_access_override_until) return false
+  const until = new Date(user.manual_access_override_until)
+  return Number.isFinite(until.getTime()) && until > new Date()
+}
+
+/** Fecha "sin vencimiento" (centinela) que usa el RPC; no la mostramos como fecha real. */
+const INDEFINITE_YEAR = 9000
+
+/**
+ * Panel de activación manual: un platform_owner / platform_admin / super_administrator
+ * concede acceso a los módulos gateados a CUALQUIER usuario sin exigir solicitud, pago
+ * ni aprobación pastoral. Reutiliza el override de acceso manual (con o sin vencimiento)
+ * y permite revocarlo.
+ */
+function ManualAccessPanel() {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState<ManualAccessUser | null>(null)
+  const [months, setMonths] = useState('12')
+  const [indefinite, setIndefinite] = useState(false)
+  const [reason, setReason] = useState('')
+  const debouncedSearch = useDebouncedValue(search.trim())
+
+  const resultsQuery = useQuery({
+    queryKey: ['membership', 'manual-access-search', debouncedSearch],
+    queryFn: () => searchUsersForManualAccess(debouncedSearch),
+    enabled: open
+  })
+
+  function resetForm() {
+    setSelected(null)
+    setMonths('12')
+    setIndefinite(false)
+    setReason('')
+  }
+
+  const grantMutation = useMutation({
+    mutationFn: async () => {
+      if (!selected) throw new Error('Selecciona un usuario.')
+      const parsedMonths = indefinite ? null : Math.max(1, Number.parseInt(months, 10) || 12)
+      return grantManualAccess({ userId: selected.id, months: parsedMonths, reason })
+    },
+    onSuccess: () => {
+      toast.success('Acceso activado. El usuario ya puede usar los módulos protegidos.')
+      resetForm()
+      void resultsQuery.refetch()
+    },
+    onError: (error) => toast.error(toErrorMessage(error))
+  })
+
+  const revokeMutation = useMutation({
+    mutationFn: async (user: ManualAccessUser) => revokeManualAccess({ userId: user.id, reason }),
+    onSuccess: () => {
+      toast.success('Acceso manual revocado.')
+      resetForm()
+      void resultsQuery.refetch()
+    },
+    onError: (error) => toast.error(toErrorMessage(error))
+  })
+
+  const busy = grantMutation.isPending || revokeMutation.isPending
+  const results = resultsQuery.data ?? []
+
+  return (
+    <Card className="rounded-card">
+      <CardHeader className="pb-0">
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          className="flex w-full items-center justify-between gap-2 text-left"
+        >
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="size-4 text-(--app-text-muted)" />
+            <div>
+              <CardTitle className="text-[0.9rem]">Activar acceso manual</CardTitle>
+              <CardDescription className="text-[0.78rem]">
+                Concede acceso a los módulos protegidos sin solicitud, pago ni aprobación pastoral.
+              </CardDescription>
+            </div>
+          </div>
+          <Badge variant="outline">{open ? 'Ocultar' : 'Abrir'}</Badge>
+        </button>
+      </CardHeader>
+
+      {open ? (
+        <CardContent className="mt-3 space-y-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar usuario por nombre o correo…"
+              className="h-10 rounded-control pl-9"
+            />
+          </div>
+
+          {resultsQuery.isLoading ? (
+            <div className="flex items-center gap-2 text-sm text-(--app-text-muted)">
+              <Spinner size="sm" /> Buscando usuarios…
+            </div>
+          ) : resultsQuery.error ? (
+            <p className="text-sm text-rose-600">{toErrorMessage(resultsQuery.error)}</p>
+          ) : results.length === 0 ? (
+            <p className="text-[0.8rem] text-(--app-text-muted)">
+              {debouncedSearch ? 'Sin usuarios para esa búsqueda.' : 'Escribe para buscar un usuario.'}
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {results.map((user) => {
+                const active = overrideIsActive(user)
+                const isSelected = selected?.id === user.id
+                return (
+                  <div
+                    key={user.id}
+                    className="rounded-control border border-(--app-border) bg-(--app-surface-elevated) p-2.5"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-[0.85rem] font-medium text-(--app-text)">
+                          {user.full_name || user.display_name || 'Usuario'}
+                        </p>
+                        <p className="truncate text-[0.72rem] text-(--app-text-muted)">{user.email}</p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {active ? (
+                          <Badge variant="outline" className={positiveBadge(true)}>
+                            <ShieldCheck className="size-3.5" /> Acceso manual activo
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline">
+                            {membershipStatusLabels[user.asi_membership_status] ?? user.asi_membership_status}
+                          </Badge>
+                        )}
+                        {active ? (
+                          <Button
+                            variant="danger"
+                            className="h-8 rounded-control px-3 text-[0.78rem]"
+                            disabled={busy}
+                            onClick={() => revokeMutation.mutate(user)}
+                          >
+                            <X className="size-4" /> Revocar
+                          </Button>
+                        ) : (
+                          <Button
+                            variant={isSelected ? 'outline' : 'primary'}
+                            className="h-8 rounded-control px-3 text-[0.78rem]"
+                            disabled={busy}
+                            onClick={() => (isSelected ? resetForm() : setSelected(user))}
+                          >
+                            <UserPlus className="size-4" /> {isSelected ? 'Cancelar' : 'Activar'}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {isSelected && !active ? (
+                      <div className="mt-2.5 space-y-2 border-t border-(--app-border) pt-2.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <label className="text-[0.8rem] text-(--app-text-muted)">Vigencia</label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={indefinite ? '' : months}
+                            onChange={(event) => setMonths(event.target.value)}
+                            disabled={busy || indefinite}
+                            className="h-8 w-20 rounded-control"
+                          />
+                          <span className="text-[0.8rem] text-(--app-text-muted)">meses</span>
+                          <Button
+                            type="button"
+                            variant={indefinite ? 'primary' : 'outline'}
+                            className="h-8 rounded-control px-3 text-[0.78rem]"
+                            disabled={busy}
+                            onClick={() => setIndefinite((value) => !value)}
+                          >
+                            <InfinityIcon className="size-4" /> Sin vencimiento
+                          </Button>
+                        </div>
+                        <Textarea
+                          value={reason}
+                          onChange={(event) => setReason(event.target.value)}
+                          disabled={busy}
+                          rows={2}
+                          placeholder="Motivo (queda en la auditoría). P. ej. cuenta interna / staff."
+                        />
+                        <Button
+                          className="h-8 rounded-control px-3 text-[0.8rem]"
+                          disabled={busy}
+                          onClick={() => grantMutation.mutate()}
+                        >
+                          <Sparkles className="size-4" />{' '}
+                          {indefinite ? 'Activar acceso indefinido' : `Activar acceso ${Math.max(1, Number.parseInt(months, 10) || 12)} meses`}
+                        </Button>
+                      </div>
+                    ) : null}
+
+                    {active && user.manual_access_override_until ? (
+                      <p className="mt-2 text-[0.72rem] text-(--app-text-muted)">
+                        {new Date(user.manual_access_override_until).getFullYear() >= INDEFINITE_YEAR
+                          ? 'Acceso indefinido hasta revocarlo.'
+                          : `Vence el ${new Date(user.manual_access_override_until).toLocaleDateString('es-DO')}.`}
+                        {user.manual_access_override_reason ? ` Motivo: ${user.manual_access_override_reason}` : ''}
+                      </p>
+                    ) : null}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CardContent>
+      ) : null}
     </Card>
   )
 }
