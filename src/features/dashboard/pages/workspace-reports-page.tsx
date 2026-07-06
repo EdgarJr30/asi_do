@@ -45,20 +45,20 @@ function ReportKpiTile({ item, loading }: { item: KpiItem; loading: boolean }) {
   const deltaIsNeutral = item.delta === 0
 
   return (
-    <div className="h-full rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-4 py-4 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-primary-300/60 hover:shadow-[0_10px_24px_rgba(20,40,90,0.07)] dark:hover:border-primary-500/40">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-[0.68rem] font-bold uppercase tracking-[0.12em] text-(--app-text-subtle)">{item.label}</p>
-        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200">
-          <Icon aria-hidden="true" className="size-4" strokeWidth={1.8} />
+    <div className="h-full rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-3 py-2.5 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-primary-300/60 hover:shadow-[0_10px_24px_rgba(20,40,90,0.07)] dark:hover:border-primary-500/40 sm:px-3.5 sm:py-3">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[0.6rem] font-bold uppercase leading-tight tracking-[0.1em] text-(--app-text-subtle) sm:text-[0.64rem]">{item.label}</p>
+        <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-200 sm:size-7">
+          <Icon aria-hidden="true" className="size-3.5" strokeWidth={1.8} />
         </span>
       </div>
-      <p className="mt-3.5 text-[1.85rem] font-bold leading-none tracking-tight text-(--app-text) tabular-nums">
+      <p className="mt-2 text-[1.4rem] font-bold leading-none tracking-tight text-(--app-text) tabular-nums sm:text-[1.6rem]">
         {loading ? '—' : item.value}
       </p>
-      <div className="mt-2.5 flex flex-wrap items-center gap-2">
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
         <span
           className={cn(
-            'inline-flex h-5 items-center rounded-full px-2 text-[0.72rem] font-bold tabular-nums',
+            'inline-flex h-4.5 items-center rounded-full px-1.5 text-[0.66rem] font-bold tabular-nums',
             deltaIsNeutral
               ? 'bg-(--app-surface-muted) text-(--app-text-muted)'
               : deltaIsDown
@@ -68,7 +68,7 @@ function ReportKpiTile({ item, loading }: { item: KpiItem; loading: boolean }) {
         >
           {deltaIsNeutral ? '0' : deltaIsDown ? `▼ ${formatDelta(item.delta)}` : `▲ ${formatDelta(item.delta)}`}
         </span>
-        <span className="text-[0.78rem] text-(--app-text-subtle)">{item.helper}</span>
+        <span className="text-[0.7rem] leading-tight text-(--app-text-subtle) sm:text-[0.74rem]">{item.helper}</span>
       </div>
     </div>
   )
@@ -76,9 +76,9 @@ function ReportKpiTile({ item, loading }: { item: KpiItem; loading: boolean }) {
 
 function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
-    <div className="mb-4">
-      <h2 className="text-[1.05rem] font-semibold tracking-tight text-(--app-text)">{title}</h2>
-      <p className="mt-1 text-sm text-(--app-text-subtle)">{description}</p>
+    <div className="mb-3">
+      <h2 className="text-[0.98rem] font-semibold tracking-tight text-(--app-text)">{title}</h2>
+      <p className="mt-0.5 text-[0.82rem] text-(--app-text-subtle)">{description}</p>
     </div>
   )
 }
@@ -178,7 +178,7 @@ export function WorkspaceReportsPage() {
 
   return (
     <motion.div
-      className="w-full space-y-6 pb-8"
+      className="w-full space-y-5 pb-8"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
@@ -202,7 +202,7 @@ export function WorkspaceReportsPage() {
         </Select>
       </motion.div>
 
-      <motion.div variants={gridStagger} className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      <motion.div variants={gridStagger} className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-4">
         {kpis.map((item) => (
           <motion.div key={item.key} variants={cardReveal} className="h-full">
             <ReportKpiTile item={item} loading={loading} />
@@ -210,15 +210,15 @@ export function WorkspaceReportsPage() {
         ))}
       </motion.div>
 
-      <motion.div variants={cardReveal} className="grid gap-7 lg:grid-cols-[1.35fr_1fr]">
+      <motion.div variants={cardReveal} className="grid gap-5 lg:grid-cols-[1.35fr_1fr] lg:gap-7">
         <section>
           <SectionHeader title="Distribución por etapa" description="Volumen de candidatos en cada etapa del pipeline." />
           {loading ? (
             <BarSkeleton />
           ) : metrics && metrics.funnel.length > 0 && totalInFunnel > 0 ? (
-            <div key={`funnel-${periodDays}`} className="space-y-5">
+            <div key={`funnel-${periodDays}`} className="space-y-4">
               {metrics.funnel.map((stage, index) => (
-                <div key={stage.stageId} className="space-y-2">
+                <div key={stage.stageId} className="space-y-1.5">
                   <div className="flex items-baseline justify-between gap-3 text-sm">
                     <span className="font-semibold text-(--app-text)">{stage.name}</span>
                     <span className="shrink-0 tabular-nums text-(--app-text-subtle)">
