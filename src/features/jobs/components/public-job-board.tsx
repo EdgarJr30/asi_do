@@ -116,8 +116,10 @@ export function PublicJobBoard() {
 
   const [filters, setFilters] = useState<Filters>(emptyFilters)
   // `submitted` = lo que realmente filtra en el servidor (búsqueda + ubicación).
-  // Se aplica al pulsar "Buscar"/Enter o al limpiar el chip; así no disparamos un
-  // refetch en cada tecla. Modalidad/tipo/orden sí aplican de inmediato.
+  // Se aplica en vivo con debounce (~350 ms tras la última tecla) para que el
+  // contador y la lista se actualicen mientras se escribe, sin disparar un refetch
+  // por pulsación; el submit explícito (Enter/"Buscar") lo aplica de inmediato.
+  // Modalidad/tipo/orden aplican al instante.
   const [submitted, setSubmitted] = useState({ search: '', location: '' })
   const [sort, setSort] = useState<'recent' | 'salary'>('recent')
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
@@ -144,6 +146,21 @@ export function PublicJobBoard() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [selectedJobId])
+
+  // Filtrado en vivo del texto libre: aplicamos búsqueda/ubicación al servidor
+  // ~350 ms después de la última tecla. Así el contador y la lista reaccionan
+  // mientras el usuario escribe, pero no lanzamos una consulta por cada carácter.
+  useEffect(() => {
+    const nextSearch = filters.search.trim()
+    const nextLocation = filters.location.trim()
+    if (nextSearch === submitted.search && nextLocation === submitted.location) return
+    const timer = window.setTimeout(() => {
+      setSelectedJobId(null)
+      setDetailOpen(false)
+      setSubmitted({ search: nextSearch, location: nextLocation })
+    }, 350)
+    return () => window.clearTimeout(timer)
+  }, [filters.search, filters.location, submitted.search, submitted.location])
 
   function patchFilters(patch: Partial<Filters>) {
     setFilters((current) => ({ ...current, ...patch }))
