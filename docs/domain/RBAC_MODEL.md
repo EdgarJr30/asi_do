@@ -232,7 +232,7 @@ Recommended helper functions:
 - `my_tenant_ids()`
 - `bootstrap_first_platform_owner()`
 - `review_recruiter_request(p_request_id uuid, p_decision recruiter_request_status, p_review_notes text)`
-- `admin_platform_rbac_snapshot(p_user_query text, p_user_limit integer)`
+- `admin_platform_rbac_snapshot(p_user_query text, p_user_limit integer, p_user_offset integer)`
 - `admin_create_platform_role(p_code text, p_name text, p_description text, p_permission_codes text[])`
 - `admin_update_platform_role(p_role_id uuid, p_name text, p_description text, p_permission_codes text[])`
 - `admin_assign_platform_role(p_user_id uuid, p_role_id uuid, p_notes text)`

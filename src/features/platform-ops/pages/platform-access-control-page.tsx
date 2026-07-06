@@ -1,6 +1,6 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useDeferredValue, useMemo, useState } from 'react'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
   Eye,
@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
 import { SideSheet } from '@/components/ui/side-sheet'
 import { Textarea } from '@/components/ui/textarea'
@@ -51,18 +52,20 @@ import {
 } from '@/features/platform-ops/lib/platform-access-control-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
+import { useInfiniteScroll } from '@/shared/ui/use-infinite-scroll'
 
 type AccessTab = 'users' | 'roles' | 'audit' | 'risks'
 type RoleSheetState = { mode: 'create' | 'edit' | 'view'; role?: PlatformAccessRole } | null
 
 const queryKey = ['platform-access-control'] as const
+const USERS_PAGE_SIZE = 12
 
 const resourceLabels: Record<string, string> = {
   app_error_log: 'Errores',
   audit_log: 'Auditoría',
   billing: 'Facturación',
   email: 'Correo',
-  feature_flag: 'Feature flags',
+  feature_flag: 'Banderas',
   license: 'Licencias',
   membership_application: 'Solicitudes de membresía',
   membership_payment: 'Pagos de membresía',
@@ -76,6 +79,42 @@ const resourceLabels: Record<string, string> = {
   support_ticket: 'Soporte',
   tenant: 'Tenants',
   user: 'Usuarios'
+}
+
+const userStatusLabels: Record<string, string> = {
+  active: 'Activo',
+  approved: 'Aprobado',
+  pending: 'Pendiente',
+  suspended: 'Suspendido',
+  rejected: 'Rechazado',
+  inactive: 'Inactivo'
+}
+
+const actionLabels: Record<string, string> = {
+  act: 'actuar',
+  activate: 'activar',
+  assign: 'asignar',
+  create: 'crear',
+  delete: 'eliminar',
+  export: 'exportar',
+  inspect: 'inspeccionar',
+  manage: 'administrar',
+  read: 'leer',
+  resend: 'reenviar',
+  restore: 'restaurar',
+  review: 'revisar',
+  suspend: 'suspender',
+  update: 'actualizar',
+  verify: 'verificar'
+}
+
+const auditEventLabels: Record<string, string> = {
+  'platform_role.assigned': 'Rol asignado',
+  'platform_role.created': 'Rol creado',
+  'platform_role.deleted': 'Rol eliminado',
+  'platform_role.revoked': 'Rol revocado',
+  'platform_role.updated': 'Rol actualizado',
+  'platform_rbac.snapshot': 'Reporte de permisos revisado'
 }
 
 const highRiskActions = new Set(['act', 'activate', 'create', 'delete', 'restore', 'review', 'resend', 'suspend', 'update'])
@@ -100,6 +139,18 @@ function formatDateTime(value: string | null) {
 
 function displayUserName(user: Pick<PlatformAccessUser, 'display_name' | 'full_name' | 'email'>) {
   return user.display_name || user.full_name || user.email || 'Usuario'
+}
+
+function userStatusLabel(status: string) {
+  return userStatusLabels[status] ?? status
+}
+
+function actionLabel(action: string) {
+  return actionLabels[action] ?? action
+}
+
+function auditEventLabel(eventType: string) {
+  return auditEventLabels[eventType] ?? eventType
 }
 
 function permissionRisk(permission: PlatformAccessPermission) {
@@ -198,8 +249,8 @@ function deriveRiskFindings(snapshot: PlatformAccessSnapshot | undefined) {
         {
           id: 'clean',
           level: 'Bajo' as const,
-          title: 'Sin alertas críticas en el snapshot',
-          description: 'Las asignaciones actuales no disparan las reglas SoD básicas.'
+          title: 'Sin alertas críticas en el reporte',
+          description: 'Las asignaciones actuales no disparan las reglas básicas de segregación de funciones.'
         }
       ]
 }
@@ -223,7 +274,7 @@ function RoleBadge({ role }: { role: Pick<PlatformAccessRole, 'is_system' | 'is_
     return <Badge variant="outline" className="border-amber-100 bg-amber-50 text-amber-700">Sistema</Badge>
   }
 
-  return <Badge variant="outline">Custom</Badge>
+  return <Badge variant="outline">Personalizado</Badge>
 }
 
 function PermissionChecklist({
@@ -267,7 +318,9 @@ function PermissionChecklist({
                         {permission.code}
                       </code>
                     </span>
-                    <span className="mt-1 block text-[0.72rem] text-(--app-text-subtle)">{permission.resource}:{permission.action}</span>
+                    <span className="mt-1 block text-[0.72rem] text-(--app-text-subtle)">
+                      {resourceLabels[permission.resource] ?? permission.resource} · {actionLabel(permission.action)}
+                    </span>
                   </span>
                   <Badge variant="outline" className={cn('shrink-0 text-[0.68rem]', risk.className)}>
                     {risk.label}
@@ -287,7 +340,8 @@ export function PlatformAccessControlPage() {
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<AccessTab>('users')
   const [searchInput, setSearchInput] = useState('')
-  const [submittedSearch, setSubmittedSearch] = useState('')
+  const deferredSearchInput = useDeferredValue(searchInput)
+  const userSearch = deferredSearchInput.trim()
   const [selectedRoleByUser, setSelectedRoleByUser] = useState<Record<string, string>>({})
   const [roleSheet, setRoleSheet] = useState<RoleSheetState>(null)
   const [roleCode, setRoleCode] = useState('')
@@ -297,17 +351,35 @@ export function PlatformAccessControlPage() {
   const [pendingRevoke, setPendingRevoke] = useState<{ user: PlatformAccessUser; role: PlatformAccessUserRole } | null>(null)
   const [pendingDelete, setPendingDelete] = useState<PlatformAccessRole | null>(null)
 
-  const snapshotQuery = useQuery({
-    queryKey: [...queryKey, submittedSearch],
-    queryFn: () => fetchPlatformAccessControlSnapshot({ userQuery: submittedSearch, userLimit: 60 })
+  const snapshotQuery = useInfiniteQuery({
+    queryKey: [...queryKey, userSearch],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      fetchPlatformAccessControlSnapshot({
+        userQuery: userSearch,
+        userLimit: USERS_PAGE_SIZE,
+        userOffset: pageParam
+      }),
+    getNextPageParam: (lastPage) => lastPage.users_page.next_offset
   })
 
-  const snapshot = snapshotQuery.data
+  const snapshotPages = useMemo(() => snapshotQuery.data?.pages ?? [], [snapshotQuery.data])
+  const baseSnapshot = snapshotPages[0]
+  const users = useMemo(() => snapshotPages.flatMap((page) => page.users), [snapshotPages])
+  const latestUsersPage = snapshotPages.at(-1)?.users_page
+  const totalUsers = baseSnapshot?.users_page.total_count ?? 0
+  const snapshot = useMemo(() => (baseSnapshot ? { ...baseSnapshot, users } : undefined), [baseSnapshot, users])
   const roles = snapshot?.roles ?? []
   const permissions = snapshot?.permissions ?? []
-  const users = snapshot?.users ?? []
   const auditEvents = snapshot?.audit_events ?? []
   const riskFindings = useMemo(() => deriveRiskFindings(snapshot), [snapshot])
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = snapshotQuery
+  const sentinelRef = useInfiniteScroll({
+    hasNextPage: Boolean(hasNextPage),
+    isFetchingNextPage,
+    onLoadMore: () => void fetchNextPage(),
+    deps: [users.length, userSearch]
+  })
 
   const mutationMeta = {
     route: surfacePaths.admin.accessControl,
@@ -424,11 +496,6 @@ export function PlatformAccessControlPage() {
     )
   }
 
-  function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmittedSearch(searchInput.trim())
-  }
-
   function handleAssignRole(user: PlatformAccessUser) {
     const roleId = selectedRoleByUser[user.id]
 
@@ -448,7 +515,7 @@ export function PlatformAccessControlPage() {
     <AdminPage
       eyebrow="Admin · Seguridad"
       title="Usuarios y roles de plataforma"
-      description="Gobierno owner-only para roles, permisos, asignaciones y evidencia de auditoría."
+      description="Gobierno exclusivo para dueños de plataforma: roles, permisos, asignaciones y evidencia de auditoría."
       superAdmin
       actions={
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
@@ -469,8 +536,8 @@ export function PlatformAccessControlPage() {
       <div className="space-y-4">
         <AdminStatBar columns={5}>
           <AdminStat label="Roles" value={snapshot?.stats.role_count ?? '—'} />
-          <AdminStat label="Custom" value={snapshot?.stats.custom_role_count ?? '—'} tone="teal" />
-          <AdminStat label="Owners" value={snapshot?.stats.platform_owner_count ?? '—'} tone="violet" />
+          <AdminStat label="Personalizados" value={snapshot?.stats.custom_role_count ?? '—'} tone="teal" />
+          <AdminStat label="Dueños" value={snapshot?.stats.platform_owner_count ?? '—'} tone="violet" />
           <AdminStat label="Asignaciones" value={snapshot?.stats.active_assignment_count ?? '—'} tone="green" />
           <AdminStat label="Usuarios" value={snapshot?.stats.users_with_platform_roles_count ?? '—'} tone="amber" />
         </AdminStatBar>
@@ -479,7 +546,7 @@ export function PlatformAccessControlPage() {
           value={tab}
           onChange={setTab}
           tabs={[
-            { value: 'users', label: 'Usuarios', count: users.length },
+            { value: 'users', label: 'Usuarios', count: totalUsers || users.length },
             { value: 'roles', label: 'Roles', count: roles.length },
             { value: 'audit', label: 'Auditoría', count: auditEvents.length },
             { value: 'risks', label: 'Riesgos', count: riskFindings.length }
@@ -496,20 +563,18 @@ export function PlatformAccessControlPage() {
 
         {snapshot && tab === 'users' ? (
           <section className="space-y-3">
-            <form className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]" onSubmit={handleSearchSubmit}>
-              <label className="relative">
+            <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+              <AdminSectionLabel title="Usuarios de plataforma" count={`${users.length} de ${totalUsers || users.length}`} />
+              <label className="relative lg:max-w-sm lg:flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
                 <Input
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder="Buscar por nombre o correo"
-                  className="h-10 pl-9 text-[0.84rem]"
+                  placeholder="Buscar por nombre o correo..."
+                  className="h-9 rounded-control pl-9 text-[0.82rem]"
                 />
               </label>
-              <Button variant="outline" className="h-10 px-3 text-xs" type="submit">
-                Buscar
-              </Button>
-            </form>
+            </div>
 
             <div className="grid gap-2.5">
               {users.map((user) => {
@@ -519,22 +584,22 @@ export function PlatformAccessControlPage() {
 
                 return (
                   <AdminCard key={user.id} className="overflow-hidden">
-                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)] lg:items-start">
+                    <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1.35fr)_minmax(250px,0.65fr)] lg:items-start">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-bold text-(--app-text)">{displayUserName(user)}</p>
+                            <p className="truncate text-[0.88rem] font-bold text-(--app-text)">{displayUserName(user)}</p>
                             <p className="mt-0.5 truncate text-[0.78rem] text-(--app-text-muted)">{user.email ?? 'Sin correo'}</p>
                           </div>
-                          <Badge variant="outline">{user.status}</Badge>
+                          <Badge variant="outline" className="px-1.5 py-0.5 text-[0.68rem]">{userStatusLabel(user.status)}</Badge>
                         </div>
 
-                        <div className="mt-3 flex flex-wrap gap-1.5">
+                        <div className="mt-2 flex flex-wrap gap-1.5">
                           {user.roles.length ? (
                             user.roles.map((role) => (
                               <span
                                 key={role.assignment_id}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-primary-100 bg-primary-50 px-2 py-1 text-[0.7rem] font-bold text-primary-700 dark:border-primary-500/20 dark:bg-primary-500/12 dark:text-primary-200"
+                                className="inline-flex items-center gap-1.5 rounded-full border border-primary-100 bg-primary-50 px-2 py-0.5 text-[0.68rem] font-bold text-primary-700 dark:border-primary-500/20 dark:bg-primary-500/12 dark:text-primary-200"
                               >
                                 <ShieldCheck className="size-3.5" />
                                 {role.role_name}
@@ -554,16 +619,16 @@ export function PlatformAccessControlPage() {
                           )}
                         </div>
 
-                        <p className="mt-2 text-[0.72rem] text-(--app-text-subtle)">
-                          {user.permissions.length} permiso{user.permissions.length === 1 ? '' : 's'} efectivo{user.permissions.length === 1 ? '' : 's'} · Ultimo acceso: {formatDateTime(user.last_sign_in_at)}
+                        <p className="mt-1.5 text-[0.72rem] text-(--app-text-subtle)">
+                          {user.permissions.length} permiso{user.permissions.length === 1 ? '' : 's'} efectivo{user.permissions.length === 1 ? '' : 's'} · Último acceso: {formatDateTime(user.last_sign_in_at)}
                         </p>
                       </div>
 
-                      <div className="grid gap-2 rounded-card border border-(--app-border) bg-(--app-surface-muted)/55 p-2.5">
+                      <div className="grid gap-2 rounded-card border border-(--app-border) bg-(--app-surface-muted)/55 p-2">
                         <Select
                           value={selectedRoleId}
                           onChange={(event) => setSelectedRoleByUser((current) => ({ ...current, [user.id]: event.target.value }))}
-                          className="h-9 text-[0.8rem]"
+                          className="h-8 text-[0.78rem]"
                         >
                           <option value="">Selecciona un rol</option>
                           {assignableRoles.map((role) => (
@@ -571,7 +636,7 @@ export function PlatformAccessControlPage() {
                           ))}
                         </Select>
                         <Button
-                          className="h-9 px-3 text-xs"
+                          className="h-8 px-2.5 text-xs"
                           disabled={!selectedRoleId || assignMutation.isPending}
                           onClick={() => handleAssignRole(user)}
                         >
@@ -582,6 +647,22 @@ export function PlatformAccessControlPage() {
                   </AdminCard>
                 )
               })}
+              {!snapshotQuery.isLoading && users.length === 0 ? (
+                <AdminEmpty
+                  title={userSearch ? 'Sin usuarios para esa búsqueda' : 'Sin usuarios'}
+                  description={userSearch ? 'Prueba con otro nombre o correo.' : 'Aún no hay usuarios disponibles para asignar roles.'}
+                />
+              ) : null}
+              <div ref={sentinelRef} aria-hidden className="h-px w-full" />
+              {isFetchingNextPage ? (
+                <div className="flex items-center justify-center gap-2 py-3 text-[0.78rem] text-(--app-text-subtle)">
+                  <Spinner size="sm" /> Cargando más usuarios...
+                </div>
+              ) : users.length > 0 && !hasNextPage ? (
+                <p className="py-3 text-center text-[0.74rem] text-(--app-text-subtle)">
+                  {latestUsersPage?.total_count ?? users.length} usuario{(latestUsersPage?.total_count ?? users.length) === 1 ? '' : 's'} · no hay más
+                </p>
+              ) : null}
             </div>
           </section>
         ) : null}
@@ -589,23 +670,23 @@ export function PlatformAccessControlPage() {
         {snapshot && tab === 'roles' ? (
           <section className="space-y-3">
             <AdminSectionLabel title="Roles de plataforma" count={roles.length} />
-            <div className="grid gap-2.5 lg:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
               {roles.map((role) => (
-                <AdminCard key={role.id}>
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-3">
+                <AdminCard key={role.id} className="p-3 sm:p-3">
+                  <div className="space-y-2.5">
+                    <div className="flex items-start justify-between gap-2.5">
                       <div className="min-w-0">
-                        <p className="truncate text-[0.95rem] font-bold text-(--app-text)">{role.name}</p>
+                        <p className="truncate text-[0.88rem] font-bold text-(--app-text)">{role.name}</p>
                         <code className="mt-1 block truncate text-[0.72rem] font-bold text-(--app-text-subtle)">{role.code}</code>
                       </div>
                       <RoleBadge role={role} />
                     </div>
-                    <p className="min-h-9 text-[0.8rem] leading-5 text-(--app-text-muted)">{role.description}</p>
+                    <p className="line-clamp-2 text-[0.78rem] leading-5 text-(--app-text-muted)">{role.description}</p>
                     <div className="flex flex-wrap gap-1.5">
-                      <Badge variant="outline">{role.permissions.length} permisos</Badge>
-                      <Badge variant="outline">{role.active_assignment_count} asignaciones</Badge>
+                      <Badge variant="outline" className="px-1.5 py-0.5 text-[0.68rem]">{role.permissions.length} permisos</Badge>
+                      <Badge variant="outline" className="px-1.5 py-0.5 text-[0.68rem]">{role.active_assignment_count} asignaciones</Badge>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       <Button variant="outline" className="h-8 px-2.5 text-xs" onClick={() => openRoleSheet({ mode: 'view', role })}>
                         <Eye className="size-3.5" /> Permisos
                       </Button>
@@ -635,7 +716,7 @@ export function PlatformAccessControlPage() {
                 {auditEvents.map((event) => (
                   <div key={event.id} className="grid gap-2 py-2.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                     <div className="min-w-0">
-                      <p className="truncate text-[0.84rem] font-bold text-(--app-text)">{event.event_type}</p>
+                      <p className="truncate text-[0.84rem] font-bold text-(--app-text)">{auditEventLabel(event.event_type)}</p>
                       <p className="mt-0.5 truncate text-[0.76rem] text-(--app-text-muted)">
                         {auditSummary(event)} · {event.actor_email ?? event.actor_name ?? 'Sistema'}
                       </p>
@@ -658,7 +739,7 @@ export function PlatformAccessControlPage() {
 
         {snapshot && tab === 'risks' ? (
           <section className="space-y-3">
-            <AdminSectionLabel title="Riesgos y SoD" count={riskFindings.length} />
+            <AdminSectionLabel title="Riesgos y segregación" count={riskFindings.length} />
             <div className="grid gap-2.5 lg:grid-cols-2">
               {riskFindings.map((finding) => (
                 <div key={finding.id} className="rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-3">
@@ -767,8 +848,8 @@ export function PlatformAccessControlPage() {
 
       <ConfirmDialog
         open={Boolean(pendingDelete)}
-        title="Eliminar rol custom"
-        description={pendingDelete ? `El rol ${pendingDelete.name} se eliminará sólo si nunca tuvo asignaciones.` : ''}
+        title="Eliminar rol personalizado"
+        description={pendingDelete ? `El rol ${pendingDelete.name} se eliminará solo si nunca tuvo asignaciones.` : ''}
         confirmLabel="Eliminar rol"
         variant="danger"
         loading={deleteMutation.isPending}

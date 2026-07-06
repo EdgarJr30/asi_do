@@ -416,6 +416,9 @@ Do not let candidate account pages such as `Tu membresía` drift back to oversiz
 ### R-116 — Platform role governance must stay owner-only and audited
 Do not manage platform administrators through ad hoc table edits, client-only checks, or broad `platform_admin` access. The post-bootstrap path for creating custom platform roles, assigning or revoking `platform_roles`, deleting custom roles, and inspecting RBAC/audit reports must stay inside `/admin/access-control`, require active `platform_owner` authority server-side, emit semantic audit events, and prevent revoking the last active `platform_owner`.
 
+### R-117 — Platform users must load with database-backed infinite pagination
+Do not regress `/admin/access-control` users back to a submit-only search, a fixed capped snapshot, or a local slice of all users. The users tab must search automatically as the query changes and append compact user rows through infinite scroll while each batch is backed by the owner-only RBAC snapshot RPC with real limit/offset metadata.
+
 ---
 
 ## Maintenance rule

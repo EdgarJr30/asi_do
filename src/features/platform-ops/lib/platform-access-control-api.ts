@@ -66,8 +66,17 @@ export interface PlatformAccessStats {
   audit_event_count: number
 }
 
+export interface PlatformAccessUsersPage {
+  limit: number
+  offset: number
+  total_count: number
+  loaded_count: number
+  next_offset: number | null
+}
+
 export interface PlatformAccessSnapshot {
   stats: PlatformAccessStats
+  users_page: PlatformAccessUsersPage
   roles: PlatformAccessRole[]
   permissions: PlatformAccessPermission[]
   users: PlatformAccessUser[]
@@ -88,11 +97,14 @@ function requireSupabase() {
   return supabase
 }
 
-export async function fetchPlatformAccessControlSnapshot(input: { userQuery?: string; userLimit?: number } = {}) {
+export async function fetchPlatformAccessControlSnapshot(
+  input: { userQuery?: string; userLimit?: number; userOffset?: number } = {}
+) {
   const client = requireSupabase()
   const response = await client.rpc('admin_platform_rbac_snapshot' as never, {
     p_user_query: input.userQuery?.trim() || null,
-    p_user_limit: input.userLimit ?? 50
+    p_user_limit: input.userLimit ?? 50,
+    p_user_offset: input.userOffset ?? 0
   } as never)
 
   if (response.error) {

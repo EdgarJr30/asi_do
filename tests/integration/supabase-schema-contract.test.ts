@@ -82,6 +82,10 @@ const platformOwnerAccessControlMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260706120000_platform_owner_access_control.sql'
 )
+const platformAccessUsersPaginationMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260706133000_platform_access_users_pagination.sql'
+)
 
 describe('supabase schema contract', () => {
   it('keeps the identity, notification, and push workflow migrations in place', () => {
@@ -105,6 +109,7 @@ describe('supabase schema contract', () => {
     expect(existsSync(membershipRenewalSettlementMigrationPath)).toBe(true)
     expect(existsSync(candidateResumeDefaultPromotionMigrationPath)).toBe(true)
     expect(existsSync(platformOwnerAccessControlMigrationPath)).toBe(true)
+    expect(existsSync(platformAccessUsersPaginationMigrationPath)).toBe(true)
   })
 
   it('defines the core identity, approval, and storage foundations', () => {
@@ -347,5 +352,17 @@ describe('supabase schema contract', () => {
     expect(migration).toContain("raise exception 'Cannot revoke the last active platform_owner'")
     expect(migration).toContain("'platform_role.assigned'")
     expect(migration).toContain("'platform_rbac'")
+  })
+
+  it('keeps platform access users database-paginated behind the owner-only snapshot', () => {
+    const migration = readFileSync(platformAccessUsersPaginationMigrationPath, 'utf8')
+
+    expect(migration).toContain('drop function if exists public.admin_platform_rbac_snapshot(text, integer);')
+    expect(migration).toContain('p_user_offset integer default 0')
+    expect(migration).toContain("raise exception 'Only platform_owner can inspect platform RBAC'")
+    expect(migration).toContain('filtered_users as (')
+    expect(migration).toContain("'users_page'")
+    expect(migration).toContain('offset v_offset')
+    expect(migration).toContain('grant execute on function public.admin_platform_rbac_snapshot(text, integer, integer) to authenticated;')
   })
 })
