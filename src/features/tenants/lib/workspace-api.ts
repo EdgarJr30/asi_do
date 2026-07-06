@@ -100,6 +100,138 @@ export async function fetchWorkspaceBundle(tenantId: string): Promise<WorkspaceB
   }
 }
 
+export type WorkspaceMemberFilter = 'all' | 'active' | 'invited'
+
+export interface WorkspaceMembersPage {
+  members: WorkspaceMembershipRow[]
+  totalCount: number
+  nextOffset: number | null
+}
+
+export interface WorkspaceMemberCounts {
+  all: number
+  active: number
+  invited: number
+}
+
+const WORKSPACE_MEMBER_PAGE_SELECT = `
+  *,
+  user:users!memberships_user_id_fkey!inner (
+    id,
+    full_name,
+    display_name,
+    email,
+    country_code,
+    avatar_path
+  ),
+  membership_roles (
+    role:tenant_roles (
+      id,
+      code,
+      name
+    )
+  )
+`
+
+/**
+ * Miembros del workspace paginados en el servidor (range + count exacto),
+ * pensado para scroll infinito. El filtro por estado y la búsqueda por nombre o
+ * correo se resuelven en Postgres; la búsqueda usa un inner join sobre `users`
+ * para que el conteo refleje solo las filas que realmente coinciden.
+ */
+export async function listWorkspaceMembersPage(input: {
+  tenantId: string
+  limit: number
+  offset: number
+  filter?: WorkspaceMemberFilter
+  query?: string
+}): Promise<WorkspaceMembersPage> {
+  const client = requireSupabase()
+  const limit = Math.max(1, input.limit)
+  const offset = Math.max(0, input.offset)
+
+  let query = client
+    .from('memberships')
+    .select(WORKSPACE_MEMBER_PAGE_SELECT, { count: 'exact' })
+    .eq('tenant_id', input.tenantId)
+
+  if (input.filter === 'active' || input.filter === 'invited') {
+    query = query.eq('status', input.filter)
+  }
+
+  const search = input.query?.trim()
+  if (search) {
+    query = query.or(
+      `display_name.ilike.%${search}%,full_name.ilike.%${search}%,email.ilike.%${search}%`,
+      { referencedTable: 'user' }
+    )
+  }
+
+  // joined_at asc como orden principal + id como desempate determinista para
+  // que los rangos entre páginas sean estables.
+  query = query.order('joined_at', { ascending: true }).order('id', { ascending: true })
+
+  const response = await query.range(offset, offset + limit - 1)
+
+  if (response.error) {
+    throw response.error
+  }
+
+  const members = (response.data ?? []) as unknown as WorkspaceMembershipRow[]
+  const totalCount = response.count ?? members.length
+  const nextOffset = offset + limit < totalCount ? offset + limit : null
+
+  return { members, totalCount, nextOffset }
+}
+
+/** Conteo por estado (total / activos / invitados) respetando la búsqueda activa. */
+export async function countWorkspaceMembers(input: {
+  tenantId: string
+  query?: string
+}): Promise<WorkspaceMemberCounts> {
+  const client = requireSupabase()
+  const search = input.query?.trim()
+
+  function buildBaseCount() {
+    const select = search ? 'id, user:users!memberships_user_id_fkey!inner (id)' : 'id'
+    let query = client
+      .from('memberships')
+      .select(select, { count: 'exact', head: true })
+      .eq('tenant_id', input.tenantId)
+
+    if (search) {
+      query = query.or(
+        `display_name.ilike.%${search}%,full_name.ilike.%${search}%,email.ilike.%${search}%`,
+        { referencedTable: 'user' }
+      )
+    }
+
+    return query
+  }
+
+  const [allResponse, activeResponse, invitedResponse] = await Promise.all([
+    buildBaseCount(),
+    buildBaseCount().eq('status', 'active'),
+    buildBaseCount().eq('status', 'invited')
+  ])
+
+  if (allResponse.error) {
+    throw allResponse.error
+  }
+  if (activeResponse.error) {
+    throw activeResponse.error
+  }
+  if (invitedResponse.error) {
+    throw invitedResponse.error
+  }
+
+  return {
+    all: allResponse.count ?? 0,
+    active: activeResponse.count ?? 0,
+    invited: invitedResponse.count ?? 0
+  }
+}
+
 export async function updateWorkspaceProfile(input: {
   tenantId: string
   displayName: string

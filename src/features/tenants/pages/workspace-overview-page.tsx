@@ -1,7 +1,7 @@
-import { useState, type ChangeEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, useReducedMotion } from 'motion/react';
 import {
   Building2,
@@ -11,6 +11,7 @@ import {
   LockKeyhole,
   Mail,
   MapPin,
+  Search,
   UploadCloud,
   UserPlus,
   Users,
@@ -28,27 +29,40 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
-import { PageLoader } from '@/components/ui/loader';
+import { PageLoader, Spinner } from '@/components/ui/loader';
 import { Select } from '@/components/ui/select';
 import { SideSheet } from '@/components/ui/side-sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { toErrorMessage } from '@/features/auth/lib/auth-api';
 import {
+  countWorkspaceMembers,
   createWorkspaceAssetUrl,
   fetchWorkspaceBundle,
   inviteWorkspaceMember,
+  listWorkspaceMembersPage,
   replaceMembershipPrimaryRole,
   revokeWorkspaceInvite,
   updateWorkspaceProfile,
   uploadWorkspaceLogo,
   type WorkspaceBundle,
+  type WorkspaceMemberFilter,
 } from '@/features/tenants/lib/workspace-api';
 import { reportErrorWithToast } from '@/lib/errors/error-reporting';
 import { cn } from '@/lib/utils/cn';
 import { UploadConstraintError } from '@/lib/uploads/media';
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion';
+import { CountUp } from '@/shared/ui/count-up';
 import { CountryCodeSelect } from '@/shared/ui/location-selects';
+
+const MEMBERS_PAGE_SIZE = 10;
+
+const MEMBER_FILTERS: Array<{ key: WorkspaceMemberFilter; label: string }> = [
+  { key: 'all', label: 'Todos' },
+  { key: 'active', label: 'Activos' },
+  { key: 'invited', label: 'Invitados' },
+];
 
 const WORKSPACE_QUERY_KEY = ['workspace', 'primary'] as const;
 const fieldLabelClassName = 'grid gap-2 text-sm';
@@ -101,7 +115,7 @@ function formatRoleNames(membership: WorkspaceBundle['memberships'][number]) {
 
 function InfoIcon({ icon: Icon, accent }: { icon: LucideIcon; accent: StatAccent }) {
   return (
-    <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-control', statAccentClassName[accent])}>
+    <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-control', statAccentClassName[accent])}>
       <Icon className="size-4" />
     </span>
   );
@@ -120,14 +134,14 @@ function StatCell({
 }) {
   const content = (
     <>
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-[0.68rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">{label}</p>
-        {to ? <span className="text-xs font-bold text-primary-600 dark:text-primary-300">Ver <ChevronRight className="inline size-3" /></span> : null}
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[0.64rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">{label}</p>
+        {to ? <span className="text-[0.7rem] font-bold text-primary-600 dark:text-primary-300">Ver <ChevronRight className="inline size-3" /></span> : null}
       </div>
-      <p className={cn('mt-2 font-bold tracking-[-0.02em] text-(--app-text)', typeof value === 'string' && value.length > 8 ? 'text-[1.15rem]' : 'text-[1.6rem]')}>
+      <p className={cn('mt-1.5 font-bold tracking-[-0.02em] text-(--app-text)', typeof value === 'string' && value.length > 8 ? 'text-[1rem]' : 'text-[1.35rem]')}>
         {value}
       </p>
-      <p className="mt-1 text-xs text-(--app-text-subtle)">{sublabel}</p>
+      <p className="mt-0.5 text-[0.7rem] leading-tight text-(--app-text-subtle)">{sublabel}</p>
     </>
   );
 
@@ -135,14 +149,14 @@ function StatCell({
     return (
       <Link
         to={to}
-        className="block min-h-[118px] px-4 py-4 transition-colors hover:bg-(--app-surface-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)"
+        className="block min-h-[92px] px-3.5 py-3 transition-colors hover:bg-(--app-surface-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)"
       >
         {content}
       </Link>
     );
   }
 
-  return <div className="min-h-[118px] px-4 py-4">{content}</div>;
+  return <div className="min-h-[92px] px-3.5 py-3">{content}</div>;
 }
 
 function ConfigRow({
@@ -164,15 +178,15 @@ function ConfigRow({
     <button
       type="button"
       onClick={onClick}
-      className="group flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-(--app-surface-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)"
+      className="group flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-(--app-surface-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)"
     >
       <InfoIcon icon={icon} accent={accent} />
       <span className="min-w-0 flex-1">
-        <span className="block text-[0.92rem] font-semibold text-(--app-text)">{title}</span>
-        <span className="mt-0.5 block truncate text-[0.8rem] text-(--app-text-subtle)">{description}</span>
+        <span className="block text-[0.86rem] font-semibold leading-tight text-(--app-text)">{title}</span>
+        <span className="mt-0.5 block truncate text-[0.76rem] text-(--app-text-subtle)">{description}</span>
       </span>
-      <span className="flex shrink-0 items-center gap-1 text-[0.8rem] font-bold text-(--app-text-subtle) transition-colors group-hover:text-primary-600 dark:group-hover:text-primary-300">
-        {actionLabel}
+      <span className="flex shrink-0 items-center gap-0.5 text-[0.74rem] font-bold text-(--app-text-subtle) transition-colors group-hover:text-primary-600 dark:group-hover:text-primary-300">
+        <span className="hidden sm:inline">{actionLabel}</span>
         <ChevronRight className="size-4" />
       </span>
     </button>
@@ -217,7 +231,61 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRoleId, setInviteRoleId] = useState('');
   const [openSheet, setOpenSheet] = useState<SheetKey | null>(null);
+  const [memberFilter, setMemberFilter] = useState<WorkspaceMemberFilter>('all');
+  const [memberQuery, setMemberQuery] = useState('');
   const shouldReduceMotion = useReducedMotion();
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const membersCountsQuery = useQuery({
+    queryKey: ['workspace', 'members', bundle.tenant.id, 'counts', memberQuery],
+    queryFn: async () => countWorkspaceMembers({ tenantId: bundle.tenant.id, query: memberQuery }),
+  });
+
+  const membersQuery = useInfiniteQuery({
+    queryKey: ['workspace', 'members', bundle.tenant.id, 'page', memberFilter, memberQuery],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) =>
+      listWorkspaceMembersPage({
+        tenantId: bundle.tenant.id,
+        filter: memberFilter,
+        query: memberQuery,
+        limit: MEMBERS_PAGE_SIZE,
+        offset: pageParam,
+      }),
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
+  });
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = membersQuery;
+
+  const memberPages = useMemo(() => membersQuery.data?.pages ?? [], [membersQuery.data]);
+  const visibleMembers = useMemo(() => memberPages.flatMap((page) => page.members), [memberPages]);
+  const membersTotalCount = memberPages[0]?.totalCount ?? 0;
+  const memberCounts = membersCountsQuery.data ?? { all: 0, active: 0, invited: 0 };
+  const hasLoadedFirstMembersPage = memberPages.length > 0;
+
+  const loadMoreMembers = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMoreMembers();
+        }
+      },
+      { rootMargin: '180px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMoreMembers, visibleMembers.length]);
 
   const logoUrlQuery = useQuery({
     queryKey: ['workspace', 'logo-url', profile?.logo_path],
@@ -324,6 +392,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY });
+      await queryClient.invalidateQueries({ queryKey: ['workspace', 'members', bundle.tenant.id] });
       await session.refresh();
       toast.success('Rol actualizado', {
         description: 'El acceso de esta persona ya refleja el rol seleccionado.',
@@ -352,6 +421,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
       setInviteEmail('');
       setInviteRoleId('');
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY });
+      await queryClient.invalidateQueries({ queryKey: ['workspace', 'members', bundle.tenant.id] });
       toast.success('Invitación creada', {
         description: 'La invitación ya fue creada y aparece dentro del equipo.',
       });
@@ -372,6 +442,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
     mutationFn: async (membershipId: string) => revokeWorkspaceInvite({ membershipId, tenantId: bundle.tenant.id }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY });
+      await queryClient.invalidateQueries({ queryKey: ['workspace', 'members', bundle.tenant.id] });
       toast.success('Invitación revocada', {
         description: 'La invitación ya fue revocada y el equipo quedó actualizado.',
       });
@@ -395,10 +466,6 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
     event.currentTarget.value = '';
   }
 
-  function openInviteSheet() {
-    setOpenSheet('team');
-  }
-
   const assignableRoles = bundle.roles.filter((role) => role.tenant_id === null || role.tenant_id === bundle.tenant.id);
   const activeMembershipCount = bundle.memberships.filter((membership) => membership.status === 'active').length;
   const invitedMembershipCount = bundle.memberships.filter((membership) => membership.status === 'invited').length;
@@ -409,26 +476,26 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
 
   return (
     <motion.div
-      className="w-full space-y-6"
+      className="w-full space-y-4"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
     >
-      <motion.header variants={cardReveal} className="flex flex-wrap items-end justify-between gap-4">
+      <motion.header variants={cardReveal} className="flex flex-wrap items-end justify-between gap-3">
         <div className="max-w-2xl">
           <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Configuración</h1>
-          <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
-            {firstName(userDisplayName)}, administra la identidad de tu empresa, el equipo y los accesos del workspace desde una vista compacta.
+          <p className="mt-1.5 max-w-2xl text-[0.84rem] leading-relaxed text-(--app-text-muted)">
+            {firstName(userDisplayName)}, administra la identidad de tu empresa, el equipo y los accesos del workspace.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
             to={surfacePaths.workspace.jobs}
-            className="inline-flex h-11 items-center justify-center rounded-card border bg-(--app-surface) px-4 text-sm font-semibold text-(--app-text) shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 hover:shadow-[0_12px_24px_rgba(15,23,42,0.1)] dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200"
+            className="inline-flex h-10 items-center justify-center rounded-card border bg-(--app-surface) px-3.5 text-[0.84rem] font-semibold text-(--app-text) shadow-sm transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:border-primary-400 dark:hover:bg-primary-500/12 dark:hover:text-primary-200"
           >
             Ver vacantes
           </Link>
-          <Button className="px-4" onClick={() => setOpenSheet('team')}>
+          <Button className="h-10 px-3.5 text-[0.84rem]" onClick={() => setOpenSheet('team')}>
             <UserPlus className="size-4" /> Invitar miembro
           </Button>
         </div>
@@ -436,120 +503,187 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
 
       <motion.section
         variants={cardReveal}
-        className={cn(panelClassName, 'grid overflow-hidden sm:grid-cols-2 xl:grid-cols-4 [&>*:not(:last-child)]:border-b [&>*:not(:last-child)]:border-(--app-border) sm:[&>*:nth-child(odd)]:border-r xl:[&>*:not(:last-child)]:border-r xl:[&>*:not(:last-child)]:border-b-0')}
+        className={cn(panelClassName, 'grid grid-cols-2 overflow-hidden xl:grid-cols-4 [&>*:not(:last-child)]:border-b [&>*:nth-child(odd)]:border-r xl:[&>*:not(:last-child)]:border-r xl:[&>*:not(:last-child)]:border-b-0 [&>*]:border-(--app-border)')}
       >
-        <StatCell label="Miembros activos" value={activeMembershipCount} sublabel="personas operando este espacio" />
-        <StatCell label="Invitaciones pendientes" value={invitedMembershipCount} sublabel="accesos aún por aceptar" />
-        <StatCell label="Roles configurados" value={assignableRoles.length} sublabel="estructura actual del equipo" to={surfacePaths.workspace.access} />
-        <StatCell label="Visibilidad" value={isPublic ? 'Perfil público' : 'Perfil privado'} sublabel="presencia actual de la empresa" />
+        <StatCell label="Miembros activos" value={activeMembershipCount} sublabel="personas en este espacio" />
+        <StatCell label="Invitaciones" value={invitedMembershipCount} sublabel="accesos por aceptar" />
+        <StatCell label="Roles" value={assignableRoles.length} sublabel="estructura del equipo" to={surfacePaths.workspace.access} />
+        <StatCell label="Visibilidad" value={isPublic ? 'Pública' : 'Privada'} sublabel="presencia de la empresa" />
       </motion.section>
 
-      <motion.section variants={gridStagger} className="grid gap-5 [&>*]:min-w-0 xl:grid-cols-[1.25fr_1fr]">
-        <motion.div variants={cardReveal} className={panelClassName}>
-          <div className="border-b border-(--app-border) px-4 py-4">
-            <h2 className="text-base font-bold tracking-tight text-(--app-text)">Datos de la empresa</h2>
-            <p className="mt-1 text-sm text-(--app-text-muted)">Edita cada bloque de información sin perder contexto.</p>
+      <motion.div variants={cardReveal} className={panelClassName}>
+        <div className="border-b border-(--app-border) px-3.5 py-3">
+          <h2 className="text-[0.95rem] font-bold tracking-tight text-(--app-text)">Datos de la empresa</h2>
+          <p className="mt-0.5 text-[0.78rem] text-(--app-text-muted)">Edita cada bloque de información sin perder contexto.</p>
+        </div>
+        <div className="divide-y divide-(--app-border)">
+          <ConfigRow icon={Building2} accent="sky" title="Perfil de empresa" description={`${workspaceName} · ${legalName || 'Nombre legal pendiente'}`} actionLabel="Editar" onClick={() => setOpenSheet('profile')} />
+          <ConfigRow icon={Mail} accent="violet" title="Canales de contacto" description={companyEmail || websiteUrl || 'Website y correo de reclutamiento pendientes'} actionLabel="Editar" onClick={() => setOpenSheet('contact')} />
+          <ConfigRow icon={MapPin} accent="amber" title="Contexto empresarial" description={[countryCode, industry, sizeRange].filter(Boolean).join(' · ') || 'País, industria y tamaño del equipo'} actionLabel="Editar" onClick={() => setOpenSheet('context')} />
+          <ConfigRow icon={ImageIcon} accent="teal" title="Branding / logo" description={hasLogo ? 'Logo listo para vacantes y perfil público' : 'Agrega el logo que verán los candidatos'} actionLabel="Configurar" onClick={() => setOpenSheet('branding')} />
+        </div>
+        <div className="flex items-center justify-between gap-3 border-t border-(--app-border) px-3.5 py-3">
+          <div className="min-w-0">
+            <p className="text-[0.84rem] font-semibold text-(--app-text)">Perfil visible al público</p>
+            <p className="mt-0.5 text-[0.72rem] text-(--app-text-subtle)">Controla si candidatos pueden ver la presencia pública de la empresa.</p>
           </div>
-          <div className="divide-y divide-(--app-border)">
-            <ConfigRow icon={Building2} accent="sky" title="Perfil de empresa" description={`${workspaceName} · ${legalName || 'Nombre legal pendiente'}`} actionLabel="Editar" onClick={() => setOpenSheet('profile')} />
-            <ConfigRow icon={Mail} accent="violet" title="Canales de contacto" description={companyEmail || websiteUrl || 'Website y correo de reclutamiento pendientes'} actionLabel="Editar" onClick={() => setOpenSheet('contact')} />
-            <ConfigRow icon={MapPin} accent="amber" title="Contexto empresarial" description={[countryCode, industry, sizeRange].filter(Boolean).join(' · ') || 'País, industria y tamaño del equipo'} actionLabel="Editar" onClick={() => setOpenSheet('context')} />
-            <ConfigRow icon={ImageIcon} accent="teal" title="Branding / logo" description={hasLogo ? 'Logo listo para vacantes y perfil público' : 'Agrega el logo que verán los candidatos'} actionLabel="Configurar" onClick={() => setOpenSheet('branding')} />
-          </div>
-          <div className="flex items-center justify-between gap-4 border-t border-(--app-border) px-4 py-4">
-            <div>
-              <p className="text-sm font-semibold text-(--app-text)">Perfil visible al público</p>
-              <p className="mt-0.5 text-xs text-(--app-text-subtle)">Controla si candidatos pueden ver la presencia pública de la empresa.</p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={isPublic}
-              aria-label="Perfil visible al público"
-              disabled={saveProfileMutation.isPending}
-              onClick={() => {
-                const nextIsPublic = !isPublic;
-                setIsPublic(nextIsPublic);
-                saveProfileMutation.mutate({ isPublic: nextIsPublic });
-              }}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isPublic}
+            aria-label="Perfil visible al público"
+            disabled={saveProfileMutation.isPending}
+            onClick={() => {
+              const nextIsPublic = !isPublic;
+              setIsPublic(nextIsPublic);
+              saveProfileMutation.mutate({ isPublic: nextIsPublic });
+            }}
+            className={cn(
+              'relative h-[26px] w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) disabled:opacity-60',
+              isPublic ? 'bg-primary-600' : 'bg-secondary-200 dark:bg-secondary-500'
+            )}
+          >
+            <span
               className={cn(
-                'relative h-[26px] w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) disabled:opacity-60',
-                isPublic ? 'bg-primary-600' : 'bg-secondary-200 dark:bg-secondary-500'
+                'absolute left-[3px] top-[3px] size-5 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.2)] transition-transform',
+                isPublic ? 'translate-x-[18px]' : 'translate-x-0'
               )}
-            >
-              <span
+            />
+          </button>
+        </div>
+      </motion.div>
+
+      <motion.section variants={cardReveal} className="space-y-2.5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-[0.95rem] font-bold tracking-tight text-(--app-text)">Equipo y accesos</h2>
+            <p className="mt-0.5 text-[0.78rem] text-(--app-text-muted)">Miembros y accesos del workspace.</p>
+          </div>
+          <Link
+            to={surfacePaths.workspace.access}
+            className="inline-flex h-9 shrink-0 items-center gap-1 rounded-card border border-primary-100 bg-primary-50 px-3 text-[0.78rem] font-bold text-primary-700 transition-colors hover:border-primary-200 hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/12 dark:text-primary-200"
+          >
+            Permisos y roles <ChevronRight className="size-4" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {MEMBER_FILTERS.map((filter) => {
+            const isActive = filter.key === memberFilter;
+
+            return (
+              <button
+                key={filter.key}
+                type="button"
+                onClick={() => setMemberFilter(filter.key)}
+                aria-pressed={isActive}
                 className={cn(
-                  'absolute left-[3px] top-[3px] size-5 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.2)] transition-transform',
-                  isPublic ? 'translate-x-[18px]' : 'translate-x-0'
+                  'flex flex-col items-center justify-center gap-0.5 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-1.5 py-2 text-center transition-[border-color,background-color,box-shadow] hover:border-primary-300 hover:bg-(--app-surface) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)',
+                  isActive ? 'border-primary-300 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]' : ''
                 )}
-              />
-            </button>
-          </div>
-        </motion.div>
+              >
+                <span className="font-sans text-base font-bold leading-none tabular-nums text-(--app-text) sm:text-lg">
+                  {membersCountsQuery.isLoading ? '...' : <CountUp value={memberCounts[filter.key]} />}
+                </span>
+                <span className="text-[0.66rem] leading-tight text-(--app-text-subtle) sm:text-[0.7rem]">{filter.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-        <motion.div variants={cardReveal} className={panelClassName}>
-          <div className="border-b border-(--app-border) px-4 py-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-base font-bold tracking-tight text-(--app-text)">Equipo y accesos</h2>
-                <p className="mt-1 text-sm text-(--app-text-muted)">
-                  {activeMembershipCount} activo{activeMembershipCount === 1 ? '' : 's'} · {invitedMembershipCount} invitación{invitedMembershipCount === 1 ? '' : 'es'} pendiente{invitedMembershipCount === 1 ? '' : 's'}
-                </p>
-              </div>
-              <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-200">Activo</Badge>
-            </div>
-          </div>
-          <div className="space-y-4 px-4 py-4">
-            <div className={softPanelClassName}>
-              <label className={fieldLabelClassName}>
-                <span className={fieldLabelTextClassName}>Invitar por correo</span>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(event) => setInviteEmail(event.target.value)}
-                    placeholder="persona@empresa.com"
-                    className="h-11"
-                  />
-                  <Button onClick={openInviteSheet} disabled={inviteEmail.trim().length === 0} className="sm:w-28">
-                    Invitar
-                  </Button>
-                </div>
-              </label>
-              <p className="mt-2 text-[0.72rem] leading-5 text-(--app-text-subtle)">El rol inicial se confirma antes de enviar la invitación.</p>
-            </div>
+        <label className="flex h-11 min-w-0 items-center gap-2.5 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
+          <Search className="size-4.5 shrink-0 text-(--app-text-subtle)" />
+          <span className="sr-only">Buscar miembro por nombre o correo</span>
+          <Input
+            value={memberQuery}
+            onChange={(event) => setMemberQuery(event.target.value)}
+            placeholder="Buscar por nombre o correo"
+            className="h-full rounded-none border-0 bg-transparent px-0 text-[0.9rem] shadow-none focus:border-0 focus:bg-transparent focus:ring-0"
+          />
+        </label>
 
-            {bundle.memberships.length > 0 ? (
-              <ul className="divide-y divide-(--app-border)">
-                {bundle.memberships.slice(0, 4).map((membership) => (
-                  <li key={membership.id} className="flex items-center justify-between gap-3 py-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-xs font-bold text-white">
-                        {initialsOf(membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'M')}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-(--app-text)">{membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'Miembro'}</p>
-                        <p className="truncate text-xs text-(--app-text-subtle)">{membership.user?.email}</p>
-                      </div>
+        {membersQuery.isLoading && !hasLoadedFirstMembersPage ? (
+          <Card className="flex items-center gap-2.5 text-[0.82rem] text-(--app-text-muted)">
+            <Spinner size="sm" /> Cargando equipo...
+          </Card>
+        ) : membersQuery.error ? (
+          <Card className="text-[0.86rem] text-rose-600">{toErrorMessage(membersQuery.error)}</Card>
+        ) : visibleMembers.length ? (
+          <div className="space-y-1">
+            <p className="px-0.5 text-[0.78rem] text-(--app-text-subtle)">
+              <b className="font-semibold text-(--app-text)">{visibleMembers.length}</b> de{' '}
+              <b className="font-semibold text-(--app-text)">{membersTotalCount}</b> miembro{membersTotalCount === 1 ? '' : 's'}
+            </p>
+            <Card className="overflow-hidden rounded-control p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+              <motion.ul
+                className="divide-y divide-(--app-border)"
+                variants={gridStagger}
+                initial={shouldReduceMotion ? false : 'hidden'}
+                animate="show"
+              >
+                {visibleMembers.map((membership) => (
+                  <motion.li key={membership.id} variants={cardReveal} className="flex items-center gap-2.5 px-3 py-2.5 sm:px-3.5">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-[0.7rem] font-bold text-white">
+                      {initialsOf(membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'M')}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[0.84rem] font-semibold leading-tight text-(--app-text)">
+                        {membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'Miembro'}
+                      </p>
+                      <p className="mt-0.5 truncate text-[0.74rem] text-(--app-text-subtle)">{membership.user?.email || formatRoleNames(membership)}</p>
                     </div>
-                    <Badge variant="outline" className={membership.status === 'active' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-200' : undefined}>
+                    {membership.status === 'invited' ? (
+                      <Button
+                        variant="outline"
+                        className="h-8 shrink-0 px-2.5 text-[0.72rem] hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+                        onClick={() => revokeInviteMutation.mutate(membership.id)}
+                        disabled={revokeInviteMutation.isPending}
+                      >
+                        Revocar
+                      </Button>
+                    ) : null}
+                    <Badge
+                      variant="outline"
+                      className={cn('shrink-0', membership.status === 'active' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-200' : undefined)}
+                    >
                       {statusLabel(membership.status)}
                     </Badge>
-                  </li>
+                  </motion.li>
                 ))}
-              </ul>
-            ) : (
-              <p className="rounded-control border border-dashed border-(--app-border) px-4 py-6 text-center text-sm text-(--app-text-muted)">Aún no hay miembros en este espacio.</p>
-            )}
+              </motion.ul>
+            </Card>
 
-            <Link
-              to={surfacePaths.workspace.access}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-card border border-primary-100 bg-primary-50 px-4 text-sm font-bold text-primary-700 transition-colors hover:border-primary-200 hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/12 dark:text-primary-200"
-            >
-              Ver permisos y roles <ChevronRight className="size-4" />
-            </Link>
+            <div ref={sentinelRef} className="flex min-h-10 items-center justify-center px-2 py-2">
+              {membersQuery.isFetchingNextPage ? (
+                <span className="inline-flex items-center gap-2 text-[0.78rem] text-(--app-text-muted)">
+                  <Spinner size="sm" /> Cargando más miembros...
+                </span>
+              ) : membersQuery.hasNextPage ? (
+                <span className="text-[0.74rem] text-(--app-text-subtle)">Desplázate para cargar más</span>
+              ) : (
+                <span className="text-[0.74rem] text-(--app-text-subtle)">No hay más miembros</span>
+              )}
+            </div>
           </div>
-        </motion.div>
+        ) : (
+          <EmptyState
+            actionLabel={memberFilter !== 'all' || memberQuery ? 'Limpiar filtros' : 'Invitar miembro'}
+            description={
+              memberFilter !== 'all' || memberQuery
+                ? 'Prueba con otro término o cambia el filtro para ampliar los resultados.'
+                : 'Invita a las personas que operarán este espacio de empresa.'
+            }
+            title={memberFilter !== 'all' || memberQuery ? 'Sin resultados' : 'Aún no hay miembros'}
+            onAction={() => {
+              if (memberFilter !== 'all' || memberQuery) {
+                setMemberFilter('all');
+                setMemberQuery('');
+              } else {
+                setOpenSheet('team');
+              }
+            }}
+          />
+        )}
       </motion.section>
 
       <SideSheet
