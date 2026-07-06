@@ -216,7 +216,7 @@ export function JobDetailPage() {
 
   return (
     <motion.div
-      className="mx-auto max-w-260 pb-20 lg:pb-4"
+      className="mx-auto max-w-260 pb-36 lg:pb-4"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}
       animate="show"
@@ -410,7 +410,7 @@ export function JobDetailPage() {
         </motion.aside>
       </motion.div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-(--app-border) bg-(--app-surface)/95 px-3 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] backdrop-blur min-[860px]:hidden">
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 flex gap-2 border-t border-(--app-border) bg-(--app-surface)/95 px-3 py-2.5 shadow-[0_-8px_20px_rgba(24,39,78,0.12)] backdrop-blur min-[860px]:hidden">
         {session.isAuthenticated && !existingApplication ? (
           <Button
             type="button"
