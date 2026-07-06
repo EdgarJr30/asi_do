@@ -964,8 +964,8 @@ function WorkspaceSidebarContent({
           aria-label={`${config.brand} navigation`}
           onScroll={hideCollapsedTooltip}
           className={cn(
-            'flex-1 overflow-y-auto px-3 py-4 [scrollbar-color:rgba(255,255,255,0.18)_transparent] [scrollbar-width:thin]',
-            showCollapsedLabels ? 'overflow-x-hidden overscroll-contain' : ''
+            'flex-1 overflow-y-auto overscroll-contain px-3 py-4 [scrollbar-color:rgba(255,255,255,0.18)_transparent] [scrollbar-width:thin]',
+            showCollapsedLabels ? 'overflow-x-hidden' : ''
           )}
         >
           {config.sidebarGroups.map((group, groupIndex) => {
