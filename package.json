@@ -9,9 +9,9 @@
   },
   "scripts": {
     "changeset": "changeset",
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "dev": "NODE_OPTIONS=--disable-warning=DEP0205 vite",
+    "build": "tsc -b && NODE_OPTIONS=--disable-warning=DEP0205 vite build",
+    "preview": "NODE_OPTIONS=--disable-warning=DEP0205 vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run",
