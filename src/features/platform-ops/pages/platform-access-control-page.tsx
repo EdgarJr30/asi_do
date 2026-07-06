@@ -1,8 +1,9 @@
-import { useDeferredValue, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
+  Check,
   Eye,
   FileClock,
   KeyRound,
@@ -19,12 +20,12 @@ import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
+import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/loader'
-import { Select } from '@/components/ui/select'
 import { SideSheet } from '@/components/ui/side-sheet'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -32,8 +33,6 @@ import {
   AdminEmpty,
   AdminPage,
   AdminSectionLabel,
-  AdminStat,
-  AdminStatBar,
   AdminTabs
 } from '@/features/internal/components/admin-redesign'
 import {
@@ -59,6 +58,10 @@ type RoleSheetState = { mode: 'create' | 'edit' | 'view'; role?: PlatformAccessR
 
 const queryKey = ['platform-access-control'] as const
 const USERS_PAGE_SIZE = 12
+// Búsqueda: no dispara por cada tecla ni por 1 sola letra. Espera a que el usuario
+// deje de escribir (debounce) y a un mínimo de caracteres; por debajo, lista completa.
+const SEARCH_DEBOUNCE_MS = 350
+const MIN_SEARCH_LENGTH = 2
 
 const resourceLabels: Record<string, string> = {
   app_error_log: 'Errores',
@@ -119,6 +122,40 @@ const auditEventLabels: Record<string, string> = {
 
 const highRiskActions = new Set(['act', 'activate', 'create', 'delete', 'restore', 'review', 'resend', 'suspend', 'update'])
 const mediumRiskResources = new Set(['audit_log', 'billing', 'membership_payment', 'plan'])
+
+// Reglas de segregación de funciones (SOD): combinaciones de permisos que, juntas,
+// concentran demasiado poder. Se usan tanto para el reporte pasivo (tab Riesgos)
+// como para alertar EN VIVO cuando el owner hace un cambio que las dispara.
+type SodLevel = 'Alto' | 'Medio'
+const SOD_RULES: Array<{ id: string; needs: string[]; level: SodLevel; phrase: string; description: string }> = [
+  {
+    id: 'flags-audit',
+    needs: ['feature_flag:update', 'audit_log:read'],
+    level: 'Alto',
+    phrase: 'cambia configuración y lee auditoría',
+    description: 'Revisar segregación de funciones en cambios sensibles y evidencia posterior.'
+  },
+  {
+    id: 'billing',
+    needs: ['plan:update', 'billing:read'],
+    level: 'Medio',
+    phrase: 'combina planes y facturación',
+    description: 'Puede estar correcto para Finanzas, pero debe ser intencional.'
+  }
+]
+
+function sodRulesTriggeredBy(permissionCodes: Iterable<string>) {
+  const set = permissionCodes instanceof Set ? permissionCodes : new Set(permissionCodes)
+  return SOD_RULES.filter((rule) => rule.needs.every((code) => set.has(code)))
+}
+
+// El RPC lanza "Only platform_owner can inspect platform RBAC" cuando la sesión no
+// es owner. Cualquier otro error (p. ej. red o firma de función) NO debe mostrarse
+// como si el problema fuera el rol del usuario.
+function isOwnerAccessError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error)
+  return /platform_owner/i.test(message)
+}
 
 function normalizeRoleCode(value: string) {
   return value
@@ -221,27 +258,16 @@ function deriveRiskFindings(snapshot: PlatformAccessSnapshot | undefined) {
       })
     })
 
-  snapshot.users
-    .filter((user) => user.permissions.includes('feature_flag:update') && user.permissions.includes('audit_log:read'))
-    .forEach((user) => {
+  snapshot.users.forEach((user) => {
+    sodRulesTriggeredBy(user.permissions).forEach((rule) => {
       findings.push({
-        id: `sod-flags-audit-${user.id}`,
-        level: 'Alto',
-        title: `${displayUserName(user)} cambia configuración y lee auditoría`,
-        description: 'Revisar segregación de funciones en cambios sensibles y evidencia posterior.'
+        id: `sod-${rule.id}-${user.id}`,
+        level: rule.level,
+        title: `${displayUserName(user)} ${rule.phrase}`,
+        description: rule.description
       })
     })
-
-  snapshot.users
-    .filter((user) => user.permissions.includes('plan:update') && user.permissions.includes('billing:read'))
-    .forEach((user) => {
-      findings.push({
-        id: `sod-billing-${user.id}`,
-        level: 'Medio',
-        title: `${displayUserName(user)} combina planes y facturación`,
-        description: 'Puede estar correcto para Finanzas, pero debe ser intencional.'
-      })
-    })
+  })
 
   return findings.length
     ? findings
@@ -340,9 +366,18 @@ export function PlatformAccessControlPage() {
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<AccessTab>('users')
   const [searchInput, setSearchInput] = useState('')
-  const deferredSearchInput = useDeferredValue(searchInput)
-  const userSearch = deferredSearchInput.trim()
-  const [selectedRoleByUser, setSelectedRoleByUser] = useState<Record<string, string>>({})
+  const [userSearch, setUserSearch] = useState('')
+
+  // Debounce + umbral mínimo: el input se actualiza al instante (no bloquea la
+  // escritura), pero la consulta al servidor solo cambia cuando dejas de escribir
+  // y hay suficientes letras. Con menos del mínimo, se limpia el filtro.
+  useEffect(() => {
+    const trimmed = searchInput.trim()
+    const nextSearch = trimmed.length >= MIN_SEARCH_LENGTH ? trimmed : ''
+    const handle = window.setTimeout(() => setUserSearch(nextSearch), SEARCH_DEBOUNCE_MS)
+    return () => window.clearTimeout(handle)
+  }, [searchInput])
+  const [selectedRolesByUser, setSelectedRolesByUser] = useState<Record<string, string[]>>({})
   const [roleSheet, setRoleSheet] = useState<RoleSheetState>(null)
   const [roleCode, setRoleCode] = useState('')
   const [roleName, setRoleName] = useState('')
@@ -360,7 +395,10 @@ export function PlatformAccessControlPage() {
         userLimit: USERS_PAGE_SIZE,
         userOffset: pageParam
       }),
-    getNextPageParam: (lastPage) => lastPage.users_page.next_offset
+    getNextPageParam: (lastPage) => lastPage.users_page.next_offset,
+    // Mantiene los datos previos visibles mientras cambia la búsqueda: la sección
+    // (y el input) no se desmontan, así no se pierde el foco al escribir.
+    placeholderData: keepPreviousData
   })
 
   const snapshotPages = useMemo(() => snapshotQuery.data?.pages ?? [], [snapshotQuery.data])
@@ -373,6 +411,13 @@ export function PlatformAccessControlPage() {
   const permissions = snapshot?.permissions ?? []
   const auditEvents = snapshot?.audit_events ?? []
   const riskFindings = useMemo(() => deriveRiskFindings(snapshot), [snapshot])
+  const accessStats = [
+    { label: 'Roles', value: snapshot?.stats.role_count ?? '—', dot: 'bg-primary-500' },
+    { label: 'Personalizados', value: snapshot?.stats.custom_role_count ?? '—', dot: 'bg-teal-500' },
+    { label: 'Dueños', value: snapshot?.stats.platform_owner_count ?? '—', dot: 'bg-violet-500' },
+    { label: 'Asignaciones', value: snapshot?.stats.active_assignment_count ?? '—', dot: 'bg-emerald-500' },
+    { label: 'Usuarios', value: snapshot?.stats.users_with_platform_roles_count ?? '—', dot: 'bg-amber-500' }
+  ]
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = snapshotQuery
   const sentinelRef = useInfiniteScroll({
     hasNextPage: Boolean(hasNextPage),
@@ -391,11 +436,21 @@ export function PlatformAccessControlPage() {
   }
 
   const assignMutation = useMutation({
-    mutationFn: assignPlatformRole,
-    onSuccess: async () => {
-      setSelectedRoleByUser({})
+    mutationFn: async ({ userId, roleIds }: { userId: string; roleIds: string[] }) => {
+      // Asigna en lote los roles seleccionados (uno por RPC; cada uno queda auditado).
+      for (const roleId of roleIds) {
+        await assignPlatformRole({ userId, roleId })
+      }
+    },
+    onSuccess: async (_data, variables) => {
+      setSelectedRolesByUser((current) => {
+        const next = { ...current }
+        delete next[variables.userId]
+        return next
+      })
       await invalidateSnapshot()
-      toast.success('Rol asignado')
+      toast.success(variables.roleIds.length > 1 ? `${variables.roleIds.length} roles asignados` : 'Rol asignado')
+      warnOnSodForAssignment(variables.userId, variables.roleIds)
     },
     onError: async (error) => {
       await reportErrorWithToast({
@@ -468,9 +523,18 @@ export function PlatformAccessControlPage() {
       })
     },
     onSuccess: async () => {
+      // Capturamos los permisos guardados antes de limpiar el formulario para la
+      // verificación SOD del rol.
+      const savedPermissionCodes = selectedPermissionCodes
       setRoleSheet(null)
       await invalidateSnapshot()
       toast.success('Rol guardado')
+
+      sodRulesTriggeredBy(savedPermissionCodes).forEach((rule) => {
+        toast.warning(`Alerta SOD · Riesgo ${rule.level.toLowerCase()}`, {
+          description: `Este rol reúne permisos que ${rule.phrase}. ${rule.description}`
+        })
+      })
     },
     onError: async (error) => {
       await reportErrorWithToast({
@@ -496,12 +560,40 @@ export function PlatformAccessControlPage() {
     )
   }
 
-  function handleAssignRole(user: PlatformAccessUser) {
-    const roleId = selectedRoleByUser[user.id]
+  function toggleRoleForUser(userId: string, roleId: string) {
+    setSelectedRolesByUser((current) => {
+      const currentIds = current[userId] ?? []
+      const nextIds = currentIds.includes(roleId)
+        ? currentIds.filter((id) => id !== roleId)
+        : [...currentIds, roleId]
+      return { ...current, [userId]: nextIds }
+    })
+  }
 
-    if (!roleId) return
+  function handleAssignRoles(user: PlatformAccessUser) {
+    const roleIds = selectedRolesByUser[user.id] ?? []
 
-    assignMutation.mutate({ userId: user.id, roleId })
+    if (!roleIds.length) return
+
+    assignMutation.mutate({ userId: user.id, roleIds })
+  }
+
+  // Alerta EN VIVO de SOD: proyecta los permisos que tendrá el usuario tras sumar
+  // los roles recién asignados y avisa si esa combinación dispara una regla.
+  function warnOnSodForAssignment(userId: string, addedRoleIds: string[]) {
+    const user = users.find((item) => item.id === userId)
+    if (!user) return
+
+    const projected = new Set(user.permissions)
+    addedRoleIds.forEach((roleId) => {
+      roles.find((role) => role.id === roleId)?.permissions.forEach((permission) => projected.add(permission.code))
+    })
+
+    sodRulesTriggeredBy(projected).forEach((rule) => {
+      toast.warning(`Alerta SOD · Riesgo ${rule.level.toLowerCase()}`, {
+        description: `${displayUserName(user)} ahora ${rule.phrase}. ${rule.description}`
+      })
+    })
   }
 
   const roleSheetTitle =
@@ -534,13 +626,20 @@ export function PlatformAccessControlPage() {
       }
     >
       <div className="space-y-4">
-        <AdminStatBar columns={5}>
-          <AdminStat label="Roles" value={snapshot?.stats.role_count ?? '—'} />
-          <AdminStat label="Personalizados" value={snapshot?.stats.custom_role_count ?? '—'} tone="teal" />
-          <AdminStat label="Dueños" value={snapshot?.stats.platform_owner_count ?? '—'} tone="violet" />
-          <AdminStat label="Asignaciones" value={snapshot?.stats.active_assignment_count ?? '—'} tone="green" />
-          <AdminStat label="Usuarios" value={snapshot?.stats.users_with_platform_roles_count ?? '—'} tone="amber" />
-        </AdminStatBar>
+        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-5 sm:gap-2">
+          {accessStats.map((stat) => (
+            <div
+              key={stat.label}
+              className="flex flex-col items-center justify-center gap-0.5 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-1 py-2 text-center sm:px-2 sm:py-2.5"
+            >
+              <span className="text-base font-bold leading-none tabular-nums text-(--app-text) sm:text-xl">{stat.value}</span>
+              <span className="flex items-center gap-1 text-[0.6rem] leading-tight text-(--app-text-subtle) sm:text-[0.7rem]">
+                <span className={cn('size-1.5 shrink-0 rounded-full', stat.dot)} />
+                {stat.label}
+              </span>
+            </div>
+          ))}
+        </div>
 
         <AdminTabs
           value={tab}
@@ -558,7 +657,14 @@ export function PlatformAccessControlPage() {
         ) : null}
 
         {snapshotQuery.error ? (
-          <AdminEmpty title="No pudimos cargar el módulo" description="Verifica que tu sesión sea platform_owner y vuelve a intentar." />
+          <AdminEmpty
+            title="No pudimos cargar el módulo"
+            description={
+              isOwnerAccessError(snapshotQuery.error)
+                ? 'Tu sesión no tiene rol platform_owner activo. Verifícalo y vuelve a intentar.'
+                : `Ocurrió un error al cargar el control de acceso: ${toErrorMessage(snapshotQuery.error)}`
+            }
+          />
         ) : null}
 
         {snapshot && tab === 'users' ? (
@@ -580,7 +686,7 @@ export function PlatformAccessControlPage() {
               {users.map((user) => {
                 const assignedRoleIds = new Set(user.roles.map((role) => role.role_id))
                 const assignableRoles = roles.filter((role) => !assignedRoleIds.has(role.id))
-                const selectedRoleId = selectedRoleByUser[user.id] ?? ''
+                const selectedRoleIds = selectedRolesByUser[user.id] ?? []
 
                 return (
                   <AdminCard key={user.id} className="overflow-hidden">
@@ -625,23 +731,44 @@ export function PlatformAccessControlPage() {
                       </div>
 
                       <div className="grid gap-2 rounded-card border border-(--app-border) bg-(--app-surface-muted)/55 p-2">
-                        <Select
-                          value={selectedRoleId}
-                          onChange={(event) => setSelectedRoleByUser((current) => ({ ...current, [user.id]: event.target.value }))}
-                          className="h-8 text-[0.78rem]"
-                        >
-                          <option value="">Selecciona un rol</option>
-                          {assignableRoles.map((role) => (
-                            <option key={role.id} value={role.id}>{role.name}</option>
-                          ))}
-                        </Select>
-                        <Button
-                          className="h-8 px-2.5 text-xs"
-                          disabled={!selectedRoleId || assignMutation.isPending}
-                          onClick={() => handleAssignRole(user)}
-                        >
-                          <UserPlus className="size-4" /> Asignar rol
-                        </Button>
+                        {assignableRoles.length ? (
+                          <>
+                            <p className="text-[0.68rem] font-bold uppercase tracking-[0.06em] text-(--app-text-subtle)">
+                              Añadir roles {selectedRoleIds.length ? `· ${selectedRoleIds.length}` : ''}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {assignableRoles.map((role) => {
+                                const selected = selectedRoleIds.includes(role.id)
+                                return (
+                                  <button
+                                    key={role.id}
+                                    type="button"
+                                    aria-pressed={selected}
+                                    onClick={() => toggleRoleForUser(user.id, role.id)}
+                                    className={cn(
+                                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.7rem] font-bold transition-colors',
+                                      selected
+                                        ? 'border-primary-300 bg-primary-100 text-primary-800 dark:border-primary-500/40 dark:bg-primary-500/20 dark:text-primary-100'
+                                        : 'border-(--app-border) bg-(--app-surface) text-(--app-text-muted) hover:border-primary-200 hover:text-(--app-text)'
+                                    )}
+                                  >
+                                    {selected ? <Check className="size-3" /> : <Plus className="size-3" />}
+                                    {role.name}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                            <Button
+                              className="h-8 px-2.5 text-xs"
+                              disabled={!selectedRoleIds.length || assignMutation.isPending}
+                              onClick={() => handleAssignRoles(user)}
+                            >
+                              <UserPlus className="size-4" /> Asignar {selectedRoleIds.length ? `(${selectedRoleIds.length})` : 'roles'}
+                            </Button>
+                          </>
+                        ) : (
+                          <p className="px-1 py-2 text-center text-[0.72rem] text-(--app-text-subtle)">Ya tiene todos los roles disponibles.</p>
+                        )}
                       </div>
                     </div>
                   </AdminCard>
