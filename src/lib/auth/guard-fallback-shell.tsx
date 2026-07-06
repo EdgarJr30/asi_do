@@ -13,7 +13,7 @@ export function GuardFallbackShell({ surface }: { surface: Extract<AppSurface, '
 
   if (surface === 'candidate') {
     return (
-      <RouteSuspense>
+      <RouteSuspense fullScreen>
         <CandidateShell fallbackContent={content} />
       </RouteSuspense>
     )
@@ -21,14 +21,14 @@ export function GuardFallbackShell({ surface }: { surface: Extract<AppSurface, '
 
   if (surface === 'admin') {
     return (
-      <RouteSuspense>
+      <RouteSuspense fullScreen>
         <AdminShell fallbackContent={content} />
       </RouteSuspense>
     )
   }
 
   return (
-    <RouteSuspense>
+    <RouteSuspense fullScreen>
       <EmployerShell fallbackContent={content} />
     </RouteSuspense>
   )

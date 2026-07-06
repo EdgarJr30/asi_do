@@ -20,7 +20,16 @@ export function AppProviders({ children }: PropsWithChildren) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 30_000,
+            // Datos "frescos" por 60s: al volver a una vista dentro de ese lapso
+            // no se refetchea. Fuera de él, React Query hace stale-while-revalidate
+            // (muestra lo cacheado al instante y refresca en segundo plano), no un
+            // loader duro. El Realtime bridge invalida lo sensible (sesión, inbox)
+            // en vivo, así que este valor no arriesga datos rancios en lo crítico.
+            staleTime: 60_000,
+            // Mantener en caché los datos inactivos 15 min (antes 5 min por defecto):
+            // volver a una página tras navegar muestra el contenido cacheado sin
+            // recarga con loader. Esta era la causa del "se siente como refresh".
+            gcTime: 15 * 60_000,
             retry: 1,
             refetchOnWindowFocus: false
           },

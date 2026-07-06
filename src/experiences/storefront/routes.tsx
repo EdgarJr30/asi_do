@@ -14,7 +14,7 @@ export const storefrontRoutes: RouteObject[] = [
   {
     path: surfacePaths.storefront.home,
     element: (
-      <RouteSuspense>
+      <RouteSuspense fullScreen>
         <StorefrontShell />
       </RouteSuspense>
     ),

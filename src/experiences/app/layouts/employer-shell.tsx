@@ -1292,7 +1292,22 @@ export function PlatformAppShell({
   const notificationPanelRef = useRef<HTMLDivElement | null>(null)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
 
-  const config = buildShellConfig(experience, session)
+  // Memoizamos la navegación: `buildShellConfig` recorre permisos y arma grupos
+  // en cada render. Sin memo se recalculaba en cada navegación, apertura de menú
+  // o cambio de estado local del shell. Solo depende de la identidad/permisos.
+  const config = useMemo(
+    () => buildShellConfig(experience, session),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      experience,
+      session.isAuthenticated,
+      session.permissions,
+      session.canAccessAdminConsole,
+      session.isPlatformOwner,
+      session.isMembershipReviewerPastor,
+      session.activeMembership?.tenantName
+    ]
+  )
   const isWorkspace = experience === 'workspace'
   const userIdentity = resolveUserIdentity(session)
   const routeMeta = getRouteMeta(location.pathname, config.topbarEyebrow, config.routeMeta, config.routeMetaDefault)

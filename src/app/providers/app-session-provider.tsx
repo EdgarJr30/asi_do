@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import { createContext, type PropsWithChildren, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { Session, SupabaseClient, User } from '@supabase/supabase-js'
 
 import type { AppMembership } from '@/features/auth/lib/auth-api'
@@ -101,7 +101,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
   const hydratedUserIdRef = useRef<string | null>(null)
   const clientRef = useRef<SupabaseClient<Database> | null>(null)
 
-  async function hydrateSession(user: User | null, options: { showLoading?: boolean } = {}) {
+  const hydrateSession = useCallback(async (user: User | null, options: { showLoading?: boolean } = {}) => {
     const { showLoading = true } = options
 
     if (!user) {
@@ -138,9 +138,9 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
-  function clearSession() {
+  const clearSession = useCallback(() => {
     hydratedUserIdRef.current = null
     setSession(null)
     setProfile(null)
@@ -152,9 +152,9 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     setIsInternalDeveloper(false)
     setActivePastorScopeCount(0)
     setIsLoading(false)
-  }
+  }, [])
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     // Leemos la sesión viva del SDK en lugar del estado del closure (que puede
     // estar desfasado justo después de iniciar sesión). Así evitamos hidratar con
     // un usuario nulo y dejar `isLoading=false` con `profile=null`, lo que causaba
@@ -170,7 +170,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     const { data } = await client.auth.getSession()
     setSession(data.session)
     await hydrateSession(data.session?.user ?? null)
-  }
+  }, [hydrateSession])
 
   useEffect(() => {
     let isActive = true
@@ -200,12 +200,21 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
       setSession(currentSession)
       await hydrateSession(currentSession?.user ?? null)
 
-      const authListener = client.auth.onAuthStateChange((_event, nextSession) => {
+      const authListener = client.auth.onAuthStateChange((event, nextSession) => {
         if (!isActive) {
           return
         }
 
         const nextUserId = nextSession?.user.id ?? null
+
+        // Rotación silenciosa del token del mismo usuario (cada ~1h y en focus):
+        // no cambia identidad, permisos ni acceso. El SDK ya usa el token nuevo
+        // internamente para sus requests, así que evitamos `setSession` (y el
+        // re-render/refetch en cascada de todos los consumidores + queries que
+        // dependen del id de usuario). Esto elimina "refresh" que no debería ocurrir.
+        if (event === 'TOKEN_REFRESHED' && nextUserId !== null && nextUserId === hydratedUserIdRef.current) {
+          return
+        }
 
         setSession(nextSession)
 
@@ -223,48 +232,66 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
       isActive = false
       unsubscribe?.()
     }
-  }, [])
+  }, [hydrateSession])
 
-  const activeMembership = resolveActiveMembership(memberships)
-  const hasAdminConsolePermission = permissions.some((permission) =>
-    [
-      'platform_dashboard:read',
-      'recruiter_request:review',
-      'user:approve',
-      'pastor_authority_request:review',
-      'regional_authority_request:review',
-      'scoped_user_authorization:review',
-      'support_ticket:read',
-      'moderation:read',
-      'app_error_log:read',
-      'audit_log:read'
-    ].includes(permission)
-  )
+  // Memoizamos el valor del contexto: sin esto, cualquier render del provider
+  // creaba un objeto nuevo y re-renderizaba TODOS los consumidores (shell, guards,
+  // páginas). Ahora solo cambia cuando cambia algún dato real de la sesión.
+  const contextValue: AppSessionContextValue = useMemo(() => {
+    const activeMembership = resolveActiveMembership(memberships)
+    const hasAdminConsolePermission = permissions.some((permission) =>
+      [
+        'platform_dashboard:read',
+        'recruiter_request:review',
+        'user:approve',
+        'pastor_authority_request:review',
+        'regional_authority_request:review',
+        'scoped_user_authorization:review',
+        'support_ticket:read',
+        'moderation:read',
+        'app_error_log:read',
+        'audit_log:read'
+      ].includes(permission)
+    )
 
-  const contextValue: AppSessionContextValue = {
-    activeMembership,
-    activeTenantId: activeMembership?.tenantId ?? null,
-    hasMultipleWorkspaceMemberships: memberships.length > 1,
-    isSupabaseConfigured,
-    isLoading,
-    isAuthenticated: session !== null,
-    session,
-    authUser: session?.user ?? null,
-    profile,
+    return {
+      activeMembership,
+      activeTenantId: activeMembership?.tenantId ?? null,
+      hasMultipleWorkspaceMemberships: memberships.length > 1,
+      isSupabaseConfigured,
+      isLoading,
+      isAuthenticated: session !== null,
+      session,
+      authUser: session?.user ?? null,
+      profile,
+      memberships,
+      permissions,
+      platformPermissions,
+      isPlatformAdmin,
+      isPlatformOwner,
+      isInternalDeveloper,
+      hasActiveAsiAccess: hasActiveAsiAccess(profile),
+      canAccessAdminConsole: isPlatformAdmin || isInternalDeveloper || hasAdminConsolePermission,
+      canReviewRecruiterRequests: permissions.includes('recruiter_request:review'),
+      canReviewAppErrors: permissions.includes('audit_log:read'),
+      isMembershipReviewerPastor: activePastorScopeCount > 0,
+      refresh,
+      clearSession
+    }
+  }, [
     memberships,
     permissions,
     platformPermissions,
+    isLoading,
+    session,
+    profile,
     isPlatformAdmin,
     isPlatformOwner,
     isInternalDeveloper,
-    hasActiveAsiAccess: hasActiveAsiAccess(profile),
-    canAccessAdminConsole: isPlatformAdmin || isInternalDeveloper || hasAdminConsolePermission,
-    canReviewRecruiterRequests: permissions.includes('recruiter_request:review'),
-    canReviewAppErrors: permissions.includes('audit_log:read'),
-    isMembershipReviewerPastor: activePastorScopeCount > 0,
+    activePastorScopeCount,
     refresh,
     clearSession
-  }
+  ])
 
   return <AppSessionContext.Provider value={contextValue}>{children}</AppSessionContext.Provider>
 }

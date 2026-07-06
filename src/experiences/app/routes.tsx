@@ -94,7 +94,7 @@ export const applicationRoutes: RouteObject[] = [
   {
     path: '/auth',
     element: (
-      <RouteSuspense>
+      <RouteSuspense fullScreen>
         <AuthShell />
       </RouteSuspense>
     ),
@@ -142,7 +142,7 @@ export const applicationRoutes: RouteObject[] = [
     element: (
       <RequireAuth>
         <RequireCompletedBaseOnboarding>
-          <RouteSuspense>
+          <RouteSuspense fullScreen>
             <AppEntryRedirect />
           </RouteSuspense>
         </RequireCompletedBaseOnboarding>
@@ -154,7 +154,7 @@ export const applicationRoutes: RouteObject[] = [
     element: (
       <RequireAuth>
         <RequireCompletedBaseOnboarding>
-          <RouteSuspense>
+          <RouteSuspense fullScreen>
             <CandidateShell />
           </RouteSuspense>
         </RequireCompletedBaseOnboarding>
@@ -325,7 +325,7 @@ export const applicationRoutes: RouteObject[] = [
       <RequireCompletedBaseOnboarding>
         <RequireActiveAsiAccess surface="workspace">
           <RequirePermission permission="workspace:read">
-            <RouteSuspense>
+            <RouteSuspense fullScreen>
               <EmployerShell />
             </RouteSuspense>
           </RequirePermission>
@@ -438,7 +438,7 @@ export const applicationRoutes: RouteObject[] = [
     element: (
       <RequireCompletedBaseOnboarding>
         <RequireAdminAccess>
-          <RouteSuspense>
+          <RouteSuspense fullScreen>
             <AdminShell />
           </RouteSuspense>
         </RequireAdminAccess>

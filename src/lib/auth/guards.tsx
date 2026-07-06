@@ -15,7 +15,7 @@ export function RequireAuth({ children }: PropsWithChildren) {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <RoutePending fullScreen label="Recuperando tu sesión" hint="Validando tu acceso y permisos" />
+    return <RoutePending fullScreen />
   }
 
   if (!session.isAuthenticated) {
@@ -31,7 +31,7 @@ export function RequireCompletedBaseOnboarding({ children }: PropsWithChildren) 
   const isProfileRoute = location.pathname === surfacePaths.candidate.profile
 
   if (session.isLoading) {
-    return <RoutePending fullScreen label="Preparando tu perfil" hint="Revisando los datos mínimos de tu cuenta" />
+    return <RoutePending fullScreen />
   }
 
   if (!session.isAuthenticated || isProfileRoute || hasCompletedBaseOnboarding(session.profile)) {
@@ -50,7 +50,7 @@ export function RequireActiveAsiAccess({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <RoutePending fullScreen label="Validando tu membresía" hint="Comprobando aprobación y suscripción ASI" />
+    return <RoutePending fullScreen />
   }
 
   if (!session.isAuthenticated) {
@@ -77,7 +77,7 @@ export function RequirePermission({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <RoutePending fullScreen label="Validando permisos" hint="Comprobando tu acceso" />
+    return <RoutePending fullScreen />
   }
 
   if (!session.isAuthenticated) {
@@ -102,7 +102,7 @@ export function RequireAnyPermission({
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <RoutePending fullScreen label="Validando permisos" hint="Comprobando tu acceso" />
+    return <RoutePending fullScreen />
   }
 
   if (!session.isAuthenticated) {
@@ -120,7 +120,7 @@ export function RequireAdminAccess({ children }: PropsWithChildren) {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <RoutePending fullScreen label="Validando acceso admin" hint="Comprobando tu acceso a la consola" />
+    return <RoutePending fullScreen />
   }
 
   if (!session.isAuthenticated) {
@@ -141,7 +141,7 @@ export function RequirePlatformAdmin({ children }: PropsWithChildren) {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <RoutePending fullScreen label="Validando acceso de plataforma" hint="Comprobando tu rol" />
+    return <RoutePending fullScreen />
   }
 
   if (!session.isAuthenticated) {
@@ -159,7 +159,7 @@ export function RequirePlatformOwner({ children }: PropsWithChildren) {
   const session = useAppSession()
 
   if (session.isLoading) {
-    return <RoutePending fullScreen label="Validando acceso de owner" hint="Comprobando tu rol de plataforma" />
+    return <RoutePending fullScreen />
   }
 
   if (!session.isAuthenticated) {

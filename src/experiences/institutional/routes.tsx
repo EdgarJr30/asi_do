@@ -40,7 +40,7 @@ export const institutionalRoutes: RouteObject[] = [
   {
     path: surfacePaths.institutional.home,
     element: (
-      <RouteSuspense>
+      <RouteSuspense fullScreen>
         <InstitutionalShell />
       </RouteSuspense>
     ),
