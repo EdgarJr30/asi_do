@@ -28,7 +28,6 @@ export function AdminFinancePage() {
 
   return (
     <AdminPage
-      eyebrow="Admin · Finanzas"
       title="Finanzas"
       description="Configuración financiera visible a miembros y donantes: pasarela AZUL, datos bancarios, cuotas por categoría y montos sugeridos."
       actions={

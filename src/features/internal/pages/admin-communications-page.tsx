@@ -19,7 +19,6 @@ export function AdminCommunicationsPage() {
 
   return (
     <AdminPage
-      eyebrow="Admin · Comunicaciones"
       title="Comunicaciones"
       description="Pipeline de correos, pruebas controladas, centro de notificaciones in-app, push y preferencias de UI."
     >

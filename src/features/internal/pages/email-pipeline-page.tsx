@@ -173,7 +173,7 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
         </div>
       )}
 
-      <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">
         <StatCard label="Total" value={stats.total} helper="Correos del pipeline real" />
         <StatCard label="Entregados / enviados" value={stats.delivered} />
         <StatCard label="En proceso" value={inFlight} />

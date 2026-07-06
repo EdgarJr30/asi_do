@@ -37,7 +37,7 @@ export function AdminPage({
   children,
   superAdmin = false
 }: {
-  eyebrow: ReactNode
+  eyebrow?: ReactNode
   title: ReactNode
   description?: ReactNode
   actions?: ReactNode
@@ -48,15 +48,17 @@ export function AdminPage({
     <div className="w-full space-y-4 pb-10">
       <section className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2">
-          <div
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.64rem] font-bold uppercase tracking-[0.08em]',
-              superAdmin ? toneClasses.violet : toneClasses.blue
-            )}
-          >
-            <span className={cn('size-1.5 rounded-full', superAdmin ? dotClasses.violet : dotClasses.blue)} />
-            {eyebrow}
-          </div>
+          {eyebrow ? (
+            <div
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.64rem] font-bold uppercase tracking-[0.08em]',
+                superAdmin ? toneClasses.violet : toneClasses.blue
+              )}
+            >
+              <span className={cn('size-1.5 rounded-full', superAdmin ? dotClasses.violet : dotClasses.blue)} />
+              {eyebrow}
+            </div>
+          ) : null}
           <div className="space-y-1">
             <h1 className="text-xl font-semibold leading-tight tracking-tight text-(--app-text) sm:text-[1.5rem]">{title}</h1>
             {description ? <p className="max-w-3xl text-[0.84rem] leading-relaxed text-(--app-text-muted)">{description}</p> : null}
