@@ -56,23 +56,9 @@ export const paymentPreferenceOptions = [
     label: 'Coordinar el pago con el equipo de ASI',
   },
   {
-    value: 'bank-transfer',
-    label: 'Recibir instrucciones para transferencia bancaria',
-  },
-  {
     value: 'in-person',
     label: 'Pagar presencialmente o por un canal acordado',
   },
-] as const
-
-export const bankAccountTypeOptions = [
-  { value: 'checking', label: 'Cuenta corriente' },
-  { value: 'savings', label: 'Cuenta de ahorros' },
-] as const
-
-export const checkingTypeOptions = [
-  { value: 'personal', label: 'Cuenta personal' },
-  { value: 'business', label: 'Cuenta comercial' },
 ] as const
 
 export const youngProfessionalStageOptions = [
@@ -145,8 +131,7 @@ export const membershipApplicationVariants: MembershipApplicationVariant[] = [
     description:
       'Presenta tu negocio, práctica profesional o servicio independiente con el mismo estándar institucional del resto de categorías.',
     sectionTitle: 'Información del negocio personal',
-    sectionDescription:
-      'Comparte el nombre comercial, el enfoque del servicio y la estabilidad operativa de tu práctica.',
+    sectionDescription: '',
     lockedBadgeLabel: 'Propietario individual',
   },
   {

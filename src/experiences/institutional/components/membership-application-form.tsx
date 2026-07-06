@@ -31,8 +31,6 @@ import {
   type EligibilityToken,
 } from '@/experiences/institutional/content/eligibility-content'
 import {
-  bankAccountTypeOptions,
-  checkingTypeOptions,
   certificatePreferenceOptions,
   genderOptions,
   getMembershipApplicationVariant,
@@ -129,15 +127,6 @@ export interface MembershipApplicationValues {
   billingStateProvince: string
   billingPostalCode: string
   billingCountry: string
-  paymentType: string
-  bankAccountType: string
-  checkingType: string
-  accountName: string
-  accountNumber: string
-  routingNumber: string
-  bankName: string
-  bankCity: string
-  bankState: string
   discountCode: string
   paymentPreference: string
   membershipPrompt: string
@@ -245,15 +234,6 @@ const duesStepFields = [
   'billingStateProvince',
   'billingPostalCode',
   'billingCountry',
-  'paymentType',
-  'bankAccountType',
-  'checkingType',
-  'accountName',
-  'accountNumber',
-  'routingNumber',
-  'bankName',
-  'bankCity',
-  'bankState',
   'discountCode',
   'paymentPreference',
   'membershipPrompt',
@@ -321,11 +301,11 @@ function buildApplicationSchema(categorySlug: string) {
       spouseName: z.string().trim(),
       cellPhone: z.string().trim().min(7, 'Ingresa un teléfono celular.'),
       email: z.string().trim().email('Ingresa un correo electrónico válido.'),
-      address1: z.string().trim().min(5, 'Ingresa tu dirección principal.'),
+      address1: z.string().trim(),
       address2: z.string().trim(),
       city: z.string().trim().min(2, 'Ingresa la ciudad.'),
       stateProvince: z.string().trim().min(2, 'Ingresa la provincia o estado.'),
-      postalCode: z.string().trim().min(3, 'Ingresa el código postal.'),
+      postalCode: z.string().trim(),
       country: z.string().trim().min(2, 'Ingresa el país.'),
       organizationName: z.string().trim(),
       organizationType: z.string().trim(),
@@ -356,13 +336,10 @@ function buildApplicationSchema(categorySlug: string) {
       currentStage: z.string().trim(),
       expectedGraduationYear: z.string().trim(),
       youngProfessionalGoals: z.string().trim(),
-      shareFaith: z
-        .string()
-        .trim()
-        .min(24, 'Describe cómo compartes tu fe en tu contexto actual.'),
-      ministries: z.array(z.string()).min(1, 'Selecciona al menos un tipo de ministerio.'),
+      shareFaith: z.string().trim(),
+      ministries: z.array(z.string()),
       ministriesOther: z.string().trim(),
-      volunteerAreas: z.array(z.string()).min(1, 'Selecciona al menos un interés de voluntariado.'),
+      volunteerAreas: z.array(z.string()),
       volunteerAreasOther: z.string().trim(),
       additionalInfo: z.string().trim(),
       churchId: z.string().uuid('Selecciona tu iglesia desde la jerarquía.'),
@@ -372,7 +349,11 @@ function buildApplicationSchema(categorySlug: string) {
       conference: z.string().trim().min(2, 'Ingresa la asociación o conferencia.'),
       pastorName: z.string().trim().min(2, 'Ingresa el nombre del pastor.'),
       pastorPhone: z.string().trim().min(7, 'Ingresa el teléfono del pastor.'),
-      pastorEmail: z.string().trim().email('Ingresa el correo electrónico del pastor.'),
+      pastorEmail: z
+        .string()
+        .trim()
+        .email('Ingresa un correo electrónico válido.')
+        .or(z.literal('')),
       billingSameAsHome: z.boolean(),
       billingAddress1: z.string().trim(),
       billingAddress2: z.string().trim(),
@@ -380,15 +361,6 @@ function buildApplicationSchema(categorySlug: string) {
       billingStateProvince: z.string().trim(),
       billingPostalCode: z.string().trim(),
       billingCountry: z.string().trim(),
-      paymentType: z.string().trim(),
-      bankAccountType: z.string().trim(),
-      checkingType: z.string().trim(),
-      accountName: z.string().trim(),
-      accountNumber: z.string().trim(),
-      routingNumber: z.string().trim(),
-      bankName: z.string().trim(),
-      bankCity: z.string().trim(),
-      bankState: z.string().trim(),
       discountCode: z.string().trim(),
       paymentPreference: z.string().trim().min(1, 'Selecciona cómo deseas coordinar el pago.'),
       membershipPrompt: z
@@ -531,17 +503,6 @@ function buildApplicationSchema(categorySlug: string) {
           requireField('certificatePreference', 'la preferencia del certificado', 1)
           requireFourDigitYear('yearEstablished', 'El año de establecimiento')
           requirePositiveNumber('employeeCount', 'la cantidad de colaboradores')
-          if (isOrganizationalForProfit) {
-            requireField('paymentType', 'el tipo de pago', 1)
-            requireField('bankAccountType', 'el tipo de cuenta', 1)
-            requireField('checkingType', 'el tipo de cuenta corriente', 1)
-            requireField('accountName', 'el nombre de la cuenta', 2)
-            requireField('accountNumber', 'el número de cuenta', 4)
-            requireField('routingNumber', 'el número de ruta', 4)
-            requireField('bankName', 'el nombre del banco', 2)
-            requireField('bankCity', 'la ciudad del banco', 2)
-            requireField('bankState', 'el estado del banco', 2)
-          }
           break
         case 'executive-professional':
           requireField('employerName', 'el nombre de la organización empleadora', 2)
@@ -554,9 +515,7 @@ function buildApplicationSchema(categorySlug: string) {
         case 'sole-proprietor':
           requireField('businessName', 'el nombre del negocio o práctica', 2)
           requireField('roleTitle', 'tu ocupación o especialidad', 2)
-          requireField('servicesOffered', 'los servicios ofrecidos', 24)
-          requireField('workPhone', 'tu teléfono principal de trabajo', 7)
-          requireFourDigitYear('yearEstablished', 'El año de operación')
+          requireFourDigitYear('yearEstablished', 'El año en que inició operaciones el negocio')
           break
         case 'retired':
           requireField('retiredFrom', 'la actividad o empresa de la cual te retiraste', 2)
@@ -653,15 +612,6 @@ function createDefaultValues(token: EligibilityToken): MembershipApplicationValu
     billingStateProvince: '',
     billingPostalCode: '',
     billingCountry: DEFAULT_COUNTRY,
-    paymentType: '',
-    bankAccountType: '',
-    checkingType: '',
-    accountName: '',
-    accountNumber: '',
-    routingNumber: '',
-    bankName: '',
-    bankCity: '',
-    bankState: '',
     discountCode: '',
     paymentPreference: 'contact',
     membershipPrompt: '',
@@ -705,16 +655,16 @@ function ApplicationSection({
   return (
     <section>
       <div className="max-w-3xl">
-        <h2 className="text-[1.375rem] font-extrabold tracking-tight text-[#15233e]">
+        <h2 className="text-lg font-extrabold tracking-tight text-[#15233e] sm:text-xl">
           {title}
         </h2>
         {description ? (
-          <p className="mt-2 text-[15px] leading-7 text-[#65728a]">
+          <p className="mt-1.5 text-[13.5px] leading-6 text-[#65728a] sm:text-[15px]">
             {description}
           </p>
         ) : null}
       </div>
-      <div className="mt-5 space-y-5">{children}</div>
+      <div className="mt-4 space-y-4">{children}</div>
     </section>
   )
 }
@@ -751,10 +701,10 @@ function Field({
 }
 
 const fieldInputClassName =
-  'h-[2.875rem] w-full rounded-control border-[1.5px] border-[#dde3ec] bg-white px-3.5 text-[15px] text-[#14223b] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#8a96a8] hover:border-(--asi-primary)/55 focus:border-(--asi-primary) focus:ring-[3px] focus:ring-(--asi-primary)/12'
+  'h-10 w-full rounded-control border-[1.5px] border-[#dde3ec] bg-white px-3 text-[13.5px] text-[#14223b] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#8a96a8] hover:border-(--asi-primary)/55 focus:border-(--asi-primary) focus:ring-[3px] focus:ring-(--asi-primary)/12 sm:h-11 sm:text-sm'
 
 const fieldTextareaClassName =
-  'min-h-28 w-full rounded-control border-[1.5px] border-[#dde3ec] bg-white px-3.5 py-3 text-[15px] leading-relaxed text-[#14223b] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#8a96a8] hover:border-(--asi-primary)/55 focus:border-(--asi-primary) focus:ring-[3px] focus:ring-(--asi-primary)/12'
+  'min-h-20 w-full rounded-control border-[1.5px] border-[#dde3ec] bg-white px-3 py-2.5 text-[13.5px] leading-relaxed text-[#14223b] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[#8a96a8] hover:border-(--asi-primary)/55 focus:border-(--asi-primary) focus:ring-[3px] focus:ring-(--asi-primary)/12 sm:min-h-24 sm:text-sm'
 
 function TextField({
   label,
@@ -1102,7 +1052,7 @@ function RadioTileGroup({
         {label}
         {required ? <span className="ml-1 font-bold text-[#e23744]">*</span> : null}
       </legend>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         {options.map((option) => {
           const selected = option.value === value
           return (
@@ -1113,7 +1063,7 @@ function RadioTileGroup({
               aria-checked={selected}
               onClick={() => onChange(option.value)}
               className={cn(
-                'flex items-center gap-2.5 rounded-control border-[1.5px] px-3.5 py-3 text-[15px] font-semibold transition-colors duration-150',
+                'flex items-center gap-2.5 rounded-control border-[1.5px] px-3 py-2.5 text-[13.5px] font-semibold transition-colors duration-150 sm:text-sm',
                 selected
                   ? 'border-(--asi-primary) bg-(--asi-primary)/6 text-(--asi-primary)'
                   : 'border-[#dde3ec] bg-white text-[#5b687e] hover:border-(--asi-primary)/45'
@@ -1154,7 +1104,7 @@ function CheckboxCard({
   return (
     <label
       className={cn(
-        'flex cursor-pointer items-start gap-3 rounded-control border-[1.5px] px-4 py-3.5 text-[14.5px] leading-[1.45] transition-colors',
+        'flex cursor-pointer items-start gap-3 rounded-control border-[1.5px] px-3.5 py-3 text-[13px] leading-[1.45] transition-colors sm:text-[14.5px]',
         checked
           ? 'border-(--asi-primary) bg-[#f4f7fc] text-[#1b2a44]'
           : 'border-[#e2e7f0] bg-white text-[#28344b] hover:border-(--asi-primary)/45'
@@ -1193,7 +1143,7 @@ function MultiCheckboxGroup({
   onToggle: (value: string) => void
 }) {
   return (
-    <Field label={label} hint={hint} error={error} required>
+    <Field label={label} hint={hint} error={error}>
       <div className="grid gap-3 sm:grid-cols-2">
         {options.map((option) => {
           const checked = values.includes(option)
@@ -1420,12 +1370,12 @@ function MobileStepBar({
 
 function WhatsNext() {
   return (
-    <div className="rounded-card border border-[#e7ebf2] bg-white p-7 shadow-[0_1px_2px_rgba(16,40,80,0.04),0_18px_40px_-28px_rgba(16,40,80,0.22)]">
-      <p className="text-[15px] font-bold text-[#15233e]">¿Qué ocurre después?</p>
-      <ol className="mt-4 space-y-3.5">
+    <div className="rounded-card border border-[#e7ebf2] bg-white p-4 shadow-[0_1px_2px_rgba(16,40,80,0.04),0_18px_40px_-28px_rgba(16,40,80,0.22)] sm:p-6">
+      <p className="text-sm font-bold text-[#15233e]">¿Qué ocurre después?</p>
+      <ol className="mt-3 space-y-3">
         {WHATS_NEXT_ITEMS.map((item, index) => (
-          <li key={item} className="flex items-start gap-3 text-[14.5px] leading-6 text-[#516079]">
-            <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-[#eaf0fa] text-[13px] font-bold text-(--asi-primary)">
+          <li key={item} className="flex items-start gap-2.5 text-[13px] leading-5 text-[#516079] sm:text-[14.5px] sm:leading-6">
+            <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-[#eaf0fa] text-[12px] font-bold text-(--asi-primary)">
               {index + 1}
             </span>
             <span>{item}</span>
@@ -1500,13 +1450,11 @@ function SubmissionSuccess({
           </p>
           <p className="mt-1 text-sm text-(--asi-text-muted)">Cuota anual: {summary.dues}</p>
           <p className="mt-1 text-sm text-(--asi-text-muted)">
-            {summary.categorySlug === ORGANIZATIONAL_FOR_PROFIT_SLUG
-              ? 'Tipo de pago: eCheck'
-              : `Coordinación de pago: ${
-                  paymentPreferenceOptions.find(
-                    (option) => option.value === summary.paymentPreference
-                  )?.label ?? 'Pendiente'
-                }`}
+            {`Coordinación de pago: ${
+              paymentPreferenceOptions.find(
+                (option) => option.value === summary.paymentPreference
+              )?.label ?? 'Pendiente'
+            }`}
           </p>
         </div>
         <div className="rounded-card border border-(--asi-outline) bg-white p-4">
@@ -1541,7 +1489,7 @@ function SubmissionSuccess({
       {isAuthenticated ? (
         <div className="flex flex-col gap-3 border-t border-(--asi-outline) pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-(--asi-text-muted)">
-            Continúa en tu panel para realizar el pago y subir tu comprobante.
+            Continúa en tu panel para realizar el pago de tu membresía.
           </p>
           <button
             type="button"
@@ -1586,8 +1534,6 @@ export function MembershipApplicationForm({
 
     if (isOrganizationalForProfit) {
       initial.billingSameAsHome = false
-      initial.paymentType = 'echeck'
-      initial.paymentPreference = 'bank-transfer'
       initial.organizationType = ''
     }
 
@@ -1690,14 +1636,6 @@ export function MembershipApplicationForm({
     control: form.control,
     name: 'currentStage',
   })
-  const bankAccountType = useWatch({
-    control: form.control,
-    name: 'bankAccountType',
-  })
-  const checkingType = useWatch({
-    control: form.control,
-    name: 'checkingType',
-  })
   const commitmentStatusChanges = useWatch({
     control: form.control,
     name: 'commitmentStatusChanges',
@@ -1769,16 +1707,6 @@ export function MembershipApplicationForm({
       })
     },
   })
-
-  useEffect(() => {
-    if (!isOrganizationalForProfit) return
-
-    if (form.getValues('paymentType') !== 'echeck') {
-      form.setValue('paymentType', 'echeck', {
-        shouldDirty: false,
-      })
-    }
-  }, [form, isOrganizationalForProfit])
 
   function toggleMultiValue(
     fieldName: 'ministries' | 'volunteerAreas',
@@ -1862,7 +1790,7 @@ export function MembershipApplicationForm({
         void form.handleSubmit(handlePrepareSubmission, handleInvalidSubmission)(event)
       }}
     >
-      <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-[30px]">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-[30px]">
         {/* Rail izquierdo (escritorio) */}
         <aside className="hidden w-[330px] shrink-0 flex-col gap-4 lg:sticky lg:top-9 lg:flex">
           <div className="rounded-card border border-[#e7ebf2] bg-white px-5 py-4 shadow-[0_1px_2px_rgba(16,40,80,0.04)]">
@@ -1883,19 +1811,18 @@ export function MembershipApplicationForm({
         </aside>
 
         {/* Columna principal */}
-        <div className="min-w-0 flex-1 space-y-6">
+        <div className="min-w-0 flex-1 space-y-5">
           <MobileStepBar steps={applicationSteps} current={currentStepIndex} percent={progressPercent} onSelect={goToStep} />
 
           <div>
-            <p className="text-[11.5px] font-bold uppercase tracking-[0.13em] text-[#8a96a8]">Solicitud de membresía</p>
-            <h1 className="mt-1 text-[2rem] font-extrabold leading-tight tracking-[-0.02em] text-[#15233e]">Solicitud de membresía ASI</h1>
-            <p className="mt-2 max-w-[60ch] text-[15.5px] leading-7 text-[#65728a]">
-              Completa los datos requeridos para dejar listo tu expediente preliminar. Tu progreso queda visible en cada fase.
+            <h1 className="text-xl font-extrabold leading-tight tracking-[-0.02em] text-[#15233e] sm:text-[1.75rem]">Solicitud de membresía</h1>
+            <p className="mt-1.5 max-w-[60ch] text-[13.5px] leading-6 text-[#65728a] sm:text-[15px]">
+              Completa los datos requeridos para dejar listo tu expediente preliminar.
             </p>
           </div>
 
-          <div className="rounded-card border border-[#e7ebf2] bg-white p-6 shadow-[0_1px_2px_rgba(16,40,80,0.04),0_18px_40px_-28px_rgba(16,40,80,0.22)] sm:p-8">
-            <span className="inline-flex w-fit rounded-full border border-[#e7ebf2] bg-[#f1f4f9] px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-[#8a96a8]">
+          <div className="rounded-card border border-[#e7ebf2] bg-white p-4 shadow-[0_1px_2px_rgba(16,40,80,0.04),0_18px_40px_-28px_rgba(16,40,80,0.22)] sm:p-6">
+            <span className="inline-flex w-fit rounded-full border border-[#e7ebf2] bg-[#f1f4f9] px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.1em] text-[#8a96a8]">
               Fase {currentStepIndex + 1} de {applicationSteps.length}
             </span>
 
@@ -1911,13 +1838,10 @@ export function MembershipApplicationForm({
               </div>
             ) : null}
 
-            <div key={currentStep.id} className="mt-6 animate-[ph-fade_0.35s_ease]">
+            <div key={currentStep.id} className="mt-5 animate-[ph-fade_0.35s_ease]">
 
       {currentStep.id === 'contact' ? (
-        <ApplicationSection
-          title="Datos de contacto"
-          description="Estos datos identifican a la persona de contacto principal de la solicitud y serán usados para el seguimiento del expediente."
-        >
+        <ApplicationSection title="Datos de contacto">
         <div className="grid gap-4 md:grid-cols-2">
           <TextField
             label="Nombre"
@@ -1937,28 +1861,19 @@ export function MembershipApplicationForm({
           />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)]">
-          <RadioTileGroup
-            label="Género"
-            required
-            error={errors.gender?.message}
-            value={selectedGender}
-            options={genderOptions}
-            onChange={(value) =>
-              form.setValue('gender', value, {
-                shouldDirty: true,
-                shouldValidate: true,
-              })
-            }
-          />
-          <TextField
-            label="Nombre del cónyuge"
-            error={errors.spouseName?.message}
-            placeholder="Opcional"
-            autoComplete="off"
-            {...form.register('spouseName')}
-          />
-        </div>
+        <RadioTileGroup
+          label="Género"
+          required
+          error={errors.gender?.message}
+          value={selectedGender}
+          options={genderOptions}
+          onChange={(value) =>
+            form.setValue('gender', value, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
+        />
 
         <div className="grid gap-4 md:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
           <TextField
@@ -1980,24 +1895,6 @@ export function MembershipApplicationForm({
             type="email"
             autoComplete="email"
             {...form.register('email')}
-          />
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.55fr)]">
-          <TextField
-            label="Dirección del hogar"
-            required
-            error={errors.address1?.message}
-            placeholder="Calle, número y sector"
-            autoComplete="street-address"
-            {...form.register('address1')}
-          />
-
-          <TextField
-            label="Apto. o referencia"
-            error={errors.address2?.message}
-            placeholder="Opcional"
-            {...form.register('address2')}
           />
         </div>
 
@@ -2051,8 +1948,8 @@ export function MembershipApplicationForm({
           )}
           <TextField
             label="Código postal"
-            required
             error={errors.postalCode?.message}
+            placeholder="Opcional"
             autoComplete="postal-code"
             {...form.register('postalCode')}
           />
@@ -2349,17 +2246,18 @@ export function MembershipApplicationForm({
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
-                label="Año de operación"
+                label="Año en que inició operaciones el negocio"
                 required
                 error={errors.yearEstablished?.message}
                 type="number"
                 inputMode="numeric"
+                placeholder="2020"
                 {...form.register('yearEstablished')}
               />
               <TextField
                 label="Teléfono de trabajo"
-                required
                 error={errors.workPhone?.message}
+                placeholder="Opcional"
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel"
@@ -2374,7 +2272,6 @@ export function MembershipApplicationForm({
             />
             <TextAreaField
               label="Servicios ofrecidos"
-              required
               error={errors.servicesOffered?.message}
               placeholder="Describe los servicios o productos que ofreces desde tu práctica."
               {...form.register('servicesOffered')}
@@ -2534,7 +2431,6 @@ export function MembershipApplicationForm({
         >
         <TextAreaField
           label="Describa brevemente cómo comparte su fe en su entorno profesional"
-          required
           error={errors.shareFaith?.message}
           placeholder="Describe prácticas, conversaciones, iniciativas o hábitos concretos."
           {...form.register('shareFaith')}
@@ -2653,8 +2549,8 @@ export function MembershipApplicationForm({
           />
           <TextField
             label="Correo electrónico del pastor"
-            required
             error={errors.pastorEmail?.message}
+            placeholder="Opcional"
             type="email"
             {...form.register('pastorEmail')}
           />
@@ -2667,7 +2563,7 @@ export function MembershipApplicationForm({
           title="Cuotas de membresía"
           description={
             isOrganizationalForProfit
-              ? 'Complete la dirección de facturación y los datos de eCheck requeridos para esta solicitud.'
+              ? 'Complete la dirección de facturación requerida para esta solicitud.'
               : 'La cuota anual ya está determinada por la categoría aprobada. Aquí solo registramos cómo debe quedar el expediente de facturación.'
           }
         >
@@ -2751,99 +2647,6 @@ export function MembershipApplicationForm({
                 })
               }
             />
-
-            <div className="rounded-card border border-(--asi-outline) bg-white p-4">
-              <p className="text-sm font-semibold text-(--asi-text)">Tipo de pago</p>
-              <p className="mt-2 text-base font-semibold text-(--asi-primary)">eCheck</p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <SelectField
-                label="Tipo de cuenta"
-                required
-                error={errors.bankAccountType?.message}
-                value={bankAccountType}
-                onChange={(event) =>
-                  form.setValue('bankAccountType', event.target.value, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-              >
-                <option value="">Selecciona una opción</option>
-                {bankAccountTypeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectField>
-              <SelectField
-                label="Tipo de cuenta corriente"
-                required
-                error={errors.checkingType?.message}
-                value={checkingType}
-                onChange={(event) =>
-                  form.setValue('checkingType', event.target.value, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-              >
-                <option value="">Selecciona una opción</option>
-                {checkingTypeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectField>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
-                label="Nombre de la cuenta"
-                required
-                error={errors.accountName?.message}
-                {...form.register('accountName')}
-              />
-              <TextField
-                label="Número de cuenta"
-                required
-                error={errors.accountNumber?.message}
-                inputMode="numeric"
-                {...form.register('accountNumber')}
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
-                label="Número de ruta"
-                required
-                error={errors.routingNumber?.message}
-                inputMode="numeric"
-                {...form.register('routingNumber')}
-              />
-              <TextField
-                label="Nombre del banco"
-                required
-                error={errors.bankName?.message}
-                {...form.register('bankName')}
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
-                label="Ciudad del banco"
-                required
-                error={errors.bankCity?.message}
-                {...form.register('bankCity')}
-              />
-              <TextField
-                label="Estado del banco"
-                required
-                error={errors.bankState?.message}
-                {...form.register('bankState')}
-              />
-            </div>
 
             <div className="grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
               <div className="rounded-card border border-(--asi-outline) bg-white p-4">
@@ -3087,7 +2890,7 @@ export function MembershipApplicationForm({
                 type="button"
                 disabled={submitMutation.isPending}
                 onClick={handlePreviousStep}
-                className="inline-flex items-center gap-2 rounded-control border-[1.5px] border-[#dde3ec] bg-white px-6 py-3 text-[15px] font-semibold text-(--asi-primary) transition-colors hover:border-(--asi-primary) disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex items-center gap-2 rounded-control border-[1.5px] border-[#dde3ec] bg-white px-5 py-2.5 text-sm font-semibold text-(--asi-primary) transition-colors hover:border-(--asi-primary) disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <ArrowLeft className="size-4" />
                 Anterior
@@ -3098,7 +2901,7 @@ export function MembershipApplicationForm({
               <button
                 type="submit"
                 disabled={submitMutation.isPending || MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED}
-                className="ml-auto inline-flex items-center gap-2 rounded-control bg-(--asi-primary) px-6 py-3 text-[15px] font-semibold text-white shadow-[0_13px_26px_-13px_var(--asi-primary)] transition-[filter] hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
+                className="ml-auto inline-flex items-center gap-2 rounded-control bg-(--asi-primary) px-5 py-2.5 text-sm font-semibold text-white shadow-[0_13px_26px_-13px_var(--asi-primary)] transition-[filter] hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {submitMutation.isPending
                   ? 'Enviando solicitud...'
@@ -3113,7 +2916,7 @@ export function MembershipApplicationForm({
                 onClick={() => {
                   void handleNextStep()
                 }}
-                className="ml-auto inline-flex items-center gap-2 rounded-control bg-(--asi-primary) px-6 py-3 text-[15px] font-semibold text-white shadow-[0_13px_26px_-13px_var(--asi-primary)] transition-[filter] hover:brightness-95"
+                className="ml-auto inline-flex items-center gap-2 rounded-control bg-(--asi-primary) px-5 py-2.5 text-sm font-semibold text-white shadow-[0_13px_26px_-13px_var(--asi-primary)] transition-[filter] hover:brightness-95"
               >
                 Siguiente
                 <ArrowRight className="size-4" />
