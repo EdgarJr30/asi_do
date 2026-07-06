@@ -1,12 +1,22 @@
 import { supabase } from '@/lib/supabase/client'
 
-export interface CandidateDirectorySearchParams {
+export type CandidateDirectorySort = 'relevance' | 'score' | 'name' | 'experience'
+
+export interface CandidateDirectoryPageParams {
   tenantId: string
   query?: string
   countryCode?: string
   language?: string
   skill?: string
-  limit?: number
+  sort?: CandidateDirectorySort
+  limit: number
+  offset: number
+}
+
+export interface CandidateDirectoryPage {
+  rows: CandidateDirectoryRow[]
+  totalCount: number
+  nextOffset: number | null
 }
 
 export interface CandidateDirectoryRow {
@@ -100,7 +110,9 @@ function requireSupabase() {
   return supabase
 }
 
-export async function searchCandidateDirectory(params: CandidateDirectorySearchParams) {
+export async function searchCandidateDirectoryPage(
+  params: CandidateDirectoryPageParams
+): Promise<CandidateDirectoryPage> {
   const client = requireSupabase()
   const response = await (client as typeof client & {
     rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: Error | null }>
@@ -110,14 +122,24 @@ export async function searchCandidateDirectory(params: CandidateDirectorySearchP
     p_country_code: params.countryCode?.trim() || null,
     p_language: params.language?.trim() || null,
     p_skill: params.skill?.trim() || null,
-    p_limit: params.limit ?? 24
+    p_limit: params.limit,
+    p_offset: params.offset,
+    p_sort: params.sort ?? 'relevance'
   })
 
   if (response.error) {
     throw response.error
   }
 
-  return (response.data ?? []) as CandidateDirectoryRow[]
+  const rows = (response.data ?? []) as Array<CandidateDirectoryRow & { total_count?: number }>
+  const totalCount = rows[0]?.total_count ?? rows.length
+  const loadedCount = params.offset + rows.length
+
+  return {
+    rows,
+    totalCount,
+    nextOffset: loadedCount < totalCount ? loadedCount : null
+  }
 }
 
 export async function fetchCandidateDirectoryDetail(tenantId: string, candidateProfileId: string) {
