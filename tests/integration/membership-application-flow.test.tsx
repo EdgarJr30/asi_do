@@ -53,6 +53,15 @@ vi.mock('@/lib/supabase/client', () => ({
         },
       })),
     },
+    channel: vi.fn(() => {
+      const channel = {
+        on: vi.fn(() => channel),
+        subscribe: vi.fn(() => channel),
+      }
+
+      return channel
+    }),
+    removeChannel: vi.fn(() => Promise.resolve({ error: null })),
   },
 }))
 
