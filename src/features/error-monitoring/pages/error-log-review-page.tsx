@@ -1,16 +1,15 @@
 import type { ReactNode } from 'react'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { PageLoader } from '@/components/ui/loader'
-import { Pagination } from '@/components/ui/pagination'
+import { PageLoader, Spinner } from '@/components/ui/loader'
 import {
   AdminCard,
   AdminMetaDetails,
@@ -19,14 +18,22 @@ import {
   AdminStatBar,
   AdminTabs
 } from '@/features/internal/components/admin-redesign'
-import { listAppErrorLogs, updateAppErrorResolution, type AppErrorLogRecord } from '@/lib/errors/api'
+import {
+  countAppErrorLogs,
+  listAppErrorLogsPage,
+  updateAppErrorResolution,
+  type AppErrorLogFilter,
+  type AppErrorLogRecord
+} from '@/lib/errors/api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
+import { useInfiniteScroll } from '@/shared/ui/use-infinite-scroll'
 import type { Tables } from '@/shared/types/database'
 
 const APP_ERROR_LOGS_QUERY_KEY = ['admin', 'app-error-logs'] as const
-const ERROR_LOGS_PAGE_SIZE = 10
+const APP_ERROR_COUNTS_QUERY_KEY = ['admin', 'app-error-log-counts'] as const
+const ERROR_LOGS_PAGE_SIZE = 12
 
-type ErrorFilter = 'open' | 'resolved' | 'all'
+type ErrorFilter = AppErrorLogFilter
 
 function formatValue(value: string | null) {
   return value || 'No disponible'
@@ -61,11 +68,21 @@ export function ErrorLogReviewPage() {
   const session = useAppSession()
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<ErrorFilter>('open')
-  const [page, setPage] = useState(0)
 
-  const errorLogsQuery = useQuery({
-    queryKey: APP_ERROR_LOGS_QUERY_KEY,
-    queryFn: () => listAppErrorLogs(60)
+  const errorLogsQuery = useInfiniteQuery({
+    queryKey: [...APP_ERROR_LOGS_QUERY_KEY, filter],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      listAppErrorLogsPage({ filter, limit: ERROR_LOGS_PAGE_SIZE, offset: pageParam }),
+    getNextPageParam: (lastPage) => lastPage.nextOffset
+  })
+
+  const countsQuery = useQuery({
+    queryKey: APP_ERROR_COUNTS_QUERY_KEY,
+    queryFn: async () => {
+      const [open, resolved] = await Promise.all([countAppErrorLogs('open'), countAppErrorLogs('resolved')])
+      return { open, resolved }
+    }
   })
 
   const resolutionMutation = useMutation({
@@ -81,7 +98,10 @@ export function ErrorLogReviewPage() {
       })
     },
     onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: APP_ERROR_LOGS_QUERY_KEY })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: APP_ERROR_LOGS_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: APP_ERROR_COUNTS_QUERY_KEY })
+      ])
       toast.success(variables.isResolved ? 'Error corregido' : 'Error reabierto', {
         description: variables.isResolved ? 'El error quedó marcado como corregido.' : 'El error se reabrió para seguimiento.'
       })
@@ -98,24 +118,23 @@ export function ErrorLogReviewPage() {
     }
   })
 
-  const errorLogs = errorLogsQuery.data ?? []
-  const openCount = errorLogs.filter((errorLog) => !errorLog.is_resolved).length
-  const resolvedCount = errorLogs.filter((errorLog) => errorLog.is_resolved).length
-  const filteredLogs = errorLogs.filter((errorLog) => {
-    if (filter === 'open') return !errorLog.is_resolved
-    if (filter === 'resolved') return errorLog.is_resolved
-    return true
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = errorLogsQuery
+  const pages = useMemo(() => errorLogsQuery.data?.pages ?? [], [errorLogsQuery.data])
+  const filteredLogs = useMemo(() => pages.flatMap((entry) => entry.rows), [pages])
+  const totalCount = pages[0]?.totalCount ?? 0
+  const openCount = countsQuery.data?.open ?? 0
+  const resolvedCount = countsQuery.data?.resolved ?? 0
+  const allCount = openCount + resolvedCount
+
+  const sentinelRef = useInfiniteScroll({
+    hasNextPage: Boolean(hasNextPage),
+    isFetchingNextPage,
+    onLoadMore: () => void fetchNextPage(),
+    deps: [filteredLogs.length]
   })
-  const pageCount = Math.max(1, Math.ceil(filteredLogs.length / ERROR_LOGS_PAGE_SIZE))
-  const safePage = Math.min(page, pageCount - 1)
-  const pageStart = safePage * ERROR_LOGS_PAGE_SIZE
-  const paginatedLogs = filteredLogs.slice(pageStart, pageStart + ERROR_LOGS_PAGE_SIZE)
-  const visibleStart = filteredLogs.length === 0 ? 0 : pageStart + 1
-  const visibleEnd = Math.min(filteredLogs.length, pageStart + paginatedLogs.length)
 
   function handleFilterChange(nextFilter: ErrorFilter) {
     setFilter(nextFilter)
-    setPage(0)
   }
 
   return (
@@ -124,24 +143,31 @@ export function ErrorLogReviewPage() {
       title="Bandeja administrativa de errores"
       description="Revisa errores visibles para usuarios, marca incidencias corregidas o reabre seguimiento con contexto técnico colapsable."
     >
-      <div className="space-y-5">
+      <div className="space-y-4">
         <AdminStatBar columns={3}>
           <AdminStat label="Abiertos" value={openCount} tone="rose" />
           <AdminStat label="Corregidos" value={resolvedCount} tone="green" />
           <AdminStat label="Usuario afectado" value="Visible" helper="Soporte puede identificar a quién contactar." tone="teal" />
         </AdminStatBar>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
           <AdminTabs
             value={filter}
             onChange={handleFilterChange}
             tabs={[
               { value: 'open', label: 'Solo abiertos', count: openCount },
               { value: 'resolved', label: 'Solo corregidos', count: resolvedCount },
-              { value: 'all', label: 'Ver todo', count: errorLogs.length }
+              { value: 'all', label: 'Ver todo', count: allCount }
             ]}
           />
-          <Button variant="ghost" className="h-10 rounded-control" onClick={() => void queryClient.invalidateQueries({ queryKey: APP_ERROR_LOGS_QUERY_KEY })}>
+          <Button
+            variant="ghost"
+            className="h-9 rounded-control"
+            onClick={() => {
+              void queryClient.invalidateQueries({ queryKey: APP_ERROR_LOGS_QUERY_KEY })
+              void queryClient.invalidateQueries({ queryKey: APP_ERROR_COUNTS_QUERY_KEY })
+            }}
+          >
             Refrescar
           </Button>
         </div>
@@ -155,22 +181,25 @@ export function ErrorLogReviewPage() {
             </p>
           </AdminCard>
         ) : (
-          <div className="space-y-3">
-            {paginatedLogs.map((errorLog) => (
-              <AdminCard key={errorLog.id}>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
+          <div className="space-y-2">
+            {filteredLogs.map((errorLog) => (
+              <div key={errorLog.id} className="rounded-card border border-(--app-border) bg-(--app-surface-elevated) px-3.5 py-3 shadow-[0_1px_2px_rgba(20,40,90,0.04)]">
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <ErrorSeverityBadge severity={errorLog.severity} />
                       <Badge variant={errorLog.is_resolved ? 'default' : 'outline'}>
                         {errorLog.is_resolved ? 'Corregido' : 'Pendiente'}
                       </Badge>
+                      <span className="text-[0.72rem] text-(--app-text-subtle)">
+                        {new Date(errorLog.created_at).toLocaleString('es-DO')}
+                      </span>
                     </div>
-                    <h2 className="text-base font-bold text-(--app-text)">{errorLog.user_message}</h2>
-                    <p className="text-sm leading-5 text-(--app-text-muted)">{errorLog.error_message}</p>
+                    <h2 className="text-[0.9rem] font-bold leading-snug text-(--app-text)">{errorLog.user_message}</h2>
+                    <p className="text-[0.8rem] leading-5 text-(--app-text-muted)">{errorLog.error_message}</p>
                   </div>
                   <Button
-                    className="h-9 rounded-control"
+                    className="h-8 shrink-0 rounded-control px-3 text-[0.8rem]"
                     variant={errorLog.is_resolved ? 'outline' : 'secondary'}
                     disabled={resolutionMutation.isPending}
                     onClick={() =>
@@ -180,46 +209,45 @@ export function ErrorLogReviewPage() {
                       })
                     }
                   >
-                    {errorLog.is_resolved ? 'Reabrir' : 'Marcar como corregido'}
+                    {errorLog.is_resolved ? 'Reabrir' : 'Marcar corregido'}
                   </Button>
                 </div>
 
-                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <div className="mt-2.5 grid gap-2 md:grid-cols-3">
                   <InfoBlock title="Usuario afectado">
-                    <p>{formatUserLabel(errorLog.affected_user)}</p>
-                    <p>{formatUserDetail(errorLog.affected_user)}</p>
-                    <p>ID: {formatValue(errorLog.user_id)}</p>
+                    <p className="truncate">{formatUserLabel(errorLog.affected_user)}</p>
+                    <p className="truncate">{formatUserDetail(errorLog.affected_user)}</p>
+                    <p className="truncate">ID: {formatValue(errorLog.user_id)}</p>
                   </InfoBlock>
                   <InfoBlock title="Contexto">
-                    <p>Ruta: {formatValue(errorLog.route)}</p>
-                    <p>Origen: {errorLog.source}</p>
-                    <p>Código: {formatValue(errorLog.error_code)}</p>
+                    <p className="truncate">Ruta: {formatValue(errorLog.route)}</p>
+                    <p className="truncate">Origen: {errorLog.source}</p>
+                    <p className="truncate">Código: {formatValue(errorLog.error_code)}</p>
                   </InfoBlock>
                   <InfoBlock title="Seguimiento">
-                    <p>Detectado: {new Date(errorLog.created_at).toLocaleString('es-DO')}</p>
-                    <p>Corregido: {errorLog.resolved_at ? new Date(errorLog.resolved_at).toLocaleString('es-DO') : 'Pendiente'}</p>
-                    <p>Resuelto por: {formatUserLabel(errorLog.resolved_by_user)}</p>
+                    <p>Corregido: {errorLog.resolved_at ? new Date(errorLog.resolved_at).toLocaleDateString('es-DO') : 'Pendiente'}</p>
+                    <p className="truncate">Resuelto por: {formatUserLabel(errorLog.resolved_by_user)}</p>
                   </InfoBlock>
                 </div>
 
-                <div className="mt-3">
+                <div className="mt-2.5">
                   <AdminMetaDetails>
                     <pre className="whitespace-pre-wrap break-words">{JSON.stringify(errorLog.metadata, null, 2)}</pre>
                   </AdminMetaDetails>
                 </div>
-              </AdminCard>
+              </div>
             ))}
-            <div className="flex flex-col gap-3 rounded-card border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-(--app-text-muted)">
-                Mostrando {visibleStart}-{visibleEnd} de {filteredLogs.length} errores
+
+            <div ref={sentinelRef} aria-hidden className="h-px w-full" />
+            {isFetchingNextPage ? (
+              <div className="flex items-center justify-center gap-2 py-3 text-[0.78rem] text-(--app-text-subtle)">
+                <Spinner size="sm" /> Cargando más errores…
+              </div>
+            ) : !hasNextPage ? (
+              <p className="py-3 text-center text-[0.74rem] text-(--app-text-subtle)">
+                {totalCount} {totalCount === 1 ? 'error' : 'errores'} · no hay más
               </p>
-              <Pagination
-                page={safePage}
-                totalPages={pageCount}
-                onPageChange={setPage}
-                ariaLabel="Paginación de errores"
-              />
-            </div>
+            ) : null}
           </div>
         )}
       </div>
@@ -229,8 +257,8 @@ export function ErrorLogReviewPage() {
 
 function InfoBlock({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-card bg-(--app-surface-muted) px-4 py-3 text-sm text-(--app-text-muted)">
-      <p className="font-bold text-(--app-text)">{title}</p>
+    <div className="min-w-0 rounded-control bg-(--app-surface-muted) px-3 py-2 text-[0.76rem] text-(--app-text-muted)">
+      <p className="text-[0.68rem] font-bold uppercase tracking-[0.06em] text-(--app-text-subtle)">{title}</p>
       <div className="mt-1 space-y-0.5">{children}</div>
     </div>
   )

@@ -48,19 +48,19 @@ function PlanCard({ plan }: { plan: SubscriptionPlanRecord }) {
   const limits = Object.entries(plan.limits_json ?? {})
 
   return (
-    <div className="rounded-card border border-(--app-border) bg-(--app-surface-muted)/65 p-4">
+    <div className="rounded-card border border-(--app-border) bg-(--app-surface-muted)/65 p-3.5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-base font-bold text-(--app-text)">{plan.name}</p>
-          <p className="mt-1 text-sm leading-5 text-(--app-text-muted)">{plan.description}</p>
+          <p className="text-[0.9rem] font-bold text-(--app-text)">{plan.name}</p>
+          <p className="mt-0.5 text-[0.8rem] leading-5 text-(--app-text-muted)">{plan.description}</p>
         </div>
         <Badge variant={plan.status === 'active' ? 'default' : 'outline'}>{plan.status}</Badge>
       </div>
-      <p className="mt-4 text-[1.45rem] font-bold tracking-normal text-(--app-text)">
+      <p className="mt-3 text-[1.2rem] font-bold tracking-normal text-(--app-text)">
         {formatMoney(Number(plan.monthly_price_amount), plan.currency_code)}
-        <span className="text-sm font-semibold text-(--app-text-muted)"> / mes</span>
+        <span className="text-[0.8rem] font-semibold text-(--app-text-muted)"> / mes</span>
       </p>
-      <div className="mt-4 divide-y divide-(--app-border)/70 rounded-control border border-(--app-border) bg-(--app-surface)">
+      <div className="mt-3 divide-y divide-(--app-border)/70 rounded-control border border-(--app-border) bg-(--app-surface)">
         {limits.length === 0 ? (
           <div className="px-3 py-2 text-sm text-(--app-text-muted)">Sin límites configurados.</div>
         ) : (
@@ -158,7 +158,7 @@ export function PlatformOpsDashboardPage() {
         />
 
         {tab === 'plans' ? (
-          <div className="grid gap-3 lg:grid-cols-3">
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {plans.map((plan) => (
               <PlanCard key={plan.id} plan={plan} />
             ))}
@@ -181,14 +181,14 @@ export function PlatformOpsDashboardPage() {
                 <tbody>
                   {subscriptions.map((subscription) => (
                     <tr key={subscription.id} className="border-b border-(--app-border)/60 transition-colors hover:bg-(--app-surface-muted)">
-                      <td className="px-3 py-3 font-semibold text-(--app-text)">
+                      <td className="px-3 py-2 font-semibold text-(--app-text)">
                         {subscription.tenant?.name ?? subscription.tenant_id}
                         <span className="block text-xs font-normal text-(--app-text-muted)">{subscription.tenant?.slug}</span>
                       </td>
-                      <td className="px-3 py-3 text-(--app-text-muted)">{subscription.plan?.name ?? subscription.plan_id}</td>
-                      <td className="px-3 py-3 text-right font-mono text-(--app-text)">{subscription.seat_count}</td>
-                      <td className="px-3 py-3 text-(--app-text-muted)">{new Date(subscription.starts_at).toLocaleDateString('es-DO')}</td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-2 text-(--app-text-muted)">{subscription.plan?.name ?? subscription.plan_id}</td>
+                      <td className="px-3 py-2 text-right font-mono text-(--app-text)">{subscription.seat_count}</td>
+                      <td className="px-3 py-2 text-(--app-text-muted)">{new Date(subscription.starts_at).toLocaleDateString('es-DO')}</td>
+                      <td className="px-3 py-2 text-right">
                         <Badge variant={subscription.status === 'active' ? 'default' : 'outline'}>{subscription.status}</Badge>
                       </td>
                     </tr>
@@ -206,14 +206,14 @@ export function PlatformOpsDashboardPage() {
                 <button
                   key={flag.id}
                   type="button"
-                  className="flex w-full items-center justify-between gap-4 py-3 text-left"
+                  className="flex w-full items-center justify-between gap-4 py-2.5 text-left"
                   disabled={toggleFlagMutation.isPending || !canUpdateFlags}
                   onClick={() => toggleFlagMutation.mutate({ id: flag.id, isEnabled: !flag.is_enabled })}
                 >
                   <span className="min-w-0">
-                    <code className="text-sm font-bold text-(--app-text)">{flag.code}</code>
-                    <span className="mt-1 block text-sm text-(--app-text-muted)">{flag.description}</span>
-                    <span className="mt-2 inline-flex rounded-control bg-(--app-surface-muted) px-2 py-1 text-[0.68rem] font-bold uppercase text-(--app-text-subtle)">
+                    <code className="text-[0.8rem] font-bold text-(--app-text)">{flag.code}</code>
+                    <span className="mt-0.5 block text-[0.8rem] text-(--app-text-muted)">{flag.description}</span>
+                    <span className="mt-1.5 inline-flex rounded-control bg-(--app-surface-muted) px-2 py-0.5 text-[0.64rem] font-bold uppercase text-(--app-text-subtle)">
                       {flag.scope_type}
                     </span>
                   </span>

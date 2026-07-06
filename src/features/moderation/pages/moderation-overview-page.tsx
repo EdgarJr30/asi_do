@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -9,11 +9,20 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { AdminPage } from '@/features/internal/components/admin-redesign'
-import { applyModerationAction, listModerationCases, openModerationCase } from '@/features/moderation/lib/moderation-api'
+import { AdminPage, AdminTabs } from '@/features/internal/components/admin-redesign'
+import {
+  applyModerationAction,
+  listModerationCasesPage,
+  openModerationCase,
+  type ModerationStatusFilter
+} from '@/features/moderation/lib/moderation-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
+import { useInfiniteScroll } from '@/shared/ui/use-infinite-scroll'
+
+const MODERATION_PAGE_SIZE = 12
 
 const moderationGuardrails = [
   'OSINT solo con fuentes publicas y proposito legitimo.',
@@ -32,10 +41,26 @@ export function ModerationOverviewPage() {
   const [severity, setSeverity] = useState<'low' | 'medium' | 'high' | 'critical'>('medium')
   const [reason, setReason] = useState('')
   const [actionNotes, setActionNotes] = useState<Record<string, string>>({})
+  const [statusFilter, setStatusFilter] = useState<ModerationStatusFilter>('open')
 
-  const casesQuery = useQuery({
-    queryKey: ['moderation-cases'],
-    queryFn: listModerationCases
+  const casesQuery = useInfiniteQuery({
+    queryKey: ['moderation-cases', statusFilter],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      listModerationCasesPage({ filter: statusFilter, limit: MODERATION_PAGE_SIZE, offset: pageParam }),
+    getNextPageParam: (lastPage) => lastPage.nextOffset
+  })
+
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = casesQuery
+  const casePages = useMemo(() => casesQuery.data?.pages ?? [], [casesQuery.data])
+  const cases = useMemo(() => casePages.flatMap((entry) => entry.rows), [casePages])
+  const totalCases = casePages[0]?.totalCount ?? 0
+
+  const sentinelRef = useInfiniteScroll({
+    hasNextPage: Boolean(hasNextPage),
+    isFetchingNextPage,
+    onLoadMore: () => void fetchNextPage(),
+    deps: [cases.length]
   })
 
   const openCaseMutation = useMutation({
@@ -85,18 +110,18 @@ export function ModerationOverviewPage() {
       title="Moderación y trust operations"
       description="Abre casos de trust & safety, ejecuta acciones seguras y deja toda decisión registrada en auditoría."
     >
-      <div className="space-y-5">
+      <div className="space-y-4">
         <Card className="overflow-hidden bg-(--app-surface-muted)">
-          <CardContent className="mt-0 grid gap-3 md:grid-cols-2">
+          <CardContent className="mt-0 grid gap-2 md:grid-cols-2">
           {moderationGuardrails.map((rule) => (
-            <div key={rule} className="rounded-card-lg border border-white/70 bg-white/80 px-4 py-4 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950/70 dark:text-zinc-300">
+            <div key={rule} className="rounded-control border border-white/70 bg-white/80 px-3 py-2.5 text-[0.8rem] leading-snug text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950/70 dark:text-zinc-300">
               {rule}
             </div>
           ))}
           </CardContent>
         </Card>
 
-      <section className="grid gap-4 xl:grid-cols-[0.88fr_1.12fr]">
+      <section className="grid gap-3 xl:grid-cols-[0.88fr_1.12fr]">
         <Card>
           <CardHeader>
             <CardTitle>Abrir caso</CardTitle>
@@ -144,28 +169,50 @@ export function ModerationOverviewPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Casos recientes</CardTitle>
-            <CardDescription>Abre, resuelve o descarta casos segun el riesgo y el tipo de entidad.</CardDescription>
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-1.5">
+                <CardTitle>Casos recientes</CardTitle>
+                <CardDescription>Abre, resuelve o descarta casos segun el riesgo y el tipo de entidad.</CardDescription>
+              </div>
+            </div>
+            <div className="mt-3">
+              <AdminTabs
+                value={statusFilter}
+                onChange={setStatusFilter}
+                tabs={[
+                  { value: 'open', label: 'Abiertos' },
+                  { value: 'resolved', label: 'Resueltos' },
+                  { value: 'all', label: 'Todos', count: totalCases }
+                ]}
+              />
+            </div>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {(casesQuery.data ?? []).map((caseItem) => (
-              <div key={caseItem.id} className="rounded-card-lg border border-zinc-200 bg-zinc-50 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/80">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
-                      {caseItem.entity_type} · {caseItem.entity_id}
+          <CardContent className="space-y-2">
+            {casesQuery.isLoading ? (
+              <p className="inline-flex items-center gap-2 py-4 text-sm text-(--app-text-muted)">
+                <Spinner size="sm" /> Cargando casos…
+              </p>
+            ) : cases.length === 0 ? (
+              <p className="py-4 text-sm text-(--app-text-muted)">No hay casos para este filtro.</p>
+            ) : null}
+            {cases.map((caseItem) => (
+              <div key={caseItem.id} className="rounded-card border border-(--app-border) bg-(--app-surface-muted)/60 px-3 py-2.5">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-[0.82rem] font-semibold text-(--app-text)">
+                      {caseItem.entity_type} · <span className="font-mono text-[0.76rem] text-(--app-text-muted)">{caseItem.entity_id}</span>
                     </p>
-                    <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{caseItem.reason}</p>
+                    <p className="mt-0.5 text-[0.8rem] leading-snug text-(--app-text-muted)">{caseItem.reason}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex shrink-0 gap-1.5">
                     <Badge variant="outline">{caseItem.severity}</Badge>
                     <Badge variant={caseItem.status === 'open' ? 'soft' : 'outline'}>{caseItem.status}</Badge>
                   </div>
                 </div>
 
                 <Textarea
-                  className="mt-3"
-                  rows={3}
+                  className="mt-2.5"
+                  rows={2}
                   placeholder="Nota operativa para la acción"
                   value={actionNotes[caseItem.id] ?? ''}
                   onChange={(event) =>
@@ -176,9 +223,10 @@ export function ModerationOverviewPage() {
                   }
                 />
 
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
                   <Button
                     variant="outline"
+                    className="h-8 rounded-control px-2.5 text-[0.78rem]"
                     disabled={!canAct || actionMutation.isPending}
                     onClick={() =>
                       actionMutation.mutate({
@@ -193,6 +241,7 @@ export function ModerationOverviewPage() {
                   {caseItem.entity_type === 'job_posting' ? (
                     <Button
                       variant="outline"
+                      className="h-8 rounded-control px-2.5 text-[0.78rem]"
                       disabled={actionMutation.isPending}
                       onClick={() =>
                         actionMutation.mutate({
@@ -209,6 +258,7 @@ export function ModerationOverviewPage() {
                     <>
                       <Button
                         variant="outline"
+                        className="h-8 rounded-control px-2.5 text-[0.78rem]"
                         disabled={!canAct || actionMutation.isPending}
                         onClick={() =>
                           actionMutation.mutate({
@@ -222,6 +272,7 @@ export function ModerationOverviewPage() {
                       </Button>
                       <Button
                         variant="outline"
+                        className="h-8 rounded-control px-2.5 text-[0.78rem]"
                         disabled={!canAct || actionMutation.isPending}
                         onClick={() =>
                           actionMutation.mutate({
@@ -237,6 +288,7 @@ export function ModerationOverviewPage() {
                   ) : null}
                   <Button
                     variant="outline"
+                    className="h-8 rounded-control px-2.5 text-[0.78rem]"
                     disabled={!canAct || actionMutation.isPending}
                     onClick={() =>
                       actionMutation.mutate({
@@ -251,10 +303,10 @@ export function ModerationOverviewPage() {
                 </div>
 
                 {caseItem.actions && caseItem.actions.length > 0 ? (
-                  <div className="mt-4 grid gap-2">
+                  <div className="mt-2.5 grid gap-1.5">
                     {caseItem.actions.slice(0, 3).map((action) => (
-                      <div key={action.id} className="rounded-card bg-white/80 px-3 py-3 text-sm text-zinc-600 dark:bg-zinc-950/70 dark:text-zinc-400">
-                        <span className="font-semibold text-zinc-900 dark:text-zinc-50">{action.action_type}</span>
+                      <div key={action.id} className="rounded-control bg-(--app-surface) px-2.5 py-1.5 text-[0.76rem] text-(--app-text-muted)">
+                        <span className="font-semibold text-(--app-text)">{action.action_type}</span>
                         {action.note ? ` · ${action.note}` : ''}
                       </div>
                     ))}
@@ -262,6 +314,15 @@ export function ModerationOverviewPage() {
                 ) : null}
               </div>
             ))}
+
+            <div ref={sentinelRef} aria-hidden className="h-px w-full" />
+            {isFetchingNextPage ? (
+              <div className="flex items-center justify-center gap-2 py-3 text-[0.78rem] text-(--app-text-subtle)">
+                <Spinner size="sm" /> Cargando más casos…
+              </div>
+            ) : !hasNextPage && cases.length > 0 ? (
+              <p className="py-3 text-center text-[0.74rem] text-(--app-text-subtle)">No hay más casos</p>
+            ) : null}
           </CardContent>
         </Card>
       </section>

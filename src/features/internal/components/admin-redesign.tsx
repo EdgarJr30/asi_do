@@ -45,24 +45,24 @@ export function AdminPage({
   superAdmin?: boolean
 }) {
   return (
-    <div className="w-full space-y-5 pb-12">
-      <section className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-2.5">
+    <div className="w-full space-y-4 pb-10">
+      <section className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-2">
           <div
             className={cn(
-              'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.08em]',
+              'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.64rem] font-bold uppercase tracking-[0.08em]',
               superAdmin ? toneClasses.violet : toneClasses.blue
             )}
           >
             <span className={cn('size-1.5 rounded-full', superAdmin ? dotClasses.violet : dotClasses.blue)} />
             {eyebrow}
           </div>
-          <div className="space-y-1.5">
-            <h1 className="text-[1.55rem] font-bold leading-tight tracking-normal text-(--app-text) sm:text-[1.72rem]">{title}</h1>
-            {description ? <p className="max-w-3xl text-[0.92rem] leading-6 text-(--app-text-muted)">{description}</p> : null}
+          <div className="space-y-1">
+            <h1 className="text-xl font-semibold leading-tight tracking-tight text-(--app-text) sm:text-[1.5rem]">{title}</h1>
+            {description ? <p className="max-w-3xl text-[0.84rem] leading-relaxed text-(--app-text-muted)">{description}</p> : null}
           </div>
         </div>
-        {actions ? <div className="flex flex-wrap gap-2.5 lg:justify-end">{actions}</div> : null}
+        {actions ? <div className="flex flex-wrap gap-2 lg:justify-end">{actions}</div> : null}
       </section>
       {children}
     </div>
@@ -82,10 +82,10 @@ export function AdminInfoGrid({ items }: { items: Array<{ label: string; value: 
   return (
     <div className="grid overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) sm:grid-cols-3">
       {items.map((item) => (
-        <div key={item.label} className="border-b border-(--app-border)/70 px-4 py-4 last:border-b-0 sm:border-r sm:border-b-0 sm:last:border-r-0">
-          <p className="text-[0.68rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">{item.label}</p>
-          <p className="mt-1.5 text-sm font-bold text-(--app-text)">{item.value}</p>
-          <p className="mt-1 text-xs leading-5 text-(--app-text-muted)">{item.helper}</p>
+        <div key={item.label} className="border-b border-(--app-border)/70 px-3.5 py-3 last:border-b-0 sm:border-r sm:border-b-0 sm:last:border-r-0">
+          <p className="text-[0.64rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">{item.label}</p>
+          <p className="mt-1 text-[0.82rem] font-bold text-(--app-text)">{item.value}</p>
+          <p className="mt-0.5 text-[0.72rem] leading-5 text-(--app-text-muted)">{item.helper}</p>
         </div>
       ))}
     </div>
@@ -109,13 +109,13 @@ export function AdminStatBar({ children, columns = 4 }: { children: ReactNode; c
 
 export function AdminStat({ label, value, helper, tone = 'blue' }: { label: string; value: ReactNode; helper?: ReactNode; tone?: Tone }) {
   return (
-    <div className="border-b border-(--app-border)/70 px-4 py-4 last:border-b-0 sm:border-r sm:last:border-r-0 lg:border-b-0">
-      <p className="flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">
+    <div className="border-b border-(--app-border)/70 px-3.5 py-3 last:border-b-0 sm:border-r sm:last:border-r-0 lg:border-b-0">
+      <p className="flex items-center gap-1.5 text-[0.64rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">
         <span className={cn('size-1.5 rounded-full', dotClasses[tone])} />
         {label}
       </p>
-      <p className="mt-1.5 text-[1.7rem] font-bold leading-none tracking-normal text-(--app-text)">{value}</p>
-      {helper ? <p className="mt-1 text-xs text-(--app-text-muted)">{helper}</p> : null}
+      <p className="mt-1 text-[1.35rem] font-bold leading-none tracking-normal text-(--app-text)">{value}</p>
+      {helper ? <p className="mt-1 text-[0.72rem] text-(--app-text-muted)">{helper}</p> : null}
     </div>
   )
 }
@@ -174,15 +174,15 @@ export function AdminModuleCard({
   return (
     <Link
       to={href}
-      className="group rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-4 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(20,40,90,0.14)]"
+      className="group rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-3 shadow-[0_1px_2px_rgba(20,40,90,0.04)] transition hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-[0_10px_32px_rgba(20,40,90,0.12)] dark:hover:border-primary-500/40"
     >
-      <div className="flex items-center gap-3">
-        <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-control border', toneClasses[tone])}>{icon}</span>
-        <span className="min-w-0 flex-1 text-[0.96rem] font-bold text-(--app-text)">{title}</span>
-        {count != null ? <Badge variant="outline" className="shrink-0 px-2 py-0.5">{count}</Badge> : null}
+      <div className="flex items-center gap-2.5">
+        <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-control border', toneClasses[tone])}>{icon}</span>
+        <span className="min-w-0 flex-1 text-[0.88rem] font-bold text-(--app-text)">{title}</span>
+        {count != null ? <Badge variant="outline" className="shrink-0 px-1.5 py-0.5 text-[0.68rem]">{count}</Badge> : null}
       </div>
-      <p className="mt-3 min-h-12 text-[0.84rem] leading-5 text-(--app-text-muted)">{description}</p>
-      <span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary-600 dark:text-primary-300">
+      <p className="mt-2 min-h-9 text-[0.78rem] leading-[1.35] text-(--app-text-muted)">{description}</p>
+      <span className="mt-2.5 inline-flex items-center gap-1 text-[0.72rem] font-bold text-primary-600 dark:text-primary-300">
         Abrir módulo <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
       </span>
     </Link>

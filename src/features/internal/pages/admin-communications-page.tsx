@@ -23,7 +23,7 @@ export function AdminCommunicationsPage() {
       title="Comunicaciones"
       description="Pipeline de correos, pruebas controladas, centro de notificaciones in-app, push y preferencias de UI."
     >
-      <div className="space-y-5">
+      <div className="space-y-4">
         <AdminTabs
           value={tab}
           onChange={handleTabChange}
@@ -35,7 +35,7 @@ export function AdminCommunicationsPage() {
         {tab === 'emails' ? (
           <EmailPipelinePage embedded />
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-4">
             <FoundationSettingsForm />
             <NotificationCenter />
           </div>

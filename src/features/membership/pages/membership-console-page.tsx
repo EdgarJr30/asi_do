@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Banknote, CheckCircle2, Paperclip, Power, Sparkles } from 'lucide-react'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Banknote, CheckCircle2, Paperclip, Power, Search, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/loader'
-import { Pagination } from '@/components/ui/pagination'
 import { Textarea } from '@/components/ui/textarea'
 import { AdminPage, AdminStat, AdminStatBar, AdminTabs } from '@/features/internal/components/admin-redesign'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -18,16 +17,20 @@ import {
   activateMember,
   createMembershipReceiptUrl,
   deactivateMember,
-  fetchAdminMembershipApplications,
+  fetchAdminMembershipCounts,
+  fetchAdminMembershipPage,
   reviewMembershipApplication,
   verifyMembershipPayment,
+  type AdminMembershipFilter,
   type AdminMembershipRow,
   type MembershipReviewDecision
 } from '@/features/membership/lib/membership-api'
+import { useInfiniteScroll } from '@/shared/ui/use-infinite-scroll'
 
 const CONSOLE_QUERY_KEY = ['membership', 'admin-console'] as const
-const MEMBERSHIP_PAGE_SIZE = 8
-type MembershipFilter = 'all' | 'review' | 'approved' | 'active' | 'inactive'
+const CONSOLE_COUNTS_QUERY_KEY = ['membership', 'admin-console-counts'] as const
+const MEMBERSHIP_PAGE_SIZE = 10
+type MembershipFilter = AdminMembershipFilter
 
 const workflowLabels: Record<string, string> = {
   submitted: 'Enviada',
@@ -67,50 +70,35 @@ export function MembershipConsolePage() {
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<MembershipFilter>('all')
   const [search, setSearch] = useState('')
-  const [page, setPage] = useState(0)
-  const consoleQuery = useQuery({ queryKey: CONSOLE_QUERY_KEY, queryFn: fetchAdminMembershipApplications })
-  const rows = consoleQuery.data ?? []
-  const reviewCount = rows.filter((row) => ['submitted', 'under_review', 'needs_more_info'].includes(row.application.status)).length
-  const approvedCount = rows.filter((row) => row.application.status === 'approved').length
-  const missingPaymentCount = rows.filter((row) => !row.payment || row.payment.status !== 'verified').length
-  const activeCount = rows.filter((row) => row.member?.asi_membership_status === 'active').length
-  const inactiveCount = rows.filter((row) => row.member && row.member.asi_membership_status !== 'active').length
-  const normalizedSearch = search.trim().toLowerCase()
-  const filteredRows = rows.filter((row) => {
-    if (filter === 'review' && !['submitted', 'under_review', 'needs_more_info'].includes(row.application.status)) return false
-    if (filter === 'approved' && row.application.status !== 'approved') return false
-    if (filter === 'active' && row.member?.asi_membership_status !== 'active') return false
-    if (filter === 'inactive' && (!row.member || row.member.asi_membership_status === 'active')) return false
-    if (!normalizedSearch) return true
 
-    return [
-      row.application.applicant_first_name,
-      row.application.applicant_last_name,
-      row.application.applicant_email,
-      row.application.category_name,
-      row.application.home_church_name,
-      row.application.church_city
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase()
-      .includes(normalizedSearch)
+  const consoleQuery = useInfiniteQuery({
+    queryKey: [...CONSOLE_QUERY_KEY, filter, search.trim()],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      fetchAdminMembershipPage({ filter, search, limit: MEMBERSHIP_PAGE_SIZE, offset: pageParam }),
+    getNextPageParam: (lastPage) => lastPage.nextOffset
   })
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / MEMBERSHIP_PAGE_SIZE))
-  const safePage = Math.min(page, totalPages - 1)
-  const paginatedRows = filteredRows.slice(safePage * MEMBERSHIP_PAGE_SIZE, safePage * MEMBERSHIP_PAGE_SIZE + MEMBERSHIP_PAGE_SIZE)
-  const firstVisible = filteredRows.length === 0 ? 0 : safePage * MEMBERSHIP_PAGE_SIZE + 1
-  const lastVisible = Math.min(filteredRows.length, (safePage + 1) * MEMBERSHIP_PAGE_SIZE)
 
-  const updateFilter = (value: MembershipFilter) => {
-    setFilter(value)
-    setPage(0)
-  }
+  const countsQuery = useQuery({ queryKey: CONSOLE_COUNTS_QUERY_KEY, queryFn: fetchAdminMembershipCounts })
+  const counts = countsQuery.data
 
-  const updateSearch = (value: string) => {
-    setSearch(value)
-    setPage(0)
-  }
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = consoleQuery
+  const pages = useMemo(() => consoleQuery.data?.pages ?? [], [consoleQuery.data])
+  const rows = useMemo(() => pages.flatMap((entry) => entry.rows), [pages])
+  const totalCount = pages[0]?.totalCount ?? 0
+
+  const sentinelRef = useInfiniteScroll({
+    hasNextPage: Boolean(hasNextPage),
+    isFetchingNextPage,
+    onLoadMore: () => void fetchNextPage(),
+    deps: [rows.length]
+  })
+
+  const invalidateConsole = () =>
+    void Promise.all([
+      queryClient.invalidateQueries({ queryKey: CONSOLE_QUERY_KEY }),
+      queryClient.invalidateQueries({ queryKey: CONSOLE_COUNTS_QUERY_KEY })
+    ])
 
   return (
     <AdminPage
@@ -118,32 +106,35 @@ export function MembershipConsolePage() {
       title="Administración de membresías"
       description="Revisa solicitudes, valida pagos, activa membresías y puede inactivar una membresía activa cuando el administrador lo necesite."
     >
-      <div className="space-y-5">
+      <div className="space-y-4">
         <AdminStatBar columns={4}>
-          <AdminStat label="En revisión" value={reviewCount} tone="amber" />
-          <AdminStat label="Aprobadas" value={approvedCount} tone="green" />
-          <AdminStat label="Sin pago" value={missingPaymentCount} tone="rose" />
-          <AdminStat label="Activadas" value={activeCount} tone="teal" />
+          <AdminStat label="En revisión" value={counts?.review ?? '—'} tone="amber" />
+          <AdminStat label="Aprobadas" value={counts?.approved ?? '—'} tone="green" />
+          <AdminStat label="Activas" value={counts?.active ?? '—'} tone="teal" />
+          <AdminStat label="Inactivas" value={counts?.inactive ?? '—'} tone="rose" />
         </AdminStatBar>
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
           <AdminTabs
             value={filter}
-            onChange={updateFilter}
+            onChange={setFilter}
             tabs={[
-              { value: 'all', label: 'Todas', count: rows.length },
-              { value: 'review', label: 'En revisión', count: reviewCount },
-              { value: 'approved', label: 'Aprobadas', count: approvedCount },
-              { value: 'active', label: 'Activas', count: activeCount },
-              { value: 'inactive', label: 'Inactivas', count: inactiveCount }
+              { value: 'all', label: 'Todas', count: counts?.all },
+              { value: 'review', label: 'En revisión', count: counts?.review },
+              { value: 'approved', label: 'Aprobadas', count: counts?.approved },
+              { value: 'active', label: 'Activas', count: counts?.active },
+              { value: 'inactive', label: 'Inactivas', count: counts?.inactive }
             ]}
           />
-          <Input
-            value={search}
-            onChange={(event) => updateSearch(event.target.value)}
-            placeholder="Buscar por nombre, email, categoría o iglesia..."
-            className="lg:max-w-sm"
-          />
+          <div className="relative lg:max-w-sm lg:flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar por nombre, email, categoría…"
+              className="h-10 rounded-control pl-9"
+            />
+          </div>
         </div>
 
       {consoleQuery.isLoading ? (
@@ -154,34 +145,29 @@ export function MembershipConsolePage() {
         <p className="text-sm text-rose-600">{toErrorMessage(consoleQuery.error)}</p>
       ) : rows.length === 0 ? (
         <EmptyState
-          title="Sin solicitudes en curso"
-          description="Cuando un miembro envíe su solicitud o un pago, aparecerá aquí para tu gestión."
-        />
-      ) : filteredRows.length === 0 ? (
-        <EmptyState
-          title="Sin resultados"
-          description="No encontramos solicitudes con ese filtro o búsqueda."
+          title={search.trim() || filter !== 'all' ? 'Sin resultados' : 'Sin solicitudes en curso'}
+          description={
+            search.trim() || filter !== 'all'
+              ? 'No encontramos solicitudes con ese filtro o búsqueda.'
+              : 'Cuando un miembro envíe su solicitud o un pago, aparecerá aquí para tu gestión.'
+          }
         />
       ) : (
-        <div className="space-y-3">
-          {paginatedRows.map((row) => (
-            <ConsoleCard
-              key={row.application.id}
-              row={row}
-              onChanged={() => void queryClient.invalidateQueries({ queryKey: CONSOLE_QUERY_KEY })}
-            />
+        <div className="space-y-2">
+          {rows.map((row) => (
+            <ConsoleCard key={row.application.id} row={row} onChanged={invalidateConsole} />
           ))}
-          <div className="flex flex-col gap-3 rounded-card border border-(--app-border) bg-(--app-surface-elevated) px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs font-medium text-(--app-text-muted)">
-              Mostrando {firstVisible}-{lastVisible} de {filteredRows.length} membresías
+
+          <div ref={sentinelRef} aria-hidden className="h-px w-full" />
+          {isFetchingNextPage ? (
+            <div className="flex items-center justify-center gap-2 py-3 text-[0.78rem] text-(--app-text-subtle)">
+              <Spinner size="sm" /> Cargando más solicitudes…
+            </div>
+          ) : !hasNextPage && rows.length > 0 ? (
+            <p className="py-3 text-center text-[0.74rem] text-(--app-text-subtle)">
+              {totalCount} {totalCount === 1 ? 'solicitud' : 'solicitudes'} · no hay más
             </p>
-            <Pagination
-              page={safePage}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              ariaLabel="Paginación de membresías"
-            />
-          </div>
+          ) : null}
         </div>
       )}
       </div>
@@ -255,17 +241,17 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
   const fullName = `${application.applicant_first_name} ${application.applicant_last_name}`.trim()
 
   return (
-    <Card className="rounded-card">
+    <Card className="rounded-card p-3.5 sm:p-4">
       <CardHeader className="pb-1">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-[0.98rem]">{fullName || 'Solicitante'}</CardTitle>
-            <CardDescription>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-0.5">
+            <CardTitle className="text-[0.9rem]">{fullName || 'Solicitante'}</CardTitle>
+            <CardDescription className="text-[0.78rem]">
               {application.category_name} · Cuota {application.dues} · {application.home_church_name} · {application.church_city}
             </CardDescription>
-            <p className="text-xs text-(--app-text-muted)">{application.applicant_email}</p>
+            <p className="text-[0.72rem] text-(--app-text-muted)">{application.applicant_email}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {isActivated ? (
               <Badge variant="outline" className={positiveBadge(true)}>
                 <Sparkles className="size-3.5" /> Membresía activa
@@ -289,8 +275,8 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
-        <div className="grid gap-2 text-sm text-(--app-text-muted) sm:grid-cols-2">
+      <CardContent className="mt-2.5 space-y-2.5">
+        <div className="grid gap-1.5 text-[0.8rem] text-(--app-text-muted) sm:grid-cols-2">
           {member ? (
             <>
               <span>Acceso: {membershipStatusLabels[memberStatus] ?? memberStatus}</span>
@@ -307,7 +293,7 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
 
         {payment?.receipt_path ? <ReceiptViewLink receiptPath={payment.receipt_path} /> : null}
 
-        <Button variant="ghost" className="h-9 rounded-control px-3" onClick={() => setNotesOpen((value) => !value)}>
+        <Button variant="ghost" className="h-8 rounded-control px-3 text-[0.8rem]" onClick={() => setNotesOpen((value) => !value)}>
           Notas
         </Button>
 
@@ -330,13 +316,13 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-(--app-text-subtle)">Solicitud</p>
             <div className="flex flex-wrap gap-2">
-              <Button className="h-9 rounded-control px-3" disabled={busy} onClick={() => reviewMutation.mutate('approved')}>
+              <Button className="h-8 rounded-control px-3 text-[0.8rem]" disabled={busy} onClick={() => reviewMutation.mutate('approved')}>
                 <CheckCircle2 className="size-4" /> Aprobar
               </Button>
-              <Button className="h-9 rounded-control px-3" variant="outline" disabled={busy} onClick={() => reviewMutation.mutate('needs_more_info')}>
+              <Button className="h-8 rounded-control px-3 text-[0.8rem]" variant="outline" disabled={busy} onClick={() => reviewMutation.mutate('needs_more_info')}>
                 Pedir más info
               </Button>
-              <Button className="h-9 rounded-control px-3" variant="danger" disabled={busy} onClick={() => reviewMutation.mutate('rejected')}>
+              <Button className="h-8 rounded-control px-3 text-[0.8rem]" variant="danger" disabled={busy} onClick={() => reviewMutation.mutate('rejected')}>
                 Rechazar
               </Button>
             </div>
@@ -348,10 +334,10 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
           <div className="space-y-2 border-t border-(--app-border) pt-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-(--app-text-subtle)">Pago</p>
             <div className="flex flex-wrap gap-2">
-              <Button className="h-9 rounded-control px-3" disabled={busy} onClick={() => paymentMutation.mutate('verified')}>
+              <Button className="h-8 rounded-control px-3 text-[0.8rem]" disabled={busy} onClick={() => paymentMutation.mutate('verified')}>
                 <Banknote className="size-4" /> Verificar pago
               </Button>
-              <Button className="h-9 rounded-control px-3" variant="danger" disabled={busy} onClick={() => paymentMutation.mutate('rejected')}>
+              <Button className="h-8 rounded-control px-3 text-[0.8rem]" variant="danger" disabled={busy} onClick={() => paymentMutation.mutate('rejected')}>
                 Rechazar comprobante
               </Button>
             </div>
@@ -361,7 +347,7 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
         {/* Activación */}
         {!isActivated ? (
           <div className="border-t border-(--app-border) pt-3">
-            <Button className="h-9 rounded-control px-3" disabled={busy || !canActivate} onClick={() => activateMutation.mutate()}>
+            <Button className="h-8 rounded-control px-3 text-[0.8rem]" disabled={busy || !canActivate} onClick={() => activateMutation.mutate()}>
               <Sparkles className="size-4" /> Activar membresía
             </Button>
             {!canActivate ? (
@@ -373,7 +359,7 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
         ) : (
           <div className="space-y-2 border-t border-(--app-border) pt-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-(--app-text-subtle)">Membresía activa</p>
-            <Button className="h-9 rounded-control px-3" variant="danger" disabled={busy} onClick={() => deactivateMutation.mutate()}>
+            <Button className="h-8 rounded-control px-3 text-[0.8rem]" variant="danger" disabled={busy} onClick={() => deactivateMutation.mutate()}>
               <Power className="size-4" /> Inactivar membresía
             </Button>
             <p className="text-xs text-(--app-text-muted)">
@@ -394,7 +380,7 @@ function ReceiptViewLink({ receiptPath }: { receiptPath: string }) {
   })
 
   return (
-    <Button variant="outline" className="h-9" disabled={openMutation.isPending} onClick={() => openMutation.mutate()}>
+    <Button variant="outline" className="h-8 rounded-control px-3 text-[0.8rem]" disabled={openMutation.isPending} onClick={() => openMutation.mutate()}>
       <Paperclip className="size-4" /> {openMutation.isPending ? 'Abriendo…' : 'Ver comprobante'}
     </Button>
   )

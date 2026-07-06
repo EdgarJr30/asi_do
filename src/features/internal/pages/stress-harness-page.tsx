@@ -176,7 +176,7 @@ export function StressHarnessPage() {
   const isRunning = mutation.isPending
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         eyebrow="Super admin"
         title="Arnés de estrés"
@@ -202,10 +202,10 @@ export function StressHarnessPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Configuración del escenario</CardTitle>
+            <CardTitle className="text-[0.95rem]">Configuración del escenario</CardTitle>
             <CardDescription>Define el volumen por módulo y la concurrencia de inserción.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

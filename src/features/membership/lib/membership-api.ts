@@ -237,6 +237,160 @@ export async function fetchAdminMembershipApplications(): Promise<AdminMembershi
   }))
 }
 
+export type AdminMembershipFilter = 'all' | 'review' | 'approved' | 'active' | 'inactive'
+
+export interface AdminMembershipPage {
+  rows: AdminMembershipRow[]
+  totalCount: number
+  nextOffset: number | null
+}
+
+export interface AdminMembershipCounts {
+  all: number
+  review: number
+  approved: number
+  active: number
+  inactive: number
+}
+
+type MembershipAppStatus = Tables<'institutional_membership_applications'>['status']
+const MEMBERSHIP_REVIEW_STATUSES: MembershipAppStatus[] = ['submitted', 'under_review', 'needs_more_info']
+const MEMBERSHIP_ACTIONABLE_STATUSES: MembershipAppStatus[] = ['submitted', 'under_review', 'needs_more_info', 'approved']
+// Hint explícito de FK: la tabla referencia `users` por dos columnas, así que el
+// embed debe nombrar la constraint de `requester_user_id` para no ser ambiguo.
+const MEMBER_EMBED =
+  'member:users!institutional_membership_applications_requester_user_id_fkey(id, full_name, email, asi_membership_status, user_subscription_status, membership_expires_at, status)'
+const MEMBERSHIP_SEARCH_FIELDS = [
+  'applicant_first_name',
+  'applicant_last_name',
+  'applicant_email',
+  'category_name',
+  'home_church_name',
+  'church_city'
+] as const
+
+function statusesForFilter(filter: AdminMembershipFilter): MembershipAppStatus[] {
+  if (filter === 'review') return MEMBERSHIP_REVIEW_STATUSES
+  if (filter === 'approved' || filter === 'active' || filter === 'inactive') return ['approved']
+  return MEMBERSHIP_ACTIONABLE_STATUSES
+}
+
+/**
+ * Paginación real de servidor para la consola admin: `range` + count exacto de
+ * PostgREST sobre las solicitudes, con filtro por estado y por estado de miembro
+ * (embed `inner` sobre `users`) para alimentar el scroll infinito. El último pago
+ * se enriquece por página, no se trae todo el histórico.
+ */
+export async function fetchAdminMembershipPage(params: {
+  filter: AdminMembershipFilter
+  search?: string
+  limit: number
+  offset: number
+}): Promise<AdminMembershipPage> {
+  const client = requireSupabase()
+  const requiresMember = params.filter === 'active' || params.filter === 'inactive'
+  const memberEmbed = requiresMember
+    ? MEMBER_EMBED.replace(
+        'users!institutional_membership_applications_requester_user_id_fkey',
+        'users!institutional_membership_applications_requester_user_id_fkey!inner'
+      )
+    : MEMBER_EMBED
+
+  let query = client
+    .from('institutional_membership_applications')
+    .select(`*, ${memberEmbed}`, { count: 'exact' })
+    .in('status', statusesForFilter(params.filter))
+    .order('submitted_at', { ascending: true })
+    .range(params.offset, params.offset + params.limit - 1)
+
+  if (params.filter === 'active') {
+    query = query.eq('member.asi_membership_status', 'active')
+  } else if (params.filter === 'inactive') {
+    query = query.neq('member.asi_membership_status', 'active')
+  }
+
+  const search = params.search?.trim()
+  if (search) {
+    const pattern = `%${search}%`
+    query = query.or(MEMBERSHIP_SEARCH_FIELDS.map((field) => `${field}.ilike.${pattern}`).join(','))
+  }
+
+  const { data, error, count } = await query
+  if (error) {
+    throw error
+  }
+
+  const rawRows = (data ?? []) as unknown as Array<MembershipApplication & { member: AdminMembershipRow['member'] }>
+  const totalCount = count ?? rawRows.length
+  const loadedCount = params.offset + rawRows.length
+
+  const applicationIds = rawRows.map((application) => application.id)
+  const latestPaymentByApplication = new Map<string, MembershipPayment>()
+  if (applicationIds.length > 0) {
+    const paymentsResponse = await client
+      .from('membership_payments')
+      .select('*')
+      .in('application_id', applicationIds)
+      .order('created_at', { ascending: false })
+    if (paymentsResponse.error) {
+      throw paymentsResponse.error
+    }
+    for (const payment of paymentsResponse.data ?? []) {
+      if (!latestPaymentByApplication.has(payment.application_id)) {
+        latestPaymentByApplication.set(payment.application_id, payment)
+      }
+    }
+  }
+
+  const rows: AdminMembershipRow[] = rawRows.map(({ member, ...application }) => ({
+    application: application as MembershipApplication,
+    payment: latestPaymentByApplication.get(application.id) ?? null,
+    member: member ?? null
+  }))
+
+  return {
+    rows,
+    totalCount,
+    nextOffset: loadedCount < totalCount ? loadedCount : null
+  }
+}
+
+/** Conteos exactos por filtro para las tarjetas de resumen y las pestañas. */
+export async function fetchAdminMembershipCounts(): Promise<AdminMembershipCounts> {
+  const client = requireSupabase()
+  const base = () => client.from('institutional_membership_applications').select('id', { count: 'exact', head: true })
+  const memberInner = () =>
+    client
+      .from('institutional_membership_applications')
+      .select('id, users!institutional_membership_applications_requester_user_id_fkey!inner(id)', {
+        count: 'exact',
+        head: true
+      })
+      .eq('status', 'approved')
+
+  const [all, review, approved, active, inactive] = await Promise.all([
+    base().in('status', MEMBERSHIP_ACTIONABLE_STATUSES),
+    base().in('status', MEMBERSHIP_REVIEW_STATUSES),
+    base().eq('status', 'approved'),
+    memberInner().eq('users.asi_membership_status', 'active'),
+    memberInner().neq('users.asi_membership_status', 'active')
+  ])
+
+  for (const response of [all, review, approved, active, inactive]) {
+    if (response.error) {
+      throw response.error
+    }
+  }
+
+  return {
+    all: all.count ?? 0,
+    review: review.count ?? 0,
+    approved: approved.count ?? 0,
+    active: active.count ?? 0,
+    inactive: inactive.count ?? 0
+  }
+}
+
 /** Admin valida (o rechaza) un pago de membresía vía RPC `verify_membership_payment`. */
 export async function verifyMembershipPayment(input: {
   paymentId: string

@@ -128,7 +128,7 @@ export function AdminConsolePage() {
       description="Zona interna para operaciones, observabilidad y gobierno de plataforma. No forma parte de la experiencia del cliente."
       actions={<Badge variant="default" className="h-8 px-3">Platform admin</Badge>}
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         <AdminInfoGrid
           items={[
             {
@@ -149,7 +149,7 @@ export function AdminConsolePage() {
           ]}
         />
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <AdminSectionLabel title="Salud de plataforma" />
           <AdminStatBar columns={6}>
             <AdminStat label="Tenants activos" value={stats?.activeTenants ?? '—'} />
@@ -161,9 +161,9 @@ export function AdminConsolePage() {
           </AdminStatBar>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <AdminSectionLabel title="Módulos" count={visibleModules.length} />
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
             {visibleModules.map((module) => (
               <AdminModuleCard
                 key={module.href}
@@ -178,9 +178,9 @@ export function AdminConsolePage() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <AdminSectionLabel title="Acceso avanzado" />
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-2.5 lg:grid-cols-2">
             <AdminCard
               title="Bootstrap de plataforma"
               description="La inicialización del primer admin sale del flujo público de auth y queda disponible solo como acceso controlado."

@@ -149,7 +149,7 @@ export function AdminPaymentAuditPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <AdminStatBar columns={4}>
         <AdminStat label="Transacciones" value={String(transactions.length)} helper={`${stats.last30} en los ultimos 30 dias`} tone="blue" />
         <AdminStat label="Aprobadas" value={String(stats.approved)} helper="Autorizadas por AZUL" tone="green" />
@@ -194,13 +194,13 @@ export function AdminPaymentAuditPage() {
                 <table className="min-w-[980px] w-full border-collapse bg-(--app-surface-elevated) text-left text-sm">
                   <thead className="border-b border-(--app-border) bg-(--app-surface-muted)">
                     <tr className="text-[0.68rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">
-                      <th className="px-4 py-3">Fecha y hora</th>
-                      <th className="px-4 py-3">Tracking de compra</th>
-                      <th className="px-4 py-3">Tarjeta</th>
-                      <th className="px-4 py-3">Estado</th>
-                      <th className="px-4 py-3">Autorización</th>
-                      <th className="px-4 py-3 text-right">Monto</th>
-                      <th className="px-4 py-3 text-right">Detalle</th>
+                      <th className="px-3 py-2.5">Fecha y hora</th>
+                      <th className="px-3 py-2.5">Tracking de compra</th>
+                      <th className="px-3 py-2.5">Tarjeta</th>
+                      <th className="px-3 py-2.5">Estado</th>
+                      <th className="px-3 py-2.5">Autorización</th>
+                      <th className="px-3 py-2.5 text-right">Monto</th>
+                      <th className="px-3 py-2.5 text-right">Detalle</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -247,27 +247,27 @@ function AuditTableRow({
 }) {
   return (
     <tr className="border-b border-(--app-border)/70 last:border-b-0 hover:bg-(--app-surface-muted)/60">
-      <td className="px-4 py-3 align-middle">
+      <td className="px-3 py-2.5 align-middle">
         <p className="font-semibold text-(--app-text)">{formatDay(transaction.occurredAt)}</p>
         <p className="font-mono text-xs tabular-nums text-(--app-text-subtle)">{formatTime(transaction.occurredAt)}</p>
       </td>
-      <td className="px-4 py-3 align-middle">
+      <td className="px-3 py-2.5 align-middle">
         <p className="max-w-[230px] truncate font-mono text-xs font-semibold text-(--app-text)">{transaction.orderNumber}</p>
         <p className="mt-1 max-w-[230px] truncate text-xs text-(--app-text-muted)">
           {transaction.displayName} · {transaction.sourceLabel}
         </p>
       </td>
-      <td className="px-4 py-3 align-middle">
+      <td className="px-3 py-2.5 align-middle">
         <PaymentCardCell transaction={transaction} />
       </td>
-      <td className="px-4 py-3 align-middle">
+      <td className="px-3 py-2.5 align-middle">
         <StatusBadge status={transaction.status} />
       </td>
-      <td className="px-4 py-3 align-middle font-mono text-xs font-semibold text-(--app-text)">{transaction.authorizationCode ?? '—'}</td>
-      <td className="px-4 py-3 align-middle text-right font-semibold tabular-nums text-(--app-text)">
+      <td className="px-3 py-2.5 align-middle font-mono text-xs font-semibold text-(--app-text)">{transaction.authorizationCode ?? '—'}</td>
+      <td className="px-3 py-2.5 align-middle text-right font-semibold tabular-nums text-(--app-text)">
         {formatMoney(transaction.amount, transaction.currency)}
       </td>
-      <td className="px-4 py-3 align-middle text-right">
+      <td className="px-3 py-2.5 align-middle text-right">
         <Button
           variant="ghost"
           className="size-9 rounded-control p-0 text-primary-600 hover:text-primary-700 dark:text-primary-300"

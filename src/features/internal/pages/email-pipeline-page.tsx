@@ -138,7 +138,7 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {!embedded ? (
         <PageHeader
           eyebrow="Plataforma"
@@ -161,21 +161,21 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
             <h2 className="text-base font-bold text-(--app-text)">Pipeline de correos</h2>
             <p className="text-sm text-(--app-text-muted)">Historial transaccional y módulo de prueba aislado.</p>
           </div>
-          <Button variant="outline" className="h-10 rounded-control" onClick={refreshAll} disabled={pageQuery.isFetching || statsQuery.isFetching}>
+          <Button variant="outline" className="h-9 rounded-control" onClick={refreshAll} disabled={pageQuery.isFetching || statsQuery.isFetching}>
             {pageQuery.isFetching || statsQuery.isFetching ? <Spinner size="sm" /> : <RefreshCw className="h-4 w-4" />}
             Actualizar
           </Button>
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total" value={stats.total} helper="Correos del pipeline real" />
         <StatCard label="Entregados / enviados" value={stats.delivered} />
         <StatCard label="En proceso" value={inFlight} />
         <StatCard label="Con problema" value={stats.problem} helper="Fallidos" />
       </div>
 
-      <div className="grid gap-3 rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-4 sm:grid-cols-[1fr_auto]">
+      <div className="grid gap-2.5 rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-3 sm:grid-cols-[1fr_auto]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--app-text-subtle)" />
           <Input
@@ -248,14 +248,14 @@ function DeliveryTable({
       <table className="w-full min-w-190 text-sm">
         <thead>
           <tr className="border-b border-(--app-border) text-left text-[0.68rem] uppercase tracking-[0.16em] text-(--app-text-subtle)">
-            <th className="px-4 py-3">Estado</th>
-            <th className="px-4 py-3">Destinatario</th>
-            <th className="px-4 py-3">Asunto</th>
-            <th className="px-4 py-3">Tipo</th>
-            <th className="px-4 py-3">Intentos</th>
-            <th className="px-4 py-3">Fecha</th>
-            {forceControl ? <th className="px-4 py-3">Forzar estado</th> : null}
-            <th className="px-4 py-3 text-right">{onResend ? 'Acciones' : 'Acción'}</th>
+            <th className="px-3 py-2.5">Estado</th>
+            <th className="px-3 py-2.5">Destinatario</th>
+            <th className="px-3 py-2.5">Asunto</th>
+            <th className="px-3 py-2.5">Tipo</th>
+            <th className="px-3 py-2.5">Intentos</th>
+            <th className="px-3 py-2.5">Fecha</th>
+            {forceControl ? <th className="px-3 py-2.5">Forzar estado</th> : null}
+            <th className="px-3 py-2.5 text-right">{onResend ? 'Acciones' : 'Acción'}</th>
           </tr>
         </thead>
         <tbody>
@@ -276,18 +276,18 @@ function DeliveryTable({
               const meta = statusMeta(row.delivery_status)
               return (
                 <tr key={row.id} className="border-b border-(--app-border)/60 transition-colors hover:bg-(--app-surface-muted)/60">
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2.5">
                     <Badge variant={meta.variant}>{meta.label}</Badge>
                   </td>
-                  <td className="px-4 py-3 font-medium text-(--app-text)">{recipientOf(row)}</td>
-                  <td className="px-4 py-3 max-w-60 truncate text-(--app-text-muted)">
+                  <td className="px-3 py-2.5 font-medium text-(--app-text)">{recipientOf(row)}</td>
+                  <td className="px-3 py-2.5 max-w-60 truncate text-(--app-text-muted)">
                     {row.notification?.title ?? '—'}
                   </td>
-                  <td className="px-4 py-3 text-(--app-text-muted)">{typeLabel(row.notification?.type)}</td>
-                  <td className="px-4 py-3 text-(--app-text-muted)">{row.attempt_count}</td>
-                  <td className="px-4 py-3 text-(--app-text-muted)">{formatDate(row.created_at)}</td>
-                  {forceControl ? <td className="px-4 py-3">{forceControl(row)}</td> : null}
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-3 py-2.5 text-(--app-text-muted)">{typeLabel(row.notification?.type)}</td>
+                  <td className="px-3 py-2.5 text-(--app-text-muted)">{row.attempt_count}</td>
+                  <td className="px-3 py-2.5 text-(--app-text-muted)">{formatDate(row.created_at)}</td>
+                  {forceControl ? <td className="px-3 py-2.5">{forceControl(row)}</td> : null}
+                  <td className="px-3 py-2.5 text-right">
                     <div className="flex items-center justify-end gap-1">
                       {onResend ? (
                         <button

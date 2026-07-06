@@ -78,14 +78,14 @@ function ApprovalActionRow({
   approveLabel?: string
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
-      <Button className="sm:flex-1" disabled={disabled} onClick={onApprove}>
+    <div className="flex flex-col gap-2 sm:flex-row">
+      <Button className="h-9 rounded-control text-[0.82rem] sm:flex-1" disabled={disabled} onClick={onApprove}>
         {approveLabel}
       </Button>
-      <Button className="sm:flex-1" disabled={disabled} variant="outline" onClick={onNeedsMoreInfo}>
+      <Button className="h-9 rounded-control text-[0.82rem] sm:flex-1" disabled={disabled} variant="outline" onClick={onNeedsMoreInfo}>
         Solicitar más información
       </Button>
-      <Button className="sm:flex-1" disabled={disabled} variant="danger" onClick={onReject}>
+      <Button className="h-9 rounded-control text-[0.82rem] sm:flex-1" disabled={disabled} variant="danger" onClick={onReject}>
         Rechazar
       </Button>
     </div>
@@ -228,7 +228,7 @@ export function RecruiterReviewPage() {
         {tab === 'authority' ? <AdminAuthorityInvitationsPage embedded /> : null}
 
         {tab === 'queue' ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <AdminStatBar columns={4}>
               <AdminStat label="Total pendientes" value={totalQueues} />
               <AdminStat label="Operador" value={pendingRecruiterRequests.length} tone="blue" />
@@ -243,7 +243,7 @@ export function RecruiterReviewPage() {
             <CardTitle>Solicitudes de operador</CardTitle>
             <CardDescription>Aprueba la creación del tenant solo cuando la verificación administrativa esté completa.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-2.5">
             {recruiterRequestsQuery.isLoading ? (
               <p className="inline-flex items-center gap-2 text-sm text-zinc-500">
                 <Spinner size="sm" /> Cargando solicitudes pendientes...
@@ -258,10 +258,10 @@ export function RecruiterReviewPage() {
                     : {}
 
                 return (
-                  <div key={request.id} className="space-y-4 rounded-card-lg border border-zinc-200 px-4 py-4 dark:border-zinc-800">
+                  <div key={request.id} className="space-y-3 rounded-card border border-(--app-border) px-3.5 py-3">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="space-y-1">
-                        <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{request.requested_company_name}</p>
+                        <p className="text-[0.95rem] font-semibold text-(--app-text)">{request.requested_company_name}</p>
                         <p className="text-sm text-zinc-500">
                           {getTenantKindLabel(request.requested_tenant_kind)} · {request.requested_company_legal_name || 'Sin razón social'} · `{request.requested_tenant_slug}`
                         </p>
@@ -270,13 +270,13 @@ export function RecruiterReviewPage() {
                     </div>
 
                     <div className="grid gap-3 md:grid-cols-2">
-                      <div className="rounded-card-lg bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300">
+                      <div className="rounded-control bg-(--app-surface-muted) px-3 py-2.5 text-[0.78rem] text-(--app-text-muted)">
                         <p className="font-semibold text-zinc-900 dark:text-zinc-50">Contacto</p>
                         <p className="mt-1">{request.company_email || 'Sin email corporativo'}</p>
                         <p>{request.company_phone || 'Sin teléfono'}</p>
                         <p>{request.company_country_code || 'Sin país'}</p>
                       </div>
-                      <div className="rounded-card-lg bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-300">
+                      <div className="rounded-control bg-(--app-surface-muted) px-3 py-2.5 text-[0.78rem] text-(--app-text-muted)">
                         <p className="font-semibold text-zinc-900 dark:text-zinc-50">Datos de tipo</p>
                         <p className="mt-1">Website: {request.company_website_url || 'Sin website'}</p>
                         {typeof requestMetadata.operating_scope === 'string' ? <p>Alcance: {requestMetadata.operating_scope}</p> : null}
@@ -288,19 +288,19 @@ export function RecruiterReviewPage() {
 
                     <div className="flex flex-wrap gap-2">
                       {request.company_logo_path ? (
-                          <Button variant="outline" onClick={() => void openPrivateAsset(request.company_logo_path as string)}>
+                          <Button variant="outline" className="h-8 rounded-control text-[0.8rem]" onClick={() => void openPrivateAsset(request.company_logo_path as string)}>
                           Abrir logo temporal
                         </Button>
                       ) : null}
                       {request.verification_document_path ? (
-                          <Button variant="outline" onClick={() => void openPrivateAsset(request.verification_document_path as string)}>
+                          <Button variant="outline" className="h-8 rounded-control text-[0.8rem]" onClick={() => void openPrivateAsset(request.verification_document_path as string)}>
                           Abrir documento de verificación
                         </Button>
                       ) : null}
                     </div>
 
-                    <label className="block space-y-2">
-                      <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">Notas de revisión</span>
+                    <label className="block space-y-1.5">
+                      <span className="text-[0.8rem] font-medium text-(--app-text)">Notas de revisión</span>
                       <Textarea
                         placeholder="Observaciones de validación, contexto del rechazo o decisiones tomadas."
                         value={reviewNotes[request.id] ?? ''}
@@ -308,9 +308,9 @@ export function RecruiterReviewPage() {
                       />
                     </label>
 
-                    <div className="flex flex-col gap-3 sm:flex-row">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Button
-                        className="sm:flex-1"
+                        className="h-9 rounded-control text-[0.82rem] sm:flex-1"
                         disabled={recruiterReviewMutation.isPending}
                         onClick={() =>
                           recruiterReviewMutation.mutate({
@@ -323,7 +323,7 @@ export function RecruiterReviewPage() {
                         Aprobar y crear tenant
                       </Button>
                       <Button
-                        className="sm:flex-1"
+                        className="h-9 rounded-control text-[0.82rem] sm:flex-1"
                         disabled={recruiterReviewMutation.isPending}
                         variant="danger"
                         onClick={() =>
@@ -352,7 +352,7 @@ export function RecruiterReviewPage() {
             <CardTitle>Solicitudes pastorales</CardTitle>
             <CardDescription>Valida la autoridad distrital o de iglesias antes de crear el scope aprobado.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-2.5">
             {pastorRequestsQuery.isLoading ? (
               <p className="inline-flex items-center gap-2 text-sm text-zinc-500">
                 <Spinner size="sm" /> Cargando solicitudes pastorales...
@@ -364,7 +364,7 @@ export function RecruiterReviewPage() {
                 <div key={request.id} className="space-y-4 rounded-card-lg border border-zinc-200 px-4 py-4 dark:border-zinc-800">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                      <p className="text-[0.95rem] font-semibold text-(--app-text)">
                         {request.first_names} {request.last_names}
                       </p>
                       <p className="text-sm text-zinc-500">{request.phone_number}</p>
@@ -375,7 +375,7 @@ export function RecruiterReviewPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" onClick={() => void openPrivateAsset(request.identity_document_file_path)}>
+                    <Button variant="outline" className="h-8 rounded-control text-[0.8rem]" onClick={() => void openPrivateAsset(request.identity_document_file_path)}>
                       Abrir cédula
                     </Button>
                   </div>
@@ -428,7 +428,7 @@ export function RecruiterReviewPage() {
             <CardTitle>Solicitudes regionales</CardTitle>
             <CardDescription>Valida el territorio y el nombramiento oficial antes de crear el scope regional.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-2.5">
             {regionalRequestsQuery.isLoading ? (
               <p className="inline-flex items-center gap-2 text-sm text-zinc-500">
                 <Spinner size="sm" /> Cargando solicitudes regionales...
@@ -440,7 +440,7 @@ export function RecruiterReviewPage() {
                 <div key={request.id} className="space-y-4 rounded-card-lg border border-zinc-200 px-4 py-4 dark:border-zinc-800">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                      <p className="text-[0.95rem] font-semibold text-(--app-text)">
                         {request.first_names} {request.last_names}
                       </p>
                       <p className="text-sm text-zinc-500">
@@ -453,10 +453,10 @@ export function RecruiterReviewPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" onClick={() => void openPrivateAsset(request.identity_document_file_path)}>
+                    <Button variant="outline" className="h-8 rounded-control text-[0.8rem]" onClick={() => void openPrivateAsset(request.identity_document_file_path)}>
                       Abrir cédula
                     </Button>
-                    <Button variant="outline" onClick={() => void openPrivateAsset(request.appointment_document_file_path)}>
+                    <Button variant="outline" className="h-8 rounded-control text-[0.8rem]" onClick={() => void openPrivateAsset(request.appointment_document_file_path)}>
                       Abrir nombramiento
                     </Button>
                   </div>

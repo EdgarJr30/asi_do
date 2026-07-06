@@ -64,6 +64,67 @@ export async function listModerationCases() {
   return (response.data ?? []) as ModerationCaseRecord[]
 }
 
+export type ModerationStatusFilter = 'open' | 'resolved' | 'all'
+
+export interface ModerationCasePage {
+  rows: ModerationCaseRecord[]
+  totalCount: number
+  nextOffset: number | null
+}
+
+/**
+ * Paginación real de servidor para los casos de moderación vía `range` + count
+ * exacto de PostgREST, filtrando por estado en el backend para el scroll infinito.
+ */
+export async function listModerationCasesPage(params: {
+  filter: ModerationStatusFilter
+  limit: number
+  offset: number
+}): Promise<ModerationCasePage> {
+  const client = requireSupabase()
+  let query = client
+    .from('moderation_cases' as never)
+    .select(
+      `
+        *,
+        actions:moderation_actions (
+          id,
+          moderation_case_id,
+          action_type,
+          actor_user_id,
+          note,
+          payload,
+          created_at
+        )
+      `,
+      { count: 'exact' }
+    )
+    .order('created_at', { ascending: false })
+    .range(params.offset, params.offset + params.limit - 1)
+
+  if (params.filter === 'open') {
+    query = query.in('status', ['open', 'under_review'] as never)
+  } else if (params.filter === 'resolved') {
+    query = query.in('status', ['resolved', 'dismissed'] as never)
+  }
+
+  const response = await query
+
+  if (response.error) {
+    throw toControlledError(response.error)
+  }
+
+  const rows = (response.data ?? []) as ModerationCaseRecord[]
+  const totalCount = response.count ?? rows.length
+  const loadedCount = params.offset + rows.length
+
+  return {
+    rows,
+    totalCount,
+    nextOffset: loadedCount < totalCount ? loadedCount : null
+  }
+}
+
 export async function openModerationCase(input: {
   entityType: string
   entityId: string
