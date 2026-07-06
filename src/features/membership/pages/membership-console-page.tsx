@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/loader'
 import { Textarea } from '@/components/ui/textarea'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { AdminPage, AdminStat, AdminStatBar, AdminTabs } from '@/features/internal/components/admin-redesign'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import {
@@ -71,12 +72,15 @@ export function MembershipConsolePage() {
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<MembershipFilter>('all')
   const [search, setSearch] = useState('')
+  // El input responde en vivo, pero la búsqueda paginada solo golpea el servidor
+  // ~300 ms tras dejar de teclear (no en cada carácter).
+  const debouncedSearch = useDebouncedValue(search.trim())
 
   const consoleQuery = useInfiniteQuery({
-    queryKey: [...CONSOLE_QUERY_KEY, filter, search.trim()],
+    queryKey: [...CONSOLE_QUERY_KEY, filter, debouncedSearch],
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
-      fetchAdminMembershipPage({ filter, search, limit: MEMBERSHIP_PAGE_SIZE, offset: pageParam }),
+      fetchAdminMembershipPage({ filter, search: debouncedSearch, limit: MEMBERSHIP_PAGE_SIZE, offset: pageParam }),
     getNextPageParam: (lastPage) => lastPage.nextOffset
   })
 

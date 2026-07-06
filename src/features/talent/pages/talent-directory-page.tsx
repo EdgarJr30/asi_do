@@ -32,6 +32,7 @@ import {
   type CandidateDirectorySort
 } from '@/features/talent/lib/talent-api'
 import { useUrlParamState } from '@/hooks/use-url-param-state'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cardReveal, gridStagger, pageStagger, softEase } from '@/shared/ui/card-motion'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
@@ -71,6 +72,9 @@ export function TalentDirectoryPage() {
   // Filtros y orden respaldados por la URL: sobreviven a navegación, back/forward
   // y recarga, y son compartibles por enlace (?q=&skill=&lang=&country=&sort=).
   const [query, setQuery] = useUrlParamState('q')
+  // Búsqueda con paginación de servidor: el input/URL cambian en vivo pero el
+  // refetch solo dispara ~300 ms tras dejar de teclear (no en cada carácter).
+  const debouncedQuery = useDebouncedValue(query)
   const [skill, setSkill] = useUrlParamState('skill')
   const [language, setLanguage] = useUrlParamState('lang')
   const [countryCode, setCountryCode] = useUrlParamState('country')
@@ -106,13 +110,13 @@ export function TalentDirectoryPage() {
   // Paginación real de servidor + scroll infinito: cada página llega vía offset,
   // no se trae todo de una vez. La key incluye filtros y orden para reiniciar en 0.
   const searchQuery = useInfiniteQuery({
-    queryKey: ['talent-directory', tenantId, query, skill, language, countryCode, sort],
+    queryKey: ['talent-directory', tenantId, debouncedQuery, skill, language, countryCode, sort],
     enabled: Boolean(tenantId),
     initialPageParam: 0,
     queryFn: async ({ pageParam }) =>
       searchCandidateDirectoryPage({
         tenantId: tenantId!,
-        query,
+        query: debouncedQuery,
         skill,
         language,
         countryCode,

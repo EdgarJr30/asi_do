@@ -25,6 +25,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Select } from '@/components/ui/select'
 import { StatCard } from '@/components/ui/stat-card'
 import { Textarea } from '@/components/ui/textarea'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import {
   clearTestEmails,
   fetchEmailDeliveriesPage,
@@ -111,6 +112,10 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
   const [statusFilter, setStatusFilter] = useState<EmailStatusFilter>('all')
   const [selected, setSelected] = useState<EmailDeliveryRow | null>(null)
 
+  // El input responde en vivo; la búsqueda paginada solo golpea el servidor
+  // ~300 ms tras dejar de teclear (no en cada carácter).
+  const debouncedSearch = useDebouncedValue(search)
+
   const onSearch = (value: string) => {
     setSearch(value)
     setPage(1)
@@ -122,8 +127,8 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
 
   const statsQuery = useQuery({ queryKey: STATS_KEY, queryFn: fetchEmailDeliveryStats })
   const pageQuery = useQuery({
-    queryKey: [...PAGE_KEY, { page, search, statusFilter }],
-    queryFn: () => fetchEmailDeliveriesPage({ page, pageSize: PAGE_SIZE, search, status: statusFilter }),
+    queryKey: [...PAGE_KEY, { page, search: debouncedSearch, statusFilter }],
+    queryFn: () => fetchEmailDeliveriesPage({ page, pageSize: PAGE_SIZE, search: debouncedSearch, status: statusFilter }),
     placeholderData: keepPreviousData
   })
 

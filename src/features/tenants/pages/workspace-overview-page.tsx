@@ -35,6 +35,7 @@ import { PageLoader, Spinner } from '@/components/ui/loader';
 import { Select } from '@/components/ui/select';
 import { SideSheet } from '@/components/ui/side-sheet';
 import { Textarea } from '@/components/ui/textarea';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { toErrorMessage } from '@/features/auth/lib/auth-api';
 import {
   countWorkspaceMembers,
@@ -233,22 +234,25 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
   const [openSheet, setOpenSheet] = useState<SheetKey | null>(null);
   const [memberFilter, setMemberFilter] = useState<WorkspaceMemberFilter>('all');
   const [memberQuery, setMemberQuery] = useState('');
+  // El input responde en vivo; la búsqueda paginada solo golpea el servidor
+  // ~300 ms tras dejar de teclear (no en cada carácter).
+  const debouncedMemberQuery = useDebouncedValue(memberQuery);
   const shouldReduceMotion = useReducedMotion();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const membersCountsQuery = useQuery({
-    queryKey: ['workspace', 'members', bundle.tenant.id, 'counts', memberQuery],
-    queryFn: async () => countWorkspaceMembers({ tenantId: bundle.tenant.id, query: memberQuery }),
+    queryKey: ['workspace', 'members', bundle.tenant.id, 'counts', debouncedMemberQuery],
+    queryFn: async () => countWorkspaceMembers({ tenantId: bundle.tenant.id, query: debouncedMemberQuery }),
   });
 
   const membersQuery = useInfiniteQuery({
-    queryKey: ['workspace', 'members', bundle.tenant.id, 'page', memberFilter, memberQuery],
+    queryKey: ['workspace', 'members', bundle.tenant.id, 'page', memberFilter, debouncedMemberQuery],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) =>
       listWorkspaceMembersPage({
         tenantId: bundle.tenant.id,
         filter: memberFilter,
-        query: memberQuery,
+        query: debouncedMemberQuery,
         limit: MEMBERS_PAGE_SIZE,
         offset: pageParam,
       }),

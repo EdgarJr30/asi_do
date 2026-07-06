@@ -22,6 +22,7 @@ import {
 } from '@/features/applications/lib/application-overview-filters'
 import { CompanyLogo } from '@/features/tenants/components/company-logo'
 import { useUrlParamState } from '@/hooks/use-url-param-state'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { cn } from '@/lib/utils/cn'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import {
@@ -111,23 +112,26 @@ export function ApplicationsOverviewPage() {
     ? filterParam
     : 'all'
   const [query, setQuery] = useUrlParamState('q')
+  // La búsqueda golpea el servidor (paginación por offset), así que se debounce:
+  // el input y la URL cambian en vivo, pero solo se refetch ~300 ms tras teclear.
+  const debouncedQuery = useDebouncedValue(query)
   const userId = session.authUser?.id ?? null
 
   const filterCountsQuery = useQuery({
-    queryKey: ['applications', 'mine', userId, 'overview-counts', query],
+    queryKey: ['applications', 'mine', userId, 'overview-counts', debouncedQuery],
     enabled: session.isAuthenticated,
-    queryFn: async () => countMyApplications({ userId: session.authUser!.id, query })
+    queryFn: async () => countMyApplications({ userId: session.authUser!.id, query: debouncedQuery })
   })
 
   const myApplicationsQuery = useInfiniteQuery({
-    queryKey: ['applications', 'mine', userId, 'overview', activeFilter, query],
+    queryKey: ['applications', 'mine', userId, 'overview', activeFilter, debouncedQuery],
     enabled: session.isAuthenticated,
     initialPageParam: 0,
     queryFn: async ({ pageParam }) =>
       listMyApplicationsPage({
         userId: session.authUser!.id,
         filter: activeFilter,
-        query,
+        query: debouncedQuery,
         limit: PAGE_SIZE,
         offset: pageParam
       }),
