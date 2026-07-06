@@ -86,6 +86,10 @@ const platformAccessUsersPaginationMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260706133000_platform_access_users_pagination.sql'
 )
+const platformRolePermissionEditMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260706160000_allow_owner_edit_platform_role_permissions.sql'
+)
 
 describe('supabase schema contract', () => {
   it('keeps the identity, notification, and push workflow migrations in place', () => {
@@ -110,6 +114,7 @@ describe('supabase schema contract', () => {
     expect(existsSync(candidateResumeDefaultPromotionMigrationPath)).toBe(true)
     expect(existsSync(platformOwnerAccessControlMigrationPath)).toBe(true)
     expect(existsSync(platformAccessUsersPaginationMigrationPath)).toBe(true)
+    expect(existsSync(platformRolePermissionEditMigrationPath)).toBe(true)
   })
 
   it('defines the core identity, approval, and storage foundations', () => {
@@ -364,5 +369,19 @@ describe('supabase schema contract', () => {
     expect(migration).toContain("'users_page'")
     expect(migration).toContain('offset v_offset')
     expect(migration).toContain('grant execute on function public.admin_platform_rbac_snapshot(text, integer, integer) to authenticated;')
+  })
+
+  it('allows platform owners to edit permissions on locked platform roles without editing role metadata', () => {
+    const migration = readFileSync(platformRolePermissionEditMigrationPath, 'utf8')
+
+    expect(migration).toContain('create or replace function public.admin_update_platform_role(')
+    expect(migration).toContain("raise exception 'Only platform_owner can update platform roles'")
+    expect(migration).toContain('if v_previous.is_locked then')
+    expect(migration).toContain("raise exception 'Locked platform role metadata cannot be edited from this module'")
+    expect(migration).toContain('delete from public.platform_role_permissions')
+    expect(migration).toContain('insert into public.platform_role_permissions (role_id, permission_id)')
+    expect(migration).toContain("'metadata_locked', v_previous.is_locked")
+    expect(migration).toContain("'previous_permission_codes', v_previous_permission_codes")
+    expect(migration).toContain('grant execute on function public.admin_update_platform_role(uuid, text, text, text[]) to authenticated;')
   })
 })

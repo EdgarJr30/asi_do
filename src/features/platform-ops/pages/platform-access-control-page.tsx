@@ -600,8 +600,11 @@ export function PlatformAccessControlPage() {
     roleSheet?.mode === 'create'
       ? 'Crear rol'
       : roleSheet?.mode === 'edit'
-        ? 'Editar rol'
+        ? roleSheet.role?.is_locked
+          ? 'Editar permisos'
+          : 'Editar rol'
         : 'Permisos del rol'
+  const roleSheetMetadataLocked = roleSheet?.mode === 'edit' && Boolean(roleSheet.role?.is_locked)
 
   return (
     <AdminPage
@@ -817,11 +820,9 @@ export function PlatformAccessControlPage() {
                       <Button variant="outline" className="h-8 px-2.5 text-xs" onClick={() => openRoleSheet({ mode: 'view', role })}>
                         <Eye className="size-3.5" /> Permisos
                       </Button>
-                      {!role.is_locked ? (
-                        <Button variant="outline" className="h-8 px-2.5 text-xs" onClick={() => openRoleSheet({ mode: 'edit', role })}>
-                          <Pencil className="size-3.5" /> Editar
-                        </Button>
-                      ) : null}
+                      <Button variant="outline" className="h-8 px-2.5 text-xs" onClick={() => openRoleSheet({ mode: 'edit', role })}>
+                        <Pencil className="size-3.5" /> {role.is_locked ? 'Editar permisos' : 'Editar'}
+                      </Button>
                       {!role.is_locked && !role.is_system ? (
                         <Button variant="ghost" className="h-8 px-2.5 text-xs text-rose-600 hover:text-rose-700" onClick={() => setPendingDelete(role)}>
                           <Trash2 className="size-3.5" /> Eliminar
@@ -928,7 +929,7 @@ export function PlatformAccessControlPage() {
               <Input
                 value={roleName}
                 onChange={(event) => setRoleName(event.target.value)}
-                disabled={roleSheet?.mode === 'view'}
+                disabled={roleSheet?.mode === 'view' || roleSheetMetadataLocked}
                 className="h-10 text-[0.84rem]"
                 placeholder="Soporte operativo"
               />
@@ -938,7 +939,7 @@ export function PlatformAccessControlPage() {
               <Textarea
                 value={roleDescription}
                 onChange={(event) => setRoleDescription(event.target.value)}
-                disabled={roleSheet?.mode === 'view'}
+                disabled={roleSheet?.mode === 'view' || roleSheetMetadataLocked}
                 className="min-h-24 text-[0.84rem]"
                 placeholder="Alcance operacional del rol"
               />

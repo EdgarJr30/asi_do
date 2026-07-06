@@ -174,7 +174,7 @@ A future anonymous opportunity preview may exist only as a separate public summa
 15. Final license activation is separate from pastor/regional authorization and is granted by default only to super administrators and platform support; any extra holder of `license:activate` requires explicit super-administrator assignment.
 16. Only company tenants may receive job creation and publishing permissions for employment job postings.
 17. The full role and scope taxonomy is defined in `docs/domain/ROLE_SCOPE_MODEL.md`.
-18. Platform role administration after bootstrap must use the owner-only `/admin/access-control` workflow and audited SQL RPCs. A `platform_admin` may operate allowed admin modules, but only an active `platform_owner` may create custom platform roles, assign/revoke platform roles, delete custom platform roles, or inspect the platform RBAC report/audit snapshot.
+18. Platform role administration after bootstrap must use the owner-only `/admin/access-control` workflow and audited SQL RPCs. A `platform_admin` may operate allowed admin modules, but only an active `platform_owner` may create custom platform roles, edit the permission set assigned to any platform role, assign/revoke platform roles, delete custom platform roles, or inspect the platform RBAC report/audit snapshot. Locked system role metadata remains immutable from the module even when its permission set is adjusted.
 
 ---
 
