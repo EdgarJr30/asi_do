@@ -178,8 +178,7 @@ export function StressHarnessPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        eyebrow="Super admin"
-        title="Arnés de estrés"
+        title="Stress Harness"
         description="Genera datos sintéticos masivos y mide el comportamiento de la base (p50/p95/p99, throughput, error rate, timeouts). Solo entornos no productivos."
         actions={
           <Button onClick={() => mutation.mutate()} disabled={isRunning || totalPlanned === 0}>

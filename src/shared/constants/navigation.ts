@@ -197,7 +197,7 @@ export const adminNavigationItems: NavigationItem[] = [
     requiredPermission: 'email:read'
   },
   {
-    title: 'Arnés de estrés',
+    title: 'Stress Harness',
     href: surfacePaths.admin.stressHarness,
     description: 'Datos sintéticos masivos y métricas de capacidad',
     requiresAuth: true,
