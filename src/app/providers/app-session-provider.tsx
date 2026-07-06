@@ -45,6 +45,12 @@ interface AppSessionContextValue {
   /** El usuario tiene autoridad pastoral activa ⇒ ve la cola de solicitudes de su iglesia. */
   isMembershipReviewerPastor: boolean
   refresh: () => Promise<void>
+  /**
+   * Limpia el estado de sesión en memoria de forma síncrona. Se usa al cerrar
+   * sesión para que la UI refleje el cierre de inmediato, sin esperar a que el
+   * evento `SIGNED_OUT` del SDK (que depende de la red del revoke) se propague.
+   */
+  clearSession: () => void
 }
 
 const AppSessionContext = createContext<AppSessionContextValue | null>(null)
@@ -76,7 +82,8 @@ function emptyState(session: Session | null): AppSessionContextValue {
     canReviewRecruiterRequests: false,
     canReviewAppErrors: false,
     isMembershipReviewerPastor: false,
-    refresh: () => Promise.resolve()
+    refresh: () => Promise.resolve(),
+    clearSession: () => {}
   }
 }
 
@@ -131,6 +138,20 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  function clearSession() {
+    hydratedUserIdRef.current = null
+    setSession(null)
+    setProfile(null)
+    setMemberships([])
+    setPermissions([])
+    setPlatformPermissions([])
+    setIsPlatformAdmin(false)
+    setIsPlatformOwner(false)
+    setIsInternalDeveloper(false)
+    setActivePastorScopeCount(0)
+    setIsLoading(false)
   }
 
   async function refresh() {
@@ -241,7 +262,8 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     canReviewRecruiterRequests: permissions.includes('recruiter_request:review'),
     canReviewAppErrors: permissions.includes('audit_log:read'),
     isMembershipReviewerPastor: activePastorScopeCount > 0,
-    refresh
+    refresh,
+    clearSession
   }
 
   return <AppSessionContext.Provider value={contextValue}>{children}</AppSessionContext.Provider>

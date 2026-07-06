@@ -1364,16 +1364,20 @@ export function PlatformAppShell({
 
   const signOutMutation = useMutation({
     mutationFn: () => signOutCurrentUser(),
-    onSuccess: () => {
+    onMutate: () => {
+      // Cierre local INMEDIATO: limpiamos la sesión y la caché en memoria sin esperar
+      // la respuesta de red del revoke de Supabase (que puede tardar o colgarse). Así
+      // la UI refleja el cierre al instante, sin tener que recargar la página.
       setProfileMenuOpen(false)
       setNotificationPanelOpen(false)
+      session.clearSession()
+      queryClient.clear()
       toast.success('Sesión cerrada')
       void navigate(surfacePaths.storefront.home)
     },
     onError: (error) => {
-      toast.error('No se pudo cerrar la sesión', {
-        description: toErrorMessage(error)
-      })
+      // El estado local ya quedó limpio; un fallo aquí solo afecta al revoke remoto.
+      console.error('No se pudo revocar la sesión en el servidor:', toErrorMessage(error))
     }
   })
 
