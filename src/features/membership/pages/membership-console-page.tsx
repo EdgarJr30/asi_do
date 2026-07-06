@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Banknote, CheckCircle2, Infinity as InfinityIcon, Paperclip, Power, Search, ShieldCheck, Sparkles, UserPlus, X } from 'lucide-react'
+import { Banknote, CheckCircle2, Infinity as InfinityIcon, Power, Search, ShieldCheck, Sparkles, UserPlus, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -16,7 +16,6 @@ import { AdminPage, AdminStat, AdminStatBar, AdminTabs } from '@/features/intern
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import {
   activateMember,
-  createMembershipReceiptUrl,
   deactivateMember,
   fetchAdminMembershipCounts,
   fetchAdminMembershipPage,
@@ -24,7 +23,6 @@ import {
   revokeManualAccess,
   reviewMembershipApplication,
   searchUsersForManualAccess,
-  verifyMembershipPayment,
   type AdminMembershipFilter,
   type AdminMembershipRow,
   type ManualAccessUser,
@@ -219,20 +217,6 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
     onError: (error) => toast.error(toErrorMessage(error))
   })
 
-  const paymentMutation = useMutation({
-    mutationFn: async (decision: 'verified' | 'rejected') => {
-      if (!payment) {
-        throw new Error('No hay un comprobante para validar.')
-      }
-      return verifyMembershipPayment({ paymentId: payment.id, decision, notes })
-    },
-    onSuccess: (_data, decision) => {
-      toast.success(decision === 'verified' ? 'Pago verificado.' : 'Comprobante rechazado.')
-      onChanged()
-    },
-    onError: (error) => toast.error(toErrorMessage(error))
-  })
-
   const activateMutation = useMutation({
     mutationFn: async () => activateMember({ applicationId: application.id, notes }),
     onSuccess: () => {
@@ -256,7 +240,7 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
     onError: (error) => toast.error(toErrorMessage(error))
   })
 
-  const busy = reviewMutation.isPending || paymentMutation.isPending || activateMutation.isPending || deactivateMutation.isPending
+  const busy = reviewMutation.isPending || activateMutation.isPending || deactivateMutation.isPending
   const fullName = `${application.applicant_first_name} ${application.applicant_last_name}`.trim()
 
   return (
@@ -310,8 +294,6 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
           ) : null}
         </div>
 
-        {payment?.receipt_path ? <ReceiptViewLink receiptPath={payment.receipt_path} /> : null}
-
         <Button variant="ghost" className="h-8 rounded-control px-3 text-[0.8rem]" onClick={() => setNotesOpen((value) => !value)}>
           Notas
         </Button>
@@ -343,21 +325,6 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
               </Button>
               <Button className="h-8 rounded-control px-3 text-[0.8rem]" variant="danger" disabled={busy} onClick={() => reviewMutation.mutate('rejected')}>
                 Rechazar
-              </Button>
-            </div>
-          </div>
-        ) : null}
-
-        {/* Verificación del pago */}
-        {payment && payment.status === 'submitted' ? (
-          <div className="space-y-2 border-t border-(--app-border) pt-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-(--app-text-subtle)">Pago</p>
-            <div className="flex flex-wrap gap-2">
-              <Button className="h-8 rounded-control px-3 text-[0.8rem]" disabled={busy} onClick={() => paymentMutation.mutate('verified')}>
-                <Banknote className="size-4" /> Verificar pago
-              </Button>
-              <Button className="h-8 rounded-control px-3 text-[0.8rem]" variant="danger" disabled={busy} onClick={() => paymentMutation.mutate('rejected')}>
-                Rechazar comprobante
               </Button>
             </div>
           </div>
@@ -604,19 +571,5 @@ function ManualAccessPanel() {
         </CardContent>
       ) : null}
     </Card>
-  )
-}
-
-function ReceiptViewLink({ receiptPath }: { receiptPath: string }) {
-  const openMutation = useMutation({
-    mutationFn: async () => createMembershipReceiptUrl(receiptPath),
-    onSuccess: (url) => window.open(url, '_blank', 'noopener,noreferrer'),
-    onError: (error) => toast.error(toErrorMessage(error))
-  })
-
-  return (
-    <Button variant="outline" className="h-8 rounded-control px-3 text-[0.8rem]" disabled={openMutation.isPending} onClick={() => openMutation.mutate()}>
-      <Paperclip className="size-4" /> {openMutation.isPending ? 'Abriendo…' : 'Ver comprobante'}
-    </Button>
   )
 }

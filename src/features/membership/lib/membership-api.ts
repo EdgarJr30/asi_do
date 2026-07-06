@@ -1,6 +1,5 @@
-import { createPrivateFileUrl, uploadPrivateFile } from '@/features/auth/lib/auth-api'
 import { supabase } from '@/lib/supabase/client'
-import type { Tables, TablesInsert } from '@/shared/types/database'
+import type { Tables } from '@/shared/types/database'
 
 export type MembershipApplication = Tables<'institutional_membership_applications'>
 export type MembershipPayment = Tables<'membership_payments'>
@@ -117,13 +116,7 @@ export async function fetchMembershipPaymentSettings(): Promise<MembershipPaymen
 }
 
 export interface MembershipPaymentSettingsInput {
-  bankName: string
-  accountHolder: string
-  accountNumber: string
-  accountType: string
-  routingOrSwift: string
   currency: string
-  instructions: string
   duesByCategory: Record<string, { amount: number | null; label: string }>
   azulEnabled: boolean
   azulCurrencyCode: string
@@ -140,13 +133,7 @@ export async function updateMembershipPaymentSettings(
   const { data, error } = await client
     .from('membership_payment_settings')
     .update({
-      bank_name: input.bankName.trim(),
-      account_holder: input.accountHolder.trim(),
-      account_number: input.accountNumber.trim(),
-      account_type: input.accountType.trim(),
-      routing_or_swift: input.routingOrSwift.trim(),
       currency: input.currency.trim() || 'DOP',
-      instructions: input.instructions.trim(),
       dues_by_category: input.duesByCategory,
       azul_enabled: input.azulEnabled,
       azul_currency_code: input.azulCurrencyCode.trim() || '$',
@@ -168,7 +155,6 @@ export type MembershipReviewDecision = Extract<
   'under_review' | 'needs_more_info' | 'approved' | 'rejected'
 >
 export type PastoralReferenceStatus = MembershipApplication['pastoral_reference_status']
-export type MembershipPaymentDecision = Extract<MembershipPayment['status'], 'verified' | 'rejected'>
 
 /** Vista admin: solicitud + su último pago + el estado de la cuenta del miembro. */
 export interface AdminMembershipRow {
@@ -391,25 +377,6 @@ export async function fetchAdminMembershipCounts(): Promise<AdminMembershipCount
   }
 }
 
-/** Admin valida (o rechaza) un pago de membresía vía RPC `verify_membership_payment`. */
-export async function verifyMembershipPayment(input: {
-  paymentId: string
-  decision: MembershipPaymentDecision
-  notes?: string
-}): Promise<MembershipPayment> {
-  const client = requireSupabase()
-  const { data, error } = await client.rpc('verify_membership_payment', {
-    p_payment_id: input.paymentId,
-    p_decision: input.decision,
-    p_notes: input.notes?.trim() || undefined
-  })
-
-  if (error) {
-    throw error
-  }
-  return data
-}
-
 /**
  * Admin activa la cuenta del miembro vía RPC `activate_member` (exige solicitud
  * aprobada + pago verificado; flip de flags + expira en +N meses).
@@ -609,64 +576,6 @@ export async function respondMembershipApplication(input: {
     throw error
   }
   return data
-}
-
-export interface SubmitMembershipPaymentInput {
-  applicationId: string
-  memberUserId: string
-  categorySlug: string
-  amount: number | null
-  currency: string
-  file: File
-  referenceNote?: string
-  /** Quién sube el comprobante: el propio miembro por defecto, o el pastor por él. */
-  uploadedByUserId?: string
-}
-
-/**
- * Sube el comprobante de transferencia al bucket privado y registra el pago
- * (`status='submitted'`) para que un admin lo verifique. Cubre el período anual.
- */
-export async function submitMembershipPaymentReceipt(input: SubmitMembershipPaymentInput): Promise<MembershipPayment> {
-  const client = requireSupabase()
-
-  const receiptPath = await uploadPrivateFile({
-    bucket: 'membership-receipts',
-    ownerUserId: input.memberUserId,
-    file: input.file,
-    prefix: 'receipt'
-  })
-
-  const periodStart = new Date()
-  const periodEnd = new Date(periodStart)
-  periodEnd.setFullYear(periodEnd.getFullYear() + 1)
-
-  const payload: TablesInsert<'membership_payments'> = {
-    application_id: input.applicationId,
-    member_user_id: input.memberUserId,
-    category_slug: input.categorySlug,
-    amount: input.amount,
-    currency: input.currency,
-    method: 'bank_transfer',
-    period_start: periodStart.toISOString().slice(0, 10),
-    period_end: periodEnd.toISOString().slice(0, 10),
-    receipt_path: receiptPath,
-    reference_note: input.referenceNote?.trim() || null,
-    status: 'submitted',
-    uploaded_by_user_id: input.uploadedByUserId ?? input.memberUserId
-  }
-
-  const { data, error } = await client.from('membership_payments').insert(payload).select('*').single()
-
-  if (error) {
-    throw error
-  }
-  return data
-}
-
-/** URL firmada (10 min) para que el miembro vea/descargue su comprobante subido. */
-export async function createMembershipReceiptUrl(receiptPath: string): Promise<string> {
-  return createPrivateFileUrl('membership-receipts', receiptPath)
 }
 
 /** Extrae la cuota de una categoría desde la configuración (jsonb dues_by_category). */

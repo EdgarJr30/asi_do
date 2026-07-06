@@ -6,9 +6,7 @@ import {
   Building2,
   CheckCircle2,
   Mail,
-  Paperclip,
-  Phone,
-  UploadCloud
+  Phone
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -22,12 +20,8 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import {
-  createMembershipReceiptUrl,
-  fetchMembershipPaymentSettings,
   fetchPastorMembershipQueue,
-  getCategoryDue,
   reviewMembershipApplication,
-  submitMembershipPaymentReceipt,
   type MembershipReviewDecision,
   type PastorQueueItem
 } from '@/features/membership/lib/membership-api'
@@ -129,7 +123,6 @@ export function PastorMembershipQueuePage() {
 function QueueCard({ item, onChanged }: { item: PastorQueueItem; onChanged: () => void }) {
   const { application, payment } = item
   const [reviewNotes, setReviewNotes] = useState('')
-  const [showUpload, setShowUpload] = useState(false)
 
   const reviewMutation = useMutation({
     mutationFn: async (decision: MembershipReviewDecision) =>
@@ -196,8 +189,6 @@ function QueueCard({ item, onChanged }: { item: PastorQueueItem; onChanged: () =
           ) : null}
         </div>
 
-        {payment?.receipt_path ? <ReceiptViewLink receiptPath={payment.receipt_path} /> : null}
-
         <div>
           <label className="text-sm font-medium text-(--app-text)">Notas de revisión (opcional)</label>
           <Textarea
@@ -221,100 +212,7 @@ function QueueCard({ item, onChanged }: { item: PastorQueueItem; onChanged: () =
             Rechazar
           </Button>
         </div>
-
-        <div className="border-t border-(--app-border) pt-3">
-          {showUpload ? (
-            <PastorReceiptUpload application={application} onUploaded={onChanged} />
-          ) : (
-            <Button variant="ghost" className="h-9" onClick={() => setShowUpload(true)}>
-              <UploadCloud className="size-4" /> Subir comprobante por el miembro
-            </Button>
-          )}
-        </div>
       </CardContent>
     </Card>
-  )
-}
-
-function ReceiptViewLink({ receiptPath }: { receiptPath: string }) {
-  const openMutation = useMutation({
-    mutationFn: async () => createMembershipReceiptUrl(receiptPath),
-    onSuccess: (url) => window.open(url, '_blank', 'noopener,noreferrer'),
-    onError: (error) => toast.error(toErrorMessage(error))
-  })
-
-  return (
-    <Button variant="outline" className="h-9" disabled={openMutation.isPending} onClick={() => openMutation.mutate()}>
-      <Paperclip className="size-4" /> {openMutation.isPending ? 'Abriendo…' : 'Ver comprobante del miembro'}
-    </Button>
-  )
-}
-
-const ACCEPTED_RECEIPT_TYPES = 'application/pdf,image/png,image/jpeg,image/webp'
-
-function PastorReceiptUpload({
-  application,
-  onUploaded
-}: {
-  application: PastorQueueItem['application']
-  onUploaded: () => void
-}) {
-  const session = useAppSession()
-  const [file, setFile] = useState<File | null>(null)
-  const [referenceNote, setReferenceNote] = useState('')
-
-  const uploadMutation = useMutation({
-    mutationFn: async () => {
-      if (!application.requester_user_id) {
-        throw new Error('Esta solicitud no tiene un miembro asociado.')
-      }
-      if (!file) {
-        throw new Error('Selecciona el archivo del comprobante.')
-      }
-      const settings = await fetchMembershipPaymentSettings()
-      const due = getCategoryDue(settings, application.category_slug)
-      return submitMembershipPaymentReceipt({
-        applicationId: application.id,
-        memberUserId: application.requester_user_id,
-        categorySlug: application.category_slug,
-        amount: due?.amount ?? null,
-        currency: settings?.currency ?? 'USD',
-        file,
-        referenceNote,
-        uploadedByUserId: session.authUser?.id
-      })
-    },
-    onSuccess: () => {
-      toast.success('Comprobante subido. Un administrador lo verificará.')
-      setFile(null)
-      setReferenceNote('')
-      onUploaded()
-    },
-    onError: (error) => toast.error(toErrorMessage(error))
-  })
-
-  return (
-    <div className="rounded-card border border-(--app-border) bg-(--app-surface-muted) p-4">
-      <p className="text-sm font-semibold text-(--app-text)">Subir comprobante por el miembro</p>
-      <p className="mt-0.5 text-xs text-(--app-text-muted)">PDF o imagen (PNG, JPG, WebP), máximo 10 MB.</p>
-      <input
-        type="file"
-        accept={ACCEPTED_RECEIPT_TYPES}
-        onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-        disabled={uploadMutation.isPending}
-        className="mt-3 block w-full text-sm text-(--app-text-muted) file:mr-3 file:rounded-control file:border-0 file:bg-(--app-surface) file:px-3 file:py-2 file:text-sm file:font-semibold file:text-(--app-text) hover:file:bg-(--app-border)"
-      />
-      <input
-        type="text"
-        value={referenceNote}
-        onChange={(event) => setReferenceNote(event.target.value)}
-        disabled={uploadMutation.isPending}
-        placeholder="Referencia o número de transferencia (opcional)"
-        className="mt-3 block w-full rounded-control border border-(--app-border) bg-(--app-surface) px-3 py-2 text-sm text-(--app-text) placeholder:text-(--app-text-subtle) focus:border-primary-500 focus:outline-none"
-      />
-      <Button className="mt-3 h-10" disabled={!file || uploadMutation.isPending} onClick={() => uploadMutation.mutate()}>
-        <UploadCloud className="size-4" /> {uploadMutation.isPending ? 'Subiendo…' : 'Enviar comprobante'}
-      </Button>
-    </div>
   )
 }

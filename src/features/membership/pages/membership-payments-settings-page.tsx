@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { PageLoader } from '@/components/ui/loader'
-import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import {
   fetchMembershipPaymentSettings,
@@ -23,13 +22,7 @@ import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 const SETTINGS_QUERY_KEY = ['membership', 'payment-settings'] as const
 
 interface PaymentSettingsForm {
-  bankName: string
-  accountHolder: string
-  accountNumber: string
-  accountType: string
-  routingOrSwift: string
   currency: string
-  instructions: string
   dues: Record<string, string>
   azulEnabled: boolean
   azulCurrencyCode: string
@@ -38,13 +31,7 @@ interface PaymentSettingsForm {
 
 function toFormValues(settings: MembershipPaymentSettings): PaymentSettingsForm {
   return {
-    bankName: settings.bank_name,
-    accountHolder: settings.account_holder,
-    accountNumber: settings.account_number,
-    accountType: settings.account_type,
-    routingOrSwift: settings.routing_or_swift,
     currency: settings.currency,
-    instructions: settings.instructions,
     dues: Object.fromEntries(
       membershipCategories.map((category) => {
         const due = getCategoryDue(settings, category.slug)
@@ -56,15 +43,6 @@ function toFormValues(settings: MembershipPaymentSettings): PaymentSettingsForm 
     azulEnvironment: settings.azul_environment
   }
 }
-
-const bankFields: Array<{ name: keyof PaymentSettingsForm; label: string; placeholder?: string }> = [
-  { name: 'bankName', label: 'Banco' },
-  { name: 'accountHolder', label: 'Titular de la cuenta' },
-  { name: 'accountNumber', label: 'Número de cuenta' },
-  { name: 'accountType', label: 'Tipo de cuenta', placeholder: 'Corriente / Ahorros' },
-  { name: 'routingOrSwift', label: 'SWIFT / ABA / Routing' },
-  { name: 'currency', label: 'Moneda', placeholder: 'DOP' }
-]
 
 export function MembershipPaymentsSettingsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const session = useAppSession()
@@ -89,13 +67,7 @@ export function MembershipPaymentsSettingsPage({ embedded = false }: { embedded?
       return updateMembershipPaymentSettings(
         settings.id,
         {
-          bankName: values.bankName,
-          accountHolder: values.accountHolder,
-          accountNumber: values.accountNumber,
-          accountType: values.accountType,
-          routingOrSwift: values.routingOrSwift,
           currency: values.currency,
-          instructions: values.instructions,
           duesByCategory: Object.fromEntries(
             membershipCategories.map((category) => {
               const raw = values.dues?.[category.slug] ?? ''
@@ -114,7 +86,7 @@ export function MembershipPaymentsSettingsPage({ embedded = false }: { embedded?
       await queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY })
       await queryClient.invalidateQueries({ queryKey: ['membership', 'status'] })
       toast.success('Datos de pago actualizados', {
-        description: 'Los miembros verán los nuevos datos de transferencia y cuotas.'
+        description: 'Los miembros verán las nuevas cuotas y la configuración de la pasarela.'
       })
     },
     onError: async (error) => {
@@ -129,7 +101,7 @@ export function MembershipPaymentsSettingsPage({ embedded = false }: { embedded?
   })
 
   if (settingsQuery.isLoading) {
-    return <PageLoader label="Cargando configuración de pago" hint="Datos bancarios y cuotas" />
+    return <PageLoader label="Cargando configuración de pago" hint="Pasarela y cuotas" />
   }
 
   if (settingsQuery.error) {
@@ -152,10 +124,10 @@ export function MembershipPaymentsSettingsPage({ embedded = false }: { embedded?
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="inline-flex items-center gap-2 text-[1.6rem] font-semibold tracking-tight text-(--app-text) sm:text-[1.9rem]">
-              <Banknote className="size-6 text-primary-600 dark:text-primary-300" /> Datos de pago y cuotas
+              <Banknote className="size-6 text-primary-600 dark:text-primary-300" /> Cobros y cuotas
             </h1>
             <p className="mt-1 text-sm text-(--app-text-muted)">
-              Estos datos se muestran a los miembros para su transferencia. Actualízalos cuando tengas la información real.
+              Configura la pasarela de pago con tarjeta (AZUL) y las cuotas por categoría de membresía.
             </p>
           </div>
           <Button type="submit" className="h-11 shrink-0" disabled={saveMutation.isPending || !settings}>
@@ -205,37 +177,15 @@ export function MembershipPaymentsSettingsPage({ embedded = false }: { embedded?
 
       <Card>
         <CardHeader>
-          <CardTitle>Datos bancarios (referencia)</CardTitle>
-          <CardDescription>Cuenta destino para transferencias manuales (respaldo / histórico).</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {bankFields.map((field) => (
-              <label key={field.name} className="grid gap-1.5 text-sm">
-                <span className="font-medium text-(--app-text-muted)">{field.label}</span>
-                <Input placeholder={field.placeholder} {...form.register(field.name)} />
-              </label>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Instrucciones para el miembro</CardTitle>
-          <CardDescription>Mensaje que verá el miembro junto a los datos de transferencia.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea rows={3} {...form.register('instructions')} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>Cuotas por categoría</CardTitle>
           <CardDescription>Monto anual ({currency}) que paga cada categoría de membresía.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <label className="grid max-w-xs gap-1.5 text-sm">
+            <span className="font-medium text-(--app-text-muted)">Moneda</span>
+            <Input placeholder="DOP" {...form.register('currency')} />
+            <span className="text-xs text-(--app-text-subtle)">Código de la moneda en que se expresan las cuotas.</span>
+          </label>
           <div className="space-y-2.5">
             {membershipCategories.map((category) => (
               <div

@@ -29,7 +29,7 @@ export function AdminFinancePage() {
   return (
     <AdminPage
       title="Finanzas"
-      description="Configuración financiera visible a miembros y donantes: pasarela AZUL, datos bancarios, cuotas por categoría y montos sugeridos."
+      description="Configuración financiera visible a miembros y donantes: pasarela AZUL, cuotas por categoría y montos sugeridos."
       actions={
         tab === 'payments' ? (
           <Button type="submit" form="membership-payments-settings-form" className="h-9 rounded-control">
