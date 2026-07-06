@@ -118,10 +118,13 @@ describe('route shells', () => {
   it('renders the public shell with guest actions for unauthenticated visitors', async () => {
     renderPublicShell()
 
-    expect(await screen.findByRole('link', { name: /Plataforma ASI/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Jobs' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Pricing' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'ASI institucional' })).toBeInTheDocument()
+    // El brand es el logo (link a home con el alt de la marca).
+    expect(await screen.findByRole('link', { name: /ASI República Dominicana/i })).toBeInTheDocument()
+    // Navegación de marketing (anclas), no destinos de producto.
+    expect(screen.getByRole('link', { name: '¿Cómo funciona?' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'FAQ' })).toBeInTheDocument()
+    // "ASI institucional" e "Iniciar sesión" navegan → son links, no botones.
+    expect(screen.getByRole('link', { name: 'ASI institucional' })).toBeInTheDocument()
     const guestRegistrationAction = screen.getByRole('button', { name: guestRegistrationActionName })
     expect(guestRegistrationAction).toBeInTheDocument()
     if (PLATFORM_REGISTRATION_LOCKED) {
@@ -129,7 +132,7 @@ describe('route shells', () => {
     } else {
       expect(guestRegistrationAction).toBeEnabled()
     }
-    expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toBeInTheDocument()
   })
 
   it('shows only workspace access for authenticated users with workspace permissions, including mobile menu', async () => {
@@ -158,12 +161,12 @@ describe('route shells', () => {
 
     renderPublicShell()
 
-    expect(await screen.findByRole('button', { name: 'Abrir mi workspace' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Abrir mi workspace' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Crear cuenta' })).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir menú' }))
 
-    expect(await screen.findAllByRole('button', { name: 'Abrir mi workspace' })).toHaveLength(2)
+    expect(await screen.findAllByRole('link', { name: 'Abrir mi workspace' })).toHaveLength(2)
     expect(screen.queryByRole('button', { name: 'Crear cuenta' })).not.toBeInTheDocument()
   })
 
@@ -183,12 +186,12 @@ describe('route shells', () => {
 
     renderPublicShell()
 
-    expect(await screen.findByRole('button', { name: 'Mi perfil' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Mi perfil' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Crear cuenta' })).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Abrir menu' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir menú' }))
 
-    expect(await screen.findAllByRole('button', { name: 'Mi perfil' })).toHaveLength(2)
+    expect(await screen.findAllByRole('link', { name: 'Mi perfil' })).toHaveLength(2)
     expect(screen.queryByRole('button', { name: 'Crear cuenta' })).not.toBeInTheDocument()
   })
 

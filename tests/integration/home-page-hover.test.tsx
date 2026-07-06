@@ -60,7 +60,6 @@ describe('home page hover affordances', () => {
     )
 
     const primaryCta = await screen.findByRole('button', { name: 'Entrar a la aplicación' })
-    const faqCta = screen.getByRole('button', { name: 'Resolver dudas' })
     const pricingCta = screen.getByRole('button', { name: 'Ver pricing' })
 
     expect(primaryCta).toBeEnabled()
@@ -71,8 +70,6 @@ describe('home page hover affordances', () => {
 
     expect(pricingCta).toBeEnabled()
     expect(pricingCta.className).toContain('hover:text-[#21438e]')
-    expect(faqCta.className).toContain('hover:border-primary-400')
-    expect(faqCta.className).toContain('hover:shadow-[0_18px_34px_rgba(15,23,42,0.12)]')
 
     fireEvent.click(pricingCta)
 

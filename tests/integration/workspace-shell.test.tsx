@@ -433,7 +433,7 @@ describe('workspace shell', () => {
     })
   })
 
-  it('paginates the notification popover', async () => {
+  it('carga la primera página paginada del inbox con scroll infinito', async () => {
     seedWorkspaceSession(['workspace:read'])
     notificationState.items = Array.from({ length: 10 }, (_, index) => ({
       id: `notification-${index + 1}`,
@@ -454,15 +454,15 @@ describe('workspace shell', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Abrir notificaciones' }))
 
+    // El popover trae solo la primera página (8 de 10) y deja el resto para el
+    // scroll infinito (IntersectionObserver), no un botón de paginación.
     expect(await screen.findByText('Notificación 1')).toBeInTheDocument()
-    expect(screen.getByText('1-8 de 10')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Notificaciones siguientes' }))
-
-    expect(await screen.findByText('Notificación 9')).toBeInTheDocument()
-    expect(screen.getByText('9-10 de 10')).toBeInTheDocument()
+    expect(screen.getByText('Notificación 8')).toBeInTheDocument()
+    expect(screen.queryByText('Notificación 9')).not.toBeInTheDocument()
+    expect(screen.getByText('8 de 10')).toBeInTheDocument()
+    expect(screen.getByText('Sigue bajando')).toBeInTheDocument()
     expect(vi.mocked(fetchMyNotificationsPage)).toHaveBeenCalledWith({
-      page: 2,
+      page: 1,
       pageSize: 8,
       recipientUserId: 'user-1'
     })
@@ -494,8 +494,8 @@ describe('workspace shell', () => {
     const panelPositioner = await screen.findByTestId('notification-panel-positioner')
 
     expect(panelPositioner).toHaveClass('fixed')
-    expect(panelPositioner).toHaveClass('inset-x-3')
-    expect(panelPositioner).toHaveClass('top-20')
+    expect(panelPositioner).toHaveClass('right-3')
+    expect(panelPositioner).toHaveClass('top-16')
     expect(await screen.findByText('Notificación móvil')).toBeInTheDocument()
   })
 

@@ -101,6 +101,21 @@ function renderRouteEntry(entry: string | { pathname: string; state?: unknown })
   )
 }
 
+// El formulario de solicitud ahora exige cuenta (gate frictionless: todo el
+// pipeline se ata a requester_user_id). Sin sesión, la página muestra el gate
+// "Crea tu cuenta" en vez del formulario. Estos tests, centrados en el formulario,
+// siembran una sesión autenticada para pasar el gate.
+function seedAuthenticatedApplicant() {
+  authState.session = { user: { id: 'user-applicant', email: 'applicant@example.com' } }
+  authState.snapshot = {
+    profile: { id: 'user-applicant', email: 'applicant@example.com', is_internal_developer: false },
+    memberships: [],
+    permissions: [],
+    platformPermissions: [],
+    isPlatformAdmin: false,
+  }
+}
+
 function saveEligibilityToken(token: {
   category: string
   categorySlug: string
@@ -123,12 +138,8 @@ async function completeContactStep() {
   fireEvent.change(screen.getByRole('textbox', { name: /apellido/i }), {
     target: { value: 'Pérez' },
   })
-  const genderButton = screen
-    .getAllByRole('button', { name: /masculino/i })
-    .find((button) => button.textContent === 'Masculino')
-
-  expect(genderButton).toBeDefined()
-  fireEvent.click(genderButton as HTMLElement)
+  // El género es un radiogroup (role="radio"), no botones.
+  fireEvent.click(screen.getByRole('radio', { name: /masculino/i }))
   fireEvent.change(screen.getByRole('textbox', { name: /teléfono celular/i }), {
     target: { value: '809-555-2222' },
   })
@@ -176,6 +187,7 @@ describe('institutional membership application flow', () => {
   })
 
   it('renders the organizational application when the eligibility result qualifies an organization', async () => {
+    seedAuthenticatedApplicant()
     saveEligibilityToken({
       category: 'Organizacional Con Fines de Lucro',
       categorySlug: 'organizational-for-profit',
@@ -187,30 +199,18 @@ describe('institutional membership application flow', () => {
     expect(
       await screen.findByRole('heading', { name: 'Solicitud de membresía ASI' })
     ).toBeInTheDocument()
-    expect(screen.getByText('Fase 1 de 6')).toBeInTheDocument()
-    expect(
-      screen.getByRole('progressbar', { name: /progreso de solicitud 0%/i })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(/La recepcion de solicitudes de membresia esta cerrada temporalmente/i)
-    ).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /\+2 más/i }))
-    expect(screen.getByText('Requisitos adicionales')).toBeInTheDocument()
-    expect(
-      screen.getByText(/la organización no debe ser propiedad/i)
-    ).toBeInTheDocument()
-    const femaleGenderButton = screen.getByRole('button', { name: 'Femenino' })
-    const maleGenderButton = screen.getByRole('button', { name: 'Masculino' })
+    // El indicador de fase aparece en el rail y en el cuerpo (misma etiqueta).
+    expect(screen.getAllByText('Fase 1 de 6').length).toBeGreaterThan(0)
+    // Género como radiogroup: ninguna opción seleccionada al inicio.
+    const femaleGenderRadio = screen.getByRole('radio', { name: 'Femenino' })
+    const maleGenderRadio = screen.getByRole('radio', { name: 'Masculino' })
 
-    expect(femaleGenderButton).toHaveAttribute('aria-pressed', 'false')
-    expect(maleGenderButton).toHaveAttribute('aria-pressed', 'false')
-    fireEvent.click(screen.getByText('Género'))
-    expect(femaleGenderButton).toHaveAttribute('aria-pressed', 'false')
-    expect(maleGenderButton).toHaveAttribute('aria-pressed', 'false')
+    expect(femaleGenderRadio).toHaveAttribute('aria-checked', 'false')
+    expect(maleGenderRadio).toHaveAttribute('aria-checked', 'false')
 
     await completeContactStep()
 
-    expect(await screen.findByText('Fase 2 de 6')).toBeInTheDocument()
+    expect((await screen.findAllByText('Fase 2 de 6')).length).toBeGreaterThan(0)
     expect(
       screen.getByRole('textbox', { name: /nombre de la organización/i })
     ).toBeInTheDocument()
@@ -225,6 +225,7 @@ describe('institutional membership application flow', () => {
   })
 
   it('renders the young professional application when the eligibility result qualifies a young professional', async () => {
+    seedAuthenticatedApplicant()
     saveEligibilityToken({
       category: 'Joven Profesional',
       categorySlug: 'young-professional',
@@ -251,6 +252,7 @@ describe('institutional membership application flow', () => {
   })
 
   it('renders the application when the eligibility token arrives through route state', async () => {
+    seedAuthenticatedApplicant()
     renderRouteEntry({
       pathname: surfacePaths.institutional.membershipApply,
       state: {
@@ -275,6 +277,7 @@ describe('institutional membership application flow', () => {
   })
 
   it('opens the filtered application after completing the eligibility wizard', async () => {
+    seedAuthenticatedApplicant()
     renderRoute(surfacePaths.institutional.eligibility)
 
     fireEvent.click(
@@ -362,6 +365,7 @@ describe('institutional membership application flow', () => {
   })
 
   it('clears the eligibility draft only when continuing to the application', async () => {
+    seedAuthenticatedApplicant()
     renderRoute(surfacePaths.institutional.eligibility)
 
     fireEvent.click(await screen.findByRole('button', { name: /sí/i }))

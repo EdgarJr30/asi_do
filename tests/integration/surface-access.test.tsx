@@ -258,7 +258,7 @@ describe('surface access states', () => {
 
     expect((await screen.findAllByText('Plataforma ASI')).length).toBeGreaterThan(0)
     expect(await screen.findByRole('heading', { name: 'Tu membresía' })).toBeInTheDocument()
-    expect(await screen.findByRole('button', { name: /Completar solicitud/i })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Iniciar mi solicitud/i })).toBeInTheDocument()
   })
 
   it('renders active account membership content when the user also has workspace access', async () => {
