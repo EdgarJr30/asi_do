@@ -19,6 +19,7 @@ import {
   type TenantApplicationsSort
 } from '@/features/applications/lib/applications-api'
 import { listTenantPipelineStages } from '@/features/pipeline/lib/pipeline-api'
+import { useUrlParamState } from '@/hooks/use-url-param-state'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cardReveal, gridStagger, pageStagger, softEase } from '@/shared/ui/card-motion'
 import { cn } from '@/lib/utils/cn'
@@ -95,12 +96,17 @@ export function WorkspaceApplicationsPage() {
   const shouldReduceMotion = useReducedMotion()
   const tenantId = session.activeTenantId
 
-  const [search, setSearch] = useState('')
-  // `submittedSearch` es lo que realmente filtra en el servidor: se aplica al
-  // pulsar Enter (escritorio) o "Ver resultados" (hoja móvil), no en cada tecla.
-  const [submittedSearch, setSubmittedSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [sort, setSort] = useState<TenantApplicationsSort>('recent')
+  // Filtros de servidor respaldados por la URL: sobreviven a navegación, back y
+  // recarga, y son compartibles por enlace (?q=&status=&sort=).
+  const [submittedSearch, setSubmittedSearch] = useUrlParamState('q')
+  const [statusFilter, setStatusFilter] = useUrlParamState('status')
+  const [sortParam, setSort] = useUrlParamState<TenantApplicationsSort>('sort', 'recent')
+  // Normaliza el valor de la URL: si viene manipulado (?sort=xxx) cae a 'recent'.
+  const sort: TenantApplicationsSort = sortParam in SORT_LABELS ? sortParam : 'recent'
+  // El input es estado local (no filtra en cada tecla); se aplica a `submittedSearch`
+  // al pulsar Enter (escritorio) o "Ver resultados" (hoja móvil). Se inicializa desde
+  // la URL para reflejar el filtro activo tras volver a la vista.
+  const [search, setSearch] = useState(submittedSearch)
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false)
 
   const sentinelRef = useRef<HTMLDivElement | null>(null)
@@ -178,7 +184,7 @@ export function WorkspaceApplicationsPage() {
           ? { key: 'status', label: statusLabel(statusFilter), clear: () => setStatusFilter('') }
           : null
       ].filter(Boolean) as Array<{ key: string; label: string; clear: () => void }>,
-    [submittedSearch, statusFilter]
+    [submittedSearch, statusFilter, setSearch, setSubmittedSearch, setStatusFilter]
   )
   const activeFilterCount = activeChips.length
 

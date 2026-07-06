@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
@@ -21,6 +21,7 @@ import {
   type PublicApplicationStatus
 } from '@/features/applications/lib/application-overview-filters'
 import { CompanyLogo } from '@/features/tenants/components/company-logo'
+import { useUrlParamState } from '@/hooks/use-url-param-state'
 import { cn } from '@/lib/utils/cn'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import {
@@ -102,8 +103,14 @@ export function ApplicationsOverviewPage() {
   const session = useAppSession()
   const shouldReduceMotion = useReducedMotion()
   const sentinelRef = useRef<HTMLDivElement | null>(null)
-  const [activeFilter, setActiveFilter] = useState<ApplicationFilter>('all')
-  const [query, setQuery] = useState('')
+  // Filtro y búsqueda respaldados por la URL: sobreviven a navegación, back y
+  // recarga, y son compartibles por enlace (?filter=&q=).
+  const [filterParam, setActiveFilter] = useUrlParamState<ApplicationFilter>('filter', 'all')
+  // Normaliza el valor de la URL: si viene manipulado (?filter=xxx) cae a 'all'.
+  const activeFilter: ApplicationFilter = (['all', 'sent', 'review', 'hired'] as const).includes(filterParam)
+    ? filterParam
+    : 'all'
+  const [query, setQuery] = useUrlParamState('q')
   const userId = session.authUser?.id ?? null
 
   const filterCountsQuery = useQuery({
