@@ -71,6 +71,22 @@ export async function fetchPipelineBoard(tenantId: string) {
   }
 }
 
+/** Solo las etapas del pipeline del tenant (para mapear nombres sin traer todo el board). */
+export async function listTenantPipelineStages(tenantId: string) {
+  const client = requireSupabase()
+  const response = await client
+    .from('pipeline_stages')
+    .select('id, name')
+    .or(`tenant_id.is.null,tenant_id.eq.${tenantId}`)
+    .order('position', { ascending: true })
+
+  if (response.error) {
+    throw response.error
+  }
+
+  return response.data ?? []
+}
+
 export async function moveApplicationStage(input: {
   applicationId: string
   toStageId: string
