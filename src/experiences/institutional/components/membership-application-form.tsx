@@ -935,10 +935,7 @@ function ChurchHierarchyPicker({
 
   return (
     <div className="rounded-card border border-(--asi-outline) bg-white p-4">
-      <p className="text-sm font-semibold text-(--asi-text)">Tu iglesia en la jerarquía</p>
-      <p className="mt-1 text-sm text-(--asi-text-muted)">
-        Selecciona tu unión, asociación, distrito e iglesia. Con esto enrutamos tu solicitud al pastor que te corresponde.
-      </p>
+      <p className="text-sm font-semibold text-(--asi-text)">Tu iglesia</p>
 
       {hierarchyQuery.isError ? (
         <p className="mt-3 text-sm text-rose-600">{toErrorMessage(hierarchyQuery.error)}</p>
@@ -2499,7 +2496,7 @@ export function MembershipApplicationForm({
       {currentStep.id === 'reference' ? (
         <ApplicationSection
           title="Referencia"
-          description="La referencia pastoral forma parte obligatoria del expediente. El pastor recibirá seguimiento adicional cuando corresponda."
+          description="Selecciona tu iglesia (unión, asociación, distrito e iglesia local) para enviar tu solicitud al pastor que te corresponde. La referencia pastoral es un paso obligatorio del proceso."
         >
         <ChurchHierarchyPicker
           value={selectedChurchId}
