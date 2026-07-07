@@ -54,6 +54,7 @@ type AzulReturnOutcome = 'declined' | 'cancelled' | 'error'
 const RECEIPTS_PAGE_SIZE = 4
 
 const applicationStatusLabels: Record<string, string> = {
+  draft: 'Borrador',
   submitted: 'Enviada',
   under_review: 'En revisión',
   needs_more_info: 'Falta información',
@@ -155,7 +156,10 @@ interface StepView {
 
 function computeSteps(bundle: MembershipStatusBundle, isActive: boolean): StepView[] {
   const { application, payment } = bundle
-  const appExists = Boolean(application)
+  // Un draft es una solicitud iniciada pero NO enviada: no cuenta como "solicitud
+  // existente" para el pipeline; el paso de solicitud sigue en progreso.
+  const isDraft = application?.status === 'draft'
+  const appExists = Boolean(application) && !isDraft
   const appRejected = application?.status === 'rejected' || application?.status === 'cancelled'
   const appApproved = application?.status === 'approved'
   const appNeedsInfo = application?.status === 'needs_more_info'
@@ -166,6 +170,8 @@ function computeSteps(bundle: MembershipStatusBundle, isActive: boolean): StepVi
   let applicationDescription: string
   if (!application) {
     applicationDescription = 'Aún no has enviado tu solicitud. Elige tu categoría y tu iglesia para empezar.'
+  } else if (isDraft) {
+    applicationDescription = `Tienes una solicitud sin terminar (${application.category_name}). Continúa donde la dejaste; ya guardamos tus datos.`
   } else if (appRejected) {
     applicationDescription = `Tu solicitud fue ${applicationStatusLabels[application.status] ?? application.status}. Contacta a un administrador.`
   } else if (appNeedsInfo) {
@@ -307,6 +313,8 @@ export function MembershipStatusPage() {
   const paymentStep = steps.find((step) => step.key === 'payment')
   const azulEnabled = Boolean(bundle.settings?.azul_enabled)
   const showPayStep = paymentStep?.state === 'current' && Boolean(bundle.application)
+  const hasDraftApplication = bundle.application?.status === 'draft'
+  const startApplicationLabel = hasDraftApplication ? 'Continuar mi solicitud' : 'Iniciar mi solicitud'
   const canRenew = session.hasActiveAsiAccess && bundle.application?.status === 'approved' && azulEnabled
   const importantStep = steps.find((step) => step.state === 'blocked') ?? steps.find((step) => step.state === 'current')
   const routeStatusLabel = session.hasActiveAsiAccess ? 'Activa' : importantStep?.title ?? 'En proceso'
@@ -465,7 +473,7 @@ export function MembershipStatusPage() {
 
                     {!session.hasActiveAsiAccess && currentStep?.key === 'application' && currentStep.state === 'current' ? (
                       <Button className="h-10" onClick={() => void navigate(surfacePaths.institutional.membershipApply)}>
-                        Iniciar mi solicitud <ArrowRight className="size-4" />
+                        {startApplicationLabel} <ArrowRight className="size-4" />
                       </Button>
                     ) : null}
                   </CardContent>
@@ -560,6 +568,7 @@ export function MembershipStatusPage() {
                         <MembershipStep
                           key={step.key}
                           step={step}
+                          startLabel={startApplicationLabel}
                           onStartApplication={() => void navigate(surfacePaths.institutional.membershipApply)}
                         />
                       ))}
@@ -803,9 +812,11 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 function MembershipStep({
   step,
+  startLabel = 'Iniciar',
   onStartApplication
 }: {
   step: StepView
+  startLabel?: string
   onStartApplication: () => void
 }) {
   const meta = stateMeta[step.state]
@@ -834,7 +845,7 @@ function MembershipStep({
       <StatusPill label={meta.label} tone={tone} />
       {step.key === 'application' && step.state === 'current' ? (
         <Button className="hidden h-9 rounded-control px-3 text-xs sm:inline-flex" onClick={onStartApplication}>
-          Iniciar <ArrowRight className="size-3.5" />
+          {startLabel} <ArrowRight className="size-3.5" />
         </Button>
       ) : null}
     </div>

@@ -4449,6 +4449,7 @@ export type Database = {
         | "rejected"
         | "cancelled"
       review_workflow_status:
+        | "draft"
         | "submitted"
         | "under_review"
         | "needs_more_info"
@@ -4701,6 +4702,7 @@ export const Constants = {
         "cancelled",
       ],
       review_workflow_status: [
+        "draft",
         "submitted",
         "under_review",
         "needs_more_info",

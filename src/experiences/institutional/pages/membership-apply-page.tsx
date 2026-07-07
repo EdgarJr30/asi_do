@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
@@ -15,6 +16,12 @@ import {
   type EligibilityToken,
 } from '@/experiences/institutional/content/eligibility-content';
 import { getMembershipApplicationVariant } from '@/experiences/institutional/content/membership-application-content';
+import { splitFullName } from '@/lib/utils/split-full-name';
+import {
+  fetchMyMembershipStatus,
+  saveMembershipDraft,
+  type MembershipApplication,
+} from '@/features/membership/lib/membership-api';
 
 // ─── Guard ────────────────────────────────────────────────────────────────────
 
@@ -50,8 +57,13 @@ function readRouteEligibilityToken(
     : null;
 }
 
-function useEligibilityGuard() {
-  const navigate = useNavigate();
+/**
+ * Lee el token de elegibilidad del lado del CLIENTE (route-state → URL → sessionStorage)
+ * y lo persiste en sessionStorage para sobrevivir el rebote por el gate de cuenta.
+ * A diferencia de antes, NO redirige: la decisión de rebotar a elegibilidad se toma
+ * arriba, después de consultar también la solicitud del servidor.
+ */
+function useClientEligibilityToken(): EligibilityToken | null {
   const location = useLocation();
   const routeToken = readRouteEligibilityToken(location.state);
   const accessToken = useMemo(() => {
@@ -60,28 +72,14 @@ function useEligibilityGuard() {
   }, [location.search]);
   const token = useMemo<EligibilityToken | null>(() => {
     if (routeToken) {
-      return {
-        ...routeToken,
-        timestamp: 0,
-      };
+      return { ...routeToken, timestamp: 0 };
     }
-
     const tokenFromAccessLink = readEligibilityTokenFromAccessToken(accessToken);
     if (tokenFromAccessLink) {
       return tokenFromAccessLink;
     }
-
     return readEligibilityToken();
   }, [accessToken, routeToken]);
-  const hasKnownCategory = token
-    ? getMembershipApplicationVariant(token.categorySlug) !== null
-    : false;
-
-  useEffect(() => {
-    if (routeToken) {
-      saveEligibilityToken(routeToken);
-    }
-  }, [routeToken]);
 
   useEffect(() => {
     if (token) {
@@ -89,13 +87,28 @@ function useEligibilityGuard() {
     }
   }, [token]);
 
-  useEffect(() => {
-    if (!token || !hasKnownCategory) {
-      void navigate(surfacePaths.institutional.eligibility, { replace: true });
-    }
-  }, [hasKnownCategory, navigate, token]);
+  const hasKnownCategory = token
+    ? getMembershipApplicationVariant(token.categorySlug) !== null
+    : false;
 
   return hasKnownCategory ? token : null;
+}
+
+/** Deriva un token de elegibilidad desde una solicitud/draft del servidor (fuente de verdad). */
+function tokenFromApplication(application: MembershipApplication | null): EligibilityToken | null {
+  if (!application) {
+    return null;
+  }
+  if (getMembershipApplicationVariant(application.category_slug) === null) {
+    return null;
+  }
+  return {
+    eligible: true,
+    category: application.category_name,
+    categorySlug: application.category_slug,
+    dues: application.dues,
+    timestamp: 0,
+  };
 }
 
 function RedirectNotice() {
@@ -176,18 +189,84 @@ function MembershipAuthGate({ token }: { token: EligibilityToken }) {
 
 export function MembershipApplyPage() {
   const session = useAppSession();
-  const token = useEligibilityGuard();
+  const navigate = useNavigate();
 
-  if (!token) return <RedirectNotice />;
+  const clientToken = useClientEligibilityToken();
+  const userId = session.authUser?.id ?? null;
 
-  // Espera la hidratación de sesión para no parpadear el gate a un usuario ya logueado.
-  if (session.isLoading) {
+  // Fuente de verdad para quien ya tiene cuenta: su solicitud/draft en el servidor.
+  // Así no dependemos del token frágil de sessionStorage y funciona entre dispositivos.
+  const statusQuery = useQuery({
+    queryKey: ['membership', 'status', userId],
+    enabled: Boolean(userId),
+    queryFn: async () => fetchMyMembershipStatus(userId!),
+  });
+
+  const serverApplication = statusQuery.data?.application ?? null;
+  const serverToken = tokenFromApplication(serverApplication);
+  const effectiveToken = serverToken ?? clientToken;
+
+  const statusReady = !userId || !statusQuery.isLoading;
+
+  // Una solicitud ya enviada/en revisión/aprobada NO se edita aquí: el formulario es
+  // solo para el draft (o para re-aplicar tras un rechazo/cancelación). Evita reenvíos
+  // duplicados mandando al panel de estado.
+  const hasLiveApplication =
+    serverApplication != null &&
+    serverApplication.status !== 'draft' &&
+    serverApplication.status !== 'rejected' &&
+    serverApplication.status !== 'cancelled';
+
+  // Persistir el draft en la cuenta cuando llegamos con token de cliente (recién
+  // creada la cuenta) pero aún no hay fila en el servidor. Así "Continuar mi
+  // solicitud" y el reanudar entre dispositivos siempre encuentran la categoría.
+  const draftMutation = useMutation({ mutationFn: saveMembershipDraft });
+  const persistedRef = useRef(false);
+  useEffect(() => {
+    if (persistedRef.current) return;
+    if (!userId || !clientToken || serverApplication) return;
+    if (!statusReady) return;
+    persistedRef.current = true;
+    const { first, last } = splitFullName(session.profile?.full_name);
+    draftMutation.mutate({
+      requesterUserId: userId,
+      categorySlug: clientToken.categorySlug,
+      categoryName: clientToken.category,
+      dues: clientToken.dues,
+      applicantFirstName: first,
+      applicantLastName: last,
+      applicantEmail: session.profile?.email ?? session.authUser?.email ?? undefined,
+      applicantPhone: session.profile?.phone ?? undefined,
+    });
+    // draftMutation es estable; solo re-evaluamos por los datos de origen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, clientToken, serverApplication, statusReady]);
+
+  // Solicitud ya viva → al panel de estado (no se reenvía desde el formulario).
+  useEffect(() => {
+    if (!statusReady) return;
+    if (!hasLiveApplication) return;
+    void navigate(surfacePaths.account.membership, { replace: true });
+  }, [statusReady, hasLiveApplication, navigate]);
+
+  // Rebote a elegibilidad SOLO cuando no hay forma de conocer la categoría: ni token
+  // de cliente ni solicitud en el servidor. Un usuario con cuenta y draft nunca rebota.
+  useEffect(() => {
+    if (session.isLoading || !statusReady) return;
+    if (effectiveToken || hasLiveApplication) return;
+    void navigate(surfacePaths.institutional.eligibility, { replace: true });
+  }, [session.isLoading, statusReady, effectiveToken, hasLiveApplication, navigate]);
+
+  // Espera la hidratación de sesión y la solicitud del servidor para no parpadear.
+  if (session.isLoading || !statusReady || hasLiveApplication) {
     return <PageLoader label="Validando tu sesión" hint="Preparando tu solicitud" />;
   }
 
+  if (!effectiveToken) return <RedirectNotice />;
+
   // Gate frictionless: la solicitud requiere cuenta (todo el pipeline se ata a requester_user_id).
   if (!session.authUser) {
-    return <MembershipAuthGate token={token} />;
+    return <MembershipAuthGate token={effectiveToken} />;
   }
 
   // El formulario rediseñado provee su propio chrome completo (rail, cabecera,
@@ -199,7 +278,7 @@ export function MembershipApplyPage() {
       spacing="none"
     >
       <div className="mx-auto max-w-[1340px]">
-        <MembershipApplicationForm token={token} />
+        <MembershipApplicationForm token={effectiveToken} application={serverApplication} />
       </div>
     </InstitutionalSection>
   );

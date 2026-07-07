@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
-import type { Tables } from '@/shared/types/database'
+import type { Tables, TablesInsert } from '@/shared/types/database'
 
 export type MembershipApplication = Tables<'institutional_membership_applications'>
 export type MembershipPayment = Tables<'membership_payments'>
@@ -96,6 +96,105 @@ export async function fetchMyMembershipStatus(userId: string): Promise<Membershi
     verifiedPayments,
     settings: settingsResponse.data ?? null
   }
+}
+
+export interface MembershipDraftInput {
+  requesterUserId: string
+  categorySlug: string
+  categoryName: string
+  dues: string
+  /** Datos ya conocidos del usuario para autocargar el formulario. */
+  applicantFirstName?: string
+  applicantLastName?: string
+  applicantEmail?: string
+  applicantPhone?: string
+}
+
+/**
+ * Persiste la categoría (y datos conocidos del usuario) en la cuenta como una
+ * solicitud en estado `draft`, para que el solicitante pueda reanudar sin repetir
+ * la verificación de elegibilidad, incluso desde otro dispositivo.
+ *
+ * - Si ya existe una solicitud VIVA (submitted/under_review/needs_more_info/approved)
+ *   no crea draft: devuelve esa solicitud (ya avanzó en el pipeline).
+ * - Si existe un draft, actualiza su categoría y datos de contacto.
+ * - Si no hay ninguna (o la última fue rechazada/cancelada), inserta un draft nuevo.
+ */
+export async function saveMembershipDraft(input: MembershipDraftInput): Promise<MembershipApplication> {
+  const client = requireSupabase()
+
+  const { data: existing, error: existingError } = await client
+    .from('institutional_membership_applications')
+    .select('*')
+    .eq('requester_user_id', input.requesterUserId)
+    .order('submitted_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (existingError) {
+    throw existingError
+  }
+
+  // Solicitud viva → no tocamos nada, ya está en revisión/aprobada.
+  if (
+    existing &&
+    existing.status !== 'draft' &&
+    existing.status !== 'rejected' &&
+    existing.status !== 'cancelled'
+  ) {
+    return existing
+  }
+
+  const contact = {
+    applicant_first_name: input.applicantFirstName ?? existing?.applicant_first_name ?? '',
+    applicant_last_name: input.applicantLastName ?? existing?.applicant_last_name ?? '',
+    applicant_email: input.applicantEmail ?? existing?.applicant_email ?? '',
+    applicant_phone: input.applicantPhone ?? existing?.applicant_phone ?? ''
+  }
+
+  if (existing && existing.status === 'draft') {
+    const { data, error } = await client
+      .from('institutional_membership_applications')
+      .update({
+        category_slug: input.categorySlug,
+        category_name: input.categoryName,
+        dues: input.dues,
+        ...contact
+      })
+      .eq('id', existing.id)
+      .select('*')
+      .single()
+    if (error) {
+      throw error
+    }
+    return data
+  }
+
+  // Columnas NOT NULL sin default → '' hasta que el formulario las complete.
+  const draftPayload = {
+    requester_user_id: input.requesterUserId,
+    status: 'draft',
+    category_slug: input.categorySlug,
+    category_name: input.categoryName,
+    dues: input.dues,
+    ...contact,
+    pastor_name: '',
+    pastor_email: '',
+    pastor_phone: '',
+    home_church_name: '',
+    church_city: '',
+    church_state_province: '',
+    conference_name: ''
+  } satisfies TablesInsert<'institutional_membership_applications'>
+
+  const { data, error } = await client
+    .from('institutional_membership_applications')
+    .insert(draftPayload)
+    .select('*')
+    .single()
+  if (error) {
+    throw error
+  }
+  return data
 }
 
 /** Configuración de pago activa (datos bancarios + cuotas). Null si no hay. */

@@ -539,6 +539,7 @@ export async function submitInstitutionalMembershipApplication(values: {
   const submittedAt = new Date().toISOString()
   const payload = {
     requester_user_id: values.requesterUserId ?? null,
+    status: 'submitted',
     category_slug: values.categorySlug,
     category_name: values.categoryName,
     dues: values.dues,
@@ -558,6 +559,40 @@ export async function submitInstitutionalMembershipApplication(values: {
     eligibility_snapshot: values.eligibilitySnapshot,
     submitted_at: submittedAt
   } satisfies TablesInsert<'institutional_membership_applications'>
+
+  // Si el usuario ya tiene un draft (creado al terminar la elegibilidad), lo
+  // enviamos actualizándolo → 'submitted'. La transición dispara la notificación de
+  // revisión y el auto-ruteo al pastor (trigger de church_id). Si no hay draft
+  // (camino legado/anónimo), insertamos la fila completa como antes.
+  if (values.requesterUserId) {
+    const draftResponse = await client
+      .from('institutional_membership_applications')
+      .select('id')
+      .eq('requester_user_id', values.requesterUserId)
+      .eq('status', 'draft')
+      .limit(1)
+      .maybeSingle()
+
+    if (draftResponse.error) {
+      throw draftResponse.error
+    }
+
+    if (draftResponse.data) {
+      const updateResponse = await client
+        .from('institutional_membership_applications')
+        .update(payload)
+        .eq('id', draftResponse.data.id)
+
+      if (updateResponse.error) {
+        throw updateResponse.error
+      }
+
+      return {
+        status: 'submitted',
+        submittedAt
+      } satisfies MembershipApplicationSubmissionResult
+    }
+  }
 
   const response = await client.from('institutional_membership_applications').insert(payload)
 

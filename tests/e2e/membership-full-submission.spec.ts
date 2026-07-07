@@ -1,16 +1,41 @@
 import { expect, test, type Page } from '@playwright/test'
 
+import {
+  createServiceClient,
+  fetchMemberApplications,
+  findUserIdByEmail,
+  membershipConfig,
+  membershipEnvReady,
+  resetMemberApplications,
+  seedLiveApplication,
+  type ServiceClient,
+} from './support/membership'
+
 /**
- * Flujo COMPLETO de envío real de una solicitud de membresía (categoría "retired"):
- * login del miembro → formulario de 6 pasos → envío → pantalla de éxito.
- * Prueba el camino real que estaba bloqueado por el flag de submisiones.
- * Requiere un miembro confirmado y onboardeado (E2E_APPLICANT_EMAIL).
+ * Flujo COMPLETO de envío real de una solicitud de membresía (categoría "retired")
+ * bajo el modelo de DRAFT:
+ *   login → deep-link con token de elegibilidad → se persiste un draft en la cuenta →
+ *   formulario de 6 pasos → envío (UPDATE draft → submitted) → pantalla de éxito.
+ * Verifica en BD que NO se duplica la solicitud (el draft se reutiliza).
+ *
+ * Repetible: resetea las solicitudes del miembro al inicio (requiere service_role).
+ * Requiere `E2E_APPLICANT_EMAIL` + credenciales de `.env.local`.
  */
 
-const APPLICANT_EMAIL = process.env.E2E_APPLICANT_EMAIL ?? ''
-const APPLICANT_PASSWORD = process.env.E2E_APPLICANT_PASSWORD ?? 'Applicant123!'
+const { applicantEmail: APPLICANT_EMAIL, applicantPassword: APPLICANT_PASSWORD } = membershipConfig
 
 test.use({ viewport: { width: 1440, height: 1200 }, isMobile: false, hasTouch: false })
+
+let admin: ServiceClient
+let applicantUserId = ''
+
+test.beforeAll(async () => {
+  if (!membershipEnvReady()) {
+    return
+  }
+  admin = createServiceClient()
+  applicantUserId = (await findUserIdByEmail(admin, APPLICANT_EMAIL)) ?? ''
+})
 
 function eligibilityAccessToken() {
   const token = {
@@ -18,7 +43,7 @@ function eligibilityAccessToken() {
     category: 'Profesional o empresario jubilado',
     categorySlug: 'retired',
     dues: 'US$50',
-    timestamp: Date.now()
+    timestamp: Date.now(),
   }
   return Buffer.from(JSON.stringify(token))
     .toString('base64')
@@ -27,38 +52,44 @@ function eligibilityAccessToken() {
     .replace(/=+$/g, '')
 }
 
-async function next(page: Page) {
-  await page.getByRole('button', { name: 'Siguiente' }).click()
-}
-
-test('un miembro envía una solicitud de membresía de punta a punta', async ({ page }) => {
-  test.skip(!APPLICANT_EMAIL, 'Define E2E_APPLICANT_EMAIL para correr esta validación.')
-
-  const pageErrors: string[] = []
-  page.on('pageerror', (error) => pageErrors.push(`${error.name}: ${error.message}`))
-
-  // Login
+async function signIn(page: Page) {
   await page.goto('/auth/sign-in')
   await page.getByPlaceholder('john.doe@empresa.com.do').fill(APPLICANT_EMAIL)
   await page.getByPlaceholder('Tu contraseña').fill(APPLICANT_PASSWORD)
   await page.getByRole('button', { name: 'Iniciar sesión' }).click()
   await expect(page).not.toHaveURL(/\/auth\/sign-in/, { timeout: 20_000 })
+}
 
-  // Deep-link al formulario con un token de elegibilidad (categoría retired)
+async function next(page: Page) {
+  await page.getByRole('button', { name: 'Siguiente' }).click()
+}
+
+test('un miembro envía su solicitud vía draft sin duplicar la fila', async ({ page }) => {
+  test.skip(!membershipEnvReady(), 'Define E2E_APPLICANT_EMAIL + service_role (.env.local) para correr esta validación.')
+  expect(applicantUserId, 'No se encontró el usuario solicitante por email').not.toBe('')
+
+  // Estado en cero → el flujo crea un draft nuevo y luego lo envía.
+  await resetMemberApplications(admin, applicantUserId)
+
+  const pageErrors: string[] = []
+  page.on('pageerror', (error) => pageErrors.push(`${error.name}: ${error.message}`))
+
+  await signIn(page)
+
+  // Deep-link al formulario con un token de elegibilidad (categoría retired).
   await page.goto(`/membership/apply?eligibilityToken=${eligibilityAccessToken()}`)
-  await expect(page.getByRole('heading', { name: /Solicitud de membresía ASI/i })).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('heading', { name: /^Solicitud de membresía$/i })).toBeVisible({ timeout: 15_000 })
 
   // ── Paso 1: Datos de contacto ──
   await page.locator('[name="firstName"]').fill('Ana')
   await page.locator('[name="lastName"]').fill('Solicitante')
-  await page.getByRole('button', { name: 'Femenino' }).click()
+  await page.getByRole('radio', { name: 'Femenino' }).click()
   await page.locator('[name="cellPhone"]').fill('8095550199')
   await page.locator('[name="email"]').fill(APPLICANT_EMAIL)
-  await page.locator('[name="address1"]').fill('Calle Principal 100, Ensanche')
-  await page.locator('[name="city"]').fill('Santo Domingo')
-  await page.locator('[name="stateProvince"]').fill('Distrito Nacional')
+  // País por defecto "República Dominicana" → provincia y ciudad son selects dependientes.
+  await page.getByLabel(/Provincia o estado/).selectOption({ index: 1 })
+  await page.getByLabel(/^Ciudad/).selectOption({ index: 1 })
   await page.locator('[name="postalCode"]').fill('10101')
-  await page.locator('[name="country"]').fill('República Dominicana')
   await next(page)
 
   // ── Paso 2: Datos de categoría (retired) ──
@@ -96,19 +127,17 @@ test('un miembro envía una solicitud de membresía de punta a punta', async ({ 
   await next(page)
 
   // ── Paso 5: Cuotas ──
-  await page.locator('[name="paymentPreference"]').selectOption('bank-transfer')
   await page
     .locator('[name="membershipPrompt"]')
     .fill('Quiero aportar mi experiencia profesional a la misión de ASI.')
   await next(page)
 
-  // ── Paso 6: Compromiso ──
+  // ── Paso 6: Compromiso (checkboxes de aceptación) ──
   const checkboxes = page.getByRole('checkbox')
   const count = await checkboxes.count()
   for (let i = 0; i < count; i++) {
     await checkboxes.nth(i).check()
   }
-  await page.locator('[name="signature"]').fill('Ana Solicitante')
 
   await page.screenshot({ path: 'tmp/full-submission-before.png', fullPage: true })
   await page.getByRole('button', { name: /Enviar solicitud/i }).click()
@@ -117,5 +146,32 @@ test('un miembro envía una solicitud de membresía de punta a punta', async ({ 
   await expect(page.getByRole('button', { name: /Ir a mi panel de membresía/i })).toBeVisible({ timeout: 20_000 })
   await page.screenshot({ path: 'tmp/full-submission-after.png', fullPage: true })
 
+  // BD: exactamente UNA solicitud (el draft se reutilizó, no se duplicó) y está enviada.
+  const apps = await fetchMemberApplications(admin, applicantUserId)
+  expect(apps.length, 'Debe existir exactamente una solicitud (draft → submitted, sin duplicar)').toBe(1)
+  expect(apps[0].status).toBe('submitted')
+  expect(apps[0].category_slug).toBe('retired')
+
   expect(pageErrors).toEqual([])
+})
+
+test('con una solicitud viva, /membership/apply redirige al panel de estado', async ({ page }) => {
+  test.skip(!membershipEnvReady(), 'Define E2E_APPLICANT_EMAIL + service_role (.env.local) para correr esta validación.')
+  expect(applicantUserId, 'No se encontró el usuario solicitante por email').not.toBe('')
+
+  // Sembramos una solicitud viva (under_review: no notifica) → el form no debe abrirse.
+  await resetMemberApplications(admin, applicantUserId)
+  await seedLiveApplication(admin, applicantUserId)
+
+  try {
+    await signIn(page)
+
+    await page.goto(`/membership/apply?eligibilityToken=${eligibilityAccessToken()}`)
+
+    // El guard anti-duplicado manda al panel de estado en vez de re-renderizar el form.
+    await expect(page).toHaveURL(/\/account\/membership/, { timeout: 15_000 })
+    await expect(page.getByRole('heading', { name: /^Solicitud de membresía$/i })).toHaveCount(0)
+  } finally {
+    await resetMemberApplications(admin, applicantUserId)
+  }
 })
