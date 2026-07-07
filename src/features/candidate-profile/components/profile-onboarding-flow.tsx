@@ -21,7 +21,6 @@ import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -54,7 +53,7 @@ const steps = [
     id: 'identity',
     label: 'Identidad',
     title: '¿Cómo te presentamos?',
-    description: 'Dos nombres claros. Nada más.',
+    description: '',
     icon: UserRound,
     fields: ['fullName', 'displayName'] satisfies FieldPath<OnboardingValues>[]
   },
@@ -116,19 +115,21 @@ function OnboardingFrame({
   const progress = Math.round((completedStepCount / steps.length) * 100)
 
   return (
-    <aside className="relative overflow-hidden rounded-card-lg border border-(--app-border) bg-(--app-surface-elevated) p-4 shadow-[0_6px_22px_rgba(29,54,120,0.07)] sm:p-5 xl:sticky xl:top-24">
+    <aside className="relative order-first overflow-hidden rounded-card-lg p-0 md:order-none md:border md:border-(--app-border) md:bg-(--app-surface-elevated) md:p-5 md:shadow-[0_6px_22px_rgba(29,54,120,0.07)] xl:sticky xl:top-24">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-100">
+          <span className="hidden size-7 shrink-0 items-center justify-center rounded-control bg-primary-50 text-primary-700 dark:bg-primary-500/12 dark:text-primary-100 md:flex">
             <Sparkles className="size-3.5" />
           </span>
-          <p className="text-sm font-bold text-(--app-text)">Tour guiado</p>
+          <p className="whitespace-nowrap text-xs font-semibold text-(--app-text-subtle) md:text-sm md:font-bold md:text-(--app-text)">
+            Tour guiado
+          </p>
         </div>
-        <span className="text-sm font-bold text-primary-700 dark:text-primary-200">{progress}%</span>
+        <span className="text-xs font-bold text-primary-700 dark:text-primary-200 md:text-sm">{progress}%</span>
       </div>
 
-      <div className="mt-4">
-        <div className="h-2 overflow-hidden rounded-full bg-primary-100/80 dark:bg-primary-500/12">
+      <div className="mt-2.5 md:mt-4">
+        <div className="h-1.5 overflow-hidden rounded-full bg-primary-100/80 dark:bg-primary-500/12 md:h-2">
           <motion.div
             className="h-full rounded-full bg-linear-to-r from-primary-500 to-primary-700"
             animate={{ width: `${progress}%` }}
@@ -166,7 +167,9 @@ function OnboardingFrame({
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-current">{step.label}</p>
-                <p className="mt-0.5 text-xs leading-5 text-(--app-text-muted)">{step.description}</p>
+                {step.description ? (
+                  <p className="mt-0.5 text-xs leading-5 text-(--app-text-muted)">{step.description}</p>
+                ) : null}
               </div>
             </button>
           )
@@ -487,30 +490,24 @@ export function ProfileOnboardingFlow() {
     : { type: 'spring' as const, stiffness: 230, damping: 28, mass: 0.85 }
 
   return (
-    <div className="mx-auto w-full max-w-300 pb-24 md:pb-0">
-      <div className="mb-7 max-w-2xl">
-        <Badge variant="soft" className="gap-2">
-          Perfil inicial
-        </Badge>
-        <h1 className="mt-4 text-[2rem] font-bold leading-[1.04] tracking-tight text-(--app-text) sm:text-[2.5rem]">
+    <div className="mx-auto w-full max-w-300 pb-8 md:pb-0">
+      <div className="mb-4 max-w-2xl md:mb-7">
+        <h1 className="text-[1.6rem] font-bold leading-[1.04] tracking-tight text-(--app-text) sm:text-[2.5rem]">
           Dejemos tu cuenta lista
         </h1>
-        <p className="mt-3 text-sm leading-6 text-(--app-text-muted) sm:text-base">
-          Un recorrido corto y opcional. Solo pedimos lo esencial para activar tu espacio; el resto lo completas cuando quieras.
-        </p>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_328px]">
+      <div className="grid gap-4 md:gap-6 xl:grid-cols-[minmax(0,1fr)_328px]">
         <main className="min-w-0">
           <section className="overflow-hidden rounded-card-lg border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_6px_22px_rgba(29,54,120,0.07)]">
             <div className="grid md:grid-cols-[minmax(0,1fr)_300px]">
-              <div className="min-h-[470px] p-5 sm:p-8">
+              <div className="p-4 sm:p-8 md:min-h-[400px]">
                 <AnimatePresence mode="wait">
                   {isComplete ? (
                     <motion.div
                       key="done"
                       animate={{ opacity: 1, y: 0 }}
-                      className="flex min-h-[414px] flex-col justify-between"
+                      className="flex flex-col justify-between md:min-h-[414px]"
                       exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -10 }}
                       initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 14 }}
                       transition={slideTransition}
@@ -546,36 +543,38 @@ export function ProfileOnboardingFlow() {
                     <motion.div
                       key={activeStep.id}
                       animate={{ opacity: 1, y: 0 }}
-                      className="flex min-h-[414px] flex-col justify-between"
+                      className="flex flex-col justify-between md:min-h-[344px]"
                       exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -10 }}
                       initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
                       transition={slideTransition}
                     >
                       <div>
                         <div className="flex items-center gap-3">
-                          <div className="flex size-[46px] shrink-0 items-center justify-center rounded-card bg-primary-50 text-primary-700 shadow-[inset_0_0_0_1px_rgba(45,82,168,0.08)] dark:bg-primary-500/12 dark:text-primary-100">
-                            <ActiveStepIcon className="size-5" />
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-card bg-primary-50 text-primary-700 shadow-[inset_0_0_0_1px_rgba(45,82,168,0.08)] dark:bg-primary-500/12 dark:text-primary-100 md:size-[46px]">
+                            <ActiveStepIcon className="size-[18px] md:size-5" />
                           </div>
                           <span className="text-xs font-bold uppercase tracking-[0.14em] text-(--app-text-subtle)">
                             Paso {activeStepIndex + 1} de {steps.length}
                           </span>
                         </div>
 
-                        <h2 className="mt-7 text-[1.7rem] font-bold leading-[1.12] tracking-tight text-(--app-text)">
+                        <h2 className="mt-5 text-[1.4rem] font-bold leading-[1.12] tracking-tight text-(--app-text) md:mt-7 md:text-[1.7rem]">
                           {activeStep.title}
                         </h2>
-                        <p className="mt-2 max-w-xl text-sm leading-6 text-(--app-text-muted)">
-                          {activeStep.description}
-                        </p>
+                        {activeStep.description ? (
+                          <p className="mt-2 max-w-xl text-sm leading-6 text-(--app-text-muted)">
+                            {activeStep.description}
+                          </p>
+                        ) : null}
 
-                        <form className="mt-7 space-y-5" onSubmit={(event) => event.preventDefault()}>
+                        <form className="mt-5 space-y-4 md:mt-7 md:space-y-5" onSubmit={(event) => event.preventDefault()}>
                           {activeStep.id === 'identity' ? (
                             <>
                               <label className="block space-y-2">
                                 <span className="text-[13px] font-semibold text-(--app-text)">Nombre completo</span>
                                 <Input
                                   autoComplete="name"
-                                  className="h-[50px] rounded-control"
+                                  className="h-12 rounded-control md:h-[50px]"
                                   placeholder="Ej. John Doe"
                                   {...form.register('fullName')}
                                 />
@@ -588,7 +587,7 @@ export function ProfileOnboardingFlow() {
                                   <span className="font-normal text-(--app-text-subtle)">· así te verán los demás</span>
                                 </span>
                                 <Input
-                                  className="h-[50px] rounded-control"
+                                  className="h-12 rounded-control md:h-[50px]"
                                   placeholder="Ej. John D."
                                   {...form.register('displayName')}
                                 />
@@ -601,7 +600,7 @@ export function ProfileOnboardingFlow() {
                             <div className="grid gap-4 sm:grid-cols-2">
                               <label className="block space-y-2">
                                 <span className="text-[13px] font-semibold text-(--app-text)">Idioma</span>
-                                <Select className="h-[50px] rounded-control" {...form.register('locale')}>
+                                <Select className="h-12 rounded-control md:h-[50px]" {...form.register('locale')}>
                                   <option value="es">Español</option>
                                   <option value="en">English</option>
                                 </Select>
@@ -609,7 +608,7 @@ export function ProfileOnboardingFlow() {
 
                               <label className="block space-y-2">
                                 <span className="text-[13px] font-semibold text-(--app-text)">País</span>
-                                <CountryCodeSelect className="h-[50px] rounded-control" {...form.register('countryCode')} />
+                                <CountryCodeSelect className="h-12 rounded-control md:h-[50px]" {...form.register('countryCode')} />
                                 <FieldError message={form.formState.errors.countryCode?.message} />
                               </label>
                             </div>
@@ -619,7 +618,7 @@ export function ProfileOnboardingFlow() {
                             <div className="space-y-4">
                               <label
                                 className={cn(
-                                  'flex cursor-pointer flex-col items-center rounded-card border border-dashed px-5 py-10 text-center transition',
+                                  'flex cursor-pointer items-center gap-3 rounded-card border border-dashed px-3 py-2.5 text-left transition md:gap-4 md:px-4 md:py-3.5',
                                   avatarFile
                                     ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-400/60 dark:bg-emerald-500/10 dark:text-emerald-200'
                                     : 'border-primary-300 bg-primary-50/70 text-primary-700 hover:bg-primary-50 dark:border-primary-500/30 dark:bg-primary-500/10 dark:text-primary-100'
@@ -627,14 +626,16 @@ export function ProfileOnboardingFlow() {
                                 onDragOver={(event) => event.preventDefault()}
                                 onDrop={handleAvatarDrop}
                               >
-                                <span className="flex size-[54px] items-center justify-center rounded-full bg-(--app-surface-elevated) shadow-sm">
-                                  {avatarFile ? <CheckCircle2 className="size-7" /> : <UploadCloud className="size-7" />}
+                                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-(--app-surface-elevated) shadow-sm md:size-11">
+                                  {avatarFile ? <CheckCircle2 className="size-4 md:size-5" /> : <UploadCloud className="size-4 md:size-5" />}
                                 </span>
-                                <span className="mt-4 text-sm font-semibold text-(--app-text)">
-                                  {avatarFile ? avatarFile.name : 'Subir foto'}
-                                </span>
-                                <span className="mt-1 max-w-xs text-xs leading-5 text-(--app-text-muted)">
-                                  SVG, PNG, JPG o WEBP · hasta {MAX_UPLOAD_SIZE_LABEL}.
+                                <span className="min-w-0">
+                                  <span className="block truncate text-[13px] font-semibold text-(--app-text) md:text-sm">
+                                    {avatarFile ? avatarFile.name : 'Subir foto'}
+                                  </span>
+                                  <span className="mt-0.5 block truncate text-[11px] leading-4 text-(--app-text-muted) md:text-xs">
+                                    SVG, PNG, JPG o WEBP · hasta {MAX_UPLOAD_SIZE_LABEL}.
+                                  </span>
                                 </span>
                                 <input
                                   accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
@@ -686,16 +687,16 @@ export function ProfileOnboardingFlow() {
                 </AnimatePresence>
               </div>
 
-              <div className="border-t border-(--app-border) bg-linear-to-b from-(--app-surface-elevated) to-(--app-surface-muted) p-5 md:border-l md:border-t-0 md:p-6">
-                <div className="flex h-full flex-col justify-between gap-5">
+              <div className="border-t border-(--app-border) bg-linear-to-b from-(--app-surface-elevated) to-(--app-surface-muted) p-4 md:border-l md:border-t-0 md:p-6">
+                <div className="flex h-full flex-col justify-between gap-4 md:gap-5">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-(--app-text-subtle)">Vista viva</p>
-                    <div className="mt-4 overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_6px_22px_rgba(29,54,120,0.07)]">
+                    <div className="overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_6px_22px_rgba(29,54,120,0.07)]">
                       <div className="flex h-[46px] items-center justify-between bg-linear-to-br from-primary-700 to-primary-500 px-4 text-white">
-                        <div className="leading-none">
-                          <p className="text-lg font-extrabold italic tracking-tight">asi</p>
-                          <p className="mt-0.5 text-[6.5px] font-bold uppercase tracking-[0.2em] text-white/70">Talent</p>
-                        </div>
+                        <img
+                          alt="ASI"
+                          className="h-8 w-8 shrink-0 object-contain"
+                          src="/brand/asi-logo-white-transparent-96.webp"
+                        />
                         <span className="rounded-[5px] border border-white/40 px-2 py-1 text-[9.5px] font-bold uppercase tracking-[0.1em] text-white/85">
                           Perfil
                         </span>
@@ -730,7 +731,7 @@ export function ProfileOnboardingFlow() {
                     </div>
                   </div>
 
-                  <p className="text-xs leading-5 text-(--app-text-subtle)">
+                  <p className="hidden text-xs leading-5 text-(--app-text-subtle) md:block">
                     Este tour guarda solo lo necesario para activar la navegación. Lo demás queda disponible en tu perfil.
                   </p>
                 </div>
@@ -747,7 +748,7 @@ export function ProfileOnboardingFlow() {
       </div>
 
       {!isComplete ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-(--app-border) bg-(--app-surface-elevated)/90 px-4 py-3 shadow-[0_-18px_34px_rgba(21,32,59,0.12)] backdrop-blur md:hidden">
+        <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 flex gap-3 border-t border-(--app-border) bg-(--app-surface-elevated)/90 px-4 py-3 shadow-[0_-18px_34px_rgba(21,32,59,0.12)] backdrop-blur md:hidden">
           <Button
             aria-label="Atrás"
             className="h-12 w-14 shrink-0 rounded-card px-0"
