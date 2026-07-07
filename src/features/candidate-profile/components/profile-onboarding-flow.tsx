@@ -22,6 +22,7 @@ import { toast } from 'sonner'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { Button } from '@/components/ui/button'
+import { FieldHelp } from '@/components/ui/field-help'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import {
@@ -582,9 +583,12 @@ export function ProfileOnboardingFlow() {
                               </label>
 
                               <label className="block space-y-2">
-                                <span className="text-[13px] font-semibold text-(--app-text)">
-                                  Nombre visible{' '}
-                                  <span className="font-normal text-(--app-text-subtle)">· así te verán los demás</span>
+                                <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-(--app-text)">
+                                  <span>Nombre visible</span>
+                                  <FieldHelp
+                                    fieldLabel="Nombre visible"
+                                    help="Así te verán otras personas dentro de la plataforma."
+                                  />
                                 </span>
                                 <Input
                                   className="h-12 rounded-control md:h-[50px]"

@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { FieldHelp } from '@/components/ui/field-help'
 import { Input } from '@/components/ui/input'
 import { KebabMenu, KebabMenuItem } from '@/components/ui/kebab-menu'
 import { PageLoader } from '@/components/ui/loader'
@@ -90,6 +91,15 @@ type PendingStatusChange = {
   jobId: string
   jobTitle: string
   action: 'close' | 'archive'
+}
+
+function FieldLabelText({ label, help }: { label: string; help?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span>{label}</span>
+      {help ? <FieldHelp fieldLabel={label} help={help} /> : null}
+    </span>
+  )
 }
 
 const EMPLOYMENT_LABELS: Record<string, string> = {
@@ -318,7 +328,10 @@ function JobEditor({
     <form className="space-y-4" onSubmit={(event) => void form.handleSubmit((values) => saveMutation.mutate(values))(event)}>
           <div className="grid gap-4 sm:grid-cols-[0.8fr_1.2fr]">
             <label className="grid gap-2 text-sm">
-              <span>Tipo de oportunidad</span>
+              <FieldLabelText
+                label="Tipo de oportunidad"
+                help="Define qué plantilla de pipeline y qué campos adicionales se usan para esta oportunidad."
+              />
               <Select {...form.register('opportunityType')}>
                 {opportunityTypeOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -354,27 +367,39 @@ function JobEditor({
               <p className="text-xs text-rose-600">{form.formState.errors.title?.message}</p>
             </label>
             <label className="grid gap-2 text-sm">
-              <span>Slug de oportunidad</span>
+              <FieldLabelText
+                label="Slug de oportunidad"
+                help="Identificador de URL generado desde el título; mantenlo corto, único y sin espacios."
+              />
               <Input {...form.register('slug')} />
               <p className="text-xs text-rose-600">{form.formState.errors.slug?.message}</p>
             </label>
           </div>
 
           <label className="grid gap-2 text-sm">
-            <span>Resumen corto</span>
+            <FieldLabelText
+              label="Resumen corto"
+              help="Texto breve para tarjetas y listados; deja los detalles largos para la descripción."
+            />
             <Textarea rows={3} {...form.register('summary')} />
             <p className="text-xs text-rose-600">{form.formState.errors.summary?.message}</p>
           </label>
 
           <label className="grid gap-2 text-sm">
-            <span>Descripcion</span>
+            <FieldLabelText
+              label="Descripción"
+              help="Describe responsabilidades, contexto, requisitos y criterios de éxito de la oportunidad."
+            />
             <Textarea rows={8} {...form.register('description')} />
             <p className="text-xs text-rose-600">{form.formState.errors.description?.message}</p>
           </label>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm">
-              <span>Modalidad</span>
+              <FieldLabelText
+                label="Modalidad"
+                help="Indica si la oportunidad es remota, híbrida o presencial para orientar expectativas."
+              />
               <Select {...form.register('workplaceType')}>
                 <option value="remote">Remote</option>
                 <option value="hybrid">Hybrid</option>
@@ -382,7 +407,10 @@ function JobEditor({
               </Select>
             </label>
             <label className="grid gap-2 text-sm">
-              <span>{opportunityType === 'employment' ? 'Tipo de empleo' : 'Ritmo del engagement'}</span>
+              <FieldLabelText
+                label={opportunityType === 'employment' ? 'Tipo de empleo' : 'Ritmo del engagement'}
+                help="Selecciona la relación de trabajo o el ritmo esperado para la colaboración."
+              />
               <Select {...form.register('employmentType')}>
                 <option value="full_time">Full-time</option>
                 <option value="part_time">Part-time</option>
@@ -403,7 +431,10 @@ function JobEditor({
               <CountryCodeSelect {...form.register('countryCode')} />
             </label>
             <label className="grid gap-2 text-sm">
-              <span>Senioridad</span>
+              <FieldLabelText
+                label="Senioridad"
+                help="Nivel esperado de experiencia, por ejemplo Junior, Mid, Senior o liderazgo."
+              />
               <Input {...form.register('experienceLevel')} placeholder="Junior, Mid, Senior..." />
             </label>
           </div>
@@ -419,7 +450,10 @@ function JobEditor({
             </label>
             <div className="mt-4 grid gap-4 sm:grid-cols-[0.8fr_1.2fr]">
               <label className="grid gap-2 text-sm">
-                <span>Tipo de compensación</span>
+                <FieldLabelText
+                  label="Tipo de compensación"
+                  help="Define si el monto es salario, rango, tarifa, honorarios u otra estructura."
+                />
                 <Select {...form.register('compensationType')}>
                   {compensationTypeOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -441,7 +475,10 @@ function JobEditor({
                   <p className="text-xs text-rose-600">{form.formState.errors.compensationMaxAmount?.message}</p>
                 </label>
                 <label className="grid gap-2 text-sm">
-                  <span>Moneda</span>
+                  <FieldLabelText
+                    label="Moneda"
+                    help="Usa el código ISO de tres letras, por ejemplo DOP, USD o EUR."
+                  />
                   <Input maxLength={3} {...form.register('compensationCurrency')} />
                   <p className="text-xs text-rose-600">{form.formState.errors.compensationCurrency?.message}</p>
                 </label>
@@ -451,7 +488,10 @@ function JobEditor({
 
           {opportunityType === 'project' || opportunityType === 'volunteer' ? (
             <label className="grid gap-2 text-sm">
-              <span>Alcance operativo</span>
+              <FieldLabelText
+                label="Alcance operativo"
+                help="Delimita entregables, población, región o responsabilidades prácticas del proyecto o voluntariado."
+              />
               <Textarea rows={3} {...form.register('operatingScope')} />
               <p className="text-xs text-rose-600">{form.formState.errors.operatingScope?.message}</p>
             </label>
@@ -459,7 +499,10 @@ function JobEditor({
 
           {opportunityType === 'project' ? (
             <label className="grid gap-2 text-sm">
-              <span>Timeline estimado</span>
+              <FieldLabelText
+                label="Timeline estimado"
+                help="Indica duración, fechas objetivo o ritmo de entrega esperado para el proyecto."
+              />
               <Input placeholder="8 semanas, Q3 2026, entrega continua..." {...form.register('deliveryTimeline')} />
               <p className="text-xs text-rose-600">{form.formState.errors.deliveryTimeline?.message}</p>
             </label>
@@ -467,7 +510,10 @@ function JobEditor({
 
           {opportunityType === 'volunteer' ? (
             <label className="grid gap-2 text-sm">
-              <span>Modelo de servicio</span>
+              <FieldLabelText
+                label="Modelo de servicio"
+                help="Describe cuándo y cómo se espera que la persona voluntaria participe."
+              />
               <Input placeholder="Fines de semana, por eventos, 6 horas semanales..." {...form.register('engagementModel')} />
               <p className="text-xs text-rose-600">{form.formState.errors.engagementModel?.message}</p>
             </label>
@@ -475,14 +521,20 @@ function JobEditor({
 
           {opportunityType === 'professional_service' ? (
             <label className="grid gap-2 text-sm">
-              <span>Alcance del servicio</span>
+              <FieldLabelText
+                label="Alcance del servicio"
+                help="Resume el servicio profesional esperado, límites del trabajo y resultados buscados."
+              />
               <Textarea rows={3} {...form.register('serviceScope')} />
               <p className="text-xs text-rose-600">{form.formState.errors.serviceScope?.message}</p>
             </label>
           ) : null}
 
           <label className="grid gap-2 text-sm">
-            <span>Expira el</span>
+            <FieldLabelText
+              label="Expira el"
+              help="Fecha en que la oportunidad deja de aparecer como activa para candidatos."
+            />
             <Input type="date" {...form.register('expiresAt')} />
           </label>
 
@@ -502,7 +554,10 @@ function JobEditor({
             {questions.map((question) => (
               <div key={question.id} className="grid gap-3 rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-3">
                 <label className="grid gap-2 text-sm">
-                  <span>Pregunta</span>
+                  <FieldLabelText
+                    label="Pregunta"
+                    help="Pregunta que verá el candidato durante la postulación."
+                  />
                   <Input
                     value={question.questionText}
                     onChange={(event) =>
@@ -514,7 +569,10 @@ function JobEditor({
                 </label>
                 <div className="grid gap-3 sm:grid-cols-[0.55fr_0.45fr]">
                   <label className="grid gap-2 text-sm">
-                    <span>Tipo de respuesta</span>
+                    <FieldLabelText
+                      label="Tipo de respuesta"
+                      help="Elige el formato que hará más fácil revisar la respuesta después."
+                    />
                     <Select
                       value={question.answerType}
                       onChange={(event) =>
@@ -548,7 +606,10 @@ function JobEditor({
                 </div>
                 {question.answerType === 'single_select' ? (
                   <label className="grid gap-2 text-sm">
-                    <span>Opciones, una por línea</span>
+                    <FieldLabelText
+                      label="Opciones, una por línea"
+                      help="Cada línea se convertirá en una opción seleccionable para el candidato."
+                    />
                     <Textarea
                       rows={3}
                       value={question.optionList}

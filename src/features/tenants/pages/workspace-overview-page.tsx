@@ -30,6 +30,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { FieldHelp } from '@/components/ui/field-help';
 import { Input } from '@/components/ui/input';
 import { PageLoader, Spinner } from '@/components/ui/loader';
 import { Select } from '@/components/ui/select';
@@ -81,6 +82,15 @@ const statAccentClassName = {
 
 type StatAccent = keyof typeof statAccentClassName;
 type SheetKey = 'profile' | 'contact' | 'context' | 'branding' | 'team';
+
+function SheetFieldLabel({ label, help }: { label: string; help?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={fieldLabelTextClassName}>{label}</span>
+      {help ? <FieldHelp fieldLabel={label} help={help} /> : null}
+    </span>
+  );
+}
 
 function firstName(value: string) {
   return value.trim().split(/\s+/)[0] ?? value;
@@ -704,15 +714,24 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
       >
         <div className="grid gap-4">
           <label className={fieldLabelClassName}>
-            <span className={fieldLabelTextClassName}>Nombre visible</span>
+            <SheetFieldLabel
+              label="Nombre visible"
+              help="Nombre público que verán candidatos y miembros dentro de la plataforma."
+            />
             <Input value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
           </label>
           <label className={fieldLabelClassName}>
-            <span className={fieldLabelTextClassName}>Nombre legal</span>
+            <SheetFieldLabel
+              label="Nombre legal"
+              help="Nombre jurídico o institucional usado para verificación y registros internos."
+            />
             <Input value={legalName} onChange={(event) => setLegalName(event.target.value)} />
           </label>
           <label className={fieldLabelClassName}>
-            <span className={fieldLabelTextClassName}>Descripción</span>
+            <SheetFieldLabel
+              label="Descripción"
+              help="Texto que explica qué hace la empresa y qué tipo de talento busca atraer."
+            />
             <Textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -741,7 +760,10 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
             <Input type="url" value={websiteUrl} onChange={(event) => setWebsiteUrl(event.target.value)} placeholder="https://empresa.com" />
           </label>
           <label className={fieldLabelClassName}>
-            <span className={fieldLabelTextClassName}>Email de reclutamiento</span>
+            <SheetFieldLabel
+              label="Email de reclutamiento"
+              help="Correo público o compartido para comunicaciones de oportunidades y candidatos."
+            />
             <div className="relative">
               <Input type="email" autoComplete="email" value={companyEmail} onChange={(event) => setCompanyEmail(event.target.value)} placeholder="careers@empresa.com" className="pr-10" />
               <LockKeyhole className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
@@ -773,7 +795,10 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
               <CountryCodeSelect value={countryCode} onChange={(event) => setCountryCode(event.target.value)} />
             </label>
             <label className={fieldLabelClassName}>
-              <span className={fieldLabelTextClassName}>Tamaño del equipo</span>
+              <SheetFieldLabel
+                label="Tamaño del equipo"
+                help="Rango aproximado de personas en la organización o workspace."
+              />
               <Select value={sizeRange} onChange={(event) => setSizeRange(event.target.value)}>
                 <option value="">Selecciona un rango</option>
                 <option value="1-10">1-10</option>
@@ -785,7 +810,10 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
             </label>
           </div>
           <label className={fieldLabelClassName}>
-            <span className={fieldLabelTextClassName}>Industria</span>
+            <SheetFieldLabel
+              label="Industria"
+              help="Sector principal donde opera la organización; ayuda a clasificar oportunidades."
+            />
             <Input value={industry} onChange={(event) => setIndustry(event.target.value)} placeholder="Ej. Energía, SaaS, Salud" />
           </label>
         </div>
@@ -897,11 +925,17 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
           <div className={softPanelClassName}>
             <div className="grid gap-4">
               <label className={fieldLabelClassName}>
-                <span className={fieldLabelTextClassName}>Email del miembro</span>
+                <SheetFieldLabel
+                  label="Email del miembro"
+                  help="La invitación se enviará a este correo y quedará asociada al tenant."
+                />
                 <Input type="email" placeholder="persona@empresa.com" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} />
               </label>
               <label className={fieldLabelClassName}>
-                <span className={fieldLabelTextClassName}>Rol inicial</span>
+                <SheetFieldLabel
+                  label="Rol inicial"
+                  help="Permisos que tendrá la persona cuando acepte la invitación."
+                />
                 <Select value={inviteRoleId} onChange={(event) => setInviteRoleId(event.target.value)}>
                   <option value="">Selecciona un rol</option>
                   {assignableRoles.map((role) => (
@@ -926,7 +960,10 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
                 </div>
                 <div className="mt-3 grid gap-3">
                   <label className={fieldLabelClassName}>
-                    <span className={fieldLabelTextClassName}>Rol principal</span>
+                    <SheetFieldLabel
+                      label="Rol principal"
+                      help="Cambiar este rol actualiza los permisos principales de la membresía en este tenant."
+                    />
                     <Select
                       value={activeRoleId}
                       onChange={(event) => {

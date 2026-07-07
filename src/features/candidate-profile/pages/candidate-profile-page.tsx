@@ -29,6 +29,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { FieldHelp } from '@/components/ui/field-help'
 import { PageLoader } from '@/components/ui/loader'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -334,18 +335,23 @@ function ProfileSection({
 
 function ProfileField({
   label,
+  help,
   error,
   className,
   children
 }: {
   label: string
+  help?: string
   error?: string
   className?: string
   children: ReactNode
 }) {
   return (
     <label className={cn('block space-y-1.5 text-[0.78rem] font-semibold text-(--app-text-muted) sm:space-y-2 sm:text-[0.8rem]', className)}>
-      <span>{label}</span>
+      <span className="inline-flex items-center gap-1.5">
+        <span>{label}</span>
+        {help ? <FieldHelp fieldLabel={label} help={help} /> : null}
+      </span>
       {children}
       {error ? <p className="text-[0.72rem] font-medium text-rose-600 dark:text-rose-300">{error}</p> : null}
     </label>
@@ -1039,11 +1045,19 @@ function CandidateProfileEditor({
               description="Resumen reutilizable para futuras aplicaciones y nuevas oportunidades."
             >
               <div className="space-y-3 sm:space-y-4">
-                <ProfileField label="Titular profesional" error={form.formState.errors.headline?.message}>
+                <ProfileField
+                  label="Titular profesional"
+                  help="Frase corta que resume cómo quieres presentarte ante empresas y equipos de oportunidad."
+                  error={form.formState.errors.headline?.message}
+                >
                   <Input className={profileFieldClass} placeholder="Ej. Coordinador de proyectos" {...form.register('headline')} />
                 </ProfileField>
 
-                <ProfileField label="Rol objetivo" error={form.formState.errors.desiredRole?.message}>
+                <ProfileField
+                  label="Rol objetivo"
+                  help="Indica el tipo de rol u oportunidad que quieres atraer, aunque hoy tengas otro cargo."
+                  error={form.formState.errors.desiredRole?.message}
+                >
                   <Input className={profileFieldClass} placeholder="Ej. Talent Acquisition Lead" {...form.register('desiredRole')} />
                 </ProfileField>
 
@@ -1060,7 +1074,11 @@ function CandidateProfileEditor({
                   </ProfileField>
                 </div>
 
-                <ProfileField label="Resumen profesional" error={form.formState.errors.summary?.message}>
+                <ProfileField
+                  label="Resumen profesional"
+                  help="Úsalo como presentación reutilizable para postulaciones; enfócate en experiencia, fortalezas y logros."
+                  error={form.formState.errors.summary?.message}
+                >
                   <Textarea
                     className={profileTextareaClass}
                     placeholder="Resume experiencia, fortalezas, logros y el tipo de oportunidad que quieres atraer."
@@ -1226,7 +1244,10 @@ function CandidateProfileEditor({
                           onChange={(event) => updateCollectionItem(setExperiences, experience.id, { roleTitle: event.target.value })}
                         />
                       </ProfileField>
-                      <ProfileField label="Tipo de empleo">
+                      <ProfileField
+                        label="Tipo de empleo"
+                        help="Puedes escribir tiempo completo, medio tiempo, contrato, consultoría, voluntariado u otra modalidad."
+                      >
                         <Input
                           className={profileFieldClass}
                           placeholder="Tiempo completo"
@@ -1260,7 +1281,11 @@ function CandidateProfileEditor({
                         />
                       </ProfileField>
                     </div>
-                    <ProfileField label="Impacto" className="mt-3 sm:mt-4">
+                    <ProfileField
+                      label="Impacto"
+                      help="Resume responsabilidades, logros medibles o resultados relevantes de esta experiencia."
+                      className="mt-3 sm:mt-4"
+                    >
                       <Textarea
                         className={profileTextareaClass}
                         placeholder="Impacto, responsabilidades y resultados."
@@ -1326,7 +1351,10 @@ function CandidateProfileEditor({
                           onChange={(event) => updateCollectionItem(setEducations, education.id, { institutionName: event.target.value })}
                         />
                       </ProfileField>
-                      <ProfileField label="Título/certificación">
+                      <ProfileField
+                        label="Título/certificación"
+                        help="Incluye grados académicos, certificaciones, diplomados o credenciales relevantes."
+                      >
                         <Input
                           className={profileFieldClass}
                           placeholder="Título o grado"
@@ -1334,7 +1362,10 @@ function CandidateProfileEditor({
                           onChange={(event) => updateCollectionItem(setEducations, education.id, { degreeName: event.target.value })}
                         />
                       </ProfileField>
-                      <ProfileField label="Área de estudio">
+                      <ProfileField
+                        label="Área de estudio"
+                        help="Indica la carrera, disciplina, especialidad o área de concentración."
+                      >
                         <Input
                           className={profileFieldClass}
                           placeholder="Área de estudio"
@@ -1362,7 +1393,11 @@ function CandidateProfileEditor({
                         </ProfileField>
                       </div>
                     </div>
-                    <ProfileField label="Notas" className="mt-3 sm:mt-4">
+                    <ProfileField
+                      label="Notas"
+                      help="Agrega logros, énfasis académicos o contexto útil que no aparezca en el título."
+                      className="mt-3 sm:mt-4"
+                    >
                       <Textarea
                         className={profileTextareaClass}
                         placeholder="Logros, enfoque o certificaciones."
@@ -1432,7 +1467,10 @@ function CandidateProfileEditor({
                     defaultOpen={!skill.skillName && !skill.proficiencyLabel}
                   >
                     <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-                      <ProfileField label="Skill">
+                      <ProfileField
+                        label="Skill"
+                        help="Usa habilidades concretas que ayuden a comparar tu perfil con oportunidades."
+                      >
                         <Input
                           className={profileFieldClass}
                           placeholder="Skill"
@@ -1440,7 +1478,10 @@ function CandidateProfileEditor({
                           onChange={(event) => updateCollectionItem(setSkills, skill.id, { skillName: event.target.value })}
                         />
                       </ProfileField>
-                      <ProfileField label="Nivel">
+                      <ProfileField
+                        label="Nivel"
+                        help="Puedes usar principiante, intermedio, avanzado, experto o una escala propia."
+                      >
                         <Input
                           className={profileFieldClass}
                           placeholder="Nivel"
@@ -1492,7 +1533,10 @@ function CandidateProfileEditor({
                           onChange={(event) => updateCollectionItem(setLanguages, language.id, { languageName: event.target.value })}
                         />
                       </ProfileField>
-                      <ProfileField label="Nivel">
+                      <ProfileField
+                        label="Nivel"
+                        help="Describe tu dominio del idioma, por ejemplo básico, conversacional, profesional o nativo."
+                      >
                         <Input
                           className={profileFieldClass}
                           placeholder="Nivel"
@@ -1550,7 +1594,10 @@ function CandidateProfileEditor({
                           <option value="website">Website</option>
                         </Select>
                       </ProfileField>
-                      <ProfileField label="Etiqueta">
+                      <ProfileField
+                        label="Etiqueta"
+                        help="Nombre visible del enlace, por ejemplo Portafolio, LinkedIn, GitHub o Sitio personal."
+                      >
                         <Input
                           className={profileFieldClass}
                           placeholder="Etiqueta"
@@ -1559,7 +1606,10 @@ function CandidateProfileEditor({
                         />
                       </ProfileField>
                     </div>
-                    <ProfileField label="URL">
+                    <ProfileField
+                      label="URL"
+                      help="Usa un enlace completo que los reclutadores puedan abrir directamente."
+                    >
                       <Input
                         className={profileFieldClass}
                         placeholder="https://..."

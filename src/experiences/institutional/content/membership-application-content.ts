@@ -153,8 +153,7 @@ export const membershipApplicationVariants: MembershipApplicationVariant[] = [
     description:
       'Orientada a estudiantes, recién graduados, pasantes, residentes y jóvenes emprendedores entre 18 y 35 años.',
     sectionTitle: 'Etapa formativa y profesional',
-    sectionDescription:
-      'Comparte en qué momento profesional te encuentras y cómo deseas crecer dentro de la comunidad ASI.',
+    sectionDescription: '',
     lockedBadgeLabel: '18 a 35 años',
     note: 'Esta categoría requiere evaluación adicional y seguimiento de transición futura.',
   },

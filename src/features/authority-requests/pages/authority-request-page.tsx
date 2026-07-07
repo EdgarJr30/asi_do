@@ -13,6 +13,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { FieldHelp } from '@/components/ui/field-help'
 import { Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/ui/page-header'
 import { PageLoader } from '@/components/ui/loader'
@@ -54,6 +55,15 @@ const MY_PASTOR_REQUESTS_QUERY_KEY = ['authority-requests', 'pastor', 'mine'] as
 const MY_REGIONAL_REQUESTS_QUERY_KEY = ['authority-requests', 'regional', 'mine'] as const
 const AUTHORITY_HIERARCHY_QUERY_KEY = ['authority-hierarchy'] as const
 const EMPTY_ITEMS: [] = []
+
+function AuthorityFieldTitle({ label, help }: { label: string; help: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span>{label}</span>
+      <FieldHelp fieldLabel={label} help={help} />
+    </span>
+  )
+}
 
 function getReviewStatusLabel(status: string) {
   switch (status) {
@@ -644,7 +654,11 @@ export function AuthorityRequestPage() {
             <Textarea placeholder="Notas opcionales para el revisor" {...pastorForm.register('notes')} />
             <div className="rounded-card border border-dashed border-(--app-border) px-4 py-4 text-sm text-(--app-text-muted)">
               <p className="inline-flex items-center gap-2 font-medium text-(--app-text)">
-                <UploadCloud className="size-4" /> Documento de identidad
+                <UploadCloud className="size-4" />
+                <AuthorityFieldTitle
+                  label="Documento de identidad"
+                  help="Adjunta cédula, pasaporte u otro documento oficial para validar tu identidad antes de activar el alcance pastoral."
+                />
               </p>
               <p className="mt-1">Adjunta tu cédula en PDF o imagen.</p>
               <Input
@@ -719,7 +733,12 @@ export function AuthorityRequestPage() {
             <Textarea placeholder="Notas opcionales para el revisor" {...regionalForm.register('notes')} />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-card border border-dashed border-(--app-border) px-4 py-4 text-sm text-(--app-text-muted)">
-                <p className="font-medium text-(--app-text)">Documento de identidad</p>
+                <p className="font-medium text-(--app-text)">
+                  <AuthorityFieldTitle
+                    label="Documento de identidad"
+                    help="Adjunta cédula, pasaporte u otro documento oficial para validar tu identidad antes de activar el alcance regional."
+                  />
+                </p>
                 <Input
                   type="file"
                   accept={RECRUITER_DOCUMENT_MIME_TYPES.join(',')}
@@ -736,7 +755,12 @@ export function AuthorityRequestPage() {
                 {regionalIdentityFileError ? <p className="mt-2 text-rose-600">{regionalIdentityFileError}</p> : null}
               </div>
               <div className="rounded-card border border-dashed border-(--app-border) px-4 py-4 text-sm text-(--app-text-muted)">
-                <p className="font-medium text-(--app-text)">Nombramiento o carta</p>
+                <p className="font-medium text-(--app-text)">
+                  <AuthorityFieldTitle
+                    label="Nombramiento o carta"
+                    help="Documento que confirma el cargo o autorización administrativa para el alcance solicitado."
+                  />
+                </p>
                 <Input
                   type="file"
                   accept={RECRUITER_DOCUMENT_MIME_TYPES.join(',')}

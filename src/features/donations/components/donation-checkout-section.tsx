@@ -18,6 +18,7 @@ import {
 import { InstitutionalCard, InstitutionalSection } from '@/experiences/institutional/components/institutional-ui'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 import { printReceipt, receiptPlainText, shareReceipt, type ReceiptLine } from '@/shared/ui/receipt'
+import { FieldHelp } from '@/components/ui/field-help'
 import { Spinner } from '@/components/ui/loader'
 import { cn } from '@/lib/utils/cn'
 
@@ -70,6 +71,21 @@ function DonationReceiptCard({ receipt }: { receipt: DonationReceipt }) {
 }
 
 const customSelection = 'custom'
+
+function DonationFieldLabel({ label, help }: { label: string; help?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span>{label}</span>
+      {help ? (
+        <FieldHelp
+          fieldLabel={label}
+          help={help}
+          className="text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:ring-(--asi-primary)/30"
+        />
+      ) : null}
+    </span>
+  )
+}
 
 function formatDop(amount: number) {
   return new Intl.NumberFormat('es-DO', {
@@ -293,7 +309,10 @@ export function DonationCheckoutSection() {
 
             {isCustom ? (
               <label className="mt-4 grid gap-2 text-sm font-medium text-(--asi-text)">
-                Monto personalizado
+                <DonationFieldLabel
+                  label="Monto personalizado"
+                  help="Ingresa el monto en pesos dominicanos dentro del rango permitido para pagos con tarjeta."
+                />
                 <input
                   className="h-12 rounded-card border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
                   inputMode="numeric"
@@ -338,7 +357,10 @@ export function DonationCheckoutSection() {
                 />
               </label>
               <label className="grid gap-2 text-sm font-medium text-(--asi-text)">
-                Destino
+                <DonationFieldLabel
+                  label="Destino"
+                  help="Selecciona el fondo o iniciativa donde deseas aplicar esta donación."
+                />
                 <select
                   className="h-12 rounded-card border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
                   value={designation}

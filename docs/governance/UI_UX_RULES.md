@@ -412,9 +412,11 @@ Apple-inspired UI rules:
 3. Operational app controls should default to compact product density, not landing-page proportions. Standard text inputs, selects, and primary buttons should usually sit around the `40px` to `44px` height range unless a mobile-specific accessibility constraint requires more space.
 4. Dense internal forms should group related fields into compact sections and parallel columns on desktop, while preserving a single-column flow on mobile.
 5. Do not add decorative summary cards, checklist banners, or “status explainer” blocks above forms unless they directly change a user decision in that workflow.
-3. Match the keyboard and input type to the field purpose.
-4. Use `autocomplete`, `inputmode`, and appropriate validation hints where supported.
-5. If a field has a tricky requirement, show helper text before the user fails validation.
+6. Optional field help should use the shared `FieldHelp`/`Tooltip` pattern with a neutral `Info` icon beside the label. Do not use warning, error, or exclamation icons for neutral help. The trigger must be a real button with an accessible name and must work by tap/click on mobile, focus on keyboard, and hover on pointer devices.
+7. Keep help copy short and complementary. If the information is required to complete the field correctly, keep it visible as helper text or placeholder guidance; reserve tooltips for context, rationale, examples, or fine detail that would otherwise make the form taller.
+8. Match the keyboard and input type to the field purpose.
+9. Use `autocomplete`, `inputmode`, and appropriate validation hints where supported.
+10. If a field has a tricky requirement, show helper text before the user fails validation.
 
 ### 10.3 Validation rules
 1. Validation messages must be specific and actionable.

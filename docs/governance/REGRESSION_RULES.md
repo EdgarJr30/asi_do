@@ -419,6 +419,9 @@ Do not manage platform administrators through ad hoc table edits, client-only ch
 ### R-117 — Platform users must load with database-backed infinite pagination
 Do not regress `/admin/access-control` users back to a submit-only search, a fixed capped snapshot, or a local slice of all users. The users tab must search automatically as the query changes and append compact user rows through infinite scroll while each batch is backed by the owner-only RBAC snapshot RPC with real limit/offset metadata.
 
+### R-118 — Neutral field help must use info affordances
+Do not place warning, error, exclamation, or alert-style icons beside form labels for optional explanatory help. Field help should use the shared `FieldHelp`/`Tooltip` pattern with a neutral information icon, a real button trigger, accessible text, and tap/click behavior on mobile. Long or required instructions must remain visible in the form instead of being hidden behind a tooltip.
+
 ---
 
 ## Maintenance rule

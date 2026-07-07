@@ -25,4 +25,26 @@ describe('Tooltip', () => {
     expect(trigger).toHaveFocus()
     expect(tooltip).not.toHaveClass('opacity-100')
   })
+
+  it('can toggle open from a pointer tap without relying on focus', () => {
+    render(
+      <Tooltip activation="toggle" label="El nombre público visible para candidatos." side="top">
+        <button type="button">Mas informacion</button>
+      </Tooltip>
+    )
+
+    const trigger = screen.getByRole('button', { name: 'Mas informacion' })
+    const tooltip = screen.getByRole('tooltip')
+
+    fireEvent.pointerDown(trigger)
+    trigger.focus()
+    fireEvent.click(trigger)
+
+    expect(tooltip).toHaveClass('opacity-100')
+
+    fireEvent.pointerDown(trigger)
+    fireEvent.click(trigger)
+
+    expect(tooltip).not.toHaveClass('opacity-100')
+  })
 })

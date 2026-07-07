@@ -11,6 +11,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { FieldHelp } from '@/components/ui/field-help'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
@@ -55,6 +56,15 @@ function getTenantNameLabel(kind: RecruiterRequestValues['requestedTenantKind'])
 
 function getLegalNameLabel(kind: RecruiterRequestValues['requestedTenantKind']) {
   return kind === 'company' ? 'Razón social' : 'Nombre legal o institucional'
+}
+
+function RequestFieldLabel({ label, help }: { label: string; help?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span>{label}</span>
+      {help ? <FieldHelp fieldLabel={label} help={help} /> : null}
+    </span>
+  )
 }
 
 export function RecruiterRequestPage() {
@@ -335,7 +345,10 @@ export function RecruiterRequestPage() {
             <form className="space-y-4" onSubmit={(event) => void form.handleSubmit((values) => submitMutation.mutate(values))(event)}>
               <div className="grid gap-4 sm:grid-cols-[0.85fr_1.15fr]">
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Tipo de tenant</span>
+                  <RequestFieldLabel
+                    label="Tipo de tenant"
+                    help="Define el modelo operativo que admin validará antes de habilitar acceso."
+                  />
                   <Select {...form.register('requestedTenantKind')}>
                     {tenantKindOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -356,19 +369,28 @@ export function RecruiterRequestPage() {
               </div>
 
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>{getTenantNameLabel(requestedTenantKind)}</span>
+                <RequestFieldLabel
+                  label={getTenantNameLabel(requestedTenantKind)}
+                  help="Nombre público que identificará el tenant dentro de la plataforma."
+                />
                 <Input placeholder="ASI Rep. Dominicana" {...form.register('requestedCompanyName')} />
                 <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.requestedCompanyName?.message}</p>
               </label>
 
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>{getLegalNameLabel(requestedTenantKind)}</span>
+                <RequestFieldLabel
+                  label={getLegalNameLabel(requestedTenantKind)}
+                  help="Nombre legal o institucional que admin puede contrastar con los documentos de verificación."
+                />
                 <Input placeholder="ASI Republica Dominicana SRL" {...form.register('requestedCompanyLegalName')} />
                 <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.requestedCompanyLegalName?.message}</p>
               </label>
 
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>Slug del tenant</span>
+                <RequestFieldLabel
+                  label="Slug del tenant"
+                  help="Identificador corto para rutas y referencias internas; usa minúsculas, guiones y texto estable."
+                />
                 <Input placeholder="asi-do-dr" {...form.register('requestedTenantSlug')} />
                 <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.requestedTenantSlug?.message}</p>
               </label>
@@ -401,14 +423,20 @@ export function RecruiterRequestPage() {
               </div>
 
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                <span>Descripción operativa</span>
+                <RequestFieldLabel
+                  label="Descripción operativa"
+                  help="Explica qué hará el tenant en ASI y por qué necesita acceso operativo."
+                />
                 <Textarea placeholder="Qué hace este tenant, cómo operará en ASI y por qué necesita acceso..." {...form.register('companyDescription')} />
                 <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.companyDescription?.message}</p>
               </label>
 
               {requestedTenantKind === 'ministry' || requestedTenantKind === 'project' ? (
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Alcance operativo</span>
+                  <RequestFieldLabel
+                    label="Alcance operativo"
+                    help="Define países, regiones, población atendida o alcance previsto del ministerio o proyecto."
+                  />
                   <Textarea
                     placeholder="Países, regiones, población atendida o alcance previsto."
                     {...form.register('operatingScope')}
@@ -419,7 +447,10 @@ export function RecruiterRequestPage() {
 
               {requestedTenantKind === 'project' || requestedTenantKind === 'field' ? (
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Entidad patrocinadora o supervisora</span>
+                  <RequestFieldLabel
+                    label="Entidad patrocinadora o supervisora"
+                    help="Indica quién respalda o supervisa el proyecto, campo o perfil solicitado."
+                  />
                   <Input placeholder="ASI, ministerio, asociación, campo..." {...form.register('sponsoringEntity')} />
                   <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.sponsoringEntity?.message}</p>
                 </label>
@@ -427,7 +458,10 @@ export function RecruiterRequestPage() {
 
               {requestedTenantKind === 'field' ? (
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Campo o región</span>
+                  <RequestFieldLabel
+                    label="Campo o región"
+                    help="Nombre del campo, unión, asociación o región administrativa que cubrirá el tenant."
+                  />
                   <Input placeholder="Unión Dominicana, Norte, región este..." {...form.register('fieldRegion')} />
                   <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.fieldRegion?.message}</p>
                 </label>
@@ -435,7 +469,10 @@ export function RecruiterRequestPage() {
 
               {requestedTenantKind === 'generic_profile' ? (
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Intención de conversión</span>
+                  <RequestFieldLabel
+                    label="Intención de conversión"
+                    help="Describe cómo este perfil podría evolucionar a empresa, ministerio o proyecto formal."
+                  />
                   <Textarea
                     placeholder="Describe cómo este perfil podría convertirse luego en empresa, ministerio o proyecto formal."
                     {...form.register('conversionIntent')}
@@ -446,7 +483,10 @@ export function RecruiterRequestPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Logo temporal para revisión</span>
+                  <RequestFieldLabel
+                    label="Logo temporal para revisión"
+                    help="Archivo privado usado solo para que admin evalúe identidad visual antes de aprobar el tenant."
+                  />
                   <Input
                     accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
                     type="file"
@@ -467,7 +507,10 @@ export function RecruiterRequestPage() {
                 </label>
 
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                  <span>Documento de verificacion</span>
+                  <RequestFieldLabel
+                    label="Documento de verificación"
+                    help="Documento requerido para comprobar identidad institucional y justificar el acceso solicitado."
+                  />
                   <Input
                     accept="application/pdf,image/png,image/jpeg,image/webp"
                     type="file"
