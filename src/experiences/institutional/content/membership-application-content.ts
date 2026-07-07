@@ -50,17 +50,6 @@ export const certificatePreferenceOptions = [
   { value: 'no', label: 'No por el momento' },
 ] as const
 
-export const paymentPreferenceOptions = [
-  {
-    value: 'contact',
-    label: 'Coordinar el pago con el equipo de ASI',
-  },
-  {
-    value: 'in-person',
-    label: 'Pagar presencialmente o por un canal acordado',
-  },
-] as const
-
 export const youngProfessionalStageOptions = [
   { value: 'student', label: 'Estudiante' },
   { value: 'recent-graduate', label: 'Recién graduado' },

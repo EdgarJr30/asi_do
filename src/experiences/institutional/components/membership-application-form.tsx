@@ -16,7 +16,6 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
-  CircleAlert,
   PencilLine,
 } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -35,7 +34,6 @@ import {
   genderOptions,
   getMembershipApplicationVariant,
   ministryOptions,
-  paymentPreferenceOptions,
   professionalFocusOptions,
   volunteerOptions,
   youngProfessionalStageOptions,
@@ -56,6 +54,8 @@ import {
   isDominicanRepublicCountryName,
 } from '@/shared/geo/location-options'
 import type { Json } from '@/shared/types/database'
+import type { MembershipApplication } from '@/features/membership/lib/membership-api'
+import { splitFullName } from '@/lib/utils/split-full-name'
 import { cn } from '@/lib/utils/cn'
 
 const DEFAULT_COUNTRY = 'República Dominicana'
@@ -128,12 +128,9 @@ export interface MembershipApplicationValues {
   billingPostalCode: string
   billingCountry: string
   discountCode: string
-  paymentPreference: string
   membershipPrompt: string
   commitmentStatusChanges: boolean
   commitmentProcessing: boolean
-  signature: string
-  signatureConsent: boolean
 }
 
 type SubmissionSnapshot = MembershipApplicationValues & {
@@ -235,15 +232,12 @@ const duesStepFields = [
   'billingPostalCode',
   'billingCountry',
   'discountCode',
-  'paymentPreference',
   'membershipPrompt',
 ] satisfies ApplicationFieldName[]
 
 const commitmentStepFields = [
   'commitmentStatusChanges',
   'commitmentProcessing',
-  'signature',
-  'signatureConsent',
 ] satisfies ApplicationFieldName[]
 
 const applicationSteps = [
@@ -362,15 +356,9 @@ function buildApplicationSchema(categorySlug: string) {
       billingPostalCode: z.string().trim(),
       billingCountry: z.string().trim(),
       discountCode: z.string().trim(),
-      paymentPreference: z.string().trim().min(1, 'Selecciona cómo deseas coordinar el pago.'),
-      membershipPrompt: z
-        .string()
-        .trim()
-        .min(16, 'Cuéntanos qué te motivó a aplicar a la membresía.'),
+      membershipPrompt: z.string().trim(),
       commitmentStatusChanges: z.boolean(),
       commitmentProcessing: z.boolean(),
-      signature: z.string().trim().min(2, 'Escribe tu nombre como firma digital.'),
-      signatureConsent: z.boolean(),
     })
     .superRefine((values, ctx) => {
       const requireField = (
@@ -481,14 +469,6 @@ function buildApplicationSchema(categorySlug: string) {
         })
       }
 
-      if (!values.signatureConsent) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Confirma que tu nombre funcionará como firma digital.',
-          path: ['signatureConsent'],
-        })
-      }
-
       switch (variant?.id) {
         case 'organization':
           requireField('organizationName', 'el nombre de la organización', 2)
@@ -533,11 +513,12 @@ function buildApplicationSchema(categorySlug: string) {
           requireField('institutionName', 'la institución o emprendimiento', 2)
           requireField('fieldOfStudy', 'tu área de estudio o especialidad', 2)
           requireField('currentStage', 'tu etapa actual', 1)
-          requireField('youngProfessionalGoals', 'tu meta de crecimiento en ASI', 24)
-          requireFourDigitYear(
-            'expectedGraduationYear',
-            'El año esperado de graduación o transición'
-          )
+          if (values.expectedGraduationYear.trim()) {
+            requireFourDigitYear(
+              'expectedGraduationYear',
+              'El año esperado de graduación o transición'
+            )
+          }
           break
         default:
           break
@@ -613,13 +594,24 @@ function createDefaultValues(token: EligibilityToken): MembershipApplicationValu
     billingPostalCode: '',
     billingCountry: DEFAULT_COUNTRY,
     discountCode: '',
-    paymentPreference: 'contact',
     membershipPrompt: '',
     commitmentStatusChanges: false,
     commitmentProcessing: false,
-    signature: '',
-    signatureConsent: false,
   } satisfies MembershipApplicationValues
+}
+
+/** Quita claves vacías/nulas para que la autocarga no pise datos con cadenas vacías. */
+function pruneEmpty(
+  values: Partial<MembershipApplicationValues>
+): Partial<MembershipApplicationValues> {
+  const result: Partial<MembershipApplicationValues> = {}
+  for (const [key, value] of Object.entries(values)) {
+    if (value === undefined || value === null) continue
+    if (typeof value === 'string' && value.trim() === '') continue
+    if (Array.isArray(value) && value.length === 0) continue
+    ;(result as Record<string, unknown>)[key] = value
+  }
+  return result
 }
 
 function buildSubmissionSnapshot(values: MembershipApplicationValues): SubmissionSnapshot {
@@ -900,6 +892,13 @@ function ChurchHierarchyPicker({
   const [associationId, setAssociationId] = useState('')
   const [districtId, setDistrictId] = useState('')
 
+  // La unión ya quedó definida en la verificación de elegibilidad (UDA), y en la
+  // jerarquía sólo existe esa unión: la preseleccionamos para que el usuario no la repita.
+  useEffect(() => {
+    if (unionId || selectedUnion) return
+    if (unions.length === 1) setUnionId(unions[0].id)
+  }, [unionId, selectedUnion, unions])
+
   // El estado local manda; si está vacío pero ya hay iglesia elegida, usamos la cadena derivada.
   const effectiveUnionId = unionId || selectedUnion?.id || ''
   const effectiveAssociationId = associationId || selectedAssociation?.id || ''
@@ -950,7 +949,7 @@ function ChurchHierarchyPicker({
           label="Unión"
           required
           value={unionId}
-          disabled={hierarchyQuery.isLoading}
+          disabled={hierarchyQuery.isLoading || unions.length <= 1}
           onChange={(event) => {
             setUnionId(event.target.value)
             setAssociationId('')
@@ -1174,10 +1173,10 @@ const STEP_SUBTITLES: Record<string, string> = {
 }
 
 const WHATS_NEXT_ITEMS = [
-  'Tu expediente preliminar queda organizado según la categoría aprobada.',
-  'Tu pastor completará o confirmará la referencia pastoral requerida.',
-  'El capítulo local de ASI revisará la solicitud y la documentación de apoyo.',
-  'La coordinación de cuota y beneficios continuará una vez la solicitud avance a aprobación.',
+  'Guardamos tu solicitud dentro de la categoría de membresía que te corresponde.',
+  'Tu pastor confirma la referencia que respalda tu solicitud.',
+  'El capítulo local de ASI revisa tu solicitud y los documentos que enviaste.',
+  'Pagas tu cuota en línea, de forma segura y automática, en el momento que prefieras. Al aprobarse tu solicitud, activamos tus beneficios.',
 ]
 
 
@@ -1449,13 +1448,6 @@ function SubmissionSuccess({
             {summary.categoryName}
           </p>
           <p className="mt-1 text-sm text-(--asi-text-muted)">Cuota anual: {summary.dues}</p>
-          <p className="mt-1 text-sm text-(--asi-text-muted)">
-            {`Coordinación de pago: ${
-              paymentPreferenceOptions.find(
-                (option) => option.value === summary.paymentPreference
-              )?.label ?? 'Pendiente'
-            }`}
-          </p>
         </div>
         <div className="rounded-card border border-(--asi-outline) bg-white p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
@@ -1507,8 +1499,11 @@ function SubmissionSuccess({
 
 export function MembershipApplicationForm({
   token,
+  application = null,
 }: {
   token: EligibilityToken
+  /** Solicitud/draft del servidor: autocarga datos ya conocidos del usuario. */
+  application?: MembershipApplication | null
 }) {
   const session = useAppSession()
   const variant = getMembershipApplicationVariant(token.categorySlug)
@@ -1524,6 +1519,29 @@ export function MembershipApplicationForm({
   const isFirstStep = currentStepIndex === 0
   const isLastStep = currentStepIndex === applicationSteps.length - 1
 
+  // Autocarga: datos que ya tenemos del usuario (perfil) y de su solicitud/draft.
+  // Si el draft trae un snapshot completo (p. ej. al reanudar una solicitud que pidió
+  // más info), ese snapshot manda sobre las columnas sueltas.
+  const prefill = useMemo<Partial<MembershipApplicationValues>>(() => {
+    const snapshot = (application?.submitted_form_snapshot ?? null) as
+      | Partial<MembershipApplicationValues>
+      | null
+    const hasSnapshot =
+      Boolean(snapshot) && typeof snapshot === 'object' && Object.keys(snapshot!).length > 0
+    const { first, last } = splitFullName(session.profile?.full_name)
+    const base: Partial<MembershipApplicationValues> = {
+      firstName: application?.applicant_first_name || first || '',
+      lastName: application?.applicant_last_name || last || '',
+      email:
+        application?.applicant_email ||
+        session.profile?.email ||
+        session.authUser?.email ||
+        '',
+      cellPhone: application?.applicant_phone || session.profile?.phone || '',
+    }
+    return hasSnapshot ? { ...base, ...snapshot } : base
+  }, [application, session.profile, session.authUser])
+
   const defaultValues = useMemo(() => {
     const initial = createDefaultValues(token)
 
@@ -1537,17 +1555,20 @@ export function MembershipApplicationForm({
       initial.organizationType = ''
     }
 
+    // Precedencia: base → autocarga (perfil/servidor) → borrador local no guardado.
+    const withPrefill = { ...initial, ...pruneEmpty(prefill) }
+
     try {
       const raw = sessionStorage.getItem(draftKey)
-      if (!raw) return initial
+      if (!raw) return withPrefill
       return {
-        ...initial,
+        ...withPrefill,
         ...(JSON.parse(raw) as Partial<MembershipApplicationValues>),
       }
     } catch {
-      return initial
+      return withPrefill
     }
-  }, [draftKey, isOrganizationalForProfit, token, variant])
+  }, [draftKey, isOrganizationalForProfit, prefill, token, variant])
 
   const form = useForm<MembershipApplicationValues>({
     resolver: zodResolver(buildApplicationSchema(token.categorySlug)),
@@ -1643,10 +1664,6 @@ export function MembershipApplicationForm({
   const commitmentProcessing = useWatch({
     control: form.control,
     name: 'commitmentProcessing',
-  })
-  const signatureConsent = useWatch({
-    control: form.control,
-    name: 'signatureConsent',
   })
 
   const errors = form.formState.errors
@@ -2406,7 +2423,6 @@ export function MembershipApplicationForm({
               />
               <TextField
                 label="Año esperado de transición"
-                required
                 error={errors.expectedGraduationYear?.message}
                 inputMode="numeric"
                 {...form.register('expectedGraduationYear')}
@@ -2414,7 +2430,6 @@ export function MembershipApplicationForm({
             </div>
             <TextAreaField
               label="Metas de crecimiento dentro de ASI"
-              required
               error={errors.youngProfessionalGoals?.message}
               placeholder="Cuéntanos cómo deseas crecer en liderazgo, servicio y vocación dentro de la comunidad ASI."
               {...form.register('youngProfessionalGoals')}
@@ -2681,27 +2696,13 @@ export function MembershipApplicationForm({
           </>
         ) : (
           <>
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-              <div className="rounded-card border border-(--asi-outline) bg-white p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
-                  Monto de membresía
-                </p>
-                <p className="mt-2 text-3xl font-semibold tracking-tight text-(--asi-primary)">
-                  {token.dues}
-                </p>
-                <p className="mt-2 text-sm leading-7 text-(--asi-text-muted)">
-                  El cobro se coordinará por un canal seguro después de la revisión inicial del expediente y la referencia pastoral.
-                </p>
-              </div>
-
-              <div className="rounded-card border border-dashed border-(--asi-outline) bg-white p-4">
-                <div className="flex gap-3">
-                  <CircleAlert className="mt-0.5 size-5 shrink-0 text-(--asi-primary)" />
-                  <p className="text-sm leading-7 text-(--asi-text-muted)">
-                    Para esta iteración del portal no se solicitan datos bancarios en línea. Solo registramos la preferencia de coordinación de pago para mantener el expediente saneado y seguro.
-                  </p>
-                </div>
-              </div>
+            <div className="rounded-card border border-(--asi-outline) bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
+                Monto de membresía
+              </p>
+              <p className="mt-2 text-3xl font-semibold tracking-tight text-(--asi-primary)">
+                {token.dues}
+              </p>
             </div>
 
             <CheckboxCard
@@ -2798,24 +2799,11 @@ export function MembershipApplicationForm({
               </>
             ) : null}
 
-            <SelectField
-              label="Preferencia para coordinar el pago"
-              required
-              error={errors.paymentPreference?.message}
-              {...form.register('paymentPreference')}
-            >
-              {paymentPreferenceOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </SelectField>
           </>
         )}
 
         <TextAreaField
           label="¿Qué le motivó a solicitar la membresía de ASI?"
-          required
           error={errors.membershipPrompt?.message}
           placeholder="Comparta la razón principal por la que desea integrarse a la comunidad ASI."
           {...form.register('membershipPrompt')}
@@ -2824,20 +2812,17 @@ export function MembershipApplicationForm({
       ) : null}
 
       {currentStep.id === 'commitment' ? (
-        <ApplicationSection
-          title="Compromiso"
-          description="Al continuar, confirma que entiende el propósito de ASI y que su solicitud debe sostenerse en información veraz y actualizada."
-        >
+        <ApplicationSection title="Compromiso">
         <div className="rounded-card border border-(--asi-outline) bg-white p-4">
           <p className="text-sm leading-7 text-(--asi-text-muted)">
-            Habiendo leído el propósito y los objetivos de ASI, y reconociendo que mi negocio o profesión es un ministerio, deseo y me comprometo a sostener los estándares y metas de ASI. Comprometo mi vida, mi oficina, mis talentos y mis fortalezas a compartir a Cristo en el mercado.
+            Entiendo el propósito de ASI y confirmo que mi información es veraz. Me comprometo a vivir mi profesión o negocio como un ministerio para compartir a Cristo en el ámbito laboral.
           </p>
         </div>
 
         <CheckboxCard
           checked={commitmentStatusChanges}
           error={errors.commitmentStatusChanges?.message}
-          label="Me comprometo a notificar a ASI si mi negocio, ministerio o condición profesional cambia de la categoría para la cual he aplicado y sido aprobado."
+          label="Me comprometo a informar a ASI si mi negocio, ministerio o situación profesional cambia respecto a la categoría de membresía que solicité."
           onChange={(checked) =>
             form.setValue('commitmentStatusChanges', checked, {
               shouldDirty: true,
@@ -2849,7 +2834,7 @@ export function MembershipApplicationForm({
         <CheckboxCard
           checked={commitmentProcessing}
           error={errors.commitmentProcessing?.message}
-          label="Reconozco que el proceso de solicitud de membresía toma un mínimo de tres meses para ser procesado y aprobado."
+          label="He leído y acepto los términos y condiciones y la política de privacidad de ASI."
           onChange={(checked) =>
             form.setValue('commitmentProcessing', checked, {
               shouldDirty: true,
@@ -2858,25 +2843,6 @@ export function MembershipApplicationForm({
           }
         />
 
-        <TextField
-          label="Firma"
-          required
-          hint="Escribe tu nombre completo tal como deseas dejar constancia en la solicitud."
-          error={errors.signature?.message}
-          {...form.register('signature')}
-        />
-
-        <CheckboxCard
-          checked={signatureConsent}
-          error={errors.signatureConsent?.message}
-          label="Acepto que mi nombre escrito funcione como firma digital para esta solicitud."
-          onChange={(checked) =>
-            form.setValue('signatureConsent', checked, {
-              shouldDirty: true,
-              shouldValidate: true,
-            })
-          }
-        />
         </ApplicationSection>
       ) : null}
             </div>
