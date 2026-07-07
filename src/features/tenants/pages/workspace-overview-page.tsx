@@ -716,21 +716,21 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
           <label className={fieldLabelClassName}>
             <SheetFieldLabel
               label="Nombre visible"
-              help="Nombre público que verán candidatos y miembros dentro de la plataforma."
+              help="Nombre público."
             />
             <Input value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
           </label>
           <label className={fieldLabelClassName}>
             <SheetFieldLabel
               label="Nombre legal"
-              help="Nombre jurídico o institucional usado para verificación y registros internos."
+              help="Nombre de verificación."
             />
             <Input value={legalName} onChange={(event) => setLegalName(event.target.value)} />
           </label>
           <label className={fieldLabelClassName}>
             <SheetFieldLabel
               label="Descripción"
-              help="Texto que explica qué hace la empresa y qué tipo de talento busca atraer."
+              help="Qué hace y qué talento busca."
             />
             <Textarea
               value={description}
@@ -762,7 +762,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
           <label className={fieldLabelClassName}>
             <SheetFieldLabel
               label="Email de reclutamiento"
-              help="Correo público o compartido para comunicaciones de oportunidades y candidatos."
+              help="Correo público de oportunidades."
             />
             <div className="relative">
               <Input type="email" autoComplete="email" value={companyEmail} onChange={(event) => setCompanyEmail(event.target.value)} placeholder="careers@empresa.com" className="pr-10" />
@@ -797,7 +797,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
             <label className={fieldLabelClassName}>
               <SheetFieldLabel
                 label="Tamaño del equipo"
-                help="Rango aproximado de personas en la organización o workspace."
+                help="Rango aproximado."
               />
               <Select value={sizeRange} onChange={(event) => setSizeRange(event.target.value)}>
                 <option value="">Selecciona un rango</option>
@@ -812,7 +812,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
           <label className={fieldLabelClassName}>
             <SheetFieldLabel
               label="Industria"
-              help="Sector principal donde opera la organización; ayuda a clasificar oportunidades."
+              help="Sector principal."
             />
             <Input value={industry} onChange={(event) => setIndustry(event.target.value)} placeholder="Ej. Energía, SaaS, Salud" />
           </label>
@@ -927,14 +927,14 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
               <label className={fieldLabelClassName}>
                 <SheetFieldLabel
                   label="Email del miembro"
-                  help="La invitación se enviará a este correo y quedará asociada al tenant."
+                  help="Correo de invitación."
                 />
                 <Input type="email" placeholder="persona@empresa.com" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} />
               </label>
               <label className={fieldLabelClassName}>
                 <SheetFieldLabel
                   label="Rol inicial"
-                  help="Permisos que tendrá la persona cuando acepte la invitación."
+                  help="Permisos al aceptar."
                 />
                 <Select value={inviteRoleId} onChange={(event) => setInviteRoleId(event.target.value)}>
                   <option value="">Selecciona un rol</option>
@@ -962,7 +962,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
                   <label className={fieldLabelClassName}>
                     <SheetFieldLabel
                       label="Rol principal"
-                      help="Cambiar este rol actualiza los permisos principales de la membresía en este tenant."
+                      help="Actualiza permisos del tenant."
                     />
                     <Select
                       value={activeRoleId}

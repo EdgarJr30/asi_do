@@ -311,7 +311,7 @@ export function DonationCheckoutSection() {
               <label className="mt-4 grid gap-2 text-sm font-medium text-(--asi-text)">
                 <DonationFieldLabel
                   label="Monto personalizado"
-                  help="Ingresa el monto en pesos dominicanos dentro del rango permitido para pagos con tarjeta."
+                  help="Monto en pesos dominicanos."
                 />
                 <input
                   className="h-12 rounded-card border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"
@@ -359,7 +359,7 @@ export function DonationCheckoutSection() {
               <label className="grid gap-2 text-sm font-medium text-(--asi-text)">
                 <DonationFieldLabel
                   label="Destino"
-                  help="Selecciona el fondo o iniciativa donde deseas aplicar esta donación."
+                  help="Fondo de la donación."
                 />
                 <select
                   className="h-12 rounded-card border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-(--asi-primary) focus:ring-2 focus:ring-(--asi-primary)/15"

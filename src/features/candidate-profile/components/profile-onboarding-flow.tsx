@@ -587,7 +587,7 @@ export function ProfileOnboardingFlow() {
                                   <span>Nombre visible</span>
                                   <FieldHelp
                                     fieldLabel="Nombre visible"
-                                    help="Así te verán otras personas dentro de la plataforma."
+                                    help="Así te verán en la plataforma."
                                   />
                                 </span>
                                 <Input

@@ -330,7 +330,7 @@ function JobEditor({
             <label className="grid gap-2 text-sm">
               <FieldLabelText
                 label="Tipo de oportunidad"
-                help="Define qué plantilla de pipeline y qué campos adicionales se usan para esta oportunidad."
+                help="Define plantilla y campos."
               />
               <Select {...form.register('opportunityType')}>
                 {opportunityTypeOptions.map((option) => (
@@ -369,7 +369,7 @@ function JobEditor({
             <label className="grid gap-2 text-sm">
               <FieldLabelText
                 label="Slug de oportunidad"
-                help="Identificador de URL generado desde el título; mantenlo corto, único y sin espacios."
+                help="URL corta y única."
               />
               <Input {...form.register('slug')} />
               <p className="text-xs text-rose-600">{form.formState.errors.slug?.message}</p>
@@ -379,7 +379,7 @@ function JobEditor({
           <label className="grid gap-2 text-sm">
             <FieldLabelText
               label="Resumen corto"
-              help="Texto breve para tarjetas y listados; deja los detalles largos para la descripción."
+              help="Texto breve para listados."
             />
             <Textarea rows={3} {...form.register('summary')} />
             <p className="text-xs text-rose-600">{form.formState.errors.summary?.message}</p>
@@ -388,7 +388,7 @@ function JobEditor({
           <label className="grid gap-2 text-sm">
             <FieldLabelText
               label="Descripción"
-              help="Describe responsabilidades, contexto, requisitos y criterios de éxito de la oportunidad."
+              help="Responsabilidades y requisitos."
             />
             <Textarea rows={8} {...form.register('description')} />
             <p className="text-xs text-rose-600">{form.formState.errors.description?.message}</p>
@@ -398,7 +398,7 @@ function JobEditor({
             <label className="grid gap-2 text-sm">
               <FieldLabelText
                 label="Modalidad"
-                help="Indica si la oportunidad es remota, híbrida o presencial para orientar expectativas."
+                help="Remota, híbrida o presencial."
               />
               <Select {...form.register('workplaceType')}>
                 <option value="remote">Remote</option>
@@ -409,7 +409,7 @@ function JobEditor({
             <label className="grid gap-2 text-sm">
               <FieldLabelText
                 label={opportunityType === 'employment' ? 'Tipo de empleo' : 'Ritmo del engagement'}
-                help="Selecciona la relación de trabajo o el ritmo esperado para la colaboración."
+                help="Relación o ritmo esperado."
               />
               <Select {...form.register('employmentType')}>
                 <option value="full_time">Full-time</option>
@@ -433,7 +433,7 @@ function JobEditor({
             <label className="grid gap-2 text-sm">
               <FieldLabelText
                 label="Senioridad"
-                help="Nivel esperado de experiencia, por ejemplo Junior, Mid, Senior o liderazgo."
+                help="Junior, Mid, Senior, liderazgo."
               />
               <Input {...form.register('experienceLevel')} placeholder="Junior, Mid, Senior..." />
             </label>
@@ -452,7 +452,7 @@ function JobEditor({
               <label className="grid gap-2 text-sm">
                 <FieldLabelText
                   label="Tipo de compensación"
-                  help="Define si el monto es salario, rango, tarifa, honorarios u otra estructura."
+                  help="Salario, tarifa u honorarios."
                 />
                 <Select {...form.register('compensationType')}>
                   {compensationTypeOptions.map((option) => (
@@ -477,7 +477,7 @@ function JobEditor({
                 <label className="grid gap-2 text-sm">
                   <FieldLabelText
                     label="Moneda"
-                    help="Usa el código ISO de tres letras, por ejemplo DOP, USD o EUR."
+                    help="Ej.: DOP, USD, EUR."
                   />
                   <Input maxLength={3} {...form.register('compensationCurrency')} />
                   <p className="text-xs text-rose-600">{form.formState.errors.compensationCurrency?.message}</p>
@@ -490,7 +490,7 @@ function JobEditor({
             <label className="grid gap-2 text-sm">
               <FieldLabelText
                 label="Alcance operativo"
-                help="Delimita entregables, población, región o responsabilidades prácticas del proyecto o voluntariado."
+                help="Entregables o región."
               />
               <Textarea rows={3} {...form.register('operatingScope')} />
               <p className="text-xs text-rose-600">{form.formState.errors.operatingScope?.message}</p>
@@ -501,7 +501,7 @@ function JobEditor({
             <label className="grid gap-2 text-sm">
               <FieldLabelText
                 label="Timeline estimado"
-                help="Indica duración, fechas objetivo o ritmo de entrega esperado para el proyecto."
+                help="Duración o fechas objetivo."
               />
               <Input placeholder="8 semanas, Q3 2026, entrega continua..." {...form.register('deliveryTimeline')} />
               <p className="text-xs text-rose-600">{form.formState.errors.deliveryTimeline?.message}</p>
@@ -512,7 +512,7 @@ function JobEditor({
             <label className="grid gap-2 text-sm">
               <FieldLabelText
                 label="Modelo de servicio"
-                help="Describe cuándo y cómo se espera que la persona voluntaria participe."
+                help="Cuándo y cómo participa."
               />
               <Input placeholder="Fines de semana, por eventos, 6 horas semanales..." {...form.register('engagementModel')} />
               <p className="text-xs text-rose-600">{form.formState.errors.engagementModel?.message}</p>
@@ -523,7 +523,7 @@ function JobEditor({
             <label className="grid gap-2 text-sm">
               <FieldLabelText
                 label="Alcance del servicio"
-                help="Resume el servicio profesional esperado, límites del trabajo y resultados buscados."
+                help="Límites y resultados."
               />
               <Textarea rows={3} {...form.register('serviceScope')} />
               <p className="text-xs text-rose-600">{form.formState.errors.serviceScope?.message}</p>
@@ -533,7 +533,7 @@ function JobEditor({
           <label className="grid gap-2 text-sm">
             <FieldLabelText
               label="Expira el"
-              help="Fecha en que la oportunidad deja de aparecer como activa para candidatos."
+              help="Fecha de cierre público."
             />
             <Input type="date" {...form.register('expiresAt')} />
           </label>
@@ -556,7 +556,7 @@ function JobEditor({
                 <label className="grid gap-2 text-sm">
                   <FieldLabelText
                     label="Pregunta"
-                    help="Pregunta que verá el candidato durante la postulación."
+                    help="La verá el candidato."
                   />
                   <Input
                     value={question.questionText}
@@ -571,7 +571,7 @@ function JobEditor({
                   <label className="grid gap-2 text-sm">
                     <FieldLabelText
                       label="Tipo de respuesta"
-                      help="Elige el formato que hará más fácil revisar la respuesta después."
+                      help="Formato de revisión."
                     />
                     <Select
                       value={question.answerType}
@@ -608,7 +608,7 @@ function JobEditor({
                   <label className="grid gap-2 text-sm">
                     <FieldLabelText
                       label="Opciones, una por línea"
-                      help="Cada línea se convertirá en una opción seleccionable para el candidato."
+                      help="Una opción por línea."
                     />
                     <Textarea
                       rows={3}

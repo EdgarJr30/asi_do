@@ -968,7 +968,7 @@ function ChurchHierarchyPicker({
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <SelectField
           label="Unión"
-          help="Selecciona la unión adventista que contiene tu iglesia local."
+          help="Unión donde está tu iglesia."
           required
           value={effectiveUnionId}
           disabled={hierarchyQuery.isLoading || unions.length <= 1}
@@ -989,7 +989,7 @@ function ChurchHierarchyPicker({
 
         <SelectField
           label="Asociación / Misión"
-          help="Usa la asociación o misión administrativa donde está registrada tu iglesia."
+          help="Asociación de tu iglesia."
           required
           value={effectiveAssociationId}
           disabled={!effectiveUnionId}
@@ -1009,7 +1009,7 @@ function ChurchHierarchyPicker({
 
         <SelectField
           label="Distrito"
-          help="El distrito ayuda a identificar al pastor responsable de revisar la referencia."
+          help="Ubica al pastor revisor."
           required
           value={effectiveDistrictId}
           disabled={!effectiveAssociationId}
@@ -1028,7 +1028,7 @@ function ChurchHierarchyPicker({
 
         <SelectField
           label="Iglesia local"
-          help="Esta selección enruta la solicitud al pastor correspondiente cuando el pastor esté registrado en la plataforma."
+          help="Enruta la referencia pastoral."
           required
           error={error}
           value={value}
@@ -2041,7 +2041,7 @@ export function MembershipApplicationForm({
                     ? 'Nombre de la organización o empresa'
                     : 'Nombre de la organización'
                 }
-                help="Usa el nombre público o legal con el que la entidad será revisada por ASI."
+                help="Nombre público o legal."
                 required
                 error={errors.organizationName?.message}
                 {...form.register('organizationName')}
@@ -2049,7 +2049,7 @@ export function MembershipApplicationForm({
               {isOrganizationalForProfit ? (
                 <TextField
                   label="Tipo de organización"
-                  help="Indica la forma o naturaleza principal de la entidad, por ejemplo empresa familiar, SRL, ministerio o fundación."
+                  help="Ej.: SRL, fundación, ministerio."
                   required
                   error={errors.organizationType?.message}
                   placeholder="Ej. corporación, SRL o empresa familiar"
@@ -2058,7 +2058,7 @@ export function MembershipApplicationForm({
               ) : (
                 <TextField
                   label="Tipo de organización"
-                  help="Este valor queda fijado por la categoría validada durante la elegibilidad."
+                  help="Definido por elegibilidad."
                   required
                   error={errors.organizationType?.message}
                   value={form.getValues('organizationType')}
@@ -2153,7 +2153,7 @@ export function MembershipApplicationForm({
 
             <TextAreaField
               label="Describe brevemente las actividades de la organización"
-              help="Resume qué hace la entidad, a quién sirve y cómo conecta su operación con la misión de ASI."
+              help="Qué hace y a quién sirve."
               required
               error={errors.organizationActivities?.message}
               placeholder="Comparte el enfoque de la organización, su servicio y el tipo de impacto que busca generar."
@@ -2163,7 +2163,7 @@ export function MembershipApplicationForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Año de establecimiento"
-                help="Si no recuerdas el mes exacto, basta con el año en que inició operaciones."
+                help="Año en que inició."
                 required
                 error={errors.yearEstablished?.message}
                 type="number"
@@ -2173,7 +2173,7 @@ export function MembershipApplicationForm({
               />
               <TextField
                 label="Número de empleados"
-                help="Puedes colocar una cantidad aproximada de personas activas en la organización."
+                help="Cantidad aproximada."
                 required
                 error={errors.employeeCount?.message}
                 type="number"
@@ -2204,7 +2204,7 @@ export function MembershipApplicationForm({
 
             <RadioTileGroup
               label="¿Le gustaría que le enviemos un certificado de membresía de ASI de cortesía, bellamente enmarcado, si su solicitud es aprobada?"
-              help="La respuesta solo define la preferencia de envío del certificado si la solicitud resulta aprobada."
+              help="Preferencia de envío."
               required
               error={errors.certificatePreference?.message}
               options={certificatePreferenceOptions}
@@ -2224,14 +2224,14 @@ export function MembershipApplicationForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Organización empleadora"
-                help="Indica la organización donde ejerces actualmente el rol que sustenta esta solicitud."
+                help="Donde ejerces este rol."
                 required
                 error={errors.employerName?.message}
                 {...form.register('employerName')}
               />
               <TextField
                 label="Cargo actual"
-                help="Usa el título del cargo o responsabilidad principal que tienes hoy."
+                help="Tu responsabilidad principal."
                 required
                 error={errors.roleTitle?.message}
                 {...form.register('roleTitle')}
@@ -2240,7 +2240,7 @@ export function MembershipApplicationForm({
             <div className="grid gap-4 md:grid-cols-3">
               <TextField
                 label="Años en el rol"
-                help="Cuenta el tiempo aproximado en tu responsabilidad actual."
+                help="Tiempo aproximado."
                 required
                 error={errors.yearsInRole?.message}
                 type="number"
@@ -2249,7 +2249,7 @@ export function MembershipApplicationForm({
               />
               <TextField
                 label="Personas supervisadas"
-                help="Incluye reportes directos o equipos bajo tu responsabilidad formal."
+                help="Reportes o equipos a cargo."
                 required
                 error={errors.peopleSupervised?.message}
                 type="number"
@@ -2258,7 +2258,7 @@ export function MembershipApplicationForm({
               />
               <SelectField
                 label="Enfoque profesional"
-                help="Selecciona el enfoque que mejor describe tu aporte principal, aunque tu rol combine varias funciones."
+                help="Elige tu aporte principal."
                 required
                 error={errors.professionalFocus?.message}
                 value={professionalFocus}
@@ -2302,14 +2302,14 @@ export function MembershipApplicationForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Nombre del negocio o práctica"
-                help="Usa el nombre comercial de tu negocio, práctica profesional o servicio independiente."
+                help="Nombre comercial o práctica."
                 required
                 error={errors.businessName?.message}
                 {...form.register('businessName')}
               />
               <TextField
                 label="Especialidad o función"
-                help="Describe la ocupación, especialidad o rol desde el cual sirves a clientes o comunidades."
+                help="Tu función o especialidad."
                 required
                 error={errors.roleTitle?.message}
                 {...form.register('roleTitle')}
@@ -2318,7 +2318,7 @@ export function MembershipApplicationForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Año en que inició operaciones el negocio"
-                help="Si operaste informalmente antes del registro, usa el año en que comenzaste a ofrecer el servicio de forma sostenida."
+                help="Año de inicio sostenido."
                 required
                 error={errors.yearEstablished?.message}
                 type="number"
@@ -2344,7 +2344,7 @@ export function MembershipApplicationForm({
             />
             <TextAreaField
               label="Servicios ofrecidos"
-              help="Incluye los servicios o productos principales que ofrece tu negocio o práctica."
+              help="Servicios o productos principales."
               error={errors.servicesOffered?.message}
               placeholder="Describe los servicios o productos que ofreces desde tu práctica."
               {...form.register('servicesOffered')}
@@ -2357,7 +2357,7 @@ export function MembershipApplicationForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Actividad o empresa de procedencia"
-                help="Indica el campo profesional, empresa o actividad desde la cual te retiraste."
+                help="Campo o actividad previa."
                 required
                 error={errors.retiredFrom?.message}
                 {...form.register('retiredFrom')}
@@ -2372,7 +2372,7 @@ export function MembershipApplicationForm({
             </div>
             <TextAreaField
               label="Resumen de trayectoria"
-              help="Enfócate en responsabilidades, liderazgo, servicio o experiencia que explican tu vínculo con ASI."
+              help="Experiencia clave."
               required
               error={errors.retirementSummary?.message}
               placeholder="Comparte el tipo de liderazgo o experiencia profesional que sostuvo tu elegibilidad previa."
@@ -2386,14 +2386,14 @@ export function MembershipApplicationForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Organización donde sirves"
-                help="Indica la institución, empresa o ministerio donde ejerces tu responsabilidad actual."
+                help="Donde sirves hoy."
                 required
                 error={errors.employerName?.message}
                 {...form.register('employerName')}
               />
               <TextField
                 label="Posición actual"
-                help="Usa el nombre de tu posición o la responsabilidad que mejor representa tu función actual."
+                help="Responsabilidad actual."
                 required
                 error={errors.roleTitle?.message}
                 {...form.register('roleTitle')}
@@ -2402,7 +2402,7 @@ export function MembershipApplicationForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <SelectField
                 label="Enfoque profesional"
-                help="Selecciona el enfoque que mejor describe tu aporte principal, aunque tu rol combine varias funciones."
+                help="Elige tu aporte principal."
                 required
                 error={errors.professionalFocus?.message}
                 value={professionalFocus}
@@ -2438,7 +2438,7 @@ export function MembershipApplicationForm({
             />
             <TextAreaField
               label="Nivel de responsabilidad"
-              help="Describe el alcance real de tu responsabilidad, aunque no tengas autoridad ejecutiva formal."
+              help="Alcance real de tu función."
               required
               error={errors.retirementSummary?.message}
               placeholder="Describe el tipo de responsabilidad que manejas, sin necesidad de autoridad ejecutiva formal."
@@ -2452,7 +2452,7 @@ export function MembershipApplicationForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <SelectField
                 label="¿En qué etapa te encuentras hoy?"
-                help="Elige si estás estudiando, recién graduado, en pasantía, residencia o emprendiendo actualmente."
+                help="Estudio, pasantía o emprendimiento."
                 required
                 error={errors.currentStage?.message}
                 value={currentStage}
@@ -2472,7 +2472,7 @@ export function MembershipApplicationForm({
               </SelectField>
               <TextField
                 label="Nombre de tu institución o emprendimiento"
-                help="El nombre de tu universidad, empresa u organización, o el de tu emprendimiento."
+                help="Universidad, empresa u organización."
                 placeholder="Ej.: Universidad Nacional o Mi Emprendimiento SRL"
                 required
                 error={errors.institutionName?.message}
@@ -2482,14 +2482,14 @@ export function MembershipApplicationForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Área de estudio o especialidad"
-                help="Indica tu carrera, área técnica, especialidad profesional o enfoque del emprendimiento."
+                help="Carrera o especialidad."
                 required
                 error={errors.fieldOfStudy?.message}
                 {...form.register('fieldOfStudy')}
               />
               <TextField
                 label="Año esperado de transición"
-                help="Puedes usar tu año estimado de graduación, residencia, salida de pasantía o consolidación del emprendimiento."
+                help="Año estimado de cambio."
                 error={errors.expectedGraduationYear?.message}
                 inputMode="numeric"
                 {...form.register('expectedGraduationYear')}
@@ -2497,7 +2497,7 @@ export function MembershipApplicationForm({
             </div>
             <TextAreaField
               label="Metas de crecimiento dentro de ASI"
-              help="Comparte el tipo de mentoría, servicio, liderazgo o conexión profesional que esperas desarrollar."
+              help="Mentoría, servicio o liderazgo."
               error={errors.youngProfessionalGoals?.message}
               placeholder="Cuéntanos cómo deseas crecer en liderazgo, servicio y vocación dentro de la comunidad ASI."
               {...form.register('youngProfessionalGoals')}
@@ -2514,7 +2514,7 @@ export function MembershipApplicationForm({
         >
         <TextAreaField
           label="Describa brevemente cómo comparte su fe en su entorno profesional"
-          help="Puedes mencionar hábitos, conversaciones, iniciativas de servicio o formas prácticas de testimonio."
+          help="Formas prácticas de testimonio."
           error={errors.shareFaith?.message}
           placeholder="Describe prácticas, conversaciones, iniciativas o hábitos concretos."
           {...form.register('shareFaith')}
@@ -2532,7 +2532,7 @@ export function MembershipApplicationForm({
         {ministries.includes('Otro') ? (
           <TextField
             label="Otro tipo de ministerio"
-            help="Describe el ministerio si no aparece en la lista anterior."
+            help="Ministerio no listado."
             required
             error={errors.ministriesOther?.message}
             {...form.register('ministriesOther')}
@@ -2551,7 +2551,7 @@ export function MembershipApplicationForm({
         {volunteerAreas.includes('Otro') ? (
           <TextField
             label="Otro interés de voluntariado"
-            help="Describe el área de servicio si no aparece en la lista anterior."
+            help="Área no listada."
             required
             error={errors.volunteerAreasOther?.message}
             {...form.register('volunteerAreasOther')}
@@ -2560,7 +2560,7 @@ export function MembershipApplicationForm({
 
         <TextAreaField
           label="Información adicional"
-          help="Usa este espacio para contexto que no encaja en los campos anteriores y que ayude a revisar la solicitud."
+          help="Contexto extra para revisión."
           error={errors.additionalInfo?.message}
           placeholder="Comparte cualquier contexto adicional que ayude a revisar tu solicitud."
           {...form.register('additionalInfo')}
@@ -2593,7 +2593,7 @@ export function MembershipApplicationForm({
         <div className="grid gap-4 md:grid-cols-3">
           <TextField
             label="Nombre de la iglesia local"
-            help="Se completa automáticamente al seleccionar la iglesia del selector, pero puedes ajustarlo si hace falta."
+            help="Puedes ajustar el autocompletado."
             required
             error={errors.homeChurchName?.message}
             {...form.register('homeChurchName')}
@@ -2614,7 +2614,7 @@ export function MembershipApplicationForm({
 
         <TextField
           label="Conferencia"
-          help="Usa el nombre de la asociación o misión a la que pertenece tu iglesia local."
+          help="Asociación o misión."
           required
           error={errors.conference?.message}
           {...form.register('conference')}
@@ -2638,7 +2638,7 @@ export function MembershipApplicationForm({
           />
           <TextField
             label="Correo electrónico del pastor"
-            help="Es opcional, pero ayuda a contactar al pastor si aún no tiene acceso activo en la plataforma."
+            help="Opcional; facilita contacto."
             error={errors.pastorEmail?.message}
             placeholder="Opcional"
             type="email"
@@ -2661,7 +2661,7 @@ export function MembershipApplicationForm({
           <>
             <TextField
               label="Dirección de facturación"
-              help="Usa la dirección que debe quedar asociada al expediente de pago de la membresía."
+              help="Dirección para el pago."
               required
               error={errors.billingAddress1?.message}
               {...form.register('billingAddress1')}
@@ -2752,7 +2752,7 @@ export function MembershipApplicationForm({
                 <div className="flex-1">
                   <TextField
                     label="Código de descuento"
-                    help="Ingresa el código si ASI te compartió uno para esta solicitud."
+                    help="Código compartido por ASI."
                     error={errors.discountCode?.message}
                     {...form.register('discountCode')}
                   />
@@ -2797,7 +2797,7 @@ export function MembershipApplicationForm({
               <>
                 <TextField
                   label="Dirección de facturación"
-                  help="Usa la dirección que debe quedar asociada al expediente de pago de la membresía."
+                  help="Dirección para el pago."
                   required
                   error={errors.billingAddress1?.message}
                   {...form.register('billingAddress1')}
@@ -2886,7 +2886,7 @@ export function MembershipApplicationForm({
         <ApplicationSection title="Compromiso">
         <TextAreaField
           label="¿Qué le motivó a solicitar la membresía de ASI?"
-          help="La respuesta ayuda a entender tu conexión con la misión de ASI y tu expectativa al integrarte."
+          help="Tu conexión con ASI."
           error={errors.membershipPrompt?.message}
           placeholder="Comparta la razón principal por la que desea integrarse a la comunidad ASI."
           {...form.register('membershipPrompt')}

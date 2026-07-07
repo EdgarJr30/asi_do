@@ -657,7 +657,7 @@ export function AuthorityRequestPage() {
                 <UploadCloud className="size-4" />
                 <AuthorityFieldTitle
                   label="Documento de identidad"
-                  help="Adjunta cédula, pasaporte u otro documento oficial para validar tu identidad antes de activar el alcance pastoral."
+                  help="Valida tu identidad pastoral."
                 />
               </p>
               <p className="mt-1">Adjunta tu cédula en PDF o imagen.</p>
@@ -736,7 +736,7 @@ export function AuthorityRequestPage() {
                 <p className="font-medium text-(--app-text)">
                   <AuthorityFieldTitle
                     label="Documento de identidad"
-                    help="Adjunta cédula, pasaporte u otro documento oficial para validar tu identidad antes de activar el alcance regional."
+                    help="Valida tu identidad regional."
                   />
                 </p>
                 <Input
@@ -758,7 +758,7 @@ export function AuthorityRequestPage() {
                 <p className="font-medium text-(--app-text)">
                   <AuthorityFieldTitle
                     label="Nombramiento o carta"
-                    help="Documento que confirma el cargo o autorización administrativa para el alcance solicitado."
+                    help="Confirma tu autorización."
                   />
                 </p>
                 <Input

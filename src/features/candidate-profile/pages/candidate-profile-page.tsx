@@ -1047,7 +1047,7 @@ function CandidateProfileEditor({
               <div className="space-y-3 sm:space-y-4">
                 <ProfileField
                   label="Titular profesional"
-                  help="Frase corta que resume cómo quieres presentarte ante empresas y equipos de oportunidad."
+                  help="Tu presentación breve."
                   error={form.formState.errors.headline?.message}
                 >
                   <Input className={profileFieldClass} placeholder="Ej. Coordinador de proyectos" {...form.register('headline')} />
@@ -1055,7 +1055,7 @@ function CandidateProfileEditor({
 
                 <ProfileField
                   label="Rol objetivo"
-                  help="Indica el tipo de rol u oportunidad que quieres atraer, aunque hoy tengas otro cargo."
+                  help="Rol que quieres atraer."
                   error={form.formState.errors.desiredRole?.message}
                 >
                   <Input className={profileFieldClass} placeholder="Ej. Talent Acquisition Lead" {...form.register('desiredRole')} />
@@ -1076,7 +1076,7 @@ function CandidateProfileEditor({
 
                 <ProfileField
                   label="Resumen profesional"
-                  help="Úsalo como presentación reutilizable para postulaciones; enfócate en experiencia, fortalezas y logros."
+                  help="Experiencia, fortalezas y logros."
                   error={form.formState.errors.summary?.message}
                 >
                   <Textarea
@@ -1246,7 +1246,7 @@ function CandidateProfileEditor({
                       </ProfileField>
                       <ProfileField
                         label="Tipo de empleo"
-                        help="Puedes escribir tiempo completo, medio tiempo, contrato, consultoría, voluntariado u otra modalidad."
+                        help="Tiempo completo, contrato, etc."
                       >
                         <Input
                           className={profileFieldClass}
@@ -1283,7 +1283,7 @@ function CandidateProfileEditor({
                     </div>
                     <ProfileField
                       label="Impacto"
-                      help="Resume responsabilidades, logros medibles o resultados relevantes de esta experiencia."
+                      help="Responsabilidades y resultados."
                       className="mt-3 sm:mt-4"
                     >
                       <Textarea
@@ -1353,7 +1353,7 @@ function CandidateProfileEditor({
                       </ProfileField>
                       <ProfileField
                         label="Título/certificación"
-                        help="Incluye grados académicos, certificaciones, diplomados o credenciales relevantes."
+                        help="Grado o certificación."
                       >
                         <Input
                           className={profileFieldClass}
@@ -1364,7 +1364,7 @@ function CandidateProfileEditor({
                       </ProfileField>
                       <ProfileField
                         label="Área de estudio"
-                        help="Indica la carrera, disciplina, especialidad o área de concentración."
+                        help="Carrera o disciplina."
                       >
                         <Input
                           className={profileFieldClass}
@@ -1395,7 +1395,7 @@ function CandidateProfileEditor({
                     </div>
                     <ProfileField
                       label="Notas"
-                      help="Agrega logros, énfasis académicos o contexto útil que no aparezca en el título."
+                      help="Logros o contexto académico."
                       className="mt-3 sm:mt-4"
                     >
                       <Textarea
@@ -1469,7 +1469,7 @@ function CandidateProfileEditor({
                     <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                       <ProfileField
                         label="Skill"
-                        help="Usa habilidades concretas que ayuden a comparar tu perfil con oportunidades."
+                        help="Habilidad relevante."
                       >
                         <Input
                           className={profileFieldClass}
@@ -1480,7 +1480,7 @@ function CandidateProfileEditor({
                       </ProfileField>
                       <ProfileField
                         label="Nivel"
-                        help="Puedes usar principiante, intermedio, avanzado, experto o una escala propia."
+                        help="Básico, intermedio, avanzado."
                       >
                         <Input
                           className={profileFieldClass}
@@ -1535,7 +1535,7 @@ function CandidateProfileEditor({
                       </ProfileField>
                       <ProfileField
                         label="Nivel"
-                        help="Describe tu dominio del idioma, por ejemplo básico, conversacional, profesional o nativo."
+                        help="Dominio del idioma."
                       >
                         <Input
                           className={profileFieldClass}
@@ -1596,7 +1596,7 @@ function CandidateProfileEditor({
                       </ProfileField>
                       <ProfileField
                         label="Etiqueta"
-                        help="Nombre visible del enlace, por ejemplo Portafolio, LinkedIn, GitHub o Sitio personal."
+                        help="Nombre visible del enlace."
                       >
                         <Input
                           className={profileFieldClass}
@@ -1608,7 +1608,7 @@ function CandidateProfileEditor({
                     </div>
                     <ProfileField
                       label="URL"
-                      help="Usa un enlace completo que los reclutadores puedan abrir directamente."
+                      help="Enlace completo."
                     >
                       <Input
                         className={profileFieldClass}

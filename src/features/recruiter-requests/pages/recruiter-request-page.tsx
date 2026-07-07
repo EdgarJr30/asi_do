@@ -347,7 +347,7 @@ export function RecruiterRequestPage() {
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <RequestFieldLabel
                     label="Tipo de tenant"
-                    help="Define el modelo operativo que admin validará antes de habilitar acceso."
+                    help="Modelo que revisará admin."
                   />
                   <Select {...form.register('requestedTenantKind')}>
                     {tenantKindOptions.map((option) => (
@@ -371,7 +371,7 @@ export function RecruiterRequestPage() {
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                 <RequestFieldLabel
                   label={getTenantNameLabel(requestedTenantKind)}
-                  help="Nombre público que identificará el tenant dentro de la plataforma."
+                  help="Nombre público del tenant."
                 />
                 <Input placeholder="ASI Rep. Dominicana" {...form.register('requestedCompanyName')} />
                 <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.requestedCompanyName?.message}</p>
@@ -380,7 +380,7 @@ export function RecruiterRequestPage() {
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                 <RequestFieldLabel
                   label={getLegalNameLabel(requestedTenantKind)}
-                  help="Nombre legal o institucional que admin puede contrastar con los documentos de verificación."
+                  help="Nombre para verificación."
                 />
                 <Input placeholder="ASI Republica Dominicana SRL" {...form.register('requestedCompanyLegalName')} />
                 <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.requestedCompanyLegalName?.message}</p>
@@ -389,7 +389,7 @@ export function RecruiterRequestPage() {
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                 <RequestFieldLabel
                   label="Slug del tenant"
-                  help="Identificador corto para rutas y referencias internas; usa minúsculas, guiones y texto estable."
+                  help="Ruta corta y estable."
                 />
                 <Input placeholder="asi-do-dr" {...form.register('requestedTenantSlug')} />
                 <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.requestedTenantSlug?.message}</p>
@@ -425,7 +425,7 @@ export function RecruiterRequestPage() {
               <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                 <RequestFieldLabel
                   label="Descripción operativa"
-                  help="Explica qué hará el tenant en ASI y por qué necesita acceso operativo."
+                  help="Qué hará y por qué."
                 />
                 <Textarea placeholder="Qué hace este tenant, cómo operará en ASI y por qué necesita acceso..." {...form.register('companyDescription')} />
                 <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.companyDescription?.message}</p>
@@ -435,7 +435,7 @@ export function RecruiterRequestPage() {
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <RequestFieldLabel
                     label="Alcance operativo"
-                    help="Define países, regiones, población atendida o alcance previsto del ministerio o proyecto."
+                    help="Regiones o población atendida."
                   />
                   <Textarea
                     placeholder="Países, regiones, población atendida o alcance previsto."
@@ -449,7 +449,7 @@ export function RecruiterRequestPage() {
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <RequestFieldLabel
                     label="Entidad patrocinadora o supervisora"
-                    help="Indica quién respalda o supervisa el proyecto, campo o perfil solicitado."
+                    help="Quién respalda el acceso."
                   />
                   <Input placeholder="ASI, ministerio, asociación, campo..." {...form.register('sponsoringEntity')} />
                   <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.sponsoringEntity?.message}</p>
@@ -460,7 +460,7 @@ export function RecruiterRequestPage() {
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <RequestFieldLabel
                     label="Campo o región"
-                    help="Nombre del campo, unión, asociación o región administrativa que cubrirá el tenant."
+                    help="Región administrativa cubierta."
                   />
                   <Input placeholder="Unión Dominicana, Norte, región este..." {...form.register('fieldRegion')} />
                   <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.fieldRegion?.message}</p>
@@ -471,7 +471,7 @@ export function RecruiterRequestPage() {
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <RequestFieldLabel
                     label="Intención de conversión"
-                    help="Describe cómo este perfil podría evolucionar a empresa, ministerio o proyecto formal."
+                    help="Cómo evolucionaría el perfil."
                   />
                   <Textarea
                     placeholder="Describe cómo este perfil podría convertirse luego en empresa, ministerio o proyecto formal."
@@ -485,7 +485,7 @@ export function RecruiterRequestPage() {
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <RequestFieldLabel
                     label="Logo temporal para revisión"
-                    help="Archivo privado usado solo para que admin evalúe identidad visual antes de aprobar el tenant."
+                    help="Sólo para revisión admin."
                   />
                   <Input
                     accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
@@ -509,7 +509,7 @@ export function RecruiterRequestPage() {
                 <label className="space-y-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
                   <RequestFieldLabel
                     label="Documento de verificación"
-                    help="Documento requerido para comprobar identidad institucional y justificar el acceso solicitado."
+                    help="Evidencia para aprobar acceso."
                   />
                   <Input
                     accept="application/pdf,image/png,image/jpeg,image/webp"

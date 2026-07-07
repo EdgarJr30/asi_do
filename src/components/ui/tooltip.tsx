@@ -129,7 +129,7 @@ export function Tooltip({
       <span
         role="tooltip"
         className={cn(
-          'pointer-events-none absolute z-50 max-w-72 whitespace-normal rounded-control border border-white/10 bg-slate-900/95 px-2.5 py-1.5 text-left text-xs font-medium leading-5 text-white opacity-0 shadow-[0_12px_28px_rgba(8,12,24,0.45)] backdrop-blur transition-[opacity,transform] duration-150',
+          'pointer-events-none absolute z-50 max-w-56 whitespace-normal rounded-control border border-white/10 bg-slate-900/95 px-2.5 py-1.5 text-left text-xs font-medium leading-5 text-white opacity-0 shadow-[0_12px_28px_rgba(8,12,24,0.45)] backdrop-blur transition-[opacity,transform] duration-150 sm:max-w-64',
           bubbleBySide[side],
           isVisible && ['opacity-100', visibleBySide[side]]
         )}
