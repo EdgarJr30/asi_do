@@ -185,7 +185,7 @@ export function StorefrontShell() {
                   </motion.span>
                 </Link>
                 <motion.span
-                  className="min-w-0 select-text"
+                  className="hidden min-w-0 select-text sm:block"
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                   animate={
                     shouldReduceMotion

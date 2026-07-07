@@ -2,10 +2,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { RouteScrollManager } from '@/app/router/route-scroll-manager'
-import {
-  getAuthenticatedHomePath,
-  surfacePaths
-} from '@/app/router/surface-paths'
+import { surfacePaths } from '@/app/router/surface-paths'
 import { BrandLockup } from '@/components/ui/app-brand'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -34,20 +31,7 @@ export function AuthShell() {
 
             <div className="flex items-center gap-2 sm:gap-3">
               <ThemeToggle compact />
-              {session.isAuthenticated ? (
-                <Button
-                  className="px-4"
-                  onClick={() =>
-                    void navigate(
-                      getAuthenticatedHomePath(
-                        session.permissions.includes('workspace:read')
-                      )
-                    )
-                  }
-                >
-                  Abrir app
-                </Button>
-              ) : (
+              {!session.isAuthenticated && (
                 <Button
                   className="px-4"
                   variant="outline"

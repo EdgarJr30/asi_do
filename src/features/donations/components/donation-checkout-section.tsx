@@ -232,7 +232,8 @@ export function DonationCheckoutSection() {
 
           {receipt && receipt.status === 'verified' ? <DonationReceiptCard receipt={receipt} /> : null}
 
-          <motion.div variants={gridStagger} className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <p className="mt-8 text-xs font-semibold uppercase tracking-[0.16em] text-(--asi-secondary)">Aporte sugerido</p>
+          <motion.div variants={gridStagger} className="mt-3 flex flex-wrap gap-2.5">
             {options.map((option) => (
               <motion.button
                 key={option.id}
@@ -240,14 +241,13 @@ export function DonationCheckoutSection() {
                 variants={cardReveal}
                 onClick={() => setSelectedOptionId(option.id)}
                 className={cn(
-                  'rounded-card border bg-white px-4 py-4 text-left shadow-[0_10px_30px_rgba(0,47,110,0.06)] transition',
+                  'rounded-control border px-4 py-2.5 text-sm font-semibold tracking-tight transition',
                   effectiveSelectedOptionId === option.id
-                    ? 'border-(--asi-primary) ring-2 ring-(--asi-primary)/18'
-                    : 'border-slate-200 hover:border-(--asi-primary)/45'
+                    ? 'border-(--asi-primary) bg-(--asi-primary) text-white'
+                    : 'border-slate-200 bg-white text-(--asi-text) hover:border-(--asi-primary)/45'
                 )}
               >
-                <span className="text-lg font-semibold tracking-tight text-(--asi-text)">{formatDop(option.amount)}</span>
-                <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.16em] text-(--asi-secondary)">Aporte sugerido</span>
+                {formatDop(option.amount)}
               </motion.button>
             ))}
 
@@ -256,12 +256,13 @@ export function DonationCheckoutSection() {
               variants={cardReveal}
               onClick={() => setSelectedOptionId(customSelection)}
               className={cn(
-                'rounded-card border border-dashed bg-white px-4 py-4 text-left shadow-[0_10px_30px_rgba(0,47,110,0.06)] transition',
-                isCustom ? 'border-(--asi-primary) ring-2 ring-(--asi-primary)/18' : 'border-slate-300 hover:border-(--asi-primary)/45'
+                'rounded-control border border-dashed px-4 py-2.5 text-sm font-semibold tracking-tight transition',
+                isCustom
+                  ? 'border-(--asi-primary) bg-(--asi-primary) text-white'
+                  : 'border-slate-300 bg-white text-(--asi-text) hover:border-(--asi-primary)/45'
               )}
             >
-              <span className="text-lg font-semibold tracking-tight text-(--asi-text)">Otro monto</span>
-              <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.16em] text-(--asi-secondary)">Personalizado</span>
+              Otro monto
             </motion.button>
           </motion.div>
 

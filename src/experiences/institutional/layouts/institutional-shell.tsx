@@ -159,7 +159,7 @@ export function InstitutionalShell() {
                   </motion.span>
                 </Link>
                 <motion.span
-                  className="min-w-0 select-text"
+                  className="hidden min-w-0 select-text sm:block"
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                   animate={
                     shouldReduceMotion
@@ -210,6 +210,13 @@ export function InstitutionalShell() {
                   Donaciones
                 </Link>
               </div>
+
+              <Link
+                className="asi-button asi-button-primary h-11 shrink-0 px-4 text-sm lg:hidden"
+                to={surfacePaths.institutional.donate}
+              >
+                Donar
+              </Link>
 
               <button
                 aria-controls="institutional-mobile-nav"

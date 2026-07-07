@@ -635,11 +635,9 @@ function HeroCollage({
 }
 
 function StorefrontHero({
-  onExploreJobs,
   onPricingClick,
   shouldReduceMotion,
 }: {
-  onExploreJobs: () => void;
   onPricingClick: () => void;
   shouldReduceMotion: boolean | null;
 }) {
@@ -661,12 +659,6 @@ function StorefrontHero({
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Button
-              className="h-12 rounded-control border-[#2d52a8] bg-[#2d52a8] px-6 text-[15px] shadow-[0_1px_2px_rgba(45,82,168,0.24),0_10px_24px_rgba(45,82,168,0.18)] hover:border-[#21438e] hover:bg-[#21438e]"
-              onClick={onExploreJobs}
-            >
-              Explorar jobs
-            </Button>
             <Button
               className="h-12 rounded-control border-transparent px-2 text-[15px] text-[#2d52a8] shadow-none hover:border-transparent hover:bg-transparent hover:text-[#21438e] hover:shadow-none dark:text-[#7c9cf0] dark:hover:text-[#9fb6f5] [&_svg]:transition-transform hover:[&_svg]:translate-x-[3px]"
               variant="ghost"
@@ -724,7 +716,6 @@ export function HomePage() {
     <div className="overflow-hidden bg-(--app-canvas)">
       <StorefrontHero
         shouldReduceMotion={shouldReduceMotion}
-        onExploreJobs={() => void navigate(surfacePaths.public.jobs)}
         onPricingClick={() => void navigate(surfacePaths.institutional.membershipCategories)}
       />
 
