@@ -179,7 +179,7 @@ function RadioOption({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        'w-full rounded-card border-2 bg-(--asi-surface-raised) p-5 text-left transition-all duration-150 active:scale-[0.99]',
+        'w-full rounded-card border-2 bg-(--asi-surface-raised) p-4 text-left transition-all duration-150 active:scale-[0.99] sm:p-5',
         selected
           ? 'border-(--asi-primary) bg-(--asi-primary)/5'
           : 'border-(--asi-outline) hover:border-(--asi-primary) hover:bg-(--asi-primary)/5',
@@ -300,7 +300,7 @@ function EligibleResult({
           <p className="text-xs font-semibold uppercase tracking-widest text-(--asi-secondary)">
             Usted califica
           </p>
-          <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
+          <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
             {result.category}
           </h2>
           <p className="max-w-[52ch] text-sm leading-6 text-(--asi-text-muted)">{result.message}</p>
@@ -440,9 +440,9 @@ function OtherDivisionsStep({
 
   return (
     <StepWrapper stepKey="other-divisions">
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
+          <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
             Encuentre su capítulo regional de ASI
           </h2>
           <p className="mt-2 text-sm leading-6 text-(--asi-text-muted)">
@@ -558,17 +558,17 @@ export function EligibilityPage() {
     <InstitutionalSection className="min-h-[70vh]">
       <div className="mx-auto max-w-xl">
         {/* Encabezado */}
-        <div className="mb-8 text-center">
+        <div className="mb-6 text-center sm:mb-8">
           <h1 className="asi-heading-lg">Verificación de Elegibilidad</h1>
-          <p className="asi-copy mt-3 mx-auto max-w-[52ch]">
-            Responda algunas preguntas para determinar qué categoría de membresía ASI es la adecuada para usted.
+          <p className="asi-copy mt-2 mx-auto max-w-[52ch] sm:mt-3">
+            En un minuto encontramos la categoría de membresía ASI ideal para usted.
           </p>
         </div>
 
         {/* Tarjeta del wizard */}
-        <div className="rounded-card-lg bg-(--asi-surface-raised) p-8 shadow-(--asi-shadow-soft) outline-1 outline-(--asi-outline) sm:p-10">
+        <div className="rounded-card-lg bg-(--asi-surface-raised) p-5 shadow-(--asi-shadow-soft) outline-1 outline-(--asi-outline) sm:p-10">
           {(showBack || showProgress) && (
-            <div className="mb-8 space-y-4">
+            <div className="mb-6 space-y-3 sm:mb-8 sm:space-y-4">
               {showBack && (
                 <div className="flex justify-start">
                   <BackButton onClick={goBack} />
@@ -585,11 +585,11 @@ export function EligibilityPage() {
             {/* ── Paso 1: ¿Es adventista? ──────────────────────── */}
             {state.step === 'adventist' && (
               <StepWrapper stepKey="adventist">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
-                    ¿Es usted un adventista del Séptimo Día bautizado en plena comunión?
+                <div className="space-y-5 sm:space-y-6">
+                  <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
+                    ¿Es adventista del Séptimo Día, bautizado y en plena comunión?
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     <RadioOption
                       label="Sí"
                       selected={state.isAdventist === true}
@@ -608,11 +608,11 @@ export function EligibilityPage() {
             {/* ── Paso 2: Ubicación ─────────────────────────────── */}
             {state.step === 'location' && (
               <StepWrapper stepKey="location">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
-                    Resido en:
+                <div className="space-y-5 sm:space-y-6">
+                  <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
+                    ¿Dónde reside?
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     <RadioOption
                       label="Unión Dominicana (UDA)"
                       selected={state.location === 'nad'}
@@ -642,20 +642,20 @@ export function EligibilityPage() {
             {/* ── Paso 3: Tipo de solicitante ───────────────────── */}
             {state.step === 'applicant-type' && (
               <StepWrapper stepKey="applicant-type">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
-                    ¿Su solicitud de membresía es para una organización o para usted personalmente?
+                <div className="space-y-5 sm:space-y-6">
+                  <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
+                    ¿La membresía es para una organización o para usted?
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     <RadioOption
                       label="Mi organización"
-                      description="Solicito en nombre de un negocio, ministerio u organización."
+                      description="Un negocio, ministerio u organización."
                       selected={state.applicantType === 'organization'}
                       onClick={() => goTo('org-type', { applicantType: 'organization' })}
                     />
                     <RadioOption
                       label="Yo personalmente"
-                      description="Solicito como profesional o laico individual."
+                      description="Como profesional o laico individual."
                       selected={state.applicantType === 'myself'}
                       onClick={() => goTo('church-employee', { applicantType: 'myself' })}
                     />
@@ -667,11 +667,11 @@ export function EligibilityPage() {
             {/* ── [Personal] Paso 4: ¿Empleado de la iglesia? ──── */}
             {state.step === 'church-employee' && (
               <StepWrapper stepKey="church-employee">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
-                    ¿Es usted empleado de la Iglesia Adventista del Séptimo Día?
+                <div className="space-y-5 sm:space-y-6">
+                  <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
+                    ¿Trabaja para la Iglesia Adventista del Séptimo Día?
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     <RadioOption
                       label="Sí"
                       selected={state.isChurchEmployee === true}
@@ -699,20 +699,20 @@ export function EligibilityPage() {
             {/* ── [Personal] Paso 5: Situación laboral ─────────── */}
             {state.step === 'employment-status' && (
               <StepWrapper stepKey="employment-status">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
-                    ¿Se encuentra actualmente empleado, jubilado o es un joven profesional?
+                <div className="space-y-5 sm:space-y-6">
+                  <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
+                    ¿Cuál es su situación laboral actual?
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     <RadioOption
                       label="Empleado"
-                      description="Actualmente trabaja en un rol profesional o gerencial."
+                      description="Trabaja en un rol profesional o gerencial."
                       selected={state.employmentStatus === 'employed'}
                       onClick={() => goTo('authority', { employmentStatus: 'employed' })}
                     />
                     <RadioOption
                       label="Jubilado"
-                      description="Se ha retirado de la vida profesional o empresarial."
+                      description="Ya se retiró de su profesión o negocio."
                       selected={state.employmentStatus === 'retired'}
                       onClick={() => resolveResult(
                         {
@@ -727,7 +727,7 @@ export function EligibilityPage() {
                     />
                     <RadioOption
                       label="Joven Profesional (18–35 años)"
-                      description="Estudiante, recién graduado, pasante, residente o joven emprendedor."
+                      description="Estudiante, recién graduado, pasante o emprendedor."
                       selected={state.employmentStatus === 'young-professional'}
                       onClick={() => resolveResult(
                         {
@@ -748,14 +748,14 @@ export function EligibilityPage() {
             {/* ── [Personal] Paso 6: ¿Autoridad para contratar? ── */}
             {state.step === 'authority' && (
               <StepWrapper stepKey="authority">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
-                    ¿Tiene usted autoridad para contratar o despedir empleados?
+                <div className="space-y-5 sm:space-y-6">
+                  <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
+                    ¿Puede contratar o despedir empleados?
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     <RadioOption
                       label="Sí"
-                      description="Gerencio, contrato o superviso al menos dos empleados equivalentes a tiempo completo."
+                      description="Superviso al menos dos empleados a tiempo completo."
                       selected={state.hasAuthority === true}
                       onClick={() => resolveResult(
                         {
@@ -770,7 +770,7 @@ export function EligibilityPage() {
                     />
                     <RadioOption
                       label="No"
-                      description="Trabajo de forma independiente o no superviso a otros."
+                      description="Trabajo por mi cuenta o no superviso a nadie."
                       selected={state.hasAuthority === false}
                       onClick={() => resolveResult(
                         {
@@ -791,20 +791,20 @@ export function EligibilityPage() {
             {/* ── [Org] Paso 4: Tipo de organización ───────────── */}
             {state.step === 'org-type' && (
               <StepWrapper stepKey="org-type">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
-                    ¿Su organización opera como una entidad sin fines de lucro o con fines de lucro?
+                <div className="space-y-5 sm:space-y-6">
+                  <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
+                    ¿Su organización es sin o con fines de lucro?
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     <RadioOption
                       label="Sin fines de lucro"
-                      description="Un ministerio, organización religiosa o entidad sin fines de lucro registrada."
+                      description="Un ministerio o entidad sin fines de lucro registrada."
                       selected={state.orgType === 'non-profit'}
                       onClick={() => goTo('org-tax-deductible', { orgType: 'non-profit' })}
                     />
                     <RadioOption
                       label="Con fines de lucro"
-                      description="Un negocio, empresa o empresa comercial."
+                      description="Un negocio o empresa comercial."
                       selected={state.orgType === 'for-profit'}
                       onClick={() => goTo('org-size', { orgType: 'for-profit' })}
                     />
@@ -816,11 +816,11 @@ export function EligibilityPage() {
             {/* ── [Org / Non-profit] Paso 5a: Recibos deducibles ─ */}
             {state.step === 'org-tax-deductible' && (
               <StepWrapper stepKey="org-tax-deductible">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
-                    ¿Está su organización autorizada a emitir recibos de donación deducibles de impuestos?
+                <div className="space-y-5 sm:space-y-6">
+                  <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
+                    ¿Su organización puede emitir recibos de donación deducibles de impuestos?
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     <RadioOption
                       label="Sí"
                       selected={state.orgTaxDeductible === true}
@@ -848,11 +848,11 @@ export function EligibilityPage() {
             {/* ── [Org] Paso 5b / 6a: Cantidad de empleados ─────── */}
             {state.step === 'org-size' && (
               <StepWrapper stepKey="org-size">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
-                    ¿Cuántos empleados o voluntarios equivalentes a tiempo completo (incluyendo al propietario/director) tiene su organización?
+                <div className="space-y-5 sm:space-y-6">
+                  <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
+                    ¿Cuántas personas a tiempo completo tiene su organización, incluyéndose a usted?
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     <RadioOption
                       label="Dos o más"
                       selected={state.orgSize === 'two-or-more'}
@@ -880,14 +880,14 @@ export function EligibilityPage() {
             {/* ── [Org] Paso final: ¿Propiedad de la iglesia? ──── */}
             {state.step === 'org-church' && (
               <StepWrapper stepKey="org-church">
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold tracking-tight text-(--asi-text)">
-                    Mi organización es propiedad de o está controlada por la Iglesia Adventista del Séptimo Día.
+                <div className="space-y-5 sm:space-y-6">
+                  <h2 className="text-lg font-semibold tracking-tight text-(--asi-text) sm:text-xl">
+                    ¿Su organización pertenece a la Iglesia Adventista del Séptimo Día?
                   </h2>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     <RadioOption
                       label="Sí"
-                      description="La organización es una escuela, hospital u otra entidad propiedad de la iglesia."
+                      description="Una escuela, hospital u otra entidad de la iglesia."
                       selected={state.orgChurchOwned === true}
                       onClick={() => resolveResult(
                         {
@@ -902,7 +902,7 @@ export function EligibilityPage() {
                     />
                     <RadioOption
                       label="No"
-                      description="La organización es de propiedad y operación independiente."
+                      description="De propiedad y operación independiente."
                       selected={state.orgChurchOwned === false}
                       onClick={() => {
                         const isNonProfit = state.orgType === 'non-profit'
