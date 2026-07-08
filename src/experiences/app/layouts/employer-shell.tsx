@@ -47,6 +47,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { Tooltip } from '@/components/ui/tooltip'
 import { signOutCurrentUser, toErrorMessage } from '@/features/auth/lib/auth-api'
 import { fetchMyNotificationsPage, markAllNotificationsRead, markNotificationRead, markNotificationUnread, type AppNotification } from '@/lib/notifications/api'
+import { isExternalNotificationUrl, resolveNotificationTarget } from '@/lib/notifications/resolve-target'
 import { filterNavigationItems } from '@/lib/permissions/guards'
 import { cn } from '@/lib/utils/cn'
 import { PLATFORM_REGISTRATION_LOCKED, PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access'
@@ -60,6 +61,8 @@ const WORKSPACE_SIDEBAR_GROUPS_COLLAPSED_STORAGE_KEY = 'asi:workspace-sidebar-gr
 const DESKTOP_SIDEBAR_EXPANDED_WIDTH = 272
 const DESKTOP_SIDEBAR_COLLAPSED_WIDTH = 88
 const NOTIFICATION_PAGE_SIZE = 8
+/* Desplazamiento del puntero (px) para que el swipe marque leída (→) o no leída (←). */
+const SWIPE_READ_THRESHOLD_PX = 72
 
 type ShellExperience = 'workspace' | 'candidate' | 'storefront' | 'admin'
 type ShellGuestAction = {
@@ -279,10 +282,6 @@ function NotificationTypeIcon({ type, className }: { type: string; className?: s
   return <Bell className={className} />
 }
 
-function isExternalUrl(value: string) {
-  return /^https?:\/\//i.test(value)
-}
-
 function getInitialSidebarCollapsed() {
   if (typeof window === 'undefined') {
     return false
@@ -407,8 +406,14 @@ function NotificationRow({
 }) {
   const isUnread = !notification.read_at
   const hasAction = Boolean(notification.action_url)
+  // El swipe genera un drag; evitamos que el click posterior abra la notificación.
+  const suppressClickRef = useRef(false)
 
   function handleActivate() {
+    if (suppressClickRef.current) {
+      return
+    }
+
     if (hasAction) {
       onOpenNotification(notification)
     } else if (isUnread) {
@@ -417,14 +422,47 @@ function NotificationRow({
   }
 
   return (
-    <li className="relative">
-      {isUnread ? <span aria-hidden className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary-500 sm:w-[3px]" /> : null}
-      <div
-        className={cn(
-          'flex items-start gap-1.5 px-3 py-2 transition-colors sm:gap-2 sm:px-4 sm:py-3',
-          isUnread && 'bg-primary-50/45 dark:bg-primary-500/8'
-        )}
+    <li className="relative overflow-hidden">
+      <span
+        aria-hidden
+        className="absolute inset-y-0 left-0 flex items-center gap-1.5 pl-4 text-xs font-semibold text-emerald-600 dark:text-emerald-400"
       >
+        <CheckCheck className="size-4" />
+        Leída
+      </span>
+      <span
+        aria-hidden
+        className="absolute inset-y-0 right-0 flex items-center gap-1.5 pr-4 text-xs font-semibold text-primary-600 dark:text-primary-300"
+      >
+        No leída
+        <Bell className="size-4" />
+      </span>
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.45}
+        dragDirectionLock
+        onDragStart={() => {
+          suppressClickRef.current = true
+        }}
+        onDragEnd={(_, info) => {
+          if (info.offset.x > SWIPE_READ_THRESHOLD_PX && isUnread) {
+            onMarkRead(notification.id)
+          } else if (info.offset.x < -SWIPE_READ_THRESHOLD_PX && !isUnread) {
+            onMarkUnread(notification.id)
+          }
+
+          window.setTimeout(() => {
+            suppressClickRef.current = false
+          }, 0)
+        }}
+        className={cn(
+          'relative flex items-start gap-1.5 bg-(--app-surface) px-3 py-2 transition-colors sm:gap-2 sm:px-4 sm:py-3',
+          isUnread && 'bg-primary-50 dark:bg-[#182b5c]'
+        )}
+        style={{ touchAction: 'pan-y' }}
+      >
+        {isUnread ? <span aria-hidden className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary-500 sm:w-[3px]" /> : null}
         <button
           type="button"
           onClick={handleActivate}
@@ -468,7 +506,7 @@ function NotificationRow({
         >
           {isUnread ? 'Leída' : 'No leída'}
         </button>
-      </div>
+      </motion.div>
     </li>
   )
 }
@@ -535,7 +573,7 @@ function WorkspaceNotificationPanel({
   }, [loadMore, visibleCount])
 
   return (
-    <div className="flex max-h-[min(26rem,calc(100dvh-5rem))] w-full flex-col overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) shadow-[0_22px_56px_rgba(8,12,24,0.2)] sm:max-h-[min(32rem,75vh)] sm:w-[min(23rem,calc(100vw-1.5rem))] sm:shadow-[0_28px_72px_rgba(8,12,24,0.22)]">
+    <div className="flex max-h-[min(26rem,calc(100dvh-5rem))] w-full flex-col overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface) shadow-[0_22px_56px_rgba(8,12,24,0.2)] sm:max-h-[min(32rem,75vh)] sm:w-[min(23rem,calc(100vw-1.5rem))] sm:shadow-[0_28px_72px_rgba(8,12,24,0.22)]">
       <div className="flex items-center justify-between gap-2 border-b border-(--app-border) px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-(--app-text)">Notificaciones</p>
@@ -1464,23 +1502,27 @@ export function PlatformAppShell({
     }
   }, [notificationPanelOpen, profileMenuOpen])
 
-  async function handleOpenNotification(notification: AppNotification) {
+  function handleOpenNotification(notification: AppNotification) {
+    // Navegación primero y marcado en segundo plano: esperar el RPC antes de
+    // movernos hacía que el clic se sintiera "pensativo".
     if (!notification.read_at) {
-      await markReadMutation.mutateAsync(notification.id)
+      markReadMutation.mutate(notification.id)
     }
 
     setNotificationPanelOpen(false)
 
-    if (!notification.action_url) {
+    const target = resolveNotificationTarget(notification)
+
+    if (!target) {
       return
     }
 
-    if (isExternalUrl(notification.action_url)) {
-      window.location.assign(notification.action_url)
+    if (isExternalNotificationUrl(target)) {
+      window.location.assign(target)
       return
     }
 
-    void navigate(notification.action_url)
+    void navigate(target)
   }
 
   function handleMarkRead(notificationId: string) {
@@ -1681,7 +1723,7 @@ export function PlatformAppShell({
                           onMarkRead={handleMarkRead}
                           onMarkAllRead={handleMarkAllRead}
                           onMarkUnread={handleMarkUnread}
-                          onOpenNotification={(notification) => void handleOpenNotification(notification)}
+                          onOpenNotification={handleOpenNotification}
                           isMarkingAll={markAllReadMutation.isPending}
                         />
                       </motion.div>
