@@ -2325,6 +2325,8 @@ export function MembershipApplicationForm({
               if (church.associationName) {
                 form.setValue('conference', church.associationName, { shouldValidate: true })
               }
+            } else {
+              form.setValue('conference', '', { shouldValidate: true, shouldDirty: true })
             }
           }}
         />
@@ -2350,14 +2352,6 @@ export function MembershipApplicationForm({
             {...form.register('churchStateProvince')}
           />
         </div>
-
-        <TextField
-          label="Conferencia"
-          help="Asociación o misión."
-          required
-          error={errors.conference?.message}
-          {...form.register('conference')}
-        />
 
         <div className="grid gap-4 sm:grid-cols-3">
           <TextField
