@@ -14,8 +14,8 @@ import { cn } from '@/lib/utils/cn'
 type CropShape = 'circle' | 'rounded'
 type CropPoint = { x: number; y: number }
 
-const MIN_ZOOM = 1
-const MAX_ZOOM = 3
+const MIN_ZOOM_FLOOR = 0.5
+const MAX_ZOOM = 4
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
@@ -149,6 +149,24 @@ export function ImageCropDialog({
     })
   }, [frameSize, imageSize, panX, panY, zoom])
 
+  const minZoom = useMemo(() => {
+    if (!frameSize || !imageSize) {
+      return MIN_ZOOM_FLOOR
+    }
+
+    const coverScale = Math.max(frameSize.width / imageSize.width, frameSize.height / imageSize.height)
+    const containScale = Math.min(frameSize.width / imageSize.width, frameSize.height / imageSize.height)
+
+    return clamp(containScale / coverScale, MIN_ZOOM_FLOOR, 1)
+  }, [frameSize, imageSize])
+
+  useEffect(() => {
+    if (zoom < minZoom) {
+      setZoom(minZoom)
+      zoomRef.current = minZoom
+    }
+  }, [minZoom, zoom])
+
   function updatePanFromPixels(deltaX: number, deltaY: number, startPanX: number, startPanY: number, activeZoom: number) {
     if (!frameSize || !imageSize) {
       return
@@ -159,14 +177,14 @@ export function ImageCropDialog({
       frameHeight: frameSize.height,
       imageWidth: imageSize.width,
       imageHeight: imageSize.height,
-      zoom: activeZoom,
+      zoom: clamp(activeZoom, minZoom, MAX_ZOOM),
       panX: 0,
       panY: 0
     })
-    const maxPanX = Math.max(0, (layout.width - frameSize.width) / 2)
-    const maxPanY = Math.max(0, (layout.height - frameSize.height) / 2)
-    const nextPanX = maxPanX > 0 ? clamp(startPanX + deltaX / maxPanX, -1, 1) : 0
-    const nextPanY = maxPanY > 0 ? clamp(startPanY + deltaY / maxPanY, -1, 1) : 0
+    const panRangeX = Math.abs(layout.width - frameSize.width) / 2
+    const panRangeY = Math.abs(layout.height - frameSize.height) / 2
+    const nextPanX = panRangeX > 0 ? clamp(startPanX + deltaX / panRangeX, -1, 1) : 0
+    const nextPanY = panRangeY > 0 ? clamp(startPanY + deltaY / panRangeY, -1, 1) : 0
 
     setPanX(nextPanX)
     setPanY(nextPanY)
@@ -214,7 +232,7 @@ export function ImageCropDialog({
     if (points.length >= 2 && gestureRef.current.distance) {
       const nextDistance = distanceBetween(points[0], points[1])
       const nextCenter = centerBetween(points[0], points[1])
-      const nextZoom = clamp(gestureRef.current.zoom * (nextDistance / gestureRef.current.distance), MIN_ZOOM, MAX_ZOOM)
+      const nextZoom = clamp(gestureRef.current.zoom * (nextDistance / gestureRef.current.distance), minZoom, MAX_ZOOM)
       setZoom(nextZoom)
       zoomRef.current = nextZoom
       updatePanFromPixels(
@@ -269,7 +287,7 @@ export function ImageCropDialog({
     }
 
     event.preventDefault()
-    const nextZoom = clamp(zoomRef.current - event.deltaY * 0.002, MIN_ZOOM, MAX_ZOOM)
+    const nextZoom = clamp(zoomRef.current - event.deltaY * 0.002, minZoom, MAX_ZOOM)
     setZoom(nextZoom)
     zoomRef.current = nextZoom
     setPanX((current) => clamp(current, -1, 1))
@@ -290,7 +308,7 @@ export function ImageCropDialog({
         outputHeight,
         panX,
         panY,
-        zoom
+        zoom: clamp(zoom, minZoom, MAX_ZOOM)
       }
       const croppedFile = await cropRasterImageFile(file, cropOptions)
       await onConfirm(croppedFile)
@@ -346,7 +364,7 @@ export function ImageCropDialog({
                 ref={frameRef}
                 aria-label="Área de encuadre de imagen"
                 role="img"
-                onPointerDown={handlePointerDown}
+                onPointerDownCapture={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerCancel={handlePointerEnd}
                 onPointerUp={handlePointerEnd}
@@ -370,7 +388,7 @@ export function ImageCropDialog({
                         height: event.currentTarget.naturalHeight
                       })
                     }}
-                    className="absolute max-w-none select-none"
+                    className="pointer-events-none absolute max-w-none select-none"
                     style={
                       previewLayout
                         ? {

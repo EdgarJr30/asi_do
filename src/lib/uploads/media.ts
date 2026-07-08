@@ -42,6 +42,8 @@ const MIME_TYPE_EXTENSION_MAP: Record<string, string[]> = {
 }
 
 const RASTER_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const MIN_RASTER_CROP_ZOOM = 0.5
+const MAX_RASTER_CROP_ZOOM = 4
 
 export interface RasterImageCropOptions {
   outputWidth: number
@@ -188,14 +190,14 @@ function getCropDrawLayout(
   panX: number,
   panY: number
 ) {
-  const safeZoom = Math.max(1, Math.min(3, zoom))
+  const safeZoom = Math.max(MIN_RASTER_CROP_ZOOM, Math.min(MAX_RASTER_CROP_ZOOM, zoom))
   const baseScale = Math.max(frameWidth / imageWidth, frameHeight / imageHeight) * safeZoom
   const width = imageWidth * baseScale
   const height = imageHeight * baseScale
-  const maxPanX = Math.max(0, (width - frameWidth) / 2)
-  const maxPanY = Math.max(0, (height - frameHeight) / 2)
-  const x = (frameWidth - width) / 2 + Math.max(-1, Math.min(1, panX)) * maxPanX
-  const y = (frameHeight - height) / 2 + Math.max(-1, Math.min(1, panY)) * maxPanY
+  const panRangeX = Math.abs(width - frameWidth) / 2
+  const panRangeY = Math.abs(height - frameHeight) / 2
+  const x = (frameWidth - width) / 2 + Math.max(-1, Math.min(1, panX)) * panRangeX
+  const y = (frameHeight - height) / 2 + Math.max(-1, Math.min(1, panY)) * panRangeY
 
   return { x, y, width, height }
 }
@@ -254,7 +256,8 @@ export async function cropRasterImageFile(file: File, options: RasterImageCropOp
     options.panY
   )
 
-  context.clearRect(0, 0, canvas.width, canvas.height)
+  context.fillStyle = '#f8fafc'
+  context.fillRect(0, 0, canvas.width, canvas.height)
   context.drawImage(image, layout.x, layout.y, layout.width, layout.height)
 
   const blob = await canvasToBlob(canvas, options.quality ?? 0.9)
