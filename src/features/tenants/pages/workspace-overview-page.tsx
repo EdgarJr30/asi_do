@@ -53,9 +53,10 @@ import {
 } from '@/features/tenants/lib/workspace-api';
 import { reportErrorWithToast } from '@/lib/errors/error-reporting';
 import { cn } from '@/lib/utils/cn';
-import { UploadConstraintError } from '@/lib/uploads/media';
+import { isRasterImageFile, MAX_UPLOAD_SIZE_BYTES, UploadConstraintError } from '@/lib/uploads/media';
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion';
 import { CountUp } from '@/shared/ui/count-up';
+import { ImageCropDialog } from '@/shared/ui/image-crop-dialog';
 import { CountryCodeSelect } from '@/shared/ui/location-selects';
 import { UserAvatar } from '@/shared/ui/user-avatar';
 
@@ -243,6 +244,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRoleId, setInviteRoleId] = useState('');
   const [openSheet, setOpenSheet] = useState<SheetKey | null>(null);
+  const [pendingLogoCropFile, setPendingLogoCropFile] = useState<File | null>(null);
   const [memberFilter, setMemberFilter] = useState<WorkspaceMemberFilter>('all');
   const [memberQuery, setMemberQuery] = useState('');
   // El input responde en vivo; la búsqueda paginada solo golpea el servidor
@@ -306,7 +308,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
     queryKey: ['workspace', 'logo-url', profile?.logo_path],
     enabled: Boolean(profile?.logo_path),
     staleTime: 1000 * 60 * 8,
-    queryFn: async () => createWorkspaceAssetUrl(profile!.logo_path!),
+    queryFn: () => createWorkspaceAssetUrl(profile!.logo_path!),
   });
 
   const saveProfileMutation = useMutation({
@@ -376,7 +378,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY });
       await queryClient.invalidateQueries({ queryKey: ['workspace', 'logo-url'] });
       toast.success('Logo actualizado', {
-        description: 'La imagen de tu empresa ya quedó lista para vacantes públicas.',
+        description: 'La imagen quedó cargada correctamente.',
       });
     },
     onError: async (error) => {
@@ -476,9 +478,18 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
   function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (file) {
-      void uploadLogoMutation.mutateAsync(file);
+      if (isRasterImageFile(file) && file.size <= MAX_UPLOAD_SIZE_BYTES) {
+        setPendingLogoCropFile(file);
+      } else {
+        void uploadLogoMutation.mutateAsync(file);
+      }
     }
     event.currentTarget.value = '';
+  }
+
+  function confirmLogoCrop(file: File) {
+    setPendingLogoCropFile(null);
+    void uploadLogoMutation.mutateAsync(file);
   }
 
   const assignableRoles = bundle.roles.filter((role) => role.tenant_id === null || role.tenant_id === bundle.tenant.id);
@@ -995,6 +1006,18 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
           })}
         </div>
       </SideSheet>
+      <ImageCropDialog
+        open={Boolean(pendingLogoCropFile)}
+        file={pendingLogoCropFile}
+        title="Encuadrar logo"
+        description="Ajusta cómo se verá la imagen de tu empresa."
+        shape="rounded"
+        outputWidth={768}
+        outputHeight={768}
+        confirmLabel="Usar logo"
+        onConfirm={confirmLogoCrop}
+        onCancel={() => setPendingLogoCropFile(null)}
+      />
     </motion.div>
   );
 }

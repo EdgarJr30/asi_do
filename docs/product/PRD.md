@@ -123,7 +123,7 @@ The MVP should **not** initially include:
 - regional administrator validation form with cedula upload, appointment evidence, union/association scope, and platform-admin approval before scoped regional authorization is granted
 - role-scope model that separates super administrator, platform support, platform moderator, readonly platform auditor, regional administrator, pastor administrator, tenant owner, tenant member, tenant billing contact, Joven Profesional candidate-only users, and other individual ASI members
 - two-step authorization model where pastors or regional administrators may authorize normal users and provide scoped endorsement for company/operator requests within scope, while final license activation remains permission-driven and stays with super administrator, platform support, or another platform admin explicitly granted `license:activate` by a super administrator
-- avatar and document uploads with modern web formats, 5 MB guardrails, and clear validation feedback
+- avatar and document uploads with modern web formats, 5 MB guardrails, clear validation feedback, and crop/positioning for raster profile and company identity images before save
 - authenticated app entry redirect that sends any incomplete base profile to `/account/profile` before workspace, admin, or other account surfaces
 - guided initial profile setup with short mobile-first steps for required identity, locale, and country data; avatar, CV, candidate depth, and company/operator requests remain optional follow-up work
 

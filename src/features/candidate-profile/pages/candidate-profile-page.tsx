@@ -86,11 +86,14 @@ import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import {
   CANDIDATE_RESUME_MIME_TYPES,
   formatFileSize,
+  isRasterImageFile,
+  MAX_UPLOAD_SIZE_BYTES,
   MAX_UPLOAD_SIZE_LABEL,
   ONBOARDING_AVATAR_MIME_TYPES,
   prepareUploadFile,
   UploadConstraintError
 } from '@/lib/uploads/media'
+import { ImageCropDialog } from '@/shared/ui/image-crop-dialog'
 import { UserAvatar } from '@/shared/ui/user-avatar'
 
 const CANDIDATE_PROFILE_QUERY_KEY = ['candidate-profile', 'mine'] as const
@@ -571,6 +574,7 @@ function CandidateProfileEditor({
   const [resumeFileError, setResumeFileError] = useState<string | null>(null)
   const [isResumeDragging, setIsResumeDragging] = useState(false)
   const [pendingResumeUpload, setPendingResumeUpload] = useState<PendingResumeUpload | null>(null)
+  const [pendingAvatarCropFile, setPendingAvatarCropFile] = useState<File | null>(null)
   const [stagedResumes, setStagedResumes] = useState<StagedResume[]>([])
   const [isVisibleToRecruiters, setIsVisibleToRecruiters] = useState(() => bundle.profile?.is_visible_to_recruiters ?? false)
   const [pendingDelete, setPendingDelete] = useState<PendingProfileDelete | null>(null)
@@ -738,8 +742,18 @@ function CandidateProfileEditor({
     event.target.value = ''
 
     if (file) {
+      if (isRasterImageFile(file) && file.size <= MAX_UPLOAD_SIZE_BYTES) {
+        setPendingAvatarCropFile(file)
+        return
+      }
+
       uploadAvatarMutation.mutate(file)
     }
+  }
+
+  function confirmAvatarCrop(file: File) {
+    setPendingAvatarCropFile(null)
+    uploadAvatarMutation.mutate(file)
   }
 
   const setDefaultResumeMutation = useMutation({
@@ -1928,6 +1942,18 @@ function CandidateProfileEditor({
         pendingUpload={pendingResumeUpload}
         onConfirm={confirmPendingResumeUpload}
         onCancel={cancelPendingResumeUpload}
+      />
+      <ImageCropDialog
+        open={Boolean(pendingAvatarCropFile)}
+        file={pendingAvatarCropFile}
+        title="Encuadrar foto"
+        description="Ajusta cómo se verá tu foto de perfil."
+        shape="circle"
+        outputWidth={512}
+        outputHeight={512}
+        confirmLabel="Usar foto"
+        onConfirm={confirmAvatarCrop}
+        onCancel={() => setPendingAvatarCropFile(null)}
       />
       <ConfirmDialog
         open={Boolean(pendingDeleteCopy)}

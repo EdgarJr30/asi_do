@@ -179,7 +179,8 @@
 7. Modern web formats such as **SVG** and **WEBP** must be accepted where the use case allows them safely.
 8. Multimedia uploads must be optimized internally before storage when the file type supports safe compression or transcoding, especially for raster images.
 9. When an upload is rejected, the UI must explain the exact reason, include the detected file size when relevant, and suggest compressing the asset or uploading a file of **5 MB or less**.
-10. Candidate CV upload flows must show a pre-upload review step with local preview or file metadata before storing the document.
+10. Raster profile photos and company/logo images must offer a pre-save crop/positioning step anywhere the user uploads or replaces them. SVG logos remain direct uploads because they are vector assets.
+11. Candidate CV upload flows must show a pre-upload review step with local preview or file metadata before storing the document.
 
 ---
 

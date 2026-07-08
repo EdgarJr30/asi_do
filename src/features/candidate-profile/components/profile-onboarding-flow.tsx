@@ -35,10 +35,13 @@ import {
 import { onboardingSchema, type OnboardingValues } from '@/features/auth/lib/auth-schemas'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
+import { ImageCropDialog } from '@/shared/ui/image-crop-dialog'
 import { getCountryOptionByCode } from '@/shared/geo/location-options'
 import { captureClientError } from '@/lib/errors/client-error-logger'
 import {
+  MAX_UPLOAD_SIZE_BYTES,
   MAX_UPLOAD_SIZE_LABEL,
+  isRasterImageFile,
   ONBOARDING_AVATAR_MIME_TYPES,
   prepareUploadFile,
   UploadConstraintError
@@ -196,6 +199,7 @@ export function ProfileOnboardingFlow() {
   const shouldReduceMotion = useReducedMotion()
   const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [pendingAvatarCropFile, setPendingAvatarCropFile] = useState<File | null>(null)
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null)
   const [avatarFileError, setAvatarFileError] = useState<string | null>(null)
   const [isPreparingAvatar, setIsPreparingAvatar] = useState(false)
@@ -327,14 +331,9 @@ export function ProfileOnboardingFlow() {
     }
   })
 
-  async function handleAvatarChange(file: File | null) {
+  async function prepareAvatarFile(file: File) {
     setAvatarFileError(null)
     setAvatarFile(file)
-
-    if (!file) {
-      setAvatarPreviewUrl(session.profile?.avatar_path ? avatarPreviewUrl : null)
-      return
-    }
 
     setIsPreparingAvatar(true)
 
@@ -380,6 +379,30 @@ export function ProfileOnboardingFlow() {
     } finally {
       setIsPreparingAvatar(false)
     }
+  }
+
+  async function handleAvatarChange(file: File | null) {
+    setAvatarFileError(null)
+
+    if (!file) {
+      setAvatarFile(null)
+      setPendingAvatarCropFile(null)
+      setAvatarPreviewUrl(session.profile?.avatar_path ? avatarPreviewUrl : null)
+      return
+    }
+
+    if (isRasterImageFile(file) && file.size <= MAX_UPLOAD_SIZE_BYTES) {
+      setAvatarFile(null)
+      setPendingAvatarCropFile(file)
+      return
+    }
+
+    await prepareAvatarFile(file)
+  }
+
+  async function confirmAvatarCrop(file: File) {
+    setPendingAvatarCropFile(null)
+    await prepareAvatarFile(file)
   }
 
   function handleAvatarDrop(event: DragEvent<HTMLLabelElement>) {
@@ -629,7 +652,10 @@ export function ProfileOnboardingFlow() {
                                   accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
                                   className="sr-only"
                                   type="file"
-                                  onChange={(event) => void handleAvatarChange(event.target.files?.[0] ?? null)}
+                                  onChange={(event) => {
+                                    void handleAvatarChange(event.target.files?.[0] ?? null)
+                                    event.currentTarget.value = ''
+                                  }}
                                 />
                               </label>
                               <p className="text-xs leading-5 text-(--app-text-subtle)">
@@ -756,6 +782,18 @@ export function ProfileOnboardingFlow() {
           </Button>
         </div>
       ) : null}
+      <ImageCropDialog
+        open={Boolean(pendingAvatarCropFile)}
+        file={pendingAvatarCropFile}
+        title="Encuadrar foto"
+        description="Ajusta cómo se verá tu foto de perfil."
+        shape="circle"
+        outputWidth={512}
+        outputHeight={512}
+        confirmLabel="Usar foto"
+        onConfirm={confirmAvatarCrop}
+        onCancel={() => setPendingAvatarCropFile(null)}
+      />
     </div>
   )
 }

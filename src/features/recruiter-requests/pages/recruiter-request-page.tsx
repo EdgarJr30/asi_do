@@ -27,10 +27,13 @@ import { recruiterRequestSchema, type RecruiterRequestValues } from '@/features/
 import { getTenantKindLabel, tenantKindOptions, tenantKindRequirementSummary } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { RecruiterRequestStatusBadge } from '@/features/recruiter-requests/components/recruiter-request-status-badge'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
+import { ImageCropDialog } from '@/shared/ui/image-crop-dialog'
 import { captureClientError } from '@/lib/errors/client-error-logger'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import {
+  MAX_UPLOAD_SIZE_BYTES,
   MAX_UPLOAD_SIZE_LABEL,
+  isRasterImageFile,
   prepareUploadFile,
   RECRUITER_DOCUMENT_MIME_TYPES,
   RECRUITER_LOGO_MIME_TYPES,
@@ -72,6 +75,7 @@ export function RecruiterRequestPage() {
   const queryClient = useQueryClient()
   const session = useAppSession()
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null)
+  const [pendingCompanyLogoCropFile, setPendingCompanyLogoCropFile] = useState<File | null>(null)
   const [verificationDocumentFile, setVerificationDocumentFile] = useState<File | null>(null)
   const [companyLogoFileError, setCompanyLogoFileError] = useState<string | null>(null)
   const [verificationDocumentFileError, setVerificationDocumentFileError] = useState<string | null>(null)
@@ -215,13 +219,9 @@ export function RecruiterRequestPage() {
   const hasOpenRequest = requests.some((request) => request.status === 'submitted' || request.status === 'under_review')
   const approvedRequest = requests.find((request) => request.status === 'approved')
 
-  async function handleCompanyLogoChange(file: File | null) {
+  async function prepareCompanyLogoFile(file: File) {
     setCompanyLogoFileError(null)
     setCompanyLogoFile(file)
-
-    if (!file) {
-      return
-    }
 
     setIsPreparingCompanyLogo(true)
 
@@ -258,6 +258,29 @@ export function RecruiterRequestPage() {
     } finally {
       setIsPreparingCompanyLogo(false)
     }
+  }
+
+  async function handleCompanyLogoChange(file: File | null) {
+    setCompanyLogoFileError(null)
+
+    if (!file) {
+      setCompanyLogoFile(null)
+      setPendingCompanyLogoCropFile(null)
+      return
+    }
+
+    if (isRasterImageFile(file) && file.size <= MAX_UPLOAD_SIZE_BYTES) {
+      setCompanyLogoFile(null)
+      setPendingCompanyLogoCropFile(file)
+      return
+    }
+
+    await prepareCompanyLogoFile(file)
+  }
+
+  async function confirmCompanyLogoCrop(file: File) {
+    setPendingCompanyLogoCropFile(null)
+    await prepareCompanyLogoFile(file)
   }
 
   async function handleVerificationDocumentChange(file: File | null) {
@@ -490,7 +513,10 @@ export function RecruiterRequestPage() {
                   <Input
                     accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
                     type="file"
-                    onChange={(event) => void handleCompanyLogoChange(event.target.files?.[0] ?? null)}
+                    onChange={(event) => {
+                      void handleCompanyLogoChange(event.target.files?.[0] ?? null)
+                      event.currentTarget.value = ''
+                    }}
                   />
                   <p className="text-xs text-zinc-500">
                     Opcional. Acepta SVG, PNG, JPG y WEBP. Optimizamos las imágenes antes de subirlas y el límite es {MAX_UPLOAD_SIZE_LABEL}.
@@ -514,7 +540,10 @@ export function RecruiterRequestPage() {
                   <Input
                     accept="application/pdf,image/png,image/jpeg,image/webp"
                     type="file"
-                    onChange={(event) => void handleVerificationDocumentChange(event.target.files?.[0] ?? null)}
+                    onChange={(event) => {
+                      void handleVerificationDocumentChange(event.target.files?.[0] ?? null)
+                      event.currentTarget.value = ''
+                    }}
                   />
                   <p className="text-xs text-zinc-500">
                     Requerido. Acepta PDF, PNG, JPG y WEBP. Las imagenes se optimizan antes de subirlas y el limite es {MAX_UPLOAD_SIZE_LABEL}.
@@ -616,6 +645,18 @@ export function RecruiterRequestPage() {
           </Card>
         ) : null}
       </div>
+      <ImageCropDialog
+        open={Boolean(pendingCompanyLogoCropFile)}
+        file={pendingCompanyLogoCropFile}
+        title="Encuadrar logo"
+        description="Ajusta cómo se verá la imagen de tu empresa."
+        shape="rounded"
+        outputWidth={768}
+        outputHeight={768}
+        confirmLabel="Usar logo"
+        onConfirm={confirmCompanyLogoCrop}
+        onCancel={() => setPendingCompanyLogoCropFile(null)}
+      />
     </div>
   )
 }

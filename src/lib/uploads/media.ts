@@ -43,6 +43,15 @@ const MIME_TYPE_EXTENSION_MAP: Record<string, string[]> = {
 
 const RASTER_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
+export interface RasterImageCropOptions {
+  outputWidth: number
+  outputHeight: number
+  panX: number
+  panY: number
+  zoom: number
+  quality?: number
+}
+
 interface FileValidationOptions {
   acceptedMimeTypes: readonly string[]
   acceptedFormatsLabel: string
@@ -89,6 +98,10 @@ function matchesAcceptedMimeType(file: File, acceptedMimeTypes: readonly string[
 
 function replaceFileExtension(fileName: string, nextExtension: string) {
   return fileName.replace(/\.[^/.]+$/, '') + `.${nextExtension}`
+}
+
+export function isRasterImageFile(file: File) {
+  return RASTER_IMAGE_MIME_TYPES.has(file.type)
 }
 
 export function formatFileSize(bytes: number) {
@@ -163,6 +176,92 @@ async function canvasToBlob(canvas: HTMLCanvasElement, quality: number) {
       'image/webp',
       quality
     )
+  })
+}
+
+function getCropDrawLayout(
+  frameWidth: number,
+  frameHeight: number,
+  imageWidth: number,
+  imageHeight: number,
+  zoom: number,
+  panX: number,
+  panY: number
+) {
+  const safeZoom = Math.max(1, Math.min(3, zoom))
+  const baseScale = Math.max(frameWidth / imageWidth, frameHeight / imageHeight) * safeZoom
+  const width = imageWidth * baseScale
+  const height = imageHeight * baseScale
+  const maxPanX = Math.max(0, (width - frameWidth) / 2)
+  const maxPanY = Math.max(0, (height - frameHeight) / 2)
+  const x = (frameWidth - width) / 2 + Math.max(-1, Math.min(1, panX)) * maxPanX
+  const y = (frameHeight - height) / 2 + Math.max(-1, Math.min(1, panY)) * maxPanY
+
+  return { x, y, width, height }
+}
+
+export function getRasterImageCropPreviewLayout(input: {
+  frameWidth: number
+  frameHeight: number
+  imageWidth: number
+  imageHeight: number
+  zoom: number
+  panX: number
+  panY: number
+}) {
+  return getCropDrawLayout(
+    input.frameWidth,
+    input.frameHeight,
+    input.imageWidth,
+    input.imageHeight,
+    input.zoom,
+    input.panX,
+    input.panY
+  )
+}
+
+export async function cropRasterImageFile(file: File, options: RasterImageCropOptions) {
+  if (!isRasterImageFile(file)) {
+    return file
+  }
+
+  const image = await loadImageElement(file)
+  const canvas = document.createElement('canvas')
+  canvas.width = options.outputWidth
+  canvas.height = options.outputHeight
+
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    throw new UploadConstraintError(
+      'compression_failed',
+      'Could not access canvas context.',
+      'No pudimos preparar el encuadre de la imagen. Intenta con otro archivo.',
+      {
+        fileName: file.name,
+        fileType: file.type
+      }
+    )
+  }
+
+  const layout = getCropDrawLayout(
+    options.outputWidth,
+    options.outputHeight,
+    image.width,
+    image.height,
+    options.zoom,
+    options.panX,
+    options.panY
+  )
+
+  context.clearRect(0, 0, canvas.width, canvas.height)
+  context.drawImage(image, layout.x, layout.y, layout.width, layout.height)
+
+  const blob = await canvasToBlob(canvas, options.quality ?? 0.9)
+
+  return new File([blob], replaceFileExtension(file.name, 'webp'), {
+    type: 'image/webp',
+    lastModified: Date.now()
   })
 }
 
