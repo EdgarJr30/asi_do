@@ -57,6 +57,7 @@ import { UploadConstraintError } from '@/lib/uploads/media';
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion';
 import { CountUp } from '@/shared/ui/count-up';
 import { CountryCodeSelect } from '@/shared/ui/location-selects';
+import { UserAvatar } from '@/shared/ui/user-avatar';
 
 const MEMBERS_PAGE_SIZE = 10;
 
@@ -637,9 +638,13 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
               >
                 {visibleMembers.map((membership) => (
                   <motion.li key={membership.id} variants={cardReveal} className="flex items-center gap-2.5 px-3 py-2.5 sm:px-3.5">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-[0.7rem] font-bold text-white">
-                      {initialsOf(membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'M')}
-                    </span>
+                    <UserAvatar
+                      name={membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'M'}
+                      avatarPath={membership.user?.avatar_path}
+                      className="size-9"
+                      fallbackClassName="bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-white"
+                      textClassName="text-[0.7rem] font-bold"
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[0.84rem] font-semibold leading-tight text-(--app-text)">
                         {membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'Miembro'}

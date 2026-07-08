@@ -36,6 +36,7 @@ import {
 } from '@/shared/ui/card-motion'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cn } from '@/lib/utils/cn'
+import { UserAvatar } from '@/shared/ui/user-avatar'
 
 function greetingForNow(date = new Date()) {
   const hour = date.getHours()
@@ -50,18 +51,6 @@ function greetingForNow(date = new Date()) {
 
 function firstName(value: string) {
   return value.trim().split(/\s+/)[0] ?? value
-}
-
-function initialsOf(value: string) {
-  return (
-    value
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join('') || '·'
-  )
 }
 
 function relativeTime(value: string) {
@@ -602,9 +591,13 @@ function ApplicationRow({ application, index }: { application: DashboardRecentAp
     <tr className="rounded-control transition-colors hover:bg-(--app-surface-muted)">
       <td className="rounded-l-control px-3 py-2">
         <div className="flex items-center gap-2.5">
-          <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white', avatarColors[index % avatarColors.length])}>
-            {initialsOf(application.candidateName)}
-          </span>
+          <UserAvatar
+            name={application.candidateName}
+            avatarPath={application.avatarPath}
+            className="size-8"
+            fallbackClassName={cn('text-white', avatarColors[index % avatarColors.length])}
+            textClassName="text-[11px] font-bold"
+          />
           <span className="max-w-45 truncate font-semibold text-(--app-text)">{application.candidateName}</span>
         </div>
       </td>

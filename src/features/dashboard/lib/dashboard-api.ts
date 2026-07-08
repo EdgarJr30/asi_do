@@ -11,6 +11,7 @@ export interface DashboardFunnelStage {
 export interface DashboardRecentApplication {
   applicationId: string
   candidateName: string
+  avatarPath: string | null
   position: string
   stageName: string | null
   stageCode: string | null
@@ -105,6 +106,20 @@ function isHiredApplication(application: PipelineApplication, stageById: Map<str
   return application.status_public === 'hired' || isHiredStage(stage?.code, stage?.name)
 }
 
+type NestedAvatarUser = { avatar_path: string | null } | null
+type NestedCandidateProfile = { user: NestedAvatarUser | NestedAvatarUser[] } | null
+
+/** Extrae la ruta del avatar del postulante, tolerando objeto o arreglo anidado. */
+function applicationAvatarPath(application: PipelineApplication): string | null {
+  const candidateProfile = application.candidate_profile as
+    | NestedCandidateProfile
+    | NestedCandidateProfile[]
+    | undefined
+  const profile = Array.isArray(candidateProfile) ? candidateProfile[0] : candidateProfile
+  const user = Array.isArray(profile?.user) ? profile?.user[0] : profile?.user
+  return user?.avatar_path ?? null
+}
+
 export async function fetchWorkspaceDashboardMetrics(
   tenantId: string,
   options?: { periodDays?: number }
@@ -163,6 +178,7 @@ export async function fetchWorkspaceDashboardMetrics(
       return {
         applicationId: application.id,
         candidateName: application.candidate_display_name_snapshot,
+        avatarPath: applicationAvatarPath(application),
         position: application.job_posting?.title ?? 'Vacante',
         stageName: stage?.name ?? null,
         stageCode: stage?.code ?? null,
