@@ -1361,15 +1361,18 @@ function MobileStepBar({
   onSelect: (index: number) => void
 }) {
   return (
-    <div className="rounded-card border border-[#e7ebf2] bg-white p-4 shadow-[0_1px_2px_rgba(16,40,80,0.04)] lg:hidden">
+    <div className="rounded-card border border-[#e7ebf2] bg-white px-3.5 py-3 shadow-[0_1px_2px_rgba(16,40,80,0.04)] lg:hidden">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-[#8a96a8]">Fase {current + 1} de {steps.length}</p>
-        <p className="text-[16px] font-extrabold text-(--asi-primary)">{percent}%</p>
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#8a96a8]">Fase {current + 1} de {steps.length}</p>
+          <p className="mt-0.5 truncate text-[13px] font-bold text-[#15233e]">{steps[current]?.title}</p>
+        </div>
+        <p className="shrink-0 text-[15px] font-extrabold text-(--asi-primary)">{percent}%</p>
       </div>
-      <div className="mt-3">
+      <div className="mt-2.5">
         <ProgressTrack percent={percent} />
       </div>
-      <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+      <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto pb-0.5">
         {steps.map((step, index) => {
           const state = stepperStateOf(index, current)
           return (
@@ -1377,28 +1380,17 @@ function MobileStepBar({
               key={step.id}
               type="button"
               onClick={() => onSelect(index)}
+              aria-label={step.title}
               className={cn(
-                'inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border-[1.5px] px-3 py-2 text-[13px] font-semibold transition-colors',
+                'flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors',
                 state === 'active'
-                  ? 'border-(--asi-primary) bg-(--asi-primary)/8 text-(--asi-primary)'
+                  ? 'bg-(--asi-primary) text-white'
                   : state === 'done'
-                    ? 'border-[#c4e7d1] bg-[#e8f6ee] text-[#1f9d57]'
-                    : 'border-[#e2e7f0] bg-white text-[#7a8699]'
+                    ? 'bg-[#e8f6ee] text-[#1f9d57]'
+                    : 'bg-[#eef1f6] text-[#7a8699]'
               )}
             >
-              <span
-                className={cn(
-                  'flex size-5 items-center justify-center rounded-full text-[11px] font-bold',
-                  state === 'active'
-                    ? 'bg-(--asi-primary) text-white'
-                    : state === 'done'
-                      ? 'bg-[#1f9d57] text-white'
-                      : 'bg-[#e7ebf2] text-[#7a8699]'
-                )}
-              >
-                {state === 'done' ? <Check className="size-3" /> : index + 1}
-              </span>
-              {step.title}
+              {state === 'done' ? <Check className="size-3" /> : index + 1}
             </button>
           )
         })}
@@ -1873,16 +1865,9 @@ export function MembershipApplicationForm({
 
           <div>
             <h1 className="text-xl font-extrabold leading-tight tracking-[-0.02em] text-[#15233e] sm:text-[1.75rem]">Solicitud de membresía</h1>
-            <p className="mt-1.5 max-w-[60ch] text-[13.5px] leading-6 text-[#65728a] sm:text-[15px]">
-              Completa los datos requeridos para dejar listo tu expediente preliminar.
-            </p>
           </div>
 
           <div className="rounded-card border border-[#e7ebf2] bg-white p-4 shadow-[0_1px_2px_rgba(16,40,80,0.04),0_18px_40px_-28px_rgba(16,40,80,0.22)] sm:p-6">
-            <span className="inline-flex w-fit rounded-full border border-[#e7ebf2] bg-[#f1f4f9] px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.1em] text-[#8a96a8]">
-              Fase {currentStepIndex + 1} de {applicationSteps.length}
-            </span>
-
             {submitMutation.isError ? (
               <div className="mt-5 rounded-card border border-red-200 bg-red-50 px-4 py-3 text-sm leading-7 text-red-700">
                 No pudimos guardar la solicitud real. Revisa los datos o vuelve a intentar.
@@ -2508,10 +2493,7 @@ export function MembershipApplicationForm({
       ) : null}
 
       {currentStep.id === 'evangelism' ? (
-        <ApplicationSection
-          title="Evangelismo personal"
-          description="Estas respuestas ayudan a entender cómo su vida profesional y su misión personal se conectan con la visión de ASI."
-        >
+        <ApplicationSection title="Evangelismo personal">
         <TextAreaField
           label="Describa brevemente cómo comparte su fe en su entorno profesional"
           help="Formas prácticas de testimonio."
@@ -2569,10 +2551,7 @@ export function MembershipApplicationForm({
       ) : null}
 
       {currentStep.id === 'reference' ? (
-        <ApplicationSection
-          title="Referencia"
-          description="Selecciona tu iglesia (unión, asociación, distrito e iglesia local) para enviar tu solicitud al pastor que te corresponde. La referencia pastoral es un paso obligatorio del proceso."
-        >
+        <ApplicationSection title="Referencia">
         <ChurchHierarchyPicker
           value={selectedChurchId}
           error={errors.churchId?.message}
