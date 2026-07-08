@@ -631,7 +631,7 @@ function CandidateProfileEditor({
     },
     onSuccess: () => {
       toast.success('Perfil candidato actualizado', {
-        description: 'Tu identidad profesional reusable ya quedó guardada.'
+        description: 'Tu perfil ya está guardado.'
       })
       void queryClient.invalidateQueries({ queryKey: CANDIDATE_PROFILE_QUERY_KEY })
     },
@@ -669,7 +669,7 @@ function CandidateProfileEditor({
       setResumeFileError(null)
       await queryClient.invalidateQueries({ queryKey: CANDIDATE_PROFILE_QUERY_KEY })
       toast.success('CV cargado', {
-        description: 'El archivo privado ya quedó listo para reusar en futuras aplicaciones.'
+        description: 'Tu CV ya está guardado y listo para tus próximas postulaciones.'
       })
     },
     onError: async (error) => {

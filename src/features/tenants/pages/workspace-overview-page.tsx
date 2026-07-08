@@ -347,7 +347,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
   const uploadLogoMutation = useMutation({
     mutationFn: async (file: File) => {
       if (!session.authUser) {
-        throw new Error('Necesitas una sesión activa para subir el logo.');
+        throw new Error('Necesitas iniciar sesión para subir el logo.');
       }
 
       const logoPath = await uploadWorkspaceLogo({
@@ -394,7 +394,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
   const replaceRoleMutation = useMutation({
     mutationFn: async (input: { membershipId: string; roleId: string }) => {
       if (!session.authUser) {
-        throw new Error('Necesitas una sesión activa para administrar roles.');
+        throw new Error('Necesitas iniciar sesión para administrar roles.');
       }
 
       return replaceMembershipPrimaryRole({
@@ -840,7 +840,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
                     <InfoIcon icon={ImageIcon} accent="sky" />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-(--app-text)">Subiendo logo</p>
-                      <p className="text-xs text-(--app-text-subtle)">Validando formato y guardando en storage.</p>
+                      <p className="text-xs text-(--app-text-subtle)">Validando el formato y guardando el logo.</p>
                     </div>
                   </div>
                   <span className="text-xs font-bold tabular-nums text-primary-600 dark:text-primary-300">...</span>

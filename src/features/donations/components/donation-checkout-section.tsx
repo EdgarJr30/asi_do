@@ -284,7 +284,7 @@ export function DonationCheckoutSection() {
 
           {amountOptionsQuery.isError ? (
             <p className="mt-4 rounded-card border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-              No pudimos cargar los montos configurados. Revisa la conexión con Supabase o intenta nuevamente.
+              No pudimos cargar los montos configurados. Revisa tu conexión e intenta de nuevo.
             </p>
           ) : null}
         </motion.div>

@@ -422,7 +422,7 @@ export function AuthorityRequestPage() {
           title="Autorización territorial"
           description="Completa la solicitud que un administrador habilitó para ti. Valida tu autoridad para avalar y autorizar dentro de tu alcance."
         >
-          <StatCard label="Almacenamiento privado" value="Seguro" helper="Cédula y nombramientos en storage privado" />
+          <StatCard label="Documentos protegidos" value="Seguro" helper="Tu cédula y nombramientos se guardan de forma segura" />
           <StatCard label="Alcance de validación" value="Por jerarquía" helper="Unión, asociación, distrito o iglesias" />
           <StatCard label="Tamaño máximo" value={MAX_UPLOAD_SIZE_LABEL} helper="Por archivo adjunto" />
         </PageHeader>
@@ -460,7 +460,7 @@ export function AuthorityRequestPage() {
                 <motion.div variants={cardReveal} className="rounded-card border border-(--app-border) bg-(--app-surface-muted) p-4">
                   <FileLock2 className="size-5 text-primary-600 dark:text-primary-300" />
                   <p className="mt-2 text-sm font-semibold text-(--app-text)">Documentos privados</p>
-                  <p className="mt-0.5 text-xs text-(--app-text-muted)">Tu cédula y nombramientos quedan en storage privado.</p>
+                  <p className="mt-0.5 text-xs text-(--app-text-muted)">Tu cédula y nombramientos se guardan de forma segura.</p>
                 </motion.div>
                 <motion.div variants={cardReveal} className="rounded-card border border-(--app-border) bg-(--app-surface-muted) p-4">
                   <MapPinned className="size-5 text-primary-600 dark:text-primary-300" />
@@ -488,7 +488,7 @@ export function AuthorityRequestPage() {
               <Inbox className="size-3.5" /> Historial
             </Badge>
             <CardTitle>Mis solicitudes enviadas</CardTitle>
-            <CardDescription>El historial muestra estado real; los archivos privados se abren con URL firmada.</CardDescription>
+            <CardDescription>Aquí ves el estado de cada solicitud; tus documentos se abren de forma segura.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {(pastorRequestsQuery.data ?? []).map((request) => (

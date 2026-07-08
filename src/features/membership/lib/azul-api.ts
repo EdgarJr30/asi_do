@@ -57,7 +57,7 @@ export async function startAzulMembershipPayment(input: {
     })
   } catch {
     throw new Error(
-      `No pudimos conectar con la pasarela de pagos (${paymentsUrl}). Verifica que el servicio esté disponible y permita el origin de esta app.`
+      `No pudimos conectar con la pasarela de pagos. Revisa tu conexión e intenta de nuevo.`
     )
   }
 

@@ -309,7 +309,7 @@ function JobEditor({
     },
     onSuccess: async () => {
       toast.success(selectedJob ? 'Oportunidad actualizada' : 'Oportunidad creada', {
-        description: 'El registro ya quedó persistido y listo para publicar cuando corresponda.'
+        description: 'Ya está guardada y lista para publicar cuando quieras.'
       })
       await onSaved()
     },

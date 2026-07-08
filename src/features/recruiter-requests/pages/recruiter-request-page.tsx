@@ -314,7 +314,7 @@ export function RecruiterRequestPage() {
         source: 'recruiter-request.asset-open',
         route: surfacePaths.candidate.recruiterRequest,
         userId: session.authUser?.id ?? null,
-        userMessage: 'No pudimos abrir el archivo privado.',
+        userMessage: 'No pudimos abrir el documento.',
         error,
         metadata: {
           assetPath: path
@@ -493,7 +493,7 @@ export function RecruiterRequestPage() {
                     onChange={(event) => void handleCompanyLogoChange(event.target.files?.[0] ?? null)}
                   />
                   <p className="text-xs text-zinc-500">
-                    Opcional. Acepta SVG, PNG, JPG y WEBP. Las imagenes raster se comprimen antes de subirlas y el limite es {MAX_UPLOAD_SIZE_LABEL}.
+                    Opcional. Acepta SVG, PNG, JPG y WEBP. Optimizamos las imágenes antes de subirlas y el límite es {MAX_UPLOAD_SIZE_LABEL}.
                   </p>
                   <p className="text-xs text-zinc-500">Se guarda privado durante la revisión.</p>
                   {isPreparingCompanyLogo ? (

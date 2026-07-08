@@ -126,7 +126,7 @@ function normalizeStorageUploadErrorMessage(file: File, errorMessage: string) {
   if (unsupportedMimeMatch) {
     const mimeType = (unsupportedMimeMatch[1] ?? file.type) || 'desconocido'
 
-    return `El almacenamiento rechazo el formato ${mimeType}. Intenta con un archivo permitido para este flujo o vuelve a subirlo cuando el bucket este actualizado.`
+    return `No pudimos aceptar el formato ${mimeType}. Intenta con un archivo en un formato permitido o vuelve a subirlo más tarde.`
   }
 
   return errorMessage
@@ -421,7 +421,7 @@ export async function uploadPrivateFile(options: {
 
   if (options.file.size > MAX_UPLOAD_SIZE_BYTES) {
     throw new Error(
-      `El archivo pesa ${formatFileSize(options.file.size)} y supera el máximo de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)}. Comprime el archivo o carga uno de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)} o menos.`
+      `El archivo pesa ${formatFileSize(options.file.size)} y supera el máximo de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)}. Usa un archivo más liviano o carga uno de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)} o menos.`
     )
   }
 
@@ -475,7 +475,7 @@ export async function uploadPublicFile(options: {
 
   if (options.file.size > MAX_UPLOAD_SIZE_BYTES) {
     throw new Error(
-      `El archivo pesa ${formatFileSize(options.file.size)} y supera el máximo de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)}. Comprime el archivo o carga uno de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)} o menos.`
+      `El archivo pesa ${formatFileSize(options.file.size)} y supera el máximo de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)}. Usa un archivo más liviano o carga uno de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)} o menos.`
     )
   }
 

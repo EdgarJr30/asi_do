@@ -947,7 +947,7 @@ export const donatePageContent: InstitutionalPageContent = {
         eyebrow: 'Canales',
         title: 'Cómo se organiza el llamado a donar en esta fase.',
         description:
-          'Aunque el pago aún no sea transaccional, la experiencia debe sentirse real y útil.',
+          'Aunque todavía no se procesen pagos, la experiencia debe sentirse real y útil.',
       },
       items: [
         {

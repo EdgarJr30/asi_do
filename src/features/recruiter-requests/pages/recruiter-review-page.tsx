@@ -206,7 +206,7 @@ export function RecruiterReviewPage() {
         userId: session.authUser?.id ?? null,
         error,
         description: toErrorMessage(error),
-        userMessage: 'No pudimos abrir el archivo privado asociado a la solicitud.',
+        userMessage: 'No pudimos abrir el documento de la solicitud.',
         metadata: {
           assetPath: path,
         },
