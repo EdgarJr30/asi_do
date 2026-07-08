@@ -32,7 +32,6 @@ import {
   type EligibilityToken,
 } from '@/experiences/institutional/content/eligibility-content'
 import {
-  certificatePreferenceOptions,
   genderOptions,
   getMembershipApplicationVariant,
   ministryOptions,
@@ -90,7 +89,6 @@ export interface MembershipApplicationValues {
   employeeCount: string
   workPhone: string
   website: string
-  certificatePreference: string
   employerName: string
   roleTitle: string
   yearsInRole: string
@@ -185,7 +183,6 @@ const categoryStepFields = [
   'employeeCount',
   'workPhone',
   'website',
-  'certificatePreference',
   'employerName',
   'roleTitle',
   'yearsInRole',
@@ -312,7 +309,6 @@ function buildApplicationSchema(categorySlug: string) {
       employeeCount: z.string().trim(),
       workPhone: z.string().trim(),
       website: z.string().trim(),
-      certificatePreference: z.string().trim(),
       employerName: z.string().trim(),
       roleTitle: z.string().trim(),
       yearsInRole: z.string().trim(),
@@ -478,7 +474,6 @@ function buildApplicationSchema(categorySlug: string) {
           requireField('organizationCountry', 'el país de la organización', 2)
           requireField('organizationActivities', 'las actividades de la organización', 24)
           requireField('workPhone', 'el teléfono laboral', 7)
-          requireField('certificatePreference', 'la preferencia del certificado', 1)
           requireFourDigitYear('yearEstablished', 'El año de establecimiento')
           requirePositiveNumber('employeeCount', 'la cantidad de colaboradores')
           break
@@ -525,7 +520,6 @@ function createDefaultValues(token: EligibilityToken): MembershipApplicationValu
     employeeCount: '',
     workPhone: '',
     website: '',
-    certificatePreference: '',
     employerName: '',
     roleTitle: '',
     yearsInRole: '',
@@ -1710,10 +1704,6 @@ export function MembershipApplicationForm({
     control: form.control,
     name: 'churchId',
   })
-  const certificatePreference = useWatch({
-    control: form.control,
-    name: 'certificatePreference',
-  })
   const professionalFocus = useWatch({
     control: form.control,
     name: 'professionalFocus',
@@ -2199,20 +2189,6 @@ export function MembershipApplicationForm({
               />
             </div>
 
-            <RadioTileGroup
-              label="¿Le gustaría que le enviemos un certificado de membresía de ASI de cortesía, bellamente enmarcado, si su solicitud es aprobada?"
-              help="Preferencia de envío."
-              required
-              error={errors.certificatePreference?.message}
-              options={certificatePreferenceOptions}
-              value={certificatePreference}
-              onChange={(value) =>
-                form.setValue('certificatePreference', value, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                })
-              }
-            />
           </>
         ) : null}
 

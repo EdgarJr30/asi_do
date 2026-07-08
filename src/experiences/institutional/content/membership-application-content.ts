@@ -42,11 +42,6 @@ export const genderOptions = [
   { value: 'male', label: 'Masculino' },
 ] as const
 
-export const certificatePreferenceOptions = [
-  { value: 'yes', label: 'Sí, envíen el certificado' },
-  { value: 'no', label: 'No por el momento' },
-] as const
-
 export const youngProfessionalStageOptions = [
   { value: 'student', label: 'Estudiante' },
   { value: 'recent-graduate', label: 'Recién graduado' },
