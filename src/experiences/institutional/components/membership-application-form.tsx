@@ -1361,18 +1361,15 @@ function MobileStepBar({
   onSelect: (index: number) => void
 }) {
   return (
-    <div className="rounded-card border border-[#e7ebf2] bg-white px-3.5 py-3 shadow-[0_1px_2px_rgba(16,40,80,0.04)] lg:hidden">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#8a96a8]">Fase {current + 1} de {steps.length}</p>
-          <p className="mt-0.5 truncate text-[13px] font-bold text-[#15233e]">{steps[current]?.title}</p>
+    <div className="rounded-card border border-[#e7ebf2] bg-white px-3.5 py-2.5 shadow-[0_1px_2px_rgba(16,40,80,0.04)] lg:hidden">
+      <div className="flex items-center gap-2.5">
+        <p className="shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8a96a8]">Fase {current + 1} de {steps.length}</p>
+        <div className="min-w-0 flex-1">
+          <ProgressTrack percent={percent} />
         </div>
-        <p className="shrink-0 text-[15px] font-extrabold text-(--asi-primary)">{percent}%</p>
+        <p className="shrink-0 text-[13px] font-extrabold tabular-nums text-(--asi-primary)">{percent}%</p>
       </div>
-      <div className="mt-2.5">
-        <ProgressTrack percent={percent} />
-      </div>
-      <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto pb-0.5">
+      <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-0.5">
         {steps.map((step, index) => {
           const state = stepperStateOf(index, current)
           return (
