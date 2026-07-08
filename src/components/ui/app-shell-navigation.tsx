@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
+import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import {
   BriefcaseBusiness,
   Building2,
@@ -211,48 +212,51 @@ export function AppWorkspaceSidebarDrawer({
   onNavigate: (href: string) => void;
   tenantName: string;
 }) {
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <div className="fixed inset-0 z-50 overflow-x-hidden lg:hidden">
-      <button
-        aria-label="Cerrar navegacion del workspace"
-        className="absolute inset-0 bg-slate-900/80"
-        type="button"
-        onClick={onClose}
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      className="relative z-50 lg:hidden"
+    >
+      <DialogBackdrop
+        transition
+        className="fixed inset-0 bg-slate-900/80 transition-opacity duration-300 ease-out data-[closed]:opacity-0"
       />
 
-      <div className="fixed inset-y-0 left-0 flex w-full max-w-xs">
-        <div className="relative flex min-w-0 flex-1">
-          <div className="absolute right-3 top-3 z-10 flex justify-center">
-            <button
-              className="rounded-full bg-slate-900/80 p-2.5 text-white shadow-lg"
-              type="button"
-              onClick={onClose}
-            >
-              <span className="sr-only">Cerrar sidebar</span>
-              <X className="size-6" />
-            </button>
-          </div>
+      <div className="fixed inset-0 overflow-x-hidden">
+        <DialogPanel
+          transition
+          className="fixed inset-y-0 left-0 flex w-full max-w-xs transform transition duration-300 ease-out data-[closed]:-translate-x-full"
+        >
+          <div className="relative flex min-w-0 flex-1">
+            <div className="absolute right-3 top-3 z-10 flex justify-center">
+              <button
+                className="rounded-full bg-slate-900/80 p-2.5 text-white shadow-lg transition-colors hover:bg-slate-900"
+                type="button"
+                onClick={onClose}
+              >
+                <span className="sr-only">Cerrar sidebar</span>
+                <X className="size-6" />
+              </button>
+            </div>
 
-          <div className="min-w-0 flex-1">
-            <WorkspaceSidebarContent
-              activeHref={activeHref}
-              brand={brand}
-              footer={footer}
-              groups={groups}
-              onNavigate={(href) => {
-                onClose();
-                onNavigate(href);
-              }}
-              tenantName={tenantName}
-            />
+            <div className="min-w-0 flex-1">
+              <WorkspaceSidebarContent
+                activeHref={activeHref}
+                brand={brand}
+                footer={footer}
+                groups={groups}
+                onNavigate={(href) => {
+                  onClose();
+                  onNavigate(href);
+                }}
+                tenantName={tenantName}
+              />
+            </div>
           </div>
-        </div>
+        </DialogPanel>
       </div>
-    </div>
+    </Dialog>
   );
 }
 

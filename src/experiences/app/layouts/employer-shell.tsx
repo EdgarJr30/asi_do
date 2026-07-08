@@ -1,6 +1,7 @@
 import type { CSSProperties, FocusEvent, MouseEvent as ReactMouseEvent, ReactNode } from 'react'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Activity,
@@ -1291,6 +1292,7 @@ export function PlatformAppShell({
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const notificationPanelRef = useRef<HTMLDivElement | null>(null)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
+  const prefersReducedMotion = useReducedMotion()
 
   // Memoizamos la navegación: `buildShellConfig` recorre permisos y arma grupos
   // en cada render. Sin memo se recalculaba en cada navegación, apertura de menú
@@ -1633,28 +1635,34 @@ export function PlatformAppShell({
                     </button>
                   </Tooltip>
 
-                  {notificationPanelOpen ? (
-                    <div
-                      className="fixed right-3 top-16 z-50 w-[min(21rem,calc(100vw-1.5rem))] sm:absolute sm:right-0 sm:top-[calc(100%+0.75rem)] sm:w-auto"
-                      data-testid="notification-panel-positioner"
-                    >
-                      <WorkspaceNotificationPanel
-                        hasNextPage={notificationsQuery.hasNextPage}
-                        isLoading={notificationsQuery.isLoading}
-                        isFetchingNextPage={notificationsQuery.isFetchingNextPage}
-                        isUpdatingReadState={markReadMutation.isPending || markUnreadMutation.isPending}
-                        notifications={notifications}
-                        totalCount={notificationTotalCount}
-                        unreadCount={notificationUnreadCount}
-                        onLoadMore={() => void notificationsQuery.fetchNextPage()}
-                        onMarkRead={handleMarkRead}
-                        onMarkAllRead={handleMarkAllRead}
-                        onMarkUnread={handleMarkUnread}
-                        onOpenNotification={(notification) => void handleOpenNotification(notification)}
-                        isMarkingAll={markAllReadMutation.isPending}
-                      />
-                    </div>
-                  ) : null}
+                  <AnimatePresence>
+                    {notificationPanelOpen ? (
+                      <motion.div
+                        className="fixed right-3 top-16 z-50 w-[min(21rem,calc(100vw-1.5rem))] origin-top sm:absolute sm:right-0 sm:top-[calc(100%+0.75rem)] sm:w-auto sm:origin-top-right"
+                        data-testid="notification-panel-positioner"
+                        initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
+                        animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+                        exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
+                        transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                      >
+                        <WorkspaceNotificationPanel
+                          hasNextPage={notificationsQuery.hasNextPage}
+                          isLoading={notificationsQuery.isLoading}
+                          isFetchingNextPage={notificationsQuery.isFetchingNextPage}
+                          isUpdatingReadState={markReadMutation.isPending || markUnreadMutation.isPending}
+                          notifications={notifications}
+                          totalCount={notificationTotalCount}
+                          unreadCount={notificationUnreadCount}
+                          onLoadMore={() => void notificationsQuery.fetchNextPage()}
+                          onMarkRead={handleMarkRead}
+                          onMarkAllRead={handleMarkAllRead}
+                          onMarkUnread={handleMarkUnread}
+                          onOpenNotification={(notification) => void handleOpenNotification(notification)}
+                          isMarkingAll={markAllReadMutation.isPending}
+                        />
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
                 </div>
 
                 <ThemeToggle
@@ -1686,8 +1694,15 @@ export function PlatformAppShell({
                     <ChevronDown className="hidden size-4 text-slate-400 lg:block dark:text-slate-500" />
                   </button>
 
-                  {profileMenuOpen ? (
-                    <div className="absolute right-0 z-10 mt-2.5 w-56 origin-top-right rounded-card border border-slate-200 bg-white p-2 shadow-[0_24px_48px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-slate-900">
+                  <AnimatePresence>
+                    {profileMenuOpen ? (
+                    <motion.div
+                      className="absolute right-0 z-10 mt-2.5 w-56 origin-top-right rounded-card border border-slate-200 bg-white p-2 shadow-[0_24px_48px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-slate-900"
+                      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
+                      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+                      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
+                      transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    >
                       <div className="border-b border-slate-100 px-3 py-2 dark:border-white/10">
                         <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</p>
                         <p className="truncate text-xs text-slate-500 dark:text-slate-400">{userIdentity.email}</p>
@@ -1719,8 +1734,9 @@ export function PlatformAppShell({
                       >
                         {signOutMutation.isPending ? 'Cerrando...' : 'Cerrar sesión'}
                       </button>
-                    </div>
-                  ) : null}
+                    </motion.div>
+                    ) : null}
+                  </AnimatePresence>
                 </div>
               </div>
             ) : (
