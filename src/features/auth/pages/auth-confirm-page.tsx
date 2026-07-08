@@ -111,7 +111,7 @@ export function AuthConfirmPage() {
         </CardDescription>
       </CardHeader>
       <CardContent className="text-sm text-zinc-600 dark:text-zinc-400">
-        Si todo sale bien te llevaremos a tu perfil automaticamente.
+        Si todo sale bien te llevaremos al siguiente paso automaticamente.
       </CardContent>
     </Card>
   )

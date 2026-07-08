@@ -142,7 +142,7 @@ test('un miembro envía su solicitud vía draft sin duplicar la fila', async ({ 
   await page.getByRole('button', { name: /Enviar solicitud/i }).click()
 
   // Éxito: pantalla de confirmación con CTA al panel de membresía.
-  await expect(page.getByRole('button', { name: /Ir a mi panel de membresía/i })).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('button', { name: /Ir a pagar mi membresía/i })).toBeVisible({ timeout: 20_000 })
   await page.screenshot({ path: 'tmp/full-submission-after.png', fullPage: true })
 
   // BD: exactamente UNA solicitud (el draft se reutilizó, no se duplicó) y está enviada.

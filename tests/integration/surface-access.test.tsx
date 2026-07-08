@@ -97,7 +97,26 @@ vi.mock('@/features/auth/lib/auth-api', async () => {
 
   return {
     ...actual,
-    fetchSessionSnapshot: vi.fn(() => Promise.resolve(authState.snapshot))
+    fetchSessionSnapshot: vi.fn(() => Promise.resolve(authState.snapshot)),
+    updateUserProfile: vi.fn((values: {
+      fullName: string
+      displayName: string
+      locale: string
+      countryCode: string
+      avatarPath?: string | null
+    }) => {
+      if (authState.snapshot.profile) {
+        authState.snapshot.profile = {
+          ...authState.snapshot.profile,
+          full_name: values.fullName,
+          display_name: values.displayName,
+          locale: values.locale,
+          country_code: values.countryCode
+        }
+      }
+
+      return Promise.resolve()
+    })
   }
 })
 
@@ -403,5 +422,38 @@ describe('surface access states', () => {
     renderRoute(surfacePaths.candidate.profile)
 
     expect(await screen.findByRole('heading', { name: 'Dejemos tu cuenta lista' })).toBeInTheDocument()
+  })
+
+  it('sends completed base onboarding to the membership payment panel', async () => {
+    authState.session = { user: { id: 'user-6', email: 'newer@example.com' } }
+    authState.snapshot = {
+      profile: {
+        ...completeProfile({ id: 'user-6', email: 'newer@example.com' }),
+        full_name: 'New user',
+        display_name: 'New user',
+        locale: 'es',
+        country_code: 'DO'
+      },
+      memberships: [],
+      permissions: [],
+      platformPermissions: [],
+      isPlatformAdmin: false
+    }
+
+    renderRoute(surfacePaths.candidate.profile)
+
+    expect(await screen.findByRole('heading', { name: 'Dejemos tu cuenta lista' })).toBeInTheDocument()
+    fireEvent.change(screen.getByPlaceholderText('Ej. John Doe'), { target: { value: 'Laura Perez' } })
+    fireEvent.change(screen.getByPlaceholderText('Ej. John D.'), { target: { value: 'Laura Perez' } })
+    fireEvent.click(screen.getAllByRole('button', { name: 'Continuar' })[0])
+    expect(await screen.findByRole('heading', { name: 'Idioma y país' })).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Continuar' })[0])
+    expect(await screen.findByRole('heading', { name: 'Una foto ayuda, pero no bloquea' })).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Guardar e ir al pago' })[0])
+
+    expect(await screen.findByText(/El siguiente paso es pagar tu membresía/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Pagar mi membresía ahora/i }))
+
+    expect(await screen.findByRole('heading', { name: 'Tu membresía' })).toBeInTheDocument()
   })
 })

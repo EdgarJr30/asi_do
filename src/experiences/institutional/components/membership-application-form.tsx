@@ -1406,8 +1406,8 @@ function SubmissionSuccess({
       current: false,
     },
     {
-      title: 'Membresía activa',
-      detail: 'Confirmamos tu membresía y obtienes acceso completo a la plataforma.',
+      title: 'Activación final',
+      detail: 'Cuando tu solicitud esté aprobada y el pago verificado, ASI activa tu membresía y tu acceso completo.',
       current: false,
     },
   ]
@@ -1425,10 +1425,10 @@ function SubmissionSuccess({
               Solicitud recibida
             </p>
             <h2 className="text-2xl font-bold tracking-tight text-(--asi-text) sm:text-[1.7rem]">
-              ¡Gracias, {summary.firstName}! Ya casi eres miembro
+              ¡Gracias, {summary.firstName}! Tu solicitud va a aprobación
             </h2>
             <p className="mx-auto max-w-[46ch] text-sm leading-7 text-(--asi-text-muted)">
-              Recibimos tu solicitud y guardamos tu información de forma segura. Solo falta un paso para activar tu membresía.
+              Recibimos tu solicitud y guardamos tu información de forma segura. Todavía no está activa: ahora pasa a revisión y puedes completar el pago para avanzar el proceso.
             </p>
           </div>
         </div>
@@ -1447,10 +1447,10 @@ function SubmissionSuccess({
                   Siguiente paso
                 </p>
                 <h3 className="mt-1 text-lg font-bold tracking-tight text-(--asi-text)">
-                  Activa tu membresía con el pago anual
+                  Avanza tu solicitud con el pago anual
                 </h3>
                 <p className="mt-1.5 text-sm leading-6 text-(--asi-text-muted)">
-                  Tu membresía se activa al completar el pago de <span className="font-semibold text-(--asi-text)">{summary.dues}</span>. Continúa en tu panel para hacerlo de forma segura.
+                  El pago de <span className="font-semibold text-(--asi-text)">{summary.dues}</span> no activa la membresía por sí solo. Continúa en tu panel para pagarlo de forma segura mientras tu solicitud va a aprobación.
                 </p>
               </div>
             </div>
@@ -1776,7 +1776,7 @@ export function MembershipApplicationForm({
       }
 
       toast.success('Solicitud enviada', {
-        description: 'Tu expediente institucional quedó persistido y entró en revisión inicial.',
+        description: 'Tu expediente institucional quedó en revisión inicial.',
       })
     },
     onError: (error) => {

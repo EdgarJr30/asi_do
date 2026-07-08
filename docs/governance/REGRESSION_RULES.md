@@ -422,6 +422,9 @@ Do not regress `/admin/access-control` users back to a submit-only search, a fix
 ### R-118 — Neutral field help must use info affordances
 Do not place warning, error, exclamation, or alert-style icons beside form labels for optional explanatory help. Field help should use the shared `FieldHelp`/`Tooltip` pattern with a neutral information icon, a real button trigger, accessible text, and tap/click behavior on mobile. Long or required instructions must remain visible in the form instead of being hidden behind a tooltip.
 
+### R-119 — Membership onboarding copy must separate payment from activation
+Do not tell users that a submitted membership application or a completed payment makes the membership active. The post-onboarding and post-application experience must make the sequence clear: base account data, payment, review/approval, then final activation. Avoid internal words such as `persistido` in user-facing success messages, and avoid `tour` labels in the base onboarding UI because they are unclear and fragile on mobile.
+
 ---
 
 ## Maintenance rule

@@ -124,7 +124,7 @@ function OnboardingFrame({
             <Sparkles className="size-3.5" />
           </span>
           <p className="whitespace-nowrap text-xs font-semibold text-(--app-text-subtle) md:text-sm md:font-bold md:text-(--app-text)">
-            Tour guiado
+            Cuenta base
           </p>
         </div>
         <span className="text-xs font-bold text-primary-700 dark:text-primary-200 md:text-sm">{progress}%</span>
@@ -182,7 +182,7 @@ function OnboardingFrame({
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary-700 dark:text-primary-200" />
           <p className="text-xs leading-5 text-(--app-text-muted)">
-            Con tus datos base ya tienes acceso. El CV y la experiencia los completas después.
+            Con tus datos base completados podemos llevarte al pago. El CV y la experiencia los completas después.
           </p>
         </div>
       </div>
@@ -291,7 +291,7 @@ export function ProfileOnboardingFlow() {
   const previewCountryLabel = getCountryOptionByCode(previewCountry)?.label ?? previewCountry.toUpperCase()
   const previewLocale = form.watch('locale') === 'en' ? 'English' : 'Español'
   const isLastStep = activeStepIndex === steps.length - 1
-  const primaryActionLabel = form.formState.isSubmitting ? 'Guardando...' : isLastStep ? 'Guardar y entrar' : 'Continuar'
+  const primaryActionLabel = form.formState.isSubmitting ? 'Guardando...' : isLastStep ? 'Guardar e ir al pago' : 'Continuar'
 
   // Refresca la sesión (para que el guard de onboarding completo deje pasar) y
   // navega. Idempotente: el countdown, el botón de pago y "Completar después"
@@ -420,7 +420,7 @@ export function ProfileOnboardingFlow() {
       setIsComplete(true)
       setJustSubmitted(true)
       toast.success('Perfil listo', {
-        description: 'Te llevamos a activar tu membresía.'
+        description: 'Te llevamos al pago de membresía.'
       })
     } catch (error) {
       await captureClientError({
@@ -505,7 +505,7 @@ export function ProfileOnboardingFlow() {
                           Listo, {previewName.split(' ')[0]}
                         </h2>
                         <p className="mt-2 max-w-xl text-sm leading-6 text-(--app-text-muted)">
-                          El último paso es activar tu membresía. Es lo que habilita el acceso completo a ASI, así que te llevamos directo al pago.
+                          El siguiente paso es pagar tu membresía. La activación final ocurre después de la aprobación, así que te llevamos directo al pago.
                         </p>
                       </div>
 
@@ -720,7 +720,7 @@ export function ProfileOnboardingFlow() {
                   </div>
 
                   <p className="hidden text-xs leading-5 text-(--app-text-subtle) md:block">
-                    Este tour guarda solo lo necesario para activar la navegación. Lo demás queda disponible en tu perfil.
+                    Este paso guarda solo lo necesario para continuar al pago. Lo demás queda disponible en tu perfil.
                   </p>
                 </div>
               </div>
