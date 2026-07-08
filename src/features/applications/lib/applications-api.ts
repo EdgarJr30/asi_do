@@ -320,6 +320,13 @@ const TENANT_APPLICATIONS_PAGE_SELECT = `
     title,
     slug,
     tenant_id
+  ),
+  candidate_profile:candidate_profiles!applications_candidate_profile_id_fkey (
+    id,
+    user:users!candidate_profiles_user_id_fkey (
+      id,
+      avatar_path
+    )
   )
 `
 
@@ -343,6 +350,7 @@ export interface TenantApplicationRow {
   status_public: PublicApplicationStatus
   submitted_at: string
   job_posting: { id: string; title: string; slug: string; tenant_id: string } | null
+  candidate_profile: { id: string; user: { id: string; avatar_path: string | null } | null } | null
 }
 
 export interface TenantApplicationsPage {

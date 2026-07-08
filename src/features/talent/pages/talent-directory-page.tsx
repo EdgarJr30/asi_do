@@ -36,23 +36,13 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cardReveal, gridStagger, pageStagger, softEase } from '@/shared/ui/card-motion'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
+import { UserAvatar } from '@/shared/ui/user-avatar'
 import { cn } from '@/lib/utils/cn'
 
 const TALENT_PAGE_SIZE = 12
 
 /** Valores válidos de orden; normaliza un `?sort=` manipulado en la URL. */
 const CANDIDATE_SORTS: readonly CandidateDirectorySort[] = ['relevance', 'score', 'name', 'experience']
-
-function candidateInitials(value: string) {
-  return (
-    value
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join('') || '·'
-  )
-}
 
 function scorePillClass(score: number) {
   if (score >= 85) {
@@ -426,9 +416,13 @@ function CandidateCard({
         active ? 'border-primary-300 bg-primary-50/60 dark:bg-primary-500/10' : 'border-(--app-border)'
       )}
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-50 text-[0.72rem] font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-200">
-        {candidateInitials(candidate.display_name)}
-      </span>
+      <UserAvatar
+        name={candidate.display_name}
+        avatarPath={candidate.avatar_path}
+        className="size-10"
+        fallbackClassName="bg-primary-50 text-primary-700 dark:bg-primary-500/15 dark:text-primary-200"
+        textClassName="text-[0.72rem] font-semibold"
+      />
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
           <h3 className="truncate text-[0.9rem] font-semibold text-(--app-text)">{candidate.display_name}</h3>
@@ -666,9 +660,13 @@ function CandidateDetailSheet({
 
   const title = profile ? (
     <span className="flex items-center gap-3">
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-50 text-sm font-semibold text-primary-700 dark:bg-primary-500/15 dark:text-primary-200">
-        {candidateInitials(profile.display_name)}
-      </span>
+      <UserAvatar
+        name={profile.display_name}
+        avatarPath={profile.avatar_path}
+        className="size-11"
+        fallbackClassName="bg-primary-50 text-primary-700 dark:bg-primary-500/15 dark:text-primary-200"
+        textClassName="text-sm font-semibold"
+      />
       <span className="min-w-0">
         <span className="block truncate text-[1.05rem] font-semibold text-(--app-text)">{profile.display_name}</span>
         <span className="block truncate text-sm font-normal text-(--app-text-muted)">{role}</span>

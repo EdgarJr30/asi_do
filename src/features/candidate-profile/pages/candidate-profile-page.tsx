@@ -1,4 +1,4 @@
-import { type Dispatch, type ReactNode, type SetStateAction, useEffect, useState } from 'react'
+import { type ChangeEvent, type Dispatch, type ReactNode, type SetStateAction, useEffect, useRef, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
   ArrowRight,
   Briefcase,
+  Camera,
   Check,
   ChevronDown,
   Download,
@@ -14,6 +15,7 @@ import {
   GraduationCap,
   Languages as LanguagesIcon,
   Link2,
+  Loader2,
   Plus,
   Sparkles,
   Trash2,
@@ -43,7 +45,7 @@ import {
 } from '@/shared/ui/card-motion'
 import { CountryCodeSelect, DominicanCitySelect } from '@/shared/ui/location-selects'
 import { cn } from '@/lib/utils/cn'
-import { toErrorMessage } from '@/features/auth/lib/auth-api'
+import { AVATARS_BUCKET, toErrorMessage, updateUserProfile, uploadPublicFile } from '@/features/auth/lib/auth-api'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
 import { ProfileOnboardingFlow } from '@/features/candidate-profile/components/profile-onboarding-flow'
 import {
@@ -80,9 +82,11 @@ import {
   CANDIDATE_RESUME_MIME_TYPES,
   formatFileSize,
   MAX_UPLOAD_SIZE_LABEL,
+  ONBOARDING_AVATAR_MIME_TYPES,
   prepareUploadFile,
   UploadConstraintError
 } from '@/lib/uploads/media'
+import { UserAvatar } from '@/shared/ui/user-avatar'
 
 const CANDIDATE_PROFILE_QUERY_KEY = ['candidate-profile', 'mine'] as const
 
@@ -561,6 +565,7 @@ function CandidateProfileEditor({
   const [pendingResumeUpload, setPendingResumeUpload] = useState<PendingResumeUpload | null>(null)
   const [isVisibleToRecruiters, setIsVisibleToRecruiters] = useState(() => bundle.profile?.is_visible_to_recruiters ?? false)
   const [pendingDelete, setPendingDelete] = useState<PendingProfileDelete | null>(null)
+  const avatarInputRef = useRef<HTMLInputElement | null>(null)
 
   const form = useForm<CandidateProfileFormValues>({
     resolver: zodResolver(candidateProfileSchema),
@@ -683,6 +688,69 @@ function CandidateProfileEditor({
       })
     }
   })
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      if (!session.authUser) {
+        throw new Error('Necesitas una sesión activa para actualizar tu foto.')
+      }
+
+      const preparedFile = await prepareUploadFile(file, {
+        acceptedMimeTypes: ONBOARDING_AVATAR_MIME_TYPES,
+        acceptedFormatsLabel: 'PNG, JPG, WEBP o SVG',
+        fieldLabel: 'La foto de perfil',
+        maxImageDimension: 1024
+      })
+
+      const avatarPath = await uploadPublicFile({
+        bucket: AVATARS_BUCKET,
+        ownerUserId: session.authUser.id,
+        file: preparedFile,
+        prefix: 'avatar'
+      })
+
+      await updateUserProfile({
+        userId: session.authUser.id,
+        fullName: session.profile?.full_name ?? '',
+        displayName: session.profile?.display_name ?? '',
+        locale: session.profile?.locale ?? 'es',
+        countryCode: session.profile?.country_code ?? 'DO',
+        avatarPath
+      })
+    },
+    onSuccess: async () => {
+      // Refresca la sesión para que la nueva foto aparezca en el header y el resto
+      // de la app de inmediato.
+      await session.refresh()
+      toast.success('Foto actualizada', {
+        description: 'La foto quedó cargada correctamente.'
+      })
+    },
+    onError: async (error) => {
+      const description =
+        error instanceof UploadConstraintError ? error.userMessage : toErrorMessage(error)
+
+      await reportErrorWithToast({
+        title: 'No pudimos actualizar tu foto',
+        source: 'candidate-profile.avatar-upload',
+        route: surfacePaths.candidate.profile,
+        userId: session.authUser?.id ?? null,
+        error,
+        description,
+        userMessage: description
+      })
+    }
+  })
+
+  function handleAvatarInputChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    // Permite volver a elegir el mismo archivo tras un intento fallido.
+    event.target.value = ''
+
+    if (file) {
+      uploadAvatarMutation.mutate(file)
+    }
+  }
 
   const setDefaultResumeMutation = useMutation({
     mutationFn: setDefaultCandidateResume,
@@ -940,13 +1008,43 @@ function CandidateProfileEditor({
       animate="show"
     >
       <motion.header variants={cardReveal} className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="max-w-2xl text-2xl font-bold leading-tight tracking-tight text-(--app-text)">
-            Tu perfil profesional
-          </h1>
-          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-(--app-text-muted)">
-            Historial, CV y visibilidad en un solo lugar.
-          </p>
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="group relative shrink-0">
+            <UserAvatar
+              name={session.profile?.display_name ?? session.profile?.full_name ?? 'Usuario'}
+              avatarPath={session.profile?.avatar_path}
+              className="size-16 border border-(--app-border)"
+              textClassName="text-lg font-semibold"
+            />
+            <button
+              type="button"
+              aria-label="Cambiar foto de perfil"
+              disabled={uploadAvatarMutation.isPending}
+              onClick={() => avatarInputRef.current?.click()}
+              className="absolute -right-1 -bottom-1 flex size-7 items-center justify-center rounded-full border-2 border-(--app-surface) bg-primary-600 text-white shadow-sm transition hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) disabled:opacity-70"
+            >
+              {uploadAvatarMutation.isPending ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Camera className="size-3.5" />
+              )}
+            </button>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
+              className="hidden"
+              onChange={handleAvatarInputChange}
+            />
+          </div>
+          <div className="min-w-0">
+            <h1 className="max-w-2xl text-2xl font-bold leading-tight tracking-tight text-(--app-text)">
+              Tu perfil profesional
+            </h1>
+            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-(--app-text-muted)">
+              Historial, CV y visibilidad en un solo lugar.
+            </p>
+          </div>
         </div>
         <Button
           className="hidden h-[42px] shrink-0 rounded-control px-5 text-sm sm:inline-flex sm:w-auto"

@@ -26,10 +26,11 @@ import { FieldHelp } from '@/components/ui/field-help'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import {
-  createPrivateFileUrl,
+  AVATARS_BUCKET,
+  resolveAvatarUrl,
   toErrorMessage,
   updateUserProfile,
-  uploadPrivateFile
+  uploadPublicFile
 } from '@/features/auth/lib/auth-api'
 import { onboardingSchema, type OnboardingValues } from '@/features/auth/lib/auth-schemas'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
@@ -231,32 +232,15 @@ export function ProfileOnboardingFlow() {
   }, [form, session.profile])
 
   useEffect(() => {
-    if (!session.profile?.avatar_path) {
+    // El avatar vive en un bucket público, así que la URL se resuelve de forma
+    // síncrona (sin firmar). Solo la aplicamos cuando no hay un archivo local
+    // recién seleccionado en preview.
+    if (avatarFile) {
       return
     }
 
-    let isActive = true
-
-    async function loadSignedAvatar() {
-      try {
-        const signedUrl = await createPrivateFileUrl('user-media', session.profile?.avatar_path ?? '')
-
-        if (isActive) {
-          setAvatarPreviewUrl(signedUrl)
-        }
-      } catch {
-        if (isActive) {
-          setAvatarPreviewUrl(null)
-        }
-      }
-    }
-
-    void loadSignedAvatar()
-
-    return () => {
-      isActive = false
-    }
-  }, [session.profile?.avatar_path])
+    setAvatarPreviewUrl(resolveAvatarUrl(session.profile?.avatar_path))
+  }, [session.profile?.avatar_path, avatarFile])
 
   useEffect(() => {
     return () => {
@@ -412,8 +396,8 @@ export function ProfileOnboardingFlow() {
       let avatarPath = session.profile?.avatar_path ?? null
 
       if (avatarFile) {
-        avatarPath = await uploadPrivateFile({
-          bucket: 'user-media',
+        avatarPath = await uploadPublicFile({
+          bucket: AVATARS_BUCKET,
           ownerUserId: session.authUser.id,
           file: avatarFile,
           prefix: 'avatar'

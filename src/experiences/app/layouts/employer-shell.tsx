@@ -52,6 +52,7 @@ import { cn } from '@/lib/utils/cn'
 import { PLATFORM_REGISTRATION_LOCKED, PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access'
 import { adminNavigationItems, candidateNavigationItems, employerNavigationItems } from '@/shared/constants/navigation'
 import type { NavigationItem } from '@/shared/types/navigation'
+import { UserAvatar } from '@/shared/ui/user-avatar'
 
 const WORKSPACE_NOTIFICATION_QUERY_KEY = ['workspace-shell', 'notifications'] as const
 const WORKSPACE_SIDEBAR_COLLAPSED_STORAGE_KEY = 'asi:workspace-sidebar-collapsed:v1'
@@ -246,7 +247,8 @@ function resolveUserIdentity(session: ReturnType<typeof useAppSession>) {
   return {
     displayName,
     email,
-    initials
+    initials,
+    avatarPath: session.profile?.avatar_path ?? null
   }
 }
 
@@ -750,9 +752,14 @@ function SidebarFooter({
               type="button"
               onClick={onOpenProfile}
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10 text-[11px] font-semibold text-white">
-                {userInitials}
-              </span>
+              <UserAvatar
+                name={userName}
+                avatarPath={session.profile?.avatar_path}
+                className="size-9 border border-white/10"
+                fallbackClassName="bg-white/10 text-white"
+                textClassName="text-[11px] font-semibold"
+                initialsFallback={userInitials}
+              />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[0.82rem] font-semibold leading-5 text-white">{userName}</span>
                 <span className="block truncate text-[0.72rem] leading-4 text-white/55">{userEmail}</span>
@@ -784,9 +791,14 @@ function SidebarFooter({
             !showCollapsedLabels && config.hideFooterChrome ? 'border border-white/10 bg-white/6 hover:border-white/16 hover:bg-white/10' : ''
           )}
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#3a63d6,#9fb6f0)] text-[11px] font-semibold text-white ring-2 ring-white/15">
-            {userInitials}
-          </span>
+          <UserAvatar
+            name={userName}
+            avatarPath={session.profile?.avatar_path}
+            className="size-9 ring-2 ring-white/15"
+            fallbackClassName="bg-[linear-gradient(135deg,#3a63d6,#9fb6f0)] text-white"
+            textClassName="text-[11px] font-semibold"
+            initialsFallback={userInitials}
+          />
           {!showCollapsedLabels ? (
             <span className="min-w-0 flex-1 text-left">
               <span className="block truncate text-[13px] font-semibold text-white">{userName}</span>
@@ -1696,9 +1708,14 @@ export function PlatformAppShell({
                       setNotificationPanelOpen(false)
                     }}
                   >
-                    <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700 outline -outline-offset-1 outline-black/5 dark:bg-slate-800 dark:text-white dark:outline-white/10">
-                      {userIdentity.initials}
-                    </span>
+                    <UserAvatar
+                      name={userIdentity.displayName}
+                      avatarPath={userIdentity.avatarPath}
+                      className="size-8 outline -outline-offset-1 outline-black/5 dark:outline-white/10"
+                      fallbackClassName="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-white"
+                      textClassName="text-xs font-semibold"
+                      initialsFallback={userIdentity.initials}
+                    />
                     <span className="hidden min-w-0 text-left lg:block">
                       <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">{userIdentity.displayName}</span>
                       <span className="block truncate text-xs text-slate-400">{userIdentity.email}</span>

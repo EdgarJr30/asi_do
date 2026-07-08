@@ -29,10 +29,25 @@ import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cn } from '@/lib/utils/cn'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
+import { UserAvatar } from '@/shared/ui/user-avatar'
 
 type PipelineBoard = Awaited<ReturnType<typeof fetchPipelineBoard>>
 type PipelineStage = PipelineBoard['stages'][number]
 type PipelineApplication = PipelineBoard['applications'][number]
+
+type NestedAvatarUser = { avatar_path: string | null } | null
+type NestedCandidateProfile = { user: NestedAvatarUser | NestedAvatarUser[] } | null
+
+/** Extrae la ruta del avatar del postulante, tolerando objeto o arreglo anidado. */
+function applicationAvatarPath(application: PipelineApplication): string | null {
+  const candidateProfile = application.candidate_profile as
+    | NestedCandidateProfile
+    | NestedCandidateProfile[]
+    | undefined
+  const profile = Array.isArray(candidateProfile) ? candidateProfile[0] : candidateProfile
+  const user = Array.isArray(profile?.user) ? profile?.user[0] : profile?.user
+  return user?.avatar_path ?? null
+}
 
 const INITIAL_STAGE_CARD_COUNT = 12
 const STAGE_CARD_BATCH_SIZE = 12
@@ -88,18 +103,6 @@ function getStageTone(stage: PipelineStage, index: number) {
   const matchedTone = STAGE_TONES.find((tone) => normalizedStage.includes(tone.key))
 
   return matchedTone ?? STAGE_TONES[index % STAGE_TONES.length]
-}
-
-function initialsFrom(value: string) {
-  return (
-    value
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join('') || '·'
-  )
 }
 
 function getLatestRating(application: PipelineApplication) {
@@ -568,9 +571,13 @@ export function PipelineBoardPage() {
                             draggedId === application.id ? 'opacity-50' : ''
                           )}
                         >
-                          <span className="flex size-8.5 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#4869b6,#8aa2d8)] text-[11px] font-bold text-white">
-                            {initialsFrom(application.candidate_display_name_snapshot)}
-                          </span>
+                          <UserAvatar
+                            name={application.candidate_display_name_snapshot}
+                            avatarPath={applicationAvatarPath(application)}
+                            className="size-8.5"
+                            fallbackClassName="bg-[linear-gradient(135deg,#4869b6,#8aa2d8)] text-white"
+                            textClassName="text-[11px] font-bold"
+                          />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-[0.84rem] font-semibold text-(--app-text)">
                               {application.candidate_display_name_snapshot}
@@ -626,9 +633,13 @@ export function PipelineBoardPage() {
           widthClassName="max-w-md"
           title={
             <span className="flex min-w-0 items-center gap-3">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-sm font-semibold text-white">
-                {initialsFrom(visibleSelectedApplication.candidate_display_name_snapshot)}
-              </span>
+              <UserAvatar
+                name={visibleSelectedApplication.candidate_display_name_snapshot}
+                avatarPath={applicationAvatarPath(visibleSelectedApplication)}
+                className="size-11"
+                fallbackClassName="bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-white"
+                textClassName="text-sm font-semibold"
+              />
               <span className="min-w-0">
                 <span className="block truncate">{visibleSelectedApplication.candidate_display_name_snapshot}</span>
               </span>

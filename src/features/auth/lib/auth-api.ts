@@ -14,7 +14,9 @@ import {
 import { isPermissionCode, type PermissionCode } from '@/shared/constants/permissions'
 import type { Json, Tables, TablesInsert } from '@/shared/types/database'
 
-export type PrivateStorageBucket = 'candidate-resumes' | 'user-media' | 'verification-documents' | 'membership-receipts'
+export type PrivateStorageBucket = 'candidate-resumes' | 'verification-documents' | 'membership-receipts'
+
+export type PublicStorageBucket = 'avatars'
 
 export interface AppMembership {
   id: string
@@ -461,6 +463,67 @@ export async function createPrivateFileUrl(bucket: PrivateStorageBucket, path: s
   }
 
   return response.data.signedUrl
+}
+
+export async function uploadPublicFile(options: {
+  bucket: PublicStorageBucket
+  ownerUserId: string
+  file: File
+  prefix: string
+}) {
+  const client = requireSupabase()
+
+  if (options.file.size > MAX_UPLOAD_SIZE_BYTES) {
+    throw new Error(
+      `El archivo pesa ${formatFileSize(options.file.size)} y supera el máximo de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)}. Comprime el archivo o carga uno de ${formatFileSize(MAX_UPLOAD_SIZE_BYTES)} o menos.`
+    )
+  }
+
+  const extension = getFileExtension(options.file)
+  const storagePath = `${options.ownerUserId}/${options.prefix}-${crypto.randomUUID()}.${extension}`
+
+  const uploadResponse = await client.storage
+    .from(options.bucket)
+    .upload(normalizeStoragePath(storagePath), options.file, {
+      upsert: false,
+      cacheControl: '3600'
+    })
+
+  if (uploadResponse.error) {
+    throw new Error(normalizeStorageUploadErrorMessage(options.file, uploadResponse.error.message))
+  }
+
+  return uploadResponse.data.path
+}
+
+export async function removePublicFile(options: {
+  bucket: PublicStorageBucket
+  path: string
+}) {
+  const client = requireSupabase()
+  const response = await client.storage.from(options.bucket).remove([normalizeStoragePath(options.path)])
+
+  if (response.error) {
+    throw response.error
+  }
+}
+
+/** URL pública estable de un archivo en un bucket público (no requiere firmar ni auth). */
+export function getPublicFileUrl(bucket: PublicStorageBucket, path: string) {
+  const client = requireSupabase()
+
+  return client.storage.from(bucket).getPublicUrl(normalizeStoragePath(path)).data.publicUrl
+}
+
+export const AVATARS_BUCKET: PublicStorageBucket = 'avatars'
+
+/** Resuelve la URL pública del avatar de un usuario, o null si no tiene. */
+export function resolveAvatarUrl(avatarPath: string | null | undefined) {
+  if (!avatarPath) {
+    return null
+  }
+
+  return getPublicFileUrl(AVATARS_BUCKET, avatarPath)
 }
 
 export async function submitRecruiterRequest(values: {

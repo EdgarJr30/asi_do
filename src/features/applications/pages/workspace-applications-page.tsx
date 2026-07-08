@@ -22,6 +22,7 @@ import { listTenantPipelineStages } from '@/features/pipeline/lib/pipeline-api'
 import { useUrlParamState } from '@/hooks/use-url-param-state'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cardReveal, gridStagger, pageStagger, softEase } from '@/shared/ui/card-motion'
+import { UserAvatar } from '@/shared/ui/user-avatar'
 import { cn } from '@/lib/utils/cn'
 
 /** Etiqueta + color del punto/estado (columna "Estado"), alineado a los tokens del handoff. */
@@ -55,18 +56,6 @@ const APPLICATIONS_PAGE_SIZE = 12
 
 function statusLabel(key: string) {
   return STATUS_META[key]?.label ?? STATUS_FILTERS.find((filter) => filter.key === key)?.label ?? key
-}
-
-function initialsFrom(value: string) {
-  return (
-    value
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join('') || '·'
-  )
 }
 
 function relativeDays(value: string) {
@@ -422,14 +411,13 @@ export function WorkspaceApplicationsPage() {
                     className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 px-3 py-2.5 transition-colors hover:bg-(--app-surface-muted)/55 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1.5fr)_150px_88px_44px] lg:gap-4 lg:px-4 lg:py-2.5"
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span
-                        className={cn(
-                          'flex size-8 shrink-0 items-center justify-center rounded-full text-[0.72rem] font-bold',
-                          avatarTint(application.id)
-                        )}
-                      >
-                        {initialsFrom(application.candidate_display_name_snapshot)}
-                      </span>
+                      <UserAvatar
+                        name={application.candidate_display_name_snapshot}
+                        avatarPath={application.candidate_profile?.user?.avatar_path}
+                        className="size-8"
+                        fallbackClassName={avatarTint(application.id)}
+                        textClassName="text-[0.72rem] font-bold"
+                      />
                       <div className="min-w-0">
                         <p className="truncate text-[0.85rem] font-semibold leading-tight text-(--app-text)">
                           {application.candidate_display_name_snapshot}
