@@ -301,7 +301,7 @@ export function InstitutionalShell() {
         ) : null}
       </AnimatePresence>
 
-      <main className="min-w-0 pt-24 sm:pt-32 lg:pt-[8.6rem]">
+      <main className="min-w-0 pt-20 sm:pt-[6.75rem] lg:pt-[6.75rem]">
         <Outlet />
       </main>
 
