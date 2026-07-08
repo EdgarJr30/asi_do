@@ -713,15 +713,15 @@ function MembershipOverviewCard({
   return (
     <Card className="rounded-card border-(--app-border) bg-(--app-surface-elevated) p-4 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)] sm:p-6">
       <CardContent className="mt-0">
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-start gap-3 sm:gap-4">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-card bg-gradient-to-br from-primary-600 to-primary-400 text-white shadow-sm sm:size-13">
             <Sparkles className="size-5 sm:size-6" />
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-[0.68rem] font-bold uppercase tracking-[0.06em] text-(--app-text-subtle) sm:text-xs">Categoría</p>
             <p className="mt-0.5 truncate text-base font-bold tracking-tight text-(--app-text) sm:text-xl">{category}</p>
+            <StatusPill className="mt-2 max-w-full" label={statusLabel} tone={isActive ? 'success' : 'neutral'} />
           </div>
-          <StatusPill className="ml-auto shrink-0" label={statusLabel} tone={isActive ? 'success' : 'neutral'} />
         </div>
 
         <div className="mt-4 sm:mt-6">
@@ -757,7 +757,7 @@ function StatusPill({
   return (
     <span
       className={cn(
-        'inline-flex h-7 items-center gap-2 rounded-full px-3 text-xs font-semibold',
+        'inline-flex h-7 max-w-full items-center gap-2 rounded-full px-3 text-xs font-semibold',
         tone === 'success' && 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300',
         tone === 'neutral' && 'bg-(--app-surface-muted) text-(--app-text-muted)',
         tone === 'danger' && 'bg-rose-50 text-rose-700 dark:bg-rose-500/12 dark:text-rose-300',
@@ -766,13 +766,13 @@ function StatusPill({
     >
       <span
         className={cn(
-          'size-1.5 rounded-full',
+          'size-1.5 shrink-0 rounded-full',
           tone === 'success' && 'bg-emerald-500',
           tone === 'neutral' && 'bg-(--app-text-subtle)',
           tone === 'danger' && 'bg-rose-500'
         )}
       />
-      {label}
+      <span className="truncate">{label}</span>
     </span>
   )
 }
