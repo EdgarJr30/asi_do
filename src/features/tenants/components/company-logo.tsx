@@ -1,7 +1,5 @@
 import { useState } from 'react'
 
-import { useQuery } from '@tanstack/react-query'
-
 import { createCompanyAssetUrl } from '@/features/tenants/lib/company-assets-api'
 import { cn } from '@/lib/utils/cn'
 
@@ -43,18 +41,7 @@ export function CompanyLogo({
 }) {
   const [imageFailed, setImageFailed] = useState(false)
   const normalizedLogoPath = logoPath?.trim() || null
-  const logoUrlQuery = useQuery({
-    queryKey: ['company-assets', 'logo-url', normalizedLogoPath],
-    enabled: Boolean(normalizedLogoPath) && !imageFailed,
-    staleTime: 1000 * 60 * 8,
-    queryFn: async () => {
-      if (!normalizedLogoPath) {
-        throw new Error('No hay logo de empresa para cargar.')
-      }
-      return createCompanyAssetUrl(normalizedLogoPath)
-    }
-  })
-  const logoUrl = imageFailed ? null : logoUrlQuery.data
+  const logoUrl = normalizedLogoPath && !imageFailed ? createCompanyAssetUrl(normalizedLogoPath) : null
 
   return (
     <span

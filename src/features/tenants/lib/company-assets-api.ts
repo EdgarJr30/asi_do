@@ -8,13 +8,9 @@ function requireSupabase() {
   return supabase
 }
 
-export async function createCompanyAssetUrl(path: string) {
+/** URL pública estable de un asset de empresa (bucket público, no requiere firmar). */
+export function createCompanyAssetUrl(path: string) {
   const client = requireSupabase()
-  const response = await client.storage.from('company-assets').createSignedUrl(path, 60 * 10)
 
-  if (response.error) {
-    throw response.error
-  }
-
-  return response.data.signedUrl
+  return client.storage.from('company-assets').getPublicUrl(path).data.publicUrl
 }
