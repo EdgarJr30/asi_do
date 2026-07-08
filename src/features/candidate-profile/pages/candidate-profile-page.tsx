@@ -59,6 +59,11 @@ import {
   uploadCandidateResume
 } from '@/features/candidate-profile/lib/candidate-profile-api'
 import {
+  clearCandidateProfileDraft,
+  loadCandidateProfileDraft,
+  saveCandidateProfileDraft
+} from '@/features/candidate-profile/lib/candidate-profile-draft'
+import {
   candidateProfileSchema,
   createEmptyCandidateEducation,
   createEmptyCandidateExperience,
@@ -222,6 +227,11 @@ function formatUpdatedAt(value?: string | null) {
 type ProfileTab = 'general' | 'cv' | 'experience' | 'skills'
 type CandidateResume = CandidateProfileBundle['resumes'][number]
 type PendingResumeUpload = {
+  file: File
+  previewUrl: string
+}
+type StagedResume = {
+  id: string
   file: File
   previewUrl: string
 }
@@ -467,12 +477,10 @@ function QuickAction({ icon: Icon, title, description, onClick }: { icon: Lucide
 
 function ResumeUploadPreviewDialog({
   pendingUpload,
-  loading,
   onConfirm,
   onCancel
 }: {
   pendingUpload: PendingResumeUpload | null
-  loading: boolean
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -487,12 +495,14 @@ function ResumeUploadPreviewDialog({
         aria-label="Cancelar carga de CV"
         type="button"
         className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm"
-        onClick={loading ? undefined : onCancel}
+        onClick={onCancel}
       />
       <Card className="relative z-10 flex max-h-[92svh] w-full max-w-3xl flex-col overflow-hidden rounded-card p-0">
         <CardHeader className="border-b border-(--app-border) px-4 py-4 sm:px-5">
-          <CardTitle>Revisar CV antes de guardar</CardTitle>
-          <CardDescription>Confirma que este es el archivo correcto antes de subirlo a tu perfil candidato.</CardDescription>
+          <CardTitle>Revisar CV antes de agregarlo</CardTitle>
+          <CardDescription>
+            Confirma que este es el archivo correcto. Quedará listo en tu perfil y se subirá cuando guardes los cambios.
+          </CardDescription>
         </CardHeader>
         <CardContent className="mt-0 min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
           <div className="flex flex-col gap-3 rounded-control border border-(--app-border) bg-(--app-surface-muted)/55 p-3.5 sm:flex-row sm:items-center">
@@ -533,12 +543,10 @@ function ResumeUploadPreviewDialog({
           )}
         </CardContent>
         <div className="flex flex-col-reverse gap-2 border-t border-(--app-border) px-4 py-4 sm:flex-row sm:justify-end sm:px-5">
-          <Button variant="outline" onClick={onCancel} disabled={loading}>
+          <Button variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button onClick={onConfirm} disabled={loading}>
-            {loading ? 'Subiendo CV...' : 'Guardar y subir CV'}
-          </Button>
+          <Button onClick={onConfirm}>Usar este CV</Button>
         </div>
       </Card>
     </div>
@@ -563,9 +571,15 @@ function CandidateProfileEditor({
   const [resumeFileError, setResumeFileError] = useState<string | null>(null)
   const [isResumeDragging, setIsResumeDragging] = useState(false)
   const [pendingResumeUpload, setPendingResumeUpload] = useState<PendingResumeUpload | null>(null)
+  const [stagedResumes, setStagedResumes] = useState<StagedResume[]>([])
   const [isVisibleToRecruiters, setIsVisibleToRecruiters] = useState(() => bundle.profile?.is_visible_to_recruiters ?? false)
   const [pendingDelete, setPendingDelete] = useState<PendingProfileDelete | null>(null)
   const avatarInputRef = useRef<HTMLInputElement | null>(null)
+  // El borrador local solo se persiste después de intentar restaurarlo, para no
+  // pisar un borrador existente con los valores iniciales del servidor.
+  const draftReadyRef = useRef(false)
+  const stagedResumesRef = useRef<StagedResume[]>([])
+  stagedResumesRef.current = stagedResumes
 
   const form = useForm<CandidateProfileFormValues>({
     resolver: zodResolver(candidateProfileSchema),
