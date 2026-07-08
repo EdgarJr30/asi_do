@@ -116,14 +116,9 @@ export interface MembershipCategoryInfo {
 }
 
 export const membershipCategoryDues = {
-  'organizational-non-profit': 'DOP 15,000',
-  'organizational-for-profit': 'DOP 15,000',
-  'executive-professional': 'DOP 15,000',
-  'sole-proprietor': 'DOP 12,000',
-  retired: 'DOP 9,000',
-  associate: 'DOP 9,000',
-  'young-professional': 'DOP 1,500',
-  'associate-international': 'DOP 15,000',
+  laico: 'RD$2,000.00',
+  profesional: 'RD$2,500.00',
+  empresa: 'RD$3,000.00',
 } as const
 
 export function getMembershipCategoryDues(categorySlug: string) {
@@ -132,113 +127,40 @@ export function getMembershipCategoryDues(categorySlug: string) {
 
 export const membershipCategories: MembershipCategoryInfo[] = [
   {
-    slug: 'organizational-non-profit',
-    name: 'Organizacional Sin Fines de Lucro',
+    slug: 'laico',
+    name: 'Laico',
     description:
-      'La membresía se registra a nombre de la organización. Una organización puede calificar si cuenta con un mínimo de dos empleados o voluntarios equivalentes a tiempo completo (ETC), incluyendo al propietario/director.',
+      'Para miembros laicos individuales que apoyan la misión de ASI y desean formar parte de la comunidad, sin ejercer necesariamente una actividad profesional o empresarial.',
     requirements: [
-      'Mínimo de dos empleados o voluntarios equivalentes a tiempo completo, incluyendo al propietario/director',
-      'La organización debe tener al menos un año de operación',
-      'El propietario/director debe ser un adventista del Séptimo Día bautizado en plena comunión',
-      'La organización no debe ser propiedad de ni estar controlada por la Iglesia Adventista del Séptimo Día',
+      'Ser adventista del Séptimo Día bautizado y en plena comunión',
+      'Mantenerse en buena posición con la Iglesia Adventista del Séptimo Día',
+      'Comprometerse a vivir en armonía con los principios adventistas',
     ],
-    dues: membershipCategoryDues['organizational-non-profit'],
-    note:
-      'Un propietario/director que haya sido miembro de ASI por cinco años o más y se jubile o venda la organización puede convertirse en miembro Personal de ASI.',
+    dues: membershipCategoryDues.laico,
   },
   {
-    slug: 'organizational-for-profit',
-    name: 'Organizacional Con Fines de Lucro',
+    slug: 'profesional',
+    name: 'Profesional',
     description:
-      'La membresía se registra a nombre de la organización. Una organización puede calificar si cuenta con un mínimo de dos empleados o voluntarios equivalentes a tiempo completo (ETC), incluyendo al propietario/director.',
+      'Para profesionales, ejecutivos y propietarios individuales que integran su vocación, testimonio y servicio desde el ejercicio de su profesión.',
     requirements: [
-      'Mínimo de dos empleados o voluntarios equivalentes a tiempo completo, incluyendo al propietario/director',
-      'La organización debe tener al menos un año de operación',
-      'El propietario/director debe ser un adventista del Séptimo Día bautizado en plena comunión',
-      'La organización no debe ser propiedad de ni estar controlada por la Iglesia Adventista del Séptimo Día',
+      'Ser adventista del Séptimo Día bautizado y en plena comunión',
+      'Ejercer una profesión, cargo ejecutivo o práctica independiente',
+      'Mantenerse en buena posición con la Iglesia Adventista del Séptimo Día',
     ],
-    dues: membershipCategoryDues['organizational-for-profit'],
-    note:
-      'Un propietario/director que haya sido miembro de ASI por cinco años o más y se jubile o venda la organización puede convertirse en miembro Personal de ASI.',
+    dues: membershipCategoryDues.profesional,
   },
   {
-    slug: 'executive-professional',
-    name: 'Profesional Ejecutivo',
+    slug: 'empresa',
+    name: 'Empresa',
     description:
-      'Disponible para gerentes que han ocupado su cargo por al menos un año, tienen autoridad para contratar y despedir empleados, y supervisan un mínimo de dos equivalentes a tiempo completo.',
+      'Para organizaciones, empresas y ministerios liderados por laicos que desean ampliar su alcance y credibilidad como parte de la red institucional de ASI.',
     requirements: [
-      'Ha ocupado el cargo por al menos un año',
-      'Tiene autoridad para contratar y despedir empleados',
-      'Supervisa un mínimo de dos equivalentes a tiempo completo',
-      'Ejemplos: directivos ejecutivos, gerentes de departamento y médicos gestores empleados por organizaciones no afiliadas',
+      'La organización es liderada por adventistas del Séptimo Día en plena comunión',
+      'No es propiedad de ni está controlada por la Iglesia Adventista del Séptimo Día',
+      'Opera en armonía con los principios y la misión de ASI',
     ],
-    dues: membershipCategoryDues['executive-professional'],
-  },
-  {
-    slug: 'sole-proprietor',
-    name: 'Propietario Individual',
-    description:
-      'La membresía se registra a nombre del negocio y está disponible para propietarios/operadores que no emplean a nadie más que a sí mismos.',
-    requirements: [
-      'El negocio ha estado en operación continua por un mínimo de un año',
-      'El propietario no emplea a nadie más que a sí mismo',
-      'Ejemplos: contadores, artistas visuales o escénicos, proveedores de cuidado infantil y consejeros',
-    ],
-    dues: membershipCategoryDues['sole-proprietor'],
-  },
-  {
-    slug: 'retired',
-    name: 'Profesional o Empresario Jubilado',
-    description:
-      'Disponible para personas que hubiesen sido elegibles para membresía Organizacional, Profesional Ejecutivo o Propietario Individual durante su vida profesional activa, pero que se han jubilado o vendido su negocio.',
-    requirements: [
-      'Fue elegible anteriormente para membresía Organizacional, Profesional Ejecutivo o Propietario Individual',
-      'Se ha jubilado o vendido su negocio',
-      'No ha sido miembro de ASI anteriormente',
-    ],
-    dues: membershipCategoryDues.retired,
-  },
-  {
-    slug: 'associate',
-    name: 'Asociado',
-    description:
-      'Disponible para personas que tienen un alto nivel de responsabilidad en una organización controlada por otra persona, pero que no son ejecutivos ni gerentes y no supervisan a ningún otro empleado.',
-    requirements: [
-      'Alto nivel de responsabilidad en una organización controlada por otra persona',
-      'No es ejecutivo ni gerente',
-      'No supervisa a ningún otro empleado',
-      'Ha ocupado el cargo por al menos un año',
-      'Ejemplos: médicos, dentistas, abogados, científicos investigadores y auditores',
-    ],
-    dues: membershipCategoryDues.associate,
-    note: '* Requiere evaluación adicional',
-  },
-  {
-    slug: 'young-professional',
-    name: 'Joven Profesional',
-    description:
-      'Abierta a personas de 18 a 35 años que sean estudiantes, recién graduados, pasantes, residentes o jóvenes emprendedores.',
-    requirements: [
-      'Edad entre 18 y 35 años',
-      'Estudiante, recién graduado, pasante, residente o joven emprendedor',
-      'Debe hacer la transición en un plazo de tres años si califica para otra categoría',
-    ],
-    dues: membershipCategoryDues['young-professional'],
-    note: '* Requiere evaluación adicional',
-  },
-  {
-    slug: 'associate-international',
-    name: 'Asociado Internacional',
-    description:
-      'Disponible para organizaciones sin fines de lucro que operan fuera de la División Norteamericana, en áreas donde no existe presencia activa de ASI.',
-    requirements: [
-      'Organización sin fines de lucro',
-      'Operando fuera de la División Norteamericana',
-      'No existe presencia activa de ASI en el área',
-      'Se aplican todos los requisitos para organizaciones sin fines de lucro',
-    ],
-    dues: membershipCategoryDues['associate-international'],
-    note: '* Requiere evaluación adicional',
+    dues: membershipCategoryDues.empresa,
   },
 ]
 

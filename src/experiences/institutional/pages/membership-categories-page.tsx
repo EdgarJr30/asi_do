@@ -13,14 +13,9 @@ import { membershipCategories } from '@/experiences/institutional/content/eligib
 import { cn } from '@/lib/utils/cn'
 
 const duesColor: Record<string, string> = {
-  'organizational-non-profit': 'text-(--asi-primary)',
-  'organizational-for-profit': 'text-(--asi-primary)',
-  'executive-professional': 'text-(--asi-primary)',
-  'associate-international': 'text-(--asi-primary)',
-  'sole-proprietor': 'text-(--asi-secondary)',
-  retired: 'text-(--asi-secondary)',
-  associate: 'text-(--asi-secondary)',
-  'young-professional': 'text-green-600',
+  laico: 'text-green-600',
+  profesional: 'text-(--asi-secondary)',
+  empresa: 'text-(--asi-primary)',
 }
 
 function CategoryCard({ cat }: { cat: typeof membershipCategories[number] }) {
@@ -204,17 +199,16 @@ export function MembershipCategoriesPage() {
             ¿Listo para unirse?
           </p>
           <h2 className="asi-heading-lg mt-4 text-white">
-            Comience con la verificación de elegibilidad
+            Elige tu categoría y comienza tu solicitud
           </h2>
           <p className="asi-copy mt-4 mx-auto max-w-[54ch] text-white/80">
-            Responda algunas preguntas para determinar qué categoría de
-            membresía le corresponde y proceda directamente al formulario de
-            solicitud.
+            Selecciona la categoría que corresponde a tu caso y procede
+            directamente al formulario de solicitud.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <InstitutionalActionLink
               action={{
-                label: 'Verificar mi elegibilidad',
+                label: 'Elegir mi categoría',
                 to: '/eligibility',
                 variant: 'primary',
               }}

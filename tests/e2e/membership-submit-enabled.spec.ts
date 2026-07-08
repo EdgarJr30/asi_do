@@ -8,12 +8,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 async function reachMembershipForm(page: Page) {
   await page.goto('/eligibility')
-  await page.getByRole('button', { name: 'Sí' }).click()
-  await page.getByRole('button', { name: 'Unión Dominicana (UDA)' }).click()
-  await page.getByRole('button', { name: /Mi organización/i }).click()
-  await page.getByRole('button', { name: /Con fines de lucro/i }).click()
-  await page.getByRole('button', { name: 'Dos o más' }).click()
-  await page.getByRole('button', { name: /La organización es de propiedad y operación independiente/i }).click()
+  await page.getByRole('button', { name: /^Empresa/ }).click()
   await page.getByRole('button', { name: /Continuar con la solicitud/i }).click()
 }
 
@@ -21,7 +16,7 @@ test('el flujo de membresía permite continuar creando o iniciando sesión', asy
   await reachMembershipForm(page)
 
   await expect(page.getByRole('heading', { name: /Crea tu cuenta para enviar tu solicitud/i })).toBeVisible()
-  await expect(page.getByText(/Calificas para la membresía de Organizacional Con Fines de Lucro/i)).toBeVisible()
+  await expect(page.getByText(/Calificas para la membresía de Empresa/i)).toBeVisible()
 
   await expect(page.getByText(/recepci[óo]n de solicitudes de membres[ií]a est[áa] cerrada/i)).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Env[íi]o cerrado/i })).toHaveCount(0)

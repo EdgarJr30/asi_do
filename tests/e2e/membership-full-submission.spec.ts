@@ -12,7 +12,7 @@ import {
 } from './support/membership'
 
 /**
- * Flujo COMPLETO de envío real de una solicitud de membresía (categoría "retired")
+ * Flujo COMPLETO de envío real de una solicitud de membresía (categoría "profesional")
  * bajo el modelo de DRAFT:
  *   login → deep-link con token de elegibilidad → se persiste un draft en la cuenta →
  *   formulario de 6 pasos → envío (UPDATE draft → submitted) → pantalla de éxito.
@@ -40,9 +40,9 @@ test.beforeAll(async () => {
 function eligibilityAccessToken() {
   const token = {
     eligible: true,
-    category: 'Profesional o empresario jubilado',
-    categorySlug: 'retired',
-    dues: 'US$50',
+    category: 'Profesional',
+    categorySlug: 'profesional',
+    dues: 'RD$2,500.00',
     timestamp: Date.now(),
   }
   return Buffer.from(JSON.stringify(token))
@@ -92,12 +92,11 @@ test('un miembro envía su solicitud vía draft sin duplicar la fila', async ({ 
   await page.locator('[name="postalCode"]').fill('10101')
   await next(page)
 
-  // ── Paso 2: Datos de categoría (retired) ──
-  await page.locator('[name="retiredFrom"]').fill('Consultoría financiera empresarial')
-  await page.locator('[name="retirementYear"]').fill('2015')
-  await page
-    .locator('[name="retirementSummary"]')
-    .fill('Dirigí una firma de consultoría financiera durante más de 25 años antes de jubilarme.')
+  // ── Paso 2: Datos de categoría (profesional) ──
+  await page.locator('[name="employerName"]').fill('Consultoría Financiera del Caribe')
+  await page.locator('[name="roleTitle"]').fill('Consultor financiero senior')
+  await page.getByLabel(/Enfoque profesional/).selectOption({ index: 1 })
+  await page.locator('[name="workPhone"]').fill('8095550110')
   await next(page)
 
   // ── Paso 3: Evangelismo personal ──
@@ -150,7 +149,7 @@ test('un miembro envía su solicitud vía draft sin duplicar la fila', async ({ 
   const apps = await fetchMemberApplications(admin, applicantUserId)
   expect(apps.length, 'Debe existir exactamente una solicitud (draft → submitted, sin duplicar)').toBe(1)
   expect(apps[0].status).toBe('submitted')
-  expect(apps[0].category_slug).toBe('retired')
+  expect(apps[0].category_slug).toBe('profesional')
 
   expect(pageErrors).toEqual([])
 })

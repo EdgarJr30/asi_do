@@ -38,7 +38,6 @@ import {
   ministryOptions,
   professionalFocusOptions,
   volunteerOptions,
-  youngProfessionalStageOptions,
 } from '@/experiences/institutional/content/membership-application-content'
 import {
   fetchAuthorityHierarchy,
@@ -61,7 +60,6 @@ import { splitFullName } from '@/lib/utils/split-full-name'
 import { cn } from '@/lib/utils/cn'
 
 const DEFAULT_COUNTRY = 'República Dominicana'
-const ORGANIZATIONAL_FOR_PROFIT_SLUG = 'organizational-for-profit'
 
 export interface MembershipApplicationValues {
   categorySlug: string
@@ -242,7 +240,7 @@ const commitmentStepFields = [
   'commitmentProcessing',
 ] satisfies ApplicationFieldName[]
 
-const applicationSteps = [
+const baseApplicationSteps = [
   {
     id: 'contact',
     title: 'Datos de contacto',
@@ -283,8 +281,6 @@ const applicationSteps = [
 
 function buildApplicationSchema(categorySlug: string) {
   const variant = getMembershipApplicationVariant(categorySlug)
-  const isOrganizationalForProfit =
-    variant?.slug === ORGANIZATIONAL_FOR_PROFIT_SLUG
 
   return z
     .object({
@@ -447,7 +443,7 @@ function buildApplicationSchema(categorySlug: string) {
         })
       }
 
-      if (isOrganizationalForProfit || !values.billingSameAsHome) {
+      if (!values.billingSameAsHome) {
         requireField('billingAddress1', 'la dirección de facturación', 5)
         requireField('billingCity', 'la ciudad de facturación', 2)
         requireField('billingStateProvince', 'la provincia o estado de facturación', 2)
@@ -486,42 +482,13 @@ function buildApplicationSchema(categorySlug: string) {
           requireFourDigitYear('yearEstablished', 'El año de establecimiento')
           requirePositiveNumber('employeeCount', 'la cantidad de colaboradores')
           break
-        case 'executive-professional':
-          requireField('employerName', 'el nombre de la organización empleadora', 2)
-          requireField('roleTitle', 'tu cargo actual', 2)
-          requireField('workPhone', 'tu teléfono laboral', 7)
+        case 'professional':
+          requireField('employerName', 'el nombre de la organización o empleador', 2)
+          requireField('roleTitle', 'tu cargo, profesión u ocupación', 2)
           requireField('professionalFocus', 'el enfoque profesional', 1)
-          requirePositiveNumber('yearsInRole', 'el tiempo en el rol')
-          requirePositiveNumber('peopleSupervised', 'la cantidad de personas supervisadas')
-          break
-        case 'sole-proprietor':
-          requireField('businessName', 'el nombre del negocio o práctica', 2)
-          requireField('roleTitle', 'tu ocupación o especialidad', 2)
-          requireFourDigitYear('yearEstablished', 'El año en que inició operaciones el negocio')
-          break
-        case 'retired':
-          requireField('retiredFrom', 'la actividad o empresa de la cual te retiraste', 2)
-          requireField('retirementSummary', 'un resumen de tu trayectoria previa', 24)
-          requireFourDigitYear('retirementYear', 'El año de retiro')
-          break
-        case 'associate':
-          requireField('employerName', 'la organización donde sirves', 2)
-          requireField('roleTitle', 'tu posición actual', 2)
-          requireField('professionalFocus', 'el enfoque profesional', 1)
-          requireField('retirementSummary', 'un resumen de tu nivel de responsabilidad', 24)
           requireField('workPhone', 'tu teléfono laboral', 7)
           break
-        case 'young-professional':
-          requireField('institutionName', 'la institución o emprendimiento', 2)
-          requireField('fieldOfStudy', 'tu área de estudio o especialidad', 2)
-          requireField('currentStage', 'tu etapa actual', 1)
-          if (values.expectedGraduationYear.trim()) {
-            requireFourDigitYear(
-              'expectedGraduationYear',
-              'El año esperado de graduación o transición'
-            )
-          }
-          break
+        case 'individual':
         default:
           break
       }
@@ -1612,11 +1579,17 @@ export function MembershipApplicationForm({
   const categoryInfo =
     membershipCategories.find((category) => category.slug === token.categorySlug) ??
     null
-  const isOrganizationalForProfit =
-    token.categorySlug === ORGANIZATIONAL_FOR_PROFIT_SLUG
   const draftKey = `asi:membership_application_draft:${token.categorySlug}`
   const [submission, setSubmission] = useState<PersistedSubmission | null>(null)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  // La membresía laica no captura datos de categoría: se omite ese paso.
+  const applicationSteps = useMemo(
+    () =>
+      variant?.id === 'individual'
+        ? baseApplicationSteps.filter((step) => step.id !== 'category')
+        : baseApplicationSteps,
+    [variant?.id]
+  )
   const currentStep = applicationSteps[currentStepIndex]
   const isFirstStep = currentStepIndex === 0
   const isLastStep = currentStepIndex === applicationSteps.length - 1
@@ -1647,16 +1620,6 @@ export function MembershipApplicationForm({
   const defaultValues = useMemo(() => {
     const initial = createDefaultValues(token)
 
-    if (variant?.id === 'organization') {
-      initial.organizationType =
-        variant.organizationTypeLabel ?? variant.lockedBadgeLabel
-    }
-
-    if (isOrganizationalForProfit) {
-      initial.billingSameAsHome = false
-      initial.organizationType = ''
-    }
-
     // Precedencia: base → autocarga (perfil/servidor) → borrador local no guardado.
     const withPrefill = { ...initial, ...pruneEmpty(prefill) }
 
@@ -1670,7 +1633,7 @@ export function MembershipApplicationForm({
     } catch {
       return withPrefill
     }
-  }, [draftKey, isOrganizationalForProfit, prefill, token, variant])
+  }, [draftKey, prefill, token])
 
   const form = useForm<MembershipApplicationValues>({
     resolver: zodResolver(buildApplicationSchema(token.categorySlug)),
@@ -1754,10 +1717,6 @@ export function MembershipApplicationForm({
   const professionalFocus = useWatch({
     control: form.control,
     name: 'professionalFocus',
-  })
-  const currentStage = useWatch({
-    control: form.control,
-    name: 'currentStage',
   })
   const commitmentStatusChanges = useWatch({
     control: form.control,
@@ -1894,7 +1853,7 @@ export function MembershipApplicationForm({
   if (!variant) {
     return (
       <div className="rounded-card-lg border border-red-200 bg-red-50 p-5 text-sm leading-7 text-red-700">
-        No encontramos una variante de formulario para la categoría seleccionada. Reinicia la verificación de elegibilidad para continuar.
+        No encontramos una variante de formulario para la categoría seleccionada. Vuelve a elegir tu categoría de membresía para continuar.
       </div>
     )
   }
@@ -2091,37 +2050,20 @@ export function MembershipApplicationForm({
           <>
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
-                label={
-                  isOrganizationalForProfit
-                    ? 'Nombre de la organización o empresa'
-                    : 'Nombre de la organización'
-                }
+                label="Nombre de la organización o empresa"
                 help="Nombre público o legal."
                 required
                 error={errors.organizationName?.message}
                 {...form.register('organizationName')}
               />
-              {isOrganizationalForProfit ? (
-                <TextField
-                  label="Tipo de organización"
-                  help="Ej.: SRL, fundación, ministerio."
-                  required
-                  error={errors.organizationType?.message}
-                  placeholder="Ej. corporación, SRL o empresa familiar"
-                  {...form.register('organizationType')}
-                />
-              ) : (
-                <TextField
-                  label="Tipo de organización"
-                  help="Definido por elegibilidad."
-                  required
-                  error={errors.organizationType?.message}
-                  value={form.getValues('organizationType')}
-                  readOnly
-                  inputClassName="bg-(--asi-primary)/6 text-(--asi-primary)"
-                  {...form.register('organizationType')}
-                />
-              )}
+              <TextField
+                label="Tipo de organización"
+                help="Ej.: SRL, fundación, ministerio."
+                required
+                error={errors.organizationType?.message}
+                placeholder="Ej. corporación, SRL o empresa familiar"
+                {...form.register('organizationType')}
+              />
             </div>
 
             <TextField
@@ -2274,181 +2216,19 @@ export function MembershipApplicationForm({
           </>
         ) : null}
 
-        {variant.id === 'executive-professional' ? (
+        {variant.id === 'professional' ? (
           <>
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
-                label="Organización empleadora"
-                help="Donde ejerces este rol."
+                label="Organización o empleador"
+                help="Dónde ejerces tu profesión."
                 required
                 error={errors.employerName?.message}
                 {...form.register('employerName')}
               />
               <TextField
-                label="Cargo actual"
-                help="Tu responsabilidad principal."
-                required
-                error={errors.roleTitle?.message}
-                {...form.register('roleTitle')}
-              />
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <TextField
-                label="Años en el rol"
-                help="Tiempo aproximado."
-                required
-                error={errors.yearsInRole?.message}
-                type="number"
-                inputMode="numeric"
-                {...form.register('yearsInRole')}
-              />
-              <TextField
-                label="Personas supervisadas"
-                help="Reportes o equipos a cargo."
-                required
-                error={errors.peopleSupervised?.message}
-                type="number"
-                inputMode="numeric"
-                {...form.register('peopleSupervised')}
-              />
-              <SelectField
-                label="Enfoque profesional"
-                help="Elige tu aporte principal."
-                required
-                error={errors.professionalFocus?.message}
-                value={professionalFocus}
-                onChange={(event) =>
-                  form.setValue('professionalFocus', event.target.value, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-              >
-                <option value="">Selecciona una opción</option>
-                {professionalFocusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectField>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
-                label="Teléfono laboral"
-                required
-                error={errors.workPhone?.message}
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                {...form.register('workPhone')}
-              />
-              <TextField
-                label="Sitio web"
-                error={errors.website?.message}
-                type="url"
-                {...form.register('website')}
-              />
-            </div>
-          </>
-        ) : null}
-
-        {variant.id === 'sole-proprietor' ? (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
-                label="Nombre del negocio o práctica"
-                help="Nombre comercial o práctica."
-                required
-                error={errors.businessName?.message}
-                {...form.register('businessName')}
-              />
-              <TextField
-                label="Especialidad o función"
-                help="Tu función o especialidad."
-                required
-                error={errors.roleTitle?.message}
-                {...form.register('roleTitle')}
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
-                label="Año en que inició operaciones el negocio"
-                help="Año de inicio sostenido."
-                required
-                error={errors.yearEstablished?.message}
-                type="number"
-                inputMode="numeric"
-                placeholder="2020"
-                {...form.register('yearEstablished')}
-              />
-              <TextField
-                label="Teléfono de trabajo"
-                error={errors.workPhone?.message}
-                placeholder="Opcional"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                {...form.register('workPhone')}
-              />
-            </div>
-            <TextField
-              label="Sitio web"
-              error={errors.website?.message}
-              type="url"
-              {...form.register('website')}
-            />
-            <TextAreaField
-              label="Servicios ofrecidos"
-              help="Servicios o productos principales."
-              error={errors.servicesOffered?.message}
-              placeholder="Describe los servicios o productos que ofreces desde tu práctica."
-              {...form.register('servicesOffered')}
-            />
-          </>
-        ) : null}
-
-        {variant.id === 'retired' ? (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
-                label="Actividad o empresa de procedencia"
-                help="Campo o actividad previa."
-                required
-                error={errors.retiredFrom?.message}
-                {...form.register('retiredFrom')}
-              />
-              <TextField
-                label="Año de retiro"
-                required
-                error={errors.retirementYear?.message}
-                inputMode="numeric"
-                {...form.register('retirementYear')}
-              />
-            </div>
-            <TextAreaField
-              label="Resumen de trayectoria"
-              help="Experiencia clave."
-              required
-              error={errors.retirementSummary?.message}
-              placeholder="Comparte el tipo de liderazgo o experiencia profesional que sostuvo tu elegibilidad previa."
-              {...form.register('retirementSummary')}
-            />
-          </>
-        ) : null}
-
-        {variant.id === 'associate' ? (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
-                label="Organización donde sirves"
-                help="Donde sirves hoy."
-                required
-                error={errors.employerName?.message}
-                {...form.register('employerName')}
-              />
-              <TextField
-                label="Posición actual"
-                help="Responsabilidad actual."
+                label="Cargo, profesión u ocupación"
+                help="Tu responsabilidad o especialidad."
                 required
                 error={errors.roleTitle?.message}
                 {...form.register('roleTitle')}
@@ -2490,72 +2270,6 @@ export function MembershipApplicationForm({
               error={errors.website?.message}
               type="url"
               {...form.register('website')}
-            />
-            <TextAreaField
-              label="Nivel de responsabilidad"
-              help="Alcance real de tu función."
-              required
-              error={errors.retirementSummary?.message}
-              placeholder="Describe el tipo de responsabilidad que manejas, sin necesidad de autoridad ejecutiva formal."
-              {...form.register('retirementSummary')}
-            />
-          </>
-        ) : null}
-
-        {variant.id === 'young-professional' ? (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <SelectField
-                label="¿En qué etapa te encuentras hoy?"
-                help="Estudio, pasantía o emprendimiento."
-                required
-                error={errors.currentStage?.message}
-                value={currentStage}
-                onChange={(event) =>
-                  form.setValue('currentStage', event.target.value, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-              >
-                <option value="">Selecciona una opción</option>
-                {youngProfessionalStageOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectField>
-              <TextField
-                label="Nombre de tu institución o emprendimiento"
-                help="Universidad, empresa u organización."
-                placeholder="Ej.: Universidad Nacional o Mi Emprendimiento SRL"
-                required
-                error={errors.institutionName?.message}
-                {...form.register('institutionName')}
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
-                label="Área de estudio o especialidad"
-                help="Carrera o especialidad."
-                required
-                error={errors.fieldOfStudy?.message}
-                {...form.register('fieldOfStudy')}
-              />
-              <TextField
-                label="Año esperado de transición"
-                help="Año estimado de cambio."
-                error={errors.expectedGraduationYear?.message}
-                inputMode="numeric"
-                {...form.register('expectedGraduationYear')}
-              />
-            </div>
-            <TextAreaField
-              label="Metas de crecimiento dentro de ASI"
-              help="Mentoría, servicio o liderazgo."
-              error={errors.youngProfessionalGoals?.message}
-              placeholder="Cuéntanos cómo deseas crecer en liderazgo, servicio y vocación dentro de la comunidad ASI."
-              {...form.register('youngProfessionalGoals')}
             />
           </>
         ) : null}
@@ -2700,236 +2414,114 @@ export function MembershipApplicationForm({
       {currentStep.id === 'dues' ? (
         <ApplicationSection
           title="Cuotas de membresía"
-          description={
-            isOrganizationalForProfit
-              ? 'Complete la dirección de facturación requerida para esta solicitud.'
-              : 'La cuota anual ya está determinada por la categoría aprobada. Aquí solo registramos cómo debe quedar el expediente de facturación.'
-          }
+          description="La cuota anual ya está determinada por la categoría seleccionada. Aquí solo registramos cómo debe quedar el expediente de facturación."
         >
-        {isOrganizationalForProfit ? (
-          <>
-            <TextField
-              label="Dirección de facturación"
-              help="Dirección para el pago."
-              required
-              error={errors.billingAddress1?.message}
-              {...form.register('billingAddress1')}
-            />
-            <TextField
-              label="Dirección de facturación (línea 2)"
-              error={errors.billingAddress2?.message}
-              {...form.register('billingAddress2')}
-            />
-            <div className="grid gap-4 md:grid-cols-3">
-              {isBillingCountryDominican ? (
-                <DominicanProvinceSelectField
-                  label="Provincia o estado"
-                  required
-                  error={errors.billingStateProvince?.message}
-                  value={billingStateProvince}
-                  onChange={(event) => {
-                    form.setValue('billingStateProvince', event.target.value, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                    form.setValue('billingCity', '', {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }}
-                />
-              ) : (
-                <TextField
-                  label="Provincia o estado"
-                  required
-                  error={errors.billingStateProvince?.message}
-                  {...form.register('billingStateProvince')}
-                />
-              )}
-              {isBillingCountryDominican ? (
-                <DominicanCitySelectField
-                  label="Ciudad"
-                  required
-                  error={errors.billingCity?.message}
-                  provinceName={billingStateProvince}
-                  value={billingCity}
-                  onChange={(event) =>
-                    form.setValue('billingCity', event.target.value, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }
-                />
-              ) : (
-                <TextField
-                  label="Ciudad"
-                  required
-                  error={errors.billingCity?.message}
-                  {...form.register('billingCity')}
-                />
-              )}
+          <div className="rounded-card border border-(--asi-outline) bg-white p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
+              Monto de membresía
+            </p>
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-(--asi-primary)">
+              {token.dues}
+            </p>
+          </div>
+
+          <CheckboxCard
+            checked={billingSameAsHome}
+            label="Usar la misma dirección principal como dirección de facturación"
+            onChange={(checked) =>
+              form.setValue('billingSameAsHome', checked, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+          />
+
+          {!billingSameAsHome ? (
+            <>
               <TextField
-                label="Código postal"
+                label="Dirección de facturación"
+                help="Dirección para el pago."
                 required
-                error={errors.billingPostalCode?.message}
-                {...form.register('billingPostalCode')}
+                error={errors.billingAddress1?.message}
+                {...form.register('billingAddress1')}
               />
-            </div>
-            <CountryNameSelectField
-              label="País"
-              required
-              error={errors.billingCountry?.message}
-              value={billingCountry}
-              onChange={(event) =>
-                form.setValue('billingCountry', event.target.value, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                })
-              }
-            />
-
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-              <div className="rounded-card border border-(--asi-outline) bg-white p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
-                  Cuota de membresía
-                </p>
-                <p className="mt-2 text-3xl font-semibold tracking-tight text-(--asi-primary)">
-                  {token.dues}
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <TextField
-                    label="Código de descuento"
-                    help="Código compartido por ASI."
-                    error={errors.discountCode?.message}
-                    {...form.register('discountCode')}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="asi-button asi-button-secondary mt-[2.15rem] justify-center whitespace-nowrap"
-                  onClick={() =>
-                    form.setValue('discountCode', form.getValues('discountCode').trim(), {
-                      shouldDirty: true,
-                    })
-                  }
-                >
-                  Aplicar código
-                </button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="rounded-card border border-(--asi-outline) bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
-                Monto de membresía
-              </p>
-              <p className="mt-2 text-3xl font-semibold tracking-tight text-(--asi-primary)">
-                {token.dues}
-              </p>
-            </div>
-
-            <CheckboxCard
-              checked={billingSameAsHome}
-              label="Usar la misma dirección principal como dirección de facturación"
-              onChange={(checked) =>
-                form.setValue('billingSameAsHome', checked, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                })
-              }
-            />
-
-            {!billingSameAsHome ? (
-              <>
-                <TextField
-                  label="Dirección de facturación"
-                  help="Dirección para el pago."
-                  required
-                  error={errors.billingAddress1?.message}
-                  {...form.register('billingAddress1')}
-                />
-                <TextField
-                  label="Dirección complementaria"
-                  error={errors.billingAddress2?.message}
-                  {...form.register('billingAddress2')}
-                />
-                <div className="grid gap-4 md:grid-cols-3">
-                  {isBillingCountryDominican ? (
-                    <DominicanProvinceSelectField
-                      label="Provincia o estado"
-                      required
-                      error={errors.billingStateProvince?.message}
-                      value={billingStateProvince}
-                      onChange={(event) => {
-                        form.setValue('billingStateProvince', event.target.value, {
-                          shouldDirty: true,
-                          shouldValidate: true,
-                        })
-                        form.setValue('billingCity', '', {
-                          shouldDirty: true,
-                          shouldValidate: true,
-                        })
-                      }}
-                    />
-                  ) : (
-                    <TextField
-                      label="Provincia o estado"
-                      required
-                      error={errors.billingStateProvince?.message}
-                      {...form.register('billingStateProvince')}
-                    />
-                  )}
-                  {isBillingCountryDominican ? (
-                    <DominicanCitySelectField
-                      label="Ciudad"
-                      required
-                      error={errors.billingCity?.message}
-                      provinceName={billingStateProvince}
-                      value={billingCity}
-                      onChange={(event) =>
-                        form.setValue('billingCity', event.target.value, {
-                          shouldDirty: true,
-                          shouldValidate: true,
-                        })
-                      }
-                    />
-                  ) : (
-                    <TextField
-                      label="Ciudad"
-                      required
-                      error={errors.billingCity?.message}
-                      {...form.register('billingCity')}
-                    />
-                  )}
-                  <TextField
-                    label="Código postal"
+              <TextField
+                label="Dirección complementaria"
+                error={errors.billingAddress2?.message}
+                {...form.register('billingAddress2')}
+              />
+              <div className="grid gap-4 md:grid-cols-3">
+                {isBillingCountryDominican ? (
+                  <DominicanProvinceSelectField
+                    label="Provincia o estado"
                     required
-                    error={errors.billingPostalCode?.message}
-                    {...form.register('billingPostalCode')}
+                    error={errors.billingStateProvince?.message}
+                    value={billingStateProvince}
+                    onChange={(event) => {
+                      form.setValue('billingStateProvince', event.target.value, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                      form.setValue('billingCity', '', {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }}
                   />
-                </div>
-                <CountryNameSelectField
-                  label="País"
+                ) : (
+                  <TextField
+                    label="Provincia o estado"
+                    required
+                    error={errors.billingStateProvince?.message}
+                    {...form.register('billingStateProvince')}
+                  />
+                )}
+                {isBillingCountryDominican ? (
+                  <DominicanCitySelectField
+                    label="Ciudad"
+                    required
+                    error={errors.billingCity?.message}
+                    provinceName={billingStateProvince}
+                    value={billingCity}
+                    onChange={(event) =>
+                      form.setValue('billingCity', event.target.value, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                  />
+                ) : (
+                  <TextField
+                    label="Ciudad"
+                    required
+                    error={errors.billingCity?.message}
+                    {...form.register('billingCity')}
+                  />
+                )}
+                <TextField
+                  label="Código postal"
                   required
-                  error={errors.billingCountry?.message}
-                  value={billingCountry}
-                  onChange={(event) =>
-                    form.setValue('billingCountry', event.target.value, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }
+                  error={errors.billingPostalCode?.message}
+                  {...form.register('billingPostalCode')}
                 />
-              </>
-            ) : null}
-
-          </>
-        )}
+              </div>
+              <CountryNameSelectField
+                label="País"
+                required
+                error={errors.billingCountry?.message}
+                value={billingCountry}
+                onChange={(event) =>
+                  form.setValue('billingCountry', event.target.value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              />
+            </>
+          ) : null}
         </ApplicationSection>
       ) : null}
+
 
       {currentStep.id === 'commitment' ? (
         <ApplicationSection title="Compromiso">

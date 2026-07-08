@@ -77,9 +77,9 @@ export async function seedLiveApplication(admin: ServiceClient, userId: string):
     .insert({
       requester_user_id: userId,
       status: 'under_review',
-      category_slug: 'retired',
-      category_name: 'Profesional o Empresario Jubilado',
-      dues: 'DOP 9,000',
+      category_slug: 'profesional',
+      category_name: 'Profesional',
+      dues: 'RD$2,500.00',
       applicant_first_name: 'Ana',
       applicant_last_name: 'Solicitante',
       applicant_email: membershipConfig.applicantEmail,

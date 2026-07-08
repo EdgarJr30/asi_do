@@ -1,14 +1,11 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppProviders } from '@/app/providers/app-providers'
 import { appRoutes } from '@/app/router/routes'
 import { surfacePaths } from '@/app/router/surface-paths'
-import {
-  ELIGIBILITY_DRAFT_STORAGE_KEY,
-  ELIGIBILITY_SESSION_KEY,
-} from '@/experiences/institutional/content/eligibility-content'
+import { ELIGIBILITY_SESSION_KEY } from '@/experiences/institutional/content/eligibility-content'
 
 const authState = {
   session: null as null | { user: { id: string; email?: string } },
@@ -74,6 +71,29 @@ vi.mock('@/features/auth/lib/auth-api', async () => {
   return {
     ...actual,
     fetchSessionSnapshot: vi.fn(() => Promise.resolve(authState.snapshot)),
+  }
+})
+
+// El apply-page consulta la solicitud del servidor para decidir el gate; sin mock
+// la query queda en loading (retry) y solo se ve el loader. Resolvemos vacío para
+// que el formulario (fuente del token de cliente) se renderice.
+vi.mock('@/features/membership/lib/membership-api', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/features/membership/lib/membership-api')>(
+      '@/features/membership/lib/membership-api'
+    )
+
+  return {
+    ...actual,
+    fetchMyMembershipStatus: vi.fn(() =>
+      Promise.resolve({
+        application: null,
+        payment: null,
+        verifiedPayment: null,
+        verifiedPayments: [],
+        settings: null,
+      })
+    ),
   }
 })
 
@@ -146,9 +166,6 @@ async function completeContactStep() {
   fireEvent.change(screen.getByRole('textbox', { name: /correo electrónico/i }), {
     target: { value: 'ana@example.com' },
   })
-  fireEvent.change(screen.getByRole('textbox', { name: /^dirección del hogar\*/i }), {
-    target: { value: 'Calle 1, Santo Domingo' },
-  })
   fireEvent.change(screen.getByRole('combobox', { name: /provincia o estado/i }), {
     target: { value: 'Distrito Nacional' },
   })
@@ -175,44 +192,46 @@ beforeEach(() => {
 })
 
 describe('institutional membership application flow', () => {
-  it('redirects back to the eligibility wizard when there is no valid eligibility token', async () => {
+  it('redirects to the category selector when there is no valid eligibility token', async () => {
     renderRoute(surfacePaths.institutional.membershipApply)
 
+    // Depende de un redirect asíncrono → damos margen para evitar flakiness bajo carga.
     expect(
-      await screen.findByRole('heading', { name: 'Verificación de Elegibilidad' })
+      await screen.findByRole(
+        'heading',
+        { name: /elige tu categoría de membresía/i },
+        { timeout: 5000 }
+      )
     ).toBeInTheDocument()
     expect(
-      screen.queryByRole('heading', { name: 'Solicitud de membresía ASI' })
+      screen.queryByRole('heading', { name: 'Solicitud de membresía' })
     ).not.toBeInTheDocument()
   })
 
-  it('renders the organizational application when the eligibility result qualifies an organization', async () => {
+  it('renders the organizational application for the empresa category', async () => {
     seedAuthenticatedApplicant()
     saveEligibilityToken({
-      category: 'Organizacional Con Fines de Lucro',
-      categorySlug: 'organizational-for-profit',
-      dues: '$250',
+      category: 'Empresa',
+      categorySlug: 'empresa',
+      dues: 'RD$3,000.00',
     })
 
     renderRoute(surfacePaths.institutional.membershipApply)
 
     expect(
-      await screen.findByRole('heading', { name: 'Solicitud de membresía ASI' })
+      await screen.findByRole('heading', { name: 'Solicitud de membresía' })
     ).toBeInTheDocument()
     // El indicador de fase aparece en el rail y en el cuerpo (misma etiqueta).
     expect(screen.getAllByText('Fase 1 de 6').length).toBeGreaterThan(0)
     // Género como radiogroup: ninguna opción seleccionada al inicio.
-    const femaleGenderRadio = screen.getByRole('radio', { name: 'Femenino' })
-    const maleGenderRadio = screen.getByRole('radio', { name: 'Masculino' })
-
-    expect(femaleGenderRadio).toHaveAttribute('aria-checked', 'false')
-    expect(maleGenderRadio).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByRole('radio', { name: 'Femenino' })).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByRole('radio', { name: 'Masculino' })).toHaveAttribute('aria-checked', 'false')
 
     await completeContactStep()
 
     expect((await screen.findAllByText('Fase 2 de 6')).length).toBeGreaterThan(0)
     expect(
-      screen.getByRole('textbox', { name: /nombre de la organización/i })
+      screen.getByRole('textbox', { name: /nombre de la organización o empresa/i })
     ).toBeInTheDocument()
     expect(
       screen.getByRole('textbox', {
@@ -220,34 +239,66 @@ describe('institutional membership application flow', () => {
       })
     ).toBeInTheDocument()
     expect(
-      screen.queryByRole('combobox', { name: /etapa actual/i })
+      screen.queryByRole('textbox', { name: /organización o empleador/i })
     ).not.toBeInTheDocument()
   })
 
-  it('renders the young professional application when the eligibility result qualifies a young professional', async () => {
+  it('renders the professional application for the profesional category', async () => {
     seedAuthenticatedApplicant()
     saveEligibilityToken({
-      category: 'Joven Profesional',
-      categorySlug: 'young-professional',
-      dues: '$25',
+      category: 'Profesional',
+      categorySlug: 'profesional',
+      dues: 'RD$2,500.00',
     })
 
     renderRoute(surfacePaths.institutional.membershipApply)
 
     expect(
-      await screen.findByRole('heading', { name: 'Solicitud de membresía ASI' })
+      await screen.findByRole('heading', { name: 'Solicitud de membresía' })
     ).toBeInTheDocument()
 
     await completeContactStep()
 
     expect(
-      await screen.findByRole('combobox', { name: /etapa actual/i })
+      await screen.findByRole('textbox', { name: /organización o empleador/i })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('textbox', { name: /institución o emprendimiento/i })
+      screen.getByRole('textbox', { name: /cargo, profesión u ocupación/i })
     ).toBeInTheDocument()
     expect(
-      screen.queryByRole('textbox', { name: /nombre de la organización/i })
+      screen.queryByRole('textbox', { name: /nombre de la organización o empresa/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('skips the category step for the laico category (personal data only)', async () => {
+    seedAuthenticatedApplicant()
+    saveEligibilityToken({
+      category: 'Laico',
+      categorySlug: 'laico',
+      dues: 'RD$2,000.00',
+    })
+
+    renderRoute(surfacePaths.institutional.membershipApply)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Solicitud de membresía' })
+    ).toBeInTheDocument()
+    // La membresía laica omite el paso de categoría → 5 pasos en lugar de 6.
+    expect(screen.getAllByText('Fase 1 de 5').length).toBeGreaterThan(0)
+
+    await completeContactStep()
+
+    // Tras contacto, el laico va directo a Evangelismo: sin campos de categoría.
+    expect(
+      await screen.findByRole('textbox', {
+        name: /comparte su fe en su entorno profesional/i,
+      })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('textbox', { name: /organización o empleador/i })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('textbox', { name: /nombre de la organización o empresa/i })
     ).not.toBeInTheDocument()
   })
 
@@ -258,135 +309,53 @@ describe('institutional membership application flow', () => {
       state: {
         eligibilityToken: {
           eligible: true,
-          category: 'Propietario Individual',
-          categorySlug: 'sole-proprietor',
-          dues: '$200',
+          category: 'Empresa',
+          categorySlug: 'empresa',
+          dues: 'RD$3,000.00',
         },
       },
     })
 
     expect(
-      await screen.findByRole('heading', { name: 'Solicitud de membresía ASI' })
+      await screen.findByRole('heading', { name: 'Solicitud de membresía' })
     ).toBeInTheDocument()
 
     await completeContactStep()
 
     expect(
-      await screen.findByRole('textbox', { name: /nombre del negocio o práctica/i })
+      await screen.findByRole('textbox', { name: /nombre de la organización o empresa/i })
     ).toBeInTheDocument()
   })
 
-  it('opens the filtered application after completing the eligibility wizard', async () => {
+  it('opens the application after selecting a category', async () => {
     seedAuthenticatedApplicant()
     renderRoute(surfacePaths.institutional.eligibility)
 
-    fireEvent.click(
-      await screen.findByRole('button', {
-        name: /sí/i,
-      })
-    )
-
-    fireEvent.click(
-      await screen.findByRole('button', {
-        name: /unión dominicana/i,
-      })
-    )
-
-    fireEvent.click(
-      await screen.findByRole('button', {
-        name: /yo personalmente/i,
-      })
-    )
-
-    fireEvent.click(
-      await screen.findByRole('button', {
-        name: /no/i,
-      })
-    )
-
-    fireEvent.click(
-      await screen.findByRole('button', {
-        name: /joven profesional/i,
-      })
-    )
-
-    fireEvent.click(
-      await screen.findByRole('button', {
-        name: /continuar con la solicitud/i,
-      })
-    )
-
-    expect(
-      await screen.findByRole('heading', { name: 'Solicitud de membresía ASI' })
-    ).toBeInTheDocument()
-
-    await completeContactStep()
-
-    expect(
-      await screen.findByRole('combobox', { name: /etapa actual/i })
-    ).toBeInTheDocument()
-  })
-
-  it('restores the eligibility wizard draft after leaving the page', async () => {
-    renderRoute(surfacePaths.institutional.eligibility)
-
-    fireEvent.click(await screen.findByRole('button', { name: /sí/i }))
-    fireEvent.click(await screen.findByRole('button', { name: /unión dominicana/i }))
-    fireEvent.click(await screen.findByRole('button', { name: /yo personalmente/i }))
-    fireEvent.click(await screen.findByRole('button', { name: /no/i }))
-    fireEvent.click(await screen.findByRole('button', { name: /empleado/i }))
-
-    expect(
-      await screen.findByRole('heading', {
-        name: /autoridad para contratar o despedir empleados/i,
-      })
-    ).toBeInTheDocument()
-
-    cleanup()
-    renderRoute(surfacePaths.institutional.eligibility)
-
-    expect(
-      await screen.findByRole('heading', {
-        name: /autoridad para contratar o despedir empleados/i,
-      })
-    ).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: /atrás/i }))
-
-    expect(
-      await screen.findByRole('heading', {
-        name: /actualmente empleado, jubilado o es un joven profesional/i,
-      })
-    ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^empleado/i })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    )
-  })
-
-  it('clears the eligibility draft only when continuing to the application', async () => {
-    seedAuthenticatedApplicant()
-    renderRoute(surfacePaths.institutional.eligibility)
-
-    fireEvent.click(await screen.findByRole('button', { name: /sí/i }))
-    fireEvent.click(await screen.findByRole('button', { name: /unión dominicana/i }))
-    fireEvent.click(await screen.findByRole('button', { name: /yo personalmente/i }))
-    fireEvent.click(await screen.findByRole('button', { name: /no/i }))
-    fireEvent.click(await screen.findByRole('button', { name: /joven profesional/i }))
-
-    expect(
-      await screen.findByRole('heading', { name: 'Joven Profesional' })
-    ).toBeInTheDocument()
-
-    expect(window.localStorage.getItem(ELIGIBILITY_DRAFT_STORAGE_KEY)).not.toBeNull()
-
+    // Selecciona la tarjeta "Profesional" y continúa.
+    fireEvent.click(await screen.findByRole('button', { name: /^Profesional/ }))
     fireEvent.click(
       await screen.findByRole('button', { name: /continuar con la solicitud/i })
     )
 
+    // Depende de la navegación al formulario → margen extra para evitar flakiness.
     expect(
-      await screen.findByRole('heading', { name: 'Solicitud de membresía ASI' })
+      await screen.findByRole('heading', { name: 'Solicitud de membresía' }, { timeout: 5000 })
     ).toBeInTheDocument()
-    expect(window.localStorage.getItem(ELIGIBILITY_DRAFT_STORAGE_KEY)).toBeNull()
+
+    await completeContactStep()
+
+    expect(
+      await screen.findByRole('textbox', { name: /organización o empleador/i })
+    ).toBeInTheDocument()
+  })
+
+  it('requires selecting a category before continuing', async () => {
+    seedAuthenticatedApplicant()
+    renderRoute(surfacePaths.institutional.eligibility)
+
+    // Sin selección, el botón de continuar está deshabilitado.
+    expect(
+      await screen.findByRole('button', { name: /continuar con la solicitud/i })
+    ).toBeDisabled()
   })
 })

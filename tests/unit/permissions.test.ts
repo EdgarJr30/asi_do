@@ -46,7 +46,7 @@ describe('permission guards', () => {
       'Plataforma',
       'Errores',
       'Finanzas',
-      'Arnés de estrés'
+      'Stress Harness'
     ])
   })
 

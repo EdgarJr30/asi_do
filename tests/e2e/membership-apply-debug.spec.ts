@@ -3,24 +3,8 @@ import { expect, test, type Page } from '@playwright/test'
 async function completeForProfitFlow(page: Page) {
   await page.goto('/eligibility')
 
-  await page.getByRole('button', { name: 'Sí' }).click()
-  await page.getByRole('button', { name: 'Unión Dominicana (UDA)' }).click()
-  await page
-    .getByRole('button', {
-      name: /Mi organización/i
-    })
-    .click()
-  await page
-    .getByRole('button', {
-      name: /Con fines de lucro/i
-    })
-    .click()
-  await page.getByRole('button', { name: 'Dos o más' }).click()
-  await page
-    .getByRole('button', {
-      name: /La organización es de propiedad y operación independiente/i
-    })
-    .click()
+  // Selector simple: elige la categoría Empresa y continúa.
+  await page.getByRole('button', { name: /^Empresa/ }).click()
   await page
     .getByRole('button', { name: /Continuar con la solicitud/i })
     .click()

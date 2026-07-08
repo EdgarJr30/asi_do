@@ -79,7 +79,7 @@ export const membershipFaqs = [
   {
     question: '¿Cómo aplico para la membresía?',
     answer:
-      '¡Unirse a ASI es sencillo! Completa el cuestionario de elegibilidad y el formulario de solicitud, y envíalo junto con los materiales requeridos. Una vez aprobado, tendrás acceso a todos los beneficios de ser parte de esta vibrante comunidad.',
+      '¡Unirse a ASI es sencillo! Elige tu categoría de membresía (Laico, Profesional o Empresa), completa el formulario de solicitud y envíalo junto con los materiales requeridos. Una vez aprobado, tendrás acceso a todos los beneficios de ser parte de esta vibrante comunidad.',
   },
   {
     question: '¿Cómo puedo renovar mi membresía existente?',

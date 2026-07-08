@@ -317,7 +317,7 @@ describe('surface access states', () => {
     fireEvent.click(screen.getByRole('button', { name: '2' }))
 
     expect(screen.getAllByText(/Comprobante ·/)).toHaveLength(1)
-    expect(screen.getByText('DOP 2,500')).toBeInTheDocument()
+    expect(screen.getByText('RD$2,500.00')).toBeInTheDocument()
     expect(getCollapsedReceiptButtons()).toHaveLength(1)
   })
 

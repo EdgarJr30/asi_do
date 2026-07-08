@@ -1,10 +1,7 @@
 export type MembershipApplicationVariantId =
+  | 'individual'
+  | 'professional'
   | 'organization'
-  | 'executive-professional'
-  | 'sole-proprietor'
-  | 'retired'
-  | 'associate'
-  | 'young-professional'
 
 export interface MembershipApplicationVariant {
   id: MembershipApplicationVariantId
@@ -67,95 +64,37 @@ export const professionalFocusOptions = [
 
 export const membershipApplicationVariants: MembershipApplicationVariant[] = [
   {
+    id: 'individual',
+    slug: 'laico',
+    title: 'Solicitud de membresía laica',
+    description:
+      'Usa este formulario para registrar tus datos personales, tu iglesia local y tu vínculo con la misión de ASI como miembro laico individual.',
+    sectionTitle: 'Datos de la membresía',
+    sectionDescription:
+      'La membresía laica no requiere información profesional ni organizacional adicional.',
+    lockedBadgeLabel: 'Laico',
+  },
+  {
+    id: 'professional',
+    slug: 'profesional',
+    title: 'Solicitud de membresía profesional',
+    description:
+      'Diseñada para profesionales, ejecutivos y propietarios que integran su vocación y testimonio desde el ejercicio de su profesión.',
+    sectionTitle: 'Trayectoria profesional',
+    sectionDescription:
+      'Describe tu ocupación actual y el contexto en el que ejerces tu profesión.',
+    lockedBadgeLabel: 'Profesional',
+  },
+  {
     id: 'organization',
-    slug: 'organizational-for-profit',
-    title: 'Solicitud organizacional con fines de lucro',
+    slug: 'empresa',
+    title: 'Solicitud de membresía empresarial',
     description:
       'Usa este formulario para documentar la persona de contacto, la información de la organización y la manera en que la entidad vive la misión de ASI.',
     sectionTitle: 'Información de la organización',
     sectionDescription:
-      'La solicitud se mantiene enfocada en la organización aprobada durante la verificación de elegibilidad.',
-    lockedBadgeLabel: 'Con fines de lucro',
-  },
-  {
-    id: 'organization',
-    slug: 'organizational-non-profit',
-    title: 'Solicitud organizacional sin fines de lucro',
-    description:
-      'Usa este formulario para presentar organizaciones o ministerios que cumplen con los criterios institucionales de ASI.',
-    sectionTitle: 'Información del ministerio u organización',
-    sectionDescription:
-      'Comparte el contexto operativo, el alcance del ministerio y la estructura básica de la organización.',
-    lockedBadgeLabel: 'Sin fines de lucro',
-  },
-  {
-    id: 'organization',
-    slug: 'associate-international',
-    title: 'Solicitud asociada internacional',
-    description:
-      'Esta variante documenta organizaciones sin fines de lucro que operan fuera de la División Norteamericana en territorios sin presencia activa de ASI.',
-    sectionTitle: 'Información de la organización internacional',
-    sectionDescription:
-      'Incluye los datos del ministerio, su ubicación principal y la forma en que sostiene la misión fuera de Norteamérica.',
-    lockedBadgeLabel: 'Internacional',
-    organizationTypeLabel: 'Organización internacional sin fines de lucro',
-    note:
-      'La solicitud puede requerir coordinación adicional con la división o capítulo regional correspondiente.',
-  },
-  {
-    id: 'executive-professional',
-    slug: 'executive-professional',
-    title: 'Solicitud profesional ejecutiva',
-    description:
-      'Diseñada para profesionales con autoridad formal de supervisión y responsabilidad de liderazgo dentro de una organización.',
-    sectionTitle: 'Trayectoria profesional',
-    sectionDescription:
-      'Describe tu rol actual, el alcance de tu liderazgo y el contexto institucional en el que sirves.',
-    lockedBadgeLabel: 'Liderazgo ejecutivo',
-  },
-  {
-    id: 'sole-proprietor',
-    slug: 'sole-proprietor',
-    title: 'Solicitud de propietario individual',
-    description:
-      'Presenta tu negocio, práctica profesional o servicio independiente con el mismo estándar institucional del resto de categorías.',
-    sectionTitle: 'Información del negocio personal',
-    sectionDescription: '',
-    lockedBadgeLabel: 'Propietario individual',
-  },
-  {
-    id: 'retired',
-    slug: 'retired',
-    title: 'Solicitud para profesional o empresario jubilado',
-    description:
-      'Esta variante recoge tu trayectoria previa y la forma en que hoy continúas vinculado a la misión, el servicio y la comunidad ASI.',
-    sectionTitle: 'Trayectoria y retiro',
-    sectionDescription:
-      'Resume la experiencia profesional que sustentó tu elegibilidad y tu situación actual de retiro.',
-    lockedBadgeLabel: 'Jubilado',
-  },
-  {
-    id: 'associate',
-    slug: 'associate',
-    title: 'Solicitud asociada',
-    description:
-      'Pensada para profesionales con alto nivel de responsabilidad que no ejercen autoridad ejecutiva formal ni supervisan equipos.',
-    sectionTitle: 'Responsabilidad profesional',
-    sectionDescription:
-      'Explica el contexto de tu posición, el tipo de responsabilidad que manejas y el aporte que haces desde tu campo.',
-    lockedBadgeLabel: 'Asociado',
-    note: 'Esta categoría requiere evaluación adicional por parte del capítulo local.',
-  },
-  {
-    id: 'young-professional',
-    slug: 'young-professional',
-    title: 'Solicitud de joven profesional',
-    description:
-      'Orientada a estudiantes, recién graduados, pasantes, residentes y jóvenes emprendedores entre 18 y 35 años.',
-    sectionTitle: 'Etapa formativa y profesional',
-    sectionDescription: '',
-    lockedBadgeLabel: '18 a 35 años',
-    note: 'Esta categoría requiere evaluación adicional y seguimiento de transición futura.',
+      'Comparte los datos de la empresa u organización que solicita la membresía.',
+    lockedBadgeLabel: 'Empresa',
   },
 ] as const
 

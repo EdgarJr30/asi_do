@@ -309,7 +309,7 @@ export function MembershipStatusPage() {
   const steps = useMemo(() => computeSteps(bundle, session.hasActiveAsiAccess), [bundle, session.hasActiveAsiAccess])
   const currentStep = getCurrentStep(steps)
   const due = getCategoryDue(bundle.settings, bundle.application?.category_slug)
-  const dueAmountLabel = due?.amount != null ? `${bundle.settings?.currency ?? 'DOP'} ${due.amount.toLocaleString()}` : null
+  const dueAmountLabel = due?.amount != null ? formatMoney(due.amount, bundle.settings?.currency ?? 'DOP') : null
   const paymentStep = steps.find((step) => step.key === 'payment')
   const azulEnabled = Boolean(bundle.settings?.azul_enabled)
   const showPayStep = paymentStep?.state === 'current' && Boolean(bundle.application)
@@ -855,7 +855,12 @@ function MembershipStep({
 const YEAR_OPTIONS = [1, 2, 3, 4, 5] as const
 
 function formatMoney(amount: number, currency: string) {
-  return `${currency} ${amount.toLocaleString('es-DO')}`
+  const formatted = amount.toLocaleString('es-DO', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  // La moneda local (DOP) se muestra como RD$ en toda la plataforma.
+  return currency === 'DOP' ? `RD$${formatted}` : `${currency} ${formatted}`
 }
 
 function AzulPayCard({
