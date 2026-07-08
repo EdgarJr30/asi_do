@@ -101,7 +101,7 @@ Do not regress upload support back to legacy-only image formats. User-facing med
 ### R-024 — Uploads must stay optimized, capped, and transparent
 All multimedia and document uploads must enforce a maximum size of 5 MB, optimize assets internally when the format supports safe compression, and show the user the exact rejection reason including detected file size when relevant.
 
-Do not upload or replace raster profile photos, company logos, or operator-request logos immediately after file selection. PNG, JPG, and WEBP identity images must first open a crop/positioning dialog so the user can choose the visible framing before the saved file is prepared. SVG logos stay as direct vector uploads.
+Do not upload or replace raster profile photos, company logos, or operator-request logos immediately after file selection. PNG, JPG, and WEBP identity images must first open a crop/positioning dialog so the user can choose the visible framing before the saved file is prepared. SVG logos stay as direct vector uploads. The framing interaction should use direct manipulation, such as drag to position and pinch or wheel to zoom, rather than separate horizontal/vertical positioning controls.
 
 ### R-025 — Meaningful errors must be user-visible and logged
 Do not hide operational failures behind generic messages. Meaningful errors must be captured with actionable user feedback and logged durably to Supabase so platform admins can review and fix them later.

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEvent } from 'react'
 
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { Check, RotateCcw, X } from 'lucide-react'
@@ -12,6 +12,25 @@ import {
 import { cn } from '@/lib/utils/cn'
 
 type CropShape = 'circle' | 'rounded'
+type CropPoint = { x: number; y: number }
+
+const MIN_ZOOM = 1
+const MAX_ZOOM = 3
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value))
+}
+
+function distanceBetween(first: CropPoint, second: CropPoint) {
+  return Math.hypot(second.x - first.x, second.y - first.y)
+}
+
+function centerBetween(first: CropPoint, second: CropPoint) {
+  return {
+    x: (first.x + second.x) / 2,
+    y: (first.y + second.y) / 2
+  }
+}
 
 export interface ImageCropDialogProps {
   open: boolean
@@ -38,18 +57,34 @@ export function ImageCropDialog({
   onCancel,
   onConfirm
 }: ImageCropDialogProps) {
-  const zoomId = useId()
-  const horizontalId = useId()
-  const verticalId = useId()
   const frameRef = useRef<HTMLDivElement | null>(null)
+  const pointersRef = useRef(new Map<number, CropPoint>())
+  const gestureRef = useRef<{
+    distance: number | null
+    origin: CropPoint
+    panX: number
+    panY: number
+    zoom: number
+  } | null>(null)
+  const panRef = useRef({ x: 0, y: 0 })
+  const zoomRef = useRef(1)
   const [objectUrl, setObjectUrl] = useState<string | null>(null)
   const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null)
   const [frameSize, setFrameSize] = useState<{ width: number; height: number } | null>(null)
   const [zoom, setZoom] = useState(1)
   const [panX, setPanX] = useState(0)
   const [panY, setPanY] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    panRef.current = { x: panX, y: panY }
+  }, [panX, panY])
+
+  useEffect(() => {
+    zoomRef.current = zoom
+  }, [zoom])
 
   useEffect(() => {
     if (!open || !file) {
@@ -59,7 +94,10 @@ export function ImageCropDialog({
       setZoom(1)
       setPanX(0)
       setPanY(0)
+      setIsDragging(false)
       setErrorMessage(null)
+      pointersRef.current.clear()
+      gestureRef.current = null
       return
     }
 
@@ -69,7 +107,10 @@ export function ImageCropDialog({
     setZoom(1)
     setPanX(0)
     setPanY(0)
+    setIsDragging(false)
     setErrorMessage(null)
+    pointersRef.current.clear()
+    gestureRef.current = null
 
     return () => URL.revokeObjectURL(nextUrl)
   }, [file, open])
@@ -108,6 +149,133 @@ export function ImageCropDialog({
     })
   }, [frameSize, imageSize, panX, panY, zoom])
 
+  function updatePanFromPixels(deltaX: number, deltaY: number, startPanX: number, startPanY: number, activeZoom: number) {
+    if (!frameSize || !imageSize) {
+      return
+    }
+
+    const layout = getRasterImageCropPreviewLayout({
+      frameWidth: frameSize.width,
+      frameHeight: frameSize.height,
+      imageWidth: imageSize.width,
+      imageHeight: imageSize.height,
+      zoom: activeZoom,
+      panX: 0,
+      panY: 0
+    })
+    const maxPanX = Math.max(0, (layout.width - frameSize.width) / 2)
+    const maxPanY = Math.max(0, (layout.height - frameSize.height) / 2)
+    const nextPanX = maxPanX > 0 ? clamp(startPanX + deltaX / maxPanX, -1, 1) : 0
+    const nextPanY = maxPanY > 0 ? clamp(startPanY + deltaY / maxPanY, -1, 1) : 0
+
+    setPanX(nextPanX)
+    setPanY(nextPanY)
+    panRef.current = { x: nextPanX, y: nextPanY }
+  }
+
+  function beginGesture(origin: CropPoint, distance: number | null) {
+    gestureRef.current = {
+      distance,
+      origin,
+      panX: panRef.current.x,
+      panY: panRef.current.y,
+      zoom: zoomRef.current
+    }
+  }
+
+  function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (!imageSize || !frameSize || isProcessing) {
+      return
+    }
+
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    setIsDragging(true)
+
+    const points = [...pointersRef.current.values()]
+    if (points.length >= 2) {
+      beginGesture(centerBetween(points[0], points[1]), distanceBetween(points[0], points[1]))
+      return
+    }
+
+    beginGesture({ x: event.clientX, y: event.clientY }, null)
+  }
+
+  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (!gestureRef.current || !pointersRef.current.has(event.pointerId)) {
+      return
+    }
+
+    event.preventDefault()
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    const points = [...pointersRef.current.values()]
+
+    if (points.length >= 2 && gestureRef.current.distance) {
+      const nextDistance = distanceBetween(points[0], points[1])
+      const nextCenter = centerBetween(points[0], points[1])
+      const nextZoom = clamp(gestureRef.current.zoom * (nextDistance / gestureRef.current.distance), MIN_ZOOM, MAX_ZOOM)
+      setZoom(nextZoom)
+      zoomRef.current = nextZoom
+      updatePanFromPixels(
+        nextCenter.x - gestureRef.current.origin.x,
+        nextCenter.y - gestureRef.current.origin.y,
+        gestureRef.current.panX,
+        gestureRef.current.panY,
+        nextZoom
+      )
+      return
+    }
+
+    const point = points[0]
+    if (!point) {
+      return
+    }
+
+    updatePanFromPixels(
+      point.x - gestureRef.current.origin.x,
+      point.y - gestureRef.current.origin.y,
+      gestureRef.current.panX,
+      gestureRef.current.panY,
+      zoomRef.current
+    )
+  }
+
+  function handlePointerEnd(event: PointerEvent<HTMLDivElement>) {
+    pointersRef.current.delete(event.pointerId)
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    const points = [...pointersRef.current.values()]
+    if (points.length >= 2) {
+      beginGesture(centerBetween(points[0], points[1]), distanceBetween(points[0], points[1]))
+      return
+    }
+
+    if (points.length === 1) {
+      beginGesture(points[0], null)
+      return
+    }
+
+    gestureRef.current = null
+    setIsDragging(false)
+  }
+
+  function handleWheel(event: WheelEvent<HTMLDivElement>) {
+    if (!imageSize || !frameSize || isProcessing) {
+      return
+    }
+
+    event.preventDefault()
+    const nextZoom = clamp(zoomRef.current - event.deltaY * 0.002, MIN_ZOOM, MAX_ZOOM)
+    setZoom(nextZoom)
+    zoomRef.current = nextZoom
+    setPanX((current) => clamp(current, -1, 1))
+    setPanY((current) => clamp(current, -1, 1))
+  }
+
   async function confirmCrop() {
     if (!file) {
       return
@@ -137,6 +305,8 @@ export function ImageCropDialog({
     setZoom(1)
     setPanX(0)
     setPanY(0)
+    panRef.current = { x: 0, y: 0 }
+    zoomRef.current = 1
   }
 
   return (
@@ -174,8 +344,17 @@ export function ImageCropDialog({
             <div className="grid gap-4 px-4 py-4 sm:px-5">
               <div
                 ref={frameRef}
+                aria-label="Área de encuadre de imagen"
+                role="img"
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerCancel={handlePointerEnd}
+                onPointerUp={handlePointerEnd}
+                onWheel={handleWheel}
                 className={cn(
-                  'relative mx-auto w-full max-w-[320px] overflow-hidden border border-(--app-border) bg-slate-950 shadow-inner sm:max-w-[380px]',
+                  'relative mx-auto w-full max-w-[320px] touch-none overflow-hidden border border-(--app-border) bg-slate-950 shadow-inner outline-none sm:max-w-[380px]',
+                  imageSize && !isProcessing ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
+                  isDragging && 'cursor-grabbing',
                   shape === 'circle' ? 'rounded-full' : 'rounded-card'
                 )}
                 style={{ aspectRatio: `${outputWidth} / ${outputHeight}` }}
@@ -204,48 +383,15 @@ export function ImageCropDialog({
                     }
                   />
                 ) : null}
-              </div>
-
-              <div className="grid gap-3 rounded-control border border-(--app-border) bg-(--app-surface-muted) p-3">
-                <label className="grid gap-1.5 text-xs font-semibold text-(--app-text-muted)" htmlFor={zoomId}>
-                  Zoom
-                  <input
-                    id={zoomId}
-                    type="range"
-                    min="1"
-                    max="3"
-                    step="0.01"
-                    value={zoom}
-                    onChange={(event) => setZoom(Number(event.target.value))}
-                    className="w-full accent-primary-600"
-                  />
-                </label>
-                <label className="grid gap-1.5 text-xs font-semibold text-(--app-text-muted)" htmlFor={horizontalId}>
-                  Horizontal
-                  <input
-                    id={horizontalId}
-                    type="range"
-                    min="-1"
-                    max="1"
-                    step="0.01"
-                    value={panX}
-                    onChange={(event) => setPanX(Number(event.target.value))}
-                    className="w-full accent-primary-600"
-                  />
-                </label>
-                <label className="grid gap-1.5 text-xs font-semibold text-(--app-text-muted)" htmlFor={verticalId}>
-                  Vertical
-                  <input
-                    id={verticalId}
-                    type="range"
-                    min="-1"
-                    max="1"
-                    step="0.01"
-                    value={panY}
-                    onChange={(event) => setPanY(Number(event.target.value))}
-                    className="w-full accent-primary-600"
-                  />
-                </label>
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-45"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(to right, rgba(255,255,255,0.26) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.26) 1px, transparent 1px)',
+                    backgroundSize: '33.333% 33.333%'
+                  }}
+                />
+                <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/35" />
               </div>
 
               {errorMessage ? <p className="text-sm text-rose-600 dark:text-rose-300">{errorMessage}</p> : null}
