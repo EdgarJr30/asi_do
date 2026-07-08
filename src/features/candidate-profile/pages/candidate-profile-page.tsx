@@ -598,8 +598,9 @@ function CandidateProfileEditor({
         throw new Error('Necesitas una sesión activa para guardar tu perfil candidato.')
       }
 
-      return saveCandidateProfileBundle({
-        userId: session.authUser.id,
+      const userId = session.authUser.id
+      const result = await saveCandidateProfileBundle({
+        userId,
         profile: {
           headline: values.headline?.trim() || undefined,
           desiredRole: values.desiredRole?.trim() || undefined,
@@ -642,8 +643,25 @@ function CandidateProfileEditor({
           url: item.url
         }))
       })
+
+      // Los CVs preparados se suben aquí, junto al resto del perfil. Cada uno
+      // sale de la lista de pendientes al confirmarse, así un fallo a mitad de
+      // camino deja solo los que faltan para reintentar con otro guardado.
+      for (const staged of stagedResumes) {
+        await uploadCandidateResume({ userId, file: staged.file })
+        setStagedResumes((current) => current.filter((item) => item.id !== staged.id))
+        URL.revokeObjectURL(staged.previewUrl)
+      }
+
+      return result
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Desactiva la persistencia del borrador antes de limpiarlo para que un
+      // autoguardado pendiente no lo reescriba justo antes del remount.
+      draftReadyRef.current = false
+      if (session.authUser) {
+        await clearCandidateProfileDraft(session.authUser.id)
+      }
       toast.success('Perfil candidato actualizado', {
         description: 'Tu perfil ya está guardado.'
       })
@@ -657,48 +675,6 @@ function CandidateProfileEditor({
         userId: session.authUser?.id ?? null,
         error,
         userMessage: 'No pudimos guardar tu perfil candidato.'
-      })
-    }
-  })
-
-  const uploadResumeMutation = useMutation({
-    mutationFn: async (file: File) => {
-      if (!session.authUser) {
-        throw new Error('Necesitas una sesión activa para subir un CV.')
-      }
-
-      const preparedFile = await prepareUploadFile(file, {
-        acceptedMimeTypes: CANDIDATE_RESUME_MIME_TYPES,
-        acceptedFormatsLabel: 'PDF, DOC o DOCX',
-        fieldLabel: 'El CV'
-      })
-
-      return uploadCandidateResume({
-        userId: session.authUser.id,
-        file: preparedFile
-      })
-    },
-    onSuccess: async () => {
-      setPendingResumeUpload(null)
-      setResumeFileError(null)
-      await queryClient.invalidateQueries({ queryKey: CANDIDATE_PROFILE_QUERY_KEY })
-      toast.success('CV cargado', {
-        description: 'Tu CV ya está guardado y listo para tus próximas postulaciones.'
-      })
-    },
-    onError: async (error) => {
-      const description =
-        error instanceof UploadConstraintError ? error.userMessage : toErrorMessage(error)
-
-      setResumeFileError(description)
-      await reportErrorWithToast({
-        title: 'No pudimos subir tu CV',
-        source: 'candidate-profile.resume-upload',
-        route: surfacePaths.candidate.profile,
-        userId: session.authUser?.id ?? null,
-        error,
-        description,
-        userMessage: description
       })
     }
   })
@@ -837,6 +813,7 @@ function CandidateProfileEditor({
   })
 
   const resumes = bundle.resumes
+  const totalResumeCount = resumes.length + stagedResumes.length
 
   useEffect(() => {
     return () => {
@@ -845,6 +822,58 @@ function CandidateProfileEditor({
       }
     }
   }, [pendingResumeUpload?.previewUrl])
+
+  useEffect(() => {
+    return () => {
+      stagedResumesRef.current.forEach((item) => URL.revokeObjectURL(item.previewUrl))
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!session.authUser) {
+      draftReadyRef.current = true
+      return
+    }
+
+    let cancelled = false
+
+    void loadCandidateProfileDraft(session.authUser.id).then((draft) => {
+      if (cancelled) {
+        return
+      }
+
+      // Solo restauramos si el borrador es más reciente que el último guardado
+      // en el servidor (p. ej. guardó desde otro dispositivo después).
+      const lastSavedAt = bundle.profile?.updated_at ? new Date(bundle.profile.updated_at).getTime() : 0
+
+      if (draft && draft.savedAt > lastSavedAt) {
+        form.reset(draft.formValues)
+        setExperiences(draft.experiences.length > 0 ? draft.experiences : [createEmptyCandidateExperience()])
+        setEducations(draft.educations.length > 0 ? draft.educations : [createEmptyCandidateEducation()])
+        setSkills(draft.skills.length > 0 ? draft.skills : [createEmptyCandidateSkill()])
+        setLanguages(draft.languages.length > 0 ? draft.languages : [createEmptyCandidateLanguage()])
+        setLinks(draft.links.length > 0 ? draft.links : [createEmptyCandidateLink()])
+        setStagedResumes(
+          draft.stagedResumeFiles.map((file) => ({
+            id: crypto.randomUUID(),
+            file,
+            previewUrl: URL.createObjectURL(file)
+          }))
+        )
+        toast.info('Recuperamos tu borrador', {
+          description: 'Restauramos los cambios de tu perfil que aún no habías guardado.'
+        })
+      }
+
+      draftReadyRef.current = true
+    })
+
+    return () => {
+      cancelled = true
+    }
+    // Solo al montar: restaura el borrador una única vez por instancia del editor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function removeExperienceDraft(itemId: string) {
     setExperiences((current) =>
@@ -926,7 +955,7 @@ function CandidateProfileEditor({
 
     setResumeFileError(null)
 
-    if (resumes.length >= MAX_RESUME_COUNT) {
+    if (totalResumeCount >= MAX_RESUME_COUNT) {
       setResumeFileError(`Alcanzaste el máximo de ${MAX_RESUME_COUNT} CVs. Elimina uno para subir otro.`)
       return
     }
@@ -964,15 +993,38 @@ function CandidateProfileEditor({
       return
     }
 
-    uploadResumeMutation.mutate(pendingResumeUpload.file)
+    // El archivo ya pasó la validación de tipo y tamaño en handleResumeFile.
+    // Queda preparado localmente y se sube junto con "Guardar cambios", para
+    // no refrescar el editor mientras el usuario sigue llenando su perfil.
+    setStagedResumes((current) => [
+      ...current,
+      {
+        id: crypto.randomUUID(),
+        file: pendingResumeUpload.file,
+        previewUrl: URL.createObjectURL(pendingResumeUpload.file)
+      }
+    ])
+    setPendingResumeUpload(null)
+    setResumeFileError(null)
+    toast.success('CV listo para guardar', {
+      description: 'Se subirá cuando guardes los cambios de tu perfil.'
+    })
   }
 
   function cancelPendingResumeUpload() {
-    if (uploadResumeMutation.isPending) {
-      return
-    }
-
     setPendingResumeUpload(null)
+  }
+
+  function removeStagedResume(stagedId: string) {
+    setStagedResumes((current) => {
+      const target = current.find((item) => item.id === stagedId)
+
+      if (target) {
+        URL.revokeObjectURL(target.previewUrl)
+      }
+
+      return current.filter((item) => item.id !== stagedId)
+    })
   }
 
   async function openResume(storagePath: string) {
@@ -991,6 +1043,50 @@ function CandidateProfileEditor({
   }
 
   const watched = useWatch({ control: form.control })
+  const watchedDraftJson = JSON.stringify(watched)
+  const collectionsDraftJson = JSON.stringify([experiences, educations, skills, languages, links])
+  const initialCollectionsJsonRef = useRef<string | null>(null)
+
+  if (initialCollectionsJsonRef.current === null) {
+    initialCollectionsJsonRef.current = collectionsDraftJson
+  }
+
+  const authUserId = session.authUser?.id ?? null
+
+  useEffect(() => {
+    if (!authUserId) {
+      return
+    }
+
+    const timeout = setTimeout(() => {
+      // Autoguardado con debounce para no perder nada si se cierra la app.
+      // Solo persiste cuando hay cambios reales frente a lo cargado del
+      // servidor; sin esta guarda cada montaje dejaría un borrador espurio
+      // idéntico a lo ya guardado (y un "Recuperamos tu borrador" falso).
+      const hasMeaningfulChanges =
+        form.formState.isDirty ||
+        stagedResumesRef.current.length > 0 ||
+        collectionsDraftJson !== initialCollectionsJsonRef.current
+
+      if (!draftReadyRef.current || !hasMeaningfulChanges) {
+        return
+      }
+
+      void saveCandidateProfileDraft(authUserId, {
+        formValues: form.getValues(),
+        experiences,
+        educations,
+        skills,
+        languages,
+        links,
+        stagedResumeFiles: stagedResumesRef.current.map((item) => item.file),
+        savedAt: Date.now()
+      })
+    }, 800)
+
+    return () => clearTimeout(timeout)
+  }, [watchedDraftJson, collectionsDraftJson, experiences, educations, skills, languages, links, stagedResumes, authUserId, form])
+
   const isDominicanRepublicProfile = isDominicanRepublicCountryCode(watched.countryCode ?? '')
   const skillCount = sanitizeCandidateSkillList(skills).length
   const languageCount = sanitizeCandidateLanguageList(languages).length
@@ -1000,7 +1096,7 @@ function CandidateProfileEditor({
     Boolean(watched.headline?.trim()),
     Boolean(watched.summary?.trim()),
     Boolean(watched.cityName?.trim() || watched.countryCode?.trim()),
-    resumes.length > 0,
+    totalResumeCount > 0,
     experienceCount > 0,
     skillCount > 0,
     isVisibleToRecruiters
@@ -1071,7 +1167,7 @@ function CandidateProfileEditor({
       </motion.header>
 
       <motion.div variants={cardReveal} className="grid grid-cols-4 gap-2 sm:gap-2.5">
-        <ProfileStatTile icon={FileText} value={resumes.length} label="CV" />
+        <ProfileStatTile icon={FileText} value={totalResumeCount} label="CV" />
         <ProfileStatTile icon={Sparkles} value={skillCount} label="Skills" />
         <ProfileStatTile icon={LanguagesIcon} value={languageCount} label="Idiomas" />
         <ProfileStatTile icon={Briefcase} value={experienceCount} label="Experiencia" />
@@ -1229,14 +1325,14 @@ function CandidateProfileEditor({
                     isResumeDragging
                       ? 'border-primary-400 bg-primary-50/80 dark:bg-primary-500/10'
                       : 'border-secondary-200 bg-(--app-surface-muted)/40 hover:border-primary-300 hover:bg-primary-50/50 dark:hover:bg-primary-500/10',
-                    (uploadResumeMutation.isPending || resumes.length >= MAX_RESUME_COUNT) && 'pointer-events-none opacity-70'
+                    (saveMutation.isPending || totalResumeCount >= MAX_RESUME_COUNT) && 'pointer-events-none opacity-70'
                   )}
                 >
                   <input
                     className="sr-only"
                     accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     type="file"
-                    disabled={uploadResumeMutation.isPending || resumes.length >= MAX_RESUME_COUNT}
+                    disabled={saveMutation.isPending || totalResumeCount >= MAX_RESUME_COUNT}
                     onChange={(event) => {
                       void handleResumeFile(event.target.files?.[0])
                       event.currentTarget.value = ''
@@ -1246,14 +1342,14 @@ function CandidateProfileEditor({
                     <Upload className="size-4 sm:size-5" />
                   </span>
                   <span className="text-[0.82rem] font-semibold text-(--app-text) sm:text-sm">
-                    {uploadResumeMutation.isPending
-                      ? 'Subiendo tu CV...'
-                      : resumes.length >= MAX_RESUME_COUNT
+                    {saveMutation.isPending
+                      ? 'Guardando tu perfil...'
+                      : totalResumeCount >= MAX_RESUME_COUNT
                         ? `Alcanzaste el máximo de ${MAX_RESUME_COUNT} CVs`
                         : 'Arrastra tu CV aquí o haz clic para revisar'}
                   </span>
                   <span className="mt-1 text-[0.72rem] text-(--app-text-subtle) sm:text-[0.78rem]">
-                    {resumes.length >= MAX_RESUME_COUNT
+                    {totalResumeCount >= MAX_RESUME_COUNT
                       ? 'Elimina un CV para subir otro'
                       : `PDF, DOC o DOCX · Máx ${MAX_UPLOAD_SIZE_LABEL}`}
                   </span>
@@ -1261,7 +1357,44 @@ function CandidateProfileEditor({
                 {resumeFileError ? <p className="text-[0.72rem] font-medium text-rose-600 dark:text-rose-300">{resumeFileError}</p> : null}
 
                 <div className="space-y-3">
-                  {resumes.length === 0 ? (
+                  {stagedResumes.map((staged) => (
+                    <div
+                      key={staged.id}
+                      className="flex flex-col gap-2.5 rounded-control border border-dashed border-amber-300 bg-amber-50/50 p-2.5 sm:flex-row sm:items-center sm:gap-3 sm:p-3.5 dark:border-amber-400/40 dark:bg-amber-500/10"
+                    >
+                      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-amber-100 text-amber-600 sm:size-10 dark:bg-amber-500/15 dark:text-amber-300">
+                          <FileText className="size-4 sm:size-5" />
+                        </span>
+                        <Badge variant="outline" className="shrink-0 px-2 py-0.5 text-[0.68rem]">Pendiente</Badge>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[0.82rem] font-semibold text-(--app-text) sm:text-sm">{staged.file.name}</p>
+                          <p className="mt-0.5 text-[0.72rem] text-(--app-text-subtle) sm:text-[0.78rem]">
+                            {getCandidateResumeFileLabel(staged.file)} · {formatFileSize(staged.file.size)} · Se subirá al guardar cambios
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2 sm:justify-end">
+                        <a
+                          className="inline-flex h-8 items-center justify-center rounded-control border border-(--app-border) bg-(--app-surface) px-3 text-[0.78rem] font-semibold text-(--app-text) transition-colors hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-primary-500/12"
+                          href={staged.previewUrl}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          Abrir
+                        </a>
+                        <Button
+                          variant="ghost"
+                          className="h-8 rounded-control px-3 text-[0.78rem]"
+                          onClick={() => removeStagedResume(staged.id)}
+                          disabled={saveMutation.isPending}
+                        >
+                          Quitar
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {totalResumeCount === 0 ? (
                     <div className="rounded-control border border-dashed border-(--app-border) px-4 py-6 text-sm text-(--app-text-muted)">
                       Todavía no has subido CVs. El primero quedará como principal.
                     </div>
@@ -1793,7 +1926,6 @@ function CandidateProfileEditor({
       </div>
       <ResumeUploadPreviewDialog
         pendingUpload={pendingResumeUpload}
-        loading={uploadResumeMutation.isPending}
         onConfirm={confirmPendingResumeUpload}
         onCancel={cancelPendingResumeUpload}
       />

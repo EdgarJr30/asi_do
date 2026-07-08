@@ -66,7 +66,7 @@ async function runDraftTransaction<T>(
 
 export async function loadCandidateProfileDraft(userId: string) {
   try {
-    const draft = await runDraftTransaction<CandidateProfileDraft | undefined>('readonly', (store) => store.get(userId))
+    const draft = await runDraftTransaction('readonly', (store) => store.get(userId) as IDBRequest<CandidateProfileDraft | undefined>)
 
     return draft ?? null
   } catch {
