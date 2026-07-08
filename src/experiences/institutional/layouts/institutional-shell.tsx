@@ -106,7 +106,7 @@ export function InstitutionalShell() {
       >
         <div className="asi-container px-0">
           <motion.div
-            className="rounded-card-lg border px-4 py-3 transition-all duration-300 ease-out sm:px-5"
+            className="rounded-card-lg border px-3.5 py-2.5 transition-all duration-300 ease-out sm:px-5 sm:py-3"
             style={{
               WebkitBackdropFilter: `blur(${headerBackdropBlur}px)`,
               backdropFilter: `blur(${headerBackdropBlur}px)`,
@@ -119,16 +119,16 @@ export function InstitutionalShell() {
               shouldReduceMotion
                 ? undefined
                 : {
-                    paddingTop: isCondensed ? 10 : 12,
-                    paddingBottom: isCondensed ? 10 : 12,
+                    paddingTop: isCondensed ? 8 : 10,
+                    paddingBottom: isCondensed ? 8 : 10,
                     borderRadius: 'var(--radius-card-lg)',
                   }
             }
           >
-            <div className="flex items-center justify-between gap-3 lg:gap-5">
+            <div className="flex items-center justify-between gap-2 sm:gap-3 lg:gap-5">
               <div className="flex min-w-0 items-center gap-3">
                 <Link
-                  className="relative h-12 w-38 shrink-0 overflow-visible sm:h-14 sm:w-42"
+                  className="relative h-10 w-30 shrink-0 overflow-visible sm:h-14 sm:w-42"
                   to={surfacePaths.institutional.home}
                 >
                   <motion.span
@@ -142,7 +142,7 @@ export function InstitutionalShell() {
                   >
                     <motion.img
                       alt="ASI República Dominicana"
-                      className="pointer-events-none absolute left-0 top-1/2 w-[10.8rem] -translate-y-1/2 sm:w-[10.8rem]"
+                      className="pointer-events-none absolute left-0 top-1/2 w-[7.6rem] -translate-y-1/2 sm:w-[10.8rem]"
                       loading="lazy"
                       width={512}
                       height={512}
@@ -211,31 +211,33 @@ export function InstitutionalShell() {
                 </Link>
               </div>
 
-              <Link
-                className="asi-button asi-button-primary h-11 shrink-0 px-4 text-sm lg:hidden"
-                to={surfacePaths.institutional.donate}
-              >
-                Donar
-              </Link>
+              <div className="flex shrink-0 items-center gap-2 xl:contents">
+                <Link
+                  className="asi-button asi-button-primary h-10 shrink-0 px-4 text-[0.9rem] lg:hidden"
+                  to={surfacePaths.institutional.donate}
+                >
+                  Donar
+                </Link>
 
-              <button
-                aria-controls="institutional-mobile-nav"
-                aria-expanded={mobileMenuOpen}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-(--asi-primary) shadow-[0_10px_24px_rgba(0,47,110,0.08)] xl:hidden"
-                type="button"
-                onClick={() => setMobileMenuOpen((current) => !current)}
-              >
-                <span className="sr-only">
-                  {mobileMenuOpen
-                    ? 'Cerrar menú institucional'
-                    : 'Abrir menú institucional'}
-                </span>
-                {mobileMenuOpen ? (
-                  <X className="size-5" />
-                ) : (
-                  <Menu className="size-5" />
-                )}
-              </button>
+                <button
+                  aria-controls="institutional-mobile-nav"
+                  aria-expanded={mobileMenuOpen}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-(--asi-primary) shadow-[0_10px_24px_rgba(0,47,110,0.08)] xl:hidden"
+                  type="button"
+                  onClick={() => setMobileMenuOpen((current) => !current)}
+                >
+                  <span className="sr-only">
+                    {mobileMenuOpen
+                      ? 'Cerrar menú institucional'
+                      : 'Abrir menú institucional'}
+                  </span>
+                  {mobileMenuOpen ? (
+                    <X className="size-5" />
+                  ) : (
+                    <Menu className="size-5" />
+                  )}
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -251,7 +253,7 @@ export function InstitutionalShell() {
             exit={shouldReduceMotion ? undefined : { opacity: 0 }}
             onClick={() => setMobileMenuOpen(false)}
           >
-            <div className="asi-container pt-30 pb-6 sm:pt-32 sm:pb-7">
+            <div className="asi-container pt-24 pb-6 sm:pt-32 sm:pb-7">
               <motion.div
                 className="rounded-card-lg bg-white p-6 shadow-(--asi-shadow-strong) sm:p-7"
                 id="institutional-mobile-nav"
@@ -299,7 +301,7 @@ export function InstitutionalShell() {
         ) : null}
       </AnimatePresence>
 
-      <main className="min-w-0 pt-[8.3rem] sm:pt-32 lg:pt-[8.6rem]">
+      <main className="min-w-0 pt-24 sm:pt-32 lg:pt-[8.6rem]">
         <Outlet />
       </main>
 
