@@ -1860,7 +1860,7 @@ export function MembershipApplicationForm({
     >
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-[30px]">
         {/* Rail izquierdo (escritorio) */}
-        <aside className="hidden w-[330px] shrink-0 flex-col gap-4 lg:sticky lg:top-9 lg:flex">
+        <aside className="hidden w-[330px] shrink-0 flex-col gap-4 lg:sticky lg:top-32 lg:flex">
           <div className="rounded-card border border-[#e7ebf2] bg-white px-5 py-4 shadow-[0_1px_2px_rgba(16,40,80,0.04)]">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[11px] font-bold uppercase tracking-[0.07em] text-[#8a96a8]">Progreso general</p>
