@@ -16,6 +16,7 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
+  CreditCard,
   PencilLine,
 } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -1426,102 +1427,174 @@ function SubmissionSuccess({
   const navigate = useNavigate()
   const isAuthenticated = Boolean(session.authUser?.id)
 
+  const nextSteps = [
+    {
+      title: 'Completa tu pago',
+      detail: `Realiza el pago de tu cuota anual (${summary.dues}) desde tu panel para avanzar tu solicitud.`,
+      current: true,
+    },
+    {
+      title: 'Revisión y referencia',
+      detail: 'Tu capítulo local revisa el expediente junto con tu referencia pastoral.',
+      current: false,
+    },
+    {
+      title: 'Membresía activa',
+      detail: 'Confirmamos tu membresía y obtienes acceso completo a la plataforma.',
+      current: false,
+    },
+  ]
+
   return (
-    <div className="space-y-6 rounded-card-lg border border-(--asi-outline) bg-(--asi-surface-raised) p-6 shadow-(--asi-shadow-soft) sm:p-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-green-50">
-            <CheckCircle2 className="size-7 text-green-600" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-(--asi-secondary)">
-              Expediente recibido
+    <div className="space-y-4 sm:space-y-5">
+      {/* Encabezado de confirmación */}
+      <div className="overflow-hidden rounded-card-lg border border-(--asi-outline) bg-(--asi-surface-raised) shadow-(--asi-shadow-soft)">
+        <div className="flex flex-col items-center gap-4 px-6 pb-7 pt-8 text-center sm:px-10 sm:pt-10">
+          <span className="flex size-16 items-center justify-center rounded-full bg-green-50 ring-8 ring-green-50/60">
+            <CheckCircle2 className="size-8 text-green-600" strokeWidth={1.75} />
+          </span>
+          <div className="space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-(--asi-secondary)">
+              Solicitud recibida
             </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-(--asi-text)">
-              Solicitud enviada a revisión
+            <h2 className="text-2xl font-bold tracking-tight text-(--asi-text) sm:text-[1.7rem]">
+              ¡Gracias, {summary.firstName}! Ya casi eres miembro
             </h2>
-            <p className="mt-2 max-w-[58ch] text-sm leading-7 text-(--asi-text-muted)">
-              Tu expediente quedó persistido con estado real `submitted`. El siguiente paso sigue siendo la revisión del capítulo local, la referencia pastoral y la coordinación del pago anual.
-            </p>
-            <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-(--asi-text-muted)">
-              Enviado: {new Date(submission.submittedAt).toLocaleString()}
+            <p className="mx-auto max-w-[46ch] text-sm leading-7 text-(--asi-text-muted)">
+              Recibimos tu solicitud y guardamos tu información de forma segura. Solo falta un paso para activar tu membresía.
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="asi-button asi-button-secondary w-full justify-center sm:w-auto"
-        >
-          <PencilLine className="size-4" />
-          Editar respuestas
-        </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-card border border-(--asi-outline) bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
-            Solicitante
-          </p>
-          <p className="mt-2 text-lg font-semibold text-(--asi-text)">
-            {summary.firstName} {summary.lastName}
-          </p>
-          <p className="mt-1 text-sm text-(--asi-text-muted)">{summary.email}</p>
-          <p className="mt-1 text-sm text-(--asi-text-muted)">{summary.cellPhone}</p>
-        </div>
-        <div className="rounded-card border border-(--asi-outline) bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
-            Categoría y cuota
-          </p>
-          <p className="mt-2 text-lg font-semibold text-(--asi-text)">
-            {summary.categoryName}
-          </p>
-          <p className="mt-1 text-sm text-(--asi-text-muted)">Cuota anual: {summary.dues}</p>
-        </div>
-        <div className="rounded-card border border-(--asi-outline) bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
-            Referencia pastoral
-          </p>
-          <p className="mt-2 text-lg font-semibold text-(--asi-text)">
-            {summary.pastorName}
-          </p>
-          <p className="mt-1 text-sm text-(--asi-text-muted)">{summary.pastorEmail}</p>
-          <p className="mt-1 text-sm text-(--asi-text-muted)">{summary.pastorPhone}</p>
-        </div>
-        <div className="rounded-card border border-(--asi-outline) bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--asi-text-muted)">
-            Dirección de facturación
-          </p>
-          <div className="mt-2 space-y-1 text-sm text-(--asi-text-muted)">
-            {summary.resolvedBillingAddress.map((line) => (
-              <p key={line}>{line}</p>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-card border border-dashed border-(--asi-outline) bg-white/70 p-4">
-        <p className="text-sm font-semibold text-(--asi-text)">Recordatorio</p>
-        <p className="mt-2 text-sm leading-7 text-(--asi-text-muted)">
-          Este paso organiza el expediente digital de la solicitud. El capítulo local seguirá con la autorización pastoral y la gestión de la membresía anual.
-        </p>
-      </div>
-
+      {/* Acción principal: pago */}
       {isAuthenticated ? (
-        <div className="flex flex-col gap-3 border-t border-(--asi-outline) pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-(--asi-text-muted)">
-            Continúa en tu panel para realizar el pago de tu membresía.
-          </p>
-          <button
-            type="button"
-            onClick={() => void navigate(surfacePaths.account.membership)}
-            className="asi-button asi-button-primary w-full justify-center sm:w-auto"
-          >
-            Ir a mi panel de membresía
-            <ArrowRight className="size-4" />
-          </button>
+        <div className="rounded-card-lg border border-(--asi-primary)/20 bg-(--asi-primary)/[0.035] p-5 shadow-(--asi-shadow-soft) sm:p-6">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+            <div className="flex items-start gap-4 sm:flex-1">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-(--asi-primary)/10 text-(--asi-primary)">
+                <CreditCard className="size-6" strokeWidth={1.75} />
+              </span>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--asi-primary)">
+                  Siguiente paso
+                </p>
+                <h3 className="mt-1 text-lg font-bold tracking-tight text-(--asi-text)">
+                  Activa tu membresía con el pago anual
+                </h3>
+                <p className="mt-1.5 text-sm leading-6 text-(--asi-text-muted)">
+                  Tu membresía se activa al completar el pago de <span className="font-semibold text-(--asi-text)">{summary.dues}</span>. Continúa en tu panel para hacerlo de forma segura.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void navigate(surfacePaths.account.membership)}
+              className="asi-button asi-button-primary w-full justify-center sm:w-auto sm:self-stretch sm:min-h-full"
+            >
+              Ir a pagar mi membresía
+              <ArrowRight className="size-4" />
+            </button>
+          </div>
         </div>
       ) : null}
+
+      {/* Cómo sigue tu proceso */}
+      <div className="rounded-card-lg border border-(--asi-outline) bg-(--asi-surface-raised) p-5 shadow-(--asi-shadow-soft) sm:p-6">
+        <p className="text-sm font-bold text-(--asi-text)">Cómo sigue tu proceso</p>
+        <ol className="mt-4 space-y-0">
+          {nextSteps.map((step, index) => (
+            <li key={step.title} className="relative flex gap-4 pb-5 last:pb-0">
+              {index < nextSteps.length - 1 ? (
+                <span
+                  aria-hidden
+                  className="absolute left-[15px] top-8 h-[calc(100%-1.5rem)] w-px bg-(--asi-outline)"
+                />
+              ) : null}
+              <span
+                className={cn(
+                  'relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                  step.current
+                    ? 'bg-(--asi-primary) text-white'
+                    : 'border border-(--asi-outline) bg-white text-(--asi-text-muted)',
+                )}
+              >
+                {index + 1}
+              </span>
+              <div className="pt-0.5">
+                <p className="text-sm font-semibold text-(--asi-text)">
+                  {step.title}
+                  {step.current ? (
+                    <span className="ml-2 rounded-full bg-(--asi-primary)/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-(--asi-primary) align-middle">
+                      Ahora
+                    </span>
+                  ) : null}
+                </p>
+                <p className="mt-1 text-[13px] leading-6 text-(--asi-text-muted)">{step.detail}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {/* Resumen de tu solicitud */}
+      <div className="rounded-card-lg border border-(--asi-outline) bg-(--asi-surface-raised) p-5 shadow-(--asi-shadow-soft) sm:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-bold text-(--asi-text)">Resumen de tu solicitud</p>
+          <button
+            type="button"
+            onClick={onEdit}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-(--asi-primary) transition-colors hover:text-(--asi-secondary)"
+          >
+            <PencilLine className="size-4" />
+            Editar
+          </button>
+        </div>
+        <dl className="mt-4 grid gap-x-6 gap-y-4 sm:grid-cols-2">
+          <div>
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--asi-text-muted)">
+              Solicitante
+            </dt>
+            <dd className="mt-1.5 text-[15px] font-semibold text-(--asi-text)">
+              {summary.firstName} {summary.lastName}
+            </dd>
+            <dd className="text-sm text-(--asi-text-muted)">{summary.email}</dd>
+            <dd className="text-sm text-(--asi-text-muted)">{summary.cellPhone}</dd>
+          </div>
+          <div>
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--asi-text-muted)">
+              Categoría y cuota
+            </dt>
+            <dd className="mt-1.5 text-[15px] font-semibold text-(--asi-text)">
+              {summary.categoryName}
+            </dd>
+            <dd className="text-sm text-(--asi-text-muted)">Cuota anual: {summary.dues}</dd>
+          </div>
+          <div>
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--asi-text-muted)">
+              Referencia pastoral
+            </dt>
+            <dd className="mt-1.5 text-[15px] font-semibold text-(--asi-text)">
+              {summary.pastorName}
+            </dd>
+            <dd className="text-sm text-(--asi-text-muted)">{summary.pastorEmail}</dd>
+            <dd className="text-sm text-(--asi-text-muted)">{summary.pastorPhone}</dd>
+          </div>
+          <div>
+            <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--asi-text-muted)">
+              Dirección de facturación
+            </dt>
+            <dd className="mt-1.5 space-y-0.5 text-sm text-(--asi-text-muted)">
+              {summary.resolvedBillingAddress.map((line) => (
+                <span key={line} className="block">{line}</span>
+              ))}
+            </dd>
+          </div>
+        </dl>
+        <p className="mt-5 border-t border-(--asi-outline) pt-4 text-xs text-(--asi-text-muted)">
+          Enviada el {new Date(submission.submittedAt).toLocaleDateString('es-DO', { day: 'numeric', month: 'long', year: 'numeric' })}
+        </p>
+      </div>
     </div>
   )
 }

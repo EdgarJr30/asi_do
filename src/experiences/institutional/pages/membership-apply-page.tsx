@@ -273,7 +273,7 @@ export function MembershipApplyPage() {
   // tarjeta, "¿qué ocurre después?" y footer). La página solo aporta el contenedor.
   return (
     <InstitutionalSection
-      className="-mt-6 min-h-[70vh] pb-16 sm:-mt-8 lg:-mt-10"
+      className="mt-3 min-h-[70vh] pb-16 sm:-mt-8 lg:-mt-10"
       reveal="mount"
       spacing="none"
     >
