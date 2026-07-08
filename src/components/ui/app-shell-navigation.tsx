@@ -220,13 +220,13 @@ export function AppWorkspaceSidebarDrawer({
     >
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-slate-900/80 transition-opacity duration-300 ease-out data-[closed]:opacity-0"
+        className="fixed inset-0 bg-slate-900/80 transition-opacity duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] data-[closed]:opacity-0"
       />
 
       <div className="fixed inset-0 overflow-x-hidden">
         <DialogPanel
           transition
-          className="fixed inset-y-0 left-0 flex w-full max-w-xs transform transition duration-300 ease-out data-[closed]:-translate-x-full"
+          className="fixed inset-y-0 left-0 flex w-full max-w-xs transform transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] data-[closed]:-translate-x-full"
         >
           <div className="relative flex min-w-0 flex-1">
             <div className="absolute right-3 top-3 z-10 flex justify-center">

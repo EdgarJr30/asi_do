@@ -1523,37 +1523,49 @@ export function PlatformAppShell({
         />
       </aside>
 
-      {mobileSidebarOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            aria-label={`Cerrar navegacion de ${config.mobileSidebarLabel}`}
-            className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
-            type="button"
-            onClick={() => setMobileSidebarOpen(false)}
-          />
-          <div className="absolute inset-y-0 left-0 w-full max-w-[20rem]">
-            <WorkspaceSidebarContent
-              activeHref={location.pathname}
-              config={config}
-              isCollapsed={false}
-              mode="mobile"
-              session={session}
-              signOutPending={signOutMutation.isPending}
-              userEmail={userIdentity.email}
-              userInitials={userIdentity.initials}
-              userName={userIdentity.displayName}
-              onActionNavigate={handleActionNavigate}
-              onOpenNotifications={() => {
-                setMobileSidebarOpen(false)
-                setNotificationPanelOpen(true)
-              }}
-              onOpenProfile={() => handleActionNavigate(config.profileHref)}
-              onSignOut={handleSignOut}
-              onToggleSidebar={() => setMobileSidebarOpen(false)}
+      <AnimatePresence>
+        {mobileSidebarOpen ? (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <motion.button
+              aria-label={`Cerrar navegacion de ${config.mobileSidebarLabel}`}
+              className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+              type="button"
+              onClick={() => setMobileSidebarOpen(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
             />
+            <motion.div
+              className="absolute inset-y-0 left-0 w-full max-w-[20rem]"
+              initial={prefersReducedMotion ? { opacity: 0 } : { x: '-100%' }}
+              animate={prefersReducedMotion ? { opacity: 1 } : { x: 0 }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { x: '-100%' }}
+              transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+            >
+              <WorkspaceSidebarContent
+                activeHref={location.pathname}
+                config={config}
+                isCollapsed={false}
+                mode="mobile"
+                session={session}
+                signOutPending={signOutMutation.isPending}
+                userEmail={userIdentity.email}
+                userInitials={userIdentity.initials}
+                userName={userIdentity.displayName}
+                onActionNavigate={handleActionNavigate}
+                onOpenNotifications={() => {
+                  setMobileSidebarOpen(false)
+                  setNotificationPanelOpen(true)
+                }}
+                onOpenProfile={() => handleActionNavigate(config.profileHref)}
+                onSignOut={handleSignOut}
+                onToggleSidebar={() => setMobileSidebarOpen(false)}
+              />
+            </motion.div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </AnimatePresence>
 
       <div className="min-w-0 transition-[padding] duration-200 ease-out lg:pl-(--shell-sidebar-width)">
         <header className="sticky top-0 z-40 border-b border-(--app-border) bg-white/94 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
