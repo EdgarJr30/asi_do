@@ -427,7 +427,7 @@ export function MembershipStatusPage() {
           animate="show"
           className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]"
         >
-          <motion.section variants={gridStagger} initial={contentInitialState} animate="show" className="space-y-6">
+          <motion.section variants={gridStagger} initial={contentInitialState} animate="show" className="min-w-0 space-y-6">
             <motion.div variants={cardReveal}>
               <MembershipOverviewCard
                 category={bundle.application?.category_name ?? 'Sin categoría'}
@@ -495,9 +495,9 @@ export function MembershipStatusPage() {
                 <ChevronDown className={cn('size-4 shrink-0 text-(--app-text-muted) transition-transform', detailsOpen && 'rotate-180')} />
               </button>
 
-              <div className={cn('mt-3 lg:mt-0 lg:block', detailsOpen ? 'block' : 'hidden')}>
+              <div className={cn('mt-3 min-w-0 lg:mt-0 lg:block', detailsOpen ? 'block' : 'hidden')}>
               <nav
-                className="inline-flex max-w-full gap-0.5 overflow-x-auto rounded-control border border-(--app-border) bg-(--app-surface-elevated) p-1 shadow-sm"
+                className="flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-control border border-(--app-border) bg-(--app-surface-elevated) p-1 shadow-sm"
                 aria-label="Secciones de membresía"
               >
                   {[
