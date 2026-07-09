@@ -885,10 +885,16 @@ function ChurchHierarchyPicker({
   const [associationId, setAssociationId] = useState('')
   const [districtId, setDistrictId] = useState('')
 
-  // El estado local manda; si está vacío pero ya hay iglesia elegida, usamos la cadena derivada.
-  const effectiveUnionId = unionId || selectedUnion?.id || (unions.length === 1 ? unions[0].id : '')
-  const effectiveAssociationId = associationId || selectedAssociation?.id || ''
-  const effectiveDistrictId = districtId || selectedDistrict?.id || ''
+  // La iglesia seleccionada manda; si aún no hay una, los filtros locales ayudan a encontrarla.
+  const effectiveUnionId = selectedUnion?.id || unionId || (unions.length === 1 ? unions[0].id : '')
+  const effectiveAssociationId = selectedAssociation?.id || associationId || ''
+  const effectiveDistrictId = selectedDistrict?.id || districtId || ''
+
+  const associationById = useMemo(
+    () => new Map(associations.map((item) => [item.id, item])),
+    [associations]
+  )
+  const districtById = useMemo(() => new Map(districts.map((item) => [item.id, item])), [districts])
 
   const filteredAssociations = useMemo(
     () => associations.filter((item) => item.union_id === effectiveUnionId),
@@ -898,19 +904,41 @@ function ChurchHierarchyPicker({
     () => districts.filter((item) => item.association_id === effectiveAssociationId),
     [districts, effectiveAssociationId]
   )
-  const filteredChurches = useMemo(
-    () => churches.filter((item) => item.district_id === effectiveDistrictId),
-    [churches, effectiveDistrictId]
-  )
+  const filteredChurches = useMemo(() => {
+    if (effectiveDistrictId) {
+      return churches.filter((item) => item.district_id === effectiveDistrictId)
+    }
+
+    if (effectiveAssociationId) {
+      return churches.filter((item) => districtById.get(item.district_id)?.association_id === effectiveAssociationId)
+    }
+
+    if (effectiveUnionId) {
+      return churches.filter((item) => {
+        const district = districtById.get(item.district_id)
+        const association = district ? associationById.get(district.association_id) : null
+        return association?.union_id === effectiveUnionId
+      })
+    }
+
+    return churches
+  }, [associationById, churches, districtById, effectiveAssociationId, effectiveDistrictId, effectiveUnionId])
+  const churchOptions = value ? churches : filteredChurches
 
   const emit = (churchId: string) => {
     const church = churches.find((item) => item.id === churchId) ?? null
     if (!church) {
+      setUnionId(unions.length === 1 ? unions[0].id : '')
+      setAssociationId('')
+      setDistrictId('')
       onSelect(null)
       return
     }
     const district = districts.find((item) => item.id === church.district_id)
     const association = associations.find((item) => item.id === district?.association_id)
+    setUnionId(association?.union_id ?? '')
+    setAssociationId(association?.id ?? '')
+    setDistrictId(district?.id ?? '')
     onSelect({
       id: church.id,
       name: church.name,
@@ -929,19 +957,31 @@ function ChurchHierarchyPicker({
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <SelectField
+          label="Iglesia local"
+          help="Elige tu iglesia para completar su territorio."
+          required
+          error={error}
+          value={value}
+          disabled={hierarchyQuery.isLoading || churches.length === 0}
+          onChange={(event) => emit(event.target.value)}
+        >
+          <option value="">Selecciona tu iglesia…</option>
+          {churchOptions.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name}
+            </option>
+          ))}
+        </SelectField>
+
+        <SelectField
           label="Unión"
-          help="Unión donde está tu iglesia."
+          help="Se completa al elegir tu iglesia local."
           required
           value={effectiveUnionId}
-          disabled={hierarchyQuery.isLoading || unions.length <= 1}
-          onChange={(event) => {
-            setUnionId(event.target.value)
-            setAssociationId('')
-            setDistrictId('')
-            onSelect(null)
-          }}
+          disabled
+          onChange={() => undefined}
         >
-          <option value="">Selecciona tu unión…</option>
+          <option value="">Se completa al elegir tu iglesia…</option>
           {unions.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
@@ -982,23 +1022,6 @@ function ChurchHierarchyPicker({
         >
           <option value="">Selecciona tu distrito…</option>
           {filteredDistricts.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </SelectField>
-
-        <SelectField
-          label="Iglesia local"
-          help="Enruta la referencia pastoral."
-          required
-          error={error}
-          value={value}
-          disabled={!effectiveDistrictId}
-          onChange={(event) => emit(event.target.value)}
-        >
-          <option value="">Selecciona tu iglesia…</option>
-          {filteredChurches.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
             </option>

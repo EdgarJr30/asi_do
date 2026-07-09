@@ -427,6 +427,9 @@ Do not place warning, error, exclamation, or alert-style icons beside form label
 ### R-119 — Membership onboarding copy must separate payment from activation
 Do not tell users that a submitted membership application or a completed payment makes the membership active. The post-onboarding and post-application experience must make the sequence clear: base account data, payment, review/approval, then final activation. Avoid internal words such as `persistido` in user-facing success messages, and avoid `tour` labels in the base onboarding UI because they are unclear and fragile on mobile.
 
+### R-120 — Membership reference must start with local church
+Do not make applicants choose the church territory manually before selecting their local church in the membership application reference step. The `Iglesia local` control must appear first, and `Unión` must be derived from the selected church instead of requiring manual applicant input.
+
 ---
 
 ## Maintenance rule
