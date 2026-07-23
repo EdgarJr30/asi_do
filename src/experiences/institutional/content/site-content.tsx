@@ -154,7 +154,6 @@ export const institutionalNavigation = [
   { label: 'Inicio', to: surfacePaths.institutional.home },
   { label: 'Membresía', to: surfacePaths.institutional.membership },
   { label: 'Proyectos', to: surfacePaths.institutional.projects },
-  { label: 'Noticias', to: surfacePaths.institutional.news },
   { label: 'Directorio', to: surfacePaths.institutional.directory },
   { label: 'Contáctanos', to: surfacePaths.institutional.contactUs },
 ] as const;
