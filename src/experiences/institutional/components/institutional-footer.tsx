@@ -108,13 +108,6 @@ export function InstitutionalFooter({
                   </Link>
                   <Link
                     className="flex items-center justify-between rounded-card bg-white/6 px-3.5 py-3 text-sm font-medium text-white/82 transition hover:bg-white/12 hover:text-white"
-                    to={surfacePaths.institutional.contactUs}
-                  >
-                    Contáctanos
-                    <MoveRight className="size-4 text-white/44" />
-                  </Link>
-                  <Link
-                    className="flex items-center justify-between rounded-card bg-white/6 px-3.5 py-3 text-sm font-medium text-white/82 transition hover:bg-white/12 hover:text-white"
                     to={surfacePaths.institutional.donate}
                   >
                     Donaciones
