@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'motion/react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import {
+  Bookmark,
+  BookmarkCheck,
   Briefcase,
   ExternalLink,
   GraduationCap,
@@ -27,6 +29,9 @@ import { Spinner } from '@/components/ui/loader'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import {
   fetchCandidateDirectoryDetail,
+  fetchTalentPoolCandidateIds,
+  removeCandidateFromTalentPool,
+  saveCandidateToTalentPool,
   searchCandidateDirectoryPage,
   type CandidateDirectoryRow,
   type CandidateDirectorySort
@@ -44,6 +49,13 @@ const TALENT_PAGE_SIZE = 12
 /** Valores válidos de orden; normaliza un `?sort=` manipulado en la URL. */
 const CANDIDATE_SORTS: readonly CandidateDirectorySort[] = ['relevance', 'score', 'name', 'experience']
 
+/**
+ * Pestañas del módulo: el directorio completo y el banco de talento del
+ * workspace (los candidatos que el equipo guardó para futuras vacantes).
+ */
+type TalentTab = 'all' | 'saved'
+const TALENT_TABS: readonly TalentTab[] = ['all', 'saved']
+
 function scorePillClass(score: number) {
   if (score >= 85) {
     return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300'
@@ -58,7 +70,14 @@ function locationLabel(candidate: Pick<CandidateDirectoryRow, 'city_name' | 'cou
 export function TalentDirectoryPage() {
   const session = useAppSession()
   const shouldReduceMotion = useReducedMotion()
+  const queryClient = useQueryClient()
   const tenantId = session.activeTenantId
+  const userId = session.authUser?.id ?? null
+  // Pestaña activa en la URL (?tab=saved) para que el enlace sea compartible y
+  // sobreviva a recargas; también es a donde apunta la vieja ruta /talent-pool.
+  const [tabParam, setTab] = useUrlParamState<TalentTab>('tab', 'all')
+  const tab: TalentTab = TALENT_TABS.includes(tabParam) ? tabParam : 'all'
+  const savedOnly = tab === 'saved'
   // Filtros y orden respaldados por la URL: sobreviven a navegación, back/forward
   // y recarga, y son compartibles por enlace (?q=&skill=&lang=&country=&sort=).
   const [query, setQuery] = useUrlParamState('q')
@@ -100,7 +119,7 @@ export function TalentDirectoryPage() {
   // Paginación real de servidor + scroll infinito: cada página llega vía offset,
   // no se trae todo de una vez. La key incluye filtros y orden para reiniciar en 0.
   const searchQuery = useInfiniteQuery({
-    queryKey: ['talent-directory', tenantId, debouncedQuery, skill, language, countryCode, sort],
+    queryKey: ['talent-directory', tenantId, tab, debouncedQuery, skill, language, countryCode, sort],
     enabled: Boolean(tenantId),
     initialPageParam: 0,
     queryFn: async ({ pageParam }) =>
@@ -111,11 +130,67 @@ export function TalentDirectoryPage() {
         language,
         countryCode,
         sort,
+        savedOnly,
         limit: TALENT_PAGE_SIZE,
         offset: pageParam
       }),
     getNextPageParam: (lastPage) => lastPage.nextOffset
   })
+
+  // Banco de talento del workspace: una sola lista de ids es la fuente de verdad
+  // del estado "guardado" (marca de cada card, contador de la pestaña y toggle
+  // del panel de detalle), así no hay dos representaciones que puedan divergir.
+  const savedIdsQuery = useQuery({
+    queryKey: ['talent-pool', tenantId],
+    enabled: Boolean(tenantId),
+    queryFn: async () => fetchTalentPoolCandidateIds(tenantId!)
+  })
+  const savedIds = useMemo(() => new Set(savedIdsQuery.data ?? []), [savedIdsQuery.data])
+  const savedCount = savedIdsQuery.data?.length ?? 0
+
+  const toggleSaved = useMutation({
+    mutationFn: async ({ candidateProfileId, nextSaved }: { candidateProfileId: string; nextSaved: boolean }) => {
+      if (!tenantId || !userId) {
+        throw new Error('No hay un workspace activo.')
+      }
+
+      if (nextSaved) {
+        await saveCandidateToTalentPool({ tenantId, candidateProfileId, userId })
+        return
+      }
+
+      await removeCandidateFromTalentPool({ tenantId, candidateProfileId })
+    },
+    // Optimista: la marca responde al instante y se revierte si el servidor falla.
+    onMutate: async ({ candidateProfileId, nextSaved }) => {
+      await queryClient.cancelQueries({ queryKey: ['talent-pool', tenantId] })
+      const previous = queryClient.getQueryData<string[]>(['talent-pool', tenantId])
+      queryClient.setQueryData<string[]>(['talent-pool', tenantId], (current) => {
+        const list = current ?? []
+        if (nextSaved) {
+          return list.includes(candidateProfileId) ? list : [candidateProfileId, ...list]
+        }
+        return list.filter((id) => id !== candidateProfileId)
+      })
+      return { previous }
+    },
+    onError: (error, _variables, context) => {
+      queryClient.setQueryData(['talent-pool', tenantId], context?.previous)
+      toast.error('No pudimos actualizar el banco de talento', { description: toErrorMessage(error) })
+    },
+    onSuccess: (_data, { nextSaved }) => {
+      toast.success(nextSaved ? 'Candidato guardado' : 'Candidato quitado de guardados')
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ['talent-pool', tenantId] })
+      // La pestaña "Guardados" se pagina en el servidor: hay que rehacer la lista.
+      void queryClient.invalidateQueries({ queryKey: ['talent-directory', tenantId, 'saved'] })
+    }
+  })
+
+  function handleToggleSaved(candidateProfileId: string) {
+    toggleSaved.mutate({ candidateProfileId, nextSaved: !savedIds.has(candidateProfileId) })
+  }
 
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = searchQuery
 
@@ -124,7 +199,12 @@ export function TalentDirectoryPage() {
   // key invalida todas las combinaciones de filtros activas.
   useRealtimeSync(
     'talent-directory',
-    [{ table: 'candidate_profiles', invalidate: [['talent-directory']] }],
+    [
+      { table: 'candidate_profiles', invalidate: [['talent-directory']] },
+      // Si un compañero guarda o quita un candidato, el banco de talento del
+      // resto del equipo se actualiza sin recargar.
+      { table: 'talent_pool_entries', invalidate: [['talent-pool'], ['talent-directory']] }
+    ],
     { enabled: Boolean(tenantId) }
   )
 
@@ -195,9 +275,27 @@ export function TalentDirectoryPage() {
       <motion.header variants={cardReveal} className="space-y-1.5">
         <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Candidatos</h1>
         <p className="max-w-2xl text-[0.84rem] leading-relaxed text-(--app-text-muted)">
-          Explora los perfiles visibles y contacta al talento aprobado.
+          {savedOnly
+            ? 'Los candidatos que tu equipo guardó para futuras vacantes.'
+            : 'Explora los perfiles visibles, guarda los que te interesen y contacta al talento aprobado.'}
         </p>
       </motion.header>
+
+      {/* Pestañas: el directorio completo y el banco de talento del workspace */}
+      <motion.div variants={cardReveal} role="tablist" aria-label="Vista de candidatos" className="flex items-center gap-1 border-b border-(--app-border)">
+        <TalentTabButton active={!savedOnly} onClick={() => setTab('all')}>
+          Todos
+        </TalentTabButton>
+        <TalentTabButton active={savedOnly} onClick={() => setTab('saved')}>
+          <Bookmark aria-hidden className="size-3.5" />
+          Guardados
+          {savedCount > 0 ? (
+            <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-(--app-surface-muted) px-1.5 py-0.5 text-[0.68rem] font-semibold leading-none text-(--app-text-muted)">
+              {savedCount}
+            </span>
+          ) : null}
+        </TalentTabButton>
+      </motion.div>
 
       {/* Móvil: barra compacta que abre una hoja inferior con búsqueda y filtros */}
       <motion.div variants={cardReveal} className="space-y-2 lg:hidden">
@@ -229,7 +327,14 @@ export function TalentDirectoryPage() {
               </>
             ) : (
               <>
-                <b className="font-semibold text-(--app-text)">{totalCount}</b> {totalCount === 1 ? 'candidato' : 'candidatos'}
+                <b className="font-semibold text-(--app-text)">{totalCount}</b>{' '}
+                {savedOnly
+                  ? totalCount === 1
+                    ? 'guardado'
+                    : 'guardados'
+                  : totalCount === 1
+                    ? 'candidato'
+                    : 'candidatos'}
               </>
             )}
           </span>
@@ -327,12 +432,25 @@ export function TalentDirectoryPage() {
         </motion.div>
       ) : rows.length === 0 ? (
         <motion.div variants={cardReveal}>
-          <EmptyState
-            title="Sin candidatos"
-            description="No encontramos perfiles visibles con esta combinación de filtros."
-            actionLabel={hasActiveFilters ? 'Limpiar filtros' : undefined}
-            onAction={hasActiveFilters ? resetFilters : undefined}
-          />
+          {savedOnly && !hasActiveFilters ? (
+            <EmptyState
+              title="Aún no has guardado candidatos"
+              description="Marca con el ícono de guardar los perfiles que te interesen y quedarán aquí, disponibles para todo tu equipo."
+              actionLabel="Explorar candidatos"
+              onAction={() => setTab('all')}
+            />
+          ) : (
+            <EmptyState
+              title="Sin candidatos"
+              description={
+                savedOnly
+                  ? 'Ningún candidato guardado coincide con esta combinación de filtros.'
+                  : 'No encontramos perfiles visibles con esta combinación de filtros.'
+              }
+              actionLabel={hasActiveFilters ? 'Limpiar filtros' : undefined}
+              onAction={hasActiveFilters ? resetFilters : undefined}
+            />
+          )}
         </motion.div>
       ) : (
         <motion.div variants={cardReveal}>
@@ -347,7 +465,9 @@ export function TalentDirectoryPage() {
                 <CandidateCard
                   candidate={candidate}
                   active={candidate.candidate_profile_id === selectedCandidateProfileId}
+                  saved={savedIds.has(candidate.candidate_profile_id)}
                   onSelect={() => selectCandidate(candidate.candidate_profile_id)}
+                  onToggleSaved={() => handleToggleSaved(candidate.candidate_profile_id)}
                 />
               </motion.li>
             ))}
@@ -390,83 +510,143 @@ export function TalentDirectoryPage() {
         isLoading={detailQuery.isLoading}
         error={detailQuery.error}
         data={detailQuery.data}
+        saved={selectedCandidateProfileId ? savedIds.has(selectedCandidateProfileId) : false}
+        onToggleSaved={() => {
+          if (selectedCandidateProfileId) {
+            handleToggleSaved(selectedCandidateProfileId)
+          }
+        }}
       />
     </motion.div>
+  )
+}
+
+/** Pestaña del módulo (directorio completo vs. guardados). */
+function TalentTabButton({
+  active,
+  onClick,
+  children
+}: {
+  active: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={cn(
+        '-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 pb-2 pt-1.5 text-[0.84rem] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
+        active
+          ? 'border-primary-600 text-(--app-text)'
+          : 'border-transparent text-(--app-text-muted) hover:text-(--app-text)'
+      )}
+    >
+      {children}
+    </button>
   )
 }
 
 function CandidateCard({
   candidate,
   active,
-  onSelect
+  saved,
+  onSelect,
+  onToggleSaved
 }: {
   candidate: CandidateDirectoryRow
   active: boolean
+  saved: boolean
   onSelect: () => void
+  onToggleSaved: () => void
 }) {
   const visibleSkills = candidate.skill_names.slice(0, 3)
   const extraSkills = candidate.skill_names.length - visibleSkills.length
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        'flex w-full items-start gap-3 rounded-card border bg-(--app-surface) px-3 py-2.5 text-left shadow-[0_1px_2px_rgba(20,40,90,0.04)] transition-[border-color,box-shadow,background-color] hover:border-primary-200 hover:bg-(--app-surface-muted)/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:hover:border-primary-500/40',
-        active ? 'border-primary-300 bg-primary-50/60 dark:bg-primary-500/10' : 'border-(--app-border)'
-      )}
-    >
-      <UserAvatar
-        name={candidate.display_name}
-        avatarPath={candidate.avatar_path}
-        className="size-10"
-        fallbackClassName="bg-primary-50 text-primary-700 dark:bg-primary-500/15 dark:text-primary-200"
-        textClassName="text-[0.72rem] font-semibold"
-      />
-      <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 items-center gap-2">
-          <h3 className="truncate text-[0.9rem] font-semibold text-(--app-text)">{candidate.display_name}</h3>
-          <span
-            className={cn(
-              'ml-auto inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[0.68rem] font-semibold',
-              scorePillClass(candidate.completeness_score)
-            )}
-          >
-            {candidate.completeness_score}%
-          </span>
-        </div>
-        <p className="mt-0.5 truncate text-[0.8rem] text-(--app-text-muted)">
-          {candidate.desired_role || candidate.headline || 'Perfil visible'}
-        </p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[0.72rem] text-(--app-text-subtle)">
-          <span className="inline-flex min-w-0 items-center gap-1">
-            <MapPin className="size-3 shrink-0" />
-            <span className="truncate">{locationLabel(candidate)}</span>
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Briefcase className="size-3 shrink-0" />
-            {candidate.total_experiences} {candidate.total_experiences === 1 ? 'experiencia' : 'experiencias'}
-          </span>
-        </div>
-        {visibleSkills.length > 0 ? (
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {visibleSkills.map((item) => (
-              <span
-                key={item}
-                className="inline-flex items-center rounded-control bg-(--app-surface-muted) px-2 py-0.5 text-[0.68rem] font-medium text-(--app-text-muted)"
-              >
-                {item}
-              </span>
-            ))}
-            {extraSkills > 0 ? (
-              <span className="inline-flex items-center rounded-control px-1.5 py-0.5 text-[0.68rem] font-semibold text-(--app-text-subtle)">
-                +{extraSkills}
-              </span>
-            ) : null}
+    <div className="relative">
+      {/* El botón de guardar vive fuera del botón de la card: anidar botones no
+          es HTML válido y rompe el foco por teclado. */}
+      <button
+        type="button"
+        onClick={onToggleSaved}
+        aria-pressed={saved}
+        title={saved ? 'Quitar de guardados' : 'Guardar candidato'}
+        className={cn(
+          'absolute right-2 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-control transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring)',
+          saved
+            ? 'text-primary-600 hover:bg-primary-50 dark:text-primary-300 dark:hover:bg-primary-500/15'
+            : 'text-(--app-text-subtle) hover:bg-(--app-surface-muted) hover:text-(--app-text)'
+        )}
+      >
+        {saved ? <BookmarkCheck aria-hidden className="size-4.5" /> : <Bookmark aria-hidden className="size-4.5" />}
+        <span className="sr-only">
+          {saved ? `Quitar a ${candidate.display_name} de guardados` : `Guardar a ${candidate.display_name}`}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={onSelect}
+        className={cn(
+          'flex w-full items-start gap-3 rounded-card border bg-(--app-surface) py-2.5 pl-3 pr-12 text-left shadow-[0_1px_2px_rgba(20,40,90,0.04)] transition-[border-color,box-shadow,background-color] hover:border-primary-200 hover:bg-(--app-surface-muted)/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) dark:hover:border-primary-500/40',
+          active ? 'border-primary-300 bg-primary-50/60 dark:bg-primary-500/10' : 'border-(--app-border)'
+        )}
+      >
+        <UserAvatar
+          name={candidate.display_name}
+          avatarPath={candidate.avatar_path}
+          className="size-10"
+          fallbackClassName="bg-primary-50 text-primary-700 dark:bg-primary-500/15 dark:text-primary-200"
+          textClassName="text-[0.72rem] font-semibold"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <h3 className="truncate text-[0.9rem] font-semibold text-(--app-text)">{candidate.display_name}</h3>
+            <span
+              className={cn(
+                'ml-auto inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[0.68rem] font-semibold',
+                scorePillClass(candidate.completeness_score)
+              )}
+            >
+              {candidate.completeness_score}%
+            </span>
           </div>
-        ) : null}
-      </div>
-    </button>
+          <p className="mt-0.5 truncate text-[0.8rem] text-(--app-text-muted)">
+            {candidate.desired_role || candidate.headline || 'Perfil visible'}
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[0.72rem] text-(--app-text-subtle)">
+            <span className="inline-flex min-w-0 items-center gap-1">
+              <MapPin className="size-3 shrink-0" />
+              <span className="truncate">{locationLabel(candidate)}</span>
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Briefcase className="size-3 shrink-0" />
+              {candidate.total_experiences} {candidate.total_experiences === 1 ? 'experiencia' : 'experiencias'}
+            </span>
+          </div>
+          {visibleSkills.length > 0 ? (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {visibleSkills.map((item) => (
+                <span
+                  key={item}
+                  className="inline-flex items-center rounded-control bg-(--app-surface-muted) px-2 py-0.5 text-[0.68rem] font-medium text-(--app-text-muted)"
+                >
+                  {item}
+                </span>
+              ))}
+              {extraSkills > 0 ? (
+                <span className="inline-flex items-center rounded-control px-1.5 py-0.5 text-[0.68rem] font-semibold text-(--app-text-subtle)">
+                  +{extraSkills}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </button>
+    </div>
   )
 }
 
@@ -647,13 +827,17 @@ function CandidateDetailSheet({
   onClose,
   isLoading,
   error,
-  data
+  data,
+  saved,
+  onToggleSaved
 }: {
   open: boolean
   onClose: () => void
   isLoading: boolean
   error: unknown
   data: Awaited<ReturnType<typeof fetchCandidateDirectoryDetail>> | undefined
+  saved: boolean
+  onToggleSaved: () => void
 }) {
   const profile = data?.profile
   const role = profile ? profile.desired_role || profile.headline || 'Perfil profesional' : ''
@@ -679,6 +863,10 @@ function CandidateDetailSheet({
   const footer =
     profile && !isLoading && !error ? (
       <div className="flex flex-col gap-2 sm:flex-row">
+        <Button variant="outline" className="gap-1.5 sm:shrink-0" aria-pressed={saved} onClick={onToggleSaved}>
+          {saved ? <BookmarkCheck className="size-4 text-primary-600 dark:text-primary-300" /> : <Bookmark className="size-4" />}
+          {saved ? 'Guardado' : 'Guardar'}
+        </Button>
         <Button
           variant="outline"
           className="flex-1 gap-1.5"

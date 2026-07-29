@@ -88,6 +88,7 @@ export const surfacePaths = {
     jobs: '/workspace/jobs',
     applications: '/workspace/applications',
     talent: '/workspace/talent',
+    /** Ruta histórica; hoy redirige a Candidatos → pestaña "Guardados". */
     talentPool: '/workspace/talent-pool',
     pipeline: '/workspace/pipeline',
     pipelineStage: (stage: string) => `/workspace/pipeline/${stage}`,

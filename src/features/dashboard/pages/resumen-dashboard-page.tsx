@@ -317,15 +317,15 @@ export function ResumenDashboardPage() {
               />
               <FirstStepCard
                 icon={UsersRound}
-                title="Explora el banco de talento"
-                description="Descubre personas abiertas a nuevas oportunidades."
-                cta="Ver talento"
+                title="Explora los candidatos"
+                description="Descubre personas abiertas a nuevas oportunidades y guarda las que te interesen."
+                cta="Ver candidatos"
                 onClick={() => void navigate(surfacePaths.workspace.talent)}
               />
               <FirstStepCard
                 icon={Settings}
-                title="Invita a tu equipo"
-                description="Configura accesos y roles para colaborar."
+                title="Completa el perfil de tu empresa"
+                description="Agrega logo, descripción y datos de contacto para que tus vacantes se vean mejor."
                 cta="Abrir configuración"
                 onClick={() => void navigate(surfacePaths.workspace.settings)}
               />

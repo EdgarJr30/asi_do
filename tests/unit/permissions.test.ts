@@ -38,7 +38,6 @@ describe('permission guards', () => {
       'Vacantes',
       'Aplicaciones',
       'Candidatos',
-      'Banco de talento',
       'Proceso de selección',
       'Reportes',
       'Configuración',

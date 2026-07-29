@@ -91,17 +91,10 @@ export const employerNavigationItems: NavigationItem[] = [
     requiredPermission: 'application:read'
   },
   {
+    // El antiguo "Banco de talento" vive aquí como la pestaña "Guardados".
     title: 'Candidatos',
     href: surfacePaths.workspace.talent,
-    description: 'Descubre personas abiertas a oportunidades',
-    group: 'recruitment',
-    requiresAuth: true,
-    requiredPermission: 'candidate_directory:read'
-  },
-  {
-    title: 'Banco de talento',
-    href: surfacePaths.workspace.talentPool,
-    description: 'Talento guardado y preseleccionado',
+    description: 'Descubre talento y guarda tus candidatos',
     group: 'recruitment',
     requiresAuth: true,
     requiredPermission: 'candidate_directory:read'

@@ -2950,6 +2950,58 @@ export type Database = {
         }
         Relationships: []
       }
+      talent_pool_entries: {
+        Row: {
+          candidate_profile_id: string
+          created_at: string
+          id: string
+          note: string | null
+          saved_by_user_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_profile_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          saved_by_user_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_profile_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          saved_by_user_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "talent_pool_entries_candidate_profile_id_fkey"
+            columns: ["candidate_profile_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_pool_entries_saved_by_user_id_fkey"
+            columns: ["saved_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "talent_pool_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_role_permissions: {
         Row: {
           created_at: string
@@ -4187,8 +4239,11 @@ export type Database = {
           p_country_code?: string
           p_language?: string
           p_limit?: number
+          p_offset?: number
           p_query?: string
+          p_saved_only?: boolean
           p_skill?: string
+          p_sort?: string
           p_tenant_id: string
         }
         Returns: {
@@ -4205,6 +4260,7 @@ export type Database = {
           latest_role_title: string
           skill_names: string[]
           summary: string
+          total_count: number
           total_experiences: number
           user_id: string
         }[]

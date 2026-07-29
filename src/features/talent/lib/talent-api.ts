@@ -9,6 +9,8 @@ export interface CandidateDirectoryPageParams {
   language?: string
   skill?: string
   sort?: CandidateDirectorySort
+  /** Limita la búsqueda al banco de talento del workspace (pestaña "Guardados"). */
+  savedOnly?: boolean
   limit: number
   offset: number
 }
@@ -124,7 +126,8 @@ export async function searchCandidateDirectoryPage(
     p_skill: params.skill?.trim() || null,
     p_limit: params.limit,
     p_offset: params.offset,
-    p_sort: params.sort ?? 'relevance'
+    p_sort: params.sort ?? 'relevance',
+    p_saved_only: params.savedOnly ?? false
   })
 
   if (response.error) {
@@ -156,4 +159,62 @@ export async function fetchCandidateDirectoryDetail(tenantId: string, candidateP
   }
 
   return response.data as unknown as CandidateDirectoryDetail
+}
+
+/**
+ * Guarda un candidato en el banco de talento del workspace. El banco es del
+ * tenant (lo ve todo el equipo), no del usuario que lo guarda.
+ */
+export async function saveCandidateToTalentPool(params: {
+  tenantId: string
+  candidateProfileId: string
+  userId: string
+}) {
+  const client = requireSupabase()
+  const { error } = await client.from('talent_pool_entries').insert({
+    tenant_id: params.tenantId,
+    candidate_profile_id: params.candidateProfileId,
+    saved_by_user_id: params.userId
+  })
+
+  // 23505: ya estaba guardado (otro miembro del equipo se adelantó). No es error.
+  if (error && error.code !== '23505') {
+    throw error
+  }
+}
+
+export async function removeCandidateFromTalentPool(params: {
+  tenantId: string
+  candidateProfileId: string
+}) {
+  const client = requireSupabase()
+  const { error } = await client
+    .from('talent_pool_entries')
+    .delete()
+    .eq('tenant_id', params.tenantId)
+    .eq('candidate_profile_id', params.candidateProfileId)
+
+  if (error) {
+    throw error
+  }
+}
+
+/**
+ * Ids de los candidatos guardados por el workspace. Es la fuente de verdad del
+ * estado "guardado" en la UI (marca de cada card, badge de la pestaña y toggle
+ * del panel de detalle), así no hay dos representaciones que puedan divergir.
+ */
+export async function fetchTalentPoolCandidateIds(tenantId: string): Promise<string[]> {
+  const client = requireSupabase()
+  const { data, error } = await client
+    .from('talent_pool_entries')
+    .select('candidate_profile_id')
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []).map((entry) => entry.candidate_profile_id)
 }

@@ -11,7 +11,7 @@ Tipos: `string`, `number`, `boolean`, `Json`, `string[]`, `enum <nombre>`, ` | n
 - **Membresía ASI**: [`institutional_membership_applications`](#institutional_membership_applications) · [`membership_payments`](#membership_payments) · [`membership_payment_settings`](#membership_payment_settings) · [`user_authority_scopes`](#user_authority_scopes) · [`pastor_authority_requests`](#pastor_authority_requests) · [`regional_administrator_authority_requests`](#regional_administrator_authority_requests) · [`recruiter_requests`](#recruiter_requests)
 - **Donaciones**: [`donations`](#donations) · [`donation_amount_options`](#donation_amount_options)
 - **Jerarquía de iglesias**: [`church_unions`](#church_unions) · [`church_associations`](#church_associations) · [`church_districts`](#church_districts) · [`churches`](#churches)
-- **Empleo (jobs & aplicaciones)**: [`job_postings`](#job_postings) · [`job_screening_questions`](#job_screening_questions) · [`applications`](#applications) · [`application_answers`](#application_answers) · [`application_notes`](#application_notes) · [`application_ratings`](#application_ratings) · [`application_stage_history`](#application_stage_history) · [`pipeline_stages`](#pipeline_stages) · [`opportunity_stage_templates`](#opportunity_stage_templates) · [`saved_jobs`](#saved_jobs) · [`job_alerts`](#job_alerts)
+- **Empleo (jobs & aplicaciones)**: [`job_postings`](#job_postings) · [`job_screening_questions`](#job_screening_questions) · [`applications`](#applications) · [`application_answers`](#application_answers) · [`application_notes`](#application_notes) · [`application_ratings`](#application_ratings) · [`application_stage_history`](#application_stage_history) · [`pipeline_stages`](#pipeline_stages) · [`opportunity_stage_templates`](#opportunity_stage_templates) · [`saved_jobs`](#saved_jobs) · [`job_alerts`](#job_alerts) · [`talent_pool_entries`](#talent_pool_entries)
 - **Perfil del candidato**: [`candidate_profiles`](#candidate_profiles) · [`candidate_educations`](#candidate_educations) · [`candidate_experiences`](#candidate_experiences) · [`candidate_languages`](#candidate_languages) · [`candidate_links`](#candidate_links) · [`candidate_resumes`](#candidate_resumes) · [`candidate_skills`](#candidate_skills)
 - **Notificaciones**: [`notifications`](#notifications) · [`notification_deliveries`](#notification_deliveries) · [`notification_delivery_logs`](#notification_delivery_logs) · [`notification_preferences`](#notification_preferences) · [`push_subscriptions`](#push_subscriptions)
 - **Suscripciones y planes**: [`subscription_plans`](#subscription_plans) · [`tenant_subscriptions`](#tenant_subscriptions) · [`feature_flags`](#feature_flags)
@@ -88,6 +88,8 @@ erDiagram
     job_postings ||--o{ job_screening_questions : "job_posting_id"
     candidate_profiles ||--o{ saved_jobs : "candidate_profile_id"
     job_postings ||--o{ saved_jobs : "job_posting_id"
+    tenants ||--o{ talent_pool_entries : "tenant_id"
+    candidate_profiles ||--o{ talent_pool_entries : "candidate_profile_id"
 ```
 
 ### Notificaciones
@@ -930,6 +932,30 @@ Montos sugeridos configurables que se muestran en `/donate` (`list_active_donati
 
 **Foreign keys:**
 - `candidate_profile_id` → [`candidate_profiles`](#candidate_profiles).`id`
+
+[↑ índice](#índice-de-tablas)
+
+### <a id="talent_pool_entries"></a>`talent_pool_entries`
+
+Banco de talento del workspace: candidatos que el equipo guardó desde el directorio
+(`/workspace/talent`, pestaña "Guardados") para futuras vacantes. El alcance es por
+tenant —lo que guarda un reclutador lo ve todo su equipo—, con `unique (tenant_id,
+candidate_profile_id)`.
+
+| Columna | Tipo | Nullable |
+|---|---|---|
+| `candidate_profile_id` | `string` |  |
+| `created_at` | `string` |  |
+| `id` | `string` |  |
+| `note` | `string` | ✓ |
+| `saved_by_user_id` | `string` | ✓ |
+| `tenant_id` | `string` |  |
+| `updated_at` | `string` |  |
+
+**Foreign keys:**
+- `candidate_profile_id` → [`candidate_profiles`](#candidate_profiles).`id`
+- `saved_by_user_id` → [`users`](#users).`id`
+- `tenant_id` → [`tenants`](#tenants).`id`
 
 [↑ índice](#índice-de-tablas)
 

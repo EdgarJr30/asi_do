@@ -15,7 +15,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Database,
   FileStack,
   FileText,
   Inbox,
@@ -103,7 +102,6 @@ const workspaceIconByHref: Partial<Record<string, LucideIcon>> = {
   [surfacePaths.workspace.jobs]: BriefcaseBusiness,
   [surfacePaths.workspace.applications]: FileStack,
   [surfacePaths.workspace.talent]: UsersRound,
-  [surfacePaths.workspace.talentPool]: Database,
   [surfacePaths.workspace.pipeline]: KanbanSquare,
   [surfacePaths.workspace.reports]: BarChart3,
   [surfacePaths.workspace.settings]: Settings,
@@ -139,11 +137,7 @@ const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
   },
   [surfacePaths.workspace.talent]: {
     title: 'Candidatos',
-    description: 'Talento visible para el equipo con contexto suficiente para decidir'
-  },
-  [surfacePaths.workspace.talentPool]: {
-    title: 'Banco de talento',
-    description: 'Talento guardado y preseleccionado para futuras vacantes'
+    description: 'Talento visible para el equipo y los candidatos guardados del workspace'
   },
   [surfacePaths.workspace.pipeline]: {
     title: 'Proceso de selección',
