@@ -460,6 +460,9 @@ Do not label authenticated product entry as `Abrir mi empresa`, because a user m
 ### R-130 — The clickable ASI sidebar brand must not use a hover fill
 Do not add a background fill, opacity animation, scale effect, or other decorative hover treatment to the clickable ASI brand mark or lockup in the platform sidebar. It must remain visually stable when the pointer passes over it while retaining its navigation to platform `Inicio` and a visible focus indicator for keyboard users.
 
+### R-131 — Loader copy must remain optically centered
+Do not let animated dots or other trailing decoration shift page-loader labels away from the horizontal center shared by the ASI brand mark and supporting hint. Decorative loading animation must be positioned outside the label's layout width so the visible copy remains correctly centered at every viewport size.
+
 ---
 
 ## Maintenance rule

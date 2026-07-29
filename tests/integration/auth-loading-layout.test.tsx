@@ -50,4 +50,17 @@ describe('auth loading layout', () => {
 
     expect(screen.getByRole('status')).not.toHaveClass('min-h-dvh')
   })
+
+  it('centers the visible loader label independently from its animated dots', () => {
+    renderAuthLoadingPage('/auth/sign-in', <SignInPage />)
+
+    const label = screen.getByText('Preparando tu plataforma')
+    const labelFrame = label.parentElement
+    const labelLine = label.closest('p')
+    const animatedDots = labelFrame?.querySelector('[aria-hidden="true"]')
+
+    expect(labelLine).toHaveClass('w-full', 'text-center')
+    expect(labelFrame).toHaveClass('relative', 'inline-block')
+    expect(animatedDots).toHaveClass('absolute', 'left-full')
+  })
 })

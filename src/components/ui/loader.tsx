@@ -109,19 +109,21 @@ export function PageLoader({
         </span>
       </div>
 
-      <div className="space-y-1.5">
-        <p className="flex items-center justify-center gap-1 text-sm font-semibold text-(--app-text)">
-          {label}
-          <span aria-hidden className="inline-flex motion-reduce:hidden">
-            {[0, 1, 2].map((index) => (
-              <span
-                key={index}
-                className="inline-block animate-[loader-dot_1.2s_ease-in-out_infinite]"
-                style={{ animationDelay: `${index * 0.18}s` }}
-              >
-                .
-              </span>
-            ))}
+      <div className="w-full space-y-1.5">
+        <p className="w-full text-center text-sm font-semibold text-(--app-text)">
+          <span className="relative inline-block">
+            <span>{label}</span>
+            <span aria-hidden className="absolute left-full top-0 ml-1 inline-flex motion-reduce:hidden">
+              {[0, 1, 2].map((index) => (
+                <span
+                  key={index}
+                  className="inline-block animate-[loader-dot_1.2s_ease-in-out_infinite]"
+                  style={{ animationDelay: `${index * 0.18}s` }}
+                >
+                  .
+                </span>
+              ))}
+            </span>
           </span>
         </p>
         {hint ? <p className="text-xs text-(--app-text-muted)">{hint}</p> : null}
