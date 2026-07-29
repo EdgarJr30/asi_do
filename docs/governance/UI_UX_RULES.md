@@ -544,6 +544,7 @@ Rules:
 20. Action footers inside narrow side sheets must size against the sheet, not the viewport breakpoint. Use a bounded grid or vertical stack, keep every control at `w-full min-w-0`, and place a long primary action on its own row so labels never overflow or clip outside the panel.
 21. Multi-item summary statbars in dense administration modules should use a compact two-column grid on mobile when the labels and helper text remain readable. Do not stack four or more indicators into a tall single-column block. Detail disclosures placed after summary/context blocks must keep a visible spacing gap instead of touching the preceding surface.
 22. Workspace settings must use the visible label `Configuración de empresa` in menus, navigation, breadcrumbs, and page headings so users do not confuse tenant/company administration with their personal profile settings.
+23. The authenticated profile menu must expose a visible `Página institucional` action before sign-out so candidates, company users, and administrators can return directly to the institutional marketing site.
 
 ---
 

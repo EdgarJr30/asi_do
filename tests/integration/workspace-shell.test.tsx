@@ -184,6 +184,10 @@ function renderWorkspaceShell(initialEntry: string = surfacePaths.workspace.root
         element: <div>Perfil candidato</div>
       },
       {
+        path: surfacePaths.institutional.home,
+        element: <div>Página institucional</div>
+      },
+      {
         path: surfacePaths.public.home,
         element: <div>Landing pública</div>
       }
@@ -507,6 +511,16 @@ describe('workspace shell', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Mi perfil' }).at(-1)!)
 
     expect(await screen.findByText('Perfil candidato')).toBeInTheDocument()
+  })
+
+  it('opens the institutional page from the profile menu', async () => {
+    seedWorkspaceSession(['workspace:read', 'role:read'])
+    renderWorkspaceShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir menu de perfil' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Página institucional' }))
+
+    expect(await screen.findByText('Página institucional')).toBeInTheDocument()
   })
 
   it('persists the desktop sidebar collapsed state', async () => {

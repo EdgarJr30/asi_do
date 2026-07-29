@@ -451,6 +451,9 @@ Do not stack the four membership status indicators in `/admin/memberships` into 
 ### R-127 — Workspace settings must be identified as company configuration
 Do not label the workspace settings route with the ambiguous standalone word `Configuración`. Menus, navigation, route metadata, page headings, and contextual back links must call it `Configuración de empresa` so users understand that it manages the company rather than their personal profile.
 
+### R-128 — Authenticated users must have a direct institutional-page action
+Do not leave authenticated candidates, company users, or administrators without a direct route back to the institutional marketing site. The shared profile menu must include a visible `Página institucional` action before `Cerrar sesión`.
+
 ---
 
 ## Maintenance rule

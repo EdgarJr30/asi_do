@@ -1181,7 +1181,8 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
       { href: surfacePaths.account.membership, label: 'Mi membresía' },
       { href: surfacePaths.candidate.profile, label: 'Mi perfil' },
       { href: surfacePaths.candidate.applications, label: 'Postulaciones' },
-      ...(settingsItem ? [{ href: settingsItem.href, label: settingsItem.title }] : [])
+      ...(settingsItem ? [{ href: settingsItem.href, label: settingsItem.title }] : []),
+      { href: surfacePaths.institutional.home, label: 'Página institucional' }
     ],
     publicActionHref: surfacePaths.storefront.jobs,
     publicActionLabel: 'Ver empleos',
