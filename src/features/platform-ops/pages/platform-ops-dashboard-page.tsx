@@ -8,6 +8,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Badge } from '@/components/ui/badge'
 import {
   AdminCard,
+  AdminEmpty,
   AdminPage,
   AdminStat,
   AdminStatBar,
@@ -19,12 +20,31 @@ import { MembershipPlansPanel } from '@/features/platform-ops/components/members
 import {
   fetchPlatformOpsSnapshot,
   listFeatureFlags,
-  listTenantSubscriptions,
+  listMembershipSubscriptions,
   updateFeatureFlag
 } from '@/features/platform-ops/lib/platform-ops-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 
 type PlatformTab = 'plans' | 'subscriptions' | 'flags'
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+function formatDate(value: string | null) {
+  if (!value) return '—'
+  return new Date(value).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+/** "en 12 días" / "venció hace 3 días", para leer la urgencia de la renovación de un vistazo. */
+function formatRemaining(expiresAt: string | null) {
+  if (!expiresAt) return 'Sin vencimiento'
+
+  const days = Math.round((new Date(expiresAt).getTime() - Date.now()) / DAY_MS)
+  if (days === 0) return 'Vence hoy'
+  if (days > 0) return `en ${days} ${days === 1 ? 'día' : 'días'}`
+
+  const overdue = Math.abs(days)
+  return `venció hace ${overdue} ${overdue === 1 ? 'día' : 'días'}`
+}
 
 export function PlatformOpsDashboardPage() {
   const session = useAppSession()
@@ -39,7 +59,7 @@ export function PlatformOpsDashboardPage() {
 
   const subscriptionsQuery = useQuery({
     queryKey: ['platform-ops-subscriptions'],
-    queryFn: listTenantSubscriptions
+    queryFn: () => listMembershipSubscriptions()
   })
 
   const featureFlagsQuery = useQuery({
@@ -82,7 +102,16 @@ export function PlatformOpsDashboardPage() {
       <div className="space-y-5">
         <AdminStatBar columns={6}>
           <AdminStat label="Tenants activos" value={stats?.activeTenants ?? '—'} />
-          <AdminStat label="Subscripciones" value={stats?.activeSubscriptions ?? '—'} tone="green" />
+          <AdminStat
+            label="Membresías activas"
+            value={stats?.activeMemberships ?? '—'}
+            helper={
+              stats
+                ? `${stats.membershipsExpiringSoon} por renovar · ${stats.membershipsInGrace} en gracia`
+                : undefined
+            }
+            tone="green"
+          />
           <AdminStat label="Moderación" value={stats?.openModerationCases ?? '—'} tone="violet" />
           <AdminStat label="Operadores pend." value={stats?.pendingRecruiterRequests ?? '—'} tone="amber" />
           <AdminStat label="Emails pendientes" value={stats?.pendingEmailHooks ?? '—'} tone="rose" />
@@ -102,36 +131,54 @@ export function PlatformOpsDashboardPage() {
         {tab === 'plans' ? <MembershipPlansPanel /> : null}
 
         {tab === 'subscriptions' ? (
-          <AdminCard title="Suscripciones recientes" description="Tenants, plan actual, seats y estado de suscripción.">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-180 text-sm">
-                <thead>
-                  <tr className="border-b border-(--app-border) text-left text-[0.68rem] uppercase tracking-[0.08em] text-(--app-text-subtle)">
-                    <th className="px-3 py-2 font-bold">Tenant</th>
-                    <th className="px-3 py-2 font-bold">Plan</th>
-                    <th className="px-3 py-2 text-right font-bold">Seats</th>
-                    <th className="px-3 py-2 font-bold">Inicio</th>
-                    <th className="px-3 py-2 text-right font-bold">Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subscriptions.map((subscription) => (
-                    <tr key={subscription.id} className="border-b border-(--app-border)/60 transition-colors hover:bg-(--app-surface-muted)">
-                      <td className="px-3 py-2 font-semibold text-(--app-text)">
-                        {subscription.tenant?.name ?? subscription.tenant_id}
-                        <span className="block text-xs font-normal text-(--app-text-muted)">{subscription.tenant?.slug}</span>
-                      </td>
-                      <td className="px-3 py-2 text-(--app-text-muted)">{subscription.plan?.name ?? subscription.plan_id}</td>
-                      <td className="px-3 py-2 text-right font-mono text-(--app-text)">{subscription.seat_count}</td>
-                      <td className="px-3 py-2 text-(--app-text-muted)">{new Date(subscription.starts_at).toLocaleDateString('es-DO')}</td>
-                      <td className="px-3 py-2 text-right">
-                        <Badge variant={subscription.status === 'active' ? 'default' : 'outline'}>{subscription.status}</Badge>
-                      </td>
+          <AdminCard
+            title="Membresías vigentes"
+            description="Quién está al día y cuándo le toca renovar. Ordenadas por la que vence primero."
+          >
+            {subscriptions.length === 0 ? (
+              <AdminEmpty
+                title="Sin membresías vigentes"
+                description="Aquí aparecerán los miembros activos y los que estén en periodo de gracia."
+              />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-180 text-sm">
+                  <thead>
+                    <tr className="border-b border-(--app-border) text-left text-[0.68rem] uppercase tracking-[0.08em] text-(--app-text-subtle)">
+                      <th className="px-3 py-2 font-bold">Miembro</th>
+                      <th className="px-3 py-2 font-bold">Plan</th>
+                      <th className="px-3 py-2 font-bold">Activada</th>
+                      <th className="px-3 py-2 font-bold">Vence</th>
+                      <th className="px-3 py-2 text-right font-bold">Estado</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {subscriptions.map((subscription) => (
+                      <tr
+                        key={subscription.userId}
+                        className="border-b border-(--app-border)/60 transition-colors hover:bg-(--app-surface-muted)"
+                      >
+                        <td className="px-3 py-2 font-semibold text-(--app-text)">
+                          {subscription.fullName}
+                          <span className="block text-xs font-normal text-(--app-text-muted)">{subscription.email}</span>
+                        </td>
+                        <td className="px-3 py-2 text-(--app-text-muted)">{subscription.categoryName ?? 'Sin categoría'}</td>
+                        <td className="px-3 py-2 text-(--app-text-muted)">{formatDate(subscription.activatedAt)}</td>
+                        <td className="px-3 py-2 text-(--app-text-muted)">
+                          {formatDate(subscription.expiresAt)}
+                          <span className="block text-xs text-(--app-text-subtle)">{formatRemaining(subscription.expiresAt)}</span>
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          <Badge variant={subscription.status === 'active' ? 'default' : 'outline'}>
+                            {subscription.status === 'active' ? 'Vigente' : 'En gracia'}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </AdminCard>
         ) : null}
 

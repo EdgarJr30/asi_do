@@ -153,7 +153,12 @@ export function AdminConsolePage() {
           <AdminSectionLabel title="Salud de plataforma" />
           <AdminStatBar columns={6}>
             <AdminStat label="Tenants activos" value={stats?.activeTenants ?? '—'} />
-            <AdminStat label="Subscripciones" value={stats?.activeSubscriptions ?? '—'} tone="green" />
+            <AdminStat
+              label="Membresías activas"
+              value={stats?.activeMemberships ?? '—'}
+              tone="green"
+              helper={stats ? `${stats.membershipsExpiringSoon} por renovar en 30 días` : undefined}
+            />
             <AdminStat label="Casos moderación" value={stats?.openModerationCases ?? '—'} tone="violet" />
             <AdminStat label="Errores abiertos" value="—" tone="rose" helper="Ver módulo Errores" />
             <AdminStat label="Emails pendientes" value={stats?.pendingEmailHooks ?? '—'} tone="amber" />

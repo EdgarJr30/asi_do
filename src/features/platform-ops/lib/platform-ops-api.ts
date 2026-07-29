@@ -5,7 +5,12 @@ export interface PlatformOpsSnapshot {
   activeTenants: number
   openModerationCases: number
   pendingRecruiterRequests: number
-  activeSubscriptions: number
+  /** Membresías vigentes: la "suscripción" real de la plataforma. */
+  activeMemberships: number
+  /** Membresías vencidas dentro del periodo de gracia. */
+  membershipsInGrace: number
+  /** Membresías vigentes que vencen en los próximos 30 días. */
+  membershipsExpiringSoon: number
   pendingEmailHooks: number
   featureFlagsEnabled: number
 }
@@ -18,24 +23,16 @@ export interface MembershipPlanAdoption {
   inReview: number
 }
 
-export interface TenantSubscriptionRecord {
-  id: string
-  tenant_id: string
-  plan_id: string
-  status: 'trialing' | 'active' | 'past_due' | 'cancelled' | 'ended'
-  seat_count: number
-  starts_at: string
-  ends_at: string | null
-  tenant: {
-    id: string
-    name: string
-    slug: string
-  } | null
-  plan: {
-    id: string
-    code: string
-    name: string
-  } | null
+/** Una membresía vigente (o en gracia) con la categoría en la que está inscrita. */
+export interface MembershipSubscriptionRecord {
+  userId: string
+  fullName: string
+  email: string | null
+  status: 'active' | 'grace_period'
+  activatedAt: string | null
+  expiresAt: string | null
+  categorySlug: string | null
+  categoryName: string | null
 }
 
 export interface FeatureFlagRecord {
@@ -103,33 +100,65 @@ export async function fetchMembershipPlanAdoption(categorySlugs: string[]) {
   return Object.fromEntries(entries) as Record<string, MembershipPlanAdoption>
 }
 
-export async function listTenantSubscriptions() {
+/**
+ * Membresías vigentes y en gracia, la que vence primero de última. La categoría vive en
+ * la solicitud aprobada, así que se resuelve en una segunda consulta acotada a esos
+ * usuarios (PostgREST no puede unir users → applications en sentido inverso).
+ */
+export async function listMembershipSubscriptions(limit = 25) {
   const client = requireSupabase()
-  const response = await client
-    .from('tenant_subscriptions' as never)
-    .select(
-      `
-        *,
-        tenant:tenants!tenant_subscriptions_tenant_id_fkey (
-          id,
-          name,
-          slug
-        ),
-        plan:subscription_plans!tenant_subscriptions_plan_id_fkey (
-          id,
-          code,
-          name
-        )
-      `
-    )
-    .order('starts_at', { ascending: false })
-    .limit(12)
 
-  if (response.error) {
-    throw toControlledError(response.error)
+  const membersResponse = await client
+    .from('users')
+    .select('id, full_name, email, asi_membership_status, membership_activated_at, membership_expires_at')
+    .in('asi_membership_status', ['active', 'grace_period'])
+    .order('membership_expires_at', { ascending: true, nullsFirst: false })
+    .limit(limit)
+
+  if (membersResponse.error) {
+    throw toControlledError(membersResponse.error)
   }
 
-  return (response.data ?? []) as TenantSubscriptionRecord[]
+  const members = membersResponse.data ?? []
+  if (members.length === 0) {
+    return [] as MembershipSubscriptionRecord[]
+  }
+
+  const applicationsResponse = await client
+    .from('institutional_membership_applications')
+    .select('requester_user_id, category_slug, category_name')
+    .eq('status', 'approved')
+    .in(
+      'requester_user_id',
+      members.map((member) => member.id)
+    )
+
+  if (applicationsResponse.error) {
+    throw toControlledError(applicationsResponse.error)
+  }
+
+  const categoryByUserId = new Map(
+    (applicationsResponse.data ?? []).flatMap((application) =>
+      application.requester_user_id
+        ? [[application.requester_user_id, { slug: application.category_slug, name: application.category_name }] as const]
+        : []
+    )
+  )
+
+  return members.map((member) => {
+    const category = categoryByUserId.get(member.id) ?? null
+
+    return {
+      userId: member.id,
+      fullName: member.full_name,
+      email: member.email,
+      status: member.asi_membership_status as MembershipSubscriptionRecord['status'],
+      activatedAt: member.membership_activated_at,
+      expiresAt: member.membership_expires_at,
+      categorySlug: category?.slug ?? null,
+      categoryName: category?.name ?? null
+    }
+  }) satisfies MembershipSubscriptionRecord[]
 }
 
 export async function listFeatureFlags() {
