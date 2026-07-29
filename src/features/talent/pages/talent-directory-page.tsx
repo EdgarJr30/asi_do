@@ -862,25 +862,30 @@ function CandidateDetailSheet({
 
   const footer =
     profile && !isLoading && !error ? (
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button variant="outline" className="gap-1.5 sm:shrink-0" aria-pressed={saved} onClick={onToggleSaved}>
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          variant="outline"
+          className="w-full min-w-0 gap-1.5 px-3"
+          aria-pressed={saved}
+          onClick={onToggleSaved}
+        >
           {saved ? <BookmarkCheck className="size-4 text-primary-600 dark:text-primary-300" /> : <Bookmark className="size-4" />}
           {saved ? 'Guardado' : 'Guardar'}
         </Button>
         <Button
           variant="outline"
-          className="flex-1 gap-1.5"
+          className="w-full min-w-0 gap-1.5 px-3"
           onClick={() =>
             toast.info('Perfil completo', {
               description: 'La vista de perfil completo estará disponible próximamente.'
             })
           }
         >
-          <ExternalLink className="size-4" /> Ver perfil completo
+          <ExternalLink className="size-4" /> Ver perfil
         </Button>
         <a
           href={`mailto:${profile.email}`}
-          className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-card border border-primary-600 bg-primary-600 px-4 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(43,69,143,0.18)] transition hover:border-primary-700 hover:bg-primary-700"
+          className="col-span-2 inline-flex h-11 w-full min-w-0 items-center justify-center gap-1.5 rounded-card border border-primary-600 bg-primary-600 px-4 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(43,69,143,0.18)] transition hover:border-primary-700 hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)"
         >
           <Mail className="size-4" /> Contactar
         </a>

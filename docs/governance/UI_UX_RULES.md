@@ -541,6 +541,7 @@ Rules:
 17. Growing candidate histories such as `Postulaciones` should prefer infinite scroll only when backed by real database pagination. Do not simulate it by loading all rows and slicing locally.
 18. Candidate account page titles such as `Postulaciones` and `Tu membresía` should share the compact app heading rhythm (`text-xl font-semibold` with `sm:text-[1.6rem]`) unless the page is intentionally an onboarding or marketing hero.
 19. Platform access-control screens should stay dense, owner-only, and report-oriented: use compact statbars, tabs for users/roles/audit/risks, mobile-safe cards, explicit confirmation for role revocation/deletion, automatic search, database-backed infinite user loading, and grouped permission checklists with risk badges instead of oversized role cards or raw JSON-first audit views.
+20. Action footers inside narrow side sheets must size against the sheet, not the viewport breakpoint. Use a bounded grid or vertical stack, keep every control at `w-full min-w-0`, and place a long primary action on its own row so labels never overflow or clip outside the panel.
 
 ---
 

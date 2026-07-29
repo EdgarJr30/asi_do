@@ -226,6 +226,7 @@ RBAC must align with Supabase authorization patterns:
 - roles/permissions stored in Postgres
 - helper SQL functions may be used for permission checks
 - RLS policies must use authenticated context and membership/role data
+- Cross-table RLS predicates must preserve the caller's tenant permission while evaluating protected lookup data through a narrow, boolean-only security-definer helper; they must not expose the protected row or bypass tenant scope.
 
 Recommended helper functions:
 - `is_platform_admin()`
