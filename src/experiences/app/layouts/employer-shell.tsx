@@ -75,7 +75,6 @@ type ShellConfig = {
   brand: string
   footerCaption: string
   hideFooterChrome?: boolean
-  userRole?: string
   guestActions: ShellGuestAction[]
   mobileSidebarLabel: string
   primaryNav: AppNavItem[]
@@ -818,38 +817,7 @@ function SidebarFooter({
         </div>
       ) : null}
 
-      {isDesktop ? (
-        <button
-          type="button"
-          aria-label={`Abrir perfil de ${userName}`}
-          onClick={onOpenProfile}
-          className={cn(
-            'group relative mt-3 flex w-full items-center rounded-card outline-none transition-[background-color,border-color] duration-150 focus-visible:ring-2 focus-visible:ring-white/40',
-            showCollapsedLabels ? 'justify-center py-1' : 'gap-3 px-2 py-2',
-            !showCollapsedLabels && config.hideFooterChrome ? 'border border-white/10 bg-white/6 hover:border-white/16 hover:bg-white/10' : ''
-          )}
-        >
-          <UserAvatar
-            name={userName}
-            avatarPath={session.profile?.avatar_path}
-            className="size-9 ring-2 ring-white/15"
-            fallbackClassName="bg-[linear-gradient(135deg,#3a63d6,#9fb6f0)] text-white"
-            textClassName="text-[11px] font-semibold"
-            initialsFallback={userInitials}
-          />
-          {!showCollapsedLabels ? (
-            <span className="min-w-0 flex-1 text-left">
-              <span className="block truncate text-[13px] font-semibold text-white">{userName}</span>
-              <span className="block truncate text-[11px] text-white/52">{config.userRole ?? userEmail}</span>
-            </span>
-          ) : (
-            <>
-              <span className="sr-only">{userName}</span>
-              <SidebarTooltip label={userName} />
-            </>
-          )}
-        </button>
-      ) : null}
+      {/* En desktop el perfil vive en el menu del topbar (arriba a la derecha); no lo duplicamos aqui. */}
 
       <button
         aria-label="Cerrar sesión"
@@ -1285,8 +1253,6 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
     brand: 'Plataforma ASI',
     footerCaption: 'Shell compartido de plataforma',
     hideFooterChrome: true,
-    // Etiqueta genérica: no exponemos el rol del tenant (p. ej. "Owner") en el chrome.
-    userRole: hasWorkspace ? 'Miembro del equipo' : 'Candidato',
     guestActions: [],
     mobileSidebarLabel: 'plataforma',
     primaryNav: baseItems,
