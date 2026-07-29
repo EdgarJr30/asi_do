@@ -457,6 +457,9 @@ Do not leave authenticated candidates, company users, or administrators without 
 ### R-129 — Platform-entry actions must use neutral Spanish product language
 Do not label authenticated product entry as `Abrir mi empresa`, because a user may enter the platform without belonging to a company. Buttons and menu actions that enter the authenticated product must say `Abrir plataforma`; do not expose mixed-language equivalents such as `Abrir mi workspace`.
 
+### R-130 — The clickable ASI sidebar brand must not use a hover fill
+Do not add a background fill, opacity animation, scale effect, or other decorative hover treatment to the clickable ASI brand mark or lockup in the platform sidebar. It must remain visually stable when the pointer passes over it while retaining its navigation to platform `Inicio` and a visible focus indicator for keyboard users.
+
 ---
 
 ## Maintenance rule

@@ -879,7 +879,7 @@ function WorkspaceSidebarContent({
           <button
             aria-label="Ir al inicio de la plataforma"
             className={cn(
-              'rounded-control text-left outline-none transition-[background-color,box-shadow] duration-150 hover:bg-white/8 focus-visible:ring-2 focus-visible:ring-white/40',
+              'rounded-control text-left outline-none focus-visible:ring-2 focus-visible:ring-white/40',
               showCollapsedLabels
                 ? 'flex size-10 items-center justify-center'
                 : 'flex min-w-0 flex-1 flex-col justify-center',
