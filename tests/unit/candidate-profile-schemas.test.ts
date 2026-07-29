@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  candidateProfileSchema,
   sanitizeCandidateEducationList,
   sanitizeCandidateExperienceList,
   sanitizeCandidateLanguageList,
@@ -90,5 +91,33 @@ describe('candidate profile schema helpers', () => {
     ).toEqual([
       { id: '1', linkType: 'linkedin', label: 'Perfil', url: 'https://linkedin.com/in/demo' }
     ])
+  })
+
+  it('requires nombre y apellido and trims them', () => {
+    const valid = candidateProfileSchema.safeParse({
+      firstName: '  Juan  ',
+      lastName: '  Pérez Gómez ',
+      headline: '',
+      desiredRole: '',
+      cityName: '',
+      countryCode: '',
+      summary: ''
+    })
+
+    expect(valid.success).toBe(true)
+    expect(valid.success && valid.data.firstName).toBe('Juan')
+    expect(valid.success && valid.data.lastName).toBe('Pérez Gómez')
+
+    const missingLastName = candidateProfileSchema.safeParse({
+      firstName: 'Juan',
+      lastName: '   ',
+      headline: '',
+      desiredRole: '',
+      cityName: '',
+      countryCode: '',
+      summary: ''
+    })
+
+    expect(missingLastName.success).toBe(false)
   })
 })

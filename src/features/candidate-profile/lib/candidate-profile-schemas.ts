@@ -1,6 +1,16 @@
 import { z } from 'zod'
 
 export const candidateProfileSchema = z.object({
+  firstName: z
+    .string()
+    .trim()
+    .min(2, 'Escribe tu nombre.')
+    .max(80, 'Usa un nombre de 80 caracteres o menos.'),
+  lastName: z
+    .string()
+    .trim()
+    .min(2, 'Escribe tu apellido.')
+    .max(80, 'Usa un apellido de 80 caracteres o menos.'),
   headline: z.string().trim().max(120, 'Usa un titular de 120 caracteres o menos.').optional().or(z.literal('')),
   desiredRole: z.string().trim().max(120, 'Usa un rol objetivo de 120 caracteres o menos.').optional().or(z.literal('')),
   cityName: z.string().trim().max(120, 'La ciudad debe tener 120 caracteres o menos.').optional().or(z.literal('')),

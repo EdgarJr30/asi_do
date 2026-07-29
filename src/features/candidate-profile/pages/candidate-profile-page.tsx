@@ -45,6 +45,7 @@ import {
 } from '@/shared/ui/card-motion'
 import { CountryCodeSelect, DominicanCitySelect } from '@/shared/ui/location-selects'
 import { cn } from '@/lib/utils/cn'
+import { splitFullName } from '@/lib/utils/split-full-name'
 import { AVATARS_BUCKET, toErrorMessage, updateUserProfile, uploadPublicFile } from '@/features/auth/lib/auth-api'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
 import { ProfileOnboardingFlow } from '@/features/candidate-profile/components/profile-onboarding-flow'
@@ -585,9 +586,15 @@ function CandidateProfileEditor({
   const stagedResumesRef = useRef<StagedResume[]>([])
   stagedResumesRef.current = stagedResumes
 
+  // El nombre real vive en `users.full_name`; el editor lo muestra separado en
+  // nombre y apellido y lo vuelve a unir al guardar.
+  const profileName = splitFullName(session.profile?.full_name === 'New user' ? '' : session.profile?.full_name)
+
   const form = useForm<CandidateProfileFormValues>({
     resolver: zodResolver(candidateProfileSchema),
     defaultValues: {
+      firstName: profileName.first,
+      lastName: profileName.last,
       headline: bundle.profile?.headline ?? '',
       desiredRole: bundle.profile?.desired_role ?? '',
       cityName: bundle.profile?.city_name ?? '',
@@ -603,6 +610,27 @@ function CandidateProfileEditor({
       }
 
       const userId = session.authUser.id
+      const currentFullName = session.profile?.full_name ?? ''
+      const currentDisplayName = session.profile?.display_name ?? ''
+      const nextFullName = [values.firstName.trim(), values.lastName.trim()].filter(Boolean).join(' ')
+
+      if (nextFullName && nextFullName !== currentFullName) {
+        await updateUserProfile({
+          userId,
+          fullName: nextFullName,
+          // El nombre visible solo se arrastra cuando el usuario no lo ha
+          // personalizado: si coincide con el nombre anterior (o sigue en el
+          // placeholder del registro) lo mantenemos en sintonía.
+          displayName:
+            !currentDisplayName || currentDisplayName === 'New user' || currentDisplayName === currentFullName
+              ? nextFullName
+              : currentDisplayName,
+          locale: session.profile?.locale ?? 'es',
+          countryCode: session.profile?.country_code ?? 'DO',
+          avatarPath: session.profile?.avatar_path ?? null
+        })
+      }
+
       const result = await saveCandidateProfileBundle({
         userId,
         profile: {
@@ -666,6 +694,9 @@ function CandidateProfileEditor({
       if (session.authUser) {
         await clearCandidateProfileDraft(session.authUser.id)
       }
+      // Refresca la sesión para que el nombre nuevo aparezca en el header y en
+      // el resto de la app sin recargar.
+      await session.refresh()
       toast.success('Perfil candidato actualizado', {
         description: 'Tu perfil ya está guardado.'
       })
@@ -861,7 +892,9 @@ function CandidateProfileEditor({
       const lastSavedAt = bundle.profile?.updated_at ? new Date(bundle.profile.updated_at).getTime() : 0
 
       if (draft && draft.savedAt > lastSavedAt) {
-        form.reset(draft.formValues)
+        // Los borradores guardados antes de que existieran nombre y apellido no
+        // traen esas claves: partimos de los valores actuales para no vaciarlas.
+        form.reset({ ...form.getValues(), ...draft.formValues })
         setExperiences(draft.experiences.length > 0 ? draft.experiences : [createEmptyCandidateExperience()])
         setEducations(draft.educations.length > 0 ? draft.educations : [createEmptyCandidateEducation()])
         setSkills(draft.skills.length > 0 ? draft.skills : [createEmptyCandidateSkill()])
@@ -1116,7 +1149,17 @@ function CandidateProfileEditor({
     isVisibleToRecruiters
   ]
   const completionPercent = Math.round((completionItems.filter(Boolean).length / completionItems.length) * 100)
-  const saveAll = form.handleSubmit((values) => saveMutation.mutate(values))
+  const saveAll = form.handleSubmit(
+    (values) => saveMutation.mutate(values),
+    () => {
+      // Todos los campos validados viven en "Perfil general": si el error salta
+      // desde otra pestaña, la traemos al frente para que se vea el mensaje.
+      setActiveTab('general')
+      toast.error('Revisa tu perfil general', {
+        description: 'Faltan datos obligatorios antes de guardar.'
+      })
+    }
+  )
   const handleTabSelect = (tab: ProfileTab) => {
     setActiveTab(tab)
     window.requestAnimationFrame(() => {
@@ -1267,6 +1310,25 @@ function CandidateProfileEditor({
               description="Resumen reutilizable para futuras aplicaciones y nuevas oportunidades."
             >
               <div className="space-y-3 sm:space-y-4">
+                <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                  <ProfileField label="Nombre" error={form.formState.errors.firstName?.message}>
+                    <Input
+                      className={profileFieldClass}
+                      autoComplete="given-name"
+                      placeholder="Ej. Juan"
+                      {...form.register('firstName')}
+                    />
+                  </ProfileField>
+                  <ProfileField label="Apellido" error={form.formState.errors.lastName?.message}>
+                    <Input
+                      className={profileFieldClass}
+                      autoComplete="family-name"
+                      placeholder="Ej. Pérez"
+                      {...form.register('lastName')}
+                    />
+                  </ProfileField>
+                </div>
+
                 <ProfileField
                   label="Titular profesional"
                   help="Tu presentación breve."
