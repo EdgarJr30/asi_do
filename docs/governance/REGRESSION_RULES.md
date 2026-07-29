@@ -454,8 +454,8 @@ Do not label the workspace settings route with the ambiguous standalone word `Co
 ### R-128 — Authenticated users must have a direct institutional-page action
 Do not leave authenticated candidates, company users, or administrators without a direct route back to the institutional marketing site. The shared profile menu must include a visible `Página institucional` action before `Cerrar sesión`.
 
-### R-129 — Company-entry actions must use Spanish product language
-Do not expose `Abrir mi workspace` as customer-facing copy. Buttons and menu actions that take an authorized user into `/workspace` must say `Abrir mi empresa` so the product language remains fully Spanish and consistent with the `Mi empresa` navigation group.
+### R-129 — Platform-entry actions must use neutral Spanish product language
+Do not label authenticated product entry as `Abrir mi empresa`, because a user may enter the platform without belonging to a company. Buttons and menu actions that enter the authenticated product must say `Abrir plataforma`; do not expose mixed-language equivalents such as `Abrir mi workspace`.
 
 ---
 

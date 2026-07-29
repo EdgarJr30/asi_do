@@ -59,7 +59,7 @@ export function StorefrontShell() {
   const primaryAction = session.isAuthenticated
     ? {
         label: session.permissions.includes('workspace:read')
-          ? 'Abrir mi empresa'
+          ? 'Abrir plataforma'
           : 'Mi perfil',
         href: getAuthenticatedHomePath(
           session.permissions.includes('workspace:read')
