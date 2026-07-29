@@ -23,6 +23,7 @@ import {
   projectsImpactStats,
   type ProjectFeature,
 } from '@/experiences/institutional/content/projects-content';
+import { unsplashSrcSet } from '@/shared/ui/unsplash';
 
 const containerVariants = {
   hidden: {},
@@ -93,7 +94,10 @@ function LazyAutoplayVideo() {
           alt={projectsHeroMedia.imageAlt}
           className="h-full w-full object-cover"
           decoding="async"
-          loading="lazy"
+          fetchPriority="high"
+          loading="eager"
+          sizes="(max-width: 1023px) 100vw, 60vw"
+          srcSet={unsplashSrcSet(projectsHeroMedia.image, [768, 1200, 1600])}
           src={projectsHeroMedia.image}
         />
       )}
@@ -171,6 +175,8 @@ function ProjectCard({ project }: { project: ProjectFeature }) {
           className="h-full w-full object-cover"
           decoding="async"
           loading="lazy"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+          srcSet={unsplashSrcSet(project.image, [400, 640, 900])}
           src={project.image}
         />
         <div className="absolute inset-0 bg-linear-to-t from-[#08111f]/68 via-[#08111f]/12 to-transparent" />

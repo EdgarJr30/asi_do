@@ -18,6 +18,7 @@ import {
   membershipPageContent,
 } from '@/experiences/institutional/content/membership-content';
 import { cn } from '@/lib/utils/cn';
+import { unsplashSrcSet } from '@/shared/ui/unsplash';
 
 const containerVariants = {
   hidden: {},
@@ -130,8 +131,11 @@ export function MembershipPage() {
             <img
               alt={membershipHeroImage.alt}
               className="aspect-4/3 w-full rounded-card-lg object-cover shadow-2xl ring-1 ring-black/8 lg:aspect-square lg:max-h-110"
+              decoding="async"
               fetchPriority="high"
               loading="eager"
+              sizes="(max-width: 1023px) 100vw, 50vw"
+              srcSet={unsplashSrcSet(membershipHeroImage.src, [640, 900, 1280])}
               src={membershipHeroImage.src}
             />
             {/* Subtle gradient overlay at the bottom */}
@@ -429,7 +433,10 @@ export function MembershipPage() {
                             <img
                               alt={item.imageAlt ?? item.title}
                               className="h-44 w-full rounded-card object-cover"
+                              decoding="async"
                               loading="lazy"
+                              sizes="(max-width: 768px) 100vw, 380px"
+                              srcSet={unsplashSrcSet(item.image, [380, 560, 760])}
                               src={item.image}
                             />
                           ) : null}

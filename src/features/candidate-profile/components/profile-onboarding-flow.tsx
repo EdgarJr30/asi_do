@@ -712,6 +712,9 @@ export function ProfileOnboardingFlow() {
                         <img
                           alt="ASI"
                           className="h-8 w-8 shrink-0 object-contain"
+                          decoding="async"
+                          width={96}
+                          height={96}
                           src="/brand/asi-logo-white-transparent-96.webp"
                         />
                         <span className="rounded-[5px] border border-white/40 px-2 py-1 text-[9.5px] font-bold uppercase tracking-[0.1em] text-white/85">
@@ -722,7 +725,7 @@ export function ProfileOnboardingFlow() {
                         <div className="flex items-center gap-3">
                           <div className="flex size-[54px] shrink-0 items-center justify-center overflow-hidden rounded-card bg-linear-to-br from-primary-500 to-primary-300 text-lg font-bold text-white shadow-sm">
                             {avatarPreviewUrl ? (
-                              <img alt="Vista previa de avatar" className="h-full w-full object-cover" src={avatarPreviewUrl} />
+                              <img alt="Vista previa de avatar" className="h-full w-full object-cover" decoding="async" width={54} height={54} src={avatarPreviewUrl} />
                             ) : (
                               previewInitials
                             )}

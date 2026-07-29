@@ -11,6 +11,7 @@ import {
   InstitutionalSection,
 } from '@/experiences/institutional/components/institutional-ui';
 import { contactPoints } from '@/experiences/institutional/content/site-content';
+import { unsplashSrcSet } from '@/shared/ui/unsplash';
 
 const containerVariants = {
   hidden: {},
@@ -103,8 +104,10 @@ export function ContactUsPage() {
               alt={heroImage.alt}
               className="h-96 w-full object-cover sm:h-112 lg:h-136"
               decoding="async"
-              loading="lazy"
+              fetchPriority="high"
+              loading="eager"
               sizes="100vw"
+              srcSet={unsplashSrcSet(heroImage.src, [768, 1200, 1600])}
               src={heroImage.src}
             />
             <div className="absolute inset-0 bg-linear-to-r from-[#071327]/88 via-[#0b2246]/58 to-[#0b2246]/24" />
@@ -208,6 +211,7 @@ export function ContactUsPage() {
                     decoding="async"
                     loading="lazy"
                     sizes="(max-width: 1023px) 0px, 42vw"
+                    srcSet={unsplashSrcSet(contactFormImage.src, [480, 720, 960])}
                     src={contactFormImage.src}
                   />
                   <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-[#071327]/45 via-transparent to-transparent" />

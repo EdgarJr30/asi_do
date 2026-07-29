@@ -9,6 +9,7 @@ import {
   InstitutionalLead,
   InstitutionalSection,
 } from '@/experiences/institutional/components/institutional-ui';
+import { unsplashSrcSet } from '@/shared/ui/unsplash';
 
 export function InstitutionalInteriorPage({
   content,
@@ -62,6 +63,8 @@ export function InstitutionalInteriorPage({
               decoding="async"
               fetchPriority="high"
               loading="eager"
+              sizes="(max-width: 1023px) 100vw, 52vw"
+              srcSet={unsplashSrcSet(content.hero.image, [640, 900, 1280])}
               src={content.hero.image}
             />
           </div>
@@ -202,7 +205,10 @@ export function InstitutionalInteriorPage({
                             <img
                               alt={item.imageAlt ?? item.title}
                               className="h-44 w-full rounded-card object-cover"
+                              decoding="async"
                               loading="lazy"
+                              sizes="(max-width: 768px) 100vw, 380px"
+                              srcSet={unsplashSrcSet(item.image, [380, 560, 760])}
                               src={item.image}
                             />
                           ) : null}
@@ -276,7 +282,10 @@ export function InstitutionalInteriorPage({
                     <img
                       alt={section.imageAlt}
                       className="h-88 w-full rounded-card-lg object-cover shadow-(--asi-shadow-soft)"
+                      decoding="async"
                       loading="lazy"
+                      sizes="(max-width: 1023px) 100vw, 48vw"
+                      srcSet={unsplashSrcSet(section.image, [560, 840, 1120])}
                       src={section.image}
                     />
                     <InstitutionalCard
@@ -376,7 +385,10 @@ export function InstitutionalInteriorPage({
                         <img
                           alt={item.name}
                           className="h-64 w-full rounded-card object-cover"
+                          decoding="async"
                           loading="lazy"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 420px"
+                          srcSet={unsplashSrcSet(item.image, [420, 640, 900])}
                           src={item.image}
                         />
                         <p className="mt-4 text-lg font-semibold tracking-tight text-(--asi-text)">

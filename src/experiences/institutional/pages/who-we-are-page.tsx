@@ -21,6 +21,10 @@ import {
 } from '@/experiences/institutional/content/who-we-are-content';
 import { surfacePaths } from '@/app/router/surface-paths';
 import { getCountryFlagEmoji } from '@/shared/geo/location-options';
+import { unsplashSrcSet } from '@/shared/ui/unsplash';
+
+const whoWeAreLegacyImage =
+  'https://images.unsplash.com/photo-1515169067868-5387ec356754?auto=format&fit=crop&w=1400&q=80';
 
 const containerVariants = {
   hidden: {},
@@ -136,8 +140,10 @@ export function WhoWeArePage() {
                 alt={whoWeAreHeroMedia.imageAlt}
                 className="aspect-4/3 w-full object-cover lg:aspect-square lg:max-h-110"
                 decoding="async"
-                loading="lazy"
+                fetchPriority="high"
+                loading="eager"
                 sizes="(max-width: 1023px) 100vw, 52vw"
+                srcSet={unsplashSrcSet(whoWeAreHeroMedia.image, [640, 900, 1280])}
                 src={whoWeAreHeroMedia.image}
               />
             </div>
@@ -259,7 +265,8 @@ export function WhoWeArePage() {
               decoding="async"
               loading="lazy"
               sizes="(max-width: 1023px) 100vw, 48vw"
-              src="https://images.unsplash.com/photo-1515169067868-5387ec356754?auto=format&fit=crop&w=1400&q=80"
+              srcSet={unsplashSrcSet(whoWeAreLegacyImage, [560, 840, 1120])}
+              src={whoWeAreLegacyImage}
             />
             <div className="asi-card bg-white">
               <p className="text-lg font-semibold tracking-tight text-(--asi-text)">

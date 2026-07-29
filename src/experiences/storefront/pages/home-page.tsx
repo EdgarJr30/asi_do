@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { InstitutionalFooter } from '@/experiences/institutional/components/institutional-footer';
 import { cn } from '@/lib/utils/cn';
 import { PLATFORM_REGISTRATION_LOCKED, PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access';
+import { unsplashSrcSet } from '@/shared/ui/unsplash';
 
 type BillingFrequency = 'monthly' | 'annually';
 
@@ -548,6 +549,9 @@ function HeroCollage({
                 <img
                   alt={item.alt}
                   className="h-full w-full object-cover"
+                  decoding="async"
+                  sizes="(max-width: 640px) 120px, (max-width: 1024px) 240px, 340px"
+                  srcSet={unsplashSrcSet(item.src, [240, 380, 520, 700])}
                   src={item.src}
                 />
                 <div className="pointer-events-none absolute inset-0 rounded-card-lg ring-1 ring-black/6 ring-inset dark:ring-white/10" />

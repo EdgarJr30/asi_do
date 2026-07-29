@@ -868,7 +868,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
             ) : hasLogo ? (
               <div className="flex items-center gap-3">
                 <div className="flex size-16 shrink-0 items-center justify-center rounded-control border border-(--app-border) bg-white p-2">
-                  {logoUrl ? <img src={logoUrl} alt="" className="max-h-full max-w-full object-contain" /> : <span className="text-sm font-bold text-primary-700">{initialsOf(workspaceName)}</span>}
+                  {logoUrl ? <img src={logoUrl} alt="" className="max-h-full max-w-full object-contain" decoding="async" width={64} height={64} /> : <span className="text-sm font-bold text-primary-700">{initialsOf(workspaceName)}</span>}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-(--app-text)">Logo de empresa</p>
@@ -905,7 +905,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
               <div className="rounded-control border border-(--app-border) bg-(--app-surface) p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex size-12 shrink-0 items-center justify-center rounded-control border border-(--app-border) bg-white p-2 text-primary-700">
-                    {logoUrl ? <img src={logoUrl} alt="" className="max-h-full max-w-full object-contain" /> : <span className="text-sm font-bold">{initialsOf(workspaceName)}</span>}
+                    {logoUrl ? <img src={logoUrl} alt="" className="max-h-full max-w-full object-contain" decoding="async" loading="lazy" width={48} height={48} /> : <span className="text-sm font-bold">{initialsOf(workspaceName)}</span>}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold text-(--app-text)">Analista de Operaciones</p>
