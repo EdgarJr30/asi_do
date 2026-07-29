@@ -1,7 +1,12 @@
 import type { EmailOtpType, User } from '@supabase/supabase-js'
 
 import { surfacePaths } from '@/app/router/surface-paths'
-import { MAX_UPLOAD_SIZE_BYTES, formatFileSize } from '@/lib/uploads/media'
+import {
+  MAX_UPLOAD_SIZE_BYTES,
+  createRasterThumbnailFile,
+  deriveThumbnailPath,
+  formatFileSize
+} from '@/lib/uploads/media'
 import { toErrorMessage } from '@/lib/errors/error-utils'
 import { supabase } from '@/lib/supabase/client'
 import { env } from '@/shared/config/env'
@@ -113,6 +118,14 @@ function uniquePermissions(values: PermissionCode[]) {
 function normalizeStoragePath(filePath: string) {
   return filePath.replace(/^\/+/, '')
 }
+
+/**
+ * Cada archivo se guarda con un UUID en el nombre, así que su contenido nunca
+ * cambia: al reemplazar un avatar se sube una ruta nueva. Por eso lo cacheamos
+ * un año como inmutable en vez de la hora por defecto, que obligaba a
+ * revalidar las mismas imágenes en cada sesión.
+ */
+export const IMMUTABLE_CACHE_CONTROL = '31536000, immutable'
 
 function getFileExtension(file: File) {
   const extension = file.name.split('.').pop()?.trim().toLowerCase()
@@ -432,7 +445,7 @@ export async function uploadPrivateFile(options: {
     .from(options.bucket)
     .upload(normalizeStoragePath(storagePath), options.file, {
       upsert: false,
-      cacheControl: '3600'
+      cacheControl: IMMUTABLE_CACHE_CONTROL
     })
 
   if (uploadResponse.error) {
@@ -465,6 +478,36 @@ export async function createPrivateFileUrl(bucket: PrivateStorageBucket, path: s
   return response.data.signedUrl
 }
 
+/**
+ * Sube la miniatura junto al original para que los listados no tengan que bajar
+ * la imagen completa. Es best-effort: si falla, el original sigue disponible y
+ * quien la consume cae a él, así que no tumbamos la subida principal.
+ */
+export async function uploadThumbnailBeside(
+  bucket: string,
+  storagePath: string,
+  file: File
+): Promise<string | null> {
+  try {
+    const thumbnail = await createRasterThumbnailFile(file)
+
+    if (!thumbnail) {
+      return null
+    }
+
+    const client = requireSupabase()
+    const thumbnailPath = deriveThumbnailPath(normalizeStoragePath(storagePath))
+    const response = await client.storage.from(bucket).upload(thumbnailPath, thumbnail, {
+      upsert: true,
+      cacheControl: IMMUTABLE_CACHE_CONTROL
+    })
+
+    return response.error ? null : response.data.path
+  } catch {
+    return null
+  }
+}
+
 export async function uploadPublicFile(options: {
   bucket: PublicStorageBucket
   ownerUserId: string
@@ -486,12 +529,14 @@ export async function uploadPublicFile(options: {
     .from(options.bucket)
     .upload(normalizeStoragePath(storagePath), options.file, {
       upsert: false,
-      cacheControl: '3600'
+      cacheControl: IMMUTABLE_CACHE_CONTROL
     })
 
   if (uploadResponse.error) {
     throw new Error(normalizeStorageUploadErrorMessage(options.file, uploadResponse.error.message))
   }
+
+  await uploadThumbnailBeside(options.bucket, uploadResponse.data.path, options.file)
 
   return uploadResponse.data.path
 }
@@ -501,7 +546,12 @@ export async function removePublicFile(options: {
   path: string
 }) {
   const client = requireSupabase()
-  const response = await client.storage.from(options.bucket).remove([normalizeStoragePath(options.path)])
+  const normalizedPath = normalizeStoragePath(options.path)
+  // La miniatura se borra junto al original; `remove` ignora las rutas que no
+  // existen, así que sirve también para archivos previos a esta optimización.
+  const response = await client.storage
+    .from(options.bucket)
+    .remove([normalizedPath, deriveThumbnailPath(normalizedPath)])
 
   if (response.error) {
     throw response.error
@@ -524,6 +574,19 @@ export function resolveAvatarUrl(avatarPath: string | null | undefined) {
   }
 
   return getPublicFileUrl(AVATARS_BUCKET, avatarPath)
+}
+
+/**
+ * URL de la miniatura del avatar. Se usa en listados y en el header, donde el
+ * avatar nunca se muestra por encima de 64px; si el usuario subió su foto antes
+ * de que existieran las miniaturas, `UserAvatar` cae al original.
+ */
+export function resolveAvatarThumbnailUrl(avatarPath: string | null | undefined) {
+  if (!avatarPath) {
+    return null
+  }
+
+  return getPublicFileUrl(AVATARS_BUCKET, deriveThumbnailPath(avatarPath))
 }
 
 export async function submitRecruiterRequest(values: {

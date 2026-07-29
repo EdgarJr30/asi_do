@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
-import { resolveAvatarUrl } from '@/features/auth/lib/auth-api'
+import { resolveAvatarThumbnailUrl, resolveAvatarUrl } from '@/features/auth/lib/auth-api'
+import { THUMBNAIL_MAX_DIMENSION } from '@/lib/uploads/media'
 import { cn } from '@/lib/utils/cn'
 
 function computeInitials(name: string, fallback = '·') {
@@ -46,13 +47,21 @@ export function UserAvatar({
   textClassName = 'text-xs font-semibold',
   initialsFallback = '·'
 }: UserAvatarProps) {
-  const resolvedUrl = avatarUrl ?? resolveAvatarUrl(avatarPath)
-  // Recordamos qué URL falló para caer a iniciales solo en esa; si la fuente
-  // cambia (p. ej. tras subir otra foto), volvemos a intentar mostrar la imagen
-  // sin necesidad de un efecto que reinicie el estado.
-  const [erroredUrl, setErroredUrl] = useState<string | null>(null)
+  // Orden de preferencia: miniatura (~6KB) y, si no existe porque la foto se
+  // subió antes de esta optimización, el original. Nunca mostramos el avatar
+  // por encima de 64px, así que la miniatura basta incluso en pantallas retina.
+  const sources = avatarUrl
+    ? [avatarUrl]
+    : ([resolveAvatarThumbnailUrl(avatarPath), resolveAvatarUrl(avatarPath)].filter(Boolean) as string[])
 
-  const showImage = Boolean(resolvedUrl) && erroredUrl !== resolvedUrl
+  // Recordamos qué URLs fallaron para bajar al siguiente candidato y, al
+  // agotarlos, a las iniciales. Si la fuente cambia (p. ej. tras subir otra
+  // foto), las URLs nuevas no están en el set y se reintentan solas, sin
+  // necesidad de un efecto que reinicie el estado.
+  const [failedUrls, setFailedUrls] = useState<ReadonlySet<string>>(() => new Set<string>())
+
+  const resolvedUrl = sources.find((source) => !failedUrls.has(source)) ?? null
+  const showImage = resolvedUrl !== null
 
   return (
     <span
@@ -65,10 +74,13 @@ export function UserAvatar({
       {showImage ? (
         <img
           alt={name}
-          src={resolvedUrl ?? undefined}
+          src={resolvedUrl}
           className="h-full w-full object-cover"
+          decoding="async"
           loading="lazy"
-          onError={() => setErroredUrl(resolvedUrl ?? null)}
+          width={THUMBNAIL_MAX_DIMENSION}
+          height={THUMBNAIL_MAX_DIMENSION}
+          onError={() => setFailedUrls((current) => new Set(current).add(resolvedUrl))}
         />
       ) : (
         <span className={textClassName}>{computeInitials(name, initialsFallback)}</span>

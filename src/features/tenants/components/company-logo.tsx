@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
-import { createCompanyAssetUrl } from '@/features/tenants/lib/company-assets-api'
+import { createCompanyAssetThumbnailUrl, createCompanyAssetUrl } from '@/features/tenants/lib/company-assets-api'
+import { THUMBNAIL_MAX_DIMENSION } from '@/lib/uploads/media'
 import { cn } from '@/lib/utils/cn'
 
 const LOGO_COLORS = ['#3b62b8', '#0e8a86', '#6b46c1', '#c2683a', '#1f9d61', '#b8456f', '#2d52a8', '#0f7a9c'] as const
@@ -39,9 +40,14 @@ export function CompanyLogo({
   size?: CompanyLogoSize
   className?: string
 }) {
-  const [imageFailed, setImageFailed] = useState(false)
+  // Igual que en `UserAvatar`: primero la miniatura y, si no existe, el
+  // original; al agotar ambos caemos a las iniciales de color.
+  const [failedUrls, setFailedUrls] = useState<ReadonlySet<string>>(() => new Set<string>())
   const normalizedLogoPath = logoPath?.trim() || null
-  const logoUrl = normalizedLogoPath && !imageFailed ? createCompanyAssetUrl(normalizedLogoPath) : null
+  const sources = normalizedLogoPath
+    ? [createCompanyAssetThumbnailUrl(normalizedLogoPath), createCompanyAssetUrl(normalizedLogoPath)]
+    : []
+  const logoUrl = sources.find((source) => !failedUrls.has(source)) ?? null
 
   return (
     <span
@@ -59,8 +65,11 @@ export function CompanyLogo({
           src={logoUrl}
           alt=""
           className="h-full w-full object-contain"
+          decoding="async"
           loading="lazy"
-          onError={() => setImageFailed(true)}
+          width={THUMBNAIL_MAX_DIMENSION}
+          height={THUMBNAIL_MAX_DIMENSION}
+          onError={() => setFailedUrls((current) => new Set(current).add(logoUrl))}
         />
       ) : (
         companyInitials(name)

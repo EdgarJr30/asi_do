@@ -1,3 +1,4 @@
+import { deriveThumbnailPath } from '@/lib/uploads/media'
 import { supabase } from '@/lib/supabase/client'
 
 function requireSupabase() {
@@ -13,4 +14,13 @@ export function createCompanyAssetUrl(path: string) {
   const client = requireSupabase()
 
   return client.storage.from('company-assets').getPublicUrl(path).data.publicUrl
+}
+
+/**
+ * URL de la miniatura del asset. Los logos se muestran como máximo a 56px, así
+ * que el original de 768x768 solo se necesita si la miniatura no existe (logos
+ * SVG o subidos antes de esta optimización).
+ */
+export function createCompanyAssetThumbnailUrl(path: string) {
+  return createCompanyAssetUrl(deriveThumbnailPath(path))
 }

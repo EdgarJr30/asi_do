@@ -45,6 +45,15 @@ const RASTER_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'
 const MIN_RASTER_CROP_ZOOM = 0.5
 const MAX_RASTER_CROP_ZOOM = 4
 
+/**
+ * Lado mayor de las miniaturas que acompañan a cada imagen pública (avatares y
+ * logos). El avatar más grande de la plataforma se muestra a 64px (`size-16`),
+ * así que 128px cubre pantallas retina sin desperdiciar bytes: un avatar de
+ * 512x512 pesa ~42KB y su miniatura ~6KB.
+ */
+export const THUMBNAIL_MAX_DIMENSION = 128
+const THUMBNAIL_QUALITY = 0.75
+
 export interface RasterImageCropOptions {
   outputWidth: number
   outputHeight: number
@@ -261,6 +270,61 @@ export async function cropRasterImageFile(file: File, options: RasterImageCropOp
   context.drawImage(image, layout.x, layout.y, layout.width, layout.height)
 
   const blob = await canvasToBlob(canvas, options.quality ?? 0.9)
+
+  return new File([blob], replaceFileExtension(file.name, 'webp'), {
+    type: 'image/webp',
+    lastModified: Date.now()
+  })
+}
+
+/**
+ * Ruta de la miniatura derivada de la ruta del original en el bucket.
+ * `user/avatar-uuid.webp` -> `user/avatar-uuid-128.webp`. La convención evita
+ * guardar una segunda columna en la base: la miniatura se deduce del path que
+ * ya tenemos y, si no existe (imágenes subidas antes de esta optimización o
+ * SVG), quien la consume cae al original.
+ */
+export function deriveThumbnailPath(path: string) {
+  return `${path.replace(/\.[^/.]+$/, '')}-${THUMBNAIL_MAX_DIMENSION}.webp`
+}
+
+/**
+ * Miniatura WebP del lado mayor `THUMBNAIL_MAX_DIMENSION`, conservando la
+ * proporción. Devuelve `null` cuando el archivo no es una imagen raster (p. ej.
+ * un logo SVG, que ya es liviano y escala solo).
+ */
+export async function createRasterThumbnailFile(file: File) {
+  if (!isRasterImageFile(file)) {
+    return null
+  }
+
+  const image = await loadImageElement(file)
+  const largestDimension = Math.max(image.width, image.height)
+  const scale = largestDimension > THUMBNAIL_MAX_DIMENSION ? THUMBNAIL_MAX_DIMENSION / largestDimension : 1
+  const width = Math.max(1, Math.round(image.width * scale))
+  const height = Math.max(1, Math.round(image.height * scale))
+  const canvas = document.createElement('canvas')
+
+  canvas.width = width
+  canvas.height = height
+
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    throw new UploadConstraintError(
+      'compression_failed',
+      'Could not access canvas context.',
+      'No pudimos preparar la miniatura de la imagen.',
+      {
+        fileName: file.name,
+        fileType: file.type
+      }
+    )
+  }
+
+  context.drawImage(image, 0, 0, width, height)
+
+  const blob = await canvasToBlob(canvas, THUMBNAIL_QUALITY)
 
   return new File([blob], replaceFileExtension(file.name, 'webp'), {
     type: 'image/webp',
