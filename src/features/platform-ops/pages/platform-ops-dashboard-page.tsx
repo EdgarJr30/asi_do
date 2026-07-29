@@ -14,69 +14,17 @@ import {
   AdminTabs,
   AdminToggle
 } from '@/features/internal/components/admin-redesign'
+import { membershipCategories } from '@/experiences/institutional/content/eligibility-content'
+import { MembershipPlansPanel } from '@/features/platform-ops/components/membership-plans-panel'
 import {
   fetchPlatformOpsSnapshot,
   listFeatureFlags,
-  listSubscriptionPlans,
   listTenantSubscriptions,
-  updateFeatureFlag,
-  type SubscriptionPlanRecord
+  updateFeatureFlag
 } from '@/features/platform-ops/lib/platform-ops-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 
 type PlatformTab = 'plans' | 'subscriptions' | 'flags'
-
-function formatMoney(amount: number, currency: string) {
-  return `${currency} ${amount.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
-function readableLimitKey(key: string) {
-  return key
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (letter) => letter.toUpperCase())
-}
-
-function renderLimitValue(value: unknown) {
-  if (value == null) return 'Sin límite'
-  if (typeof value === 'boolean') return value ? 'Sí' : 'No'
-  if (typeof value === 'number') return value.toLocaleString('es-DO')
-  if (typeof value === 'string') return value
-  return JSON.stringify(value)
-}
-
-function PlanCard({ plan }: { plan: SubscriptionPlanRecord }) {
-  const limits = Object.entries(plan.limits_json ?? {})
-
-  return (
-    <div className="rounded-card border border-(--app-border) bg-(--app-surface-muted)/65 p-3.5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[0.9rem] font-bold text-(--app-text)">{plan.name}</p>
-          <p className="mt-0.5 text-[0.8rem] leading-5 text-(--app-text-muted)">{plan.description}</p>
-        </div>
-        <Badge variant={plan.status === 'active' ? 'default' : 'outline'}>{plan.status}</Badge>
-      </div>
-      <p className="mt-3 text-[1.2rem] font-bold tracking-normal text-(--app-text)">
-        {formatMoney(Number(plan.monthly_price_amount), plan.currency_code)}
-        <span className="text-[0.8rem] font-semibold text-(--app-text-muted)"> / mes</span>
-      </p>
-      <div className="mt-3 divide-y divide-(--app-border)/70 rounded-control border border-(--app-border) bg-(--app-surface)">
-        {limits.length === 0 ? (
-          <div className="px-3 py-2 text-sm text-(--app-text-muted)">Sin límites configurados.</div>
-        ) : (
-          limits.map(([key, value]) => (
-            <div key={key} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-              <span className="text-(--app-text-muted)">{readableLimitKey(key)}</span>
-              <code className="rounded-control bg-(--app-surface-muted) px-2 py-1 text-xs font-bold text-(--app-text)">
-                {renderLimitValue(value)}
-              </code>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  )
-}
 
 export function PlatformOpsDashboardPage() {
   const session = useAppSession()
@@ -87,11 +35,6 @@ export function PlatformOpsDashboardPage() {
   const snapshotQuery = useQuery({
     queryKey: ['platform-ops-snapshot'],
     queryFn: fetchPlatformOpsSnapshot
-  })
-
-  const plansQuery = useQuery({
-    queryKey: ['platform-ops-plans'],
-    queryFn: listSubscriptionPlans
   })
 
   const subscriptionsQuery = useQuery({
@@ -127,7 +70,6 @@ export function PlatformOpsDashboardPage() {
   })
 
   const stats = snapshotQuery.data
-  const plans = plansQuery.data ?? []
   const subscriptions = subscriptionsQuery.data ?? []
   const featureFlags = featureFlagsQuery.data ?? []
 
@@ -151,19 +93,13 @@ export function PlatformOpsDashboardPage() {
           value={tab}
           onChange={setTab}
           tabs={[
-            { value: 'plans', label: 'Planes' },
+            { value: 'plans', label: 'Planes', count: membershipCategories.length },
             { value: 'subscriptions', label: 'Suscripciones', count: subscriptions.length },
             { value: 'flags', label: 'Feature flags', count: featureFlags.length }
           ]}
         />
 
-        {tab === 'plans' ? (
-          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-            {plans.map((plan) => (
-              <PlanCard key={plan.id} plan={plan} />
-            ))}
-          </div>
-        ) : null}
+        {tab === 'plans' ? <MembershipPlansPanel /> : null}
 
         {tab === 'subscriptions' ? (
           <AdminCard title="Suscripciones recientes" description="Tenants, plan actual, seats y estado de suscripción.">

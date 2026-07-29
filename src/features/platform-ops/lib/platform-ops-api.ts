@@ -10,15 +10,12 @@ export interface PlatformOpsSnapshot {
   featureFlagsEnabled: number
 }
 
-export interface SubscriptionPlanRecord {
-  id: string
-  code: string
-  name: string
-  description: string
-  status: 'draft' | 'active' | 'archived'
-  monthly_price_amount: number
-  currency_code: string
-  limits_json: Record<string, unknown>
+/** Adopción real de una categoría de membresía (los "planes" de la plataforma). */
+export interface MembershipPlanAdoption {
+  /** Miembros con la solicitud aprobada en esa categoría. */
+  approved: number
+  /** Solicitudes en curso (enviadas o en revisión). */
+  inReview: number
 }
 
 export interface TenantSubscriptionRecord {
@@ -70,18 +67,40 @@ export async function fetchPlatformOpsSnapshot() {
   return (response.data ?? {}) as PlatformOpsSnapshot
 }
 
-export async function listSubscriptionPlans() {
+/**
+ * Cuántos miembros/solicitudes tiene cada categoría de membresía. Se consulta con
+ * `count: 'exact'` por categoría para no traer filas al cliente.
+ */
+export async function fetchMembershipPlanAdoption(categorySlugs: string[]) {
   const client = requireSupabase()
-  const response = await client
-    .from('subscription_plans' as never)
-    .select('*')
-    .order('monthly_price_amount', { ascending: true })
 
-  if (response.error) {
-    throw toControlledError(response.error)
-  }
+  const entries = await Promise.all(
+    categorySlugs.map(async (slug) => {
+      const [approvedResponse, inReviewResponse] = await Promise.all([
+        client
+          .from('institutional_membership_applications')
+          .select('id', { count: 'exact', head: true })
+          .eq('category_slug', slug)
+          .eq('status', 'approved'),
+        client
+          .from('institutional_membership_applications')
+          .select('id', { count: 'exact', head: true })
+          .eq('category_slug', slug)
+          .in('status', ['submitted', 'under_review', 'needs_more_info'])
+      ])
 
-  return (response.data ?? []) as SubscriptionPlanRecord[]
+      if (approvedResponse.error) {
+        throw toControlledError(approvedResponse.error)
+      }
+      if (inReviewResponse.error) {
+        throw toControlledError(inReviewResponse.error)
+      }
+
+      return [slug, { approved: approvedResponse.count ?? 0, inReview: inReviewResponse.count ?? 0 }] as const
+    })
+  )
+
+  return Object.fromEntries(entries) as Record<string, MembershipPlanAdoption>
 }
 
 export async function listTenantSubscriptions() {
