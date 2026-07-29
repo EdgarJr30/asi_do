@@ -1,3 +1,5 @@
+import { OTHER_SECTOR_ID, sectorDefinitions } from '@/features/jobs/lib/sectors'
+
 export type MembershipApplicationVariantId =
   | 'individual'
   | 'professional'
@@ -50,12 +52,22 @@ export const youngProfessionalStageOptions = [
   { value: 'entrepreneur', label: 'Joven emprendedor' },
 ] as const
 
-export const professionalFocusOptions = [
-  { value: 'management', label: 'Gestión y liderazgo' },
-  { value: 'clinical', label: 'Práctica clínica o profesional' },
-  { value: 'creative', label: 'Servicios creativos o especializados' },
-  { value: 'operations', label: 'Operaciones y administración' },
-] as const
+/**
+ * Sector en el que ejerce el profesional. Reutiliza la taxonomía curada del job
+ * board para que un miembro profesional quede clasificado con los mismos ids que
+ * las empresas y vacantes de la plataforma; se añaden los rubros que la
+ * taxonomía de empresas no cubre para una persona (oficios, artes, hogar).
+ */
+export const PROFESSIONAL_SECTOR_OTHER = OTHER_SECTOR_ID
+
+export const professionalSectorOptions = [
+  ...sectorDefinitions.map((sector) => ({ value: sector.id, label: sector.label })),
+  { value: 'trades', label: 'Oficios y servicios técnicos' },
+  { value: 'arts', label: 'Artes, música y cultura' },
+  { value: 'home', label: 'Hogar y cuidado familiar' },
+]
+  .sort((a, b) => a.label.localeCompare(b.label, 'es'))
+  .concat({ value: PROFESSIONAL_SECTOR_OTHER, label: 'Otro' })
 
 export const membershipApplicationVariants: MembershipApplicationVariant[] = [
   {
