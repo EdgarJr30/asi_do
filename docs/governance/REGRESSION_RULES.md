@@ -445,6 +445,9 @@ Do not stack the four queue indicators in `/admin/approvals` into one tall mobil
 ### R-125 — Platform module stats must use a mobile grid
 Do not stack the six summary indicators in `/admin/platform` into one tall mobile column. They must render as a compact two-column by three-row grid while preserving the six-column desktop statbar.
 
+### R-126 — Membership administration stats must use a mobile grid
+Do not stack the four membership status indicators in `/admin/memberships` into one tall mobile column. They must render as a compact two-column by two-row grid while preserving the four-column desktop statbar.
+
 ---
 
 ## Maintenance rule

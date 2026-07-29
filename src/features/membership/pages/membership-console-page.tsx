@@ -122,7 +122,7 @@ export function MembershipConsolePage() {
       description="Revisa solicitudes, valida pagos, activa membresías y puede inactivar una membresía activa cuando el administrador lo necesite."
     >
       <div className="space-y-4">
-        <AdminStatBar columns={4}>
+        <AdminStatBar columns={4} mobileTwoColumns>
           <AdminStat label="En revisión" value={counts?.review ?? '—'} tone="amber" />
           <AdminStat label="Aprobadas" value={counts?.approved ?? '—'} tone="green" />
           <AdminStat label="Activas" value={counts?.active ?? '—'} tone="teal" />
