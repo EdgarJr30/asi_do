@@ -282,16 +282,16 @@ const privacyDocument: LegalDocument = {
   cardLabel: 'Política de privacidad',
   icon: Lock,
   title: 'Política de privacidad',
-  lede: 'Cómo recopilamos, usamos y protegemos tus datos al procesar membresías y donaciones. En lenguaje claro y sin letra pequeña innecesaria.',
+  lede: 'Cómo recopilamos, usamos y protegemos tus datos al usar el portal, gestionar membresías y realizar donaciones. En lenguaje claro y sin letra pequeña innecesaria.',
   summary: 'Qué datos tratamos, para qué, con quién los compartimos y tus derechos.',
-  effectiveDate: '1 de julio, 2026',
-  version: '2.4',
+  effectiveDate: '28 de julio, 2026',
+  version: '2.5',
   readingTime: '~5 min',
   intro: (
     <>
       Tu confianza es la base de este portal. Esta política explica{' '}
-      <strong>qué datos tratamos, para qué y con qué controles</strong> cuando gestionas una membresía o realizas una donación
-      en ASI República Dominicana.
+      <strong>qué datos tratamos, para qué y con qué controles</strong> cuando accedes al portal, gestionas una membresía o
+      realizas una donación en ASI República Dominicana.
     </>
   ),
   clauses: [
@@ -305,7 +305,7 @@ const privacyDocument: LegalDocument = {
           items: [
             <><strong>Datos de contacto:</strong> nombre, correo electrónico y teléfono.</>,
             <><strong>Datos de la transacción:</strong> categoría de membresía o destino de donación, monto, orden de pago y respuesta operativa de la pasarela.</>,
-            <><strong>Datos técnicos:</strong> dirección IP y datos de navegación básicos para seguridad y trazabilidad.</>
+            <><strong>Datos técnicos y de acceso:</strong> fecha y hora de inicio de sesión, método de autenticación, dirección IP, user-agent, navegador, sistema operativo, tipo general de dispositivo, idioma y zona horaria informados por el navegador.</>
           ]
         }
       ]
@@ -321,6 +321,7 @@ const privacyDocument: LegalDocument = {
           items: [
             'Confirmar pagos y emitir comprobantes.',
             'Dar soporte y responder solicitudes de servicio al cliente.',
+            'Detectar accesos no autorizados, investigar incidentes y mantener la seguridad del portal.',
             'Mantener auditoría interna y cumplir obligaciones administrativas y fiscales.'
           ]
         },
@@ -377,6 +378,10 @@ const privacyDocument: LegalDocument = {
         },
         {
           kind: 'paragraph',
+          content: 'Los registros internos de inicio de sesión se conservan hasta 180 días y solo pueden consultarlos administradores autorizados para fines de seguridad, auditoría y soporte. No solicitamos ubicación GPS para este registro.'
+        },
+        {
+          kind: 'paragraph',
           content: 'Aplicamos control de accesos, registros de auditoría y servicios de infraestructura seguros con cifrado en tránsito para proteger la información.'
         }
       ]
@@ -426,6 +431,7 @@ const privacyDocument: LegalDocument = {
     }
   ],
   changelog: [
+    { version: '2.5', date: '28 jul 2026', note: 'Se informa el registro de accesos, sus datos técnicos, acceso restringido y retención de 180 días.' },
     { version: '2.4', date: '1 jul 2026', note: 'Se detalla que no se almacenan datos de tarjeta y se aclara la conservación.' },
     { version: '2.3', date: '20 feb 2026', note: 'Sección de cookies ampliada.' },
     { version: '2.0', date: '1 sep 2025', note: 'Se precisa el uso de datos para membresías y donaciones.' }

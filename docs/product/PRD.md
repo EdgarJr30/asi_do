@@ -245,6 +245,11 @@ Pastors and regional administrators must submit form-backed validation requests 
 ### FR-3 RBAC administration
 Tenant owners/admins must be able to manage tenant roles and assign permissions from the app.
 
+### FR-3.1 User access audit
+Platform administrators with `audit_log:read` must be able to review successful user sessions from `/admin/access-logs`, including last login, authentication method, session time, last activity, IP address, browser, operating system, general device type, browser language, and browser-reported timezone. Access to this data must be enforced server-side and every administrative read must itself be audited.
+
+Access logs must be captured from Supabase Auth sessions, retained for no more than 180 days, and must not collect GPS coordinates or use invasive browser fingerprinting. IP and timezone are approximate security context, not proof of a person's exact location.
+
 ### FR-3.2 Tenant team invitations
 Authorized tenant users must be able to invite already-registered platform users into the workspace, assign an initial role, and revoke pending invites.
 

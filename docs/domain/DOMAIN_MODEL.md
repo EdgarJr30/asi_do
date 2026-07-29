@@ -207,6 +207,7 @@ Technical log line for provider attempts, failures, and retries.
 | tenant_role_permissions | role_id, permission_id |
 | user_platform_roles | user_id, role_id |
 | membership_roles | membership_id, role_id |
+| user_access_logs | id, user_id, auth_session_id unique, signed_in_at, last_seen_at, ip_address nullable, user_agent nullable, authentication_method nullable, client_timezone nullable, client_language nullable, created_at, updated_at |
 | recruiter_requests | id, requester_user_id, status, requested_tenant_kind, requested_company_name, requested_tenant_slug, company_logo_path, verification_document_path, approved_tenant_id nullable |
 | unions | id, name, country_code, status |
 | associations | id, union_id, name, status |

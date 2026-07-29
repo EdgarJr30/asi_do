@@ -267,6 +267,9 @@ Add structured logs/events for critical flows where possible.
 - All public tables must receive `audit_row_changes` triggers automatically.
 - `app_error_logs` stores user-visible client/runtime failures with route, source, severity, user message, and technical metadata for admin review.
 - platform admins review those logs from an in-app error inbox and can mark incidents as corrected or reopen them when follow-up is still needed.
+- `user_access_logs` is populated from `auth.sessions` through a database trigger so successful sessions are recorded independently of client rendering. IP and user-agent come from Supabase Auth; the client may enrich only timezone and language.
+- `/admin/access-logs` reads this sensitive history through `admin_user_access_log_page`, which enforces platform audit permission, records a `user_access_log.viewed` audit event, and preserves real server paging for infinite-scroll UX.
+- A daily `pg_cron` task removes user access records older than 180 days. The generic public-table audit trigger is intentionally removed from this table to avoid duplicating IP/user-agent into a store with a different retention policy.
 - Notification persistence is split into `notifications`, `notification_preferences`, `push_subscriptions`, `notification_deliveries`, and `notification_delivery_logs`.
 - `process-email-deliveries` is the operational Edge Function that drains pending email deliveries and records sent/failed outcomes.
 - Browser subscriptions are registered from the client through SQL RPC helpers, not ad hoc table writes.

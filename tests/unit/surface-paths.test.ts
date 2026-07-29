@@ -18,5 +18,6 @@ describe('surface paths', () => {
 
   it('keeps platform access control under the admin surface', () => {
     expect(surfacePaths.admin.accessControl).toBe('/admin/access-control')
+    expect(surfacePaths.admin.accessLogs).toBe('/admin/access-logs')
   })
 })

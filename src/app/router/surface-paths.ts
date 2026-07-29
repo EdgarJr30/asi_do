@@ -102,6 +102,7 @@ export const surfacePaths = {
     accessControl: '/admin/access-control',
     moderation: '/admin/moderation',
     errors: '/admin/errors',
+    accessLogs: '/admin/access-logs',
     membership: '/admin/membership',
     authority: '/admin/authority',
     correos: '/admin/correos',

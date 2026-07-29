@@ -234,6 +234,19 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     }
   }, [hydrateSession])
 
+  useEffect(() => {
+    if (!session?.user.id) {
+      return
+    }
+
+    // El trigger de auth.sessions ya preserva IP y user-agent. Este paso solo
+    // añade zona horaria e idioma informados por el navegador y nunca bloquea
+    // la hidratación ni el acceso si la telemetría no está disponible.
+    void import('@/features/access-logs/lib/access-log-api')
+      .then(({ enrichCurrentAccessLog }) => enrichCurrentAccessLog())
+      .catch(() => undefined)
+  }, [session?.user.id])
+
   // Memoizamos el valor del contexto: sin esto, cualquier render del provider
   // creaba un objeto nuevo y re-renderizaba TODOS los consumidores (shell, guards,
   // páginas). Ahora solo cambia cuando cambia algún dato real de la sesión.

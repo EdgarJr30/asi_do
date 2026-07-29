@@ -121,6 +121,7 @@ Don't:
 3. Respect safe areas on iOS and Android devices with notches, rounded corners, or gesture bars.
 4. No critical workflow may require horizontal scrolling on mobile.
 5. Desktop may add density and parallel visibility, but it must not redefine the task flow established on mobile.
+6. Sensitive access-log screens must identify IP/location context as approximate, keep raw user-agent details collapsed by default, and explain retention and authorized-use limits in the module.
 
 ---
 

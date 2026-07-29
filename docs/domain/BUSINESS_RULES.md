@@ -18,6 +18,11 @@
 12. Pastors may authorize standard professional users and provide scoped pastoral endorsement for company/operator requests only inside their approved district/church scope, but pastors may not activate licenses, finalize tenant onboarding, or approve other pastors/regional administrators.
 13. Regional administrators may authorize pastors, standard professional users, and provide scoped territorial endorsement for company/operator requests only inside their approved territory, but may not activate licenses or finalize tenant onboarding by themselves.
 14. Final license activation is permission-driven and is granted by default only to super administrators and platform support; any additional platform admin may activate final licenses only when a super administrator explicitly assigns `license:activate`.
+15. Every successful Supabase Auth session must create or update a durable user access record with session time, last activity, IP, user-agent, and authentication method when the provider supplies them.
+16. Browser language and timezone may enrich the current session for support and security, but access logging must not request GPS coordinates or add invasive fingerprinting signals.
+17. User access records are retained for at most 180 days and then deleted automatically.
+18. Only platform administrators with `audit_log:read` may inspect user access records, and each administrative read must leave a separate semantic audit event.
+19. IP address, timezone, browser, operating system, and device category are approximate technical context and must not be represented as exact physical location or conclusive identity.
 
 ---
 

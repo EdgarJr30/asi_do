@@ -45,6 +45,7 @@ describe('permission guards', () => {
       'Overview',
       'Plataforma',
       'Errores',
+      'Registro de accesos',
       'Finanzas',
       'Stress Harness'
     ])

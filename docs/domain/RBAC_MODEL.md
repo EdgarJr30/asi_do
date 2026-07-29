@@ -114,6 +114,8 @@ Examples:
 - `recruiter_request:review`
 
 Platform roles with `audit_log:read` must also be able to access the in-app operational error inbox backed by `app_error_logs`.
+
+The same permission authorizes the user access-log module at `/admin/access-logs`. The browser never receives direct table access: an audited `SECURITY DEFINER` RPC enforces `audit_log:read` or active platform-admin authority, applies server-side paging, and returns only the fields required by the module.
 Platform launch-readiness screens must remain split between `platform_dashboard:read`, `moderation:read`, `moderation:act`, `plan:read`, `plan:update`, `feature_flag:read`, and `feature_flag:update` so support, trust, and billing scopes can stay separated.
 
 ## 4.2 Tenant permissions
@@ -175,6 +177,7 @@ A future anonymous opportunity preview may exist only as a separate public summa
 16. Only company tenants may receive job creation and publishing permissions for employment job postings.
 17. The full role and scope taxonomy is defined in `docs/domain/ROLE_SCOPE_MODEL.md`.
 18. Platform role administration after bootstrap must use the owner-only `/admin/access-control` workflow and audited SQL RPCs. A `platform_admin` may operate allowed admin modules, but only an active `platform_owner` may create custom platform roles, edit the permission set assigned to any platform role, assign/revoke platform roles, delete custom platform roles, or inspect the platform RBAC report/audit snapshot. Locked system role metadata remains immutable from the module even when its permission set is adjusted.
+19. User access logs are operational audit data, not RBAC mutation controls: administrators with `audit_log:read` may inspect them, while direct table reads remain revoked and every RPC read is audited.
 
 ---
 
@@ -237,6 +240,8 @@ Recommended helper functions:
 - `admin_update_platform_role(p_role_id uuid, p_name text, p_description text, p_permission_codes text[])`
 - `admin_assign_platform_role(p_user_id uuid, p_role_id uuid, p_notes text)`
 - `admin_revoke_platform_role(p_assignment_id uuid, p_notes text)`
+- `admin_user_access_log_page(p_query text, p_since timestamptz, p_limit integer, p_offset integer)`
+- `enrich_current_access_log(p_timezone text, p_language text)`
 
 All permission changes must remain aligned with `docs/governance/SECURITY_RULES.md`, `docs/governance/TESTING_RULES.md`, and `docs/governance/DOCUMENTATION_RULES.md`.
 

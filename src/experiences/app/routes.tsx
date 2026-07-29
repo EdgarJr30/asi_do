@@ -39,6 +39,7 @@ const WorkspaceSectionPlaceholderPage = lazy(() =>
   import('@/features/dashboard/pages/workspace-section-placeholder-page').then(({ WorkspaceSectionPlaceholderPage }) => ({ default: WorkspaceSectionPlaceholderPage }))
 )
 const ErrorLogReviewPage = lazy(() => import('@/features/error-monitoring/pages/error-log-review-page').then(({ ErrorLogReviewPage }) => ({ default: ErrorLogReviewPage })))
+const UserAccessLogPage = lazy(() => import('@/features/access-logs/pages/user-access-log-page').then(({ UserAccessLogPage }) => ({ default: UserAccessLogPage })))
 const AdminConsolePage = lazy(() => import('@/features/internal/pages/admin-console-page').then(({ AdminConsolePage }) => ({ default: AdminConsolePage })))
 const AdminCommunicationsPage = lazy(() =>
   import('@/features/internal/pages/admin-communications-page').then(({ AdminCommunicationsPage }) => ({ default: AdminCommunicationsPage }))
@@ -499,6 +500,16 @@ export const applicationRoutes: RouteObject[] = [
           <RequirePermission permission="audit_log:read" surface="admin">
             <RouteSuspense>
               <ErrorLogReviewPage />
+            </RouteSuspense>
+          </RequirePermission>
+        )
+      },
+      {
+        path: 'access-logs',
+        element: (
+          <RequirePermission permission="audit_log:read" surface="admin">
+            <RouteSuspense>
+              <UserAccessLogPage />
             </RouteSuspense>
           </RequirePermission>
         )

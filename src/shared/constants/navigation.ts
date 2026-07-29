@@ -176,6 +176,13 @@ export const adminNavigationItems: NavigationItem[] = [
     requiredPermission: 'audit_log:read'
   },
   {
+    title: 'Registro de accesos',
+    href: surfacePaths.admin.accessLogs,
+    description: 'Inicios de sesión, IP y dispositivos',
+    requiresAuth: true,
+    requiredPermission: 'audit_log:read'
+  },
+  {
     title: 'Administrar membresías',
     href: surfacePaths.admin.membership,
     description: 'Revisar solicitudes, validar pagos, activar e inactivar membresías',
