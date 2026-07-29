@@ -94,7 +94,15 @@ export function AdminInfoGrid({ items }: { items: Array<{ label: string; value: 
   )
 }
 
-export function AdminStatBar({ children, columns = 4 }: { children: ReactNode; columns?: 3 | 4 | 5 | 6 }) {
+export function AdminStatBar({
+  children,
+  columns = 4,
+  mobileTwoByTwo = false
+}: {
+  children: ReactNode
+  columns?: 3 | 4 | 5 | 6
+  mobileTwoByTwo?: boolean
+}) {
   const columnClass = {
     3: 'lg:grid-cols-3',
     4: 'lg:grid-cols-4',
@@ -103,7 +111,15 @@ export function AdminStatBar({ children, columns = 4 }: { children: ReactNode; c
   }[columns]
 
   return (
-    <div className={cn('grid overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated) sm:grid-cols-2', columnClass)}>
+    <div
+      className={cn(
+        'grid overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated)',
+        mobileTwoByTwo
+          ? 'grid-cols-2 [&>*:nth-child(even)]:border-r-0 [&>*:nth-child(odd)]:border-r [&>*:nth-last-child(-n+2)]:border-b-0 lg:[&>*:last-child]:border-r-0 lg:[&>*:not(:last-child)]:border-r'
+          : 'sm:grid-cols-2',
+        columnClass
+      )}
+    >
       {children}
     </div>
   )
