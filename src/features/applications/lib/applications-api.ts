@@ -311,6 +311,7 @@ export async function listTenantApplications(tenantId: string) {
 const TENANT_APPLICATIONS_PAGE_SELECT = `
   id,
   candidate_display_name_snapshot,
+  candidate_email_snapshot,
   candidate_profile_id,
   current_stage_id,
   status_public,
@@ -325,6 +326,9 @@ const TENANT_APPLICATIONS_PAGE_SELECT = `
     id,
     user:users!candidate_profiles_user_id_fkey (
       id,
+      full_name,
+      display_name,
+      email,
       avatar_path
     )
   )
@@ -345,12 +349,46 @@ export interface ListTenantApplicationsPageInput {
 export interface TenantApplicationRow {
   id: string
   candidate_display_name_snapshot: string
+  candidate_email_snapshot: string | null
   candidate_profile_id: string
   current_stage_id: string | null
   status_public: PublicApplicationStatus
   submitted_at: string
   job_posting: { id: string; title: string; slug: string; tenant_id: string } | null
-  candidate_profile: { id: string; user: { id: string; avatar_path: string | null } | null } | null
+  candidate_profile: {
+    id: string
+    user: {
+      id: string
+      full_name: string | null
+      display_name: string | null
+      email: string | null
+      avatar_path: string | null
+    } | null
+  } | null
+}
+
+/**
+ * Identidad vigente del candidato. Los snapshots de `applications` se mantienen
+ * sincronizados por trigger, pero el join a `users` es la fuente de verdad y se
+ * prefiere; el snapshot queda como respaldo si RLS no deja leer al usuario.
+ */
+export interface CandidateIdentity {
+  name: string
+  email: string | null
+}
+
+export function resolveCandidateIdentity(application: {
+  candidate_display_name_snapshot?: string | null
+  candidate_email_snapshot?: string | null
+  candidate_profile?: {
+    user?: { full_name?: string | null; display_name?: string | null; email?: string | null } | null
+  } | null
+}): CandidateIdentity {
+  const user = application.candidate_profile?.user
+  const name = user?.display_name ?? user?.full_name ?? application.candidate_display_name_snapshot ?? ''
+  const email = user?.email ?? application.candidate_email_snapshot ?? null
+
+  return { name, email }
 }
 
 export interface TenantApplicationsPage {
@@ -407,7 +445,9 @@ export async function listTenantApplicationsPage(input: ListTenantApplicationsPa
   if (search) {
     const normalized = search.toLowerCase()
     const titleMatchIds = tenantJobs.filter((job) => job.title.toLowerCase().includes(normalized)).map((job) => job.id)
-    const orParts = [`candidate_display_name_snapshot.ilike.%${search}%`]
+    // El correo es el identificador estable del candidato: si cambió de nombre,
+    // buscarlo por correo lo encuentra igual.
+    const orParts = [`candidate_display_name_snapshot.ilike.%${search}%`, `candidate_email_snapshot.ilike.%${search}%`]
     if (titleMatchIds.length > 0) {
       orParts.push(`job_posting_id.in.(${titleMatchIds.join(',')})`)
     }
@@ -491,7 +531,10 @@ export function exportApplicationsCsv(
     status_public?: string | null
     current_stage_id?: string | null
     job_posting?: { title?: string | null } | null
-    candidate_profile?: { desired_role?: string | null } | null
+    candidate_profile?: {
+      desired_role?: string | null
+      user?: { full_name?: string | null; display_name?: string | null; email?: string | null } | null
+    } | null
   }>,
   stageNameById?: Record<string, string>
 ) {
@@ -505,10 +548,12 @@ export function exportApplicationsCsv(
     'submitted_at'
   ]
 
-  const rows = applications.map((application) =>
-    [
-      application.candidate_display_name_snapshot ?? '',
-      application.candidate_email_snapshot ?? '',
+  const rows = applications.map((application) => {
+    const candidate = resolveCandidateIdentity(application)
+
+    return [
+      candidate.name,
+      candidate.email ?? '',
       application.candidate_profile?.desired_role ?? '',
       application.job_posting?.title ?? '',
       application.status_public ?? '',
@@ -517,7 +562,7 @@ export function exportApplicationsCsv(
     ]
       .map((value) => toCsvCell(value))
       .join(',')
-  )
+  })
 
   const csv = [header.join(','), ...rows].join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })

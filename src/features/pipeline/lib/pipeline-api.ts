@@ -71,6 +71,46 @@ export async function fetchPipelineBoard(tenantId: string) {
   }
 }
 
+export type PipelineBoard = Awaited<ReturnType<typeof fetchPipelineBoard>>
+export type PipelineBoardApplication = PipelineBoard['applications'][number]
+
+type NestedUser = {
+  full_name: string | null
+  display_name: string | null
+  email: string | null
+  avatar_path: string | null
+} | null
+type NestedCandidateProfile = { user: NestedUser | NestedUser[] } | null
+
+/** Extrae el usuario anidado del postulante, tolerando objeto o arreglo. */
+function applicationUser(application: PipelineBoardApplication): NestedUser {
+  const candidateProfile = application.candidate_profile as
+    | NestedCandidateProfile
+    | NestedCandidateProfile[]
+    | undefined
+  const profile = Array.isArray(candidateProfile) ? candidateProfile[0] : candidateProfile
+  return (Array.isArray(profile?.user) ? profile?.user[0] : profile?.user) ?? null
+}
+
+export function applicationAvatarPath(application: PipelineBoardApplication): string | null {
+  return applicationUser(application)?.avatar_path ?? null
+}
+
+/**
+ * Identidad vigente del candidato: el join a `users` manda porque el usuario
+ * puede haber cambiado su nombre después de postular. Los snapshots de la
+ * postulación se mantienen sincronizados por trigger y quedan como respaldo
+ * para cuando RLS no permite leer al usuario.
+ */
+export function applicationCandidateName(application: PipelineBoardApplication): string {
+  const user = applicationUser(application)
+  return user?.display_name ?? user?.full_name ?? application.candidate_display_name_snapshot
+}
+
+export function applicationCandidateEmail(application: PipelineBoardApplication): string | null {
+  return applicationUser(application)?.email ?? application.candidate_email_snapshot ?? null
+}
+
 /** Solo las etapas del pipeline del tenant (para mapear nombres sin traer todo el board). */
 export async function listTenantPipelineStages(tenantId: string) {
   const client = requireSupabase()

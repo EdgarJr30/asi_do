@@ -16,6 +16,7 @@ import { Select } from '@/components/ui/select'
 import {
   countTenantApplications,
   listTenantApplicationsPage,
+  resolveCandidateIdentity,
   type TenantApplicationsSort
 } from '@/features/applications/lib/applications-api'
 import { listTenantPipelineStages } from '@/features/pipeline/lib/pipeline-api'
@@ -403,6 +404,7 @@ export function WorkspaceApplicationsPage() {
                 const stageName = application.current_stage_id ? stageNameById.get(application.current_stage_id) : null
                 const jobTitle = application.job_posting?.title ?? 'Vacante'
                 const jobSlug = application.job_posting?.slug
+                const candidate = resolveCandidateIdentity(application)
 
                 return (
                   <motion.li
@@ -412,7 +414,7 @@ export function WorkspaceApplicationsPage() {
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
                       <UserAvatar
-                        name={application.candidate_display_name_snapshot}
+                        name={candidate.name}
                         avatarPath={application.candidate_profile?.user?.avatar_path}
                         className="size-8"
                         fallbackClassName={avatarTint(application.id)}
@@ -420,9 +422,14 @@ export function WorkspaceApplicationsPage() {
                       />
                       <div className="min-w-0">
                         <p className="truncate text-[0.85rem] font-semibold leading-tight text-(--app-text)">
-                          {application.candidate_display_name_snapshot}
+                          {candidate.name}
                         </p>
                         <p className="mt-0.5 truncate text-[0.76rem] text-(--app-text-subtle) lg:hidden">{jobTitle}</p>
+                        {candidate.email ? (
+                          <p className="mt-0.5 hidden truncate text-[0.72rem] text-(--app-text-subtle) lg:block">
+                            {candidate.email}
+                          </p>
+                        ) : null}
                       </div>
                     </div>
 
@@ -441,7 +448,7 @@ export function WorkspaceApplicationsPage() {
                     </span>
 
                     <div className="col-start-2 row-span-2 row-start-1 flex items-start justify-end self-start lg:col-auto lg:row-auto lg:self-center">
-                      <KebabMenu label={`Acciones para ${application.candidate_display_name_snapshot}`}>
+                      <KebabMenu label={`Acciones para ${candidate.name}`}>
                         <KebabMenuItem to={surfacePaths.workspace.pipeline}>
                           <KanbanSquare className="mr-2 size-4 text-(--app-text-subtle)" />
                           Ver en pipeline

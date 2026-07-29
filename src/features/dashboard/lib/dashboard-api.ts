@@ -1,5 +1,9 @@
 import { listTenantJobs } from '@/features/jobs/lib/jobs-api'
-import { fetchPipelineBoard } from '@/features/pipeline/lib/pipeline-api'
+import {
+  applicationAvatarPath,
+  applicationCandidateName,
+  fetchPipelineBoard
+} from '@/features/pipeline/lib/pipeline-api'
 
 export interface DashboardFunnelStage {
   stageId: string
@@ -106,20 +110,6 @@ function isHiredApplication(application: PipelineApplication, stageById: Map<str
   return application.status_public === 'hired' || isHiredStage(stage?.code, stage?.name)
 }
 
-type NestedAvatarUser = { avatar_path: string | null } | null
-type NestedCandidateProfile = { user: NestedAvatarUser | NestedAvatarUser[] } | null
-
-/** Extrae la ruta del avatar del postulante, tolerando objeto o arreglo anidado. */
-function applicationAvatarPath(application: PipelineApplication): string | null {
-  const candidateProfile = application.candidate_profile as
-    | NestedCandidateProfile
-    | NestedCandidateProfile[]
-    | undefined
-  const profile = Array.isArray(candidateProfile) ? candidateProfile[0] : candidateProfile
-  const user = Array.isArray(profile?.user) ? profile?.user[0] : profile?.user
-  return user?.avatar_path ?? null
-}
-
 export async function fetchWorkspaceDashboardMetrics(
   tenantId: string,
   options?: { periodDays?: number }
@@ -177,7 +167,7 @@ export async function fetchWorkspaceDashboardMetrics(
 
       return {
         applicationId: application.id,
-        candidateName: application.candidate_display_name_snapshot,
+        candidateName: applicationCandidateName(application),
         avatarPath: applicationAvatarPath(application),
         position: application.job_posting?.title ?? 'Vacante',
         stageName: stage?.name ?? null,
@@ -189,7 +179,7 @@ export async function fetchWorkspaceDashboardMetrics(
 
   const activity: DashboardActivityItem[] = []
   for (const application of periodApplications) {
-    const candidateName = application.candidate_display_name_snapshot
+    const candidateName = applicationCandidateName(application)
     const jobTitle = application.job_posting?.title ?? 'Vacante'
     activity.push({
       id: `app-${application.id}`,

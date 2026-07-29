@@ -19,10 +19,14 @@ import { exportApplicationsCsv } from '@/features/applications/lib/applications-
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import {
   addApplicationNote,
+  applicationAvatarPath,
+  applicationCandidateEmail,
+  applicationCandidateName,
   fetchApplicationActivity,
   fetchPipelineBoard,
   moveApplicationStage,
-  upsertApplicationRating
+  upsertApplicationRating,
+  type PipelineBoard
 } from '@/features/pipeline/lib/pipeline-api'
 import { useUrlParamState } from '@/hooks/use-url-param-state'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
@@ -31,23 +35,8 @@ import { cn } from '@/lib/utils/cn'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 import { UserAvatar } from '@/shared/ui/user-avatar'
 
-type PipelineBoard = Awaited<ReturnType<typeof fetchPipelineBoard>>
 type PipelineStage = PipelineBoard['stages'][number]
 type PipelineApplication = PipelineBoard['applications'][number]
-
-type NestedAvatarUser = { avatar_path: string | null } | null
-type NestedCandidateProfile = { user: NestedAvatarUser | NestedAvatarUser[] } | null
-
-/** Extrae la ruta del avatar del postulante, tolerando objeto o arreglo anidado. */
-function applicationAvatarPath(application: PipelineApplication): string | null {
-  const candidateProfile = application.candidate_profile as
-    | NestedCandidateProfile
-    | NestedCandidateProfile[]
-    | undefined
-  const profile = Array.isArray(candidateProfile) ? candidateProfile[0] : candidateProfile
-  const user = Array.isArray(profile?.user) ? profile?.user[0] : profile?.user
-  return user?.avatar_path ?? null
-}
 
 const INITIAL_STAGE_CARD_COUNT = 12
 const STAGE_CARD_BATCH_SIZE = 12
@@ -291,8 +280,8 @@ export function PipelineBoardPage() {
     const normalizedCandidateQuery = candidateQuery.trim().toLowerCase()
     const candidateMatches =
       normalizedCandidateQuery.length === 0 ||
-      application.candidate_display_name_snapshot.toLowerCase().includes(normalizedCandidateQuery) ||
-      (application.candidate_email_snapshot ?? '').toLowerCase().includes(normalizedCandidateQuery)
+      applicationCandidateName(application).toLowerCase().includes(normalizedCandidateQuery) ||
+      (applicationCandidateEmail(application) ?? '').toLowerCase().includes(normalizedCandidateQuery)
 
     const jobMatches = jobFilter.length === 0 || application.job_posting?.id === jobFilter
     const stageMatches = stageFilter.length === 0 || application.current_stage_id === stageFilter
@@ -585,7 +574,7 @@ export function PipelineBoardPage() {
                           )}
                         >
                           <UserAvatar
-                            name={application.candidate_display_name_snapshot}
+                            name={applicationCandidateName(application)}
                             avatarPath={applicationAvatarPath(application)}
                             className="size-8.5"
                             fallbackClassName="bg-[linear-gradient(135deg,#4869b6,#8aa2d8)] text-white"
@@ -593,7 +582,7 @@ export function PipelineBoardPage() {
                           />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-[0.84rem] font-semibold text-(--app-text)">
-                              {application.candidate_display_name_snapshot}
+                              {applicationCandidateName(application)}
                             </span>
                             <span className="mt-0.5 block truncate text-[0.72rem] text-(--app-text-subtle)">
                               {application.job_posting?.title || 'Vacante'}
@@ -647,18 +636,23 @@ export function PipelineBoardPage() {
           title={
             <span className="flex min-w-0 items-center gap-3">
               <UserAvatar
-                name={visibleSelectedApplication.candidate_display_name_snapshot}
+                name={applicationCandidateName(visibleSelectedApplication)}
                 avatarPath={applicationAvatarPath(visibleSelectedApplication)}
                 className="size-11"
                 fallbackClassName="bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-white"
                 textClassName="text-sm font-semibold"
               />
               <span className="min-w-0">
-                <span className="block truncate">{visibleSelectedApplication.candidate_display_name_snapshot}</span>
+                <span className="block truncate">{applicationCandidateName(visibleSelectedApplication)}</span>
+                {applicationCandidateEmail(visibleSelectedApplication) ? (
+                  <span className="block truncate text-[0.76rem] font-normal text-(--app-text-subtle)">
+                    {applicationCandidateEmail(visibleSelectedApplication)}
+                  </span>
+                ) : null}
               </span>
             </span>
           }
-          description={visibleSelectedApplication.job_posting?.title ?? visibleSelectedApplication.candidate_email_snapshot}
+          description={visibleSelectedApplication.job_posting?.title}
         >
           <div className="space-y-3.5">
             <section className="rounded-card border border-(--app-border) bg-(--app-surface) p-4">
