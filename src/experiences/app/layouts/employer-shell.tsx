@@ -148,7 +148,7 @@ const workspaceCopyByHref: Record<string, Pick<AppNavItem, 'title' | 'descriptio
     description: 'Metricas y desempeno del reclutamiento'
   },
   [surfacePaths.workspace.settings]: {
-    title: 'Configuración',
+    title: 'Configuración de empresa',
     description: 'Empresa, equipo y accesos del workspace'
   },
   [surfacePaths.workspace.access]: {

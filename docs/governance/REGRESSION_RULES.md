@@ -448,6 +448,9 @@ Do not stack the six summary indicators in `/admin/platform` into one tall mobil
 ### R-126 — Membership administration stats must use a mobile grid
 Do not stack the four membership status indicators in `/admin/memberships` into one tall mobile column. They must render as a compact two-column by two-row grid while preserving the four-column desktop statbar.
 
+### R-127 — Workspace settings must be identified as company configuration
+Do not label the workspace settings route with the ambiguous standalone word `Configuración`. Menus, navigation, route metadata, page headings, and contextual back links must call it `Configuración de empresa` so users understand that it manages the company rather than their personal profile.
+
 ---
 
 ## Maintenance rule

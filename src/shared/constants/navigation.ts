@@ -116,7 +116,7 @@ export const employerNavigationItems: NavigationItem[] = [
     requiredPermission: 'workspace:read'
   },
   {
-    title: 'Configuración',
+    title: 'Configuración de empresa',
     href: surfacePaths.workspace.settings,
     description: 'Empresa, equipo y accesos',
     group: 'general',

@@ -175,7 +175,7 @@ export function RbacOverviewPage() {
         to={surfacePaths.workspace.settings}
         className="inline-flex items-center gap-2 text-sm font-semibold text-(--app-text-subtle) transition-colors hover:text-primary-600 dark:hover:text-primary-300"
       >
-        <ArrowLeft className="size-4" /> Configuración
+        <ArrowLeft className="size-4" /> Configuración de empresa
       </Link>
 
       <header className="flex flex-wrap items-end justify-between gap-4">

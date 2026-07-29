@@ -40,7 +40,7 @@ describe('permission guards', () => {
       'Candidatos',
       'Proceso de selección',
       'Reportes',
-      'Configuración',
+      'Configuración de empresa',
       'Overview',
       'Plataforma',
       'Errores',
