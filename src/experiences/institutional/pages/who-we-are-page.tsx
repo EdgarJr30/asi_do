@@ -20,6 +20,7 @@ import {
   whoWeAreTrustSignals,
 } from '@/experiences/institutional/content/who-we-are-content';
 import { surfacePaths } from '@/app/router/surface-paths';
+import { getCountryFlagEmoji } from '@/shared/geo/location-options';
 
 const containerVariants = {
   hidden: {},
@@ -60,11 +61,7 @@ export function WhoWeArePage() {
       return 'EU';
     }
 
-    return code
-      .toUpperCase()
-      .replace(/./g, (char) =>
-        String.fromCodePoint(127397 + char.charCodeAt(0))
-      );
+    return getCountryFlagEmoji(code) || code.toUpperCase();
   };
 
   return (

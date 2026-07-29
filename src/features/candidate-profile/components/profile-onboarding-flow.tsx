@@ -36,7 +36,7 @@ import { onboardingSchema, type OnboardingValues } from '@/features/auth/lib/aut
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
 import { ImageCropDialog } from '@/shared/ui/image-crop-dialog'
-import { getCountryOptionByCode } from '@/shared/geo/location-options'
+import { getCountryFlagLabel, getCountryOptionByCode } from '@/shared/geo/location-options'
 import { captureClientError } from '@/lib/errors/client-error-logger'
 import {
   MAX_UPLOAD_SIZE_BYTES,
@@ -292,7 +292,10 @@ export function ProfileOnboardingFlow() {
   const previewName = watchedDisplayName || watchedFullName || session.authUser?.email || 'Tu nombre'
   const previewInitials = getInitials(previewName)
   const previewCountry = form.watch('countryCode') || 'DO'
-  const previewCountryLabel = getCountryOptionByCode(previewCountry)?.label ?? previewCountry.toUpperCase()
+  const previewCountryOption = getCountryOptionByCode(previewCountry)
+  const previewCountryLabel = previewCountryOption
+    ? getCountryFlagLabel(previewCountryOption)
+    : previewCountry.toUpperCase()
   const previewLocale = form.watch('locale') === 'en' ? 'English' : 'Español'
   const isLastStep = activeStepIndex === steps.length - 1
   const primaryActionLabel = form.formState.isSubmitting ? 'Guardando...' : isLastStep ? 'Guardar e ir al pago' : 'Continuar'

@@ -5,6 +5,7 @@ import {
   countryNameOptions,
   dominicanCityOptions,
   dominicanProvinceOptions,
+  getCountryFlagLabel,
   getDominicanCityOptionsByProvince
 } from '@/shared/geo/location-options'
 import { Select } from '@/components/ui/select'
@@ -20,7 +21,7 @@ export const CountryCodeSelect = forwardRef<HTMLSelectElement, LocationSelectPro
         <option value="">{placeholder}</option>
         {countryCodeOptions.map((country) => (
           <option key={country.code} value={country.value}>
-            {country.label}
+            {getCountryFlagLabel(country)}
           </option>
         ))}
         {children}
@@ -36,7 +37,7 @@ export const CountryNameSelect = forwardRef<HTMLSelectElement, LocationSelectPro
         <option value="">{placeholder}</option>
         {countryNameOptions.map((country) => (
           <option key={country.code} value={country.value}>
-            {country.label}
+            {getCountryFlagLabel(country)}
           </option>
         ))}
         {children}

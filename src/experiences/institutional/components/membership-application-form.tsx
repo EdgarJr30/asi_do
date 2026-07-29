@@ -50,6 +50,7 @@ import {
 import {
   countryNameOptions,
   dominicanProvinceOptions,
+  getCountryFlagLabel,
   getDominicanCityOptionsByProvince,
   isDominicanRepublicCountryName,
 } from '@/shared/geo/location-options'
@@ -786,7 +787,7 @@ function CountryNameSelectField(props: Omit<SelectHTMLAttributes<HTMLSelectEleme
       ) : null}
       {countryNameOptions.map((country) => (
         <option key={country.code} value={country.value}>
-          {country.label}
+          {getCountryFlagLabel(country)}
         </option>
       ))}
     </SelectField>

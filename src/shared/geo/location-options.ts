@@ -3,6 +3,7 @@ import { dominicanRepublicLocations } from '@/shared/geo/dominican-republic-loca
 
 export interface CountryOption {
   code: string
+  flag: string
   label: string
   value: string
 }
@@ -52,6 +53,26 @@ function getCountryDisplayName(code: string, fallback: string) {
   return countryNameOverrides[code] ?? regionNamesEs.of(code) ?? fallback
 }
 
+const REGIONAL_INDICATOR_OFFSET = 127397
+
+// Misma bandera que expone countries-states-cities en su campo `emoji`: los dos
+// indicadores regionales del ISO2. Lo derivamos aquí para no cargar el bundle
+// completo de la librería (cities.json pesa ~36 MB), igual que hicimos con el
+// subset de provincias/ciudades de RD.
+export function getCountryFlagEmoji(code: string) {
+  const normalized = code.trim().toUpperCase()
+
+  if (!/^[A-Z]{2}$/.test(normalized)) {
+    return ''
+  }
+
+  return normalized.replace(/./g, (char) => String.fromCodePoint(REGIONAL_INDICATOR_OFFSET + char.charCodeAt(0)))
+}
+
+export function getCountryFlagLabel(country: Pick<CountryOption, 'flag' | 'label'>) {
+  return country.flag ? `${country.flag} ${country.label}` : country.label
+}
+
 export const countryCodeOptions: CountryOption[] = uniqueSorted(
   internationalDivisionCountries.map((country) => {
     const code = country.iso.toUpperCase()
@@ -59,6 +80,7 @@ export const countryCodeOptions: CountryOption[] = uniqueSorted(
 
     return {
       code,
+      flag: getCountryFlagEmoji(code),
       label,
       value: code
     }
