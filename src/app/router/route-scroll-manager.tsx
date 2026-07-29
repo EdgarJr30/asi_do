@@ -6,6 +6,9 @@ const MAX_HASH_SCROLL_ATTEMPTS = 12
 export function RouteScrollManager() {
   const location = useLocation()
 
+  // Los parámetros de búsqueda respaldan estado dentro de la misma pantalla
+  // (filtros, pestañas y paneles de detalle). Cambiarlos no es navegación de
+  // página y no debe devolver al usuario al inicio del contenido.
   useEffect(() => {
     if (typeof window === 'undefined') {
       return
@@ -39,7 +42,7 @@ export function RouteScrollManager() {
     frame = window.requestAnimationFrame(scrollToHashTarget)
 
     return () => window.cancelAnimationFrame(frame)
-  }, [location.hash, location.pathname, location.search])
+  }, [location.hash, location.pathname])
 
   return null
 }
