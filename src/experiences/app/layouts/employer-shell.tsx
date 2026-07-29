@@ -686,29 +686,17 @@ function FloatingSidebarTooltip({ label, top }: { label: string; top: number }) 
 
 function SidebarFooter({
   config,
-  isDesktop,
   session,
   showCollapsedLabels,
   signOutPending,
-  userEmail,
-  userInitials,
-  userName,
   onActionNavigate,
-  onOpenNotifications,
-  onOpenProfile,
   onSignOut
 }: {
   config: ShellConfig
-  isDesktop: boolean
   session: ReturnType<typeof useAppSession>
   showCollapsedLabels: boolean
   signOutPending: boolean
-  userEmail: string
-  userInitials: string
-  userName: string
   onActionNavigate: (href: string) => void
-  onOpenNotifications: () => void
-  onOpenProfile: () => void
   onSignOut: () => void
 }) {
   const footerYear = new Date().getFullYear()
@@ -777,47 +765,7 @@ function SidebarFooter({
         </button>
       ) : null}
 
-      {!isDesktop ? (
-        <div
-          className="mt-2 rounded-card border border-white/10 bg-white/8 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
-          data-testid="mobile-sidebar-profile-card"
-        >
-          <div className="flex items-center gap-2">
-            <button
-              aria-label={`Mi perfil: ${userName}`}
-              className="flex min-w-0 flex-1 items-center gap-2 rounded-control px-2 py-1.5 text-left transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
-              type="button"
-              onClick={onOpenProfile}
-            >
-              <UserAvatar
-                name={userName}
-                avatarPath={session.profile?.avatar_path}
-                className="size-9 border border-white/10"
-                fallbackClassName="bg-white/10 text-white"
-                textClassName="text-[11px] font-semibold"
-                initialsFallback={userInitials}
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[0.82rem] font-semibold leading-5 text-white">{userName}</span>
-                <span className="block truncate text-[0.72rem] leading-4 text-white/55">{userEmail}</span>
-              </span>
-              <ChevronRight className="size-4 shrink-0 text-white/42" />
-            </button>
-            <Tooltip label="Notificaciones" side="top">
-              <button
-                aria-label="Abrir notificaciones"
-                className="inline-flex size-10 shrink-0 items-center justify-center rounded-control text-white/72 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/35"
-                type="button"
-                onClick={onOpenNotifications}
-              >
-                <Bell className="size-4" />
-              </button>
-            </Tooltip>
-          </div>
-        </div>
-      ) : null}
-
-      {/* En desktop el perfil vive en el menu del topbar (arriba a la derecha); no lo duplicamos aqui. */}
+      {/* El perfil y las notificaciones viven en el topbar (arriba a la derecha); no los duplicamos aqui. */}
 
       <button
         aria-label="Cerrar sesión"
@@ -856,12 +804,7 @@ function WorkspaceSidebarContent({
   mode,
   session,
   signOutPending,
-  userEmail,
-  userInitials,
-  userName,
   onActionNavigate,
-  onOpenNotifications,
-  onOpenProfile,
   onSignOut,
   onToggleSidebar
 }: {
@@ -871,12 +814,7 @@ function WorkspaceSidebarContent({
   mode: 'desktop' | 'mobile'
   session: ReturnType<typeof useAppSession>
   signOutPending: boolean
-  userEmail: string
-  userInitials: string
-  userName: string
   onActionNavigate: (href: string) => void
-  onOpenNotifications: () => void
-  onOpenProfile: () => void
   onSignOut: () => void
   onToggleSidebar: () => void
 }) {
@@ -1036,13 +974,7 @@ function WorkspaceSidebarContent({
                         {isActive && !showCollapsedLabels ? (
                           <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.5)]" />
                         ) : null}
-                        <span
-                          className={cn(
-                            'flex shrink-0 items-center justify-center transition-colors',
-                            showCollapsedLabels ? 'size-10 rounded-control' : 'size-5',
-                            showCollapsedLabels && isActive ? 'bg-white/12' : ''
-                          )}
-                        >
+                        <span className="flex size-5 shrink-0 items-center justify-center transition-colors">
                           {Icon ? <Icon className={cn('size-[1.15rem]', isActive ? 'text-white' : 'text-current')} strokeWidth={isActive ? 2.4 : 2} /> : null}
                         </span>
                         {!showCollapsedLabels ? (
@@ -1061,16 +993,10 @@ function WorkspaceSidebarContent({
 
         <SidebarFooter
           config={config}
-          isDesktop={isDesktop}
           session={session}
           showCollapsedLabels={showCollapsedLabels}
           signOutPending={signOutPending}
-          userEmail={userEmail}
-          userInitials={userInitials}
-          userName={userName}
           onActionNavigate={onActionNavigate}
-          onOpenNotifications={onOpenNotifications}
-          onOpenProfile={onOpenProfile}
           onSignOut={onSignOut}
         />
       </div>
@@ -1532,12 +1458,7 @@ export function PlatformAppShell({
           mode="desktop"
           session={session}
           signOutPending={signOutMutation.isPending}
-          userEmail={userIdentity.email}
-          userInitials={userIdentity.initials}
-          userName={userIdentity.displayName}
           onActionNavigate={handleActionNavigate}
-          onOpenNotifications={() => setNotificationPanelOpen(true)}
-          onOpenProfile={() => handleActionNavigate(config.profileHref)}
           onSignOut={handleSignOut}
           onToggleSidebar={() => setIsDesktopSidebarCollapsed((current) => !current)}
         />
@@ -1570,15 +1491,7 @@ export function PlatformAppShell({
                 mode="mobile"
                 session={session}
                 signOutPending={signOutMutation.isPending}
-                userEmail={userIdentity.email}
-                userInitials={userIdentity.initials}
-                userName={userIdentity.displayName}
                 onActionNavigate={handleActionNavigate}
-                onOpenNotifications={() => {
-                  setMobileSidebarOpen(false)
-                  setNotificationPanelOpen(true)
-                }}
-                onOpenProfile={() => handleActionNavigate(config.profileHref)}
                 onSignOut={handleSignOut}
                 onToggleSidebar={() => setMobileSidebarOpen(false)}
               />
