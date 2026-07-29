@@ -216,9 +216,22 @@ export function AdminEmpty({ title, description }: { title: string; description:
   )
 }
 
-export function AdminMetaDetails({ title = 'Metadata', children }: { title?: string; children: ReactNode }) {
+export function AdminMetaDetails({
+  title = 'Metadata',
+  children,
+  className
+}: {
+  title?: string
+  children: ReactNode
+  className?: string
+}) {
   return (
-    <details className="rounded-card border border-(--app-border) bg-(--app-surface-muted)/70 px-4 py-3">
+    <details
+      className={cn(
+        'rounded-card border border-(--app-border) bg-(--app-surface-muted)/70 px-4 py-3',
+        className
+      )}
+    >
       <summary className="cursor-pointer text-sm font-bold text-(--app-text)">{title}</summary>
       <div className="mt-3 overflow-x-auto text-xs text-(--app-text-muted)">{children}</div>
     </details>

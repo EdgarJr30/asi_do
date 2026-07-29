@@ -542,7 +542,7 @@ Rules:
 18. Candidate account page titles such as `Postulaciones` and `Tu membresía` should share the compact app heading rhythm (`text-xl font-semibold` with `sm:text-[1.6rem]`) unless the page is intentionally an onboarding or marketing hero.
 19. Platform access-control screens should stay dense, owner-only, and report-oriented: use compact statbars, tabs for users/roles/audit/risks, mobile-safe cards, explicit confirmation for role revocation/deletion, automatic search, database-backed infinite user loading, and grouped permission checklists with risk badges instead of oversized role cards or raw JSON-first audit views.
 20. Action footers inside narrow side sheets must size against the sheet, not the viewport breakpoint. Use a bounded grid or vertical stack, keep every control at `w-full min-w-0`, and place a long primary action on its own row so labels never overflow or clip outside the panel.
-21. Four-item summary statbars in dense administration modules should use a compact two-column by two-row grid on mobile when the labels and helper text remain readable. Do not stack those four indicators into a tall single-column block.
+21. Four-item summary statbars in dense administration modules should use a compact two-column by two-row grid on mobile when the labels and helper text remain readable. Do not stack those four indicators into a tall single-column block. Detail disclosures placed after summary/context blocks must keep a visible spacing gap instead of touching the preceding surface.
 
 ---
 

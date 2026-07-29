@@ -434,7 +434,7 @@ Do not make applicants choose the church territory manually before selecting the
 Do not make the talent-pool insert policy read recruiter-visible candidate profiles through invoker-context RLS. The policy must preserve `candidate_directory:read`, bind `saved_by_user_id` to `auth.uid()`, and evaluate profile visibility through a narrow boolean-only security-definer predicate. The candidate detail side sheet must keep every footer action inside its narrow panel; long actions must occupy their own row instead of relying on viewport breakpoints that can force horizontal overflow. Opening or closing a candidate through the `candidate` query parameter must preserve the current scroll position instead of returning the directory to its first row. The global route scroll manager must ignore query-only transitions and reset the page only when the pathname or hash changes.
 
 ### R-122 — Access-log stats must stay compact on mobile
-Do not stack the four summary indicators in `/admin/access-logs` into a tall single-column block on mobile. They must render as a readable two-column by two-row grid while preserving the shared admin statbar treatment.
+Do not stack the four summary indicators in `/admin/access-logs` into a tall single-column block on mobile. They must render as a readable two-column by two-row grid while preserving the shared admin statbar treatment. Inside each access entry, keep a visible gap between the context cards and the `Ver identificadores y user-agent` disclosure so those surfaces never appear stuck together.
 
 ---
 

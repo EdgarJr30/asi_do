@@ -261,7 +261,7 @@ export function UserAccessLogPage() {
                     </div>
                   </div>
 
-                  <AdminMetaDetails title="Ver identificadores y user-agent">
+                  <AdminMetaDetails className="mt-2.5" title="Ver identificadores y user-agent">
                     <dl className="grid gap-2 sm:grid-cols-2">
                       <div>
                         <dt className="font-bold text-(--app-text)">Usuario</dt>
