@@ -87,7 +87,7 @@ export function UserAccessLogPage() {
       }
     >
       <div className="space-y-4">
-        <AdminStatBar columns={4} mobileTwoByTwo>
+        <AdminStatBar columns={4} mobileTwoColumns>
           <AdminStat
             label="Accesos registrados"
             value={stats?.total_accesses ?? '—'}

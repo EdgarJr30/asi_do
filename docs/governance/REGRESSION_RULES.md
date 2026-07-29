@@ -436,6 +436,9 @@ Do not make the talent-pool insert policy read recruiter-visible candidate profi
 ### R-122 — Access-log stats must stay compact on mobile
 Do not stack the four summary indicators in `/admin/access-logs` into a tall single-column block on mobile. They must render as a readable two-column by two-row grid while preserving the shared admin statbar treatment. Inside each access entry, keep a visible gap between the context cards and the `Ver identificadores y user-agent` disclosure so those surfaces never appear stuck together.
 
+### R-123 — Platform health stats must use a mobile grid
+Do not stack the six `Salud de plataforma` indicators in the administration overview into one tall mobile column. They must render as a compact two-column by three-row grid while preserving the six-column desktop statbar.
+
 ---
 
 ## Maintenance rule

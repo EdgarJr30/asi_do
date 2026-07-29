@@ -97,11 +97,11 @@ export function AdminInfoGrid({ items }: { items: Array<{ label: string; value: 
 export function AdminStatBar({
   children,
   columns = 4,
-  mobileTwoByTwo = false
+  mobileTwoColumns = false
 }: {
   children: ReactNode
   columns?: 3 | 4 | 5 | 6
-  mobileTwoByTwo?: boolean
+  mobileTwoColumns?: boolean
 }) {
   const columnClass = {
     3: 'lg:grid-cols-3',
@@ -114,7 +114,7 @@ export function AdminStatBar({
     <div
       className={cn(
         'grid overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated)',
-        mobileTwoByTwo
+        mobileTwoColumns
           ? 'grid-cols-2 [&>*:nth-child(even)]:border-r-0 [&>*:nth-child(odd)]:border-r [&>*:nth-last-child(-n+2)]:border-b-0 lg:[&>*:last-child]:border-r-0 lg:[&>*:not(:last-child)]:border-r'
           : 'sm:grid-cols-2',
         columnClass

@@ -151,7 +151,7 @@ export function AdminConsolePage() {
 
         <div className="space-y-2.5">
           <AdminSectionLabel title="Salud de plataforma" />
-          <AdminStatBar columns={6}>
+          <AdminStatBar columns={6} mobileTwoColumns>
             <AdminStat label="Tenants activos" value={stats?.activeTenants ?? '—'} />
             <AdminStat
               label="Membresías activas"
