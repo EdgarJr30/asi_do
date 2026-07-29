@@ -315,7 +315,9 @@ export function MembershipStatusPage() {
   const showPayStep = paymentStep?.state === 'current' && Boolean(bundle.application)
   const hasDraftApplication = bundle.application?.status === 'draft'
   const startApplicationLabel = hasDraftApplication ? 'Continuar mi solicitud' : 'Iniciar mi solicitud'
-  const canRenew = session.hasActiveAsiAccess && bundle.application?.status === 'approved' && azulEnabled
+  // Renovar solo tiene sentido sobre una solicitud ya aprobada; el acceso puede venir
+  // de un override manual con la solicitud todavía en revisión.
+  const canRenew = session.hasActiveAsiAccess && bundle.application?.status === 'approved'
   const importantStep = steps.find((step) => step.state === 'blocked') ?? steps.find((step) => step.state === 'current')
   const routeStatusLabel = session.hasActiveAsiAccess ? 'Activa' : importantStep?.title ?? 'En proceso'
   const membershipActivatedAt =
@@ -625,7 +627,7 @@ export function MembershipStatusPage() {
           </motion.section>
 
           <motion.aside variants={gridStagger} initial={contentInitialState} animate="show" className="space-y-5 lg:sticky lg:top-6">
-            {session.hasActiveAsiAccess && bundle.application ? (
+            {canRenew && bundle.application ? (
               <motion.div variants={cardReveal}>
                 <Card className="rounded-card p-5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
                   <CardContent className="mt-0">
@@ -640,7 +642,7 @@ export function MembershipStatusPage() {
                       currency={bundle.settings?.currency ?? 'DOP'}
                       categoryLabel={due?.label ?? bundle.application.category_name ?? null}
                       paymentStatus={visiblePaymentStatus === 'initiated' ? 'initiated' : visiblePaymentStatus}
-                      azulEnabled={canRenew}
+                      azulEnabled={azulEnabled}
                       compact
                       onRefresh={() => void queryClient.invalidateQueries({ queryKey: ['membership', 'status', userId] })}
                     />
