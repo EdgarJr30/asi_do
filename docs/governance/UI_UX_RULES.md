@@ -388,6 +388,7 @@ Apple-inspired UI rules:
 7. The mobile workspace sidebar must render only one compact profile card. Combine identity, profile access, and notification access into that single card instead of stacking duplicate user/profile cards.
 8. Mobile workspace overlays must own the viewport cleanly: notification panels should render as fixed, viewport-bounded panels, and an open mobile sidebar must lock page scroll behind it until it closes.
 9. Workspace `Resumen` is the employer hub for KPIs, funnel health, recent applications, and recent activity. Do not duplicate the same activity feed as a top-level sidebar module; keep the full `Actividad` page as a secondary drill-in destination from `Resumen` when users need the complete history.
+10. The ASI brand mark and lockup in authenticated platform sidebars must always navigate to the shared account `Inicio`, regardless of whether the user is currently in candidate, workspace, or administration modules. The public platform shell keeps its own public home as the brand destination.
 
 ### 9.3 IA rules
 1. Preserve core navigation order across tenants and roles whenever possible.

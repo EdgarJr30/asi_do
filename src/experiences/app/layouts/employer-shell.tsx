@@ -72,6 +72,7 @@ type ShellGuestAction = {
 }
 type ShellConfig = {
   brand: string
+  brandHomeHref: string
   footerCaption: string
   hideFooterChrome?: boolean
   guestActions: ShellGuestAction[]
@@ -875,19 +876,27 @@ function WorkspaceSidebarContent({
     >
       <div className="border-b border-white/10 px-3 py-3">
         <div className={cn('flex', showCollapsedLabels ? 'flex-col items-center gap-2.5' : 'items-center gap-2')}>
-          {showCollapsedLabels ? (
-            <BrandMark panelClassName="size-10 rounded-control border-white/12 bg-white/10 p-2 shadow-none" />
-          ) : (
-            <div
-              className={cn(
-                'flex min-w-0 flex-1 flex-col justify-center',
-                config.hideFooterChrome ? '' : 'rounded-card bg-white/6 px-3 py-2'
-              )}
-            >
-              <BrandLockup className={config.hideFooterChrome ? 'w-20' : 'w-28'} surface="dark" />
-              <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-white/48">{config.tenantName}</p>
-            </div>
-          )}
+          <button
+            aria-label="Ir al inicio de la plataforma"
+            className={cn(
+              'rounded-control text-left outline-none transition-[background-color,box-shadow] duration-150 hover:bg-white/8 focus-visible:ring-2 focus-visible:ring-white/40',
+              showCollapsedLabels
+                ? 'flex size-10 items-center justify-center'
+                : 'flex min-w-0 flex-1 flex-col justify-center',
+              !showCollapsedLabels && !config.hideFooterChrome ? 'rounded-card bg-white/6 px-3 py-2' : ''
+            )}
+            type="button"
+            onClick={() => onActionNavigate(config.brandHomeHref)}
+          >
+            {showCollapsedLabels ? (
+              <BrandMark panelClassName="size-10 rounded-control border-white/12 bg-white/10 p-2 shadow-none" />
+            ) : (
+              <>
+                <BrandLockup className={config.hideFooterChrome ? 'w-20' : 'w-28'} surface="dark" />
+                <p className="mt-1 truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-white/48">{config.tenantName}</p>
+              </>
+            )}
+          </button>
           {!showCollapsedLabels ? (
             <span className="sr-only">{config.brand}</span>
           ) : null}
@@ -1050,6 +1059,7 @@ function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
 
   return {
     brand: 'Plataforma ASI',
+    brandHomeHref: surfacePaths.storefront.home,
     footerCaption: 'Shell compartido de plataforma',
     hideFooterChrome: true,
     guestActions: [
@@ -1171,6 +1181,7 @@ function buildUnifiedConfig(session: ReturnType<typeof useAppSession>): ShellCon
 
   return {
     brand: 'Plataforma ASI',
+    brandHomeHref: surfacePaths.account.home,
     footerCaption: 'Shell compartido de plataforma',
     hideFooterChrome: true,
     guestActions: [],

@@ -184,6 +184,10 @@ function renderWorkspaceShell(initialEntry: string = surfacePaths.workspace.root
         element: <div>Perfil candidato</div>
       },
       {
+        path: surfacePaths.account.home,
+        element: <div>Inicio de la plataforma</div>
+      },
+      {
         path: surfacePaths.institutional.home,
         element: <div>Página institucional</div>
       },
@@ -521,6 +525,25 @@ describe('workspace shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Página institucional' }))
 
     expect(await screen.findByText('Página institucional')).toBeInTheDocument()
+  })
+
+  it('navigates to platform home from the ASI brand in the desktop sidebar', async () => {
+    seedWorkspaceSession(['workspace:read', 'role:read'])
+    renderWorkspaceShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Ir al inicio de la plataforma' }))
+
+    expect(await screen.findByText('Inicio de la plataforma')).toBeInTheDocument()
+  })
+
+  it('navigates to platform home from the ASI brand in the mobile sidebar', async () => {
+    seedWorkspaceSession(['workspace:read', 'role:read'])
+    renderWorkspaceShell()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir sidebar de plataforma' }))
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Ir al inicio de la plataforma' })).at(-1)!)
+
+    expect(await screen.findByText('Inicio de la plataforma')).toBeInTheDocument()
   })
 
   it('persists the desktop sidebar collapsed state', async () => {
