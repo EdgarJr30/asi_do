@@ -17,6 +17,7 @@ import {
 import { surfacePaths } from '@/app/router/surface-paths'
 import { LazySurfaceStatusPage } from '@/app/router/routes/lazy-surface-status-page'
 import { approvalReviewPermissions } from '@/shared/constants/navigation'
+import { WORKSPACE_ROLE_VISIBILITY_ENABLED } from '@/shared/config/launch-access'
 
 const ApplicationsOverviewPage = lazy(() =>
   import('@/features/applications/pages/applications-overview-page').then(({ ApplicationsOverviewPage }) => ({ default: ApplicationsOverviewPage }))
@@ -408,13 +409,17 @@ export const applicationRoutes: RouteObject[] = [
         )
       },
       {
+        // Los roles y permisos solo se administran desde la consola de
+        // plataforma; la vista del workspace queda desmontada.
         path: 'settings/access',
-        element: (
+        element: WORKSPACE_ROLE_VISIBILITY_ENABLED ? (
           <RequirePermission permission="role:read" surface="workspace">
             <RouteSuspense>
               <RbacOverviewPage />
             </RouteSuspense>
           </RequirePermission>
+        ) : (
+          <Navigate replace to={surfacePaths.workspace.settings} />
         )
       },
       {

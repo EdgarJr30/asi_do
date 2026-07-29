@@ -360,10 +360,37 @@ describe('surface access states', () => {
       isPlatformAdmin: false
     }
 
-    renderRoute(surfacePaths.workspace.access)
+    renderRoute(surfacePaths.workspace.pipeline)
 
     expect((await screen.findAllByText('Acme')).length).toBeGreaterThan(0)
     expect((await screen.findAllByText('No puedes abrir esta vista del workspace')).length).toBeGreaterThan(0)
+  })
+
+  it('redirects the legacy workspace roles view to the workspace settings', async () => {
+    authState.session = { user: { id: 'user-2', email: 'recruiter@example.com' } }
+    authState.snapshot = {
+      profile: completeProfile({ id: 'user-2', email: 'recruiter@example.com' }),
+      memberships: [
+        {
+          id: 'membership-1',
+          tenantId: 'tenant-1',
+          tenantName: 'Acme',
+          tenantSlug: 'acme',
+          roleCodes: [],
+          roleNames: [],
+          permissions: ['workspace:read', 'role:read']
+        }
+      ],
+      permissions: ['workspace:read', 'role:read'],
+      platformPermissions: [],
+      isPlatformAdmin: false
+    }
+
+    renderRoute(surfacePaths.workspace.access)
+
+    expect((await screen.findAllByText('Acme')).length).toBeGreaterThan(0)
+    expect(screen.queryByText('Permisos y roles del workspace')).not.toBeInTheDocument()
+    expect(screen.queryByText('No puedes abrir esta vista del workspace')).not.toBeInTheDocument()
   })
 
   it('renders admin forbidden inside the admin shell', async () => {

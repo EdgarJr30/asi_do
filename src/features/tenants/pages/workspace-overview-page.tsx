@@ -52,6 +52,7 @@ import {
   type WorkspaceMemberFilter,
 } from '@/features/tenants/lib/workspace-api';
 import { reportErrorWithToast } from '@/lib/errors/error-reporting';
+import { WORKSPACE_ROLE_VISIBILITY_ENABLED, WORKSPACE_TEAM_MANAGEMENT_ENABLED } from '@/shared/config/launch-access';
 import { cn } from '@/lib/utils/cn';
 import { isRasterImageFile, MAX_UPLOAD_SIZE_BYTES, UploadConstraintError } from '@/lib/uploads/media';
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion';
@@ -255,11 +256,13 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
 
   const membersCountsQuery = useQuery({
     queryKey: ['workspace', 'members', bundle.tenant.id, 'counts', debouncedMemberQuery],
+    enabled: WORKSPACE_TEAM_MANAGEMENT_ENABLED,
     queryFn: async () => countWorkspaceMembers({ tenantId: bundle.tenant.id, query: debouncedMemberQuery }),
   });
 
   const membersQuery = useInfiniteQuery({
     queryKey: ['workspace', 'members', bundle.tenant.id, 'page', memberFilter, debouncedMemberQuery],
+    enabled: WORKSPACE_TEAM_MANAGEMENT_ENABLED,
     initialPageParam: 0,
     queryFn: async ({ pageParam }) =>
       listWorkspaceMembersPage({
@@ -511,7 +514,7 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
         <div className="max-w-2xl">
           <h1 className="text-xl font-semibold tracking-tight text-(--app-text) sm:text-[1.6rem]">Configuración</h1>
           <p className="mt-1.5 max-w-2xl text-[0.84rem] leading-relaxed text-(--app-text-muted)">
-            {firstName(userDisplayName)}, administra la identidad de tu empresa, el equipo y los accesos del workspace.
+            {firstName(userDisplayName)}, administra la identidad y la presencia pública de tu empresa.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -521,21 +524,27 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
           >
             Ver vacantes
           </Link>
-          <Button className="h-10 px-3.5 text-[0.84rem]" onClick={() => setOpenSheet('team')}>
-            <UserPlus className="size-4" /> Invitar miembro
-          </Button>
+          {WORKSPACE_TEAM_MANAGEMENT_ENABLED ? (
+            <Button className="h-10 px-3.5 text-[0.84rem]" onClick={() => setOpenSheet('team')}>
+              <UserPlus className="size-4" /> Invitar miembro
+            </Button>
+          ) : null}
         </div>
       </motion.header>
 
-      <motion.section
-        variants={cardReveal}
-        className={cn(panelClassName, 'grid grid-cols-2 overflow-hidden xl:grid-cols-4 [&>*:not(:last-child)]:border-b [&>*:nth-child(odd)]:border-r xl:[&>*:not(:last-child)]:border-r xl:[&>*:not(:last-child)]:border-b-0 [&>*]:border-(--app-border)')}
-      >
-        <StatCell label="Miembros activos" value={activeMembershipCount} sublabel="personas en este espacio" />
-        <StatCell label="Invitaciones" value={invitedMembershipCount} sublabel="accesos por aceptar" />
-        <StatCell label="Roles" value={assignableRoles.length} sublabel="estructura del equipo" to={surfacePaths.workspace.access} />
-        <StatCell label="Visibilidad" value={isPublic ? 'Pública' : 'Privada'} sublabel="presencia de la empresa" />
-      </motion.section>
+      {WORKSPACE_TEAM_MANAGEMENT_ENABLED ? (
+        <motion.section
+          variants={cardReveal}
+          className={cn(panelClassName, 'grid grid-cols-2 overflow-hidden xl:grid-cols-4 [&>*:not(:last-child)]:border-b [&>*:nth-child(odd)]:border-r xl:[&>*:not(:last-child)]:border-r xl:[&>*:not(:last-child)]:border-b-0 [&>*]:border-(--app-border)')}
+        >
+          <StatCell label="Miembros activos" value={activeMembershipCount} sublabel="personas en este espacio" />
+          <StatCell label="Invitaciones" value={invitedMembershipCount} sublabel="accesos por aceptar" />
+          {WORKSPACE_ROLE_VISIBILITY_ENABLED ? (
+            <StatCell label="Roles" value={assignableRoles.length} sublabel="estructura del equipo" to={surfacePaths.workspace.access} />
+          ) : null}
+          <StatCell label="Visibilidad" value={isPublic ? 'Pública' : 'Privada'} sublabel="presencia de la empresa" />
+        </motion.section>
+      ) : null}
 
       <motion.div variants={cardReveal} className={panelClassName}>
         <div className="border-b border-(--app-border) px-3.5 py-3">
@@ -579,142 +588,146 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
         </div>
       </motion.div>
 
-      <motion.section variants={cardReveal} className="space-y-2.5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-[0.95rem] font-bold tracking-tight text-(--app-text)">Equipo y accesos</h2>
-            <p className="mt-0.5 text-[0.78rem] text-(--app-text-muted)">Miembros y accesos del workspace.</p>
-          </div>
-          <Link
-            to={surfacePaths.workspace.access}
-            className="inline-flex h-9 shrink-0 items-center gap-1 rounded-card border border-primary-100 bg-primary-50 px-3 text-[0.78rem] font-bold text-primary-700 transition-colors hover:border-primary-200 hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/12 dark:text-primary-200"
-          >
-            Permisos y roles <ChevronRight className="size-4" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          {MEMBER_FILTERS.map((filter) => {
-            const isActive = filter.key === memberFilter;
-
-            return (
-              <button
-                key={filter.key}
-                type="button"
-                onClick={() => setMemberFilter(filter.key)}
-                aria-pressed={isActive}
-                className={cn(
-                  'flex flex-col items-center justify-center gap-0.5 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-1.5 py-2 text-center transition-[border-color,background-color,box-shadow] hover:border-primary-300 hover:bg-(--app-surface) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)',
-                  isActive ? 'border-primary-300 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]' : ''
-                )}
-              >
-                <span className="font-sans text-base font-bold leading-none tabular-nums text-(--app-text) sm:text-lg">
-                  {membersCountsQuery.isLoading ? '...' : <CountUp value={memberCounts[filter.key]} />}
-                </span>
-                <span className="text-[0.66rem] leading-tight text-(--app-text-subtle) sm:text-[0.7rem]">{filter.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <label className="flex h-11 min-w-0 items-center gap-2.5 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
-          <Search className="size-4.5 shrink-0 text-(--app-text-subtle)" />
-          <span className="sr-only">Buscar miembro por nombre o correo</span>
-          <Input
-            value={memberQuery}
-            onChange={(event) => setMemberQuery(event.target.value)}
-            placeholder="Buscar por nombre o correo"
-            className="h-full rounded-none border-0 bg-transparent px-0 text-[0.9rem] shadow-none focus:border-0 focus:bg-transparent focus:ring-0"
-          />
-        </label>
-
-        {membersQuery.isLoading && !hasLoadedFirstMembersPage ? (
-          <Card className="flex items-center gap-2.5 text-[0.82rem] text-(--app-text-muted)">
-            <Spinner size="sm" /> Cargando equipo...
-          </Card>
-        ) : membersQuery.error ? (
-          <Card className="text-[0.86rem] text-rose-600">{toErrorMessage(membersQuery.error)}</Card>
-        ) : visibleMembers.length ? (
-          <div className="space-y-1">
-            <p className="px-0.5 text-[0.78rem] text-(--app-text-subtle)">
-              <b className="font-semibold text-(--app-text)">{visibleMembers.length}</b> de{' '}
-              <b className="font-semibold text-(--app-text)">{membersTotalCount}</b> miembro{membersTotalCount === 1 ? '' : 's'}
-            </p>
-            <Card className="overflow-hidden rounded-control p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
-              <motion.ul
-                className="divide-y divide-(--app-border)"
-                variants={gridStagger}
-                initial={shouldReduceMotion ? false : 'hidden'}
-                animate="show"
-              >
-                {visibleMembers.map((membership) => (
-                  <motion.li key={membership.id} variants={cardReveal} className="flex items-center gap-2.5 px-3 py-2.5 sm:px-3.5">
-                    <UserAvatar
-                      name={membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'M'}
-                      avatarPath={membership.user?.avatar_path}
-                      className="size-9"
-                      fallbackClassName="bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-white"
-                      textClassName="text-[0.7rem] font-bold"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[0.84rem] font-semibold leading-tight text-(--app-text)">
-                        {membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'Miembro'}
-                      </p>
-                      <p className="mt-0.5 truncate text-[0.74rem] text-(--app-text-subtle)">{membership.user?.email || formatRoleNames(membership)}</p>
-                    </div>
-                    {membership.status === 'invited' ? (
-                      <Button
-                        variant="outline"
-                        className="h-8 shrink-0 px-2.5 text-[0.72rem] hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
-                        onClick={() => revokeInviteMutation.mutate(membership.id)}
-                        disabled={revokeInviteMutation.isPending}
-                      >
-                        Revocar
-                      </Button>
-                    ) : null}
-                    <Badge
-                      variant="outline"
-                      className={cn('shrink-0', membership.status === 'active' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-200' : undefined)}
-                    >
-                      {statusLabel(membership.status)}
-                    </Badge>
-                  </motion.li>
-                ))}
-              </motion.ul>
-            </Card>
-
-            <div ref={sentinelRef} className="flex min-h-10 items-center justify-center px-2 py-2">
-              {membersQuery.isFetchingNextPage ? (
-                <span className="inline-flex items-center gap-2 text-[0.78rem] text-(--app-text-muted)">
-                  <Spinner size="sm" /> Cargando más miembros...
-                </span>
-              ) : membersQuery.hasNextPage ? (
-                <span className="text-[0.74rem] text-(--app-text-subtle)">Desplázate para cargar más</span>
-              ) : (
-                <span className="text-[0.74rem] text-(--app-text-subtle)">No hay más miembros</span>
-              )}
+      {WORKSPACE_TEAM_MANAGEMENT_ENABLED ? (
+        <motion.section variants={cardReveal} className="space-y-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-[0.95rem] font-bold tracking-tight text-(--app-text)">Equipo y accesos</h2>
+              <p className="mt-0.5 text-[0.78rem] text-(--app-text-muted)">Miembros y accesos del workspace.</p>
             </div>
+            {WORKSPACE_ROLE_VISIBILITY_ENABLED ? (
+              <Link
+                to={surfacePaths.workspace.access}
+                className="inline-flex h-9 shrink-0 items-center gap-1 rounded-card border border-primary-100 bg-primary-50 px-3 text-[0.78rem] font-bold text-primary-700 transition-colors hover:border-primary-200 hover:bg-primary-100 dark:border-primary-500/20 dark:bg-primary-500/12 dark:text-primary-200"
+              >
+                Permisos y roles <ChevronRight className="size-4" />
+              </Link>
+            ) : null}
           </div>
-        ) : (
-          <EmptyState
-            actionLabel={memberFilter !== 'all' || memberQuery ? 'Limpiar filtros' : 'Invitar miembro'}
-            description={
-              memberFilter !== 'all' || memberQuery
-                ? 'Prueba con otro término o cambia el filtro para ampliar los resultados.'
-                : 'Invita a las personas que operarán este espacio de empresa.'
-            }
-            title={memberFilter !== 'all' || memberQuery ? 'Sin resultados' : 'Aún no hay miembros'}
-            onAction={() => {
-              if (memberFilter !== 'all' || memberQuery) {
-                setMemberFilter('all');
-                setMemberQuery('');
-              } else {
-                setOpenSheet('team');
+
+          <div className="grid grid-cols-3 gap-2">
+            {MEMBER_FILTERS.map((filter) => {
+              const isActive = filter.key === memberFilter;
+
+              return (
+                <button
+                  key={filter.key}
+                  type="button"
+                  onClick={() => setMemberFilter(filter.key)}
+                  aria-pressed={isActive}
+                  className={cn(
+                    'flex flex-col items-center justify-center gap-0.5 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-1.5 py-2 text-center transition-[border-color,background-color,box-shadow] hover:border-primary-300 hover:bg-(--app-surface) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--app-ring) focus-visible:ring-offset-2 focus-visible:ring-offset-(--app-canvas)',
+                    isActive ? 'border-primary-300 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]' : ''
+                  )}
+                >
+                  <span className="font-sans text-base font-bold leading-none tabular-nums text-(--app-text) sm:text-lg">
+                    {membersCountsQuery.isLoading ? '...' : <CountUp value={memberCounts[filter.key]} />}
+                  </span>
+                  <span className="text-[0.66rem] leading-tight text-(--app-text-subtle) sm:text-[0.7rem]">{filter.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <label className="flex h-11 min-w-0 items-center gap-2.5 rounded-control border border-(--app-border) bg-(--app-surface-elevated) px-3.5 transition-[border-color,box-shadow] focus-within:border-primary-600 focus-within:ring-3 focus-within:ring-primary-600/10">
+            <Search className="size-4.5 shrink-0 text-(--app-text-subtle)" />
+            <span className="sr-only">Buscar miembro por nombre o correo</span>
+            <Input
+              value={memberQuery}
+              onChange={(event) => setMemberQuery(event.target.value)}
+              placeholder="Buscar por nombre o correo"
+              className="h-full rounded-none border-0 bg-transparent px-0 text-[0.9rem] shadow-none focus:border-0 focus:bg-transparent focus:ring-0"
+            />
+          </label>
+
+          {membersQuery.isLoading && !hasLoadedFirstMembersPage ? (
+            <Card className="flex items-center gap-2.5 text-[0.82rem] text-(--app-text-muted)">
+              <Spinner size="sm" /> Cargando equipo...
+            </Card>
+          ) : membersQuery.error ? (
+            <Card className="text-[0.86rem] text-rose-600">{toErrorMessage(membersQuery.error)}</Card>
+          ) : visibleMembers.length ? (
+            <div className="space-y-1">
+              <p className="px-0.5 text-[0.78rem] text-(--app-text-subtle)">
+                <b className="font-semibold text-(--app-text)">{visibleMembers.length}</b> de{' '}
+                <b className="font-semibold text-(--app-text)">{membersTotalCount}</b> miembro{membersTotalCount === 1 ? '' : 's'}
+              </p>
+              <Card className="overflow-hidden rounded-control p-0 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_4px_16px_rgba(20,40,90,0.04)]">
+                <motion.ul
+                  className="divide-y divide-(--app-border)"
+                  variants={gridStagger}
+                  initial={shouldReduceMotion ? false : 'hidden'}
+                  animate="show"
+                >
+                  {visibleMembers.map((membership) => (
+                    <motion.li key={membership.id} variants={cardReveal} className="flex items-center gap-2.5 px-3 py-2.5 sm:px-3.5">
+                      <UserAvatar
+                        name={membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'M'}
+                        avatarPath={membership.user?.avatar_path}
+                        className="size-9"
+                        fallbackClassName="bg-[linear-gradient(135deg,#2d52a8,#8aa2d8)] text-white"
+                        textClassName="text-[0.7rem] font-bold"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[0.84rem] font-semibold leading-tight text-(--app-text)">
+                          {membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'Miembro'}
+                        </p>
+                        <p className="mt-0.5 truncate text-[0.74rem] text-(--app-text-subtle)">{membership.user?.email || formatRoleNames(membership)}</p>
+                      </div>
+                      {membership.status === 'invited' ? (
+                        <Button
+                          variant="outline"
+                          className="h-8 shrink-0 px-2.5 text-[0.72rem] hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+                          onClick={() => revokeInviteMutation.mutate(membership.id)}
+                          disabled={revokeInviteMutation.isPending}
+                        >
+                          Revocar
+                        </Button>
+                      ) : null}
+                      <Badge
+                        variant="outline"
+                        className={cn('shrink-0', membership.status === 'active' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-200' : undefined)}
+                      >
+                        {statusLabel(membership.status)}
+                      </Badge>
+                    </motion.li>
+                  ))}
+                </motion.ul>
+              </Card>
+
+              <div ref={sentinelRef} className="flex min-h-10 items-center justify-center px-2 py-2">
+                {membersQuery.isFetchingNextPage ? (
+                  <span className="inline-flex items-center gap-2 text-[0.78rem] text-(--app-text-muted)">
+                    <Spinner size="sm" /> Cargando más miembros...
+                  </span>
+                ) : membersQuery.hasNextPage ? (
+                  <span className="text-[0.74rem] text-(--app-text-subtle)">Desplázate para cargar más</span>
+                ) : (
+                  <span className="text-[0.74rem] text-(--app-text-subtle)">No hay más miembros</span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <EmptyState
+              actionLabel={memberFilter !== 'all' || memberQuery ? 'Limpiar filtros' : 'Invitar miembro'}
+              description={
+                memberFilter !== 'all' || memberQuery
+                  ? 'Prueba con otro término o cambia el filtro para ampliar los resultados.'
+                  : 'Invita a las personas que operarán este espacio de empresa.'
               }
-            }}
-          />
-        )}
-      </motion.section>
+              title={memberFilter !== 'all' || memberQuery ? 'Sin resultados' : 'Aún no hay miembros'}
+              onAction={() => {
+                if (memberFilter !== 'all' || memberQuery) {
+                  setMemberFilter('all');
+                  setMemberQuery('');
+                } else {
+                  setOpenSheet('team');
+                }
+              }}
+            />
+          )}
+        </motion.section>
+      ) : null}
 
       <SideSheet
         open={openSheet === 'profile'}
@@ -920,92 +933,94 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
         </div>
       </SideSheet>
 
-      <SideSheet
-        open={openSheet === 'team'}
-        onClose={() => setOpenSheet(null)}
-        title={<SheetTitle icon={Users} accent="emerald" title="Equipo y accesos" description="Invita personas y mantén roles correctos." />}
-        widthClassName="max-w-md"
-        footer={
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="ghost" onClick={() => setOpenSheet(null)}>Cancelar</Button>
-            <Button
-              onClick={() => inviteMemberMutation.mutate()}
-              disabled={inviteMemberMutation.isPending || inviteEmail.trim().length === 0 || inviteRoleId.length === 0}
-            >
-              {inviteMemberMutation.isPending ? 'Enviando...' : 'Enviar invitación'}
-            </Button>
-          </div>
-        }
-      >
-        <div className="grid gap-4">
-          <div className={softPanelClassName}>
-            <div className="grid gap-4">
-              <label className={fieldLabelClassName}>
-                <SheetFieldLabel
-                  label="Email del miembro"
-                  help="Correo de invitación."
-                />
-                <Input type="email" placeholder="persona@empresa.com" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} />
-              </label>
-              <label className={fieldLabelClassName}>
-                <SheetFieldLabel
-                  label="Rol inicial"
-                  help="Permisos al aceptar."
-                />
-                <Select value={inviteRoleId} onChange={(event) => setInviteRoleId(event.target.value)}>
-                  <option value="">Selecciona un rol</option>
-                  {assignableRoles.map((role) => (
-                    <option key={role.id} value={role.id}>{role.name}</option>
-                  ))}
-                </Select>
-              </label>
+      {WORKSPACE_TEAM_MANAGEMENT_ENABLED ? (
+        <SideSheet
+          open={openSheet === 'team'}
+          onClose={() => setOpenSheet(null)}
+          title={<SheetTitle icon={Users} accent="emerald" title="Equipo y accesos" description="Invita personas y mantén roles correctos." />}
+          widthClassName="max-w-md"
+          footer={
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="ghost" onClick={() => setOpenSheet(null)}>Cancelar</Button>
+              <Button
+                onClick={() => inviteMemberMutation.mutate()}
+                disabled={inviteMemberMutation.isPending || inviteEmail.trim().length === 0 || inviteRoleId.length === 0}
+              >
+                {inviteMemberMutation.isPending ? 'Enviando...' : 'Enviar invitación'}
+              </Button>
             </div>
-          </div>
-
-          {bundle.memberships.map((membership) => {
-            const activeRoleId = membership.membership_roles?.find((item) => item.role)?.role?.id ?? '';
-
-            return (
-              <div key={membership.id} className={softPanelClassName}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-(--app-text)">{membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'Miembro'}</p>
-                    <p className="mt-1 truncate text-sm text-(--app-text-muted)">{membership.user?.email}</p>
-                  </div>
-                  <Badge variant="outline">{statusLabel(membership.status)}</Badge>
-                </div>
-                <div className="mt-3 grid gap-3">
-                  <label className={fieldLabelClassName}>
-                    <SheetFieldLabel
-                      label="Rol principal"
-                      help="Actualiza permisos del tenant."
-                    />
-                    <Select
-                      value={activeRoleId}
-                      onChange={(event) => {
-                        if (event.target.value) {
-                          void replaceRoleMutation.mutateAsync({ membershipId: membership.id, roleId: event.target.value });
-                        }
-                      }}
-                    >
-                      <option value="">Selecciona un rol</option>
-                      {assignableRoles.map((role) => (
-                        <option key={role.id} value={role.id}>{role.name}</option>
-                      ))}
-                    </Select>
-                  </label>
-                  <p className="text-xs leading-5 text-(--app-text-subtle)">{formatRoleNames(membership)}</p>
-                  {membership.status === 'invited' ? (
-                    <Button variant="outline" className="h-9 justify-self-start px-3 text-xs" onClick={() => revokeInviteMutation.mutate(membership.id)} disabled={revokeInviteMutation.isPending}>
-                      Revocar invitación
-                    </Button>
-                  ) : null}
-                </div>
+          }
+        >
+          <div className="grid gap-4">
+            <div className={softPanelClassName}>
+              <div className="grid gap-4">
+                <label className={fieldLabelClassName}>
+                  <SheetFieldLabel
+                    label="Email del miembro"
+                    help="Correo de invitación."
+                  />
+                  <Input type="email" placeholder="persona@empresa.com" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} />
+                </label>
+                <label className={fieldLabelClassName}>
+                  <SheetFieldLabel
+                    label="Rol inicial"
+                    help="Permisos al aceptar."
+                  />
+                  <Select value={inviteRoleId} onChange={(event) => setInviteRoleId(event.target.value)}>
+                    <option value="">Selecciona un rol</option>
+                    {assignableRoles.map((role) => (
+                      <option key={role.id} value={role.id}>{role.name}</option>
+                    ))}
+                  </Select>
+                </label>
               </div>
-            );
-          })}
-        </div>
-      </SideSheet>
+            </div>
+
+            {bundle.memberships.map((membership) => {
+              const activeRoleId = membership.membership_roles?.find((item) => item.role)?.role?.id ?? '';
+
+              return (
+                <div key={membership.id} className={softPanelClassName}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-(--app-text)">{membership.user?.display_name || membership.user?.full_name || membership.user?.email || 'Miembro'}</p>
+                      <p className="mt-1 truncate text-sm text-(--app-text-muted)">{membership.user?.email}</p>
+                    </div>
+                    <Badge variant="outline">{statusLabel(membership.status)}</Badge>
+                  </div>
+                  <div className="mt-3 grid gap-3">
+                    <label className={fieldLabelClassName}>
+                      <SheetFieldLabel
+                        label="Rol principal"
+                        help="Actualiza permisos del tenant."
+                      />
+                      <Select
+                        value={activeRoleId}
+                        onChange={(event) => {
+                          if (event.target.value) {
+                            void replaceRoleMutation.mutateAsync({ membershipId: membership.id, roleId: event.target.value });
+                          }
+                        }}
+                      >
+                        <option value="">Selecciona un rol</option>
+                        {assignableRoles.map((role) => (
+                          <option key={role.id} value={role.id}>{role.name}</option>
+                        ))}
+                      </Select>
+                    </label>
+                    <p className="text-xs leading-5 text-(--app-text-subtle)">{formatRoleNames(membership)}</p>
+                    {membership.status === 'invited' ? (
+                      <Button variant="outline" className="h-9 justify-self-start px-3 text-xs" onClick={() => revokeInviteMutation.mutate(membership.id)} disabled={revokeInviteMutation.isPending}>
+                        Revocar invitación
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SideSheet>
+      ) : null}
       <ImageCropDialog
         open={Boolean(pendingLogoCropFile)}
         file={pendingLogoCropFile}
