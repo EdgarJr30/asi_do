@@ -242,7 +242,7 @@ export function RecruiterReviewPage() {
 
         {tab === 'queue' ? (
           <div className="space-y-3">
-            <AdminStatBar columns={4}>
+            <AdminStatBar columns={4} mobileTwoColumns>
               <AdminStat label="Total pendientes" value={totalQueues} />
               <AdminStat label="Operador" value={pendingRecruiterRequests.length} tone="blue" />
               <AdminStat label="Pastoral" value={pendingPastorRequests.length} tone="teal" />

@@ -439,6 +439,9 @@ Do not stack the four summary indicators in `/admin/access-logs` into a tall sin
 ### R-123 — Platform health stats must use a mobile grid
 Do not stack the six `Salud de plataforma` indicators in the administration overview into one tall mobile column. They must render as a compact two-column by three-row grid while preserving the six-column desktop statbar.
 
+### R-124 — Approval stats must use a mobile grid
+Do not stack the four queue indicators in `/admin/approvals` into one tall mobile column. They must render as a compact two-column by two-row grid while preserving the four-column desktop statbar.
+
 ---
 
 ## Maintenance rule
