@@ -545,6 +545,7 @@ Rules:
 21. Multi-item summary statbars in dense administration modules should use a compact two-column grid on mobile when the labels and helper text remain readable. Do not stack four or more indicators into a tall single-column block. Detail disclosures placed after summary/context blocks must keep a visible spacing gap instead of touching the preceding surface.
 22. Workspace settings must use the visible label `Configuración de empresa` in menus, navigation, breadcrumbs, and page headings so users do not confuse tenant/company administration with their personal profile settings.
 23. The authenticated profile menu must expose a visible `Página institucional` action before sign-out so candidates, company users, and administrators can return directly to the institutional marketing site.
+24. Customer-facing actions that enter `/workspace` must use the Spanish label `Abrir mi empresa`. Do not expose `Abrir mi workspace` or other mixed-language equivalents in public headers, mobile menus, or authenticated profile menus.
 
 ---
 

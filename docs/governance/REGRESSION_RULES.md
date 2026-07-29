@@ -233,7 +233,7 @@ When the public pricing section is visible, do not leave the public pricing comp
 Do not ship pointer-accessible actions that stay visually inert on hover. Buttons, icon buttons, clickable cards, nav items, segmented controls, disclosure triggers, selectable list rows, and similar actionable surfaces must all show a clear hover response through color, border, background, shadow, or controlled motion. A cursor change by itself is not enough, and this rule applies across the product UI, not only the public landing.
 
 ### R-076 — Candidate, workspace, and platform-operational routes must share the same shell construction
-Do not let `/account/*`, `/workspace/*`, and authenticated product routes drift back into different sidebar/navbar implementations. The institutional site and the `/platform` marketing landing may keep their own public chrome, but authenticated or operational platform screens must reuse one shared shell structure, varying only navigation content, copy, and permission-gated destinations. When a signed-in user has `workspace:read`, the shell navigation must keep a visible `Workspace` destination even while they are browsing account or other non-workspace platform surfaces. The inverse must also hold: when a signed-in user is inside `workspace` and still has account access, the sidebar must keep a visible route back to the user account area.
+Do not let `/account/*`, `/workspace/*`, and authenticated product routes drift back into different sidebar/navbar implementations. The institutional site and the `/platform` marketing landing may keep their own public chrome, but authenticated or operational platform screens must reuse one shared shell structure, varying only navigation content, copy, and permission-gated destinations. When a signed-in user has `workspace:read`, the shell navigation must keep a visible `Mi empresa` destination even while they are browsing account or other non-workspace platform surfaces. The inverse must also hold: when a signed-in user is inside `workspace` and still has account access, the sidebar must keep a visible route back to the user account area.
 
 ### R-077 — Platform navigation must never highlight multiple modules for one route
 Do not regress the shared application shell into route matching that leaves two navigation destinations highlighted at the same time. In sidebars and bottom navigation, the active state must resolve to the single most specific matching destination for the current pathname, so parent routes like `/workspace` or `/account` do not remain visually selected while the user is clearly inside `/workspace/jobs`, `/workspace/talent`, `/account/applications`, or similar deeper screens.
@@ -453,6 +453,9 @@ Do not label the workspace settings route with the ambiguous standalone word `Co
 
 ### R-128 — Authenticated users must have a direct institutional-page action
 Do not leave authenticated candidates, company users, or administrators without a direct route back to the institutional marketing site. The shared profile menu must include a visible `Página institucional` action before `Cerrar sesión`.
+
+### R-129 — Company-entry actions must use Spanish product language
+Do not expose `Abrir mi workspace` as customer-facing copy. Buttons and menu actions that take an authorized user into `/workspace` must say `Abrir mi empresa` so the product language remains fully Spanish and consistent with the `Mi empresa` navigation group.
 
 ---
 

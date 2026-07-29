@@ -699,7 +699,7 @@ export function HomePage() {
   const primaryAction = session.isAuthenticated
     ? {
         label: session.permissions.includes('workspace:read')
-          ? 'Abrir mi workspace'
+          ? 'Abrir mi empresa'
           : 'Completar mi perfil',
         href: getAuthenticatedHomePath(
           session.permissions.includes('workspace:read')

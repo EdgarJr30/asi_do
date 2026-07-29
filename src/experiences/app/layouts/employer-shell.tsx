@@ -1065,7 +1065,7 @@ function buildStorefrontConfig(session: ReturnType<typeof useAppSession>) {
     profileMenuLinks: session.isAuthenticated
       ? [
           { href: surfacePaths.candidate.profile, label: 'Mi perfil' },
-          ...(hasWorkspaceAccess ? [{ href: surfacePaths.workspace.root, label: 'Abrir mi workspace' }] : [])
+          ...(hasWorkspaceAccess ? [{ href: surfacePaths.workspace.root, label: 'Abrir mi empresa' }] : [])
         ]
       : [],
     publicActionHref: surfacePaths.institutional.home,

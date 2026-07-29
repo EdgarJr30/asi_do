@@ -161,12 +161,12 @@ describe('route shells', () => {
 
     renderPublicShell()
 
-    expect(await screen.findByRole('link', { name: 'Abrir mi workspace' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Abrir mi empresa' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Crear cuenta' })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Abrir menú' }))
 
-    expect(await screen.findAllByRole('link', { name: 'Abrir mi workspace' })).toHaveLength(2)
+    expect(await screen.findAllByRole('link', { name: 'Abrir mi empresa' })).toHaveLength(2)
     expect(screen.queryByRole('button', { name: 'Crear cuenta' })).not.toBeInTheDocument()
   })
 
