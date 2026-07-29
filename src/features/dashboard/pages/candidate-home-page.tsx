@@ -190,9 +190,6 @@ export function CandidateHomePage() {
           <DailyQuote />
         </div>
         <div className="flex shrink-0 flex-wrap gap-2.5">
-          <Button variant="outline" className="h-10 text-[0.82rem]" onClick={() => void navigate(surfacePaths.candidate.profile)}>
-            Editar perfil
-          </Button>
           <Button className="h-10 gap-1.5 text-[0.82rem]" onClick={() => void navigate(surfacePaths.storefront.jobs)}>
             Explorar vacantes
             <ArrowRight className="size-4" />
