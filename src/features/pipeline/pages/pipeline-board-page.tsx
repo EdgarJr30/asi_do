@@ -491,7 +491,20 @@ export function PipelineBoardPage() {
         </Select>
       </motion.div>
 
-      {filteredApplications.length === 0 ? (
+      {boardQuery.data.stages.length === 0 ? (
+        // Sin etapas no hay columnas que dibujar: antes el tablero quedaba en
+        // blanco aunque el contador mostrara candidatos, sin explicar por qué.
+        <motion.div
+          variants={cardReveal}
+          className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1.5 rounded-card border border-dashed border-(--app-border) bg-(--app-surface-elevated) px-6 text-center"
+        >
+          <p className="text-sm font-semibold text-(--app-text)">El catálogo de etapas está vacío</p>
+          <p className="max-w-md text-sm text-(--app-text-muted)">
+            No hay etapas configuradas, así que no podemos construir el tablero. Avisa al equipo de plataforma para
+            restaurar las etapas del proceso de selección.
+          </p>
+        </motion.div>
+      ) : filteredApplications.length === 0 ? (
         <motion.div
           variants={cardReveal}
           className="flex min-h-0 flex-1 items-center justify-center rounded-card border border-dashed border-(--app-border) bg-(--app-surface-elevated) px-6 text-center text-sm text-(--app-text-muted)"
