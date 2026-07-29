@@ -100,7 +100,7 @@ export function PlatformOpsDashboardPage() {
       description="Salud operativa, gobierno de planes, suscripciones y feature flags para controlar el producto sin tocar deploys."
     >
       <div className="space-y-5">
-        <AdminStatBar columns={6}>
+        <AdminStatBar columns={6} mobileTwoColumns>
           <AdminStat label="Tenants activos" value={stats?.activeTenants ?? '—'} />
           <AdminStat
             label="Membresías activas"
