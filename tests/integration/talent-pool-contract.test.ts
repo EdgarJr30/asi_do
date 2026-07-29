@@ -25,4 +25,8 @@ describe('talent pool regression contract', () => {
     expect(talentPage).toContain('className="col-span-2 inline-flex h-11 w-full min-w-0')
     expect(talentPage).toContain('<ExternalLink className="size-4" /> Ver perfil')
   })
+
+  it('opens and closes candidate detail without returning the list to the first row', () => {
+    expect(talentPage).toContain('{ replace: true, preventScrollReset: true }')
+  })
 })

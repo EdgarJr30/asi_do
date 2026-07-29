@@ -112,7 +112,7 @@ export function TalentDirectoryPage() {
         }
         return next
       },
-      { replace: true }
+      { replace: true, preventScrollReset: true }
     )
   }
 
