@@ -1,0 +1,86 @@
+name: Database migrations
+
+# Reproduce el historial completo de migraciones sobre una base de datos vacía.
+#
+# Por qué existe: las ~85 migraciones de este repo se aplicaron una por una sobre
+# un proyecto que ya tenía estado previo, así que nunca se ha comprobado que la
+# secuencia funcione desde cero. Un historial que no se puede reproducir no sirve
+# para levantar un entorno nuevo ni para recuperarse de un desastre: es una
+# carpeta de SQL, no un historial.
+#
+# Este job convierte esa suposición en una comprobación. Corre solo cuando cambia
+# algo de `supabase/`, para no gastar minutos de CI en cambios de frontend.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/db-migrations.yml'
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/db-migrations.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-migrations-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  replay:
+    name: Replay sobre base vacía
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Versión fijada a propósito: la reproducibilidad es justo lo que este job
+      # verifica, así que el CLI no debe cambiar bajo nuestros pies. Subir la
+      # versión es un cambio deliberado, no un efecto secundario.
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.111.0
+
+      - name: Contar migraciones a reproducir
+        run: |
+          count=$(find supabase/migrations -name '*.sql' | wc -l | tr -d ' ')
+          echo "Migraciones en el repositorio: $count"
+          echo "### Replay de $count migraciones" >> "$GITHUB_STEP_SUMMARY"
+
+      # `supabase start` levanta el stack local y aplica cada migración en orden
+      # sobre una base vacía. Si una migración depende de estado que solo existe
+      # en el proyecto remoto, falla aquí — que es exactamente lo que queremos
+      # detectar. Se excluyen los servicios que no participan en el esquema.
+      - name: Aplicar todas las migraciones desde cero
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
+
+      # Detecta RPC que se despliegan bien pero fallan en tiempo de ejecución
+      # (enums mal casteados, referencias ambiguas). Ya encontró cuatro reales.
+      - name: Lint del esquema resultante
+        run: supabase db lint --local
+
+      # Si el replay reconstruye el esquema fielmente, no debe quedar diferencia
+      # entre la base recién construida y las propias migraciones.
+      - name: Comprobar que no queda drift
+        run: |
+          diff=$(supabase db diff --local --schema public)
+          if [ -n "$diff" ]; then
+            echo "El esquema reproducido no coincide con las migraciones:"
+            echo "$diff"
+            exit 1
+          fi
+          echo "Sin drift: el esquema reproducido coincide con las migraciones."
+
+      - name: Diagnóstico si algo falló
+        if: failure()
+        run: |
+          echo "El historial de migraciones no se reproduce limpio desde cero."
+          echo "Revisa el paso que falló: indica la primera migración que no aplica."
+          supabase status || true
