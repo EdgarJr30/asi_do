@@ -2,6 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
 
 import { corsHeaders } from '../_shared/cors.ts'
+import { resolvePublishableKey } from '../_shared/supabase-keys.ts'
 
 interface SendNotificationRequest {
   recipientUserId: string
@@ -148,7 +149,7 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    const supabaseAnonKey = resolvePublishableKey()
     const authorization = req.headers.get('Authorization')
 
     if (!supabaseUrl || !supabaseAnonKey) {

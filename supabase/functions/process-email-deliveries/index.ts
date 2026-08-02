@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 import { corsHeaders } from '../_shared/cors.ts'
+import { resolveServiceKey } from '../_shared/supabase-keys.ts'
 
 /**
  * Duración de la reserva. Si el worker no cierra la entrega en este tiempo se
@@ -536,7 +537,7 @@ Deno.serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    const serviceRoleKey = resolveServiceKey()
     const resendApiKey = Deno.env.get('RESEND_API_KEY') ?? ''
     const fromEmail = Deno.env.get('EMAIL_FROM_ADDRESS') ?? ''
     const appUrl = Deno.env.get('APP_URL') ?? 'http://localhost:5173'

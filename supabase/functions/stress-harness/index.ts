@@ -21,6 +21,7 @@ import {
   type AdminApplicationsMode
 } from '../_shared/harness-core.ts'
 import { evaluateHarnessGuard } from '../_shared/harness-guards.ts'
+import { resolvePublishableKey, resolveServiceKey } from '../_shared/supabase-keys.ts'
 
 declare const Deno: { env: { get(key: string): string | undefined } }
 
@@ -55,8 +56,8 @@ Deno.serve(async (request: Request) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+  const serviceKey = resolveServiceKey()
+  const anonKey = resolvePublishableKey()
 
   // 1) Guarda de entorno (antes de tocar nada).
   const guard = evaluateHarnessGuard({
