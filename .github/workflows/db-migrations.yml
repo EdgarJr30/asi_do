@@ -59,7 +59,13 @@ jobs:
       # en el proyecto remoto, falla aquí — que es exactamente lo que queremos
       # detectar. Se excluyen los servicios que no participan en el esquema.
       - name: Aplicar todas las migraciones desde cero
-        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
+        run: supabase start -x studio,imgproxy,edge-runtime,analytics,vector
+
+      # Sin esto, diagnosticar un fallo exige acceso autenticado a los logs de
+      # Actions. El log del contenedor de base de datos dice qué migración rompió.
+      - name: Log de la base si el arranque falló
+        if: failure()
+        run: docker ps -a && docker logs supabase_db_asi_do --tail 120 || true
 
       # Detecta RPC que se despliegan bien pero fallan en tiempo de ejecución
       # (enums mal casteados, referencias ambiguas). Ya encontró cuatro reales.
