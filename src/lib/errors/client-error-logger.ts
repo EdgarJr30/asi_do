@@ -21,22 +21,30 @@ export async function captureClientError(input: CaptureClientErrorInput) {
   const clientEnvironment = await collectClientEnvironmentMetadata()
 
   try {
-    await supabase.from('app_error_logs').insert({
-      user_id: input.userId ?? null,
-      route: input.route ?? null,
-      source: input.source,
-      severity: input.severity ?? 'error',
-      error_code: serializedError.errorCode,
-      error_message: serializedError.errorMessage,
-      user_message: input.userMessage,
-      metadata: {
+    // La ingesta va por RPC, no por insert directo: el servidor recorta tamaños,
+    // redacta PII, deduplica, aplica rate limit y toma el user_id de la sesión
+    // en lugar de confiar en el que envíe el cliente.
+    const response = await supabase.rpc('log_client_error', {
+      p_source: input.source,
+      p_error_message: serializedError.errorMessage,
+      p_user_message: input.userMessage,
+      p_route: input.route ?? undefined,
+      p_severity: input.severity ?? 'error',
+      p_error_code: serializedError.errorCode ?? undefined,
+      p_metadata: {
         ...input.metadata,
         ...serializedError.metadata,
         stack: serializedError.stack,
         clientEnvironment
       }
     })
+
+    // PostgREST devuelve el fallo en `error` en vez de lanzarlo, así que el
+    // try/catch no lo veía y un registro roto pasaba inadvertido.
+    if (response.error) {
+      console.warn('[error-logger] no se pudo registrar el error', response.error.message)
+    }
   } catch {
-    // Logging must never break the main UX flow.
+    // Registrar un error nunca debe romper el flujo principal de la UI.
   }
 }

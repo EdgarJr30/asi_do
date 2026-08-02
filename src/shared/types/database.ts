@@ -41,12 +41,16 @@ export type Database = {
     Tables: {
       app_error_logs: {
         Row: {
+          client_bucket: string | null
           created_at: string
           error_code: string | null
           error_message: string
+          fingerprint: string | null
           id: string
           is_resolved: boolean
+          last_seen_at: string
           metadata: Json
+          occurrence_count: number
           resolved_at: string | null
           resolved_by_user_id: string | null
           route: string | null
@@ -57,12 +61,16 @@ export type Database = {
           user_message: string
         }
         Insert: {
+          client_bucket?: string | null
           created_at?: string
           error_code?: string | null
           error_message: string
+          fingerprint?: string | null
           id?: string
           is_resolved?: boolean
+          last_seen_at?: string
           metadata?: Json
+          occurrence_count?: number
           resolved_at?: string | null
           resolved_by_user_id?: string | null
           route?: string | null
@@ -73,12 +81,16 @@ export type Database = {
           user_message: string
         }
         Update: {
+          client_bucket?: string | null
           created_at?: string
           error_code?: string | null
           error_message?: string
+          fingerprint?: string | null
           id?: string
           is_resolved?: boolean
+          last_seen_at?: string
           metadata?: Json
+          occurrence_count?: number
           resolved_at?: string | null
           resolved_by_user_id?: string | null
           route?: string | null
@@ -2018,11 +2030,14 @@ export type Database = {
         Row: {
           attempt_count: number
           channel: string
+          claim_token: string | null
+          claimed_at: string | null
           created_at: string
           delivered_at: string | null
           delivery_status: string
           failed_at: string | null
           id: string
+          idempotency_key: string
           is_test: boolean
           last_attempt_at: string | null
           notification_id: string
@@ -2036,11 +2051,14 @@ export type Database = {
         Insert: {
           attempt_count?: number
           channel: string
+          claim_token?: string | null
+          claimed_at?: string | null
           created_at?: string
           delivered_at?: string | null
           delivery_status?: string
           failed_at?: string | null
           id?: string
+          idempotency_key?: string
           is_test?: boolean
           last_attempt_at?: string | null
           notification_id: string
@@ -2054,11 +2072,14 @@ export type Database = {
         Update: {
           attempt_count?: number
           channel?: string
+          claim_token?: string | null
+          claimed_at?: string | null
           created_at?: string
           delivered_at?: string | null
           delivery_status?: string
           failed_at?: string | null
           id?: string
+          idempotency_key?: string
           is_test?: boolean
           last_attempt_at?: string | null
           notification_id?: string
@@ -3174,6 +3195,59 @@ export type Database = {
           },
         ]
       }
+      user_access_logs: {
+        Row: {
+          auth_session_id: string
+          authentication_method: string | null
+          client_language: string | null
+          client_timezone: string | null
+          created_at: string
+          id: string
+          ip_address: unknown
+          last_seen_at: string
+          signed_in_at: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth_session_id: string
+          authentication_method?: string | null
+          client_language?: string | null
+          client_timezone?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          last_seen_at: string
+          signed_in_at: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth_session_id?: string
+          authentication_method?: string | null
+          client_language?: string | null
+          client_timezone?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          last_seen_at?: string
+          signed_in_at?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_access_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_authority_scopes: {
         Row: {
           association_id: string | null
@@ -3479,11 +3553,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      deactivate_member: {
-        Args: {
-          p_notes?: string
-          p_user_id: string
+      admin_assign_platform_role: {
+        Args: { p_notes?: string; p_role_id: string; p_user_id: string }
+        Returns: {
+          assigned_at: string
+          assigned_by_user_id: string | null
+          id: string
+          revoked_at: string | null
+          revoked_by_user_id: string | null
+          role_id: string
+          user_id: string
         }
+        SetofOptions: {
+          from: "*"
+          to: "user_platform_roles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_clear_manual_access_override: {
+        Args: { p_reason?: string; p_user_id: string }
         Returns: {
           approval_reviewed_at: string | null
           approval_reviewed_by_user_id: string | null
@@ -3546,6 +3635,132 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_create_platform_role: {
+        Args: {
+          p_code: string
+          p_description: string
+          p_name: string
+          p_permission_codes?: string[]
+        }
+        Returns: {
+          code: string
+          created_at: string
+          description: string
+          id: string
+          is_locked: boolean
+          is_system: boolean
+          name: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "platform_roles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_delete_platform_role: {
+        Args: { p_role_id: string }
+        Returns: string
+      }
+      admin_platform_rbac_snapshot: {
+        Args: {
+          p_user_limit?: number
+          p_user_offset?: number
+          p_user_query?: string
+        }
+        Returns: Json
+      }
+      admin_revoke_platform_role: {
+        Args: { p_assignment_id: string; p_notes?: string }
+        Returns: {
+          assigned_at: string
+          assigned_by_user_id: string | null
+          id: string
+          revoked_at: string | null
+          revoked_by_user_id: string | null
+          role_id: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_platform_roles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_search_users_for_access: {
+        Args: { p_limit?: number; p_query?: string }
+        Returns: Json
+      }
+      admin_set_manual_access_override: {
+        Args: { p_months?: number; p_reason?: string; p_user_id: string }
+        Returns: {
+          approval_reviewed_at: string | null
+          approval_reviewed_by_user_id: string | null
+          asi_membership_status: Database["public"]["Enums"]["asi_membership_status"]
+          avatar_path: string | null
+          country_code: string | null
+          created_at: string
+          display_name: string
+          email: string | null
+          full_name: string
+          id: string
+          is_internal_developer: boolean
+          last_sign_in_at: string | null
+          locale: string | null
+          manual_access_override_by_user_id: string | null
+          manual_access_override_reason: string | null
+          manual_access_override_until: string | null
+          membership_activated_at: string | null
+          membership_expires_at: string | null
+          phone: string | null
+          status: Database["public"]["Enums"]["user_status"]
+          subscription_expires_at: string | null
+          updated_at: string
+          user_approval_status: Database["public"]["Enums"]["user_approval_status"]
+          user_subscription_status: Database["public"]["Enums"]["user_subscription_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "users"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_update_platform_role: {
+        Args: {
+          p_description: string
+          p_name: string
+          p_permission_codes?: string[]
+          p_role_id: string
+        }
+        Returns: {
+          code: string
+          created_at: string
+          description: string
+          id: string
+          is_locked: boolean
+          is_system: boolean
+          name: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "platform_roles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_user_access_log_page: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+          p_since?: string
+        }
+        Returns: Json
+      }
       apply_moderation_action: {
         Args: {
           p_action_type: Database["public"]["Enums"]["moderation_action_type"]
@@ -3607,8 +3822,8 @@ export type Database = {
       azul_settle_donation_payment: {
         Args: { p_approved: boolean; p_order_number: string; p_response?: Json }
         Returns: {
-          donation_id: string | null
-          donor_user_id: string | null
+          donation_id: string
+          donor_user_id: string
           status: string
         }[]
       }
@@ -3647,6 +3862,43 @@ export type Database = {
         Args: { p_application_id: string }
         Returns: boolean
       }
+      can_read_candidate_profile_via_application: {
+        Args: { p_profile_id: string }
+        Returns: boolean
+      }
+      claim_email_deliveries: {
+        Args: {
+          p_lease_seconds?: number
+          p_limit?: number
+          p_max_attempts?: number
+        }
+        Returns: {
+          action_url: string
+          attempt_count: number
+          body: string
+          claim_token: string
+          delivery_id: string
+          idempotency_key: string
+          notification_id: string
+          notification_type: string
+          payload: Json
+          recipient_display_name: string
+          recipient_email: string
+          recipient_full_name: string
+          title: string
+        }[]
+      }
+      complete_email_delivery: {
+        Args: {
+          p_claim_token: string
+          p_delivery_id: string
+          p_provider_message_id?: string
+          p_response_code?: number
+          p_response_payload?: Json
+          p_status: string
+        }
+        Returns: boolean
+      }
       consume_authority_invitation: {
         Args: { p_request_id: string; p_token: string }
         Returns: {
@@ -3671,6 +3923,41 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      deactivate_member: {
+        Args: { p_notes?: string; p_user_id: string }
+        Returns: {
+          approval_reviewed_at: string | null
+          approval_reviewed_by_user_id: string | null
+          asi_membership_status: Database["public"]["Enums"]["asi_membership_status"]
+          avatar_path: string | null
+          country_code: string | null
+          created_at: string
+          display_name: string
+          email: string | null
+          full_name: string
+          id: string
+          is_internal_developer: boolean
+          last_sign_in_at: string | null
+          locale: string | null
+          manual_access_override_by_user_id: string | null
+          manual_access_override_reason: string | null
+          manual_access_override_until: string | null
+          membership_activated_at: string | null
+          membership_expires_at: string | null
+          phone: string | null
+          status: Database["public"]["Enums"]["user_status"]
+          subscription_expires_at: string | null
+          updated_at: string
+          user_approval_status: Database["public"]["Enums"]["user_approval_status"]
+          user_subscription_status: Database["public"]["Enums"]["user_subscription_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "users"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       email_resend_delivery: {
         Args: { p_delivery_id: string }
         Returns: undefined
@@ -3691,7 +3978,11 @@ export type Database = {
       }
       enqueue_donation_receipt_email: {
         Args: { p_donation_id: string }
-        Returns: string | null
+        Returns: string
+      }
+      enrich_current_access_log: {
+        Args: { p_language?: string; p_timezone?: string }
+        Returns: undefined
       }
       get_authority_invitation: {
         Args: { p_token: string }
@@ -3726,6 +4017,7 @@ export type Database = {
       }
       get_plan_limit_json: { Args: { p_tenant_id: string }; Returns: Json }
       get_tenant_plan_snapshot: { Args: { p_tenant_id: string }; Returns: Json }
+      harness_email_suppressed: { Args: never; Returns: boolean }
       has_active_asi_access: { Args: { p_user_id?: string }; Returns: boolean }
       has_active_authority_scope: {
         Args: {
@@ -3768,8 +4060,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      is_applicant_visible_to_reader: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       is_candidate_profile_owner: {
         Args: { p_profile_id: string }
+        Returns: boolean
+      }
+      is_candidate_profile_visible_to_recruiters: {
+        Args: { p_candidate_profile_id: string }
         Returns: boolean
       }
       is_platform_admin: { Args: never; Returns: boolean }
@@ -3784,6 +4084,18 @@ export type Database = {
           id: string
           label: string
         }[]
+      }
+      log_client_error: {
+        Args: {
+          p_error_code?: string
+          p_error_message: string
+          p_metadata?: Json
+          p_route?: string
+          p_severity?: string
+          p_source: string
+          p_user_message: string
+        }
+        Returns: string
       }
       mark_notification_clicked: {
         Args: { p_delivery_id?: string; p_notification_id: string }
@@ -4265,9 +4577,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      set_harness_email_suppression: {
+        Args: { p_active: boolean }
+        Returns: undefined
+      }
       set_runtime_secret: {
         Args: { p_key: string; p_value: string }
         Returns: undefined
+      }
+      shares_active_tenant_with: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       submit_application: {
         Args: {
@@ -4317,6 +4637,32 @@ export type Database = {
         Returns: string
       }
       trigger_email_dispatch: { Args: never; Returns: undefined }
+      update_application_resume: {
+        Args: { p_application_id: string; p_submitted_resume_id: string }
+        Returns: {
+          candidate_display_name_snapshot: string
+          candidate_email_snapshot: string | null
+          candidate_headline_snapshot: string | null
+          candidate_profile_id: string
+          candidate_summary_snapshot: string | null
+          cover_letter: string | null
+          created_at: string
+          current_stage_id: string | null
+          id: string
+          job_posting_id: string
+          status_public: Database["public"]["Enums"]["application_public_status"]
+          submitted_at: string
+          submitted_resume_filename: string | null
+          submitted_resume_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "applications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_push_delivery_status: {
         Args: {
           p_deactivate_subscription?: boolean
@@ -4332,11 +4678,14 @@ export type Database = {
         Returns: {
           attempt_count: number
           channel: string
+          claim_token: string | null
+          claimed_at: string | null
           created_at: string
           delivered_at: string | null
           delivery_status: string
           failed_at: string | null
           id: string
+          idempotency_key: string
           is_test: boolean
           last_attempt_at: string | null
           notification_id: string
