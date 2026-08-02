@@ -2,24 +2,35 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 import { corsHeaders } from '../_shared/cors.ts'
 
-interface PendingEmailDeliveryRow {
-  id: string
+/**
+ * Duración de la reserva. Si el worker no cierra la entrega en este tiempo se
+ * asume que murió y otra ejecución puede reclamarla. Debe superar con holgura
+ * lo que tarda una llamada al proveedor.
+ */
+const LEASE_SECONDS = 300
+
+/** Tope de intentos antes de dar la entrega por fallida de forma definitiva. */
+const MAX_ATTEMPTS = 5
+
+/**
+ * Fila devuelta por `claim_email_deliveries`, que reserva la entrega de forma
+ * atómica (`for update skip locked`) en lugar de solo leerla. Trae el token de
+ * la reserva y la clave de idempotencia, que son los que hacen seguro el envío.
+ */
+interface ClaimedEmailDeliveryRow {
+  delivery_id: string
+  claim_token: string
+  idempotency_key: string
   attempt_count: number
   notification_id: string
-  notification: {
-    id: string
-    type: string
-    title: string
-    body: string
-    action_url: string | null
-    payload: Record<string, unknown> | null
-    recipient_user: {
-      id: string
-      email: string | null
-      display_name: string | null
-      full_name: string | null
-    } | null
-  } | null
+  notification_type: string
+  title: string
+  body: string
+  action_url: string | null
+  payload: Record<string, unknown> | null
+  recipient_email: string | null
+  recipient_display_name: string | null
+  recipient_full_name: string | null
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -473,64 +484,38 @@ async function insertDeliveryLog(
   }
 }
 
-async function updateDelivery(
+/**
+ * Cierra la reserva y escribe el resultado. El token es la guarda: si el lease
+ * venció y otro worker ya reclamó la entrega, el RPC no aplica nada y devuelve
+ * `false`, de modo que un worker zombi no puede pisar el resultado del vivo.
+ *
+ * Devuelve si el cierre se aplicó, para poder registrarlo cuando no.
+ */
+async function completeDelivery(
   client: ReturnType<typeof createClient>,
   input: {
     deliveryId: string
-    status: 'processing' | 'sent' | 'failed'
+    claimToken: string
+    status: 'sent' | 'failed' | 'pending'
     responseCode?: number | null
     providerMessageId?: string | null
-    providerName?: string
     responsePayload?: Record<string, unknown>
-    delivered?: boolean
   }
-) {
-  const payload: Record<string, unknown> = {
-    delivery_status: input.status,
-    response_code: input.responseCode ?? null,
-    provider_message_id: input.providerMessageId ?? null,
-    provider_name: input.providerName ?? 'resend',
-    response_payload: input.responsePayload ?? {},
-    last_attempt_at: new Date().toISOString(),
-    attempt_count: undefined,
-    failed_at: input.status === 'failed' ? new Date().toISOString() : null,
-    delivered_at: input.status === 'sent' || input.delivered ? new Date().toISOString() : null
-  }
-
-  const response = await client
-    .from('notification_deliveries')
-    .update(payload)
-    .eq('id', input.deliveryId)
+): Promise<boolean> {
+  const response = await client.rpc('complete_email_delivery', {
+    p_delivery_id: input.deliveryId,
+    p_claim_token: input.claimToken,
+    p_status: input.status,
+    p_response_code: input.responseCode ?? null,
+    p_provider_message_id: input.providerMessageId ?? null,
+    p_response_payload: input.responsePayload ?? {}
+  })
 
   if (response.error) {
     throw response.error
   }
-}
 
-async function incrementAttemptCount(client: ReturnType<typeof createClient>, deliveryId: string) {
-  const readResponse = await client
-    .from('notification_deliveries')
-    .select('attempt_count')
-    .eq('id', deliveryId)
-    .single()
-
-  if (readResponse.error) {
-    throw readResponse.error
-  }
-
-  const response = await client
-    .from('notification_deliveries')
-    .update({
-      attempt_count: (readResponse.data.attempt_count ?? 0) + 1,
-      last_attempt_at: new Date().toISOString(),
-      delivery_status: 'processing',
-      provider_name: 'resend'
-    })
-    .eq('id', deliveryId)
-
-  if (response.error) {
-    throw response.error
-  }
+  return response.data === true
 }
 
 Deno.serve(async (req) => {
@@ -567,39 +552,21 @@ Deno.serve(async (req) => {
       }
     })
 
-    const pendingResponse = await supabase
-      .from('notification_deliveries')
-      .select(
-        `
-          id,
-          attempt_count,
-          notification_id,
-          notification:notifications!notification_deliveries_notification_id_fkey (
-            id,
-            type,
-            title,
-            body,
-            action_url,
-            payload,
-            recipient_user:users!notifications_recipient_user_id_fkey (
-              id,
-              email,
-              display_name,
-              full_name
-            )
-          )
-        `
-      )
-      .eq('channel', 'email')
-      .eq('delivery_status', 'pending')
-      .order('created_at', { ascending: true })
-      .limit(limit)
+    // Reserva atómica: marca las filas como 'processing' y devuelve solo las que
+    // este worker consiguió. Otra ejecución concurrente recibe un conjunto
+    // disjunto, así que el mismo correo no puede enviarse dos veces. También
+    // recupera reservas cuyo lease venció porque el worker anterior murió.
+    const pendingResponse = await supabase.rpc('claim_email_deliveries', {
+      p_limit: limit,
+      p_lease_seconds: LEASE_SECONDS,
+      p_max_attempts: MAX_ATTEMPTS
+    })
 
     if (pendingResponse.error) {
       throw pendingResponse.error
     }
 
-    const deliveries = (pendingResponse.data ?? []) as unknown as PendingEmailDeliveryRow[]
+    const deliveries = (pendingResponse.data ?? []) as unknown as ClaimedEmailDeliveryRow[]
 
     if (deliveries.length === 0) {
       return jsonResponse({
@@ -616,29 +583,29 @@ Deno.serve(async (req) => {
       // Override del destinatario (lo usa el módulo de prueba de /admin/correos para
       // enviar a una dirección arbitraria). El pipeline real no setea payload.to.
       const overrideTo =
-        typeof delivery.notification?.payload?.to === 'string'
-          ? (delivery.notification.payload.to as string).trim()
-          : ''
+        typeof delivery.payload?.to === 'string' ? (delivery.payload.to as string).trim() : ''
       const overrideRecipientName =
-        typeof delivery.notification?.payload?.recipientName === 'string'
-          ? (delivery.notification.payload.recipientName as string).trim()
+        typeof delivery.payload?.recipientName === 'string'
+          ? (delivery.payload.recipientName as string).trim()
           : ''
-      const recipientEmail = overrideTo || (delivery.notification?.recipient_user?.email?.trim() ?? '')
+      const recipientEmail = overrideTo || (delivery.recipient_email?.trim() ?? '')
       const recipientName =
         overrideRecipientName ||
-        delivery.notification?.recipient_user?.display_name?.trim() ||
-        delivery.notification?.recipient_user?.full_name?.trim() ||
+        delivery.recipient_display_name?.trim() ||
+        delivery.recipient_full_name?.trim() ||
         'usuario'
 
-      await incrementAttemptCount(supabase, delivery.id)
+      // El contador de intentos ya lo incrementó la reserva, dentro de la misma
+      // sentencia que tomó la fila. Hacerlo aquí era un read-then-write que
+      // perdía incrementos y marcaba 'processing' demasiado tarde.
 
       if (!resendApiKey || !fromEmail) {
         failedCount += 1
-        await updateDelivery(supabase, {
-          deliveryId: delivery.id,
+        await completeDelivery(supabase, {
+          deliveryId: delivery.delivery_id,
+          claimToken: delivery.claim_token,
           status: 'failed',
           responseCode: 503,
-          providerName: 'email_hook',
           responsePayload: {
             missingConfig: [
               !resendApiKey ? 'RESEND_API_KEY' : null,
@@ -647,7 +614,7 @@ Deno.serve(async (req) => {
           }
         })
         await insertDeliveryLog(supabase, {
-          deliveryId: delivery.id,
+          deliveryId: delivery.delivery_id,
           logLevel: 'error',
           message: 'Email delivery failed because the email provider configuration is missing.',
           metadata: {
@@ -658,19 +625,19 @@ Deno.serve(async (req) => {
         continue
       }
 
-      if (!delivery.notification || recipientEmail.length === 0) {
+      if (recipientEmail.length === 0) {
         failedCount += 1
-        await updateDelivery(supabase, {
-          deliveryId: delivery.id,
+        await completeDelivery(supabase, {
+          deliveryId: delivery.delivery_id,
+          claimToken: delivery.claim_token,
           status: 'failed',
           responseCode: 422,
-          providerName: 'resend',
           responsePayload: {
             recipientEmail
           }
         })
         await insertDeliveryLog(supabase, {
-          deliveryId: delivery.id,
+          deliveryId: delivery.delivery_id,
           logLevel: 'error',
           message: 'Email delivery failed because the notification payload or recipient email is incomplete.',
           metadata: {
@@ -682,10 +649,10 @@ Deno.serve(async (req) => {
 
       const emailContent = buildEmailContent({
         appUrl,
-        type: delivery.notification.type,
-        title: delivery.notification.title,
-        body: delivery.notification.body,
-        actionUrl: delivery.notification.action_url,
+        type: delivery.notification_type,
+        title: delivery.title,
+        body: delivery.body,
+        actionUrl: delivery.action_url,
         recipientName
       })
 
@@ -693,12 +660,16 @@ Deno.serve(async (req) => {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${resendApiKey}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          // Si la respuesta se pierde (timeout, corte) y el lease expira, el
+          // reintento llega con la misma clave y el proveedor no reenvía. La
+          // clave solo se renueva en un reenvío deliberado desde /admin/correos.
+          'Idempotency-Key': delivery.idempotency_key
         },
         body: JSON.stringify({
           from: fromEmail,
           to: [recipientEmail],
-          subject: delivery.notification.title,
+          subject: delivery.title,
           html: emailContent.html,
           text: emailContent.text
         })
@@ -708,19 +679,24 @@ Deno.serve(async (req) => {
 
       if (!providerResponse.ok) {
         failedCount += 1
-        await updateDelivery(supabase, {
-          deliveryId: delivery.id,
-          status: 'failed',
+        // Se deja en 'pending' para que el siguiente ciclo lo reintente con la
+        // misma clave de idempotencia, hasta agotar MAX_ATTEMPTS. Marcarlo
+        // 'failed' aquí convertía un fallo transitorio del proveedor en
+        // definitivo y el correo no se enviaba nunca.
+        await completeDelivery(supabase, {
+          deliveryId: delivery.delivery_id,
+          claimToken: delivery.claim_token,
+          status: delivery.attempt_count >= MAX_ATTEMPTS ? 'failed' : 'pending',
           responseCode: providerResponse.status,
-          providerName: 'resend',
           responsePayload: providerPayload
         })
         await insertDeliveryLog(supabase, {
-          deliveryId: delivery.id,
+          deliveryId: delivery.delivery_id,
           logLevel: 'error',
           message: 'Email delivery failed at provider level.',
           metadata: {
             responseCode: providerResponse.status,
+            attemptCount: delivery.attempt_count,
             providerPayload
           }
         })
@@ -728,17 +704,16 @@ Deno.serve(async (req) => {
       }
 
       sentCount += 1
-      await updateDelivery(supabase, {
-        deliveryId: delivery.id,
+      await completeDelivery(supabase, {
+        deliveryId: delivery.delivery_id,
+        claimToken: delivery.claim_token,
         status: 'sent',
         responseCode: providerResponse.status,
-        providerName: 'resend',
         providerMessageId: typeof providerPayload.id === 'string' ? providerPayload.id : null,
-        responsePayload: providerPayload,
-        delivered: true
+        responsePayload: providerPayload
       })
       await insertDeliveryLog(supabase, {
-        deliveryId: delivery.id,
+        deliveryId: delivery.delivery_id,
         logLevel: 'info',
         message: 'Email delivery sent successfully.',
         metadata: {
