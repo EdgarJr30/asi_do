@@ -48,7 +48,13 @@ Las migraciones son el plano; la base de datos desplegada es el edificio. **Drif
 
 Da igual mientras exista un solo entorno. Importa el día que se levante staging o producción desde las migraciones: todo lo que no está en un archivo **no viaja**, y el entorno nuevo sale incompleto sin que nadie sepa qué falta. También importa para revisión: un `GRANT` hecho a mano no aparece en ningún diff, que es justo la clase de fallo que originó el P0 de las RPC `SECURITY DEFINER`.
 
-Este repositorio **ya tiene drift**: hay objetos en el remoto que no están en `migrations/`. Lo que no está medido es cuánto.
+**El primer run midió el drift de este repositorio y encontró exactamente un objeto:** `public.rls_auto_enable()` y su event trigger `ensure_rls`, creados a mano en el proyecto desplegado y ausentes de `migrations/`. Se destapó porque `20260801120000` revoca privilegios sobre esa función y, en una base vacía, la función no existía:
+
+```
+ERROR: function public.rls_auto_enable() does not exist (SQLSTATE 42883)
+```
+
+No era cosmético. Ese event trigger **activa RLS automáticamente en cada tabla nueva de `public`**, así que un entorno creado desde las migraciones se habría quedado sin esa red de seguridad, y nadie lo habría notado hasta que una tabla nueva quedara expuesta. Repuesto en `20260801110000_backfill_rls_auto_enable.sql`, con timestamp anterior a la migración que lo necesita.
 
 ### Los jobs
 
