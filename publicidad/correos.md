@@ -1,5 +1,7 @@
 # Listado de correos
 
+Uso previsto: email marketing para el lanzamiento de la app.
+
 Total: **57 correos únicos**.
 
 1. candelario.delvillar@hotmail.com
