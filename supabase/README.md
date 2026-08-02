@@ -40,6 +40,43 @@ Aplica igual a las migraciones que resultan "obviamente correctas" y a los arreg
 - **Las migraciones son inmutables una vez aplicadas.** Si una necesita corregirse, se añade otra encima. Editar el archivo ya desplegado hace que el repo y el remoto digan cosas distintas sin que nada lo detecte.
 - **Toda RPC nueva que llame el cliente necesita su `grant execute ... to authenticated` explícito.** Se revocó el default privilege de Supabase, así que sin el grant falla en desarrollo — es intencional.
 
+## Los dos jobs que vigilan la base
+
+### Qué es el drift
+
+Las migraciones son el plano; la base de datos desplegada es el edificio. **Drift** es que alguien movió una pared sin actualizar el plano: un índice creado desde el dashboard, un `GRANT` a mano en el SQL Editor, una policy ajustada en la interfaz. El cambio funciona, pero **ya no hay ningún archivo que lo explique**.
+
+Da igual mientras exista un solo entorno. Importa el día que se levante staging o producción desde las migraciones: todo lo que no está en un archivo **no viaja**, y el entorno nuevo sale incompleto sin que nadie sepa qué falta. También importa para revisión: un `GRANT` hecho a mano no aparece en ningún diff, que es justo la clase de fallo que originó el P0 de las RPC `SECURITY DEFINER`.
+
+Este repositorio **ya tiene drift**: hay objetos en el remoto que no están en `migrations/`. Lo que no está medido es cuánto.
+
+### Los jobs
+
+| Job | Pregunta que responde | Cuándo corre |
+|---|---|---|
+| `.github/workflows/db-migrations.yml` | ¿Mis migraciones construyen un esquema válido desde cero? | Al cambiar `supabase/**`, y a demanda |
+| `.github/workflows/db-drift.yml` | ¿Lo que construyen coincide con lo desplegado? | Diario 08:00 (hora RD), y a demanda |
+
+Ambos en verde significan que crear un entorno nuevo es trámite y no exploración.
+
+**Cuando el job de drift falla**, publica en el resumen del run la diferencia **como SQL** y la guarda como artefacto `drift-sql`. Ese SQL es el parche que falta: se copia a `supabase migration new <nombre>` y el plano vuelve a coincidir con el edificio. Si el cambio no debía existir, se revierte en el remoto.
+
+Corre a diario a propósito. El drift lo crean personas haciendo cosas puntuales, y la memoria caduca: al día siguiente todavía recuerdas por qué creaste ese índice; seis meses después nadie sabe si fue deliberado ni si borrarlo rompe algo.
+
+### Configuración requerida
+
+El job de drift necesita credenciales del proyecto. En GitHub → *Settings* → *Secrets and variables* → *Actions*:
+
+| Tipo | Nombre | Valor |
+|---|---|---|
+| Secret | `SUPABASE_ACCESS_TOKEN` | Token personal del CLI (`supabase.com/dashboard/account/tokens`) |
+| Secret | `SUPABASE_DB_PASSWORD` | Contraseña de la base del proyecto |
+| Variable | `SUPABASE_PROJECT_REF` | Ref del proyecto a vigilar |
+
+Sin estos tres, el job falla al enlazar. El de replay no necesita ninguno: corre contra una base local desechable.
+
+> Los jobs programados se desactivan solos tras 60 días sin actividad en el repositorio. Si el repo queda inactivo, hay que reactivarlos a mano desde la pestaña *Actions*.
+
 ## Current baseline note
 
 The connected Supabase project already contained the identity/RBAC baseline migrations:
