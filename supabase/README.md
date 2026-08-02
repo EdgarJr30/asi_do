@@ -15,6 +15,31 @@ supabase/
 SQL migrations remain authoritative for schema, constraints, helper functions, and RLS policies.
 `supabase/config.toml` is the source of truth for hosted Auth and Storage configuration that is managed through `supabase config push`.
 
+## Regla: commitear antes de `db push`
+
+**Git nunca debe ir por detrás de la base de datos.** El orden obligatorio para toda migración es:
+
+```bash
+supabase migration new <nombre>   # nunca crear el archivo a mano: el timestamp evita colisiones
+# ...escribir la migración...
+git add supabase/migrations/<archivo> && git commit
+git push
+supabase db push --linked          # solo ahora toca el remoto
+# ...verificar con una probe de supabase/tests/...
+```
+
+**Por qué el orden importa.** Si `db push` va primero y algo se pierde entre medias —el disco falla, la rama se descarta, la sesión se interrumpe—, producción queda con cambios que **nadie puede explicar**: el SQL está aplicado, pero no existe el commit, ni el mensaje, ni el contexto de por qué se hizo. Recuperar eso significa arqueología sobre `pg_proc`.
+
+Con el orden correcto, el peor caso es que git vaya por delante del remoto. Eso se arregla corriendo `db push`. El caso inverso no tiene arreglo.
+
+Aplica igual a las migraciones que resultan "obviamente correctas" y a los arreglos de una línea: el riesgo no viene del tamaño del cambio, viene de la ventana entre aplicar y registrar.
+
+### Corolarios
+
+- **Una probe por migración de seguridad o de datos.** Viven en `supabase/tests/`, terminan siempre en `RAISE EXCEPTION` para que la transacción se revierta y no dejen filas de prueba en producción. Ver `p0_notification_authz_probe.sql` como referencia.
+- **Las migraciones son inmutables una vez aplicadas.** Si una necesita corregirse, se añade otra encima. Editar el archivo ya desplegado hace que el repo y el remoto digan cosas distintas sin que nada lo detecte.
+- **Toda RPC nueva que llame el cliente necesita su `grant execute ... to authenticated` explícito.** Se revocó el default privilege de Supabase, así que sin el grant falla en desarrollo — es intencional.
+
 ## Current baseline note
 
 The connected Supabase project already contained the identity/RBAC baseline migrations:
