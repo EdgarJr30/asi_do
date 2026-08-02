@@ -1,0 +1,18 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ASI Inter-America//Annual Convention 2026//ES
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:asi-annual-convention-2026@interamerica.org
+DTSTAMP:20260802T200000Z
+DTSTART;VALUE=DATE:20260812
+DTEND;VALUE=DATE:20260816
+SUMMARY:Convención Anual ASI 2026
+LOCATION:Barceló Bávaro Palace\, Punta Cana\, República Dominicana
+DESCRIPTION:ASI — Living in Purpose. Inscripción e información: https://asi26.interamerica.org/
+URL:https://asi26.interamerica.org/
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

@@ -463,6 +463,9 @@ Do not add a background fill, opacity animation, scale effect, or other decorati
 ### R-131 — Loader copy must remain optically centered
 Do not let animated dots or other trailing decoration shift page-loader labels away from the horizontal center shared by the ASI brand mark and supporting hint. Decorative loading animation must be positioned outside the label's layout width so the visible copy remains correctly centered at every viewport size.
 
+### R-132 — Campaign emails must feel curated and event-specific
+Do not ship campaign emails as generic stacked templates with default typography, repetitive cards, or decorative choices disconnected from the promoted event. Event invitations must derive their typography, palette, imagery, spacing, and editorial hierarchy from the campaign identity; keep the copy concise; make dates and locations actionable; use purposeful iconography or graceful decorative motion with static fallbacks; and preserve a polished responsive layout in clients that do not support web fonts, hover states, or animation.
+
 ---
 
 ## Maintenance rule

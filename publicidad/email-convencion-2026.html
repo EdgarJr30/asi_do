@@ -4,10 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="x-apple-disable-message-reformatting">
+    <meta name="color-scheme" content="light only">
     <title>Convención Anual ASI 2026</title>
-    <!-- Asunto sugerido: Vive con propósito | Convención Anual ASI 2026 -->
-    <!-- Preencabezado: 12–15 de agosto en Punta Cana. Inscríbete hoy. -->
+    <!-- Asunto sugerido: Nos vemos en Punta Cana | Convención Anual ASI 2026 -->
+    <!-- Preencabezado: Cuatro días para inspirarnos, conectar y vivir con propósito. -->
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
+
       body,
       table,
       td,
@@ -50,8 +53,24 @@
         mso-hide: all;
       }
 
-      @media only screen and (max-width: 620px) {
+      .calendar-link:hover,
+      .place-link:hover,
+      .text-link:hover {
+        color: #127b85 !important;
+      }
+
+      .primary-button:hover {
+        background-color: #ffe08a !important;
+        border-color: #ffe08a !important;
+      }
+
+      @media only screen and (max-width: 640px) {
+        .outer-pad {
+          padding: 0 !important;
+        }
+
         .email-shell {
+          border-radius: 0 !important;
           width: 100% !important;
         }
 
@@ -71,39 +90,85 @@
           width: 100% !important;
         }
 
+        .editorial-pad,
         .content-pad {
-          padding-left: 24px !important;
-          padding-right: 24px !important;
+          padding-left: 26px !important;
+          padding-right: 26px !important;
         }
 
-        .event-title {
-          font-size: 30px !important;
-          line-height: 36px !important;
+        .editorial-title {
+          font-size: 39px !important;
+          line-height: 44px !important;
         }
 
-        .detail-label,
-        .detail-value {
+        .brand-name,
+        .edition {
+          font-size: 9px !important;
+          letter-spacing: 1.1px !important;
+          white-space: nowrap !important;
+        }
+
+        .detail-column,
+        .qr-copy,
+        .qr-image-cell {
           display: block !important;
-          padding-left: 0 !important;
-          text-align: left !important;
           width: 100% !important;
         }
 
-        .detail-value {
-          padding-top: 4px !important;
+        .detail-spacer {
+          display: none !important;
+        }
+
+        .detail-card {
+          margin-bottom: 12px !important;
+        }
+
+        .qr-copy {
+          padding: 30px 26px 12px !important;
+          text-align: center !important;
+        }
+
+        .qr-image-cell {
+          padding: 8px 26px 30px !important;
+        }
+
+        .contact-left,
+        .contact-right {
+          display: block !important;
+          text-align: center !important;
+          width: 100% !important;
+        }
+
+        .contact-right {
+          padding-top: 12px !important;
         }
       }
     </style>
   </head>
-  <body style="background-color:#eef2f8; margin:0; padding:0;">
-    <div style="display:none; font-size:1px; color:#eef2f8; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">
-      12–15 de agosto de 2026 en Punta Cana. Inscríbete hoy en la Convención Anual ASI.
+  <body style="background-color:#e9edf3; margin:0; padding:0;">
+    <div style="display:none; font-size:1px; color:#e9edf3; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">
+      Cuatro días para inspirarnos, conectar y vivir con propósito. 12–15 de agosto de 2026 en Punta Cana.
     </div>
 
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#eef2f8;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#e9edf3;">
       <tr>
-        <td align="center" style="padding:28px 12px;">
-          <table class="email-shell" role="presentation" width="620" cellspacing="0" cellpadding="0" border="0" style="background-color:#ffffff; border-radius:20px; box-shadow:0 16px 44px rgba(5, 23, 64, 0.12); overflow:hidden; width:620px;">
+        <td class="outer-pad" align="center" style="padding:34px 14px;">
+          <table class="email-shell" role="presentation" width="620" cellspacing="0" cellpadding="0" border="0" style="background-color:#07183f; border-radius:26px; box-shadow:0 24px 70px rgba(7, 24, 63, 0.22); overflow:hidden; width:620px;">
+            <tr>
+              <td style="background-color:#07183f; padding:18px 28px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                  <tr>
+                    <td class="brand-name" style="color:#ffffff; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:11px; font-weight:800; letter-spacing:2.2px; line-height:18px; text-transform:uppercase;">
+                      ASI · Inter-American Division
+                    </td>
+                    <td class="edition" align="right" style="color:#f0be4d; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:11px; font-weight:800; letter-spacing:1.8px; line-height:18px; text-transform:uppercase;">
+                      Punta Cana · 2026
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
             <tr>
               <td>
                 <a href="https://asi26.interamerica.org/" target="_blank" style="text-decoration:none;">
@@ -126,83 +191,129 @@
             </tr>
 
             <tr>
-              <td class="content-pad" style="padding:38px 46px 12px;">
-                <p style="color:#2e51ab; font-family:Arial, Helvetica, sans-serif; font-size:12px; font-weight:700; letter-spacing:1.8px; line-height:18px; margin:0 0 12px; text-transform:uppercase;">
-                  Convención Anual ASI 2026
+              <td style="background-color:#07183f;">
+                <img
+                  src="https://asi-do.netlify.app/media/asi-convention-horizon.gif?v=20260802"
+                  width="620"
+                  alt=""
+                  style="background-color:#07183f; display:block; height:auto; width:100%;"
+                >
+              </td>
+            </tr>
+
+            <tr>
+              <td class="editorial-pad" style="background-color:#07183f; padding:24px 54px 52px;">
+                <p style="color:#50d7dc; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:11px; font-weight:800; letter-spacing:2.4px; line-height:18px; margin:0 0 18px; text-transform:uppercase;">
+                  Una invitación para ti
                 </p>
-                <h1 class="event-title" style="color:#071d49; font-family:Arial, Helvetica, sans-serif; font-size:38px; line-height:44px; margin:0 0 16px;">
-                  Vive con propósito
+                <h1 class="editorial-title" style="color:#ffffff; font-family:'Playfair Display',Georgia,'Times New Roman',serif; font-size:50px; font-weight:600; letter-spacing:-1.2px; line-height:54px; margin:0 0 20px;">
+                  Vivir con propósito<br>
+                  <span style="color:#f0be4d; font-style:italic;">nos reúne.</span>
                 </h1>
-                <p style="color:#40516f; font-family:Arial, Helvetica, sans-serif; font-size:17px; line-height:27px; margin:0;">
-                  Te esperamos para compartir inspiración, formación y conexiones que impulsan nuestra misión.
+                <p style="color:#c9d4e8; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:16px; line-height:27px; margin:0; max-width:470px;">
+                  Cuatro días para inspirarnos, aprender y crear conexiones que trascienden. Nos encantará encontrarte allí.
                 </p>
               </td>
             </tr>
 
             <tr>
-              <td class="content-pad" style="padding:22px 46px 8px;">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f8ff; border:1px solid #d9e5fa; border-radius:14px;">
+              <td class="content-pad" style="background-color:#f7f3ea; padding:46px 36px 20px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                   <tr>
-                    <td class="detail-label" width="38%" style="border-bottom:1px solid #d9e5fa; color:#2e51ab; font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:700; padding:14px 16px; text-transform:uppercase;">Fecha</td>
-                    <td class="detail-value" style="border-bottom:1px solid #d9e5fa; color:#071d49; font-family:Arial, Helvetica, sans-serif; font-size:15px; font-weight:700; padding:14px 16px; text-align:right;">12–15 de agosto de 2026</td>
-                  </tr>
-                  <tr>
-                    <td class="detail-label" width="38%" style="border-bottom:1px solid #d9e5fa; color:#2e51ab; font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:700; padding:14px 16px; text-transform:uppercase;">Lugar</td>
-                    <td class="detail-value" style="border-bottom:1px solid #d9e5fa; color:#071d49; font-family:Arial, Helvetica, sans-serif; font-size:15px; font-weight:700; padding:14px 16px; text-align:right;">Barceló Resort · Punta Cana</td>
-                  </tr>
-                  <tr>
-                    <td class="detail-label" width="38%" style="color:#2e51ab; font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:700; padding:14px 16px; text-transform:uppercase;">Inversión</td>
-                    <td class="detail-value" style="color:#071d49; font-family:Arial, Helvetica, sans-serif; font-size:15px; font-weight:700; padding:14px 16px; text-align:right;">Inscripción USD 135 · Estadía USD 150/día</td>
+                    <td class="detail-column" width="32%" valign="top">
+                      <table class="detail-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#ffffff; border:1px solid #e4dece; border-radius:18px;">
+                        <tr>
+                          <td style="padding:20px 18px;">
+                            <img src="https://asi-do.netlify.app/media/email-convention-calendar.png?v=20260802" width="38" alt="Calendario" style="height:38px; margin:0 0 14px; width:38px;">
+                            <p style="color:#72809a; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:10px; font-weight:800; letter-spacing:1.5px; line-height:16px; margin:0 0 6px; text-transform:uppercase;">Fecha</p>
+                            <a class="calendar-link" href="https://asi-do.netlify.app/events/asi-convention-2026.ics" target="_blank" style="color:#07183f; display:block; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:15px; font-weight:800; line-height:21px; text-decoration:none;">12–15 agosto<br>2026</a>
+                            <a class="text-link" href="https://asi-do.netlify.app/events/asi-convention-2026.ics" target="_blank" style="color:#127b85; display:inline-block; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:11px; font-weight:700; line-height:17px; margin-top:10px; text-decoration:underline;">Guardar fecha ↗</a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td class="detail-spacer" width="2%">&nbsp;</td>
+                    <td class="detail-column" width="32%" valign="top">
+                      <table class="detail-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#ffffff; border:1px solid #e4dece; border-radius:18px;">
+                        <tr>
+                          <td style="padding:20px 18px;">
+                            <img src="https://asi-do.netlify.app/media/email-convention-location.png?v=20260802" width="38" alt="Ubicación" style="height:38px; margin:0 0 14px; width:38px;">
+                            <p style="color:#72809a; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:10px; font-weight:800; letter-spacing:1.5px; line-height:16px; margin:0 0 6px; text-transform:uppercase;">Lugar</p>
+                            <a class="place-link" href="https://www.google.com/maps/search/?api=1&amp;query=Barcel%C3%B3+B%C3%A1varo+Palace%2C+Punta+Cana%2C+Dominican+Republic" target="_blank" style="color:#07183f; display:block; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:15px; font-weight:800; line-height:21px; text-decoration:none;">Barceló Resort<br>· Punta Cana</a>
+                            <a class="text-link" href="https://www.google.com/maps/search/?api=1&amp;query=Barcel%C3%B3+B%C3%A1varo+Palace%2C+Punta+Cana%2C+Dominican+Republic" target="_blank" style="color:#127b85; display:inline-block; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:11px; font-weight:700; line-height:17px; margin-top:10px; text-decoration:underline;">Ver ubicación ↗</a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td class="detail-spacer" width="2%">&nbsp;</td>
+                    <td class="detail-column" width="32%" valign="top">
+                      <table class="detail-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#ffffff; border:1px solid #e4dece; border-radius:18px;">
+                        <tr>
+                          <td style="padding:20px 18px;">
+                            <img src="https://asi-do.netlify.app/media/email-convention-ticket.png?v=20260802" width="38" alt="Inscripción" style="height:38px; margin:0 0 14px; width:38px;">
+                            <p style="color:#72809a; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:10px; font-weight:800; letter-spacing:1.5px; line-height:16px; margin:0 0 6px; text-transform:uppercase;">Inversión</p>
+                            <p style="color:#07183f; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:15px; font-weight:800; line-height:21px; margin:0;">USD 135<br>inscripción</p>
+                            <p style="color:#72809a; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:11px; font-weight:600; line-height:17px; margin:10px 0 0;">Estadía USD 150/día</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
                   </tr>
                 </table>
               </td>
             </tr>
 
             <tr>
-              <td align="center" class="content-pad" style="padding:24px 46px 12px;">
+              <td align="center" class="content-pad" style="background-color:#f7f3ea; padding:18px 36px 50px;">
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                   <tr>
-                    <td align="center" bgcolor="#2e51ab" style="border-radius:999px;">
-                      <a href="https://asi26.interamerica.org/" target="_blank" style="background-color:#2e51ab; border:1px solid #2e51ab; border-radius:999px; color:#ffffff; display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:17px; font-weight:700; line-height:20px; padding:15px 30px; text-decoration:none;">
-                        Inscribirme ahora
+                    <td align="center" bgcolor="#f0be4d" style="border-radius:999px; box-shadow:0 12px 24px rgba(154, 105, 5, 0.2);">
+                      <a class="primary-button" href="https://asi26.interamerica.org/" target="_blank" style="background-color:#f0be4d; border:1px solid #f0be4d; border-radius:999px; color:#07183f; display:inline-block; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:15px; font-weight:800; letter-spacing:0.2px; line-height:20px; padding:16px 34px; text-decoration:none;">
+                        Reservar mi lugar&nbsp; →
                       </a>
                     </td>
                   </tr>
                 </table>
-                <p style="color:#6a7891; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:20px; margin:12px 0 0;">
-                  <a href="https://asi26.interamerica.org/" target="_blank" style="color:#2e51ab; text-decoration:underline;">asi26.interamerica.org</a>
+                <p style="color:#7f796e; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:11px; line-height:18px; margin:14px 0 0;">
+                  Registro seguro en <a href="https://asi26.interamerica.org/" target="_blank" style="color:#127b85; font-weight:700; text-decoration:underline;">asi26.interamerica.org</a>
                 </p>
               </td>
             </tr>
 
             <tr>
-              <td align="center" class="content-pad" style="padding:22px 46px 10px;">
-                <p style="color:#071d49; font-family:Arial, Helvetica, sans-serif; font-size:16px; font-weight:700; line-height:24px; margin:0 0 14px;">
-                  Escanea el código y completa tu registro
-                </p>
-                <a href="https://asi26.interamerica.org/" target="_blank" style="display:inline-block; text-decoration:none;">
-                  <img
-                    src="https://asi-do.netlify.app/presentation/QRASIConvention.webp?v=20260802"
-                    width="210"
-                    alt="Código QR para registrarse en la Convención Anual ASI 2026"
-                    style="border:1px solid #d9e5fa; border-radius:18px; display:block; height:auto; width:210px;"
-                  >
-                </a>
-              </td>
-            </tr>
-
-            <tr>
-              <td class="content-pad" style="padding:24px 46px 40px;">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#071d49; border-radius:14px;">
+              <td class="content-pad" style="background-color:#f7f3ea; padding:0 36px 44px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#0b2855; border-radius:22px; overflow:hidden;">
                   <tr>
-                    <td align="center" style="padding:20px 22px;">
-                      <p style="color:#ffffff; font-family:Arial, Helvetica, sans-serif; font-size:15px; font-weight:700; line-height:23px; margin:0 0 6px;">¿Tienes alguna pregunta?</p>
-                      <p style="color:#d8e6ff; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:23px; margin:0;">
-                        <a href="https://app.interamerica.org/s3/ASI-QA" target="_blank" style="color:#72e4ed; font-weight:700; text-decoration:underline;">Formulario oficial de consultas</a>
-                        <br>
-                        División Interamericana:
-                        <a href="tel:+13054034700" style="color:#ffffff; font-weight:700; text-decoration:none; white-space:nowrap;">+1 305-403-4700</a>
-                      </p>
+                    <td class="qr-copy" width="57%" valign="middle" style="padding:34px 16px 34px 32px;">
+                      <p style="color:#50d7dc; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:10px; font-weight:800; letter-spacing:1.7px; line-height:16px; margin:0 0 10px; text-transform:uppercase;">Registro rápido</p>
+                      <h2 style="color:#ffffff; font-family:'Playfair Display',Georgia,'Times New Roman',serif; font-size:28px; font-weight:600; line-height:33px; margin:0 0 12px;">Escanea.<br>Regístrate.<br><span style="color:#f0be4d; font-style:italic;">Nos vemos allí.</span></h2>
+                      <p style="color:#b9c9e3; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:12px; line-height:20px; margin:0;">El código te lleva directamente al sitio oficial de la convención.</p>
+                    </td>
+                    <td class="qr-image-cell" align="center" width="43%" valign="middle" style="padding:28px 28px 28px 8px;">
+                      <a href="https://asi26.interamerica.org/" target="_blank" style="display:inline-block; text-decoration:none;">
+                        <img
+                          src="https://asi-do.netlify.app/presentation/QRASIConvention.webp?v=20260802"
+                          width="172"
+                          alt="Código QR para registrarse en la Convención Anual ASI 2026"
+                          style="background-color:#ffffff; border:8px solid #ffffff; border-radius:18px; display:block; height:auto; width:172px;"
+                        >
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="content-pad" style="background-color:#ffffff; padding:28px 36px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                  <tr>
+                    <td class="contact-left" width="54%" style="color:#07183f; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:14px; font-weight:800; line-height:22px;">
+                      ¿Alguna pregunta? Estamos para ayudarte.
+                    </td>
+                    <td class="contact-right" align="right" width="46%" style="color:#40516f; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:12px; line-height:20px;">
+                      <a href="https://app.interamerica.org/s3/ASI-QA" target="_blank" style="color:#127b85; font-weight:800; text-decoration:underline;">Enviar una consulta</a><br>
+                      <a href="tel:+13054034700" style="color:#07183f; font-weight:800; text-decoration:none; white-space:nowrap;">+1 305-403-4700</a>
                     </td>
                   </tr>
                 </table>
@@ -210,7 +321,7 @@
             </tr>
           </table>
 
-          <p style="color:#7a879c; font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:19px; margin:18px 0 0; text-align:center;">
+          <p style="color:#738096; font-family:'Manrope','Avenir Next','Segoe UI',Arial,sans-serif; font-size:10px; letter-spacing:0.4px; line-height:18px; margin:20px 0 0; text-align:center;">
             ASI · División Interamericana<br>
             Adventist-laymen's Services &amp; Industries
           </p>
