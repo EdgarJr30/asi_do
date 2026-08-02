@@ -20,6 +20,9 @@ const contentIds = {
   desktop: 'asi-convention-desktop',
   mobile: 'asi-convention-mobile',
   qr: 'asi-convention-qr',
+  calendar: 'asi-icon-calendar',
+  location: 'asi-icon-location',
+  payment: 'asi-icon-payment',
 }
 
 const sourceImages = {
@@ -32,6 +35,24 @@ const convertedImages = {
   desktop: path.join(tempDir, 'asi-convention-desktop.jpg'),
   mobile: path.join(tempDir, 'asi-convention-mobile.jpg'),
   qr: path.join(tempDir, 'asi-convention-qr.png'),
+  calendar: path.join(tempDir, 'asi-icon-calendar.png'),
+  location: path.join(tempDir, 'asi-icon-location.png'),
+  payment: path.join(tempDir, 'asi-icon-payment.png'),
+}
+
+const iconRasters = {
+  calendar: {
+    color: '#078894',
+    draw: 'roundrectangle 8,11 40,40 5,5 line 8,20 40,20 line 17,7 17,15 line 31,7 31,15 line 16,27 20,27 line 28,27 32,27 line 16,34 20,34 line 28,34 32,34',
+  },
+  location: {
+    color: '#078894',
+    draw: "path 'M 24,42 C 24,42 38,29.1 38,18.5 C 38,10.5 31.7,5 24,5 C 16.3,5 10,10.5 10,18.5 C 10,29.1 24,42 24,42 Z' circle 24,18.5 29,18.5",
+  },
+  payment: {
+    color: '#B87B00',
+    draw: 'roundrectangle 5,10 43,38 5,5 line 5,19 43,19 line 12,30 21,30',
+  },
 }
 
 const wrapBase64 = (value) => value.match(/.{1,76}/g)?.join('\r\n') ?? ''
@@ -81,12 +102,32 @@ try {
     convertedImages.mobile,
   ])
   execFileSync('magick', [sourceImages.qr, '-strip', convertedImages.qr])
+  for (const [name, icon] of Object.entries(iconRasters)) {
+    execFileSync('magick', [
+      '-size',
+      '48x48',
+      'xc:none',
+      '-fill',
+      'none',
+      '-stroke',
+      icon.color,
+      '-strokewidth',
+      '3.5',
+      '-draw',
+      icon.draw,
+      '-strip',
+      convertedImages[name],
+    ])
+  }
 
   const html = readFileSync(templatePath, 'utf8')
   const attachments = {
     desktop: readFileSync(convertedImages.desktop),
     mobile: readFileSync(convertedImages.mobile),
     qr: readFileSync(convertedImages.qr),
+    calendar: readFileSync(convertedImages.calendar),
+    location: readFileSync(convertedImages.location),
+    payment: readFileSync(convertedImages.payment),
   }
 
   const previewHtml = html
@@ -101,6 +142,18 @@ try {
     .replaceAll(
       `cid:${contentIds.qr}`,
       `data:image/png;base64,${attachments.qr.toString('base64')}`,
+    )
+    .replaceAll(
+      `cid:${contentIds.calendar}`,
+      `data:image/png;base64,${attachments.calendar.toString('base64')}`,
+    )
+    .replaceAll(
+      `cid:${contentIds.location}`,
+      `data:image/png;base64,${attachments.location.toString('base64')}`,
+    )
+    .replaceAll(
+      `cid:${contentIds.payment}`,
+      `data:image/png;base64,${attachments.payment.toString('base64')}`,
     )
 
   writeFileSync(previewPath, previewHtml)
@@ -157,6 +210,30 @@ try {
     'Content-Disposition: inline; filename="asi-convention-qr.png"',
     '',
     wrapBase64(attachments.qr.toString('base64')),
+    '',
+    `--${relatedBoundary}`,
+    'Content-Type: image/png; name="asi-icon-calendar.png"',
+    'Content-Transfer-Encoding: base64',
+    `Content-ID: <${contentIds.calendar}>`,
+    'Content-Disposition: inline; filename="asi-icon-calendar.png"',
+    '',
+    wrapBase64(attachments.calendar.toString('base64')),
+    '',
+    `--${relatedBoundary}`,
+    'Content-Type: image/png; name="asi-icon-location.png"',
+    'Content-Transfer-Encoding: base64',
+    `Content-ID: <${contentIds.location}>`,
+    'Content-Disposition: inline; filename="asi-icon-location.png"',
+    '',
+    wrapBase64(attachments.location.toString('base64')),
+    '',
+    `--${relatedBoundary}`,
+    'Content-Type: image/png; name="asi-icon-payment.png"',
+    'Content-Transfer-Encoding: base64',
+    `Content-ID: <${contentIds.payment}>`,
+    'Content-Disposition: inline; filename="asi-icon-payment.png"',
+    '',
+    wrapBase64(attachments.payment.toString('base64')),
     '',
     `--${relatedBoundary}--`,
     '',
