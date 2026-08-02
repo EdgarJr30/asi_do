@@ -1,0 +1,105 @@
+name: Database drift
+
+# Vigila que el proyecto Supabase desplegado y las migraciones del repositorio
+# digan lo mismo.
+#
+# Por qué existe: ya se sabe que hay objetos en el remoto que no están en
+# `migrations/`. Ese drift es invisible hasta que alguien intenta levantar un
+# entorno nuevo y descubre que la mitad del esquema no está en ningún archivo.
+# Un cambio hecho a mano desde el dashboard no viaja a staging ni a producción.
+#
+# Este job lo convierte en un aviso diario en vez de una sorpresa el día del
+# despliegue.
+#
+# Requiere estos secrets/variables en GitHub (Settings → Secrets and variables → Actions):
+#   secret  SUPABASE_ACCESS_TOKEN   token personal del CLI (supabase.com/dashboard/account/tokens)
+#   secret  SUPABASE_DB_PASSWORD    contraseña de la base del proyecto
+#   var     SUPABASE_PROJECT_REF    ref del proyecto a vigilar
+#
+# NO se dispara en `pull_request`: los PR desde forks no deben poder alcanzar
+# credenciales del proyecto desplegado.
+
+on:
+  schedule:
+    # 12:00 UTC = 08:00 en República Dominicana (UTC-4)
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-drift
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    name: Remoto vs migraciones
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.111.0
+
+      - name: Enlazar el proyecto
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+
+      # `db diff` construye una base sombra aplicando las migraciones del repo y
+      # la compara contra el remoto. Lo que salga son cambios que existen en la
+      # base desplegada pero que ningún archivo del repositorio explica.
+      - name: Calcular la diferencia
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase db diff --linked --schema public > drift.sql 2> drift.err || {
+            echo "El cálculo de la diferencia falló:"
+            cat drift.err
+            exit 1
+          }
+          cat drift.err || true
+
+      - name: Publicar el resultado
+        id: report
+        run: |
+          if [ -s drift.sql ]; then
+            {
+              echo "## Drift detectado"
+              echo
+              echo "El proyecto desplegado tiene cambios que no están en \`supabase/migrations/\`."
+              echo "Conviértelos en una migración con \`supabase migration new\` y pégalos ahí,"
+              echo "o revierte el cambio manual en el remoto."
+              echo
+              echo '```sql'
+              head -c 60000 drift.sql
+              echo
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "clean=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "## Sin drift" >> "$GITHUB_STEP_SUMMARY"
+            echo "El remoto coincide con las migraciones del repositorio." >> "$GITHUB_STEP_SUMMARY"
+            echo "clean=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Guardar la diferencia como artefacto
+        if: steps.report.outputs.clean == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-sql
+          path: drift.sql
+          retention-days: 30
+
+      - name: Fallar si hay drift
+        if: steps.report.outputs.clean == 'false'
+        run: |
+          echo "Hay drift entre el remoto y las migraciones. Revisa el resumen del job."
+          exit 1
