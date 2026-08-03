@@ -68,6 +68,9 @@ const plainText = `Convención Anual ASI 2026
 
 Vivir con propósito nos reúne.
 
+¿Conoces a alguien que debería acompañarnos?
+Comparte esta invitación con tus amigos y relacionados.
+
 12–15 de agosto de 2026
 Barceló Resort · Punta Cana
 Inscripción: USD 135
