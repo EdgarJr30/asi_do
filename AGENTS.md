@@ -86,8 +86,9 @@ Keep these aligned when the task affects their area:
 - Any repository change: create a git commit for the completed change in the same task.
 
 ## Linear follow-up rule
-- If any task ends with pending work of any kind, Codex must create one or more Linear issues automatically without asking for confirmation first.
-- Those follow-up issues must be created in the canonical Linear project for this repo, assigned immediately to `me`, and written so the user can later confirm the work was completed.
+- If any task ends with pending work of any kind, record it automatically without asking for confirmation first.
+- Pending work goes as an unchecked checklist item in the `TASK-255` comment for its area (`Calidad, CI y observabilidad`, `Frontend y PWA`, `Mantenibilidad e higiene`, `Rendimiento de aplicacion`), not as a new Linear issue: the workspace is on the free plan and rejects issue creation.
+- Edit the existing area comment instead of adding a new one, write every item so the user can later confirm the work was completed, and check it off there —with the commit that closed it— when the work lands.
 - This rule applies to every prompt, including implementation work, documentation work, deployments, manual verification, external configuration, or any other unresolved follow-up.
 
 ## Core domain language
