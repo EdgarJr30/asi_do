@@ -9,10 +9,13 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    // `scripts/stress-harness.ts` comparte código con las Edge Functions, que
+    // importan con extensión `.ts` explícita como exige Deno.
+    "allowImportingTsExtensions": true,
     "moduleDetection": "force",
     "noEmit": true,
     "strict": true,
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "playwright.config.ts", "eslint.config.js"]
+  "include": ["vite.config.ts", "playwright.config.ts", "eslint.config.js", "scripts/**/*.ts"]
 }

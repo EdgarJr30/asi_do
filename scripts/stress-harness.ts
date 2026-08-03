@@ -149,8 +149,19 @@ function rowFor(m: MetricsSummary): string {
   )
 }
 
+// El tipo se deriva de la fábrica y no de `ReturnType<typeof createClient>`:
+// esa forma resuelve los genéricos a sus restricciones, no a los que infiere la
+// llamada real, y el cliente creado abajo no encajaba en la firma.
+function createHarnessClient(url: string, key: string) {
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  })
+}
+
+type HarnessClient = ReturnType<typeof createHarnessClient>
+
 // Purga TODOS los datos sintéticos identificables. No toca datos reales.
-async function purge(client: ReturnType<typeof createClient>): Promise<void> {
+async function purge(client: HarnessClient): Promise<void> {
   console.log('Purga de datos sintéticos en curso…')
 
   // 1) Tenants sintéticos → cascada a company_profiles, job_postings, applications, memberships.
@@ -163,7 +174,7 @@ async function purge(client: ReturnType<typeof createClient>): Promise<void> {
 
   // 2) Pagos + solicitudes de membresía institucional sintéticas.
   await client.from('membership_payments').delete().like('order_number', 'MBR-%')
-  const apps = await client
+  await client
     .from('institutional_membership_applications')
     .delete()
     .like('applicant_email', 'stress+%@harness.asido.test')
@@ -230,9 +241,7 @@ async function main(): Promise<void> {
   }
   console.log(`✅ ${guard.reason}\n`)
 
-  const client = createClient(supabaseUrl, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  })
+  const client = createHarnessClient(supabaseUrl, serviceKey)
 
   if (args.purge === true) {
     await purge(client)

@@ -253,7 +253,8 @@ export default tseslint.config(
     }
   },
   {
-    files: ['scripts/**/*.mjs'],
+    // Scripts de build y de generación de correo: corren en Node, no en el navegador.
+    files: ['scripts/**/*.mjs', 'publicidad/**/*.mjs'],
     languageOptions: {
       ecmaVersion: 2023,
       sourceType: 'module',

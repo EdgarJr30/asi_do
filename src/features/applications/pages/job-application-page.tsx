@@ -154,7 +154,7 @@ export function JobApplicationPage() {
       setRedirectCountdown((seconds) => {
         if (seconds <= 1) {
           window.clearInterval(interval)
-          navigate(surfacePaths.candidate.applications)
+          void navigate(surfacePaths.candidate.applications)
           return 0
         }
         return seconds - 1
