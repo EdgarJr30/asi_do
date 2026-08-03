@@ -13,6 +13,7 @@ site_url = "https://asi-do.netlify.app"
 additional_redirect_urls = [
   "https://asi-do.netlify.app/auth/confirm",
   "https://asi-do.netlify.app/auth/sign-in",
+  "https://asi-do.netlify.app/auth/reset-password",
   "https://asi-do.netlify.app/candidate/profile"
 ]
 jwt_expiry = 3600
@@ -21,8 +22,11 @@ refresh_token_reuse_interval = 10
 enable_signup = true
 enable_anonymous_sign_ins = false
 enable_manual_linking = false
-minimum_password_length = 6
-password_requirements = ""
+# La politica vive aqui y se replica en `signUpFormSchema` (auth-schemas.ts). Si
+# cambia una, cambia la otra: el cliente solo puede ser igual de estricto, nunca
+# menos, o la UI aceptaria contrasenas que el servidor rechaza.
+minimum_password_length = 8
+password_requirements = "lower_upper_letters_digits"
 
 [auth.mfa]
 max_enrolled_factors = 10
@@ -42,7 +46,9 @@ max_frequency = "5s"
 enable_signup = true
 double_confirm_changes = true
 enable_confirmations = true
-secure_password_change = false
+# Exige sesion reciente para cambiar la contrasena: una sesion robada y olvidada
+# en un dispositivo ajeno no basta para quedarse con la cuenta.
+secure_password_change = true
 max_frequency = "1m0s"
 otp_length = 8
 otp_expiry = 3600

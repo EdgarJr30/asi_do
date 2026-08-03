@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
@@ -125,18 +125,12 @@ export function SignInPage() {
         <label className="block space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[13px] font-semibold text-(--app-text)">Contraseña</span>
-            <button
+            <Link
               className="text-xs font-medium text-primary-600 transition hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
-              type="button"
-              onClick={() =>
-                toast('Recuperación de contraseña', {
-                  description:
-                    'Escríbenos a soporte@asi.do y te ayudamos a restablecer el acceso mientras habilitamos el flujo automático.'
-                })
-              }
+              to={surfacePaths.auth.forgotPassword}
             >
               ¿Olvidaste tu contraseña?
-            </button>
+            </Link>
           </div>
           <div className="relative">
             <Input

@@ -11,6 +11,7 @@ import { buildAuthRedirectQuery, getSafeNextPath } from '@/features/auth/lib/aut
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/loader'
+import { PasswordPolicyHints } from '@/features/auth/components/password-policy-hints'
 import { signUpFormSchema, type SignUpFormValues } from '@/features/auth/lib/auth-schemas'
 import { Input } from '@/components/ui/input'
 import { signUpWithPassword, toErrorMessage } from '@/features/auth/lib/auth-api'
@@ -24,12 +25,6 @@ function FieldError({ message }: { message?: string }) {
 
   return <p className="text-xs text-rose-600 dark:text-rose-300">{message}</p>
 }
-
-const passwordRules = [
-  { short: '8+ caracteres', test: (value: string) => value.length >= 8 },
-  { short: 'Una mayúscula', test: (value: string) => /[A-Z]/.test(value) },
-  { short: 'Un número', test: (value: string) => /\d/.test(value) }
-] as const
 
 export function SignUpPage() {
   const navigate = useNavigate()
@@ -170,28 +165,7 @@ export function SignUpPage() {
               </button>
             </div>
             <FieldError message={form.formState.errors.password?.message} />
-            <ul className="flex flex-wrap gap-x-2 gap-y-1 pt-0.5">
-              {passwordRules.map((rule) => {
-                const passed = rule.test(passwordValue)
-
-                return (
-                  <li
-                    key={rule.short}
-                    className={
-                      passed
-                        ? 'inline-flex items-center gap-1 rounded-pill bg-emerald-50 px-1.5 py-0.5 text-[11px] leading-4 font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
-                        : 'inline-flex items-center gap-1 rounded-pill bg-(--app-surface-elevated) px-1.5 py-0.5 text-[11px] leading-4 text-(--app-text-subtle)'
-                    }
-                  >
-                    <Check
-                      className={passed ? 'size-3 text-emerald-600 dark:text-emerald-400' : 'size-3 text-(--app-text-subtle)/60'}
-                      strokeWidth={3}
-                    />
-                    {rule.short}
-                  </li>
-                )
-              })}
-            </ul>
+            <PasswordPolicyHints value={passwordValue} />
           </label>
 
           <label className="block space-y-0.5">

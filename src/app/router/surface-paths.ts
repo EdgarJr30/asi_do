@@ -35,7 +35,9 @@ export const surfacePaths = {
     root: '/auth',
     signIn: '/auth/sign-in',
     signUp: '/auth/sign-up',
-    confirm: '/auth/confirm'
+    confirm: '/auth/confirm',
+    forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password'
   },
   app: {
     home: '/app'

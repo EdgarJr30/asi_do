@@ -4,15 +4,55 @@ import { tenantKindValues } from '@/features/opportunities/lib/opportunity-taxon
 
 const authorityScopeTypeValues = ['union', 'association'] as const
 
+// Réplica exacta de la política de `supabase/config.toml`
+// (`minimum_password_length = 8` + `password_requirements = "lower_upper_letters_digits"`).
+// El servidor es quien manda: esto solo adelanta el rechazo para no gastar un
+// viaje de red. Si divergen, la UI acepta lo que GoTrue rechaza y el usuario ve
+// un error genérico en vez de saber qué le falta.
+export const passwordPolicyRules = [
+  { short: '8+ caracteres', test: (value: string) => value.length >= 8 },
+  { short: 'Una minúscula', test: (value: string) => /[a-z]/.test(value) },
+  { short: 'Una mayúscula', test: (value: string) => /[A-Z]/.test(value) },
+  { short: 'Un número', test: (value: string) => /\d/.test(value) }
+] as const
+
+export const passwordSchema = z
+  .string()
+  .min(8, 'La contraseña debe tener al menos 8 caracteres.')
+  .regex(/[a-z]/, 'Incluye al menos una letra minúscula.')
+  .regex(/[A-Z]/, 'Incluye al menos una letra mayúscula.')
+  .regex(/\d/, 'Incluye al menos un número.')
+
 export const signInSchema = z.object({
   email: z.email('Escribe un correo válido.'),
-  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.')
+  // El acceso no valida la política: una cuenta anterior al endurecimiento tiene
+  // una contraseña que ya no se podría registrar hoy, y debe poder entrar igual.
+  password: z.string().min(1, 'Escribe tu contraseña.')
 })
+
+export const passwordRecoveryRequestSchema = z.object({
+  email: z.email('Escribe un correo válido.')
+})
+
+export const passwordResetSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Confirma tu contraseña.')
+  })
+  .superRefine((values, context) => {
+    if (values.password !== values.confirmPassword) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['confirmPassword'],
+        message: 'Las contraseñas deben coincidir.'
+      })
+    }
+  })
 
 export const signUpSchema = z.object({
   fullName: z.string().trim().min(2, 'Escribe tu nombre completo.'),
   email: z.email('Escribe un correo válido.'),
-  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.')
+  password: passwordSchema
 })
 
 export const signUpFormSchema = z
@@ -20,7 +60,7 @@ export const signUpFormSchema = z
     firstName: z.string().trim().min(2, 'Escribe tu nombre.'),
     lastName: z.string().trim().min(2, 'Escribe tu apellido.'),
     email: z.email('Escribe un correo válido.'),
-    password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.'),
+    password: passwordSchema,
     confirmPassword: z.string().min(1, 'Confirma tu contraseña.')
   })
   .superRefine((values, context) => {
@@ -169,6 +209,8 @@ export const regionalAuthorityRequestSchema = z.object({
   }
 })
 
+export type PasswordRecoveryRequestValues = z.infer<typeof passwordRecoveryRequestSchema>
+export type PasswordResetValues = z.infer<typeof passwordResetSchema>
 export type SignInValues = z.infer<typeof signInSchema>
 export type SignUpValues = z.infer<typeof signUpSchema>
 export type SignUpFormValues = z.infer<typeof signUpFormSchema>

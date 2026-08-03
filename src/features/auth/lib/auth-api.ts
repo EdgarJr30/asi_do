@@ -161,6 +161,43 @@ export function getAuthRedirectUrl(nextPath = surfacePaths.candidate.profile) {
   return redirectUrl.toString()
 }
 
+// El enlace de recuperación aterriza directo en la pantalla de nueva contraseña,
+// no en `/auth/confirm`: el usuario llega con una sesión de recovery y lo único
+// que puede hacer con ella es fijar la contraseña. Esta URL debe estar en
+// `additional_redirect_urls` de `supabase/config.toml` o GoTrue la ignora y
+// devuelve al `site_url`.
+export function getPasswordRecoveryRedirectUrl() {
+  const originCandidate = env.authSiteUrl || (typeof window !== 'undefined' ? window.location.origin : null)
+
+  if (!originCandidate) {
+    return undefined
+  }
+
+  return new URL(surfacePaths.auth.resetPassword, originCandidate).toString()
+}
+
+export async function requestPasswordRecovery(email: string) {
+  const client = requireSupabase()
+  const response = await client.auth.resetPasswordForEmail(email, {
+    redirectTo: getPasswordRecoveryRedirectUrl()
+  })
+
+  if (response.error) {
+    throw response.error
+  }
+}
+
+export async function updateAccountPassword(password: string) {
+  const client = requireSupabase()
+  const response = await client.auth.updateUser({ password })
+
+  if (response.error) {
+    throw response.error
+  }
+
+  return response.data
+}
+
 async function retryProfileLookup(userId: string) {
   const client = requireSupabase()
   const firstAttempt = await client.from('users').select('*').eq('id', userId).maybeSingle()

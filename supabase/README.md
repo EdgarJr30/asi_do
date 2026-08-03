@@ -15,6 +15,59 @@ supabase/
 SQL migrations remain authoritative for schema, constraints, helper functions, and RLS policies.
 `supabase/config.toml` is the source of truth for hosted Auth and Storage configuration that is managed through `supabase config push`.
 
+## Contraseñas: política y recuperación
+
+**La política se declara una vez, en `config.toml`:** `minimum_password_length = 8` y
+`password_requirements = "lower_upper_letters_digits"` (mínimo 8 caracteres con minúscula, mayúscula y
+dígito). GoTrue solo admite tres presets en ese campo —`letters_digits`, `lower_upper_letters_digits` y
+`lower_upper_letters_digits_symbols`—, así que no se puede expresar cualquier regla.
+
+**El cliente la replica, no la define.** `passwordSchema` y `passwordPolicyRules` en
+`src/features/auth/lib/auth-schemas.ts` existen solo para adelantar el rechazo y decirle al usuario qué le
+falta; quien decide es el servidor. `tests/unit/password-policy.test.ts` lee este mismo `config.toml` y
+falla si las dos declaraciones dejan de coincidir. **Si cambias la política aquí, ese test te avisa de lo
+que falta actualizar allá.**
+
+Dos detalles que no son obvios:
+
+- **El formulario de acceso no valida la política**, solo que el campo no esté vacío. Antes del
+  endurecimiento el servidor aceptaba 6 caracteres, y aplicar la regla nueva al login dejaría fuera a esas
+  cuentas sin haberles cambiado nunca la contraseña.
+- **El checklist visible sale de `passwordPolicyRules`**, la misma constante que valida. Estaba duplicado y
+  era decorativo: mostraba «una mayúscula» y «un número» mientras el esquema solo pedía 8 caracteres.
+
+### El flujo de recuperación, de punta a punta
+
+1. `/auth/forgot-password` pide el correo y llama a `resetPasswordForEmail` con
+   `redirectTo = {site_url}/auth/reset-password`. **Esa URL tiene que estar en `additional_redirect_urls`**
+   o GoTrue la ignora en silencio y devuelve al `site_url`.
+2. La confirmación en pantalla es idéntica exista o no la cuenta. Es deliberado: distinguir convertiría la
+   pantalla en un verificador de quién tiene cuenta en ASI.
+3. El correo usa `templates/recovery.html` con `{{ .ConfirmationURL }}`. Al abrirlo, GoTrue valida el token
+   y redirige a `/auth/reset-password` con la sesión en el fragmento de la URL, que el SDK consume solo.
+4. `/auth/reset-password` espera a que la sesión hidrate antes de decidir. **Sin sesión no muestra el
+   formulario**: el enlace caducó (1 h), ya se usó, o alguien entró a la ruta a mano.
+5. Al guardar, `updateUser({ password })` y **cierre de sesión inmediato**. La sesión de recuperación es una
+   credencial de un solo uso que llegó por correo; mantenerla viva después del cambio alarga su vida sin
+   razón, y obligar a entrar con la contraseña nueva es la única confirmación real de que quedó guardada.
+
+### Verificar sin esperar un correo
+
+El mínimo efectivo del remoto se lee provocando el rechazo, sin llegar a crear usuario:
+
+```bash
+curl -s -X POST "$SUPABASE_URL/auth/v1/signup" -H "apikey: $ANON_KEY" \
+  -H "Content-Type: application/json" -d '{"email":"probe@example.com","password":"a"}'
+# -> weak_password; `reasons` lista "length" y/o "characters" según lo que incumpla
+```
+
+Una contraseña de un solo carácter incumple **todo** a la vez, así que `reasons` revela de una si hay
+requisitos de caracteres configurados además del largo.
+
+El ciclo completo de recuperación se prueba sin inbox generando el enlace con `service_role`
+(`POST /auth/v1/admin/generate_link` con `{"type":"recovery"}`), canjeándolo con `verify` y llamando a
+`PUT /auth/v1/user`. Es la forma de comprobar que `secure_password_change` no bloquea el restablecimiento.
+
 ## Regla: commitear antes de `db push`
 
 **Git nunca debe ir por detrás de la base de datos.** El orden obligatorio para toda migración es:

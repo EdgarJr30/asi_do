@@ -28,6 +28,8 @@ const WorkspaceApplicationsPage = lazy(() =>
 const AuthConfirmPage = lazy(() => import('@/features/auth/pages/auth-confirm-page').then(({ AuthConfirmPage }) => ({ default: AuthConfirmPage })))
 const AuthPage = lazy(() => import('@/features/auth/pages/auth-page').then(({ AuthPage }) => ({ default: AuthPage })))
 const BootstrapOwnerPage = lazy(() => import('@/features/auth/pages/bootstrap-owner-page').then(({ BootstrapOwnerPage }) => ({ default: BootstrapOwnerPage })))
+const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/forgot-password-page').then(({ ForgotPasswordPage }) => ({ default: ForgotPasswordPage })))
+const ResetPasswordPage = lazy(() => import('@/features/auth/pages/reset-password-page').then(({ ResetPasswordPage }) => ({ default: ResetPasswordPage })))
 const SignInPage = lazy(() => import('@/features/auth/pages/sign-in-page').then(({ SignInPage }) => ({ default: SignInPage })))
 const SignUpPage = lazy(() => import('@/features/auth/pages/sign-up-page').then(({ SignUpPage }) => ({ default: SignUpPage })))
 const AuthorityRequestPage = lazy(() => import('@/features/authority-requests/pages/authority-request-page').then(({ AuthorityRequestPage }) => ({ default: AuthorityRequestPage })))
@@ -127,6 +129,22 @@ export const applicationRoutes: RouteObject[] = [
         element: (
           <RouteSuspense>
             <AuthConfirmPage />
+          </RouteSuspense>
+        )
+      },
+      {
+        path: 'forgot-password',
+        element: (
+          <RouteSuspense>
+            <ForgotPasswordPage />
+          </RouteSuspense>
+        )
+      },
+      {
+        path: 'reset-password',
+        element: (
+          <RouteSuspense>
+            <ResetPasswordPage />
           </RouteSuspense>
         )
       },
