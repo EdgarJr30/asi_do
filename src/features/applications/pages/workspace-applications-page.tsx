@@ -17,6 +17,7 @@ import {
   countTenantApplications,
   listTenantApplicationsPage,
   resolveCandidateIdentity,
+  type TenantApplicationsCursor,
   type TenantApplicationsSort
 } from '@/features/applications/lib/applications-api'
 import { listTenantPipelineStages } from '@/features/pipeline/lib/pipeline-api'
@@ -113,12 +114,14 @@ export function WorkspaceApplicationsPage() {
     queryFn: async () => listTenantPipelineStages(tenantId!)
   })
 
-  // Paginación real de servidor + scroll infinito: cada página llega vía `range`.
-  // La key incluye los filtros de servidor para reiniciar desde el offset 0.
+  // Paginación keyset en el servidor + scroll infinito: cada página se pide con
+  // el cursor de la última fila servida, así que el coste no crece con la
+  // profundidad y no se solapan filas si entran postulaciones mientras navegas.
+  // La key incluye los filtros de servidor para reiniciar desde la primera.
   const applicationsQuery = useInfiniteQuery({
     queryKey: ['tenant-applications', 'page', tenantId, statusFilter, submittedSearch, sort],
     enabled: Boolean(tenantId),
-    initialPageParam: 0,
+    initialPageParam: null as TenantApplicationsCursor | null,
     queryFn: async ({ pageParam }) =>
       listTenantApplicationsPage({
         tenantId: tenantId!,
@@ -126,9 +129,9 @@ export function WorkspaceApplicationsPage() {
         query: submittedSearch,
         sort,
         limit: APPLICATIONS_PAGE_SIZE,
-        offset: pageParam
+        cursor: pageParam
       }),
-    getNextPageParam: (lastPage) => lastPage.nextOffset
+    getNextPageParam: (lastPage) => lastPage.nextCursor
   })
 
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = applicationsQuery
@@ -145,6 +148,7 @@ export function WorkspaceApplicationsPage() {
 
   const pages = useMemo(() => applicationsQuery.data?.pages ?? [], [applicationsQuery.data])
   const rows = useMemo(() => pages.flatMap((page) => page.applications), [pages])
+  // El total filtrado solo viaja en la primera página; las siguientes lo dejan null.
   const totalCount = pages[0]?.totalCount ?? 0
   const stageNameById = useMemo(
     () => new Map((stagesQuery.data ?? []).map((stage) => [stage.id, stage.name])),

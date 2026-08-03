@@ -1,3 +1,4 @@
+import { toControlledError } from '@/lib/errors/error-utils'
 import { supabase } from '@/lib/supabase/client'
 import type { Tables } from '@/shared/types/database'
 import {
@@ -270,76 +271,24 @@ export async function countMyApplications(input: CountMyApplicationsInput) {
   return { all, sent, review, hired }
 }
 
-export async function listTenantApplications(tenantId: string) {
-  const client = requireSupabase()
-  const response = await client
-    .from('applications')
-    .select(
-      `
-        *,
-        job_posting:job_postings!applications_job_posting_id_fkey (
-          id,
-          title,
-          slug,
-          tenant_id
-        ),
-        candidate_profile:candidate_profiles!applications_candidate_profile_id_fkey (
-          id,
-          desired_role,
-          city_name,
-          country_code,
-          user:users!candidate_profiles_user_id_fkey (
-            id,
-            full_name,
-            display_name,
-            email,
-            avatar_path
-          )
-        )
-      `
-    )
-    .eq('job_posting.tenant_id', tenantId)
-    .order('submitted_at', { ascending: false })
-
-  if (response.error) {
-    throw response.error
-  }
-
-  return response.data ?? []
-}
-
-const TENANT_APPLICATIONS_PAGE_SELECT = `
-  id,
-  candidate_display_name_snapshot,
-  candidate_email_snapshot,
-  candidate_profile_id,
-  current_stage_id,
-  status_public,
-  submitted_at,
-  job_posting:job_postings!applications_job_posting_id_fkey (
-    id,
-    title,
-    slug,
-    tenant_id
-  ),
-  candidate_profile:candidate_profiles!applications_candidate_profile_id_fkey (
-    id,
-    user:users!candidate_profiles_user_id_fkey (
-      id,
-      full_name,
-      display_name,
-      email,
-      avatar_path
-    )
-  )
-`
-
 export type TenantApplicationsSort = 'recent' | 'oldest' | 'name'
+
+/**
+ * Posición de la última fila servida. El servidor la devuelve y el cliente la
+ * reenvía tal cual: es la clave de orden (fecha o nombre) más el `id` como
+ * desempate, no un número de página.
+ */
+export interface TenantApplicationsCursor {
+  submitted_at: string
+  name: string
+  id: string
+}
 
 export interface ListTenantApplicationsPageInput {
   tenantId: string
   limit: number
-  offset: number
+  /** `null` = primera página; después, el `nextCursor` de la anterior. */
+  cursor?: TenantApplicationsCursor | null
   /** '' = sin filtro; de lo contrario un `application_public_status`. */
   status?: string
   query?: string
@@ -393,8 +342,9 @@ export function resolveCandidateIdentity(application: {
 
 export interface TenantApplicationsPage {
   applications: TenantApplicationRow[]
-  totalCount: number
-  nextOffset: number | null
+  /** Solo llega en la primera página; la vista conserva el de `pages[0]`. */
+  totalCount: number | null
+  nextCursor: TenantApplicationsCursor | null
 }
 
 export interface TenantApplicationStats {
@@ -404,118 +354,70 @@ export interface TenantApplicationStats {
   byStatus: Record<string, number>
 }
 
-/** Vacantes del tenant (id + título) para acotar las postulaciones y buscar por posición. */
-async function getTenantJobPostings(tenantId: string) {
-  const client = requireSupabase()
-  const response = await client.from('job_postings').select('id, title').eq('tenant_id', tenantId).limit(2000)
-
-  if (response.error) {
-    throw response.error
-  }
-
-  return (response.data ?? []) as Array<{ id: string; title: string }>
-}
-
 /**
- * Postulaciones del workspace paginadas en el servidor (range + count exacto),
- * pensado para scroll infinito. El scoping por tenant se resuelve acotando a las
- * vacantes de la empresa, lo que además permite buscar por título de la posición.
+ * Postulaciones del workspace, paginadas con keyset en el servidor.
+ *
+ * Antes el scoping por tenant se resolvía trayendo hasta 2000 vacantes y
+ * armando un `in (…)` con sus ids: pasado ese techo las postulaciones de las
+ * vacantes sobrantes desaparecían del listado sin ningún error. La RPC hace el
+ * join directo por `tenant_id`, así que no hay techo, y el cursor evita que el
+ * coste crezca con la profundidad del scroll.
  */
 export async function listTenantApplicationsPage(input: ListTenantApplicationsPageInput): Promise<TenantApplicationsPage> {
   const client = requireSupabase()
-  const limit = Math.max(1, input.limit)
-  const offset = Math.max(0, input.offset)
-
-  const tenantJobs = await getTenantJobPostings(input.tenantId)
-  if (tenantJobs.length === 0) {
-    return { applications: [], totalCount: 0, nextOffset: null }
-  }
-  const tenantJobIds = tenantJobs.map((job) => job.id)
-
-  let query = client
-    .from('applications')
-    .select(TENANT_APPLICATIONS_PAGE_SELECT, { count: 'exact' })
-    .in('job_posting_id', tenantJobIds)
-
-  if (input.status) {
-    query = query.eq('status_public', input.status as PublicApplicationStatus)
-  }
-
-  const search = input.query?.trim()
-  if (search) {
-    const normalized = search.toLowerCase()
-    const titleMatchIds = tenantJobs.filter((job) => job.title.toLowerCase().includes(normalized)).map((job) => job.id)
-    // El correo es el identificador estable del candidato: si cambió de nombre,
-    // buscarlo por correo lo encuentra igual.
-    const orParts = [`candidate_display_name_snapshot.ilike.%${search}%`, `candidate_email_snapshot.ilike.%${search}%`]
-    if (titleMatchIds.length > 0) {
-      orParts.push(`job_posting_id.in.(${titleMatchIds.join(',')})`)
-    }
-    query = query.or(orParts.join(','))
-  }
-
-  if (input.sort === 'name') {
-    query = query.order('candidate_display_name_snapshot', { ascending: true })
-  } else {
-    query = query.order('submitted_at', { ascending: input.sort === 'oldest' })
-  }
-  // Desempate determinista para que los rangos sean estables entre páginas.
-  query = query.order('id', { ascending: false })
-
-  const response = await query.range(offset, offset + limit - 1)
+  const response = await client.rpc('tenant_applications_page' as never, {
+    p_tenant_id: input.tenantId,
+    p_status: input.status || null,
+    p_query: input.query?.trim() || null,
+    p_sort: input.sort ?? 'recent',
+    p_limit: Math.max(1, input.limit),
+    p_cursor: input.cursor ?? null
+  } as never)
 
   if (response.error) {
-    throw response.error
+    throw toControlledError(response.error)
   }
 
-  const applications = (response.data ?? []) as unknown as TenantApplicationRow[]
-  const totalCount = response.count ?? applications.length
-  const nextOffset = offset + limit < totalCount ? offset + limit : null
+  const snapshot = response.data as unknown as {
+    rows: TenantApplicationRow[]
+    next_cursor: TenantApplicationsCursor | null
+    page: { total_count: number | null }
+  }
 
-  return { applications, totalCount, nextOffset }
+  return {
+    applications: snapshot.rows ?? [],
+    totalCount: snapshot.page?.total_count ?? null,
+    nextCursor: snapshot.next_cursor ?? null
+  }
 }
 
-/** Métricas globales del tenant (total, en entrevista, últimos 7 días) y conteo por estado. */
+/**
+ * Métricas globales del tenant (total, en entrevista, últimos 7 días) y conteo
+ * por estado, resueltas con una sola agregación en vez de siete conteos.
+ */
 export async function countTenantApplications(tenantId: string): Promise<TenantApplicationStats> {
   const client = requireSupabase()
-  const tenantJobs = await getTenantJobPostings(tenantId)
+  const response = await client.rpc('tenant_applications_stats' as never, {
+    p_tenant_id: tenantId
+  } as never)
 
-  if (tenantJobs.length === 0) {
-    return { total: 0, interviewing: 0, recent7d: 0, byStatus: {} }
-  }
-  const tenantJobIds = tenantJobs.map((job) => job.id)
-
-  async function countWhere(refine?: (query: ReturnType<typeof buildBaseCount>) => ReturnType<typeof buildBaseCount>) {
-    let query = buildBaseCount()
-    if (refine) {
-      query = refine(query)
-    }
-    const response = await query
-    if (response.error) {
-      throw response.error
-    }
-    return response.count ?? 0
+  if (response.error) {
+    throw toControlledError(response.error)
   }
 
-  function buildBaseCount() {
-    return client.from('applications').select('id', { count: 'exact', head: true }).in('job_posting_id', tenantJobIds)
+  const stats = response.data as unknown as {
+    total: number
+    recent7d: number
+    interviewing: number
+    by_status: Record<string, number>
   }
 
-  const since = new Date(Date.now() - 7 * 86_400_000).toISOString()
-  const statusesToCount: PublicApplicationStatus[] = ['submitted', 'in_review', 'interviewing', 'hired', 'rejected']
-
-  const [total, recent7d, ...statusCounts] = await Promise.all([
-    countWhere(),
-    countWhere((query) => query.gte('submitted_at', since)),
-    ...statusesToCount.map((status) => countWhere((query) => query.eq('status_public', status)))
-  ])
-
-  const byStatus: Record<string, number> = {}
-  statusesToCount.forEach((status, index) => {
-    byStatus[status] = statusCounts[index]
-  })
-
-  return { total, recent7d, interviewing: byStatus.interviewing ?? 0, byStatus }
+  return {
+    total: stats.total ?? 0,
+    recent7d: stats.recent7d ?? 0,
+    interviewing: stats.interviewing ?? 0,
+    byStatus: stats.by_status ?? {}
+  }
 }
 
 function toCsvCell(value: string | null | undefined) {
