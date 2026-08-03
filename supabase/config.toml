@@ -2,7 +2,11 @@ project_id = "asi_do"
 
 [storage]
 enabled = true
-file_size_limit = "5MiB"
+# Tope global, no por bucket: cada bucket lo ajusta hacia abajo en su migración.
+# Tiene que cubrir al mayor, que es `public-media` con 50 MB (20260626120000);
+# con los 5MiB que decía antes, un push de storage habría dejado el bucket de
+# video sin poder recibir un solo archivo.
+file_size_limit = "50MiB"
 
 [storage.s3_protocol]
 enabled = true
