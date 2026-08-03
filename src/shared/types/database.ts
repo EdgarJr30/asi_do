@@ -4550,33 +4550,16 @@ export type Database = {
       search_candidate_profiles: {
         Args: {
           p_country_code?: string
+          p_cursor?: Json
           p_language?: string
           p_limit?: number
-          p_offset?: number
           p_query?: string
           p_saved_only?: boolean
           p_skill?: string
           p_sort?: string
           p_tenant_id: string
         }
-        Returns: {
-          avatar_path: string
-          candidate_profile_id: string
-          city_name: string
-          completeness_score: number
-          country_code: string
-          desired_role: string
-          display_name: string
-          full_name: string
-          headline: string
-          language_names: string[]
-          latest_role_title: string
-          skill_names: string[]
-          summary: string
-          total_count: number
-          total_experiences: number
-          user_id: string
-        }[]
+        Returns: Json
       }
       set_harness_email_suppression: {
         Args: { p_active: boolean }

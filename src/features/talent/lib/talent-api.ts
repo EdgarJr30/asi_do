@@ -140,25 +140,23 @@ export async function searchCandidateDirectoryPage(
   params: CandidateDirectoryPageParams
 ): Promise<CandidateDirectoryPage> {
   const client = requireSupabase()
-  const response = await (client as typeof client & {
-    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: Error | null }>
-  }).rpc('search_candidate_profiles', {
+  const response = await client.rpc('search_candidate_profiles', {
     p_tenant_id: params.tenantId,
-    p_query: params.query?.trim() || null,
-    p_country_code: params.countryCode?.trim() || null,
-    p_language: params.language?.trim() || null,
-    p_skill: params.skill?.trim() || null,
+    p_query: params.query?.trim() || undefined,
+    p_country_code: params.countryCode?.trim() || undefined,
+    p_language: params.language?.trim() || undefined,
+    p_skill: params.skill?.trim() || undefined,
     p_limit: params.limit,
     p_sort: params.sort ?? 'relevance',
     p_saved_only: params.savedOnly ?? false,
-    p_cursor: params.cursor ?? null
+    p_cursor: params.cursor ?? undefined
   })
 
   if (response.error) {
     throw response.error
   }
 
-  const snapshot = response.data as {
+  const snapshot = response.data as unknown as {
     rows: CandidateDirectoryRow[]
     next_cursor: CandidateDirectoryCursor | null
     page: { total_count: number | null }

@@ -47,10 +47,11 @@ describe('directorio de talento', () => {
     expect(rpcCalls[0].args).toMatchObject({
       p_tenant_id: 'tenant-1',
       p_limit: 24,
-      p_cursor: null,
       p_sort: 'relevance',
       p_saved_only: false
     })
+    // Sin cursor la RPC aplica su valor por defecto: primera página.
+    expect(rpcCalls[0].args.p_cursor).toBeUndefined()
     expect(page.totalCount).toBe(1500)
     expect(page.nextCursor).toEqual(cursor)
     expect(page.rows[0].skill_names).toEqual(['SQL'])
