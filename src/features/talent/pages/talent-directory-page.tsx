@@ -33,6 +33,7 @@ import {
   removeCandidateFromTalentPool,
   saveCandidateToTalentPool,
   searchCandidateDirectoryPage,
+  type CandidateDirectoryCursor,
   type CandidateDirectoryRow,
   type CandidateDirectorySort
 } from '@/features/talent/lib/talent-api'
@@ -116,12 +117,14 @@ export function TalentDirectoryPage() {
     )
   }
 
-  // Paginación real de servidor + scroll infinito: cada página llega vía offset,
-  // no se trae todo de una vez. La key incluye filtros y orden para reiniciar en 0.
+  // Paginación keyset en el servidor + scroll infinito: cada página se pide con
+  // el cursor de la última fila servida, así el recorrido es estable aunque los
+  // perfiles se actualicen mientras se navega. La key incluye filtros y orden
+  // para reiniciar desde la primera página.
   const searchQuery = useInfiniteQuery({
     queryKey: ['talent-directory', tenantId, tab, debouncedQuery, skill, language, countryCode, sort],
     enabled: Boolean(tenantId),
-    initialPageParam: 0,
+    initialPageParam: null as CandidateDirectoryCursor | null,
     queryFn: async ({ pageParam }) =>
       searchCandidateDirectoryPage({
         tenantId: tenantId!,
@@ -132,9 +135,9 @@ export function TalentDirectoryPage() {
         sort,
         savedOnly,
         limit: TALENT_PAGE_SIZE,
-        offset: pageParam
+        cursor: pageParam
       }),
-    getNextPageParam: (lastPage) => lastPage.nextOffset
+    getNextPageParam: (lastPage) => lastPage.nextCursor
   })
 
   // Banco de talento del workspace: una sola lista de ids es la fuente de verdad
@@ -216,6 +219,7 @@ export function TalentDirectoryPage() {
 
   const pages = useMemo(() => searchQuery.data?.pages ?? [], [searchQuery.data])
   const rows = useMemo(() => pages.flatMap((entry) => entry.rows), [pages])
+  // El total filtrado solo viaja en la primera página; las siguientes lo dejan null.
   const totalCount = pages[0]?.totalCount ?? 0
 
   // Scroll infinito: un sentinel al fondo pide la siguiente página al acercarse.

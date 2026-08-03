@@ -2,6 +2,20 @@ import { supabase } from '@/lib/supabase/client'
 
 export type CandidateDirectorySort = 'relevance' | 'score' | 'name' | 'experience'
 
+/**
+ * Posición de la última fila servida. La devuelve el servidor y el cliente la
+ * reenvía tal cual: lleva las claves de los cuatro órdenes posibles, no un
+ * número de página.
+ */
+export type CandidateDirectoryCursor = {
+  id: string
+  score: number
+  updated_at: string
+  name: string | null
+  experiences: number | null
+  saved_at: string | null
+}
+
 export interface CandidateDirectoryPageParams {
   tenantId: string
   query?: string
@@ -12,13 +26,15 @@ export interface CandidateDirectoryPageParams {
   /** Limita la búsqueda al banco de talento del workspace (pestaña "Guardados"). */
   savedOnly?: boolean
   limit: number
-  offset: number
+  /** `null` = primera página; después, el `nextCursor` de la anterior. */
+  cursor?: CandidateDirectoryCursor | null
 }
 
 export interface CandidateDirectoryPage {
   rows: CandidateDirectoryRow[]
-  totalCount: number
-  nextOffset: number | null
+  /** Solo llega en la primera página; la vista conserva el de `pages[0]`. */
+  totalCount: number | null
+  nextCursor: CandidateDirectoryCursor | null
 }
 
 export interface CandidateDirectoryRow {
@@ -112,6 +128,14 @@ function requireSupabase() {
   return supabase
 }
 
+/**
+ * Página del directorio de talento con paginación keyset.
+ *
+ * Antes iba por `offset` sobre un orden que terminaba en campos que empatan
+ * (`completeness_score`, `updated_at`), así que dos páginas consecutivas podían
+ * repetir o saltarse candidatos. El cursor lleva el desempate por id y hace el
+ * recorrido estable, además de no encarecerse con la profundidad del scroll.
+ */
 export async function searchCandidateDirectoryPage(
   params: CandidateDirectoryPageParams
 ): Promise<CandidateDirectoryPage> {
@@ -125,23 +149,25 @@ export async function searchCandidateDirectoryPage(
     p_language: params.language?.trim() || null,
     p_skill: params.skill?.trim() || null,
     p_limit: params.limit,
-    p_offset: params.offset,
     p_sort: params.sort ?? 'relevance',
-    p_saved_only: params.savedOnly ?? false
+    p_saved_only: params.savedOnly ?? false,
+    p_cursor: params.cursor ?? null
   })
 
   if (response.error) {
     throw response.error
   }
 
-  const rows = (response.data ?? []) as Array<CandidateDirectoryRow & { total_count?: number }>
-  const totalCount = rows[0]?.total_count ?? rows.length
-  const loadedCount = params.offset + rows.length
+  const snapshot = response.data as {
+    rows: CandidateDirectoryRow[]
+    next_cursor: CandidateDirectoryCursor | null
+    page: { total_count: number | null }
+  }
 
   return {
-    rows,
-    totalCount,
-    nextOffset: loadedCount < totalCount ? loadedCount : null
+    rows: snapshot.rows ?? [],
+    totalCount: snapshot.page?.total_count ?? null,
+    nextCursor: snapshot.next_cursor ?? null
   }
 }
 
