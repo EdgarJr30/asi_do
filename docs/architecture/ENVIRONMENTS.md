@@ -111,6 +111,8 @@ Para que la activación de staging sea "cambiar entornos y ya", esto conviene re
 - [x] **URLs por entorno separadas** en `.env.development` / `.env.production`.
 - [x] **Replay de migraciones en CI** (`.github/workflows/db-migrations.yml`): garantiza que un proyecto nuevo se puede construir desde cero. Sin esto, crear staging es una apuesta.
 - [x] **Vigilancia de drift** (`.github/workflows/db-drift.yml`): detecta cambios hechos fuera de migraciones, que son justamente los que no se propagan a un entorno nuevo.
+- [ ] **Rotar la `service_role` key antes del corte a producción.** Estuvo escrita en claro en `audit_logs` desde marzo hasta el saneamiento de TASK-260, legible por cualquier portador de `audit_log:read`. El saneamiento la quitó de la base pero **no invalida la llave**, y esa llave **bypassa RLS por completo**. Decisión del propietario (2026-08-02): **no se rota ahora**, porque el acceso a `audit_log:read` estuvo limitado a personas de confianza y no hay indicio de filtración. Queda como paso obligatorio del corte a producción, no como remediación pendiente. Al rotarla hay que resincronizar `.env.local`, el microservicio AZUL y las Edge Functions.
+
 - [ ] **Cero cambios manuales desde el dashboard de Supabase.** Todo por migración. Un `GRANT` o una policy hecha a mano no viaja a staging.
 - [ ] **Despliegue de Edge Functions por CI**, no `supabase functions deploy` desde la laptop.
 - [ ] **Unificar la topología documentada.** `docs/pasarelaDePagos/despliegue-azul.md` describe frontend en Hostinger y AZUL en Railway, mientras el repo tiene `netlify.toml` y el dominio activo es `asi-do.netlify.app`. Debe quedar una sola versión antes de montar staging.
