@@ -278,7 +278,7 @@ export type TenantApplicationsSort = 'recent' | 'oldest' | 'name'
  * reenvía tal cual: es la clave de orden (fecha o nombre) más el `id` como
  * desempate, no un número de página.
  */
-export interface TenantApplicationsCursor {
+export type TenantApplicationsCursor = {
   submitted_at: string
   name: string
   id: string
@@ -365,14 +365,14 @@ export interface TenantApplicationStats {
  */
 export async function listTenantApplicationsPage(input: ListTenantApplicationsPageInput): Promise<TenantApplicationsPage> {
   const client = requireSupabase()
-  const response = await client.rpc('tenant_applications_page' as never, {
+  const response = await client.rpc('tenant_applications_page', {
     p_tenant_id: input.tenantId,
-    p_status: input.status || null,
-    p_query: input.query?.trim() || null,
+    p_status: input.status || undefined,
+    p_query: input.query?.trim() || undefined,
     p_sort: input.sort ?? 'recent',
     p_limit: Math.max(1, input.limit),
-    p_cursor: input.cursor ?? null
-  } as never)
+    p_cursor: input.cursor ?? undefined
+  })
 
   if (response.error) {
     throw toControlledError(response.error)
@@ -397,9 +397,7 @@ export async function listTenantApplicationsPage(input: ListTenantApplicationsPa
  */
 export async function countTenantApplications(tenantId: string): Promise<TenantApplicationStats> {
   const client = requireSupabase()
-  const response = await client.rpc('tenant_applications_stats' as never, {
-    p_tenant_id: tenantId
-  } as never)
+  const response = await client.rpc('tenant_applications_stats', { p_tenant_id: tenantId })
 
   if (response.error) {
     throw toControlledError(response.error)

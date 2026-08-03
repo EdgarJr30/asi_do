@@ -3761,6 +3761,7 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_user_access_log_stats: { Args: never; Returns: Json }
       apply_moderation_action: {
         Args: {
           p_action_type: Database["public"]["Enums"]["moderation_action_type"]
@@ -4635,6 +4636,21 @@ export type Database = {
           p_type: string
         }
         Returns: string
+      }
+      tenant_applications_page: {
+        Args: {
+          p_cursor?: Json
+          p_limit?: number
+          p_query?: string
+          p_sort?: string
+          p_status?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      tenant_applications_stats: {
+        Args: { p_tenant_id: string }
+        Returns: Json
       }
       trigger_email_dispatch: { Args: never; Returns: undefined }
       update_application_resume: {

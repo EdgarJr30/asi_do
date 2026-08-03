@@ -38,7 +38,9 @@ describe('postulaciones del workspace', () => {
 
     expect(rpcCalls).toHaveLength(1)
     expect(rpcCalls[0].fn).toBe('tenant_applications_page')
-    expect(rpcCalls[0].args).toMatchObject({ p_tenant_id: 'tenant-1', p_limit: 12, p_cursor: null, p_sort: 'recent' })
+    expect(rpcCalls[0].args).toMatchObject({ p_tenant_id: 'tenant-1', p_limit: 12, p_sort: 'recent' })
+    // Sin cursor la RPC aplica su valor por defecto: primera página.
+    expect(rpcCalls[0].args.p_cursor).toBeUndefined()
     expect(page.totalCount).toBe(2500)
     expect(page.nextCursor).toEqual(cursor)
     expect(page.applications).toHaveLength(1)
