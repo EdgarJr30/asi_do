@@ -37,7 +37,12 @@ export interface UserAccessLogPage {
 }
 
 export interface UserAccessLogSnapshot {
-  stats: UserAccessLogStats
+  /**
+   * Solo viene en la primera página (`offset = 0`). En las siguientes llega
+   * `null` para no recalcular las métricas globales en cada scroll: la vista
+   * conserva las de `pages[0]`.
+   */
+  stats: UserAccessLogStats | null
   page: UserAccessLogPage
   rows: UserAccessLogRecord[]
 }
