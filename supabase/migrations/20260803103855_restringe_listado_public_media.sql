@@ -1,0 +1,21 @@
+-- Retira el listado anónimo del bucket `public-media`.
+--
+-- La policy `public_media_read` (migración 20260626120000) daba SELECT sobre
+-- `storage.objects` a `anon` y `authenticated` con la única condición de que la
+-- fila fuera del bucket. Eso no habilita la lectura del archivo —de eso se
+-- encarga el bucket público— sino la **enumeración** del contenido: cualquiera
+-- con la anon key podía pedir `/storage/v1/object/list/public-media` y obtener
+-- el inventario completo, incluidos archivos que nadie ha enlazado todavía.
+--
+-- Nadie lista este bucket. La aplicación construye rutas fijas con
+-- `publicStorageUrl()` y las subidas ocurren fuera de la app, con `service_role`,
+-- que no pasa por RLS. El listado era superficie sin consumidor.
+--
+-- La lectura pública no depende de esta policy: para un bucket con `public = true`
+-- el endpoint `/object/public/` sirve el archivo sin evaluar RLS. Verificado
+-- contra el proyecto remoto sobre `avatars` y `company-assets`, que son públicos
+-- y no tienen ninguna policy de SELECT: ambos devuelven 200 por URL pública.
+--
+-- Se elimina en vez de acotarse por prefijo porque un prefijo permitido seguiría
+-- siendo un listado, y no hay ninguna ruta que necesite enumerarse.
+drop policy if exists "public_media_read" on storage.objects;
