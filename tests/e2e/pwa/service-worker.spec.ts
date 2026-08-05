@@ -82,6 +82,23 @@ test.describe('service worker', () => {
     await expect(page.locator('#root')).toBeAttached()
     expect(await page.evaluate(() => navigator.onLine)).toBe(false)
 
+    // Y responde **estilado**. Este aserto importa desde que la hoja dejó de ir
+    // en línea dentro de `index.html`: ahora la sirve el handler de destinos
+    // estáticos del service worker desde su caché en runtime. Si esa parte se
+    // rompe, la página offline sigue existiendo pero se ve sin estilos, y la
+    // prueba anterior —que solo miraba que `#root` estuviera— no lo notaría.
+    const styled = await page.evaluate(() => {
+      const body = getComputedStyle(document.body)
+
+      return {
+        fontFamily: body.fontFamily,
+        stylesheets: document.styleSheets.length
+      }
+    })
+
+    expect(styled.fontFamily).toContain('Manrope')
+    expect(styled.stylesheets).toBeGreaterThan(1)
+
     await context.setOffline(false)
   })
 

@@ -33,9 +33,49 @@ function buildNotificationUrl(data = {}) {
   }
 }
 
+/**
+ * Precachea las hojas de estilo que referencia el HTML.
+ *
+ * No pueden listarse en `APP_SHELL_ASSETS` porque el build les pone un hash en
+ * el nombre y este archivo es estático: no conoce el hash. Se descubren leyendo
+ * el propio `index.html`.
+ *
+ * Sin esto, una carga en frío sin red sirve el shell **sin estilos**: el HTML
+ * viene del precache, pero la petición de la hoja no encuentra nada en caché
+ * —solo se guarda cuando el service worker ya controla la página, y en la
+ * primera visita todavía no lo hacía— y la red no está. Antes no pasaba porque
+ * el CSS viajaba en línea dentro del HTML.
+ *
+ * Es best-effort: si algo falla, el resto del precache ya se aplicó.
+ */
+async function precacheReferencedStylesheets(cache) {
+  try {
+    const response = await fetch('/index.html', { cache: 'no-cache' })
+
+    if (!response.ok) {
+      return
+    }
+
+    const html = await response.text()
+    const hrefs = [...html.matchAll(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/g)].map(
+      (match) => match[1]
+    )
+
+    await Promise.all(hrefs.map((href) => cache.add(href).catch(() => {})))
+  } catch {
+    // Sin red durante la instalación no hay nada que precachear.
+  }
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(APP_SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL_ASSETS)).then(() => self.skipWaiting())
+    (async () => {
+      const cache = await caches.open(APP_SHELL_CACHE)
+
+      await cache.addAll(APP_SHELL_ASSETS)
+      await precacheReferencedStylesheets(cache)
+      await self.skipWaiting()
+    })()
   )
 })
 

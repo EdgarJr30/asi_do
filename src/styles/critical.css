@@ -1,0 +1,38 @@
+/*
+ * CSS crítico: lo único que se inyecta en línea dentro de `index.html`.
+ *
+ * Por qué existe. El resto de la hoja de estilos viaja como archivo con hash en
+ * `/assets/`, que `netlify.toml` cachea un año como `immutable`. `index.html`, en
+ * cambio, tiene que revalidarse en cada visita —es la entrada de la SPA; si se
+ * cacheara, nadie recibiría un despliegue nuevo—. Todo lo que se inline aquí se
+ * vuelve a descargar **siempre**, así que este archivo tiene que quedarse
+ * pequeño: son bytes que se pagan en cada carga, no una sola vez.
+ *
+ * Qué entra. Solo lo que pinta antes de que React monte. El shell es un
+ * `<div id="root">` vacío, así que lo único visible es el lienzo: su color de
+ * fondo y el esquema de color del navegador (que decide el color de las barras
+ * de scroll y de los controles nativos). Sin esto, un usuario en tema oscuro ve
+ * un destello blanco entre el primer pintado y la llegada de la hoja completa.
+ *
+ * Qué NO entra. Tipografías, componentes, utilidades: nada de eso tiene qué
+ * pintar todavía y su sitio es el archivo cacheable.
+ *
+ * Los valores están duplicados a propósito desde `index.css` —no hay forma de
+ * compartir custom properties antes de que la hoja principal cargue—, y
+ * `tests/unit/critical-css.test.ts` falla si divergen.
+ */
+
+:root {
+  color-scheme: light;
+  --app-canvas: #ffffff;
+}
+
+.dark {
+  color-scheme: dark;
+  --app-canvas: #091127;
+}
+
+html,
+body {
+  background-color: var(--app-canvas);
+}

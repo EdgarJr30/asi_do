@@ -72,33 +72,40 @@ function requireProductionEnv(): PluginOption {
   }
 }
 
-// Inlines the build CSS bundle into <head> as a <style> tag so it stops being a
-// render-blocking network request (improves FCP/LCP). Build-only.
-function inlineCss(): PluginOption {
+const criticalCssPath = fileURLToPath(new URL('./src/styles/critical.css', import.meta.url))
+
+/**
+ * Inyecta en línea **solo** el CSS crítico y deja el resto como archivo con hash.
+ *
+ * Antes se inyectaba la hoja entera. La justificación era evitar una petición
+ * bloqueante, pero aquí no compraba nada: el shell es un `<div id="root">` vacío,
+ * así que no hay contenido que pintar hasta que React monta, y para eso hace
+ * falta el JS de todas formas. Lo que sí costaba era medible: `index.html` tiene
+ * que revalidarse en cada visita —es la entrada de la SPA—, así que esos 33 KB
+ * gzip de CSS se volvían a descargar **siempre**, incluso cuando no habían
+ * cambiado. Como archivo con hash en `/assets/`, `netlify.toml` los cachea un año
+ * como `immutable`.
+ *
+ * El `<link>` se deja bloqueante a propósito: es lo que evita el FOUC cuando
+ * React monta, y no retrasa nada porque la hoja pesa mucho menos que el JS y
+ * viaja en paralelo con él.
+ */
+function inlineCriticalCss(): PluginOption {
   return {
-    name: 'asi-inline-css',
+    name: 'asi-inline-critical-css',
     apply: 'build',
     enforce: 'post',
-    transformIndexHtml(html, ctx) {
-      if (!ctx.bundle) return html
+    transformIndexHtml(html) {
+      const critical = readFileSync(criticalCssPath, 'utf8')
+        // Los comentarios explican el porqué a quien lee el fuente; en el HTML
+        // servido solo son peso.
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
 
-      return html.replace(
-        /<link rel="stylesheet"[^>]*href="\/([^"]+\.css)"[^>]*>/g,
-        (match, fileName: string) => {
-          const asset = ctx.bundle?.[fileName]
-          if (!asset || asset.type !== 'asset') return match
-
-          const css =
-            typeof asset.source === 'string'
-              ? asset.source
-              : Buffer.from(asset.source).toString('utf8')
-
-          // Drop the standalone CSS file from the output; it's now inlined.
-          delete ctx.bundle![fileName]
-
-          return `<style>${css}</style>`
-        }
-      )
+      // Va antes del `<link>` para que el navegador tenga el color del lienzo
+      // aunque la hoja principal aún no haya llegado.
+      return html.replace('</head>', `  <style>${critical}</style>\n  </head>`)
     }
   }
 }
@@ -132,7 +139,7 @@ function servePresentationIndex(): PluginOption {
 }
 
 export default defineConfig({
-  plugins: [requireProductionEnv(), servePresentationIndex(), react(), tailwindcss(), inlineCss()],
+  plugins: [requireProductionEnv(), servePresentationIndex(), react(), tailwindcss(), inlineCriticalCss()],
   define: {
     __APP_RELEASE__: JSON.stringify(resolveReleaseCommit()),
     __APP_VERSION__: JSON.stringify(packageVersion),
