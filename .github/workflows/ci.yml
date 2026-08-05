@@ -94,7 +94,7 @@ jobs:
         run: npm run verify
 
   edge-functions:
-    name: Lint and type-check Edge Functions
+    name: Lint and test Edge Functions
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # `eslint` excluye `supabase/functions` porque ese codigo corre en Deno, no en
@@ -112,6 +112,13 @@ jobs:
 
       - name: Lint Edge Functions
         run: deno lint supabase/functions
+
+      # Cubren la guarda fail-closed del arnes —lo unico que impide sembrar
+      # decenas de miles de filas sinteticas contra produccion— y las metricas
+      # que sustentan las mediciones de rendimiento, donde un percentil mal
+      # calculado no falla de forma visible: da un numero creible y equivocado.
+      - name: Run Edge Function tests
+        run: deno test supabase/functions
 
       # `deno check` queda fuera a proposito, por ahora. Reporta 15 errores, y se
       # comprobo uno por uno que **ninguno es un defecto de runtime**: son
