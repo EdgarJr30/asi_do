@@ -31,8 +31,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # El `build` que cierra `verify` corre en modo produccion, asi que pasa por
+      # `validateProductionEnv` y aborta si falta una variable critica. En CI no
+      # hay `.env.local` —esta en `.gitignore`— y solo llegan las URLs de
+      # `.env.production`, asi que sin esto el build nunca podia terminar aqui.
+      #
+      # Los valores son ficticios a proposito: lo que CI comprueba es que el
+      # proyecto compila y empaqueta, no la configuracion del despliegue. Esa la
+      # sigue guardando el mismo `validateProductionEnv` en el build real de
+      # Netlify, que es el unico que se publica y el unico que ve los valores
+      # verdaderos.
       - name: Run repository verification
         run: npm run verify
+        env:
+          VITE_SUPABASE_URL: https://proyecto-de-ci.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_de_ci
+          VITE_AZUL_PAYMENTS_URL: https://pagos-de-ci.invalid
 
       # El fallo intermitente de la suite aparecio dos veces dentro de `verify` y
       # las dos veces se perdio el nombre del test, porque el stdout se lo llevo
