@@ -17,5 +17,11 @@
     "strict": true,
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "playwright.config.ts", "eslint.config.js", "scripts/**/*.ts"]
+  "include": [
+    "vite.config.ts",
+    "playwright.config.ts",
+    "playwright.pwa.config.ts",
+    "eslint.config.js",
+    "scripts/**/*.ts"
+  ]
 }
