@@ -18,6 +18,7 @@ import {
 
 import { BrandMark } from '@/components/ui/app-brand';
 import { cn } from '@/lib/utils/cn';
+import { prefetchRoute } from '@/lib/navigation/route-prefetch';
 
 export interface AppNavItem {
   title: string;
@@ -140,6 +141,8 @@ function WorkspaceSidebarContent({
                         data-active={isActive ? 'true' : 'false'}
                         type="button"
                         onClick={() => void onNavigate(item.href)}
+                        onFocus={() => prefetchRoute(item.href)}
+                        onMouseEnter={() => prefetchRoute(item.href)}
                       >
                         <Icon
                           className={cn(
@@ -316,6 +319,8 @@ export function AppSidebarNav({
               data-active={isActive ? 'true' : 'false'}
               type="button"
               onClick={() => void onNavigate(item.href)}
+              onFocus={() => prefetchRoute(item.href)}
+              onMouseEnter={() => prefetchRoute(item.href)}
             >
               <span className="mt-0.5 rounded-card bg-(--app-surface) p-2 text-current shadow-sm">
                 <Icon className="h-4 w-4" />
@@ -388,6 +393,8 @@ export function AppBottomNav({
               data-active={isActive ? 'true' : 'false'}
               type="button"
               onClick={() => void onNavigate(item.href)}
+              onFocus={() => prefetchRoute(item.href)}
+              onMouseEnter={() => prefetchRoute(item.href)}
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="w-full truncate text-center">{item.title}</span>
