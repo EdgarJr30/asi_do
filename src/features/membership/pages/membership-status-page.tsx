@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
@@ -1253,6 +1253,7 @@ function NeedsMoreInfoResponse({
   onResponded: () => void
 }) {
   const [note, setNote] = useState('')
+  const responseFieldId = useId()
 
   const respondMutation = useMutation({
     mutationFn: async () => respondMembershipApplication({ applicationId, responseNote: note }),
@@ -1271,8 +1272,11 @@ function NeedsMoreInfoResponse({
         </div>
       ) : null}
 
-      <label className="text-sm font-medium text-(--app-text)">Tu respuesta</label>
+      <label htmlFor={responseFieldId} className="text-sm font-medium text-(--app-text)">
+        Tu respuesta
+      </label>
       <Textarea
+        id={responseFieldId}
         value={note}
         onChange={(event) => setNote(event.target.value)}
         disabled={respondMutation.isPending}

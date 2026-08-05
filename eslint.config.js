@@ -1,6 +1,7 @@
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
+import jsxA11y from 'eslint-plugin-jsx-a11y'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
@@ -281,11 +282,26 @@ export default tseslint.config(
     },
     plugins: {
       canonicalTailwind: canonicalTailwindPlugin,
+      'jsx-a11y': jsxA11y,
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // Accesibilidad: el conjunto `recommended` del plugin. No cubre contraste
+      // ni orden de foco —eso pide Axe sobre la pagina renderizada— pero si
+      // atrapa lo estatico: alt ausente, roles invalidos, controles sin nombre
+      // accesible, handlers de click sobre elementos no interactivos.
+      ...jsxA11y.flatConfigs.recommended.rules,
+      // El repo asocia label y control **envolviendo** el control con el label,
+      // que es asociacion implicita valida y no necesita `htmlFor`. La regla no
+      // ve a traves de los componentes propios del sistema de diseno, asi que
+      // sin esta lista marcaba 92 falsos positivos. Un control nuevo que se use
+      // dentro de un label debe anadirse aqui.
+      'jsx-a11y/label-has-associated-control': [
+        'error',
+        { controlComponents: ['Input', 'Textarea', 'Select', 'CountryCodeSelect'] }
+      ],
       'canonicalTailwind/canonical-utility-syntax': 'error',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }]
     }

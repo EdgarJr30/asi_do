@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -123,6 +123,7 @@ export function PastorMembershipQueuePage() {
 function QueueCard({ item, onChanged }: { item: PastorQueueItem; onChanged: () => void }) {
   const { application, payment } = item
   const [reviewNotes, setReviewNotes] = useState('')
+  const reviewNotesFieldId = useId()
 
   const reviewMutation = useMutation({
     mutationFn: async (decision: MembershipReviewDecision) =>
@@ -190,8 +191,11 @@ function QueueCard({ item, onChanged }: { item: PastorQueueItem; onChanged: () =
         </div>
 
         <div>
-          <label className="text-sm font-medium text-(--app-text)">Notas de revisión (opcional)</label>
+          <label htmlFor={reviewNotesFieldId} className="text-sm font-medium text-(--app-text)">
+            Notas de revisión (opcional)
+          </label>
           <Textarea
+            id={reviewNotesFieldId}
             value={reviewNotes}
             onChange={(event) => setReviewNotes(event.target.value)}
             disabled={isBusy}

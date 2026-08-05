@@ -7,6 +7,7 @@ import { BrandLockup } from '@/components/ui/app-brand'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { AuthHeroPanel } from '@/features/auth/components/auth-hero-panel'
+import { MAIN_CONTENT_ID, SkipToContent } from '@/components/ui/skip-to-content'
 
 export function AuthShell() {
   const navigate = useNavigate()
@@ -17,9 +18,10 @@ export function AuthShell() {
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,color-mix(in_srgb,var(--app-canvas)_88%,white)_0%,var(--app-canvas)_100%)]">
+      <SkipToContent />
       <RouteScrollManager />
       <div className="lg:grid lg:min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.96fr)] xl:grid-cols-[minmax(0,1fr)_minmax(30rem,0.94fr)]">
-        <main className="flex min-h-screen flex-col px-5 py-5 sm:px-8 sm:py-8 lg:px-12 lg:py-10 xl:px-14">
+        <main id={MAIN_CONTENT_ID} className="flex min-h-screen flex-col px-5 py-5 sm:px-8 sm:py-8 lg:px-12 lg:py-10 xl:px-14">
           <div className="flex items-start justify-between gap-4">
             <button
               className="rounded-card-lg p-1 transition hover:opacity-90"

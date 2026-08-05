@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Banknote, CheckCircle2, Infinity as InfinityIcon, Power, Search, ShieldCheck, Sparkles, UserPlus, X } from 'lucide-react'
@@ -196,6 +196,7 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
   const { application, payment, member } = row
   const [notes, setNotes] = useState('')
   const [notesOpen, setNotesOpen] = useState(false)
+  const notesFieldId = useId()
 
   const isActivated = member?.asi_membership_status === 'active'
   const appOpen = ['submitted', 'under_review', 'needs_more_info'].includes(application.status)
@@ -300,8 +301,11 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
 
         {notesOpen ? (
           <div>
-            <label className="text-sm font-medium text-(--app-text)">Notas (se adjuntan a la acción)</label>
+            <label htmlFor={notesFieldId} className="text-sm font-medium text-(--app-text)">
+              Notas (se adjuntan a la acción)
+            </label>
             <Textarea
+              id={notesFieldId}
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               disabled={busy}
@@ -379,6 +383,7 @@ function ManualAccessPanel() {
   const [selected, setSelected] = useState<ManualAccessUser | null>(null)
   const [months, setMonths] = useState('12')
   const [indefinite, setIndefinite] = useState(false)
+  const monthsFieldId = useId()
   const [reason, setReason] = useState('')
   const debouncedSearch = useDebouncedValue(search.trim())
 
@@ -517,8 +522,11 @@ function ManualAccessPanel() {
                     {isSelected && !active ? (
                       <div className="mt-2.5 space-y-2 border-t border-(--app-border) pt-2.5">
                         <div className="flex flex-wrap items-center gap-2">
-                          <label className="text-[0.8rem] text-(--app-text-muted)">Vigencia</label>
+                          <label htmlFor={monthsFieldId} className="text-[0.8rem] text-(--app-text-muted)">
+                            Vigencia
+                          </label>
                           <Input
+                            id={monthsFieldId}
                             type="number"
                             min={1}
                             value={indefinite ? '' : months}

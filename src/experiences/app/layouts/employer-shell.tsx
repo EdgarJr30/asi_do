@@ -53,6 +53,7 @@ import { PLATFORM_REGISTRATION_LOCKED, PLATFORM_REGISTRATION_LOCKED_MESSAGE } fr
 import { adminNavigationItems, candidateNavigationItems, employerNavigationItems } from '@/shared/constants/navigation'
 import type { NavigationItem } from '@/shared/types/navigation'
 import { UserAvatar } from '@/shared/ui/user-avatar'
+import { MAIN_CONTENT_ID, SkipToContent } from '@/components/ui/skip-to-content'
 
 const WORKSPACE_NOTIFICATION_QUERY_KEY = ['workspace-shell', 'notifications'] as const
 const WORKSPACE_SIDEBAR_COLLAPSED_STORAGE_KEY = 'asi:workspace-sidebar-collapsed:v1'
@@ -1451,6 +1452,7 @@ export function PlatformAppShell({
 
   return (
     <div className="tm-shell min-h-screen overflow-x-clip bg-(--app-platform-canvas)" style={shellLayoutStyle}>
+      <SkipToContent />
       <RouteScrollManager />
 
       <aside
@@ -1720,6 +1722,7 @@ export function PlatformAppShell({
         </header>
 
         <main
+          id={MAIN_CONTENT_ID}
           className="min-h-[calc(100svh-4.5rem)] min-w-0 bg-(--app-platform-canvas) pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8 lg:pb-8"
         >
           <div className="min-w-0 px-4 sm:px-6 lg:px-8">{fallbackContent ?? <Outlet />}</div>

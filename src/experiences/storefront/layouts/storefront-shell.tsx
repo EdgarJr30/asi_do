@@ -13,6 +13,7 @@ import {
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils/cn';
 import { PLATFORM_REGISTRATION_LOCKED } from '@/shared/config/launch-access';
+import { MAIN_CONTENT_ID, SkipToContent } from '@/components/ui/skip-to-content';
 
 const SHOW_PRICING_SECTION = false;
 
@@ -118,6 +119,7 @@ export function StorefrontShell() {
 
   return (
     <div className="tm-shell overflow-x-clip">
+      <SkipToContent />
       <RouteScrollManager />
 
       {/* Cabecera reutiliza el diseño institucional; el token-provider
@@ -350,6 +352,7 @@ export function StorefrontShell() {
       </div>
 
       <main
+        id={MAIN_CONTENT_ID}
         className={
           isLanding
             ? 'min-w-0 pb-0'

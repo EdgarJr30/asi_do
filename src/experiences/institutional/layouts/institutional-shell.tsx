@@ -9,6 +9,7 @@ import { surfacePaths } from '@/app/router/surface-paths';
 import { InstitutionalFooter } from '@/experiences/institutional/components/institutional-footer';
 import { institutionalNavigation } from '@/experiences/institutional/content/site-content';
 import { cn } from '@/lib/utils/cn';
+import { MAIN_CONTENT_ID, SkipToContent } from '@/components/ui/skip-to-content';
 
 const institutionalPrimaryNavigation = [
   { label: 'Contáctanos', to: surfacePaths.institutional.contactUs },
@@ -96,6 +97,7 @@ export function InstitutionalShell() {
 
   return (
     <div className="asi-site min-h-screen overflow-x-clip">
+      <SkipToContent />
       <RouteScrollManager />
 
       <motion.header
@@ -301,7 +303,7 @@ export function InstitutionalShell() {
         ) : null}
       </AnimatePresence>
 
-      <main className="min-w-0 pt-20 sm:pt-[6.75rem] lg:pt-[6.75rem]">
+      <main id={MAIN_CONTENT_ID} className="min-w-0 pt-20 sm:pt-[6.75rem] lg:pt-[6.75rem]">
         <Outlet />
       </main>
 

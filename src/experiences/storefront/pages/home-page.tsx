@@ -1205,6 +1205,12 @@ export function HomePage() {
                         </p>
                       </div>
 
+                      {/* `role="list"` no es redundante aqui: el preflight de
+                          Tailwind quita `list-style`, y Safari con VoiceOver
+                          descarta la semantica de lista cuando eso pasa. El rol
+                          explicito es el workaround conocido, asi que la regla
+                          se silencia en vez de "arreglar" la accesibilidad. */}
+                      {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
                       <ul
                         className={cn(
                           'mt-8 space-y-3 border-t pt-6 text-sm leading-6',

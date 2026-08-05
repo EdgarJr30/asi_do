@@ -22,6 +22,9 @@ export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElemen
 }
 
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
+  // La regla no puede probar estaticamente que un primitivo generico reciba
+  // children; el contenido lo pone siempre quien lo usa.
+  // eslint-disable-next-line jsx-a11y/heading-has-content
   return <h3 className={cn('text-[0.95rem] font-semibold tracking-tight text-(--app-text) sm:text-base', className)} {...props} />
 }
 

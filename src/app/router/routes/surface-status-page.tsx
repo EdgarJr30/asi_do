@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { type FormEvent, useId, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { motion, useReducedMotion } from 'motion/react'
@@ -175,6 +175,7 @@ export function SurfaceStatusPage({
   const content = getSurfaceStatusContent(surface, kind)
   const isNotFound = kind === 'not-found'
   const [searchTerm, setSearchTerm] = useState('')
+  const searchFieldId = useId()
 
   function handleSearch(event: FormEvent) {
     event.preventDefault()
@@ -208,10 +209,13 @@ export function SurfaceStatusPage({
 
           {isNotFound ? (
             <form onSubmit={handleSearch} className="space-y-2">
-              <label className="text-[0.82rem] font-medium text-(--app-text-muted)">¿Qué estás buscando?</label>
+              <label htmlFor={searchFieldId} className="text-[0.82rem] font-medium text-(--app-text-muted)">
+                ¿Qué estás buscando?
+              </label>
               <div className="flex items-center gap-2.5 rounded-card border border-(--app-border) bg-(--app-surface) px-3.5 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-(--app-ring)">
                 <Search aria-hidden="true" className="size-4 text-(--app-text-subtle)" />
                 <input
+                  id={searchFieldId}
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                   placeholder="Buscar personas, proyectos, vacantes..."
