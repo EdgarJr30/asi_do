@@ -13,6 +13,7 @@ supabase/.temp/
 tmp/
 test-results/
 playwright-report/
+reports/
 
 # Design source assets (no versionar imágenes pesadas de diseño)
 rediseno/

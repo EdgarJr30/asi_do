@@ -28,6 +28,7 @@ This file is intentionally compact. Keep the root guidance lightweight and use `
 8. User corrections become durable rules.
 9. Every repository change must end with a git commit created in the same task.
 10. Prefer the smallest correct MVP-safe implementation.
+11. Behavioral changes follow Red-Green-Refactor and the risk-based test contract in `docs/governance/TDD_PLAYBOOK.md`.
 
 ## Context-efficiency protocol
 Use the minimum context needed to complete the task well.
@@ -122,6 +123,7 @@ Do not introduce casual synonyms.
 A meaningful feature is not done unless:
 - business logic works
 - permissions and tenant isolation are preserved
+- a relevant automated test was observed failing before the implementation and passing after it
 - loading, error, and empty states exist where applicable
 - tests or explicit verification were added when risk justifies them
 - affected docs were reconciled

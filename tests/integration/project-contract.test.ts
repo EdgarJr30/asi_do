@@ -9,6 +9,7 @@ import {
   requiredDirectories,
   requiredPwaFiles,
   requiredRuleFiles,
+  requiredTestingFiles,
   requiredWorkflowFiles,
   requiredVersioningFiles
 } from '@/shared/contracts/project-contract'
@@ -41,6 +42,24 @@ describe('project contract', () => {
     for (const file of requiredVersioningFiles) {
       expect(existsSync(resolve(repoRoot, file)), `${file} should exist`).toBe(true)
     }
+  })
+
+  it('keeps the test-first quality contract executable', () => {
+    for (const file of requiredTestingFiles) {
+      expect(existsSync(resolve(repoRoot, file)), `${file} should exist`).toBe(true)
+    }
+
+    const packageJson = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')) as {
+      scripts?: Record<string, string>
+    }
+    const strykerConfig = JSON.parse(readFileSync(resolve(repoRoot, 'stryker.config.json'), 'utf8')) as {
+      thresholds?: { break?: number }
+    }
+
+    expect(packageJson.scripts?.['test:acceptance']).toContain('cucumber-js')
+    expect(packageJson.scripts?.['test:mutation']).toBe('stryker run')
+    expect(packageJson.scripts?.verify).toContain('npm run test:acceptance')
+    expect(strykerConfig.thresholds?.break).toBe(100)
   })
 
   it('keeps the CI/CD workflow files in place', () => {

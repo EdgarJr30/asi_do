@@ -14,6 +14,7 @@ Create a clean base for scalable development.
 - token/theme setup
 - documentation governance baseline
 - testing rules baseline
+- test-first delivery baseline with executable acceptance specifications and mutation testing
 - security rules baseline
 - core docs in repo
 - lint/format/typecheck/test baseline
@@ -23,6 +24,7 @@ Create a clean base for scalable development.
 - PWA shell exists
 - docs are present
 - CI-quality local checks run
+- unit, integration, acceptance, coverage, and critical mutation gates are reproducible from repository commands
 
 ---
 

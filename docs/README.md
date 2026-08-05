@@ -43,6 +43,7 @@ This folder contains the canonical Markdown documentation for the repository.
 - `governance/CODING_RULES.md`
 - `governance/DOCUMENTATION_RULES.md`
 - `governance/TESTING_RULES.md`
+- `governance/TDD_PLAYBOOK.md`
 - `governance/SECURITY_RULES.md`
 - `governance/REGRESSION_RULES.md`
 - `governance/VERSIONING_RULES.md`

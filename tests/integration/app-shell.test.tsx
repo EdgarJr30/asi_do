@@ -161,7 +161,12 @@ describe('route shells', () => {
 
     renderPublicShell()
 
-    expect(await screen.findByRole('link', { name: 'Abrir plataforma' })).toBeInTheDocument()
+    // Con cobertura, la hidratación instrumentada puede superar el timeout
+    // genérico de Testing Library. Esperamos la decisión final de permisos sin
+    // debilitar el aserto ni introducir sleeps arbitrarios.
+    expect(
+      await screen.findByRole('link', { name: 'Abrir plataforma' }, { timeout: 5_000 })
+    ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Crear cuenta' })).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Abrir menú' }))

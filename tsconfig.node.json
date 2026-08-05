@@ -19,6 +19,7 @@
   },
   "include": [
     "vite.config.ts",
+    "vitest.mutation.config.ts",
     "playwright.config.ts",
     "playwright.pwa.config.ts",
     "eslint.config.js",

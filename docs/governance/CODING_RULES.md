@@ -70,11 +70,14 @@
 ---
 
 ## 7. Testing rules
+- start every behavioral change with a failing test that describes the intended outcome
+- follow Red-Green-Refactor; do not write broader production code than the current failing example requires
 - add tests for critical domain helpers
 - test RBAC-sensitive behavior
 - test tenant isolation-sensitive behavior
 - do not ship core workflow changes without at least minimal verification
 - keep `npm run test`, `npm run test:contract`, and related quality commands meaningful
+- use `docs/governance/TDD_PLAYBOOK.md` for test-layer selection, Gherkin, coverage, mutation testing, and required evidence
 
 ---
 

@@ -53,6 +53,15 @@ export const requiredPwaFiles = ['public/manifest.webmanifest', 'public/sw.js'] 
 
 export const requiredVersioningFiles = ['.changeset/config.json', 'scripts/release-plan.mjs'] as const
 
+export const requiredTestingFiles = [
+  '.github/PULL_REQUEST_TEMPLATE.md',
+  'docs/governance/TDD_PLAYBOOK.md',
+  'stryker.config.json',
+  'vitest.mutation.config.ts',
+  'tests/acceptance/permission-access.feature',
+  'tests/acceptance/permission-access.steps.ts'
+] as const
+
 export const requiredWorkflowFiles = ['.github/workflows/ci.yml'] as const
 
 export const requiredDeploymentFiles = ['netlify.toml'] as const

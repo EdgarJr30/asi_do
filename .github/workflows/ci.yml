@@ -93,6 +93,37 @@ jobs:
       - name: Run service verification
         run: npm run verify
 
+  mutation-testing:
+    name: Mutation testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Cobertura solo prueba que una linea se ejecuto. Stryker altera las
+      # decisiones RBAC criticas y exige que los asserts detecten el defecto.
+      - name: Enforce mutation score
+        run: npm run test:mutation
+
+      - name: Upload mutation report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report-${{ github.run_id }}
+          path: reports/mutation/
+          if-no-files-found: warn
+          retention-days: 14
+
   edge-functions:
     name: Lint and test Edge Functions
     runs-on: ubuntu-latest

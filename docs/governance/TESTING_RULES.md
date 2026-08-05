@@ -8,14 +8,16 @@ Testing is a required safety layer, not a polish step.
 ---
 
 ## 2. Testing philosophy
-1. Critical business flows must be verifiable locally.
-2. RBAC, tenant isolation, and security-sensitive logic require explicit tests.
-3. The project must include contract tests that validate the existence of required rule files and key architectural folders.
-4. When a bug or correction reveals risk, add a regression test whenever practical.
-5. Fast feedback matters: lint, typecheck, unit, and integration checks must be runnable by default from the repository root.
-6. CI must mirror the same primary verification command used locally so quality gates do not drift.
-7. Launch-readiness gaps must add either browser smoke coverage in `tests/e2e/` or a documented blocker in the same task.
-8. WebKit-sensitive motion surfaces must be exercised in the browser family where they regress, not inferred only from Chromium.
+1. Behavioral work follows Red-Green-Refactor as defined in `TDD_PLAYBOOK.md`.
+2. Critical business flows must be verifiable locally.
+3. RBAC, tenant isolation, and security-sensitive logic require explicit approval and denial tests.
+4. The project must include contract tests that validate required rule files, quality configuration, and key architectural folders.
+5. When a bug or correction reveals risk, reproduce it with a failing test before implementing the fix whenever execution is possible.
+6. Fast feedback matters: lint, typecheck, unit, integration, and acceptance checks must be runnable from the repository root.
+7. CI must mirror the same primary verification command used locally so quality gates do not drift.
+8. Coverage is a non-decreasing ratchet; mutation testing proves the strength of assertions in critical pure logic.
+9. Launch-readiness gaps must add either browser smoke coverage in `tests/e2e/` or a documented blocker in the same task.
+10. WebKit-sensitive motion surfaces must be exercised in the browser family where they regress, not inferred only from Chromium.
 
 ---
 
@@ -49,6 +51,18 @@ Test the repo contract itself:
 - required PWA baseline files exist
 - removed vulnerable dependency chains are not reintroduced
 - critical rule changes are guarded
+
+### Executable acceptance specifications
+Business-readable critical rules live as Spanish Gherkin in `tests/acceptance/` and execute through Cucumber.
+Use acceptance specifications for lifecycle, authorization, tenant isolation, billing, moderation, and destructive-action rules that product, QA, or operations must be able to review without reading implementation code.
+Keep steps domain-focused and observable; implementation details belong in thin step definitions.
+
+### Coverage and mutation tests
+- `npm run test:coverage` enforces the repository's non-decreasing coverage baseline.
+- `npm run test:mutation` uses Stryker to alter critical pure logic and verifies that the test suite detects every configured mutation.
+- The initial permission-guard mutation scope has a 100% breaking threshold.
+- Any task that changes critical pure logic outside the configured scope must add that module to the permanent mutation set or document why mutation is not technically meaningful there.
+- A surviving mutant blocks completion unless it is proven equivalent and documented at the smallest possible scope.
 
 ### E2E smoke tests
 E2E coverage becomes mandatory as soon as auth, job application, and ATS flows are interactive.
@@ -120,6 +134,8 @@ src/features/*/tests/   feature-local tests when co-location helps
 9. Test names should describe business intent, not implementation trivia.
 10. The `main` branch must stay gated by a successful CI quality run even when preview and production deploys are handled by a hosting platform.
 11. Manual release checks must stay codified in `docs/checklists/MVP_RELEASE_CHECKLIST.md`.
+12. Pull requests must record the observed Red failure, Green result, refactor status, and risk-specific gauntlet using `.github/PULL_REQUEST_TEMPLATE.md`.
+13. Skipped tests and unavailable environments must be reported as unverified, never as passing.
 
 ---
 
@@ -131,6 +147,9 @@ The repository must keep these commands meaningful:
 - `npm run test:unit`
 - `npm run test:integration`
 - `npm run test:contract`
+- `npm run test:acceptance`
+- `npm run test:coverage`
+- `npm run test:mutation`
 - `npm run test:e2e`
 - `npm run test:e2e:smoke`
 - `npm run version:plan`

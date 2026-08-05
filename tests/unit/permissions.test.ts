@@ -4,12 +4,27 @@ import { filterNavigationItems, hasAnyPermission, hasPermission } from '@/lib/pe
 import { adminNavigationItems, candidateNavigationItems, employerNavigationItems } from '@/shared/constants/navigation'
 
 describe('permission guards', () => {
+  it('allows public capabilities without inventing a permission requirement', () => {
+    expect(hasPermission([], undefined)).toBe(true)
+    expect(hasAnyPermission([], undefined)).toBe(true)
+    expect(hasAnyPermission([], [])).toBe(true)
+  })
+
   it('allows access when the required permission exists', () => {
     expect(hasPermission(['workspace:read', 'job:read'], 'job:read')).toBe(true)
   })
 
+  it('denies access when the required permission is missing', () => {
+    expect(hasPermission(['workspace:read'], 'job:read')).toBe(false)
+    expect(hasPermission(new Set(['workspace:read']), 'job:read')).toBe(false)
+  })
+
   it('allows access when one of the accepted permissions exists', () => {
     expect(hasAnyPermission(['user:approve'], ['recruiter_request:review', 'user:approve'])).toBe(true)
+  })
+
+  it('denies access when none of the accepted permissions exists', () => {
+    expect(hasAnyPermission(['workspace:read'], ['recruiter_request:review', 'user:approve'])).toBe(false)
   })
 
   it('filters navigation items that the current session cannot access', () => {
@@ -48,6 +63,12 @@ describe('permission guards', () => {
       'Finanzas',
       'Stress Harness'
     ])
+  })
+
+  it('keeps protected navigation hidden from unauthenticated visitors', () => {
+    const visibleItems = filterNavigationItems(candidateNavigationItems, [], false)
+
+    expect(visibleItems.map((item) => item.title)).toEqual(['Jobs'])
   })
 
   it('hides owner-only admin navigation unless the session is platform owner', () => {

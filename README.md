@@ -57,6 +57,7 @@ asi_do/
     functions/
     seeds/
   tests/
+    acceptance/
     unit/
     integration/
     e2e/
@@ -80,6 +81,7 @@ Dentro de `app`, las superficies activas siguen siendo `auth`, `candidate`, `wor
 - Cualquier cambio en logica, UI, arquitectura, testing o seguridad debe actualizar los archivos de reglas afectados en la misma tarea.
 - `docs/governance/REGRESSION_RULES.md` guarda correcciones duraderas.
 - `docs/governance/TESTING_RULES.md` define como el proyecto se verifica a si mismo.
+- `docs/governance/TDD_PLAYBOOK.md` define el ciclo Red-Green-Refactor y como aplicar Gherkin, cobertura y mutation testing.
 - `docs/governance/SECURITY_RULES.md` fija la postura de seguridad web, OSINT y proteccion de reglas de negocio/arquitectura.
 - La base PWA evita dependencias con vulnerabilidades conocidas y usa integracion propia de `manifest` + `service worker`.
 - La base `database-first` arranca con una migracion inicial de identidad/RBAC, aprobación de operadores de tenant y buckets privados de Supabase Storage.
@@ -115,6 +117,9 @@ npm run dev
 npm run lint
 npm run typecheck
 npm run test
+npm run test:acceptance
+npm run test:coverage
+npm run test:mutation
 npm run version:plan
 npm run verify
 ```

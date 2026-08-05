@@ -35,6 +35,7 @@ Documentation is a living contract, not an afterthought.
 - `docs/governance/REGRESSION_RULES.md`
 - `docs/governance/DOCUMENTATION_RULES.md`
 - `docs/governance/TESTING_RULES.md`
+- `docs/governance/TDD_PLAYBOOK.md`
 - `docs/governance/SECURITY_RULES.md`
 - `docs/governance/VERSIONING_RULES.md`
 - `docs/product/BENCHMARK.md`
