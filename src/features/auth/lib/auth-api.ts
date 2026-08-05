@@ -21,7 +21,7 @@ import type { Json, Tables, TablesInsert } from '@/shared/types/database'
 
 export type PrivateStorageBucket = 'candidate-resumes' | 'verification-documents' | 'membership-receipts'
 
-export type PublicStorageBucket = 'avatars'
+export type PublicStorageBucket = 'avatars' | 'company-assets'
 
 export interface AppMembership {
   id: string
@@ -592,6 +592,32 @@ export async function removePublicFile(options: {
 
   if (response.error) {
     throw response.error
+  }
+}
+
+/**
+ * Descarta un objeto reemplazado sin propagar el fallo.
+ *
+ * El orden importa: solo se llama **después** de que la referencia en base ya
+ * apunta al archivo nuevo. Si el borrado falla, la base queda consistente y el
+ * archivo viejo se vuelve huérfano —lo recoge `npm run media:orphans`—; borrar
+ * antes de actualizar la referencia sí perdería un archivo vivo, así que nunca
+ * se hace en ese orden.
+ */
+export async function discardReplacedFileQuietly(
+  bucket: PublicStorageBucket,
+  path: string | null | undefined
+) {
+  if (!path) {
+    return
+  }
+
+  try {
+    const client = requireSupabase()
+    const normalizedPath = normalizeStoragePath(path)
+    await client.storage.from(bucket).remove([normalizedPath, deriveThumbnailPath(normalizedPath)])
+  } catch {
+    // best-effort: la limpieza diferida es responsabilidad del barredor
   }
 }
 

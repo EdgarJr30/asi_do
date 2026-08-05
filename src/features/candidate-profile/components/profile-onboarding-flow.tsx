@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import {
   AVATARS_BUCKET,
+  discardReplacedFileQuietly,
   resolveAvatarUrl,
   toErrorMessage,
   updateUserProfile,
@@ -419,7 +420,8 @@ export function ProfileOnboardingFlow() {
     }
 
     try {
-      let avatarPath = session.profile?.avatar_path ?? null
+      const previousAvatarPath = session.profile?.avatar_path ?? null
+      let avatarPath = previousAvatarPath
 
       if (avatarFile) {
         avatarPath = await uploadPublicFile({
@@ -430,14 +432,26 @@ export function ProfileOnboardingFlow() {
         })
       }
 
-      await updateUserProfile({
-        userId: session.authUser.id,
-        fullName: values.fullName,
-        displayName: values.displayName,
-        locale: values.locale,
-        countryCode: values.countryCode,
-        avatarPath
-      })
+      try {
+        await updateUserProfile({
+          userId: session.authUser.id,
+          fullName: values.fullName,
+          displayName: values.displayName,
+          locale: values.locale,
+          countryCode: values.countryCode,
+          avatarPath
+        })
+      } catch (error) {
+        // Rollback de la foto recién subida: la referencia no llegó a moverse.
+        if (avatarFile && avatarPath !== previousAvatarPath) {
+          await discardReplacedFileQuietly(AVATARS_BUCKET, avatarPath)
+        }
+        throw error
+      }
+
+      if (avatarFile && avatarPath !== previousAvatarPath) {
+        await discardReplacedFileQuietly(AVATARS_BUCKET, previousAvatarPath)
+      }
 
       // No refrescamos la sesión aquí: hacerlo marca el onboarding como completo
       // y CandidateProfilePage desmontaría este wizard antes de mostrar el

@@ -25,6 +25,8 @@
     "harness": "node scripts/stress-harness.ts",
     "harness:seed": "node scripts/stress-harness.ts --profile=baseline",
     "harness:purge": "node scripts/stress-harness.ts --purge",
+    "media:orphans": "node scripts/media-orphans.ts",
+    "media:orphans:apply": "node scripts/media-orphans.ts --apply --yes",
     "version:plan": "node scripts/release-plan.mjs",
     "version:apply": "changeset version && npm install --package-lock-only",
     "verify": "npm run lint && npm run typecheck && npm run test && npm run build"

@@ -1,3 +1,4 @@
+import type { PublicStorageBucket } from '@/features/auth/lib/auth-api'
 import { deriveThumbnailPath } from '@/lib/uploads/media'
 import { supabase } from '@/lib/supabase/client'
 
@@ -9,11 +10,13 @@ function requireSupabase() {
   return supabase
 }
 
+export const COMPANY_ASSETS_BUCKET: PublicStorageBucket = 'company-assets'
+
 /** URL pública estable de un asset de empresa (bucket público, no requiere firmar). */
 export function createCompanyAssetUrl(path: string) {
   const client = requireSupabase()
 
-  return client.storage.from('company-assets').getPublicUrl(path).data.publicUrl
+  return client.storage.from(COMPANY_ASSETS_BUCKET).getPublicUrl(path).data.publicUrl
 }
 
 /**

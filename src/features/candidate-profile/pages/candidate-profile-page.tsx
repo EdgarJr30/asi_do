@@ -46,7 +46,13 @@ import {
 import { CountryCodeSelect, DominicanCitySelect } from '@/shared/ui/location-selects'
 import { cn } from '@/lib/utils/cn'
 import { splitFullName } from '@/lib/utils/split-full-name'
-import { AVATARS_BUCKET, toErrorMessage, updateUserProfile, uploadPublicFile } from '@/features/auth/lib/auth-api'
+import {
+  AVATARS_BUCKET,
+  discardReplacedFileQuietly,
+  toErrorMessage,
+  updateUserProfile,
+  uploadPublicFile
+} from '@/features/auth/lib/auth-api'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
 import { ProfileOnboardingFlow } from '@/features/candidate-profile/components/profile-onboarding-flow'
 import {
@@ -727,6 +733,10 @@ function CandidateProfileEditor({
         maxImageDimension: 1024
       })
 
+      // La foto anterior queda huérfana si no se retira: cada subida usa un UUID
+      // nuevo y `updateUserProfile` solo cambia la referencia.
+      const previousAvatarPath = session.profile?.avatar_path ?? null
+
       const avatarPath = await uploadPublicFile({
         bucket: AVATARS_BUCKET,
         ownerUserId: session.authUser.id,
@@ -734,14 +744,23 @@ function CandidateProfileEditor({
         prefix: 'avatar'
       })
 
-      await updateUserProfile({
-        userId: session.authUser.id,
-        fullName: session.profile?.full_name ?? '',
-        displayName: session.profile?.display_name ?? '',
-        locale: session.profile?.locale ?? 'es',
-        countryCode: session.profile?.country_code ?? 'DO',
-        avatarPath
-      })
+      try {
+        await updateUserProfile({
+          userId: session.authUser.id,
+          fullName: session.profile?.full_name ?? '',
+          displayName: session.profile?.display_name ?? '',
+          locale: session.profile?.locale ?? 'es',
+          countryCode: session.profile?.country_code ?? 'DO',
+          avatarPath
+        })
+      } catch (error) {
+        // Rollback: la referencia sigue apuntando a la foto anterior, así que lo
+        // que sobra es la recién subida.
+        await discardReplacedFileQuietly(AVATARS_BUCKET, avatarPath)
+        throw error
+      }
+
+      await discardReplacedFileQuietly(AVATARS_BUCKET, previousAvatarPath)
     },
     onSuccess: async () => {
       // Refresca la sesión para que la nueva foto aparezca en el header y el resto

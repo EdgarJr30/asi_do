@@ -37,7 +37,8 @@ import { Select } from '@/components/ui/select';
 import { SideSheet } from '@/components/ui/side-sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { toErrorMessage } from '@/features/auth/lib/auth-api';
+import { discardReplacedFileQuietly, toErrorMessage } from '@/features/auth/lib/auth-api';
+import { COMPANY_ASSETS_BUCKET } from '@/features/tenants/lib/company-assets-api';
 import {
   countWorkspaceMembers,
   createWorkspaceAssetUrl,
@@ -316,7 +317,10 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
 
   const saveProfileMutation = useMutation({
     mutationFn: async (overrides?: { isPublic?: boolean; logoPath?: string | null }) => {
-      return updateWorkspaceProfile({
+      const previousLogoPath = profile?.logo_path ?? null;
+      const clearsLogo = Boolean(overrides && 'logoPath' in overrides && !overrides.logoPath);
+
+      const updated = await updateWorkspaceProfile({
         tenantId: bundle.tenant.id,
         displayName,
         legalName,
@@ -330,6 +334,14 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
         isPublic: overrides?.isPublic ?? isPublic,
         ...(overrides && 'logoPath' in overrides ? { logoPath: overrides.logoPath } : {}),
       });
+
+      // Quitar el logo solo ponía la referencia en null: el objeto y su miniatura
+      // se quedaban en el bucket para siempre.
+      if (clearsLogo) {
+        await discardReplacedFileQuietly(COMPANY_ASSETS_BUCKET, previousLogoPath);
+      }
+
+      return updated;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY });
@@ -356,26 +368,37 @@ function WorkspaceEditor({ bundle }: { bundle: WorkspaceBundle }) {
         throw new Error('Necesitas iniciar sesión para subir el logo.');
       }
 
+      // Mismo ciclo de vida que el avatar: subir, mover la referencia y recién
+      // entonces retirar el logo anterior.
+      const previousLogoPath = profile?.logo_path ?? null;
+
       const logoPath = await uploadWorkspaceLogo({
         tenantId: bundle.tenant.id,
         userId: session.authUser.id,
         file,
       });
 
-      await updateWorkspaceProfile({
-        tenantId: bundle.tenant.id,
-        displayName,
-        legalName,
-        websiteUrl,
-        companyEmail,
-        companyPhone,
-        countryCode,
-        industry,
-        sizeRange,
-        description,
-        isPublic,
-        logoPath,
-      });
+      try {
+        await updateWorkspaceProfile({
+          tenantId: bundle.tenant.id,
+          displayName,
+          legalName,
+          websiteUrl,
+          companyEmail,
+          companyPhone,
+          countryCode,
+          industry,
+          sizeRange,
+          description,
+          isPublic,
+          logoPath,
+        });
+      } catch (error) {
+        await discardReplacedFileQuietly(COMPANY_ASSETS_BUCKET, logoPath);
+        throw error;
+      }
+
+      await discardReplacedFileQuietly(COMPANY_ASSETS_BUCKET, previousLogoPath);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY });

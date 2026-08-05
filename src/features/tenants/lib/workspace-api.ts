@@ -1,4 +1,5 @@
 import { IMMUTABLE_CACHE_CONTROL, uploadThumbnailBeside } from '@/features/auth/lib/auth-api'
+import { COMPANY_ASSETS_BUCKET } from '@/features/tenants/lib/company-assets-api'
 import { supabase } from '@/lib/supabase/client'
 import { prepareUploadFile, RECRUITER_LOGO_MIME_TYPES } from '@/lib/uploads/media'
 import type { Tables, TablesUpdate } from '@/shared/types/database'
@@ -293,16 +294,18 @@ export async function uploadWorkspaceLogo(input: {
 
   const extension = getFileExtension(preparedFile)
   const storagePath = `${input.tenantId}/logo-${crypto.randomUUID()}.${extension}`
-  const uploadResponse = await client.storage.from('company-assets').upload(normalizePath(storagePath), preparedFile, {
-    upsert: false,
-    cacheControl: IMMUTABLE_CACHE_CONTROL
-  })
+  const uploadResponse = await client.storage
+    .from(COMPANY_ASSETS_BUCKET)
+    .upload(normalizePath(storagePath), preparedFile, {
+      upsert: false,
+      cacheControl: IMMUTABLE_CACHE_CONTROL
+    })
 
   if (uploadResponse.error) {
     throw uploadResponse.error
   }
 
-  await uploadThumbnailBeside('company-assets', uploadResponse.data.path, preparedFile)
+  await uploadThumbnailBeside(COMPANY_ASSETS_BUCKET, uploadResponse.data.path, preparedFile)
 
   return uploadResponse.data.path
 }
