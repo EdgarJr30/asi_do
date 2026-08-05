@@ -163,3 +163,35 @@ When a production bug, user correction, or architectural safeguard exposes a rep
 - an automated test when feasible
 - `docs/governance/REGRESSION_RULES.md`
 - any impacted source-of-truth document
+
+---
+
+## 9. CI parity: a test must not depend on the machine that runs it
+A suite that passes locally and fails in CI is not a slower suite; it is a suite that reads something the repository does not control. Two things have already caused it here, and both hid behind misleading failure messages.
+
+### 9.1 Environment: never read Supabase config from `.env.local`
+`.env.local` is in `.gitignore`, so it exists on developer machines and never in CI. Without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, `getSupabaseConfig()` returns `null` and the app renders a **degraded shell** instead of failing: `/auth/sign-in` shows `El acceso aún no está disponible` in place of the form. The test then reports a missing heading, which reads like broken UI.
+
+Every runner therefore gets its own values, and all three must stay in sync:
+
+| Runner | Where the values come from |
+|---|---|
+| Vitest (`test`, `test:coverage`, `test:mutation`) | `src/test/env.ts`, imported **first** by `src/test/setup.ts` so the stub lands before `src/shared/config/env.ts` evaluates `import.meta.env` |
+| Playwright `webServer` | `webServerEnv()` in `tests/e2e/support/env.ts`, which fills stub credentials only when real ones are absent |
+| CI job steps | `env:` blocks in `.github/workflows/ci.yml` |
+
+Rules:
+1. Do not make a test's result depend on `.env.local`. If a module reads an environment variable at load time and that variable changes what renders, stub it in `src/test/env.ts`.
+2. The `build` that closes `verify` runs in production mode, so it passes through `validateProductionEnv`. Adding a variable to `REQUIRED_PRODUCTION_ENV` without adding it to the verify step's `env:` block aborts the build **in CI only**. Change both in the same task.
+3. CI values are deliberately fictitious: CI proves the project compiles, bundles, and renders, not that the deployment is configured. The real guard stays in the Netlify build, which is the only one that publishes and the only one that sees real values.
+
+### 9.2 Timing: budgets live in configuration, not in defaults
+`findBy*` and `waitFor` default to one second of wall-clock time, spent by the route's deferred chunk, the first render, and animated step transitions. A CI runner is slower than a laptop, and `--coverage` instruments every module on top of that, so the default turns the slowest tests into machine-dependent coin flips.
+
+- `configure({ asyncUtilTimeout: 5000 })` in `src/test/setup.ts` sets the async budget for the whole suite.
+- `testTimeout: 15000` lives in `vite.config.ts`, so `npm test` and `npm run test:coverage` share it. Do not reintroduce it as a flag on one script only: the script-local value left `npm test` below the async budget, where a slow test died on the vitest timeout before it could report which element it never found.
+
+Rules:
+1. Do not sprinkle per-call timeouts to rescue one slow assertion; raise the shared budget or make the test cheaper.
+2. Raising a budget is legitimate only for latency. An element that never appears must still fail.
+3. A test that only passes on a fast machine is unverified, not passing.

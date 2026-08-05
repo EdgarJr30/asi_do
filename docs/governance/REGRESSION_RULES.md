@@ -472,6 +472,9 @@ Do not open new Linear issues for follow-up work. The workspace is on the free p
 ### R-134 — Behavioral changes must pass a test-first gauntlet
 Do not implement a behavioral change and add a test only after the result is already known to work. Start with the smallest failing example, make it pass with the smallest correct implementation, refactor while green, and retain the regression test. Select additional gates by risk: executable Gherkin for business-readable critical rules, integration or contract coverage for boundaries, Playwright for real journeys, and mutation testing for critical pure logic. Do not translate every technical test into Gherkin: map only rules and journeys that business, QA, and development need to understand together. Record any justified exception explicitly; a coverage percentage alone is not proof that assertions can detect a defect.
 
+### R-135 — Tests must not depend on the machine that runs them
+Do not let a test's result depend on the developer's `.env.local` or on how fast the runner is; both produce green locally and red in CI with a failure message that blames the UI. Supabase configuration for the suite is fixed in `src/test/env.ts` (imported first by `src/test/setup.ts`), for the Playwright web server in `tests/e2e/support/env.ts`, and for CI in the `env:` blocks of `.github/workflows/ci.yml`; a variable added to `REQUIRED_PRODUCTION_ENV` must be added to the verify step in the same task, or the production build aborts only in CI. Async waiting budgets belong in shared configuration —`asyncUtilTimeout` in `src/test/setup.ts`, `testTimeout` in `vite.config.ts`— never as a flag on a single script or as per-call rescues for one slow assertion. Raising a budget is legitimate only for latency: an element that never appears must still fail. See `docs/governance/TESTING_RULES.md` §9.
+
 ---
 
 ## Maintenance rule
