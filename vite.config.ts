@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 
@@ -12,6 +13,36 @@ import {
 } from './src/shared/config/required-env'
 
 const presentationIndexPath = fileURLToPath(new URL('./public/presentation/index.html', import.meta.url))
+
+const packageVersion = (
+  JSON.parse(readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf8')) as {
+    version: string
+  }
+).version
+
+/**
+ * SHA del commit desplegado. Sin el, los stacks minificados de `app_error_logs`
+ * no se pueden mapear a ningun sourcemap: no hay forma de saber de que build
+ * salieron.
+ *
+ * En Netlify y en GitHub Actions llega por variable de entorno; en local se
+ * pregunta a git. Si nada de eso funciona —un tarball sin `.git`— se marca como
+ * `unknown` en vez de romper el build: un release sin identificar es peor que
+ * uno identificado, pero mucho mejor que no poder desplegar.
+ */
+function resolveReleaseCommit(): string {
+  const fromEnv = process.env.COMMIT_REF ?? process.env.GITHUB_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA
+
+  if (fromEnv) {
+    return fromEnv
+  }
+
+  try {
+    return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim()
+  } catch {
+    return 'unknown'
+  }
+}
 
 // Aborta el build de produccion cuando falta una variable critica. Ver
 // `src/shared/config/required-env.ts` para el porque: el modo de fallo sin esto
@@ -102,7 +133,17 @@ function servePresentationIndex(): PluginOption {
 
 export default defineConfig({
   plugins: [requireProductionEnv(), servePresentationIndex(), react(), tailwindcss(), inlineCss()],
+  define: {
+    __APP_RELEASE__: JSON.stringify(resolveReleaseCommit()),
+    __APP_VERSION__: JSON.stringify(packageVersion),
+    __APP_BUILT_AT__: JSON.stringify(new Date().toISOString())
+  },
   build: {
+    // `hidden` genera los .map pero **no** escribe el comentario
+    // `//# sourceMappingURL`, asi que el navegador no los pide y no quedan
+    // enlazados desde el bundle. Siguen existiendo en el artefacto para poder
+    // mapear un stack a mano; `netlify.toml` bloquea su descarga publica.
+    sourcemap: 'hidden',
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -161,6 +202,26 @@ export default defineConfig({
     // artefacto cuando el job falle. Sin esto, la proxima aparicion vuelve a no
     // dejar rastro y no hay nada que arreglar.
     reporters: process.env.CI ? ['default', 'junit'] : ['default'],
-    outputFile: { junit: './test-results/junit.xml' }
+    outputFile: { junit: './test-results/junit.xml' },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'lcov'],
+      reportsDirectory: './coverage',
+      // Se mide solo lo que tiene sentido cubrir con pruebas unitarias. Incluir
+      // paginas y layouts inflaria el denominador con JSX de presentacion y
+      // haria que el umbral no dijera nada.
+      include: ['src/lib/**/*.ts', 'src/shared/**/*.ts', 'src/features/**/lib/**/*.ts'],
+      exclude: ['**/*.d.ts', 'src/shared/types/database.ts', '**/*.test.*'],
+      // Umbrales fijados al nivel de HOY, no a una aspiracion. Sirven como
+      // trinquete: impiden que la cobertura baje, y se suben a mano cuando el
+      // numero real se despega. Un umbral inalcanzable se termina bajando o
+      // ignorando, que es como estos controles dejan de servir.
+      thresholds: {
+        lines: 21,
+        functions: 26,
+        branches: 15,
+        statements: 21
+      }
+    }
   }
 })

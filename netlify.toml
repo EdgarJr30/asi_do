@@ -72,6 +72,16 @@
   [headers.values]
     Cache-Control = "public, max-age=604800"
 
+# Los sourcemaps se generan como `hidden`: existen en el artefacto para poder
+# mapear a mano un stack de `app_error_logs`, pero no deben ser descargables
+# desde el sitio publico. Sin esta regla basta adivinar la URL del bundle y
+# cambiarle la extension para leerse el codigo fuente entero.
+[[redirects]]
+  from = "/assets/*.map"
+  to = "/index.html"
+  status = 404
+  force = true
+
 # El service worker y el manifest deben revalidarse para propagar updates.
 [[headers]]
   for = "/sw.js"

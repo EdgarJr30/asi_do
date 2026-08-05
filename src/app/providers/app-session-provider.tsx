@@ -135,6 +135,28 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
       setIsPlatformOwner(Boolean(snapshot.isPlatformOwner))
       setIsInternalDeveloper(Boolean(snapshot.profile?.is_internal_developer))
       setActivePastorScopeCount(snapshot.activePastorScopeCount)
+    } catch (error) {
+      // Sin este `catch` el rechazo no lo manejaba nadie: `hydrateSession` se
+      // invoca con `void` desde el efecto de arranque y desde el listener de
+      // auth, asi que un fallo de `fetchSessionSnapshot` —un corte de red, un
+      // error de RLS— se convertia en un unhandled rejection. En produccion eso
+      // dejaba al usuario con la app cargada y sin perfil, sin explicacion y sin
+      // registro; en los tests reventaba la suite **culpando a un test al azar**,
+      // que es el fallo intermitente que se buscaba desde el 2026-08-03.
+      const { captureClientError } = await import('@/lib/errors/client-error-logger')
+
+      void captureClientError({
+        source: 'session.hydrate',
+        userId: user.id,
+        error,
+        severity: 'error',
+        userMessage: 'No pudimos cargar tu sesion completa.'
+      })
+
+      // La identidad no se marca como hidratada: asi un reintento posterior
+      // (`refresh`, un cambio de auth) vuelve a intentarlo en vez de dar por
+      // buena una sesion a medias.
+      hydratedUserIdRef.current = null
     } finally {
       setIsLoading(false)
     }
@@ -176,7 +198,7 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
     let isActive = true
     let unsubscribe: (() => void) | undefined
 
-    void (async () => {
+    const bootstrap = (async () => {
       const client = await loadSupabaseClient()
 
       if (!isActive) {
@@ -227,6 +249,22 @@ export function AppSessionProvider({ children }: PropsWithChildren) {
 
       unsubscribe = () => authListener.data.subscription.unsubscribe()
     })()
+
+    void bootstrap.catch((error: unknown) => {
+      // El arranque tambien puede fallar antes de llegar a `hydrateSession`:
+      // cargar el chunk del SDK o `auth.getSession()`. Sin este catch el
+      // rechazo quedaba suelto y la app se quedaba en el loader para siempre.
+      setIsLoading(false)
+
+      void import('@/lib/errors/client-error-logger').then(({ captureClientError }) =>
+        captureClientError({
+          source: 'session.bootstrap',
+          error,
+          severity: 'fatal',
+          userMessage: 'No pudimos iniciar la sesion.'
+        })
+      )
+    })
 
     return () => {
       isActive = false

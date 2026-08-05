@@ -47,6 +47,25 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      # Umbrales fijados al nivel real de hoy, no a una aspiracion: funcionan
+      # como trinquete —impiden que la cobertura baje— y se suben a mano cuando
+      # el numero se despega. Un umbral inalcanzable se termina bajando o
+      # ignorando, que es como estos controles dejan de servir.
+      - name: Enforce coverage thresholds
+        run: npm run test:coverage
+
+      # Los sourcemaps se generan como `hidden` y `netlify.toml` bloquea su
+      # descarga publica, asi que la unica copia utilizable para mapear un stack
+      # de `app_error_logs` es esta.
+      - name: Upload sourcemaps
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sourcemaps-${{ github.sha }}
+          path: dist/assets/*.map
+          if-no-files-found: warn
+          retention-days: 30
+
   azul-service:
     name: Verify AZUL payments service
     runs-on: ubuntu-latest

@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client'
 import { extractErrorDetails } from '@/lib/errors/error-utils'
 import { collectClientEnvironmentMetadata } from '@/lib/platform/client-environment'
+import { release } from '@/shared/config/release'
 
 export interface CaptureClientErrorInput {
   source: string
@@ -35,6 +36,13 @@ export async function captureClientError(input: CaptureClientErrorInput) {
         ...input.metadata,
         ...serializedError.metadata,
         stack: serializedError.stack,
+        // Sin esto el stack minificado es ilegible: identifica de que build
+        // salio y por tanto que sourcemap lo traduce.
+        release: {
+          commit: release.commit,
+          version: release.version,
+          builtAt: release.builtAt
+        },
         clientEnvironment
       }
     })
