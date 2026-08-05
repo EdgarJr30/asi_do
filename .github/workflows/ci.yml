@@ -134,6 +134,49 @@ jobs:
       # por las funciones. Anotado en TASK-255; hasta entonces un job rojo de
       # nacimiento solo ensenaria al equipo a ignorar CI.
 
+  e2e-smoke:
+    name: E2E smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      # El smoke autenticado se provee su propia cuenta efimera con service_role
+      # y la borra al terminar, asi que no depende de que exista una cuenta de
+      # prueba concreta. Sin el secreto el bloque autenticado se salta y solo
+      # corre el publico; con el, cero skips.
+      - name: Run smoke suite
+        run: npm run test:e2e:smoke
+        env:
+          E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          E2E_SERVICE_ROLE_KEY: ${{ secrets.E2E_SERVICE_ROLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 14
+
   dependency-audit:
     name: Dependency audit policy
     runs-on: ubuntu-latest
