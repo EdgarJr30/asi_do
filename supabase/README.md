@@ -100,27 +100,34 @@ Aplica igual a las migraciones que resultan "obviamente correctas" y a los arreg
 - **Toda RPC nueva que llame el cliente necesita su `grant execute ... to authenticated` explícito.** Se revocó el default privilege de Supabase, así que sin el grant falla en desarrollo — es intencional.
 - **Un `REVOKE` sobre tablas que no son de `postgres` es un no-op silencioso.** Ver abajo.
 
-### Los `REVOKE` del esquema `storage` no se pueden hacer desde una migración
+### Los `REVOKE` del esquema `storage` no se pueden hacer, ni desde una migración ni desde el dashboard
 
-Un `REVOKE` solo retira los grants que concedió **quien lo ejecuta**. Las migraciones corren como `postgres`, pero el grantor de `storage.objects`, `storage.buckets` y `storage.buckets_analytics` es `supabase_storage_admin` —su owner—, y `postgres` **no es miembro** de ese rol.
+**Estado: riesgo residual aceptado.** No es una tarea pendiente. Se intentó por las tres vías que existen y ninguna es posible en un proyecto hosted; queda documentado aquí para que nadie vuelva a gastar el tiempo.
 
-Postgres no lo trata como error: revoca cero filas y devuelve éxito. `supabase db push` termina en verde y el repo queda afirmando algo que no ocurrió. Le pasó a `20260805014037`, que está registrada como aplicada y **no surtió efecto**; se comprobó con `supabase/tests/p1_storage_truncate_grants_probe.sql`, que siguió reportando `TRUNCATE` vivo después del push.
+Un `REVOKE` solo retira los grants que concedió **quien lo ejecuta**. Las migraciones corren como `postgres`, pero el grantor de `storage.objects`, `storage.buckets` y `storage.buckets_analytics` es `supabase_storage_admin` —su owner—, y `postgres` **no es miembro** de ese rol. Verificado contra el remoto en `information_schema.role_table_grants`: los 42 grants de `anon` y `authenticated` sobre esas tres tablas los concedió `supabase_storage_admin`, sin una sola excepción.
 
-Asumir al grantor tampoco funciona: `set local role supabase_storage_admin` devuelve `permission denied to set role` (SQLSTATE 42501).
+Postgres no trata ese desajuste como error: revoca cero filas y devuelve éxito. `supabase db push` termina en verde y el repo queda afirmando algo que no ocurrió. Le pasó a `20260805014037`, que está registrada como aplicada y **no surtió efecto**; se comprobó con `supabase/tests/p1_storage_truncate_grants_probe.sql`, que siguió reportando `TRUNCATE` vivo después del push.
 
-**Cómo se hace entonces.** Desde el SQL editor del dashboard, con un rol que sí pueda asumirlo:
+Las tres vías, y por qué ninguna sirve:
 
-```sql
-set role supabase_storage_admin;
-revoke truncate, trigger, references on storage.objects from anon, authenticated;
-revoke truncate, trigger, references on storage.buckets from anon, authenticated;
-revoke truncate, trigger, references on storage.buckets_analytics from anon, authenticated;
-reset role;
-```
+| Intento | Resultado |
+|---|---|
+| `revoke ...` desde una migración (como `postgres`) | Éxito falso: cero filas revocadas, `db push` en verde |
+| `set role supabase_storage_admin` (migración **o** SQL editor del dashboard) | `permission denied to set role` (42501) |
+| `grant supabase_storage_admin to postgres` para poder asumirlo | `"supabase_storage_admin" role memberships are reserved, only superusers can grant them` (42501) |
 
-Después, verificar con la probe. Esto es drift deliberado: queda fuera de `migrations/` porque no hay forma de expresarlo ahí, así que se documenta aquí y el job de `db diff` lo va a señalar.
+El detalle que hace inútil el dashboard: **su SQL editor también corre como `postgres`**, el mismo rol que el CLI. No hay ahí ningún privilegio extra que no tengas desde la terminal. Y `postgres` en Supabase hosted no es superusuario —tiene `CREATEROLE`, pero desde PG16 eso solo permite administrar los roles que él mismo creó, y `supabase_storage_admin` lo creó `supabase_admin`—. El superusuario no está disponible para el cliente en un proyecto gestionado, así que el revoke exigiría intervención de soporte de Supabase.
 
-**Por qué importa.** `TRUNCATE` no pasa por RLS: vacía la tabla entera sin evaluar una sola política. La probe comprobó por comportamiento que hoy `anon` y `authenticated` sí pueden ejecutarlo sobre `storage.objects`. No es un agujero activo —`storage` no está expuesto por PostgREST—, pero es una puerta que conviene cerrar antes de que una configuración futura la abra.
+**Qué es lo que queda vivo.** `TRUNCATE` sobre `storage.objects`, `storage.buckets` y `storage.buckets_analytics` para `anon` y `authenticated`, más `TRIGGER` y `REFERENCES`. `TRUNCATE` no pasa por RLS: vacía la tabla entera sin evaluar una sola política. La probe lo comprobó por comportamiento —no solo por catálogo—: hoy ambos roles pueden ejecutarlo.
+
+**Por qué se puede convivir con ello.** El privilegio existe en la base, pero no hay ruta para llegar a él: `storage` no está entre los esquemas expuestos por PostgREST (el default es `public, graphql_public`), y las APIs de Storage y de PostgREST no aceptan `TRUNCATE` como operación. Hace falta una conexión SQL directa con las credenciales de `anon` o `authenticated`, que son roles de conexión sin contraseña propia — un cliente con la anon key no obtiene una sesión de Postgres, obtiene un JWT que `authenticator` traduce.
+
+**Qué lo convertiría en explotable, y por tanto qué vigilar:**
+
+1. Que `storage` se añada a *Dashboard → Settings → API → Exposed schemas*. Es un clic, y es el único cambio que abre la puerta de par en par.
+2. Que aparezca una vía de SQL directo con esos roles (un pooler mal configurado, una extensión que exponga consultas arbitrarias).
+
+La probe cubre lo que se puede cubrir desde SQL: su bloque D vigila que ninguna política de `storage` apunte a `anon`. El punto 1 no es observable desde la base — es configuración de la plataforma— y va en la revisión de despliegue.
 
 ## Los dos jobs que vigilan la base
 

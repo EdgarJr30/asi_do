@@ -2,9 +2,18 @@
 -- Impersona a `anon` y a `authenticated`, y termina en RAISE EXCEPTION: la
 -- transacción se revierte siempre, así que no deja rastro en producción.
 --
--- Lo que vigila: que `TRUNCATE` —el único privilegio de esta lista que no pasa
--- por RLS— no vuelva a concederse sobre las tablas de storage. Un `TRUNCATE` de
--- `storage.objects` vacía el inventario entero sin evaluar una sola política.
+-- OJO CON LEER EL RESULTADO: los bloques A, B y C reportan hoy TRUNCATE VIVO y
+-- PERMITIDO, y **eso es lo esperado**, no una regresión. El revoke resultó
+-- imposible en un proyecto hosted: el grantor es `supabase_storage_admin` y ni
+-- las migraciones ni el SQL editor del dashboard —ambos corren como `postgres`—
+-- pueden asumirlo ni obtener su membresía. Está documentado con las tres vías
+-- agotadas en `supabase/README.md`, bajo "Los `REVOKE` del esquema `storage`".
+-- A/B/C se conservan como medición del riesgo residual: si algún día Supabase
+-- cambia el owner o soporte aplica el revoke, aquí se verá.
+--
+-- La alarma real es D. Mientras `storage` no esté expuesto por PostgREST y
+-- ninguna política apunte a `anon`, el privilegio existe pero no hay ruta para
+-- alcanzarlo. Si D deja de dar 0, el riesgo residual pasa a ser un agujero.
 do $probe$
 declare
   v_out text := '';
