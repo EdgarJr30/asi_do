@@ -98,6 +98,29 @@ Aplica igual a las migraciones que resultan "obviamente correctas" y a los arreg
 - **Una probe por migración de seguridad o de datos.** Viven en `supabase/tests/`, terminan siempre en `RAISE EXCEPTION` para que la transacción se revierta y no dejen filas de prueba en producción. Ver `p0_notification_authz_probe.sql` como referencia.
 - **Las migraciones son inmutables una vez aplicadas.** Si una necesita corregirse, se añade otra encima. Editar el archivo ya desplegado hace que el repo y el remoto digan cosas distintas sin que nada lo detecte.
 - **Toda RPC nueva que llame el cliente necesita su `grant execute ... to authenticated` explícito.** Se revocó el default privilege de Supabase, así que sin el grant falla en desarrollo — es intencional.
+- **Un `REVOKE` sobre tablas que no son de `postgres` es un no-op silencioso.** Ver abajo.
+
+### Los `REVOKE` del esquema `storage` no se pueden hacer desde una migración
+
+Un `REVOKE` solo retira los grants que concedió **quien lo ejecuta**. Las migraciones corren como `postgres`, pero el grantor de `storage.objects`, `storage.buckets` y `storage.buckets_analytics` es `supabase_storage_admin` —su owner—, y `postgres` **no es miembro** de ese rol.
+
+Postgres no lo trata como error: revoca cero filas y devuelve éxito. `supabase db push` termina en verde y el repo queda afirmando algo que no ocurrió. Le pasó a `20260805014037`, que está registrada como aplicada y **no surtió efecto**; se comprobó con `supabase/tests/p1_storage_truncate_grants_probe.sql`, que siguió reportando `TRUNCATE` vivo después del push.
+
+Asumir al grantor tampoco funciona: `set local role supabase_storage_admin` devuelve `permission denied to set role` (SQLSTATE 42501).
+
+**Cómo se hace entonces.** Desde el SQL editor del dashboard, con un rol que sí pueda asumirlo:
+
+```sql
+set role supabase_storage_admin;
+revoke truncate, trigger, references on storage.objects from anon, authenticated;
+revoke truncate, trigger, references on storage.buckets from anon, authenticated;
+revoke truncate, trigger, references on storage.buckets_analytics from anon, authenticated;
+reset role;
+```
+
+Después, verificar con la probe. Esto es drift deliberado: queda fuera de `migrations/` porque no hay forma de expresarlo ahí, así que se documenta aquí y el job de `db diff` lo va a señalar.
+
+**Por qué importa.** `TRUNCATE` no pasa por RLS: vacía la tabla entera sin evaluar una sola política. La probe comprobó por comportamiento que hoy `anon` y `authenticated` sí pueden ejecutarlo sobre `storage.objects`. No es un agujero activo —`storage` no está expuesto por PostgREST—, pero es una puerta que conviene cerrar antes de que una configuración futura la abra.
 
 ## Los dos jobs que vigilan la base
 
