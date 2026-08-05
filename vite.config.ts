@@ -120,6 +120,14 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     css: true,
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['tests/e2e/**']
+    exclude: ['tests/e2e/**'],
+    // El fallo intermitente de la suite aparecio dos veces encadenado dentro de
+    // `npm run verify`, y las dos veces se perdio el nombre del test: el reporter
+    // por defecto escribe a stdout y ese stdout se lo lleva el comando siguiente.
+    // En CI se escribe ademas un JUnit a disco para que el workflow lo suba como
+    // artefacto cuando el job falle. Sin esto, la proxima aparicion vuelve a no
+    // dejar rastro y no hay nada que arreglar.
+    reporters: process.env.CI ? ['default', 'junit'] : ['default'],
+    outputFile: { junit: './test-results/junit.xml' }
   }
 })

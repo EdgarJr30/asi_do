@@ -23,7 +23,6 @@ import {
 import { evaluateHarnessGuard } from '../_shared/harness-guards.ts'
 import { resolvePublishableKey, resolveServiceKey } from '../_shared/supabase-keys.ts'
 
-declare const Deno: { env: { get(key: string): string | undefined } }
 
 type HarnessRequest = {
   profile?: 'smoke' | 'baseline' | 'heavy'

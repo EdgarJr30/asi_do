@@ -1,0 +1,13 @@
+{
+  "$comment": "Excepciones de la auditoría de dependencias. Las revisa scripts/audit-policy.ts. Toda entrada VENCE: pasada la fecha el job falla y obliga a re-evaluar, para que una excepción no se vuelva permanente por olvido. Borrar una entrada que ya no corresponda también es obligatorio — el script falla si sobra.",
+  "exceptions": [
+    {
+      "advisory": "GHSA-qwww-vcr4-c8h2",
+      "package": "react-router",
+      "workspace": "root",
+      "severity": "high",
+      "expires": "2026-11-04",
+      "reason": "Aplica solo al modo RSC de React Router (CSRF bypass que ejecuta la action antes del 400). Esta app es una SPA de Vite servida estáticamente: usa createBrowserRouter + RouterProvider, no hay SSR, ni RSC, ni server actions, ni el endpoint __manifest — verificado por grep de unstable_/renderToString/renderToPipeableStream/@react-router/server, sin resultados. El 'fix' que propone npm es bajar a react-router-dom 7.11.0, que reintroduce los doce avisos que 7.18.2 ya cierra, incluidos los dos open redirect de <Link>/useNavigate que sí son alcanzables desde el cliente. Se mantiene 7.18.2 y se revisa cuando salga una versión que cierre este aviso sin retroceder."
+    }
+  ]
+}

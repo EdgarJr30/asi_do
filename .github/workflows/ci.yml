@@ -33,3 +33,104 @@ jobs:
 
       - name: Run repository verification
         run: npm run verify
+
+      # El fallo intermitente de la suite aparecio dos veces dentro de `verify` y
+      # las dos veces se perdio el nombre del test, porque el stdout se lo llevo
+      # el comando siguiente de la cadena. El JUnit queda en disco pase lo que
+      # pase; se sube solo cuando el job falla, que es cuando hace falta.
+      - name: Upload test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-junit-${{ github.run_id }}
+          path: test-results/junit.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+  azul-service:
+    name: Verify AZUL payments service
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Job aislado: el servicio tiene su propio package-lock y su propio verify, y
+    # hasta ahora CI solo validaba la raiz. Un fallo suyo no debe confundirse con
+    # uno del frontend.
+    defaults:
+      run:
+        working-directory: services/azul-payments
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: services/azul-payments/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run service verification
+        run: npm run verify
+
+  edge-functions:
+    name: Lint and type-check Edge Functions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # `eslint` excluye `supabase/functions` porque ese codigo corre en Deno, no en
+    # Node: importa con extension `.ts` explicita y usa `npm:`/`jsr:` specifiers,
+    # que la config de Node no entiende. Sin este job, las Edge Functions no las
+    # revisa nadie.
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Lint Edge Functions
+        run: deno lint supabase/functions
+
+      # `deno check` queda fuera a proposito, por ahora. Reporta 15 errores, y se
+      # comprobo uno por uno que **ninguno es un defecto de runtime**: son
+      # artefactos de que `createClient` se invoca sin el generic `Database`, asi
+      # que supabase-js infiere `SupabaseClient<any, ...>` y deja de encajar en
+      # las firmas de los helpers. El caso mas enganoso es
+      # `stress-harness/index.ts:109`, donde el tipo dice que `platform_roles`
+      # llega como array; se verifico contra el remoto que PostgREST devuelve un
+      # objeto, asi que la guarda de super admin funciona y "corregirla" segun el
+      # tipo la habria roto.
+      #
+      # Activar el job con `deno check` exige antes enhebrar el tipo `Database`
+      # por las funciones. Anotado en TASK-255; hasta entonces un job rojo de
+      # nacimiento solo ensenaria al equipo a ignorar CI.
+
+  dependency-audit:
+    name: Dependency audit policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install AZUL service dependencies
+        run: npm ci
+        working-directory: services/azul-payments
+
+      # Politica en `scripts/audit-policy.ts`: high y critical rompen, con
+      # excepciones documentadas y con fecha de vencimiento en
+      # `audit-exceptions.json`.
+      - name: Enforce dependency audit policy
+        run: npm run audit:policy

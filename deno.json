@@ -1,0 +1,12 @@
+{
+  "//": "Configuracion de Deno para las Edge Functions. Vive en la raiz y no en supabase/functions/ a proposito: el CLI de Supabase interpreta un deno.json dentro del directorio de funciones como mapa de imports del despliegue, y aqui solo queremos configurar el linter. `no-import-prefix` se excluye porque quiere las dependencias en un mapa de imports en vez de specifiers `npm:` en linea, y las Edge Functions de Supabase se documentan y se despliegan justamente con specifiers en linea: la regla choca con la plataforma, no con el codigo. El resto de reglas por defecto se mantiene, que son las que encontraron el import muerto y los `any` de harness-core.ts. NO declarar `nodeModulesDir`: `deno check` con esa opcion escribe en el `node_modules` de npm y altera la resolucion de tipos del proyecto Node, que se manifiesta como una lluvia de `no-unnecessary-type-assertion` en `npm run lint`.",
+  "lint": {
+    "include": ["supabase/functions"],
+    "rules": {
+      "exclude": ["no-import-prefix"]
+    }
+  },
+  "fmt": {
+    "include": ["supabase/functions"]
+  }
+}

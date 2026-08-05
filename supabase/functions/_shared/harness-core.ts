@@ -24,8 +24,7 @@ import {
   hashSeed,
   intBetween,
   pick,
-  syntheticEmail,
-  type Rng
+  syntheticEmail
 } from './synthetic.ts'
 
 // Interfaz mínima del cliente para mantener portabilidad Deno/Node.
@@ -38,7 +37,14 @@ export type SupabaseLike = {
       }>
     }
   }
+  // El constructor de consultas de PostgREST es encadenable y "thenable": cada
+  // metodo devuelve otro constructor y el await final resuelve al resultado.
+  // Modelarlo aqui significaria duplicar el generic completo de supabase-js, que
+  // esta tipado contra `database.ts` y no es alcanzable cuando esto corre en
+  // Deno. Se deja sin tipar a proposito, acotado a estas dos lineas.
+  // deno-lint-ignore no-explicit-any
   from: (table: string) => any
+  // deno-lint-ignore no-explicit-any
   rpc: (fn: string, args?: Record<string, unknown>) => any
 }
 
