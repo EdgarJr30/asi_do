@@ -139,6 +139,23 @@
     background-attachment: fixed;
   }
 
+  /*
+   * `background-attachment: fixed` sobre cuatro gradientes obliga al navegador a
+   * repintar el fondo entero en cada scroll, porque el fondo no puede viajar con
+   * la capa desplazada. En un móvil de gama media eso se nota como scroll a
+   * tirones en toda la app.
+   *
+   * `scroll` conserva el mismo aspecto en la práctica —los gradientes son suaves
+   * y cubren la altura del viewport— y devuelve el fondo a la capa que ya se
+   * compone. Se acota por puntero grueso y no por ancho de pantalla: lo que
+   * importa es el dispositivo táctil, no una ventana de escritorio estrecha.
+   */
+  @media (hover: none) and (pointer: coarse) {
+    .dark body {
+      background-attachment: scroll;
+    }
+  }
+
   #root {
     @apply min-h-screen;
     overflow-x: clip;

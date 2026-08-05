@@ -1,8 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
-import quoteData from 'inspirational-quotes/data/data.json'
 import {
   ArrowRight,
   CalendarClock,
@@ -66,8 +65,28 @@ function getApplicationDetailPath(application: { job_posting?: { slug?: string |
 }
 
 type InspirationalQuote = { text: string; from: string }
-const inspirationalQuotes = quoteData as InspirationalQuote[]
 const FALLBACK_QUOTE: InspirationalQuote = { text: 'El futuro depende de lo que hagas hoy.', from: 'Mahatma Gandhi' }
+
+/**
+ * El dataset de frases pesa unos 50 KB en crudo (~15 KB gzip) y hasta ahora
+ * viajaba dentro del chunk de esta pagina, que es la primera pantalla despues de
+ * iniciar sesion. Es mucho peso en el camino critico para adornar una frase.
+ *
+ * Se carga en diferido y se muestra `FALLBACK_QUOTE` mientras llega, asi que la
+ * tarjeta nunca aparece vacia. Si la carga falla —red caida, chunk obsoleto tras
+ * un despliegue— se queda con la de respaldo, que es un final aceptable para
+ * algo decorativo.
+ */
+async function loadRandomQuote(): Promise<InspirationalQuote> {
+  const module = await import('inspirational-quotes/data/data.json')
+  const quotes = (module.default ?? module) as InspirationalQuote[]
+
+  if (quotes.length === 0) {
+    return FALLBACK_QUOTE
+  }
+
+  return quotes[Math.floor(Math.random() * quotes.length)] ?? FALLBACK_QUOTE
+}
 
 interface MetricCardData {
   key: string
@@ -329,10 +348,21 @@ export function CandidateHomePage() {
 function DailyQuote() {
   // Una frase aleatoria por visita: se elige al montar y permanece fija
   // hasta que el usuario sale y vuelve a entrar al módulo.
-  const quote = useState(() => {
-    if (inspirationalQuotes.length === 0) return FALLBACK_QUOTE
-    return inspirationalQuotes[Math.floor(Math.random() * inspirationalQuotes.length)] ?? FALLBACK_QUOTE
-  })[0]
+  const [quote, setQuote] = useState<InspirationalQuote>(FALLBACK_QUOTE)
+
+  useEffect(() => {
+    let isActive = true
+
+    void loadRandomQuote().then((loaded) => {
+      if (isActive) {
+        setQuote(loaded)
+      }
+    })
+
+    return () => {
+      isActive = false
+    }
+  }, [])
   const [copied, setCopied] = useState(false)
 
   async function handleCopy() {
