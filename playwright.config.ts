@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
+import { webServerEnv } from './tests/e2e/support/env'
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
@@ -18,7 +20,10 @@ export default defineConfig({
         command: 'npm run dev -- --host 127.0.0.1 --port 4173',
         port: 4173,
         reuseExistingServer: true,
-        timeout: 120_000
+        timeout: 120_000,
+        // Sin credenciales de Supabase la app arranca en modo degradado y el
+        // smoke acabaría probando un shell que no es el que ve un visitante.
+        env: webServerEnv()
       },
   projects: [
     {

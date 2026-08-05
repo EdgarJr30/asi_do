@@ -1,7 +1,6 @@
-import { existsSync, readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-
 import { createClient } from '@supabase/supabase-js'
+
+import { loadLocalEnv } from './env'
 
 /**
  * Soporte para la prueba e2e de datos en vivo (Supabase Realtime).
@@ -12,28 +11,7 @@ import { createClient } from '@supabase/supabase-js'
  * `.env.local` automáticamente; en CI, de variables de entorno reales.
  */
 
-// Carga best-effort de .env.local SOLO para llaves aún no presentes en el entorno.
-// CI siempre puede sobrescribir exportando las variables reales.
-function loadLocalEnvOnce() {
-  const path = resolve(process.cwd(), '.env.local')
-  if (!existsSync(path)) {
-    return
-  }
-  for (const line of readFileSync(path, 'utf8').split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#') || !trimmed.includes('=')) {
-      continue
-    }
-    const i = trimmed.indexOf('=')
-    const key = trimmed.slice(0, i).trim()
-    const value = trimmed.slice(i + 1).trim().replace(/^["']|["']$/g, '')
-    if (process.env[key] === undefined) {
-      process.env[key] = value
-    }
-  }
-}
-
-loadLocalEnvOnce()
+loadLocalEnv()
 
 export const realtimeConfig = {
   supabaseUrl: process.env.E2E_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '',

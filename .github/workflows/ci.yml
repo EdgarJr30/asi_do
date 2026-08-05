@@ -203,6 +203,11 @@ jobs:
       # y la borra al terminar, asi que no depende de que exista una cuenta de
       # prueba concreta. Sin el secreto el bloque autenticado se salta y solo
       # corre el publico; con el, cero skips.
+      #
+      # Si los secretos VITE_* llegan vacios, el webServer de playwright.config
+      # arranca la app con credenciales stub: sin ellas la app entra en modo
+      # degradado (/auth/sign-in muestra "El acceso aun no esta disponible") y
+      # el smoke publico probaria un shell que ningun visitante ve.
       - name: Run smoke suite
         run: npm run test:e2e:smoke
         env:
