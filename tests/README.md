@@ -9,3 +9,4 @@ tests/e2e/          browser workflows once the interactive hiring loop is implem
 
 See `docs/governance/TESTING_RULES.md` for the quality contract.
 See `docs/governance/TDD_PLAYBOOK.md` for the Red-Green-Refactor workflow and the risk matrix.
+See `tests/acceptance/README.md` for the business-readable scenario map and its executable evidence.

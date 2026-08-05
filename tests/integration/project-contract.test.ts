@@ -57,6 +57,9 @@ describe('project contract', () => {
     }
 
     expect(packageJson.scripts?.['test:acceptance']).toContain('cucumber-js')
+    expect(packageJson.scripts?.['test:acceptance']).toContain(
+      'TSX_TSCONFIG_PATH=tsconfig.app.json'
+    )
     expect(packageJson.scripts?.['test:mutation']).toBe('stryker run')
     expect(packageJson.scripts?.verify).toContain('npm run test:acceptance')
     expect(strykerConfig.thresholds?.break).toBe(100)

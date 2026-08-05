@@ -56,6 +56,7 @@ Test the repo contract itself:
 Business-readable critical rules live as Spanish Gherkin in `tests/acceptance/` and execute through Cucumber.
 Use acceptance specifications for lifecycle, authorization, tenant isolation, billing, moderation, and destructive-action rules that product, QA, or operations must be able to review without reading implementation code.
 Keep steps domain-focused and observable; implementation details belong in thin step definitions.
+Maintain the shared rule-to-evidence map in `tests/acceptance/README.md`; do not duplicate helpers, rendering details, or other purely technical cases as Gherkin.
 
 ### Coverage and mutation tests
 - `npm run test:coverage` enforces the repository's non-decreasing coverage baseline.

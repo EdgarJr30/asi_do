@@ -75,7 +75,7 @@ Use Gherkin only when a product, operations, QA, or security stakeholder benefit
 
 Avoid UI selectors, HTTP verbs, table names, React components, and implementation details in `.feature` files. Step definitions may call domain code or test adapters, but must remain thin. Scenarios are independent and must not share mutable state.
 
-The baseline in `tests/acceptance/permission-access.feature` demonstrates an authorization rule with permitted and denied examples. New critical rules should add their own feature or extend the closest domain feature.
+The executable map in `tests/acceptance/README.md` covers the shared critical rules for access, membership, opportunities/applications, pipeline/governance, and notifications/offline. New critical rules should add their own feature or extend the closest domain feature; technical details remain in Vitest or Playwright instead of being duplicated as Gherkin.
 
 ## 7. Coverage policy
 

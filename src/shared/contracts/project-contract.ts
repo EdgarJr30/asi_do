@@ -58,8 +58,15 @@ export const requiredTestingFiles = [
   'docs/governance/TDD_PLAYBOOK.md',
   'stryker.config.json',
   'vitest.mutation.config.ts',
+  'tests/acceptance/README.md',
+  'tests/acceptance/authentication-and-access.feature',
+  'tests/acceptance/business-critical-flows.steps.ts',
+  'tests/acceptance/membership-lifecycle.feature',
+  'tests/acceptance/notifications-and-offline.feature',
+  'tests/acceptance/opportunities-and-applications.feature',
   'tests/acceptance/permission-access.feature',
-  'tests/acceptance/permission-access.steps.ts'
+  'tests/acceptance/permission-access.steps.ts',
+  'tests/acceptance/pipeline-and-governance.feature'
 ] as const
 
 export const requiredWorkflowFiles = ['.github/workflows/ci.yml'] as const
