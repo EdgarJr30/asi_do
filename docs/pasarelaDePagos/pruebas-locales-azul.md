@@ -256,7 +256,7 @@ alcanzable, y el navegador alcanza ambos).
 
 ---
 
-## 9. Checklist de la prueba
+## 9. Checklist de la prueba.
 
 - [ ] `/healthz` responde OK
 - [ ] SPA carga en `localhost:5173` y el panel de membresía muestra el botón de pago
