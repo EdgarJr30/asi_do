@@ -3,10 +3,43 @@ import { fileURLToPath, URL } from 'node:url'
 
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import type { PluginOption } from 'vite'
+import { loadEnv, type PluginOption } from 'vite'
 import { defineConfig } from 'vitest/config'
 
+import {
+  formatEnvValidationError,
+  validateProductionEnv
+} from './src/shared/config/required-env'
+
 const presentationIndexPath = fileURLToPath(new URL('./public/presentation/index.html', import.meta.url))
+
+// Aborta el build de produccion cuando falta una variable critica. Ver
+// `src/shared/config/required-env.ts` para el porque: el modo de fallo sin esto
+// es publicar una app que arranca pero no autentica a nadie.
+function requireProductionEnv(): PluginOption {
+  let loaded: Record<string, string> = {}
+
+  return {
+    name: 'asi-require-production-env',
+    apply: 'build',
+    enforce: 'pre',
+    configResolved(config) {
+      // Se carga aqui y no en `defineConfig` para no tener que convertir la
+      // config entera a la forma de funcion. `loadEnv` con prefijo vacio trae
+      // tambien las variables sin `VITE_`, que es lo que necesita `APP_URL`.
+      loaded = loadEnv(config.mode, config.envDir, '')
+    },
+    buildStart() {
+      // El entorno del proceso gana: en Netlify y en CI las variables llegan por
+      // ahi, no por un archivo `.env`.
+      const problems = validateProductionEnv({ ...loaded, ...process.env })
+
+      if (problems.length > 0) {
+        this.error(formatEnvValidationError(problems))
+      }
+    }
+  }
+}
 
 // Inlines the build CSS bundle into <head> as a <style> tag so it stops being a
 // render-blocking network request (improves FCP/LCP). Build-only.
@@ -68,7 +101,7 @@ function servePresentationIndex(): PluginOption {
 }
 
 export default defineConfig({
-  plugins: [servePresentationIndex(), react(), tailwindcss(), inlineCss()],
+  plugins: [requireProductionEnv(), servePresentationIndex(), react(), tailwindcss(), inlineCss()],
   build: {
     rollupOptions: {
       output: {
