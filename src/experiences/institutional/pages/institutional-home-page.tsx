@@ -377,6 +377,7 @@ export function InstitutionalHomePage() {
   const [testimonialInteractionTick, setTestimonialInteractionTick] =
     useState(0);
   const [platformVideoReady, setPlatformVideoReady] = useState(true);
+  const [christianEventVideoReady, setChristianEventVideoReady] = useState(true);
   const heroWheelNavigationTimeoutRef = useRef<number | null>(null);
   const carouselViewportRef = useRef<HTMLDivElement | null>(null);
   const carouselMeasureCardRef = useRef<HTMLElement | null>(null);
@@ -1138,11 +1139,28 @@ export function InstitutionalHomePage() {
 
             <InstitutionalCard className="institutional-home__event-card overflow-hidden border-white/70 bg-white/78 p-0 backdrop-blur-sm">
               <div className="institutional-home__event-shell relative min-h-56">
-                <LazyAutoplayVideo
-                  aria-label="Video breve de un evento cristiano comunitario"
-                  className="pointer-events-none h-full w-full select-none object-cover"
-                  src={christianEventVideoPath}
-                />
+                {christianEventVideoReady ? (
+                  <LazyAutoplayVideo
+                    ariaLabel="Video breve de un evento cristiano comunitario"
+                    className="pointer-events-none h-full w-full select-none object-cover"
+                    poster={homeEcosystemCards[0].image}
+                    src={christianEventVideoPath}
+                    onCanPlay={() => setChristianEventVideoReady(true)}
+                    onError={() => setChristianEventVideoReady(false)}
+                  />
+                ) : (
+                  // Sin este fallback la card queda vacía cuando el video no está
+                  // en el bucket: el `<video>` roto no pinta nada y solo se ve el
+                  // texto flotando.
+                  <img
+                    alt={homeEcosystemCards[0].imageAlt}
+                    className="pointer-events-none h-full w-full select-none object-cover"
+                    loading="lazy"
+                    sizes="(max-width: 1280px) 100vw, 600px"
+                    srcSet={unsplashSrcSet(homeEcosystemCards[0].image, [600, 900, 1200])}
+                    src={homeEcosystemCards[0].image}
+                  />
+                )}
                 <div className="institutional-home__event-overlay absolute inset-0" />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-4 sm:p-5">
                   <div className="institutional-home__event-caption max-w-104 border border-white/30 px-4 py-3 backdrop-blur-md">
