@@ -11,6 +11,17 @@ file_size_limit = "50MiB"
 [storage.s3_protocol]
 enabled = true
 
+# Vector Buckets es de plan Pro. El CLI trae `enabled = true` por defecto en su
+# plantilla, asi que omitir este bloque no significa "no lo uses": significa que
+# el push manda `true` y el plan gratuito responde
+# `402: Please upgrade the project to a paid tier to enable vector buckets`.
+# Ese 402 abortaba el paso de Storage entero, y por eso la configuracion de
+# Storage de este repo nunca llego al remoto pese a que `supabase/README.md` la
+# declara fuente de verdad. Declararlo en falso es lo que desatasca el push.
+# (`[storage.analytics]` no hace falta: su default ya es `false`.)
+[storage.vector]
+enabled = false
+
 [auth]
 enabled = true
 site_url = "https://asi-do.netlify.app"
