@@ -23,6 +23,7 @@
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.ts",
     "test:e2e:realtime": "playwright test tests/e2e/realtime-job-board.spec.ts --project=desktop-webkit",
+    "test:e2e:pwa": "playwright test --config=playwright.pwa.config.ts",
     "harness": "node scripts/stress-harness.ts",
     "harness:seed": "node scripts/stress-harness.ts --profile=baseline",
     "harness:purge": "node scripts/stress-harness.ts --purge",
