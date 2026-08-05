@@ -24,6 +24,7 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
+import { ErrorState } from '@/components/ui/error-state'
 import { Spinner } from '@/components/ui/loader'
 import { applicationStatusDotClass, applicationStatusLabel } from '@/features/applications/lib/application-status'
 import { CompanyLogo } from '@/features/tenants/components/company-logo'
@@ -96,6 +97,12 @@ interface MetricCardData {
   value: number
   suffix?: string
   loading: boolean
+  /**
+   * La consulta que alimenta esta métrica falló. Sin esto, el valor cae a 0 y la
+   * tarjeta afirma «0 aplicaciones activas» a alguien que quizá tiene diez: el
+   * usuario concluye que perdió sus datos en vez de que hubo un fallo de red.
+   */
+  failed?: boolean
   sub: string
   trendUp?: boolean
 }
@@ -134,6 +141,8 @@ export function CandidateHomePage() {
 
   const openJobsCount = openJobsQuery.data?.jobs.length ?? 0
   const appsLoading = applicationsQuery.isLoading
+  const appsFailed = applicationsQuery.isError
+  const jobsFailed = openJobsQuery.isError
 
   const metricCards: MetricCardData[] = [
     {
@@ -143,6 +152,7 @@ export function CandidateHomePage() {
       label: 'Aplicaciones activas',
       value: metrics.active,
       loading: appsLoading,
+      failed: appsFailed,
       sub: metrics.thisWeek > 0 ? `+${metrics.thisWeek} esta semana` : `${metrics.total} en total`,
       trendUp: metrics.thisWeek > 0
     },
@@ -153,6 +163,7 @@ export function CandidateHomePage() {
       label: 'Entrevistas programadas',
       value: metrics.interviews,
       loading: appsLoading,
+      failed: appsFailed,
       sub: metrics.interviews > 0 ? 'En tus procesos activos' : 'Sin entrevistas aún'
     },
     {
@@ -163,6 +174,7 @@ export function CandidateHomePage() {
       value: metrics.responseRate,
       suffix: '%',
       loading: appsLoading,
+      failed: appsFailed,
       sub: metrics.total > 0 ? `${metrics.responded} de ${metrics.total} te respondieron` : 'Aún sin postulaciones'
     },
     {
@@ -172,6 +184,7 @@ export function CandidateHomePage() {
       label: 'Vacantes para ti',
       value: openJobsCount,
       loading: openJobsQuery.isLoading,
+      failed: jobsFailed,
       sub: 'Abiertas según tu perfil'
     }
   ]
@@ -330,6 +343,16 @@ export function CandidateHomePage() {
               </div>
             ) : null}
           </>
+        ) : appsFailed ? (
+          <Card>
+            <ErrorState
+              title="No pudimos cargar tus aplicaciones"
+              error={applicationsQuery.error}
+              source="dashboard.candidate.applications"
+              isRetrying={applicationsQuery.isFetching}
+              onRetry={() => void applicationsQuery.refetch()}
+            />
+          </Card>
         ) : (
           <Card>
             <EmptyState
@@ -413,7 +436,11 @@ function MetricCard({ metric }: { metric: MetricCardData }) {
       <div className="min-w-0">
         <p className="text-[0.66rem] font-semibold leading-tight text-(--app-text-subtle) sm:text-[0.72rem]">{metric.label}</p>
         <p className="mt-1 text-[1.25rem] font-semibold leading-none tracking-tight tabular-nums text-(--app-text) sm:mt-1.5 sm:text-[1.55rem]">
-          {metric.loading ? '—' : <CountUp value={metric.value} suffix={metric.suffix} />}
+          {metric.loading || metric.failed ? (
+            <span aria-label={metric.failed ? 'Dato no disponible' : undefined}>—</span>
+          ) : (
+            <CountUp value={metric.value} suffix={metric.suffix} />
+          )}
         </p>
         <p
           className={cn(
@@ -421,8 +448,8 @@ function MetricCard({ metric }: { metric: MetricCardData }) {
             metric.trendUp ? 'font-semibold text-emerald-600 dark:text-emerald-400' : 'text-(--app-text-muted)'
           )}
         >
-          {metric.trendUp ? <TrendingUp aria-hidden className="size-3 shrink-0 sm:size-3.5" /> : null}
-          {metric.sub}
+          {metric.trendUp && !metric.failed ? <TrendingUp aria-hidden className="size-3 shrink-0 sm:size-3.5" /> : null}
+          {metric.failed ? 'No se pudo cargar' : metric.sub}
         </p>
       </div>
     </div>

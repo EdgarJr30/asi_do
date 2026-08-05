@@ -30,11 +30,11 @@ import { surfacePaths } from '@/app/router/surface-paths'
 import { useAppSession } from '@/app/providers/app-session-provider'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { ErrorState } from '@/components/ui/error-state'
 import { Input } from '@/components/ui/input'
 import { PageLoader, Spinner } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
 import { Tooltip } from '@/components/ui/tooltip'
-import { toErrorMessage } from '@/features/auth/lib/auth-api'
 import { getPublicJobBySlug, listPublicJobsPage, toggleSavedJob, type JobPostingBundle } from '@/features/jobs/lib/jobs-api'
 import { classifySector, getSectorLabel, sectorDefinitions } from '@/features/jobs/lib/sectors'
 import { getCompensationTypeLabel, getOpportunityTypeLabel, opportunityTypeOptions } from '@/features/opportunities/lib/opportunity-taxonomy'
@@ -535,11 +535,14 @@ export function PublicJobBoard() {
           <PageLoader label="Buscando empleos" hint="Cargando las oportunidades disponibles" />
         </motion.div>
       ) : jobsQuery.error ? (
-        <motion.div
-          variants={cardReveal}
-          className="rounded-card border border-rose-200 bg-rose-50 px-4 py-6 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
-        >
-          {toErrorMessage(jobsQuery.error)}
+        <motion.div variants={cardReveal}>
+          <ErrorState
+            title="No pudimos cargar las vacantes"
+            error={jobsQuery.error}
+            source="jobs.public-board"
+            isRetrying={jobsQuery.isFetching}
+            onRetry={() => void jobsQuery.refetch()}
+          />
         </motion.div>
       ) : visibleJobs.length === 0 && !hasNextPage && !isFetchingNextPage ? (
         <motion.div variants={cardReveal}>
