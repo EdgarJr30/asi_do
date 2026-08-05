@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveServiceKey } from '../_shared/supabase-keys.ts'
@@ -465,7 +465,7 @@ function buildEmailContent(input: {
 }
 
 async function insertDeliveryLog(
-  client: ReturnType<typeof createClient>,
+  client: SupabaseClient,
   input: {
     deliveryId: string
     logLevel: 'info' | 'warn' | 'error'
@@ -493,7 +493,7 @@ async function insertDeliveryLog(
  * Devuelve si el cierre se aplicó, para poder registrarlo cuando no.
  */
 async function completeDelivery(
-  client: ReturnType<typeof createClient>,
+  client: SupabaseClient,
   input: {
     deliveryId: string
     claimToken: string

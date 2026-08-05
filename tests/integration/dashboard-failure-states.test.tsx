@@ -71,6 +71,45 @@ describe('dashboard del candidato: fallo distinguible de vacío', () => {
     expect(screen.queryByText('Aún no tienes aplicaciones')).toBeNull()
   })
 
+  it('las métricas no muestran un 0 que miente cuando la consulta falla', async () => {
+    // La mitad del defecto que quedaba sin cubrir. Aunque la lista ya avise del
+    // fallo, unas tarjetas que dicen «0 aplicaciones activas» y «0 entrevistas»
+    // siguen afirmando un dato falso: quien tiene diez postulaciones lee que no
+    // tiene ninguna. Al fallar deben mostrar «—», no un número.
+    listMyApplications.mockRejectedValue(new Error('network down'))
+
+    const { CandidateHomePage } = await import('@/features/dashboard/pages/candidate-home-page')
+
+    renderDashboard(CandidateHomePage)
+
+    await waitFor(() => {
+      expect(screen.getAllByLabelText('Dato no disponible').length).toBeGreaterThan(0)
+    })
+
+    // Las tres métricas que dependen de las postulaciones: activas, entrevistas
+    // y tasa de respuesta.
+    expect(screen.getAllByLabelText('Dato no disponible')).toHaveLength(3)
+    expect(screen.getAllByText('No se pudo cargar').length).toBe(3)
+  })
+
+  it('las métricas sí muestran 0 cuando el 0 es verdad', async () => {
+    // El control de la prueba anterior: «—» solo debe aparecer por fallo. Si
+    // sustituyera también al cero legítimo, la corrección habría cambiado un
+    // dato engañoso por otro.
+    listMyApplications.mockResolvedValue([])
+
+    const { CandidateHomePage } = await import('@/features/dashboard/pages/candidate-home-page')
+
+    renderDashboard(CandidateHomePage)
+
+    await waitFor(() => {
+      expect(screen.getByText('Aún no tienes aplicaciones')).toBeTruthy()
+    })
+
+    expect(screen.queryByLabelText('Dato no disponible')).toBeNull()
+    expect(screen.queryByText('No se pudo cargar')).toBeNull()
+  })
+
   it('cuando de verdad no hay ninguna, muestra el estado vacío y no una alerta', async () => {
     // La otra mitad del contrato: distinguir los dos casos solo sirve si el
     // vacío legítimo sigue viéndose como vacío.

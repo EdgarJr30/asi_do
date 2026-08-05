@@ -1,12 +1,27 @@
 {
-  "//": "Configuracion de Deno para las Edge Functions. Vive en la raiz y no en supabase/functions/ a proposito: el CLI de Supabase interpreta un deno.json dentro del directorio de funciones como mapa de imports del despliegue, y aqui solo queremos configurar el linter. `no-import-prefix` se excluye porque quiere las dependencias en un mapa de imports en vez de specifiers `npm:` en linea, y las Edge Functions de Supabase se documentan y se despliegan justamente con specifiers en linea: la regla choca con la plataforma, no con el codigo. El resto de reglas por defecto se mantiene, que son las que encontraron el import muerto y los `any` de harness-core.ts. NO declarar `nodeModulesDir`: `deno check` con esa opcion escribe en el `node_modules` de npm y altera la resolucion de tipos del proyecto Node, que se manifiesta como una lluvia de `no-unnecessary-type-assertion` en `npm run lint`.",
+  "//": "Configuracion de Deno para las Edge Functions. Vive en la raiz y no en supabase/functions/ a proposito: el CLI de Supabase interpreta un deno.json dentro del directorio de funciones como mapa de imports del despliegue, y aqui solo queremos lint y type-check.",
+
+  "//lint": "`no-import-prefix` quiere las dependencias en un mapa de imports en vez de specifiers `npm:` en linea, y las Edge Functions de Supabase se documentan y despliegan justamente con specifiers en linea: la regla choca con la plataforma, no con el codigo. El resto de reglas por defecto se mantiene, que son las que encontraron un import muerto y dos `any` en harness-core.ts.",
+
+  "//nodeModulesDir": "`none` es obligatorio. Con `auto`, `deno check` escribe en el `node_modules` de npm y altera la resolucion de tipos del proyecto Node; se manifiesta como una lluvia de `no-unnecessary-type-assertion` en `npm run lint` que no tiene nada que ver con el codigo.",
+
+  "//minimumDependencyAge": "Deno descubre el `package.json` de la raiz y resuelve su arbol entero, aunque las Edge Functions no usen nada de el. Con la politica por defecto (24 h), este job falla cada vez que **cualquier** dependencia de npm se publico hace poco — paso con `tsx@4.23.6`, ajeno por completo a estas funciones. Un job que se pone rojo por algo que no vigila enseña al equipo a ignorar CI, asi que se desactiva aqui. La puerta real de suministro para npm es `npm run audit:policy`, que si mira lo que se instala.",
+
+  "nodeModulesDir": "none",
+  "minimumDependencyAge": "0",
   "lint": {
-    "include": ["supabase/functions"],
+    "include": [
+      "supabase/functions"
+    ],
     "rules": {
-      "exclude": ["no-import-prefix"]
+      "exclude": [
+        "no-import-prefix"
+      ]
     }
   },
   "fmt": {
-    "include": ["supabase/functions"]
+    "include": [
+      "supabase/functions"
+    ]
   }
 }

@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
 
 import { corsHeaders } from '../_shared/cors.ts'
@@ -26,6 +26,17 @@ interface QueuedPushRow {
   push_subscription_id: string | null
   subscription_endpoint: string | null
   subscription_locale: string | null
+}
+
+/** Fila con las cuatro columnas de envio ya garantizadas como no nulas. */
+type CompleteQueuedPushRow = Omit<
+  QueuedPushRow,
+  'auth_key' | 'p256dh_key' | 'push_delivery_id' | 'subscription_endpoint'
+> & {
+  auth_key: NonNullable<QueuedPushRow['auth_key']>
+  p256dh_key: NonNullable<QueuedPushRow['p256dh_key']>
+  push_delivery_id: NonNullable<QueuedPushRow['push_delivery_id']>
+  subscription_endpoint: NonNullable<QueuedPushRow['subscription_endpoint']>
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -108,7 +119,7 @@ function getVapidConfiguration() {
 }
 
 async function updateDeliveryStatus(
-  client: ReturnType<typeof createClient>,
+  client: SupabaseClient,
   input: {
     deliveryId: string
     status: string
@@ -192,9 +203,13 @@ Deno.serve(async (req) => {
 
     const queuedRows = (queueResponse.data ?? []) as QueuedPushRow[]
     const notificationId = queuedRows[0]?.notification_id ?? null
+    // `NonNullable` y no `Required`: `Required<>` solo quita la opcionalidad `?`,
+    // **no** el `| null` del tipo. Estas cuatro columnas son `string | null`, asi
+    // que el predicado anterior no estrechaba nada — el filtro en runtime si
+    // descartaba los nulos, pero el tipo seguia diciendo que podian serlo, y por
+    // eso `deliveryId` fallaba mas abajo. El estrechamiento era decorativo.
     const pushRows = queuedRows.filter(
-      (row): row is QueuedPushRow &
-        Required<Pick<QueuedPushRow, 'auth_key' | 'p256dh_key' | 'push_delivery_id' | 'subscription_endpoint'>> =>
+      (row): row is CompleteQueuedPushRow =>
         Boolean(row.auth_key && row.p256dh_key && row.push_delivery_id && row.subscription_endpoint)
     )
 

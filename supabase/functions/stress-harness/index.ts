@@ -105,9 +105,15 @@ Deno.serve(async (request: Request) => {
     .select('platform_roles!inner(code)')
     .eq('user_id', callerId)
     .is('revoked_at', null)
-  const isOwner = (roleCheck.data ?? []).some(
-    (row: { platform_roles: { code: string } | null }) => row.platform_roles?.code === 'platform_owner'
-  )
+  // Sin el generic `Database`, supabase-js infiere que toda relacion embebida es
+  // un array. Aqui no lo es: `platform_roles!inner` es muchos-a-uno y PostgREST
+  // devuelve un **objeto** — verificado contra el remoto, no deducido del tipo.
+  // Se declara la forma real en vez de leer `[0].code`, que es lo que pediria el
+  // tipo y romperia la guarda de super admin.
+  const roleRows = (roleCheck.data ?? []) as unknown as Array<{
+    platform_roles: { code: string } | null
+  }>
+  const isOwner = roleRows.some((row) => row.platform_roles?.code === 'platform_owner')
   if (!isOwner) {
     return jsonResponse({ error: 'Solo el super admin (platform_owner) puede ejecutar el arnés' }, 403)
   }
