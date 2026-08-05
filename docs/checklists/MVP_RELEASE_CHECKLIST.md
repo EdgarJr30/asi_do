@@ -8,7 +8,7 @@
 - Solicitud de operador en `/account/recruiter-request`
 - Aprobacion admin en `/admin/approvals`
 - Workspace employer en `/workspace`
-- Creacion y publish de job en `/account/jobs` con listado protegido para miembros aprobados
+- Creacion y publish de job en `/workspace/jobs` (superficie del empleador) con listado protegido para miembros aprobados en `/account/jobs` (superficie del candidato)
 - Apply flow en `/account/jobs/:slug/apply`
 - Pipeline de coordinadores en `/workspace/pipeline`
 

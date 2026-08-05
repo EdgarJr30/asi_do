@@ -115,7 +115,7 @@ Para que la activación de staging sea "cambiar entornos y ya", esto conviene re
 
 - [ ] **Cero cambios manuales desde el dashboard de Supabase.** Todo por migración. Un `GRANT` o una policy hecha a mano no viaja a staging.
 - [ ] **Despliegue de Edge Functions por CI**, no `supabase functions deploy` desde la laptop.
-- [ ] **Unificar la topología documentada.** `docs/pasarelaDePagos/despliegue-azul.md` describe frontend en Hostinger y AZUL en Railway, mientras el repo tiene `netlify.toml` y el dominio activo es `asi-do.netlify.app`. Debe quedar una sola versión antes de montar staging.
+- [x] **Unificar la topología documentada.** ✅ 2026-08-04. Resuelto: no era una decisión pendiente sino texto obsoleto en un solo documento. **No existe ni un archivo de configuración de Hostinger en el repositorio**, mientras que `netlify.toml`, `railway.json` y el `Dockerfile` del microservicio sí están, y tres documentos ya decían Netlify. La topología única —SPA en Netlify, `services/azul-payments` en Railway, plataforma en Supabase— queda declarada en `docs/pasarelaDePagos/despliegue-azul.md`, que es el runbook que manda.
 
 ## 6. Runbook: activar staging
 

@@ -3,11 +3,25 @@
 Pasos para poner en producción los pagos de membresía y donaciones con AZUL. Ver el flujo en
 [`flujo-azul.md`](./flujo-azul.md).
 
-## Recomendación de hosting
-Mantén el frontend productivo en **Hostinger** y despliega `services/azul-payments` en **Railway**.
-El microservicio Node.js maneja secretos de AZUL/Supabase, recibe callbacks firmados, corre conciliación
-y necesita healthcheck/logs/reinicios. Railway encaja mejor para ese rol; Hostinger queda como hosting de
-la SPA y dominio principal.
+## Topología de despliegue
+
+**Frontend en Netlify, microservicio AZUL en Railway.** Es la única topología del proyecto; si algún
+documento dice otra cosa, este es el que manda.
+
+| Pieza | Dónde | Config en el repo |
+|---|---|---|
+| SPA (frontend) | **Netlify**, publicando desde `main` | `netlify.toml` |
+| `services/azul-payments` | **Railway**, build por Dockerfile | `services/azul-payments/railway.json`, `Dockerfile` |
+| Base de datos, Auth, Storage, Edge Functions | **Supabase** | `supabase/config.toml` |
+
+Van separados porque son cargas distintas: la SPA es un artefacto estático con CDN, mientras que el
+microservicio Node maneja secretos de AZUL y Supabase, recibe callbacks firmados, corre la conciliación
+por cron y necesita healthcheck, logs y reinicios.
+
+> **Corrección 2026-08-04.** Este runbook decía «Hostinger» para el frontend, contradiciendo al `README`,
+> a `docs/architecture/ENVIRONMENTS.md` y a `TECHNICAL_ARCHITECTURE.md`, que dicen Netlify. No era una
+> decisión pendiente sino texto obsoleto: **no existe ni un archivo de configuración de Hostinger en el
+> repositorio**, mientras que `netlify.toml` sí está y el dominio activo es `asi-do.netlify.app`.
 
 ## 1. Base de datos (Supabase)
 Aplica las migraciones nuevas al proyecto remoto:
@@ -60,13 +74,23 @@ Variables de entorno (secret store del proveedor — ver `.env.example`):
 > En producción, cambia a las URLs `https://pagos.azul.com.do/...`, `AZUL_ENVIRONMENT=production`,
 > el `MerchantName` de la afiliación real y la `AuthKey` de producción (distinta a la de pruebas).
 
-## 3. SPA en Hostinger
-Define la variable de build del frontend:
+## 3. SPA en Netlify
+Define la variable de build del frontend en el panel de Netlify:
 ```
 VITE_AZUL_PAYMENTS_URL=https://<subdominio-pagos-o-railway>
 ```
-Re-despliega el frontend en Hostinger. Si usas un subdominio propio para pagos, apunta ese DNS al dominio
-que te entregue Railway y usa ese mismo valor en `SERVICE_PUBLIC_URL`.
+Netlify republica solo al empujar a `main`. Si usas un subdominio propio para pagos, apunta ese DNS al
+dominio que te entregue Railway y usa ese mismo valor en `SERVICE_PUBLIC_URL`.
+
+El build **falla** si falta esta variable o cualquier otra crítica: lo comprueba el plugin
+`asi-require-production-env` (ver `src/shared/config/required-env.ts`). Es deliberado — sin él, un
+despliegue mal configurado publicaba una aplicación que no autentica ni cobra, y el fallo no se veía
+hasta que un usuario lo sufría.
+
+### Origins de CORS
+`ALLOWED_ORIGIN` del microservicio acepta lista separada por comas y debe incluir el dominio de
+producción de Netlify. `APP_URL` es a dónde vuelve el usuario tras pagar; `SERVICE_PUBLIC_URL` es la URL
+pública del propio microservicio, la que se registra con AZUL para los callbacks.
 
 ## 4. Configuración con AZUL
 - Activa el pago en `/admin/payments` (toggle **Habilitar pago con tarjeta (AZUL)**, CurrencyCode, ambiente).
