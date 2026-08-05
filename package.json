@@ -20,7 +20,7 @@
     "test:integration": "vitest run tests/integration",
     "test:contract": "vitest run tests/integration/project-contract.test.ts",
     "test:acceptance": "TSX_TSCONFIG_PATH=tsconfig.app.json NODE_OPTIONS='--import tsx' cucumber-js \"tests/acceptance/**/*.feature\" --import \"tests/acceptance/**/*.steps.ts\" --strict --format progress",
-    "test:coverage": "vitest run --coverage --testTimeout=15000",
+    "test:coverage": "vitest run --coverage",
     "test:mutation": "stryker run",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.ts",

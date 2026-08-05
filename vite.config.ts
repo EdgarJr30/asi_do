@@ -200,6 +200,13 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
+    // El limite por test vivia solo en el script de cobertura, asi que `npm test`
+    // se quedaba con los 5s por defecto: menos margen que el que espera
+    // testing-library (`asyncUtilTimeout`, ver `src/test/setup.ts`), y un test
+    // lento moria por timeout de vitest antes de poder decir que elemento no
+    // encontro. Con el valor en la config, las dos formas de correr la suite
+    // usan el mismo presupuesto.
+    testTimeout: 15000,
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['tests/e2e/**'],
     // El fallo intermitente de la suite aparecio dos veces encadenado dentro de

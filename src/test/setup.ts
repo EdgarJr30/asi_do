@@ -1,7 +1,7 @@
 // Primero de todo: fija el entorno antes de que cualquier módulo lea `import.meta.env`.
 import '@/test/env'
 
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { afterEach } from 'vitest'
 import '@/lib/i18n/config'
@@ -9,6 +9,16 @@ import '@/lib/i18n/config'
 afterEach(() => {
   cleanup()
 })
+
+// `findBy*`/`waitFor` esperan 1s por defecto, y ese segundo es presupuesto de
+// reloj de pared: lo consumen el chunk diferido de la ruta, el primer render y
+// la transición animada entre pasos. En un portátil sobra; en el runner de CI
+// —y sobre todo bajo `--coverage`, que instrumenta cada módulo— no, y el test
+// falla diciendo "no encuentro el heading" cuando lo que pasó es que aún no
+// había llegado. Es la misma clase de fallo que solo se ve en CI, así que se
+// sube el presupuesto en vez de dejarlo al azar de la máquina. Un elemento que
+// de verdad no aparece sigue fallando, solo que 4s más tarde.
+configure({ asyncUtilTimeout: 5000 })
 
 // localStorage/sessionStorage: Node 26 expone un `localStorage` global experimental
 // (undefined salvo que se pase `--localstorage-file`) que deja a `window.localStorage`
