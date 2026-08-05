@@ -34,9 +34,9 @@ import {
   smoothPageStagger as pageStagger
 } from '@/shared/ui/card-motion'
 import { CountUp } from '@/shared/ui/count-up'
-import { listMyApplications } from '@/features/applications/lib/applications-api'
 import { listPublicJobs } from '@/features/jobs/lib/jobs-api'
 import type { Database } from '@/shared/types/database'
+import { myApplicationsQuery } from '@/features/applications/lib/applications-queries'
 
 type PublicStatus = Database['public']['Enums']['application_public_status']
 
@@ -88,11 +88,7 @@ export function CandidateHomePage() {
   const userId = session.authUser?.id ?? null
   const displayName = session.profile?.display_name ?? session.profile?.full_name ?? session.authUser?.email ?? 'candidato'
 
-  const applicationsQuery = useQuery({
-    queryKey: ['applications', 'mine', userId],
-    enabled: Boolean(userId),
-    queryFn: async () => listMyApplications(userId!)
-  })
+  const applicationsQuery = useQuery(myApplicationsQuery(userId))
 
   const openJobsQuery = useQuery({
     queryKey: ['jobs', 'public-board', 'home-count'],

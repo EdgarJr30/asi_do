@@ -24,15 +24,15 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageLoader } from '@/components/ui/loader'
-import { listMyApplications } from '@/features/applications/lib/applications-api'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
-import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
 import { getPublicJobBySlug, toggleSavedJob } from '@/features/jobs/lib/jobs-api'
 import { getCompensationTypeLabel, getOpportunityTypeLabel } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { CompanyLogo } from '@/features/tenants/components/company-logo'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
+import { myCandidateProfileQuery } from '@/features/candidate-profile/lib/candidate-profile-queries'
+import { myApplicationsQuery } from '@/features/applications/lib/applications-queries'
 
 const workplaceLabels: Record<string, string> = { remote: 'Remoto', hybrid: 'Híbrido', on_site: 'Presencial' }
 const employmentLabels: Record<string, string> = {
@@ -112,21 +112,13 @@ export function JobDetailPage() {
   const session = useAppSession()
   const queryClient = useQueryClient()
   const shouldReduceMotion = useReducedMotion()
-  const candidateProfileQuery = useQuery({
-    queryKey: ['candidate-profile', 'mine', 'job-detail'],
-    enabled: session.isAuthenticated,
-    queryFn: async () => fetchMyCandidateProfile(session.authUser!.id)
-  })
+  const candidateProfileQuery = useQuery(myCandidateProfileQuery(session.authUser?.id))
   const jobQuery = useQuery({
     queryKey: ['jobs', 'detail', jobSlug, candidateProfileQuery.data?.profile?.id ?? null],
     enabled: jobSlug.length > 0,
     queryFn: async () => getPublicJobBySlug(jobSlug, candidateProfileQuery.data?.profile?.id ?? null)
   })
-  const applicationsQuery = useQuery({
-    queryKey: ['applications', 'mine', 'job-detail', session.authUser?.id ?? null],
-    enabled: session.isAuthenticated,
-    queryFn: async () => listMyApplications(session.authUser!.id)
-  })
+  const applicationsQuery = useQuery(myApplicationsQuery(session.authUser?.id))
 
   const saveMutation = useMutation({
     mutationFn: async (shouldSave: boolean) => {

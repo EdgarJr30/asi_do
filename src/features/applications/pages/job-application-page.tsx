@@ -23,12 +23,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PageLoader } from '@/components/ui/loader'
 import { Textarea } from '@/components/ui/textarea'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
-import { listMyApplications, submitApplication, updateApplicationResume } from '@/features/applications/lib/applications-api'
-import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
+import { submitApplication, updateApplicationResume } from '@/features/applications/lib/applications-api'
 import { getPublicJobBySlug } from '@/features/jobs/lib/jobs-api'
 import { CompanyLogo } from '@/features/tenants/components/company-logo'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { cn } from '@/lib/utils/cn'
+import { myCandidateProfileQuery } from '@/features/candidate-profile/lib/candidate-profile-queries'
+import { APPLICATIONS_QUERY_SCOPE, myApplicationsQuery } from '@/features/applications/lib/applications-queries'
 
 const TOTAL_STEPS = 4
 
@@ -164,21 +165,13 @@ export function JobApplicationPage() {
     return () => window.clearInterval(interval)
   }, [applicationSubmitted, autoRedirect, navigate])
 
-  const candidateProfileQuery = useQuery({
-    queryKey: ['candidate-profile', 'mine', 'apply'],
-    enabled: session.isAuthenticated,
-    queryFn: async () => fetchMyCandidateProfile(session.authUser!.id)
-  })
+  const candidateProfileQuery = useQuery(myCandidateProfileQuery(session.authUser?.id))
   const jobQuery = useQuery({
     queryKey: ['jobs', 'detail', 'apply', jobSlug],
     enabled: jobSlug.length > 0,
     queryFn: async () => getPublicJobBySlug(jobSlug)
   })
-  const applicationsQuery = useQuery({
-    queryKey: ['applications', 'mine', 'job-apply', session.authUser?.id ?? null],
-    enabled: session.isAuthenticated,
-    queryFn: async () => listMyApplications(session.authUser!.id)
-  })
+  const applicationsQuery = useQuery(myApplicationsQuery(session.authUser?.id))
 
   const profileBundle = candidateProfileQuery.data
   const job = jobQuery.data
@@ -225,7 +218,7 @@ export function JobApplicationPage() {
             ? 'Actualizamos el CV asociado a esta postulación.'
             : 'Tu perfil y respuestas ya quedaron registrados para esta vacante.'
       })
-      await queryClient.invalidateQueries({ queryKey: ['applications', 'mine'] })
+      await queryClient.invalidateQueries({ queryKey: APPLICATIONS_QUERY_SCOPE })
       await queryClient.invalidateQueries({ queryKey: ['jobs'] })
       if (!existingApplication) {
         clearApplicationDraft(draftKey)

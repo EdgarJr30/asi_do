@@ -35,8 +35,6 @@ import { PageLoader, Spinner } from '@/components/ui/loader'
 import { Select } from '@/components/ui/select'
 import { Tooltip } from '@/components/ui/tooltip'
 import { toErrorMessage } from '@/features/auth/lib/auth-api'
-import { listMyApplications } from '@/features/applications/lib/applications-api'
-import { fetchMyCandidateProfile } from '@/features/candidate-profile/lib/candidate-profile-api'
 import { getPublicJobBySlug, listPublicJobsPage, toggleSavedJob, type JobPostingBundle } from '@/features/jobs/lib/jobs-api'
 import { classifySector, getSectorLabel, sectorDefinitions } from '@/features/jobs/lib/sectors'
 import { getCompensationTypeLabel, getOpportunityTypeLabel, opportunityTypeOptions } from '@/features/opportunities/lib/opportunity-taxonomy'
@@ -44,6 +42,8 @@ import { CompanyLogo } from '@/features/tenants/components/company-logo'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { useRealtimeSync } from '@/lib/realtime/use-realtime-sync'
 import { cn } from '@/lib/utils/cn'
+import { myCandidateProfileQuery } from '@/features/candidate-profile/lib/candidate-profile-queries'
+import { myApplicationsQuery } from '@/features/applications/lib/applications-queries'
 import {
   softEase,
   smoothCardReveal as cardReveal,
@@ -182,11 +182,7 @@ export function PublicJobBoard() {
     setSort(nextSort)
   }
 
-  const candidateProfileQuery = useQuery({
-    queryKey: ['candidate-profile', 'mine', 'jobs-board'],
-    enabled: session.isAuthenticated,
-    queryFn: async () => fetchMyCandidateProfile(session.authUser!.id)
-  })
+  const candidateProfileQuery = useQuery(myCandidateProfileQuery(session.authUser?.id))
   const candidateProfileId = candidateProfileQuery.data?.profile?.id ?? null
 
   // Paginación real de servidor + scroll infinito: cada página llega vía `range`,
@@ -217,11 +213,7 @@ export function PublicJobBoard() {
     { table: 'job_postings', invalidate: [PUBLIC_JOBS_QUERY_KEY] }
   ])
 
-  const applicationsQuery = useQuery({
-    queryKey: ['applications', 'mine', 'jobs-board', session.authUser?.id ?? null],
-    enabled: session.isAuthenticated,
-    queryFn: async () => listMyApplications(session.authUser!.id)
-  })
+  const applicationsQuery = useQuery(myApplicationsQuery(session.authUser?.id))
 
   const pages = useMemo(() => jobsQuery.data?.pages ?? [], [jobsQuery.data])
   const allJobs = useMemo(() => pages.flatMap((entry) => entry.jobs), [pages])

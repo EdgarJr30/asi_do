@@ -8,6 +8,7 @@ import { NotificationEventBridge } from '@/app/providers/notification-event-brid
 import { SessionRealtimeBridge } from '@/app/providers/session-realtime-bridge'
 import { AppSessionProvider } from '@/app/providers/app-session-provider'
 import { ThemeProvider } from '@/app/providers/theme-provider'
+import { OfflineBanner } from '@/components/ui/offline-banner'
 
 function AppToaster() {
   const { resolvedTheme, theme } = useTheme()
@@ -31,7 +32,12 @@ export function AppProviders({ children }: PropsWithChildren) {
             // recarga con loader. Esta era la causa del "se siente como refresh".
             gcTime: 15 * 60_000,
             retry: 1,
-            refetchOnWindowFocus: false
+            refetchOnWindowFocus: false,
+            // Sin esto, una consulta que falla mientras no hay red no se
+            // reintenta al volver la conexión: se queda en error hasta que el
+            // usuario navega. El banner refresca lo activo, pero esto cubre las
+            // que ni siquiera llegaron a montarse.
+            refetchOnReconnect: true
           },
           mutations: {
             retry: 0
@@ -48,6 +54,7 @@ export function AppProviders({ children }: PropsWithChildren) {
           <NotificationEventBridge />
           <SessionRealtimeBridge />
           {children}
+          <OfflineBanner />
           <AppToaster />
         </ThemeProvider>
       </AppSessionProvider>
