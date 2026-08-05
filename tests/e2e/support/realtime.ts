@@ -34,6 +34,78 @@ export function createServiceClient() {
 
 export type ServiceClient = ReturnType<typeof createServiceClient>
 
+/** `role` de una llave legacy, para distinguir la `service_role` de la `anon`. */
+function legacyJwtRole(key: string) {
+  try {
+    const payload: unknown = JSON.parse(Buffer.from(key.split('.')[1], 'base64').toString('utf8'))
+    const role = (payload as { role?: unknown }).role
+    return typeof role === 'string' ? role : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Describe la llave configurada SIN exponer su valor: solo prefijo y longitud.
+ *
+ * Basta para separar los tres errores que ocurren de verdad —llave vacía, la
+ * publishable pegada en su lugar, o la legacy de un proyecto que ya migró a las
+ * API keys nuevas— sin volcar un secreto al log de CI, que es público.
+ */
+function describeServiceRoleKey() {
+  const key = realtimeConfig.serviceRoleKey
+
+  if (!key) {
+    return 'está vacía'
+  }
+  if (key.startsWith('sb_secret_')) {
+    return `es una secret key nueva (sb_secret_…, ${key.length} chars), así que apunta a otro proyecto o fue rotada`
+  }
+  if (key.startsWith('sb_publishable_')) {
+    return 'es la publishable key (sb_publishable_…), no la secret'
+  }
+  if (key.split('.').length === 3) {
+    const role = legacyJwtRole(key)
+    return `es una JWT legacy${role ? ` (role=${role})` : ''}, y este proyecto usa las API keys nuevas`
+  }
+  return `tiene un formato no reconocido (${key.length} chars)`
+}
+
+/**
+ * Traduce un fallo de credenciales a algo accionable.
+ *
+ * Con la llave mal configurada, supabase-js lanza `AuthApiError: Invalid API
+ * key` desde dentro del `beforeAll`: un stack que apunta a `auth-js` y no dice
+ * ni qué variable revisar ni contra qué proyecto falló. Averiguarlo costó una
+ * corrida de CI entera, así que el diagnóstico se queda escrito aquí.
+ */
+export function explainAdminError(error: unknown): unknown {
+  const status = (error as { status?: unknown } | null)?.status
+  const message = (error as { message?: unknown } | null)?.message
+  const looksLikeBadKey =
+    status === 401 || (typeof message === 'string' && /invalid api key|no api key/i.test(message))
+
+  if (!looksLikeBadKey) {
+    return error
+  }
+
+  let host = realtimeConfig.supabaseUrl
+  try {
+    host = new URL(realtimeConfig.supabaseUrl).host
+  } catch {
+    host = realtimeConfig.supabaseUrl || '(sin URL)'
+  }
+
+  return new Error(
+    [
+      `Supabase rechazó las credenciales de administrador contra ${host}: "${String(message)}".`,
+      `La llave de E2E_SERVICE_ROLE_KEY / SUPABASE_SERVICE_ROLE_KEY ${describeServiceRoleKey()}.`,
+      'Debe ser la secret key del mismo proyecto que E2E_SUPABASE_URL.',
+      'En CI se configura en Settings → Secrets and variables → Actions; en local, en .env.local.'
+    ].join('\n')
+  )
+}
+
 export interface ProvisionedCandidate {
   userId: string
   email: string
@@ -55,7 +127,7 @@ export async function provisionRealtimeCandidate(admin: ServiceClient): Promise<
     user_metadata: { full_name: 'Realtime E2E' }
   })
   if (createError) {
-    throw createError
+    throw explainAdminError(createError)
   }
   const userId = created.user.id
 
