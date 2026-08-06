@@ -89,7 +89,19 @@ test.describe.serial('mvp authenticated smoke', () => {
     await expect(page).not.toHaveURL(/\/auth\/sign-in/)
 
     await page.goto(candidateProfilePath)
-    await expect(page.getByText(/Dejemos tu cuenta lista|Perfil candidato/i).first()).toBeVisible()
+    // Unico aserto del test que espera contenido y no una URL, y cae justo tras
+    // un `goto`: la sesion se rehidrata desde cero y encima hay una query remota
+    // detras, asi que espera bastante mas que un aserto de DOM normal. Los 10s
+    // por defecto alcanzan en local (~33s la suite entera) pero no en el runner
+    // de CI, que va con 2 workers y tardo 70s en lo mismo; ahi se agotaban y el
+    // smoke fallaba sin que nada estuviera roto.
+    //
+    // Esperar a que se retire el PageLoader seria mas preciso que un numero, pero
+    // no se puede por `role`: el propio wizard tiene un <p role="status"> fijo
+    // (profile-onboarding-flow.tsx), asi que el conteo nunca baja a cero.
+    await expect(page.getByText(/Dejemos tu cuenta lista|Perfil candidato/i).first()).toBeVisible({
+      timeout: 30_000
+    })
 
     await page.goto(candidateApplicationsPath)
     await expect(page).not.toHaveURL(/\/auth\/sign-in/)
