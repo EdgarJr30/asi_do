@@ -26,6 +26,26 @@ export function realtimeEnvReady() {
   return Boolean(realtimeConfig.supabaseUrl && realtimeConfig.serviceRoleKey)
 }
 
+/**
+ * En CI, entorno ausente es un fallo, no un skip.
+ *
+ * El skip existe para el portátil de quien no tiene el `service_role` a mano.
+ * En CI significa otra cosa: que el secreto se borró, se renombró o llegó
+ * vacío, y entonces la corrida termina en verde sin haber probado la mitad que
+ * importa. Ese "verde" es peor que un rojo, porque nadie lo mira. Se comprueba
+ * al importar el módulo para que ningún call site pueda saltárselo.
+ */
+if (!realtimeEnvReady() && process.env.CI) {
+  throw new Error(
+    [
+      'Faltan E2E_SUPABASE_URL y/o E2E_SERVICE_ROLE_KEY en CI.',
+      `Recibido: URL ${realtimeConfig.supabaseUrl ? 'presente' : 'vacía'}, service_role ${realtimeConfig.serviceRoleKey ? 'presente' : 'vacía'}.`,
+      'Fuera de CI la suite se salta sin ruido; aquí no, porque un skip dejaría la corrida verde sin ejecutar las pruebas autenticadas.',
+      'Configúralos en Settings → Secrets and variables → Actions.'
+    ].join('\n')
+  )
+}
+
 export function createServiceClient() {
   return createClient(realtimeConfig.supabaseUrl, realtimeConfig.serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false }
