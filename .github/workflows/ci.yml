@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - main
+  # Relanzar a mano sin inventar un commit vacio: cuando el fallo esta en un
+  # secreto (no en el codigo), la unica forma de reprobarlo era pushear algo.
+  workflow_dispatch:
 
 permissions:
   contents: read
