@@ -4,6 +4,13 @@ import { webServerEnv } from './tests/e2e/support/env'
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // Las pruebas del service worker no corren aquí: exigen el build de
+  // producción, y esta config levanta `npm run dev`, donde el SW ni se
+  // registra. Tienen su propia config y su propio script
+  // (`playwright.pwa.config.ts`, `npm run test:e2e:pwa`); sin esta exclusión se
+  // colaban en la suite principal y fallaban las 6, en los 3 navegadores, por
+  // algo que no es un defecto del producto.
+  testIgnore: '**/pwa/**',
   fullyParallel: false,
   retries: 0,
   // El techo del test queda holgado a propósito por encima de los presupuestos

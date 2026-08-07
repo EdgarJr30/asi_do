@@ -16,9 +16,10 @@ loadLocalEnv()
 export const realtimeConfig = {
   supabaseUrl: process.env.E2E_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '',
   serviceRoleKey: process.env.E2E_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
-  // Tenant/empresa semilla ("Empresa Demo") usados como dueños de la vacante de prueba.
-  tenantId: process.env.E2E_REALTIME_TENANT_ID ?? 'ac2fe711-a642-4010-b6ee-5b67fe0a8937',
-  companyProfileId: process.env.E2E_REALTIME_COMPANY_PROFILE_ID ?? '3f26fb90-5089-4b4e-b31e-5d280a0c1034',
+  // Dueño de la vacante de prueba. Vacío = se descubre de la base al arrancar
+  // (ver `resolveJobPublisher`); las variables existen para fijarlo a propósito.
+  tenantId: process.env.E2E_REALTIME_TENANT_ID ?? '',
+  companyProfileId: process.env.E2E_REALTIME_COMPANY_PROFILE_ID ?? '',
   candidatePassword: process.env.E2E_REALTIME_PASSWORD ?? 'RealtimeTest!2026'
 }
 
@@ -168,13 +169,75 @@ export async function provisionRealtimeCandidate(admin: ServiceClient): Promise<
   const overrideUntil = new Date(Date.now() + 1000 * 60 * 60).toISOString() // +1h
   const { error: grantError } = await admin
     .from('users')
-    .update({ status: 'active', manual_access_override_until: overrideUntil })
+    .update({
+      status: 'active',
+      manual_access_override_until: overrideUntil,
+      // Onboarding base completado. Sin estos cuatro campos, `RequireAuth`
+      // desvía cualquier ruta autenticada a /account/profile
+      // (`hasCompletedBaseOnboarding`), así que la cuenta recién creada no podía
+      // llegar al job board ni al home: las pruebas medían el asistente de
+      // onboarding creyendo que medían otra cosa.
+      //
+      // Se completa solo el mínimo del gate. El *perfil de candidato* sigue
+      // vacío a propósito: es lo que hace visible el aviso "Completa tu perfil"
+      // y lo que mantiene a la cuenta representando a un usuario nuevo.
+      full_name: 'Realtime E2E',
+      display_name: 'Realtime E2E',
+      locale: 'es',
+      country_code: 'DO'
+    })
     .eq('id', userId)
   if (grantError) {
     throw grantError
   }
 
   return { userId, email, password }
+}
+
+export type JobPublisher = {
+  tenantId: string
+  companyProfileId: string
+  /** Título de una vacante ya publicada, para saber que el board cargó. */
+  baselineTitle: string
+}
+
+/**
+ * Averigua bajo qué empresa publicar la vacante de la prueba, leyéndolo de la
+ * base en vez de darlo por sabido.
+ *
+ * Antes había dos UUID incrustados aquí (la "Empresa Demo" semilla) y un título
+ * de vacante literal en la prueba. Las tres filas ya no existen en el proyecto,
+ * así que la prueba fallaba en el primer aserto —el board no mostraba la
+ * vacante esperada— y su INSERT habría muerto después por clave foránea. Ese
+ * fallo no dice nada del producto: dice que alguien borró unos datos de ejemplo
+ * hace meses.
+ *
+ * Descubrirlo tiene además la propiedad que se quiere: la prueba comprueba que
+ * el board **muestra lo que hay publicado**, sea lo que sea, y no que exista
+ * una fila concreta.
+ */
+export async function resolveJobPublisher(admin: ServiceClient): Promise<JobPublisher | null> {
+  const { data, error } = await admin
+    .from('job_postings')
+    .select('title, tenant_id, company_profile_id')
+    .eq('status', 'published')
+    .not('company_profile_id', 'is', null)
+    .order('published_at', { ascending: false })
+    .limit(1)
+    .maybeSingle<{ title: string; tenant_id: string; company_profile_id: string }>()
+
+  if (error) {
+    throw error
+  }
+  if (!data) {
+    return null
+  }
+
+  return {
+    tenantId: realtimeConfig.tenantId || data.tenant_id,
+    companyProfileId: realtimeConfig.companyProfileId || data.company_profile_id,
+    baselineTitle: data.title
+  }
 }
 
 export async function cleanupRealtimeCandidate(admin: ServiceClient, candidate: ProvisionedCandidate | null) {

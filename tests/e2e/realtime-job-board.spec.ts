@@ -4,8 +4,9 @@ import {
   cleanupRealtimeCandidate,
   createServiceClient,
   provisionRealtimeCandidate,
-  realtimeConfig,
   realtimeEnvReady,
+  resolveJobPublisher,
+  type JobPublisher,
   type ProvisionedCandidate,
   type ServiceClient
 } from './support/realtime'
@@ -23,9 +24,7 @@ import { FRESH_SESSION_CONTENT_TIMEOUT } from './support/timeouts'
  * (lee .env.local automáticamente en local).
  */
 
-const DEMO_JOB_TITLE = 'Desarrollador(a) Frontend React'
-
-async function signInAndOpenBoard(page: Page, candidate: ProvisionedCandidate) {
+async function signInAndOpenBoard(page: Page, candidate: ProvisionedCandidate, baselineTitle: string) {
   await page.goto('/auth/sign-in')
   await page.getByPlaceholder('john.doe@empresa.com.do').fill(candidate.email)
   await page.getByPlaceholder('Tu contraseña').fill(candidate.password)
@@ -33,7 +32,10 @@ async function signInAndOpenBoard(page: Page, candidate: ProvisionedCandidate) {
   // Usuario nuevo: puede aterrizar en /account o /account/profile (onboarding).
   await page.waitForURL(/\/account/)
   await page.goto('/account/jobs')
-  await expect(page.getByText(DEMO_JOB_TITLE).first()).toBeVisible({
+  // Esperar a una vacante que ya existía: confirma que el board terminó de
+  // cargar antes de medir nada en vivo. El título sale de la base, no de una
+  // constante — ver `resolveJobPublisher`.
+  await expect(page.getByText(baselineTitle).first()).toBeVisible({
     timeout: FRESH_SESSION_CONTENT_TIMEOUT
   })
   // A partir de aquí, ninguna sesión debe recargarse: lo verificamos al final.
@@ -45,9 +47,11 @@ test.describe.serial('job board público en vivo', () => {
 
   let admin: ServiceClient
   let candidate: ProvisionedCandidate | null = null
+  let publisher: JobPublisher | null = null
 
   test.beforeAll(async () => {
     admin = createServiceClient()
+    publisher = await resolveJobPublisher(admin)
     candidate = await provisionRealtimeCandidate(admin)
   })
 
@@ -57,7 +61,12 @@ test.describe.serial('job board público en vivo', () => {
 
   test('una vacante publicada aparece y desaparece en vivo en dos sesiones, sin recargar', async ({ browser }) => {
     expect(candidate).not.toBeNull()
+    // Sin ninguna vacante publicada no hay board que observar. Es un salto
+    // honesto: la prueba no puede concluir nada, y fallar aquí culparía al
+    // producto de que la base está vacía.
+    test.skip(publisher === null, 'No hay ninguna vacante publicada bajo la que publicar la de prueba.')
     const activeCandidate = candidate!
+    const activePublisher = publisher!
     const unique = `Vacante Realtime ${Date.now()}`
     const slug = `vacante-realtime-${Date.now()}`
     let insertedId: string | null = null
@@ -68,15 +77,15 @@ test.describe.serial('job board público en vivo', () => {
     const pageB = await contextB.newPage()
 
     try {
-      await signInAndOpenBoard(pageA, activeCandidate)
-      await signInAndOpenBoard(pageB, activeCandidate)
+      await signInAndOpenBoard(pageA, activeCandidate, activePublisher.baselineTitle)
+      await signInAndOpenBoard(pageB, activeCandidate, activePublisher.baselineTitle)
 
       // --- Otra "empresa" publica una vacante directamente en la BD ---
       const { data, error } = await admin
         .from('job_postings')
         .insert({
-          tenant_id: realtimeConfig.tenantId,
-          company_profile_id: realtimeConfig.companyProfileId,
+          tenant_id: activePublisher.tenantId,
+          company_profile_id: activePublisher.companyProfileId,
           title: unique,
           slug,
           summary: 'Vacante temporal para verificar actualizaciones en vivo.',
