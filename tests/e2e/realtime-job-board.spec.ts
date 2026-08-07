@@ -9,6 +9,7 @@ import {
   type ProvisionedCandidate,
   type ServiceClient
 } from './support/realtime'
+import { FRESH_SESSION_CONTENT_TIMEOUT } from './support/timeouts'
 
 /**
  * Regresión de datos en vivo: dos sesiones independientes abren el job board
@@ -30,9 +31,11 @@ async function signInAndOpenBoard(page: Page, candidate: ProvisionedCandidate) {
   await page.getByPlaceholder('Tu contraseña').fill(candidate.password)
   await page.getByRole('button', { name: /Iniciar sesión/i }).click()
   // Usuario nuevo: puede aterrizar en /account o /account/profile (onboarding).
-  await page.waitForURL(/\/account/, { timeout: 30_000 })
+  await page.waitForURL(/\/account/)
   await page.goto('/account/jobs')
-  await expect(page.getByText(DEMO_JOB_TITLE).first()).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText(DEMO_JOB_TITLE).first()).toBeVisible({
+    timeout: FRESH_SESSION_CONTENT_TIMEOUT
+  })
   // A partir de aquí, ninguna sesión debe recargarse: lo verificamos al final.
   await page.evaluate(() => ((window as unknown as { __noReload: boolean }).__noReload = true))
 }
@@ -89,15 +92,15 @@ test.describe.serial('job board público en vivo', () => {
       insertedId = data.id
 
       // Sin recargar: ambas sesiones deben mostrar la nueva vacante.
-      await expect(pageA.getByText(unique).first()).toBeVisible({ timeout: 20_000 })
-      await expect(pageB.getByText(unique).first()).toBeVisible({ timeout: 20_000 })
+      await expect(pageA.getByText(unique).first()).toBeVisible()
+      await expect(pageB.getByText(unique).first()).toBeVisible()
 
       // --- La vacante se elimina; ambas deben dejar de mostrarla en vivo ---
       await admin.from('job_postings').delete().eq('id', insertedId)
       insertedId = null
 
-      await expect(pageA.getByText(unique)).toHaveCount(0, { timeout: 20_000 })
-      await expect(pageB.getByText(unique)).toHaveCount(0, { timeout: 20_000 })
+      await expect(pageA.getByText(unique)).toHaveCount(0)
+      await expect(pageB.getByText(unique)).toHaveCount(0)
 
       // Garantía de "en vivo": ninguna pestaña se recargó durante la prueba.
       expect(await pageA.evaluate(() => (window as unknown as { __noReload?: boolean }).__noReload)).toBe(true)

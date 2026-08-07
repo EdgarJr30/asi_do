@@ -6,12 +6,24 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
   retries: 0,
-  timeout: 60_000,
+  // El techo del test queda holgado a propósito por encima de los presupuestos
+  // de abajo: si un aserto agota sus 20s dentro de un test que ya gastó tiempo,
+  // el test debe morir en el aserto —que dice qué elemento no apareció— y no en
+  // el timeout global, que solo dice que se acabó el tiempo.
+  timeout: 90_000,
   expect: {
-    timeout: 10_000
+    // Presupuesto compartido de los asertos. No son 10s porque el runner de CI
+    // va ~2x más lento que esta máquina (suite completa: 33s local, 70s en CI
+    // con 2 workers) y a 10s los asertos más lentos se volvían una moneda al
+    // aire según la máquina. Subirlo aquí, y no aserto por aserto, mantiene el
+    // número en un solo sitio: un elemento que nunca aparece sigue fallando.
+    timeout: 20_000
   },
   use: {
     baseURL: process.env.E2E_BASE_URL ?? 'http://127.0.0.1:4173',
+    // Cubre `goto` y `waitForURL`. Por defecto Playwright no acota la
+    // navegación y la deja morir en el timeout del test, que reporta mucho peor.
+    navigationTimeout: 30_000,
     trace: 'retain-on-failure'
   },
   webServer: process.env.E2E_SKIP_WEBSERVER

@@ -23,29 +23,29 @@ test('un admin revisa, verifica el pago y activa una cuenta', async ({ page }) =
   await page.getByPlaceholder('john.doe@empresa.com.do').fill(ADMIN_EMAIL)
   await page.getByPlaceholder('Tu contraseña').fill(ADMIN_PASSWORD)
   await page.getByRole('button', { name: 'Iniciar sesión' }).click()
-  await expect(page).not.toHaveURL(/\/auth\/sign-in/, { timeout: 20_000 })
+  await expect(page).not.toHaveURL(/\/auth\/sign-in/)
 
   // Consola admin
   await page.goto('/admin/membership')
-  await expect(page.getByRole('heading', { name: /Consola de membresía/i })).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('heading', { name: /Consola de membresía/i })).toBeVisible()
 
   // Tarjeta de Marcos (tiene un pago por verificar)
   const card = page.locator('[class*="rounded"]').filter({ hasText: 'Marcos Miembro' }).first()
-  await expect(card).toBeVisible({ timeout: 15_000 })
+  await expect(card).toBeVisible()
 
   await page.screenshot({ path: 'tmp/admin-console-before.png', fullPage: true })
 
   // 1. Aprobar la solicitud
   await card.getByRole('button', { name: 'Aprobar' }).click()
-  await expect(card.getByText(/Aprobada/i)).toBeVisible({ timeout: 15_000 })
+  await expect(card.getByText(/Aprobada/i)).toBeVisible()
 
   // 2. Verificar el pago
   await card.getByRole('button', { name: 'Verificar pago' }).click()
-  await expect(card.getByText(/Pago verificado/i)).toBeVisible({ timeout: 15_000 })
+  await expect(card.getByText(/Pago verificado/i)).toBeVisible()
 
   // 3. Activar la cuenta (ahora habilitado)
   await card.getByRole('button', { name: 'Activar cuenta' }).click()
-  await expect(card.getByText(/Cuenta activada/i)).toBeVisible({ timeout: 15_000 })
+  await expect(card.getByText(/Cuenta activada/i)).toBeVisible()
 
   await page.screenshot({ path: 'tmp/admin-console-after.png', fullPage: true })
 

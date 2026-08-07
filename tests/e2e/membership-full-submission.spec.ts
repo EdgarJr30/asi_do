@@ -57,7 +57,7 @@ async function signIn(page: Page) {
   await page.getByPlaceholder('john.doe@empresa.com.do').fill(APPLICANT_EMAIL)
   await page.getByPlaceholder('Tu contraseña').fill(APPLICANT_PASSWORD)
   await page.getByRole('button', { name: 'Iniciar sesión' }).click()
-  await expect(page).not.toHaveURL(/\/auth\/sign-in/, { timeout: 20_000 })
+  await expect(page).not.toHaveURL(/\/auth\/sign-in/)
 }
 
 async function next(page: Page) {
@@ -78,7 +78,7 @@ test('un miembro envía su solicitud vía draft sin duplicar la fila', async ({ 
 
   // Deep-link al formulario con un token de elegibilidad (categoría retired).
   await page.goto(`/membership/apply?eligibilityToken=${eligibilityAccessToken()}`)
-  await expect(page.getByRole('heading', { name: /^Solicitud de membresía$/i })).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('heading', { name: /^Solicitud de membresía$/i })).toBeVisible()
 
   // ── Paso 1: Datos de contacto ──
   await page.locator('[name="firstName"]').fill('Ana')
@@ -144,7 +144,7 @@ test('un miembro envía su solicitud vía draft sin duplicar la fila', async ({ 
   await page.getByRole('button', { name: /Enviar solicitud/i }).click()
 
   // Éxito: pantalla de confirmación con CTA al panel de membresía.
-  await expect(page.getByRole('button', { name: /Ir a pagar mi membresía/i })).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('button', { name: /Ir a pagar mi membresía/i })).toBeVisible()
   await page.screenshot({ path: 'tmp/full-submission-after.png', fullPage: true })
 
   // BD: exactamente UNA solicitud (el draft se reutilizó, no se duplicó) y está enviada.
@@ -170,7 +170,7 @@ test('con una solicitud viva, /membership/apply redirige al panel de estado', as
     await page.goto(`/membership/apply?eligibilityToken=${eligibilityAccessToken()}`)
 
     // El guard anti-duplicado manda al panel de estado en vez de re-renderizar el form.
-    await expect(page).toHaveURL(/\/account\/membership/, { timeout: 15_000 })
+    await expect(page).toHaveURL(/\/account\/membership/)
     await expect(page.getByRole('heading', { name: /^Solicitud de membresía$/i })).toHaveCount(0)
   } finally {
     await resetMemberApplications(admin, applicantUserId)

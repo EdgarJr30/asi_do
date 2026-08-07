@@ -20,7 +20,7 @@ async function signIn(page: import('@playwright/test').Page, email: string, pass
   await page.getByPlaceholder('john.doe@empresa.com.do').fill(email)
   await page.getByPlaceholder('Tu contraseña').fill(password)
   await page.getByRole('button', { name: 'Iniciar sesión' }).click()
-  await expect(page).not.toHaveURL(/\/auth\/sign-in/, { timeout: 20_000 })
+  await expect(page).not.toHaveURL(/\/auth\/sign-in/)
 }
 
 test('el pastor ve su cola scoped y aprueba la solicitud de su iglesia', async ({ page }) => {
@@ -36,14 +36,14 @@ test('el pastor ve su cola scoped y aprueba la solicitud de su iglesia', async (
   await page.getByRole('button', { name: 'Iniciar sesión' }).click()
 
   // Espera a salir de la pantalla de sign-in (sesión hidratada + redirect).
-  await expect(page).not.toHaveURL(/\/auth\/sign-in/, { timeout: 20_000 })
+  await expect(page).not.toHaveURL(/\/auth\/sign-in/)
 
   // 2. Entra a la cola del pastor
   await page.goto('/account/membership-queue')
 
   await expect(
     page.getByRole('heading', { name: /Solicitudes de membres[ií]a de tus iglesias/i })
-  ).toBeVisible({ timeout: 15_000 })
+  ).toBeVisible()
 
   // 3. La solicitud sembrada (scoped a su iglesia) aparece. Acotamos a su tarjeta:
   // la cola puede tener varias solicitudes de la misma iglesia.
@@ -61,7 +61,7 @@ test('el pastor ve su cola scoped y aprueba la solicitud de su iglesia', async (
   await card.getByRole('button', { name: /Aprobar referencia/i }).click()
 
   // Tras aprobar, la solicitud sale del filtro de pendientes y desaparece de la cola.
-  await expect(page.getByText('María Miembro')).toBeHidden({ timeout: 15_000 })
+  await expect(page.getByText('María Miembro')).toBeHidden()
 
   await page.screenshot({ path: 'tmp/pastor-queue-after.png', fullPage: true })
 
@@ -81,9 +81,9 @@ test('un pastor de otra iglesia NO ve las solicitudes ajenas (RLS scoped)', asyn
   // Es pastor, así que ve la cola; pero NO las solicitudes de la iglesia de otro pastor.
   await expect(
     page.getByRole('heading', { name: /Solicitudes de membres[ií]a de tus iglesias/i })
-  ).toBeVisible({ timeout: 15_000 })
+  ).toBeVisible()
 
-  await expect(page.getByText(/Sin solicitudes pendientes/i)).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText(/Sin solicitudes pendientes/i)).toBeVisible()
   await expect(page.getByText('María Miembro')).toHaveCount(0)
   await expect(page.getByText('Marcos Miembro')).toHaveCount(0)
 

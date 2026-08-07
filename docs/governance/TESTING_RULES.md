@@ -188,10 +188,19 @@ Rules:
 ### 9.2 Timing: budgets live in configuration, not in defaults
 `findBy*` and `waitFor` default to one second of wall-clock time, spent by the route's deferred chunk, the first render, and animated step transitions. A CI runner is slower than a laptop, and `--coverage` instruments every module on top of that, so the default turns the slowest tests into machine-dependent coin flips.
 
+Unit tests (vitest + testing-library):
+
 - `configure({ asyncUtilTimeout: 5000 })` in `src/test/setup.ts` sets the async budget for the whole suite.
 - `testTimeout: 15000` lives in `vite.config.ts`, so `npm test` and `npm run test:coverage` share it. Do not reintroduce it as a flag on one script only: the script-local value left `npm test` below the async budget, where a slow test died on the vitest timeout before it could report which element it never found.
 
+End-to-end (Playwright): same principle, three budgets, all in `playwright.config.ts`.
+
+- `expect.timeout: 20_000` is the assertion budget. It is not 10s because the CI runner is roughly 2x slower than a laptop (whole suite: 33s local, 70s on CI with 2 workers), and at 10s the slowest assertions became machine-dependent coin flips.
+- `use.navigationTimeout: 30_000` bounds `goto` and `waitForURL`. Playwright leaves navigation unbounded by default, so it dies on the test timeout, which reports far worse.
+- `timeout: 90_000` per test stays comfortably above both, so a test that runs out of time dies on the assertion that names the missing element, not on the global clock.
+
 Rules:
-1. Do not sprinkle per-call timeouts to rescue one slow assertion; raise the shared budget or make the test cheaper.
+1. Do not sprinkle per-call timeouts to rescue one slow assertion; raise the shared budget or make the test cheaper. A per-call number is only allowed when the wait is a *different category* from a normal assertion, and then it goes through a named constant with its reason written down — today that is `FRESH_SESSION_CONTENT_TIMEOUT` in `tests/e2e/support/timeouts.ts` (session rehydration + deferred route chunk + a remote query, all after a `goto`). A bare number inline is not allowed: it hides both latency and defects, and it quietly makes the shared budget a lie.
 2. Raising a budget is legitimate only for latency. An element that never appears must still fail.
 3. A test that only passes on a fast machine is unverified, not passing.
+4. Retries are not a budget. `retries: 0` is deliberate: re-running the suite would paper over a flake and a real defect identically.

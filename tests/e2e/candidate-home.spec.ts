@@ -11,7 +11,7 @@ test('candidate first login lands on /account home, not the profile form', async
   await page.getByRole('button', { name: /Iniciar sesión/i }).click()
 
   // Debe aterrizar en el home del usuario (/account), NO en /account/profile.
-  await page.waitForURL('**/account', { timeout: 20_000 })
+  await page.waitForURL('**/account')
   expect(new URL(page.url()).pathname).toBe('/account')
 
   // Encabezado del home + banner de perfil incompleto (usuario nuevo).
@@ -31,7 +31,7 @@ test('sidebar copy: Inicio present, "Acceso operador" gone', async ({ page }, te
   await page.getByPlaceholder('john.doe@empresa.com.do').fill(email)
   await page.getByPlaceholder('Tu contraseña').fill(password)
   await page.getByRole('button', { name: /Iniciar sesión/i }).click()
-  await page.waitForURL('**/account', { timeout: 20_000 })
+  await page.waitForURL('**/account')
 
   // El texto críptico anterior no debe existir en ninguna parte.
   await expect(page.getByText('Acceso operador')).toHaveCount(0)

@@ -17,7 +17,7 @@ export async function signInThroughUi(page: Page, candidate: ProvisionedCandidat
 
   // Un usuario recién creado puede aterrizar en `/account` o en
   // `/account/profile` si el onboarding está incompleto; las dos son válidas.
-  await page.waitForURL(/\/account/, { timeout: 30_000 })
+  await page.waitForURL(/\/account/)
 }
 
 /** Comprueba que la sesión quedó viva, no solo que el redirect ocurrió. */

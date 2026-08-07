@@ -9,6 +9,7 @@ import {
   type ProvisionedCandidate,
   type ServiceClient
 } from './support/realtime'
+import { FRESH_SESSION_CONTENT_TIMEOUT } from './support/timeouts'
 
 const candidateProfilePath = '/account/profile'
 const candidateRecruiterRequestPath = '/account/recruiter-request'
@@ -27,7 +28,7 @@ test.describe('public shell smoke', () => {
     // El job board (/account/jobs) está detrás de RequireActiveAsiAccess: un
     // visitante sin sesión activa es redirigido a iniciar sesión.
     await page.goto('/account/jobs')
-    await page.waitForURL('**/auth/sign-in**', { timeout: 15_000 })
+    await page.waitForURL('**/auth/sign-in**')
     await expect(page.getByRole('heading', { name: /Bienvenida de vuelta/i })).toBeVisible()
   })
 
@@ -89,18 +90,11 @@ test.describe.serial('mvp authenticated smoke', () => {
     await expect(page).not.toHaveURL(/\/auth\/sign-in/)
 
     await page.goto(candidateProfilePath)
-    // Unico aserto del test que espera contenido y no una URL, y cae justo tras
-    // un `goto`: la sesion se rehidrata desde cero y encima hay una query remota
-    // detras, asi que espera bastante mas que un aserto de DOM normal. Los 10s
-    // por defecto alcanzan en local (~33s la suite entera) pero no en el runner
-    // de CI, que va con 2 workers y tardo 70s en lo mismo; ahi se agotaban y el
-    // smoke fallaba sin que nada estuviera roto.
-    //
-    // Esperar a que se retire el PageLoader seria mas preciso que un numero, pero
-    // no se puede por `role`: el propio wizard tiene un <p role="status"> fijo
-    // (profile-onboarding-flow.tsx), asi que el conteo nunca baja a cero.
+    // Único aserto del test que espera contenido y no una URL, y cae justo tras
+    // un `goto` con la sesión recién iniciada: ver el motivo del margen en
+    // `support/timeouts.ts`.
     await expect(page.getByText(/Dejemos tu cuenta lista|Perfil candidato/i).first()).toBeVisible({
-      timeout: 30_000
+      timeout: FRESH_SESSION_CONTENT_TIMEOUT
     })
 
     await page.goto(candidateApplicationsPath)
