@@ -13,7 +13,7 @@ import { expect, test } from '@playwright/test'
  * SW **está** controlando la página antes de concluir nada.
  */
 
-const SHELL_CACHE = 'asi-platform-shell-v3'
+const SHELL_CACHE = 'asi-platform-shell-v4'
 
 test.describe('service worker', () => {
   test('se registra y toma control de la página', async ({ page }) => {
@@ -98,6 +98,21 @@ test.describe('service worker', () => {
 
     expect(styled.fontFamily).toContain('Manrope')
     expect(styled.stylesheets).toBeGreaterThan(1)
+
+    // Y con la fuente de verdad, no solo declarada. `getComputedStyle` devuelve
+    // la familia que pide el CSS aunque el `.woff2` no haya llegado nunca: la
+    // página se dibujaba con la fuente del sistema y ningún aserto lo veía.
+    // `document.fonts.load` sí falla si el archivo no está en la caché del
+    // service worker, que es lo único que puede servirlo sin red.
+    const fuenteCargada = await page.evaluate(async () => {
+      try {
+        const caras = await document.fonts.load('500 1em Manrope')
+        return caras.length > 0
+      } catch {
+        return false
+      }
+    })
+    expect(fuenteCargada, 'La fuente Manrope no está disponible sin red').toBe(true)
 
     await context.setOffline(false)
   })

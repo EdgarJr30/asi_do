@@ -1,4 +1,8 @@
-const APP_SHELL_CACHE = 'asi-platform-shell-v3'
+// v4: el precache ahora incluye las fuentes. La versión tiene que subir o los
+// clientes que ya instalaron v3 se quedarían con su caché vieja —sin fuentes—
+// hasta el siguiente cambio, porque `activate` solo borra las que no son la
+// actual y la instalación no se repite.
+const APP_SHELL_CACHE = 'asi-platform-shell-v4'
 const APP_SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -34,19 +38,45 @@ function buildNotificationUrl(data = {}) {
 }
 
 /**
- * Precachea las hojas de estilo que referencia el HTML.
+ * Añade al precache reintentando una vez.
+ *
+ * Un `cache.add` que falla en silencio deja un agujero que solo se ve sin red y
+ * meses después: la instalación termina "bien" y la carga offline aparece sin
+ * estilos o sin fuente. Un reintento cubre el caso real —el servidor todavía
+ * calentando en el primer arranque— sin volver frágil la instalación.
+ */
+async function addToCache(cache, url) {
+  try {
+    await cache.add(url)
+    return true
+  } catch {
+    try {
+      await cache.add(url)
+      return true
+    } catch {
+      return false
+    }
+  }
+}
+
+/**
+ * Precachea las hojas de estilo que referencia el HTML **y las fuentes que esas
+ * hojas cargan**.
  *
  * No pueden listarse en `APP_SHELL_ASSETS` porque el build les pone un hash en
  * el nombre y este archivo es estático: no conoce el hash. Se descubren leyendo
- * el propio `index.html`.
+ * el propio `index.html` y, para las fuentes, el texto de cada hoja.
  *
- * Sin esto, una carga en frío sin red sirve el shell **sin estilos**: el HTML
- * viene del precache, pero la petición de la hoja no encuentra nada en caché
- * —solo se guarda cuando el service worker ya controla la página, y en la
- * primera visita todavía no lo hacía— y la red no está. Antes no pasaba porque
- * el CSS viajaba en línea dentro del HTML.
+ * Sin esto, una carga en frío sin red sirve el shell **sin estilos ni fuente**:
+ * el HTML viene del precache, pero la petición de la hoja —o la del `.woff2`—
+ * no encuentra nada en caché y la red no está. La causa es la misma en los dos
+ * casos: esos recursos se piden en la primera visita, cuando el service worker
+ * todavía no controla la página, así que el caché en runtime no llega a verlos.
  *
- * Es best-effort: si algo falla, el resto del precache ya se aplicó.
+ * Se comprobó midiendo una carga offline: las peticiones de
+ * `/assets/manrope-*.woff2` fallaban con `net::ERR_FAILED` y la página se
+ * dibujaba con la fuente del sistema. Como `getComputedStyle` sigue devolviendo
+ * la familia declarada, eso no se veía en ninguna prueba.
  */
 async function precacheReferencedStylesheets(cache) {
   try {
@@ -61,10 +91,40 @@ async function precacheReferencedStylesheets(cache) {
       (match) => match[1]
     )
 
-    await Promise.all(hrefs.map((href) => cache.add(href).catch(() => {})))
+    await Promise.all(hrefs.map((href) => addToCache(cache, href)))
+    await precacheFontsFrom(cache, hrefs)
   } catch {
     // Sin red durante la instalación no hay nada que precachear.
   }
+}
+
+/** Fuentes referenciadas por `url(...)` dentro de las hojas ya precacheadas. */
+async function precacheFontsFrom(cache, hrefs) {
+  const fontUrls = new Set()
+
+  for (const href of hrefs) {
+    const cached = await cache.match(href)
+
+    if (!cached) {
+      continue
+    }
+
+    const css = await cached.clone().text()
+
+    for (const match of css.matchAll(/url\(\s*["']?([^"')]+\.(?:woff2|woff|ttf|otf))["']?\s*\)/g)) {
+      try {
+        const url = new URL(match[1], new URL(href, self.location.origin))
+
+        if (url.origin === self.location.origin) {
+          fontUrls.add(url.pathname)
+        }
+      } catch {
+        // URL malformada en el CSS: no es asunto del service worker.
+      }
+    }
+  }
+
+  await Promise.all([...fontUrls].map((url) => addToCache(cache, url)))
 }
 
 self.addEventListener('install', (event) => {
