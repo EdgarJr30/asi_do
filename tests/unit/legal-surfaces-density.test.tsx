@@ -15,9 +15,11 @@ describe('legal surface density', () => {
     )
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveClass(
-      'text-[clamp(1.75rem,3.2vw,2.2rem)]'
+      'text-[clamp(1.5rem,2.5vw,1.85rem)]'
     )
-    expect(screen.getByRole('link', { name: /Términos y condiciones/i })).toHaveClass('p-4')
+    expect(screen.getByTestId('legal-center-masthead')).toHaveClass('py-5', 'lg:py-6')
+    expect(screen.getByTestId('legal-policy-grid')).toHaveClass('gap-2.5', 'py-5')
+    expect(screen.getByRole('link', { name: /Términos y condiciones/i })).toHaveClass('p-3')
     expect(screen.queryByText(/¿Vas a citar una política\?/i)).not.toBeInTheDocument()
   })
 
