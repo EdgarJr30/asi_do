@@ -4,14 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowRight,
-  Building2,
   CheckCircle2,
   Clock3,
   FileCheck2,
   FileLock2,
-  Globe2,
-  History,
-  Mail,
   UploadCloud,
 } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -83,26 +79,16 @@ function RequestFieldLabel({ label, help }: { label: string; help?: string }) {
 }
 
 function SectionHeading({
-  icon: Icon,
-  eyebrow,
   title,
   description,
 }: {
-  icon: typeof Building2
-  eyebrow: string
   title: string
   description: string
 }) {
   return (
-    <div className="flex items-start gap-3 border-b border-(--app-border) pb-4">
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-card bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-200">
-        <Icon className="size-5" aria-hidden="true" />
-      </span>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-700 dark:text-primary-300">{eyebrow}</p>
-        <h2 className="mt-1 text-base font-semibold text-(--app-text) sm:text-lg">{title}</h2>
-        <p className="mt-1 text-sm leading-5 text-(--app-text-muted)">{description}</p>
-      </div>
+    <div>
+      <h2 className="text-base font-semibold text-(--app-text)">{title}</h2>
+      <p className="mt-1 text-sm leading-5 text-(--app-text-muted)">{description}</p>
     </div>
   )
 }
@@ -136,15 +122,15 @@ function FilePicker({
       </div>
       <label
         htmlFor={id}
-        className="group flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-card-lg border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-5 text-center transition hover:border-primary-300 hover:bg-primary-50/50 focus-within:ring-2 focus-within:ring-(--app-ring) dark:hover:border-primary-500/50 dark:hover:bg-primary-500/5"
+        className="group flex min-h-24 cursor-pointer items-center gap-3 rounded-card border border-dashed border-(--app-border) bg-(--app-surface-muted) px-4 py-3 transition hover:border-primary-300 focus-within:ring-2 focus-within:ring-(--app-ring) dark:hover:border-primary-500/50"
       >
-        <span className="flex size-10 items-center justify-center rounded-full bg-white text-primary-700 shadow-sm dark:bg-zinc-900 dark:text-primary-300">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-card border border-(--app-border) bg-(--app-surface-elevated) text-primary-700 dark:text-primary-300">
           {file ? <FileCheck2 className="size-5" aria-hidden="true" /> : <UploadCloud className="size-5" aria-hidden="true" />}
         </span>
-        <span className="mt-3 max-w-full truncate text-sm font-semibold text-(--app-text)">
-          {file?.name ?? 'Seleccionar archivo'}
+        <span className="min-w-0 text-left">
+          <span className="block truncate text-sm font-medium text-(--app-text)">{file?.name ?? 'Seleccionar archivo'}</span>
+          <span className="mt-1 block text-xs leading-5 text-(--app-text-muted)">{description}</span>
         </span>
-        <span className="mt-1 text-xs leading-5 text-(--app-text-muted)">{description}</span>
         <input
           id={id}
           className="sr-only"
@@ -480,33 +466,15 @@ export function RecruiterRequestPage() {
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-panel border border-primary-100 bg-gradient-to-br from-primary-50 via-white to-sky-50 p-5 shadow-[0_18px_48px_rgba(35,78,150,0.08)] sm:p-6 lg:p-8 dark:border-primary-500/20 dark:from-primary-950/50 dark:via-zinc-950 dark:to-sky-950/30">
-        <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div className="max-w-3xl">
-            <Badge variant="soft">Empresas que desean reclutar</Badge>
-            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-(--app-text) sm:text-3xl">
-              Solicita acceso para reclutar con tu empresa
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-(--app-text-muted) sm:text-base">
-              Cuéntanos sobre tu organización y comparte un documento que confirme su identidad. Revisaremos la información antes de habilitar las herramientas de reclutamiento.
-            </p>
-          </div>
-          <div className="grid grid-cols-3 gap-2 text-center text-xs text-(--app-text-muted) sm:gap-4">
-            {[
-              [Building2, 'Completa tus datos'],
-              [FileCheck2, 'Envía la solicitud'],
-              [CheckCircle2, 'Comienza a reclutar'],
-            ].map(([Icon, label], index) => (
-              <div key={String(label)} className="flex max-w-28 flex-col items-center gap-2">
-                <span className="flex size-9 items-center justify-center rounded-full border border-primary-200 bg-white text-primary-700 dark:border-primary-500/30 dark:bg-zinc-900 dark:text-primary-300">
-                  <Icon className="size-4" aria-hidden="true" />
-                </span>
-                <span>{index + 1}. {String(label)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <header className="border-b border-(--app-border) pb-6">
+        <p className="text-xs font-medium text-(--app-text-muted)">Acceso para empresas</p>
+        <h1 className="mt-2 text-xl font-semibold tracking-tight text-(--app-text) sm:text-2xl">
+          Solicita acceso para reclutar con tu empresa
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-(--app-text-muted)">
+          Completa la información de la organización y adjunta un documento que permita confirmar su identidad.
+        </p>
+      </header>
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div>
@@ -523,24 +491,23 @@ export function RecruiterRequestPage() {
               </div>
             </Card>
           ) : (
-            <form className="space-y-6" onSubmit={(event) => void form.handleSubmit(submitRequest)(event)}>
-              <Card className="p-4 sm:p-6">
-                <SectionHeading
-                  icon={Building2}
-                  eyebrow="Paso 1"
-                  title="Datos de la organización"
-                  description="Identifica la entidad que publicará oportunidades y gestionará candidatos."
-                />
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <form onSubmit={(event) => void form.handleSubmit(submitRequest)(event)}>
+              <Card className="overflow-hidden p-0">
+                <section className="p-4 sm:p-6">
+                  <SectionHeading
+                    title="Información de la empresa"
+                    description="Datos con los que identificaremos a la organización."
+                  />
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2 text-sm font-medium text-(--app-text)">
                     <RequestFieldLabel label="Tipo de organización" help="Selecciona la opción que mejor representa a la entidad solicitante." />
                     <Select {...form.register('requestedTenantKind')}>
                       {tenantKindOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                     </Select>
                   </label>
-                  <div className="rounded-card-lg border border-primary-100 bg-primary-50/70 px-4 py-3 text-sm dark:border-primary-500/20 dark:bg-primary-500/5">
-                    <p className="font-semibold text-(--app-text)">Información necesaria</p>
-                    <p className="mt-1 text-xs leading-5 text-(--app-text-muted)">{tenantKindRequirementSummary[requestedTenantKind].join(' · ')}</p>
+                  <div className="self-end border-l-2 border-(--app-border) py-1 pl-3">
+                    <p className="text-xs font-medium text-(--app-text)">Para esta organización solicitaremos:</p>
+                    <p className="mt-1 text-xs leading-5 text-(--app-text-muted)">{tenantKindRequirementSummary[requestedTenantKind].join(', ')}.</p>
                   </div>
                   <label className="space-y-2 text-sm font-medium text-(--app-text)">
                     <RequestFieldLabel label={getTenantNameLabel(requestedTenantKind)} help="Es el nombre que verán candidatos y colaboradores." />
@@ -560,17 +527,15 @@ export function RecruiterRequestPage() {
                     </div>
                     <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.requestedTenantSlug?.message}</p>
                   </label>
-                </div>
-              </Card>
+                  </div>
+                </section>
 
-              <Card className="p-4 sm:p-6">
-                <SectionHeading
-                  icon={Globe2}
-                  eyebrow="Paso 2"
-                  title="Contacto y presencia digital"
-                  description="Indica cómo podemos contactar a la organización y validar su presencia."
-                />
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <section className="border-t border-(--app-border) p-4 sm:p-6">
+                  <SectionHeading
+                    title="Contacto"
+                    description="Información para comunicarnos contigo durante la revisión."
+                  />
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2 text-sm font-medium text-(--app-text)">
                     <RequestFieldLabel label="Sitio web" help="Opcional. Ayuda a conocer y validar públicamente tu organización." />
                     <Input type="url" inputMode="url" placeholder="https://empresa.com" {...form.register('companyWebsiteUrl')} />
@@ -590,17 +555,15 @@ export function RecruiterRequestPage() {
                     <CountryCodeSelect {...form.register('companyCountryCode')} />
                     <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.companyCountryCode?.message}</p>
                   </label>
-                </div>
-              </Card>
+                  </div>
+                </section>
 
-              <Card className="p-4 sm:p-6">
-                <SectionHeading
-                  icon={Mail}
-                  eyebrow="Paso 3"
-                  title="Presentación de la empresa"
-                  description="Ayúdanos a entender qué hace la organización y cómo utilizará ASI DO para reclutar."
-                />
-                <div className="mt-5 space-y-4">
+                <section className="border-t border-(--app-border) p-4 sm:p-6">
+                  <SectionHeading
+                    title="Uso de ASI DO"
+                    description="Contexto breve sobre la organización y sus necesidades de reclutamiento."
+                  />
+                  <div className="mt-5 space-y-4">
                   <label className="space-y-2 text-sm font-medium text-(--app-text)">
                     <RequestFieldLabel label="Acerca de la organización" help="Incluye su actividad principal, el tipo de talento que busca y quién gestionará las oportunidades." />
                     <Textarea className="min-h-32" placeholder="Ej. Somos una organización dedicada a… Buscamos incorporar talento para…" {...form.register('companyDescription')} />
@@ -635,17 +598,15 @@ export function RecruiterRequestPage() {
                       <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.conversionIntent?.message}</p>
                     </label>
                   ) : null}
-                </div>
-              </Card>
+                  </div>
+                </section>
 
-              <Card className="p-4 sm:p-6">
-                <SectionHeading
-                  icon={FileLock2}
-                  eyebrow="Paso 4"
-                  title="Verificación de la empresa"
-                  description="Los archivos se mantienen privados y se utilizan únicamente para revisar esta solicitud."
-                />
-                <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <section className="border-t border-(--app-border) p-4 sm:p-6">
+                  <SectionHeading
+                    title="Documentación"
+                    description="Estos archivos son privados y se utilizan únicamente para revisar la solicitud."
+                  />
+                  <div className="mt-5 grid gap-5 sm:grid-cols-2">
                   <FilePicker
                     id="company-logo"
                     title="Logo de la organización"
@@ -667,18 +628,19 @@ export function RecruiterRequestPage() {
                     error={verificationDocumentFileError}
                     onChange={(file) => void handleVerificationDocumentChange(file)}
                   />
+                  </div>
+                </section>
+
+                <div className="border-t border-(--app-border) bg-(--app-surface-muted) p-4 sm:flex sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+                  <div className="mb-3 flex items-center gap-3 sm:mb-0">
+                    <FileLock2 className="size-4 shrink-0 text-(--app-text-muted)" aria-hidden="true" />
+                    <p className="text-xs leading-5 text-(--app-text-muted)">La información se usa únicamente para validar la empresa.</p>
+                  </div>
+                  <Button className="w-full shrink-0 sm:w-auto" disabled={submitMutation.isPending || isPreparingCompanyLogo || isPreparingVerificationDocument} type="submit">
+                    {submitMutation.isPending ? <><Spinner size="sm" /> Enviando…</> : <>Enviar solicitud <ArrowRight className="size-4" aria-hidden="true" /></>}
+                  </Button>
                 </div>
               </Card>
-
-              <div className="sticky bottom-4 z-10 rounded-panel border border-(--app-border) bg-(--app-surface-elevated)/95 p-3 shadow-[0_16px_44px_rgba(10,18,36,0.14)] backdrop-blur sm:flex sm:items-center sm:justify-between sm:gap-4 sm:p-4">
-                <div className="mb-3 flex items-center gap-3 sm:mb-0">
-                  <CheckCircle2 className="size-5 shrink-0 text-primary-700 dark:text-primary-300" aria-hidden="true" />
-                  <p className="text-xs leading-5 text-(--app-text-muted)">Al enviar, confirmas que la información pertenece a la organización que representas.</p>
-                </div>
-                <Button className="w-full shrink-0 sm:w-auto" disabled={submitMutation.isPending || isPreparingCompanyLogo || isPreparingVerificationDocument} type="submit">
-                  {submitMutation.isPending ? <><Spinner size="sm" /> Enviando…</> : <>Enviar solicitud <ArrowRight className="size-4" aria-hidden="true" /></>}
-                </Button>
-              </div>
             </form>
           )}
         </div>
@@ -697,19 +659,16 @@ export function RecruiterRequestPage() {
                 <div className="h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800" aria-label={`${requestProgress}% completado`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={requestProgress}>
                   <div className="h-full rounded-full bg-primary-600 transition-[width] duration-300" style={{ width: `${requestProgress}%` }} />
                 </div>
-                <div className="mt-4 space-y-3 text-sm">
-                  <p className="flex items-center gap-2 text-(--app-text-muted)"><CheckCircle2 className="size-4 text-primary-600" aria-hidden="true" /> Información de la organización</p>
-                  <p className="flex items-center gap-2 text-(--app-text-muted)"><FileLock2 className="size-4 text-primary-600" aria-hidden="true" /> Un documento de respaldo</p>
-                  <p className="flex items-center gap-2 text-(--app-text-muted)"><Clock3 className="size-4 text-primary-600" aria-hidden="true" /> Revisión antes de la activación</p>
-                </div>
+                <p className="mt-3 text-xs leading-5 text-(--app-text-muted)">
+                  {completedRequirements} de {progressRequirements.length} requisitos esenciales completados.
+                </p>
               </CardContent>
             </Card>
           ) : null}
 
           <Card className="p-4 sm:p-5">
             <CardHeader>
-              <span className="flex size-9 items-center justify-center rounded-full bg-(--app-surface-muted) text-(--app-text-muted)"><History className="size-4" aria-hidden="true" /></span>
-              <CardTitle className="pt-2">Historial de solicitudes</CardTitle>
+              <CardTitle>Historial de solicitudes</CardTitle>
               <CardDescription>Consulta el estado y las observaciones de cada revisión.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">

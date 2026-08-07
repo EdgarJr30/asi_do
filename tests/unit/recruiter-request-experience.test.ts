@@ -13,13 +13,17 @@ const validationSource = readFileSync(
 )
 
 describe('recruiter request commercial experience', () => {
-  it('guides a company through a clear, staged verification request', () => {
+  it('guides a company through a clear, restrained verification request', () => {
     expect(source).toContain('Solicita acceso para reclutar con tu empresa')
-    expect(source).toContain('Datos de la organización')
-    expect(source).toContain('Contacto y presencia digital')
-    expect(source).toContain('Presentación de la empresa')
-    expect(source).toContain('Verificación de la empresa')
+    expect(source).toContain('Información de la empresa')
+    expect(source).toContain('Contacto')
+    expect(source).toContain('Uso de ASI DO')
+    expect(source).toContain('Documentación')
     expect(source).toContain('Progreso de la solicitud')
+    expect(source).not.toContain('bg-gradient-to-br')
+    expect(source).not.toContain('Paso 1')
+    expect(source).not.toContain('Completa tus datos')
+    expect(source).not.toContain('shadow-[0_18px_48px')
   })
 
   it('removes internal platform language from customer-facing copy', () => {

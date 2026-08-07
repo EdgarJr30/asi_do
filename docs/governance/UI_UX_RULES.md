@@ -428,8 +428,9 @@ Apple-inspired UI rules:
 2. Do not show aggressive validation on every keystroke unless it clearly helps the task.
 3. Surface errors inline near the field and summarize them at the form level when the form is long.
 4. Required and optional notation must be consistent within the same form.
-5. Company-access and verification forms must use commercial organization language. Keep implementation terms such as `tenant`, `slug`, `operator`, provisioning, internal roles, and workspace out of applicant-facing titles, labels, help, validation, states, and actions; translate them into company, web address, recruiting access, review, and company panel language.
 5. Default rule: required fields are implicit, optional fields are marked `Optional`. If a workflow requires explicit `Required` labels, apply that pattern to all fields in the flow.
+6. Company-access and verification forms must use commercial organization language. Keep implementation terms such as `tenant`, `slug`, `operator`, provisioning, internal roles, and workspace out of applicant-facing titles, labels, help, validation, states, and actions; translate them into company, web address, recruiting access, review, and company panel language.
+7. Company-access forms must look like restrained product workflows, not generated marketing compositions. Use one continuous form surface with quiet section dividers and functional help; avoid gradient heroes, numbered icon journeys, one card per field group, ornamental progress checklists, floating submit panels, and repeated decorative badges.
 
 ### 10.4 Mobile form usability rules
 1. Avoid side-by-side inputs on phones unless both controls remain easy to read and tap.
