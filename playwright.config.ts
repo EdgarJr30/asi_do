@@ -12,6 +12,18 @@ export default defineConfig({
   // algo que no es un defecto del producto.
   testIgnore: '**/pwa/**',
   fullyParallel: false,
+  // Un solo worker. `fullyParallel: false` solo serializa los tests *dentro* de
+  // un archivo: los archivos seguían corriendo en paralelo, y en esta máquina
+  // eso eran 6 navegadores autenticándose a la vez contra el mismo proyecto
+  // Supabase y el mismo `vite dev`. El resultado era que cada spec pasaba sola y
+  // fallaba en conjunto —siete `waitForURL` agotados esperando un login que
+  // nunca navegaba—, que es la peor clase de fallo: parece del producto y no lo
+  // es.
+  //
+  // No hay entorno por worker que repartir: hay un remoto compartido, con su
+  // límite de peticiones de autenticación, y cuentas efímeras que las pruebas
+  // crean y borran. Serializar es lo que corresponde.
+  workers: 1,
   retries: 0,
   // El techo del test queda holgado a propósito por encima de los presupuestos
   // de abajo: si un aserto agota sus 20s dentro de un test que ya gastó tiempo,

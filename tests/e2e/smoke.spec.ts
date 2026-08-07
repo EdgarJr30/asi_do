@@ -93,7 +93,13 @@ test.describe.serial('mvp authenticated smoke', () => {
     // Único aserto del test que espera contenido y no una URL, y cae justo tras
     // un `goto` con la sesión recién iniciada: ver el motivo del margen en
     // `support/timeouts.ts`.
-    await expect(page.getByText(/Dejemos tu cuenta lista|Perfil candidato/i).first()).toBeVisible({
+    //
+    // Se aceptan las dos formas de la pantalla porque las dos son válidas según
+    // el estado de la cuenta: el asistente mientras falte el onboarding base, y
+    // el perfil ya montado cuando está completo —que es el caso desde que el
+    // provisionador lo completa—. "Perfil candidato", el texto que había aquí,
+    // hoy solo existe dentro de un toast: nunca podía verse al abrir la página.
+    await expect(page.getByText(/Dejemos tu cuenta lista|Tu perfil profesional/i).first()).toBeVisible({
       timeout: FRESH_SESSION_CONTENT_TIMEOUT
     })
 
@@ -114,7 +120,17 @@ test.describe.serial('mvp authenticated smoke', () => {
     // tenant, así que el pipeline del empleador debe seguir fuera de su alcance.
     // Sin este aserto, el smoke solo probaría que la autenticación funciona y no
     // que la autorización sigue separando superficies.
+    //
+    // Se comprueba por lo que se ve, no por la URL: el guard **no redirige**,
+    // renderiza la pantalla de acceso restringido en la misma ruta
+    // (`GuardFallbackShell` → `surface-status-page`). El aserto anterior miraba
+    // la URL y pasaba por un motivo ajeno —al candidato lo desviaba antes el
+    // gate de onboarding—, así que dejaba sin verificar justo lo que dice
+    // verificar.
     await page.goto('/workspace/pipeline')
-    await expect(page).not.toHaveURL(/\/workspace\/pipeline$/)
+    await expect(page.getByText('Acceso restringido')).toBeVisible({
+      timeout: FRESH_SESSION_CONTENT_TIMEOUT
+    })
+    await expect(page.getByText(/No puedes abrir esta vista del workspace/i)).toBeVisible()
   })
 })

@@ -50,6 +50,15 @@ test.describe('home del candidato', () => {
     await signInThroughUi(page, candidate!)
 
     // Debe aterrizar en el home del usuario (/account), NO en /account/profile.
+    //
+    // Se espera al destino en vez de leer la URL de inmediato: `signInThroughUi`
+    // devuelve en cuanto la ruta empieza por /account —incluye /account/profile,
+    // porque otras pruebas usan cuentas sin onboarding— y el redirect posterior
+    // llega un instante después. Sin esta espera el aserto era una carrera: pasó
+    // en dos navegadores y falló en el tercero durante la corrida completa.
+    // Quedarse en /account/profile sigue fallando, que es lo que la prueba
+    // vigila; lo que deja de fallar es leer la URL a mitad de la transición.
+    await page.waitForURL(/\/account$/)
     expect(new URL(page.url()).pathname).toBe('/account')
 
     // Y el formulario de perfil no debe estar ocupando la pantalla. Es el aserto
