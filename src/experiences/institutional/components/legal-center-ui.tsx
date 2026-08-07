@@ -90,22 +90,21 @@ export function LegalDocTabs({ activeKind }: { activeKind: LegalDocument['kind']
 }
 
 /* ------------------------------------------------------------------ */
-/* Metadata pills — effective date, version, reading time.             */
+/* Metadata pills — effective date and reading time.                  */
 /* ------------------------------------------------------------------ */
 export function LegalMetaPills({
   document,
   includeOperational = true
 }: {
   document: LegalDocument
-  // La vigencia y la versión son metadata operativa (solo admin); el tiempo de
-  // lectura sí es útil para cualquier lector, así que se muestra siempre.
+  // La vigencia es metadata operativa (solo admin); el tiempo de lectura sí es
+  // útil para cualquier lector, así que se muestra siempre.
   includeOperational?: boolean
 }) {
   const pills = [
     ...(includeOperational
       ? [
-          { icon: metaPillIcons.date, label: 'Vigente desde', value: document.effectiveDate },
-          { icon: metaPillIcons.version, label: 'Versión', value: document.version }
+          { icon: metaPillIcons.date, label: 'Vigente desde', value: document.effectiveDate }
         ]
       : []),
     { icon: metaPillIcons.reading, label: 'Lectura', value: document.readingTime }
@@ -155,7 +154,7 @@ export function LegalDocActions({ document }: { document: LegalDocument }) {
           onClick={() => setChangelogOpen((open) => !open)}
         >
           <History className="size-4" />
-          Ver cambios (v{document.version})
+          Ver cambios
         </button>
       </div>
 
@@ -188,10 +187,7 @@ export function LegalChangelog({ id, entries }: { id?: string; entries: LegalCha
           key={entry.version}
           className="grid grid-cols-[6.5rem_1fr] gap-4 border-t border-(--asi-outline) px-4 py-3.5 first:border-t-0"
         >
-          <div className="text-[0.85rem] font-bold text-(--asi-primary)">
-            v{entry.version}
-            <span className="mt-0.5 block text-[0.72rem] font-medium text-(--asi-secondary)">{entry.date}</span>
-          </div>
+          <div className="text-[0.75rem] font-semibold text-(--asi-secondary)">{entry.date}</div>
           <p className="text-[0.85rem] leading-6 text-(--asi-text-muted)">{entry.note}</p>
         </div>
       ))}

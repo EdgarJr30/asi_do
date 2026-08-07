@@ -5,6 +5,8 @@ import { describe, expect, it } from 'vitest'
 
 import { LegalCenterPage } from '@/experiences/institutional/pages/legal-center-page'
 import { LegalDocumentPage } from '@/experiences/institutional/pages/legal-document-page'
+import { LegalDocActions, LegalMetaPills } from '@/experiences/institutional/components/legal-center-ui'
+import { legalDocuments } from '@/experiences/institutional/content/legal-center-content'
 
 describe('legal surface density', () => {
   it('keeps the legal center heading and policy cards compact', () => {
@@ -22,7 +24,26 @@ describe('legal surface density', () => {
     expect(screen.getByTestId('legal-center-masthead')).toHaveClass('py-5', 'lg:py-6')
     expect(screen.getByTestId('legal-policy-grid')).toHaveClass('gap-2.5', 'py-5')
     expect(screen.getByRole('link', { name: /Términos y condiciones/i })).toHaveClass('p-3')
+    expect(screen.queryByText('v3.1')).not.toBeInTheDocument()
     expect(screen.queryByText(/¿Vas a citar una política\?/i)).not.toBeInTheDocument()
+  })
+
+  it('does not expose version labels in legal metadata or change history', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <>
+        <LegalMetaPills document={legalDocuments.terms} />
+        <LegalDocActions document={legalDocuments.terms} />
+      </>
+    )
+
+    expect(screen.queryByText('Versión')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ver cambios' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Ver cambios' }))
+
+    expect(screen.queryByText(/^v\d/)).not.toBeInTheDocument()
   })
 
   it('keeps every legal document on the compact reading rhythm', () => {

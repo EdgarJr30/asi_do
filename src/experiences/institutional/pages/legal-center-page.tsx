@@ -56,7 +56,6 @@ export function LegalCenterPage() {
                 <h2 className="mt-2 text-[0.9rem] font-bold tracking-tight text-(--asi-text)">{document.cardLabel}</h2>
                 <p className="mt-1 text-[0.8rem] leading-5 text-(--asi-text-muted)">{document.summary}</p>
                 <div className="mt-3 flex items-center gap-2 border-t border-(--asi-outline) pt-2.5 text-[0.7rem] font-semibold text-(--asi-secondary)">
-                  <span className="rounded-pill bg-(--asi-primary)/8 px-2 py-0.5 text-(--asi-primary)">v{document.version}</span>
                   <span className="inline-flex items-center gap-1">
                     <Clock className="size-3" />
                     {document.readingTime}

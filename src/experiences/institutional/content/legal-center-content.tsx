@@ -778,6 +778,5 @@ export const legalDocumentList: LegalDocument[] = legalDocumentOrder.map((kind) 
 
 export const metaPillIcons = {
   date: CalendarDays,
-  version: ShieldCheck,
   reading: Clock
 } as const
