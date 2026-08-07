@@ -484,6 +484,9 @@ Do not let `/legal` or its policy documents return to oversized marketing headin
 ### R-137 — Entity legal data must stay collapsed by default
 Do not leave the full entity-registration dataset permanently expanded on `/legal` or at the end of each policy document. Present it through a compact, descriptive disclosure that is closed by default, keyboard accessible, and reveals every legal datum only when the reader requests it.
 
+### R-138 — Company recruiting requests must speak commercial language
+Do not expose `tenant`, `slug`, `operator`, provisioning, internal role keys, or workspace terminology in the company-facing recruiting request. The flow must identify the organization, explain the requested recruiting access, present its short web address in familiar language, clarify private document review, and direct approved companies to their recruiting panel. Keep the long form grouped into scannable steps with visible progress, contextual help, clear file-selection states, and a single primary submit action.
+
 ---
 
 ## Maintenance rule

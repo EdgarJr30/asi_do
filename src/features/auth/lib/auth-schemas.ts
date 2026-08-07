@@ -92,7 +92,7 @@ export const recruiterRequestSchema = z
     requestedTenantSlug: z
       .string()
       .trim()
-      .min(3, 'El slug debe tener al menos 3 caracteres.')
+      .min(3, 'La dirección debe tener al menos 3 caracteres.')
       .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Usa minúsculas, números y guiones.'),
     companyWebsiteUrl: z.union([z.url('Escribe una URL válida.'), z.literal('')]).optional(),
     companyEmail: z.union([z.email('Escribe un correo válido.'), z.literal('')]).optional(),
@@ -122,7 +122,7 @@ export const recruiterRequestSchema = z
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['requestedCompanyLegalName'],
-          message: 'Este tipo de tenant requiere razón social o nombre legal.'
+          message: 'Este tipo de organización requiere una razón social o nombre legal.'
         })
       }
     }
@@ -151,7 +151,7 @@ export const recruiterRequestSchema = z
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['fieldRegion'],
-        message: 'Indica el campo o región que representará este tenant.'
+        message: 'Indica el campo o región que representará esta organización.'
       })
     }
 
@@ -159,7 +159,7 @@ export const recruiterRequestSchema = z
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['conversionIntent'],
-        message: 'Explica cómo este perfil podría convertirse luego en tenant formal.'
+        message: 'Explica cómo este perfil podría convertirse luego en una organización formal.'
       })
     }
   })

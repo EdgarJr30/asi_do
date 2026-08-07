@@ -110,7 +110,7 @@ const enResources: TranslationResource = {
         primaryGuestAction: 'Create account or sign in',
         secondaryGuestAction: 'Learn the operator flow',
         primaryAuthenticatedAction: 'Prepare profile',
-        secondaryAuthenticatedAction: 'Submit operator request',
+        secondaryAuthenticatedAction: 'Request recruiting access',
         moduleCardEyebrow: 'Active business rule',
         moduleCardTitle: 'There is no direct operator signup',
         moduleCardDescription:
@@ -124,8 +124,8 @@ const enResources: TranslationResource = {
         stepAccountDescription: 'Email + password backed by a real Supabase Auth session.',
         stepProfileTitle: 'Guided profile setup',
         stepProfileDescription: 'Baseline profile, locale, country, and private user avatar.',
-        stepRequestTitle: 'Operator request',
-        stepRequestDescription: 'Company data, slug, temporary logo, and verification document.',
+        stepRequestTitle: 'Recruiting request',
+        stepRequestDescription: 'Company details, visual identity, and supporting document.',
         stepReviewTitle: 'Administrative review',
         stepReviewDescription: 'Approval creates the tenant, company profile, and owner membership.',
         stepStateDone: 'Done',
@@ -161,12 +161,12 @@ const enResources: TranslationResource = {
         actionOnboardingReady:
           'Your profile already has the minimum data; you can review or update it.',
         actionOnboardingButton: 'Open profile',
-        actionRecruiterTitle: 'Request operator validation',
+        actionRecruiterTitle: 'Request recruiting access',
         actionRecruiterPending:
-          'Submit your company for administrative review and tenant provisioning.',
+          'Submit your company details to enable its recruiting tools.',
         actionRecruiterApproved:
           'Your account already has employer access, but you can review request history.',
-        actionRecruiterButton: 'Open operator request',
+        actionRecruiterButton: 'Complete company request',
         actionAdminTitle: 'Administrative review',
         actionAdminEnabled: 'Your session can approve requests and provision operators from the app.',
         actionAdminLocked: 'Only users with `recruiter_request:review` can open this inbox.',

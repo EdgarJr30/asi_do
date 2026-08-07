@@ -108,7 +108,7 @@ export const esResources = {
         primaryGuestAction: 'Crear cuenta o iniciar sesión',
         secondaryGuestAction: 'Conocer el flujo de operador',
         primaryAuthenticatedAction: 'Preparar perfil',
-        secondaryAuthenticatedAction: 'Enviar solicitud de operador',
+        secondaryAuthenticatedAction: 'Solicitar acceso para reclutar',
         moduleCardEyebrow: 'Regla de negocio activa',
         moduleCardTitle: 'No existe signup directo de operador',
         moduleCardDescription:
@@ -122,8 +122,8 @@ export const esResources = {
         stepAccountDescription: 'Email + contraseña con sesión real de Supabase Auth.',
         stepProfileTitle: 'Perfil inicial guiado',
         stepProfileDescription: 'Perfil base, locale, país y avatar privado del usuario.',
-        stepRequestTitle: 'Solicitud de operador',
-        stepRequestDescription: 'Empresa, slug, logo temporal y documento de verificación.',
+        stepRequestTitle: 'Solicitud para reclutar',
+        stepRequestDescription: 'Datos de la empresa, identidad visual y documento de respaldo.',
         stepReviewTitle: 'Revisión administrativa',
         stepReviewDescription: 'Aprobación que crea tenant, company profile y membership owner.',
         stepStateDone: 'Listo',
@@ -159,12 +159,12 @@ export const esResources = {
         actionOnboardingReady:
           'Tu perfil ya tiene la data mínima; puedes revisarlo o actualizarlo.',
         actionOnboardingButton: 'Abrir perfil',
-        actionRecruiterTitle: 'Solicitar validación de operador',
+        actionRecruiterTitle: 'Solicitar acceso para reclutar',
         actionRecruiterPending:
-          'Envía tu empresa para revisión administrativa y provisioning del tenant.',
+          'Presenta los datos de tu empresa para habilitar sus herramientas de reclutamiento.',
         actionRecruiterApproved:
           'Tu cuenta ya tiene acceso employer, pero puedes revisar el historial de solicitudes.',
-        actionRecruiterButton: 'Abrir solicitud de operador',
+        actionRecruiterButton: 'Completar solicitud de empresa',
         actionAdminTitle: 'Review administrativo',
         actionAdminEnabled:
           'Tu sesión puede aprobar solicitudes y provisionar operadores desde la app.',
