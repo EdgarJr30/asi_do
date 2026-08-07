@@ -19,8 +19,7 @@ export function LegalCenterPage() {
             </h1>
             <p className="asi-copy mt-5 max-w-[64ch] text-[1.05rem]">
               Términos, privacidad, devoluciones, entrega y seguridad de pagos para membresías y donaciones de{' '}
-              {merchantCompliance.businessName}. Cada documento tiene su propia página citable, con versión, fecha de
-              vigencia y opción de imprimir o descargar.
+              {merchantCompliance.businessName}.
             </p>
           </div>
 
