@@ -549,6 +549,7 @@ Rules:
 23. The authenticated profile menu must expose a visible `Página institucional` action before sign-out so candidates, company users, and administrators can return directly to the institutional marketing site.
 24. Customer-facing actions that enter the authenticated product must use the neutral Spanish label `Abrir plataforma`. Do not use `Abrir mi empresa`, because users may have platform access before belonging to a company, and do not expose mixed-language equivalents such as `Abrir mi workspace`.
 25. Public legal surfaces must use an editorial, compact reading rhythm rather than marketing-hero proportions. Keep the legal-center heading restrained, policy cards low-padding and scannable, document mastheads short, navigation tabs tight, and clauses comfortably readable without oversized headings or vertical gaps. Do not add explanatory copy about each policy having its own citable URL; the policy links already communicate that behavior. The compact treatment must apply consistently to `/legal` and every linked policy route on mobile and desktop.
+26. Secondary entity-registration details on public legal surfaces must use progressive disclosure. Keep the trigger compact, descriptive, keyboard accessible, and closed by default; reveal the complete legal identity only when the reader requests it.
 
 ---
 

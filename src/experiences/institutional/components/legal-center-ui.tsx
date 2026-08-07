@@ -1,7 +1,7 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useId, useRef, useState, type ReactNode } from 'react'
 
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { History, Printer } from 'lucide-react'
+import { Building2, ChevronDown, History, Printer } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
 import { legalIdentity } from '@/experiences/institutional/content/payment-compliance-content'
@@ -368,20 +368,75 @@ function LegalCallout({
 /* Legal identity — company registration data (exigibilidad legal).    */
 /* ------------------------------------------------------------------ */
 export function LegalIdentityPanel({ className }: { className?: string }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const panelId = useId()
+  const shouldReduceMotion = useReducedMotion()
+
   return (
     <div
-      className={cn('rounded-card border border-(--asi-outline) bg-white/80 p-4 sm:p-5', className)}
+      className={cn(
+        'overflow-hidden rounded-card border border-(--asi-outline) bg-white/80 shadow-(--asi-shadow-soft)',
+        className
+      )}
       data-legal-chrome
     >
-      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-(--asi-secondary)">Datos legales de la entidad</p>
-      <dl className="mt-3 grid gap-x-7 gap-y-3 sm:grid-cols-2">
-        {legalIdentity.map((item) => (
-          <div key={item.label}>
-            <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-(--asi-secondary)">{item.label}</dt>
-            <dd className="mt-0.5 text-[0.86rem] font-medium leading-5 text-(--asi-text)">{item.value}</dd>
-          </div>
-        ))}
-      </dl>
+      <button
+        aria-controls={panelId}
+        aria-expanded={isOpen}
+        aria-label={`${isOpen ? 'Ocultar' : 'Ver'} datos legales de la entidad`}
+        className="group flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-(--asi-surface-muted) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--asi-primary) focus-visible:ring-inset sm:px-5"
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+      >
+        <span className="grid size-9 shrink-0 place-items-center rounded-control bg-(--asi-primary)/9 text-(--asi-primary)">
+          <Building2 className="size-4" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="text-[0.86rem] font-bold text-(--asi-text)">Datos legales de la entidad</span>
+            <span className="rounded-pill bg-(--asi-primary)/8 px-2 py-0.5 text-[0.68rem] font-bold text-(--asi-primary)">
+              {legalIdentity.length} datos
+            </span>
+          </span>
+          <span className="mt-0.5 block text-[0.76rem] leading-5 text-(--asi-text-muted)">
+            Identidad fiscal, domicilio y jurisdicción
+          </span>
+        </span>
+        <ChevronDown
+          aria-hidden
+          className={cn(
+            'size-4 shrink-0 text-(--asi-secondary) transition-transform duration-200 group-hover:text-(--asi-primary)',
+            isOpen && 'rotate-180'
+          )}
+        />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {isOpen ? (
+          <motion.div
+            key="legal-identity"
+            initial={shouldReduceMotion ? false : { height: 0, opacity: 0 }}
+            animate={shouldReduceMotion ? undefined : { height: 'auto', opacity: 1 }}
+            exit={shouldReduceMotion ? undefined : { height: 0, opacity: 0 }}
+            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <dl
+              id={panelId}
+              className="grid gap-x-7 gap-y-3 border-t border-(--asi-outline) bg-white/65 px-4 py-4 sm:grid-cols-2 sm:px-5"
+            >
+              {legalIdentity.map((item) => (
+                <div key={item.label}>
+                  <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-(--asi-secondary)">
+                    {item.label}
+                  </dt>
+                  <dd className="mt-0.5 text-[0.86rem] font-medium leading-5 text-(--asi-text)">{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   )
 }

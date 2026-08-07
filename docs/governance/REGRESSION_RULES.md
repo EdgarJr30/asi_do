@@ -478,6 +478,9 @@ Do not let a test's result depend on the developer's `.env.local` or on how fast
 ### R-136 — Legal pages must keep a compact editorial rhythm
 Do not let `/legal` or its policy documents return to oversized marketing headings, tall mastheads, heavily padded cards, wide vertical gaps between clauses, or explanatory copy about each policy having a citable URL. The legal center must keep compact policy cards and a brief security notice, while every policy route must preserve restrained titles, tight metadata and tabs, and readable low-density document sections across mobile and desktop.
 
+### R-137 — Entity legal data must stay collapsed by default
+Do not leave the full entity-registration dataset permanently expanded on `/legal` or at the end of each policy document. Present it through a compact, descriptive disclosure that is closed by default, keyboard accessible, and reveals every legal datum only when the reader requests it.
+
 ---
 
 ## Maintenance rule
