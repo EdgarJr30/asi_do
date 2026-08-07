@@ -1,14 +1,26 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LegalCenterPage } from '@/experiences/institutional/pages/legal-center-page'
 import { LegalDocumentPage } from '@/experiences/institutional/pages/legal-document-page'
-import { LegalDocActions, LegalMetaPills } from '@/experiences/institutional/components/legal-center-ui'
+import { LegalDocActions, LegalDocTabs, LegalMetaPills } from '@/experiences/institutional/components/legal-center-ui'
 import { legalDocuments } from '@/experiences/institutional/content/legal-center-content'
 
+const { appSessionState } = vi.hoisted(() => ({
+  appSessionState: { isPlatformOwner: false }
+}))
+
+vi.mock('@/app/providers/app-session-provider', () => ({
+  useAppSession: () => appSessionState
+}))
+
 describe('legal surface density', () => {
+  beforeEach(() => {
+    appSessionState.isPlatformOwner = false
+  })
+
   it('keeps the legal center heading and policy cards compact', () => {
     render(
       <MemoryRouter initialEntries={['/legal']}>
@@ -39,6 +51,7 @@ describe('legal surface density', () => {
     )
 
     expect(screen.queryByText('Versión')).not.toBeInTheDocument()
+    expect(screen.queryByText('Vigente desde')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Ver cambios' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Ver cambios' }))
@@ -57,6 +70,35 @@ describe('legal surface density', () => {
       'text-[clamp(1.65rem,3.2vw,2.15rem)]'
     )
     expect(screen.getByTestId('legal-document-body')).toHaveClass('py-8', 'lg:py-10')
+    expect(screen.queryByText('Vigente desde')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Descargar / Imprimir' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Ver cambios' })).not.toBeInTheDocument()
+  })
+
+  it('keeps the legal tabs horizontally scrollable without a vertical scrollbar', () => {
+    render(
+      <MemoryRouter initialEntries={['/terms']}>
+        <LegalDocTabs activeKind="terms" />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('navigation', { name: 'Documentos legales' })).toHaveClass(
+      'overflow-x-auto',
+      'overflow-y-hidden'
+    )
+  })
+
+  it('reserves legal document actions for the platform owner', () => {
+    appSessionState.isPlatformOwner = true
+
+    render(
+      <MemoryRouter initialEntries={['/terms']}>
+        <LegalDocumentPage kind="terms" />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('button', { name: 'Descargar / Imprimir' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ver cambios' })).toBeInTheDocument()
   })
 
   it('keeps the entity legal data collapsed until the reader requests it', async () => {

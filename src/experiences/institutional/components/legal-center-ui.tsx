@@ -45,7 +45,7 @@ export function LegalDocTabs({ activeKind }: { activeKind: LegalDocument['kind']
       <div className="asi-container">
         <nav
           aria-label="Documentos legales"
-          className="tm-scrollbar flex gap-1 overflow-x-auto"
+          className="tm-scrollbar flex gap-1 overflow-x-auto overflow-y-hidden"
         >
           {legalDocumentList.map((document, index) => {
             const Icon = document.icon
@@ -90,25 +90,10 @@ export function LegalDocTabs({ activeKind }: { activeKind: LegalDocument['kind']
 }
 
 /* ------------------------------------------------------------------ */
-/* Metadata pills — effective date and reading time.                  */
+/* Metadata pills — public reading time only.                         */
 /* ------------------------------------------------------------------ */
-export function LegalMetaPills({
-  document,
-  includeOperational = true
-}: {
-  document: LegalDocument
-  // La vigencia es metadata operativa (solo admin); el tiempo de lectura sí es
-  // útil para cualquier lector, así que se muestra siempre.
-  includeOperational?: boolean
-}) {
-  const pills = [
-    ...(includeOperational
-      ? [
-          { icon: metaPillIcons.date, label: 'Vigente desde', value: document.effectiveDate }
-        ]
-      : []),
-    { icon: metaPillIcons.reading, label: 'Lectura', value: document.readingTime }
-  ]
+export function LegalMetaPills({ document }: { document: LegalDocument }) {
+  const pills = [{ icon: metaPillIcons.reading, label: 'Lectura', value: document.readingTime }]
 
   return (
     <div className="flex flex-wrap gap-2">

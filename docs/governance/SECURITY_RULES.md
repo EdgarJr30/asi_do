@@ -93,6 +93,7 @@ Security includes protecting:
 33. Access telemetry must follow data minimization: retain session timestamp, last activity, IP, user-agent, browser-reported language, and timezone for no more than 180 days; do not collect GPS coordinates, canvas fingerprints, advertising identifiers, or unrelated device signals.
 34. IP address, user-agent, timezone, and derived device labels are sensitive approximate context. They must remain restricted to authorized security/support use and must never be presented as exact location or conclusive user identity.
 35. RLS checks that depend on a protected relation must not rely on an invoker-context subquery that can be filtered by that relation's own policies. Use a narrow `security definer` predicate that returns only the authorization boolean, revoke public execution, and grant it only to the role that needs the policy.
+36. Legal-document export/print and change-history controls must render only for an active `platform_owner`. Do not treat generic admin-console visibility, `platform_admin`, internal-developer status, or a partial platform permission as equivalent to this superadministrator gate.
 
 ### Supabase MCP rules for LLM-assisted development
 - Supabase MCP may be used only as an internal developer tool, never as an end-user or customer-facing capability.

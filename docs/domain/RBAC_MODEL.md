@@ -178,6 +178,7 @@ A future anonymous opportunity preview may exist only as a separate public summa
 17. The full role and scope taxonomy is defined in `docs/domain/ROLE_SCOPE_MODEL.md`.
 18. Platform role administration after bootstrap must use the owner-only `/admin/access-control` workflow and audited SQL RPCs. A `platform_admin` may operate allowed admin modules, but only an active `platform_owner` may create custom platform roles, edit the permission set assigned to any platform role, assign/revoke platform roles, delete custom platform roles, or inspect the platform RBAC report/audit snapshot. Locked system role metadata remains immutable from the module even when its permission set is adjusted.
 19. User access logs are operational audit data, not RBAC mutation controls: administrators with `audit_log:read` may inspect them, while direct table reads remain revoked and every RPC read is audited.
+20. Legal-document export/print and change-history controls are owner-only operational tools. The UI must require an active `platform_owner`; generic admin-console access, `platform_admin`, internal-developer status, or partial platform permissions are insufficient.
 
 ---
 

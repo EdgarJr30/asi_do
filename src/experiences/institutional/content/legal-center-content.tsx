@@ -2,7 +2,6 @@
 import type { ComponentType, ReactNode } from 'react'
 
 import {
-  CalendarDays,
   CheckCircle2,
   Clock,
   CreditCard,
@@ -777,6 +776,5 @@ export const legalDocumentOrder: LegalDocKind[] = ['terms', 'privacy', 'refunds'
 export const legalDocumentList: LegalDocument[] = legalDocumentOrder.map((kind) => legalDocuments[kind])
 
 export const metaPillIcons = {
-  date: CalendarDays,
   reading: Clock
 } as const

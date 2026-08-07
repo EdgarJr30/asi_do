@@ -23,9 +23,9 @@ export function LegalDocumentPage({ kind }: { kind: LegalDocKind }) {
   const document = legalDocuments[kind]
   const clauseIds = useMemo(() => document.clauses.map((clause) => clause.id), [document])
   const activeClauseId = useScrollSpy(clauseIds)
-  // La metadata operativa (vigencia, versión, imprimir, historial de cambios) es
-  // ruido para el público general; solo la exponemos a quienes administran la consola.
-  const { canAccessAdminConsole } = useAppSession()
+  // Imprimir y consultar el historial son herramientas operativas reservadas
+  // al superadministrador estricto de la plataforma (`platform_owner`).
+  const { isPlatformOwner } = useAppSession()
 
   return (
     <div className="pb-6" data-legal-print>
@@ -43,9 +43,9 @@ export function LegalDocumentPage({ kind }: { kind: LegalDocKind }) {
           <h1 className="asi-heading-lg mt-2.5 max-w-[24ch] text-[clamp(1.65rem,3.2vw,2.15rem)]">{document.title}</h1>
           <p className="asi-copy mt-3 max-w-[68ch] text-[0.95rem] leading-6">{document.lede}</p>
           <div className="mt-4">
-            <LegalMetaPills document={document} includeOperational={canAccessAdminConsole} />
+            <LegalMetaPills document={document} />
           </div>
-          {canAccessAdminConsole ? (
+          {isPlatformOwner ? (
             <div className="mt-4" data-legal-chrome>
               <LegalDocActions document={document} />
             </div>
