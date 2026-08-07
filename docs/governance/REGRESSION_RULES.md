@@ -475,6 +475,9 @@ Do not implement a behavioral change and add a test only after the result is alr
 ### R-135 — Tests must not depend on the machine that runs them
 Do not let a test's result depend on the developer's `.env.local` or on how fast the runner is; both produce green locally and red in CI with a failure message that blames the UI. Supabase configuration for the suite is fixed in `src/test/env.ts` (imported first by `src/test/setup.ts`), for the Playwright web server in `tests/e2e/support/env.ts`, and for CI in the `env:` blocks of `.github/workflows/ci.yml`; a variable added to `REQUIRED_PRODUCTION_ENV` must be added to the verify step in the same task, or the production build aborts only in CI. Async waiting budgets belong in shared configuration —`asyncUtilTimeout` in `src/test/setup.ts`, `testTimeout` in `vite.config.ts`— never as a flag on a single script or as per-call rescues for one slow assertion. Raising a budget is legitimate only for latency: an element that never appears must still fail. See `docs/governance/TESTING_RULES.md` §9.
 
+### R-136 — Legal pages must keep a compact editorial rhythm
+Do not let `/legal` or its policy documents return to oversized marketing headings, tall mastheads, heavily padded cards, or wide vertical gaps between clauses. The legal center must keep compact policy cards and a brief security notice, while every policy route must preserve restrained titles, tight metadata and tabs, and readable low-density document sections across mobile and desktop.
+
 ---
 
 ## Maintenance rule

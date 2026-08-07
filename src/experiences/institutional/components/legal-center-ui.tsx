@@ -59,8 +59,8 @@ export function LegalDocTabs({ activeKind }: { activeKind: LegalDocument['kind']
                 }}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'group relative inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-1 py-4 text-sm font-semibold transition-colors',
-                  'mr-5 last:mr-0',
+                  'group relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-1 py-3 text-[0.82rem] font-semibold transition-colors',
+                  'mr-4 last:mr-0',
                   isActive ? 'text-(--asi-primary)' : 'text-(--asi-secondary) hover:text-(--asi-text)'
                 )}
                 to={document.path}
@@ -68,7 +68,7 @@ export function LegalDocTabs({ activeKind }: { activeKind: LegalDocument['kind']
               >
                 <Icon
                   className={cn(
-                    'size-4 transition-colors',
+                    'size-3.5 transition-colors',
                     isActive ? 'text-(--asi-primary)' : 'text-(--asi-secondary)/70 group-hover:text-(--asi-secondary)'
                   )}
                 />
@@ -112,15 +112,15 @@ export function LegalMetaPills({
   ]
 
   return (
-    <div className="flex flex-wrap gap-2.5">
+    <div className="flex flex-wrap gap-2">
       {pills.map((pill) => {
         const Icon = pill.icon
         return (
           <span
             key={pill.label}
-            className="inline-flex items-center gap-2 rounded-pill border border-(--asi-outline) bg-white px-3.5 py-1.5 text-[0.82rem] font-semibold text-(--asi-secondary)"
+            className="inline-flex items-center gap-1.5 rounded-pill border border-(--asi-outline) bg-white px-3 py-1 text-[0.76rem] font-semibold text-(--asi-secondary)"
           >
-            <Icon className="size-3.5 text-(--asi-primary)" />
+            <Icon className="size-3 text-(--asi-primary)" />
             {pill.label} <b className="font-bold text-(--asi-text)">{pill.value}</b>
           </span>
         )
@@ -211,7 +211,7 @@ export function LegalTableOfContents({
 }) {
   return (
     <aside className="sticky top-32 hidden lg:block" data-legal-chrome>
-      <p className="mb-3.5 pl-3.5 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-(--asi-secondary)">
+      <p className="mb-3 pl-3 text-[0.66rem] font-bold uppercase tracking-[0.12em] text-(--asi-secondary)">
         Contenido
       </p>
       <nav aria-label="Índice del documento" className="flex flex-col">
@@ -221,7 +221,7 @@ export function LegalTableOfContents({
             <a
               key={clause.id}
               className={cn(
-                'flex items-baseline gap-2.5 border-l-2 py-1.5 pl-3.5 text-[0.84rem] leading-snug transition-colors',
+                'flex items-baseline gap-2 border-l-2 py-1.5 pl-3 text-[0.79rem] leading-snug transition-colors',
                 isActive
                   ? 'border-(--asi-primary) font-semibold text-(--asi-primary)'
                   : 'border-(--asi-outline) text-(--asi-secondary) hover:border-(--asi-primary)/50 hover:text-(--asi-text)'
@@ -230,7 +230,7 @@ export function LegalTableOfContents({
             >
               <span
                 className={cn(
-                  'text-[0.7rem] font-bold tabular-nums',
+                  'text-[0.66rem] font-bold tabular-nums',
                   isActive ? 'text-(--asi-primary)' : 'text-(--asi-secondary)/70'
                 )}
               >
@@ -251,16 +251,16 @@ export function LegalTableOfContents({
 export function LegalClauseSection({ clause, index }: { clause: LegalClause; index: number }) {
   return (
     <section
-      className="scroll-mt-36 border-t border-(--asi-outline) pt-10 first:border-t-0 first:pt-0"
+      className="scroll-mt-36 border-t border-(--asi-outline) pt-7 first:border-t-0 first:pt-0"
       id={clause.id}
     >
-      <h2 className="flex items-baseline gap-3 text-[1.35rem] font-bold tracking-tight text-(--asi-text)">
-        <span className="text-sm font-bold tabular-nums text-(--asi-primary)">
+      <h2 className="flex items-baseline gap-2.5 text-[1.15rem] font-bold tracking-tight text-(--asi-text)">
+        <span className="text-xs font-bold tabular-nums text-(--asi-primary)">
           {String(index + 1).padStart(2, '0')}
         </span>
         {clause.title}
       </h2>
-      <div className="mt-4 space-y-4">
+      <div className="mt-3 space-y-3">
         {clause.blocks.map((block, blockIndex) => (
           <LegalBlock key={blockIndex} block={block} />
         ))}
@@ -272,18 +272,18 @@ export function LegalClauseSection({ clause, index }: { clause: LegalClause; ind
 function LegalBlock({ block }: { block: LegalClause['blocks'][number] }) {
   switch (block.kind) {
     case 'paragraph':
-      return <p className="asi-copy text-[0.98rem] [&_strong]:font-semibold [&_strong]:text-(--asi-text)">{block.content}</p>
+      return <p className="asi-copy text-[0.94rem] leading-6 [&_strong]:font-semibold [&_strong]:text-(--asi-text)">{block.content}</p>
     case 'subheading':
-      return <h3 className="pt-2 text-[0.98rem] font-bold text-(--asi-text)">{block.text}</h3>
+      return <h3 className="pt-1 text-[0.94rem] font-bold text-(--asi-text)">{block.text}</h3>
     case 'list':
       return (
-        <ul className="space-y-2.5">
+        <ul className="space-y-2">
           {block.items.map((item, index) => (
             <li
               key={index}
-              className="relative pl-6 text-[0.98rem] leading-7 text-(--asi-text-muted) [&_strong]:font-semibold [&_strong]:text-(--asi-text)"
+              className="relative pl-5 text-[0.94rem] leading-6 text-(--asi-text-muted) [&_strong]:font-semibold [&_strong]:text-(--asi-text)"
             >
-              <span className="absolute left-1 top-3 size-1.5 rounded-full bg-(--asi-primary)" />
+              <span className="absolute left-1 top-2.5 size-1.5 rounded-full bg-(--asi-primary)" />
               {item}
             </li>
           ))}
@@ -295,10 +295,10 @@ function LegalBlock({ block }: { block: LegalClause['blocks'][number] }) {
           {block.items.map((item) => (
             <div
               key={item.term}
-              className="grid gap-1 border-t border-(--asi-outline) px-4 py-3.5 first:border-t-0 sm:grid-cols-[11rem_1fr] sm:gap-4"
+              className="grid gap-1 border-t border-(--asi-outline) px-3.5 py-3 first:border-t-0 sm:grid-cols-[10rem_1fr] sm:gap-3"
             >
-              <dt className="text-[0.9rem] font-bold text-(--asi-text)">{item.term}</dt>
-              <dd className="text-[0.9rem] leading-6 text-(--asi-text-muted)">{item.description}</dd>
+              <dt className="text-[0.86rem] font-bold text-(--asi-text)">{item.term}</dt>
+              <dd className="text-[0.86rem] leading-5 text-(--asi-text-muted)">{item.description}</dd>
             </div>
           ))}
         </dl>
@@ -307,16 +307,16 @@ function LegalBlock({ block }: { block: LegalClause['blocks'][number] }) {
       return (
         <div className="mt-1">
           {block.items.map((item, index) => (
-            <div key={item.title} className="relative grid grid-cols-[2.25rem_1fr] gap-4 pb-5 last:pb-0">
+            <div key={item.title} className="relative grid grid-cols-[2rem_1fr] gap-3 pb-4 last:pb-0">
               {index < block.items.length - 1 ? (
-                <span className="absolute left-[1.06rem] top-9 bottom-0 w-0.5 bg-(--asi-outline)" />
+                <span className="absolute left-[0.94rem] top-8 bottom-0 w-0.5 bg-(--asi-outline)" />
               ) : null}
-              <span className="z-10 grid size-9 place-items-center rounded-full border border-(--asi-outline) bg-(--asi-surface-muted) text-sm font-bold text-(--asi-primary)">
+              <span className="z-10 grid size-8 place-items-center rounded-full border border-(--asi-outline) bg-(--asi-surface-muted) text-xs font-bold text-(--asi-primary)">
                 {index + 1}
               </span>
               <div>
-                <h3 className="text-[0.98rem] font-bold text-(--asi-text)">{item.title}</h3>
-                <p className="mt-1 text-[0.95rem] leading-7 text-(--asi-text-muted)">{item.description}</p>
+                <h3 className="text-[0.92rem] font-bold text-(--asi-text)">{item.title}</h3>
+                <p className="mt-1 text-[0.9rem] leading-6 text-(--asi-text-muted)">{item.description}</p>
               </div>
             </div>
           ))}
@@ -340,21 +340,21 @@ function LegalCallout({
   return (
     <div
       className={cn(
-        'flex gap-3.5 rounded-card border p-4',
+        'flex gap-3 rounded-card border p-3.5',
         isGreen ? 'border-[#cdeadb] bg-[#eef8f2]' : 'border-[#d6e0f2] bg-(--asi-surface-muted)'
       )}
     >
       <span
         className={cn(
-          'grid size-8 shrink-0 place-items-center rounded-control',
+          'grid size-7 shrink-0 place-items-center rounded-control',
           isGreen ? 'bg-[#1f9d61]/14 text-[#1f9d61]' : 'bg-(--asi-primary)/10 text-(--asi-primary)'
         )}
       >
-        <Icon className="size-4.5" />
+        <Icon className="size-4" />
       </span>
       <p
         className={cn(
-          'text-[0.92rem] leading-6 [&_a]:font-semibold [&_strong]:font-bold',
+          'text-[0.88rem] leading-6 [&_a]:font-semibold [&_strong]:font-bold',
           isGreen ? 'text-[#1c6844] [&_strong]:text-[#14512f]' : 'text-[#33477a] [&_strong]:text-(--asi-primary)'
         )}
       >
@@ -370,15 +370,15 @@ function LegalCallout({
 export function LegalIdentityPanel({ className }: { className?: string }) {
   return (
     <div
-      className={cn('rounded-card-lg border border-(--asi-outline) bg-white/80 p-5 sm:p-6', className)}
+      className={cn('rounded-card border border-(--asi-outline) bg-white/80 p-4 sm:p-5', className)}
       data-legal-chrome
     >
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-(--asi-secondary)">Datos legales de la entidad</p>
-      <dl className="mt-4 grid gap-x-8 gap-y-3.5 sm:grid-cols-2">
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-(--asi-secondary)">Datos legales de la entidad</p>
+      <dl className="mt-3 grid gap-x-7 gap-y-3 sm:grid-cols-2">
         {legalIdentity.map((item) => (
           <div key={item.label}>
-            <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-(--asi-secondary)">{item.label}</dt>
-            <dd className="mt-0.5 text-[0.9rem] font-medium leading-6 text-(--asi-text)">{item.value}</dd>
+            <dt className="text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-(--asi-secondary)">{item.label}</dt>
+            <dd className="mt-0.5 text-[0.86rem] font-medium leading-5 text-(--asi-text)">{item.value}</dd>
           </div>
         ))}
       </dl>
