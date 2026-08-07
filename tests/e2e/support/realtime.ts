@@ -133,19 +133,38 @@ export interface ProvisionedCandidate {
   password: string
 }
 
+export interface ProvisionUserOptions {
+  /** Prefijo del correo, para reconocer de qué prueba salió una cuenta huérfana. */
+  prefix?: string
+  /** Nombre visible. Varias pruebas lo buscan en pantalla, así que importa. */
+  fullName?: string
+  /** Acceso ASI sin pasar por el pipeline de membresía. Por defecto, sí. */
+  withAsiAccess?: boolean
+}
+
 /**
- * Crea un candidato temporal con acceso ASI (vía `manual_access_override_until`,
- * que saltea el pipeline de membresía) para poder ver el job board en la prueba.
+ * Cuenta temporal lista para usar la aplicación: correo confirmado, onboarding
+ * base completo y, salvo que se pida lo contrario, acceso ASI.
+ *
+ * Es la base de todas las cuentas de la suite. Los roles —pastor, admin— se
+ * montan encima en `support/membership.ts`, porque son filas de otras tablas y
+ * no todas las pruebas los necesitan.
  */
-export async function provisionRealtimeCandidate(admin: ServiceClient): Promise<ProvisionedCandidate> {
-  const email = `rt-e2e+${Date.now()}@asido.test`
+export async function provisionUser(
+  admin: ServiceClient,
+  options: ProvisionUserOptions = {}
+): Promise<ProvisionedCandidate> {
+  const { prefix = 'rt-e2e', fullName = 'Realtime E2E', withAsiAccess = true } = options
+  // El sufijo aleatorio evita colisiones entre pruebas que arrancan en el mismo
+  // milisegundo; el correo tiene que ser único en `auth.users`.
+  const email = `${prefix}+${Date.now()}-${Math.random().toString(36).slice(2, 8)}@asido.test`
   const password = realtimeConfig.candidatePassword
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name: 'Realtime E2E' }
+    user_metadata: { full_name: fullName }
   })
   if (createError) {
     throw explainAdminError(createError)
@@ -171,7 +190,7 @@ export async function provisionRealtimeCandidate(admin: ServiceClient): Promise<
     .from('users')
     .update({
       status: 'active',
-      manual_access_override_until: overrideUntil,
+      manual_access_override_until: withAsiAccess ? overrideUntil : null,
       // Onboarding base completado. Sin estos cuatro campos, `RequireAuth`
       // desvía cualquier ruta autenticada a /account/profile
       // (`hasCompletedBaseOnboarding`), así que la cuenta recién creada no podía
@@ -181,8 +200,8 @@ export async function provisionRealtimeCandidate(admin: ServiceClient): Promise<
       // Se completa solo el mínimo del gate. El *perfil de candidato* sigue
       // vacío a propósito: es lo que hace visible el aviso "Completa tu perfil"
       // y lo que mantiene a la cuenta representando a un usuario nuevo.
-      full_name: 'Realtime E2E',
-      display_name: 'Realtime E2E',
+      full_name: fullName,
+      display_name: fullName,
       locale: 'es',
       country_code: 'DO'
     })
@@ -192,6 +211,14 @@ export async function provisionRealtimeCandidate(admin: ServiceClient): Promise<
   }
 
   return { userId, email, password }
+}
+
+/**
+ * Crea un candidato temporal con acceso ASI (vía `manual_access_override_until`,
+ * que saltea el pipeline de membresía) para poder ver el job board en la prueba.
+ */
+export function provisionRealtimeCandidate(admin: ServiceClient): Promise<ProvisionedCandidate> {
+  return provisionUser(admin)
 }
 
 export type JobPublisher = {
@@ -241,8 +268,22 @@ export async function resolveJobPublisher(admin: ServiceClient): Promise<JobPubl
 }
 
 export async function cleanupRealtimeCandidate(admin: ServiceClient, candidate: ProvisionedCandidate | null) {
-  if (!candidate) {
-    return
+  await cleanupUsers(admin, [candidate])
+}
+
+/**
+ * Borra cuentas de prueba. Nunca lanza: se llama desde `afterAll`, y si una
+ * limpieza falla queremos ver el fallo real de la prueba, no el de la limpieza.
+ * Lo que sí importa es que se intenten todas aunque una falle.
+ */
+export async function cleanupUsers(
+  admin: ServiceClient,
+  users: Array<ProvisionedCandidate | null | undefined>
+) {
+  for (const user of users) {
+    if (!user) {
+      continue
+    }
+    await admin.auth.admin.deleteUser(user.userId).catch(() => {})
   }
-  await admin.auth.admin.deleteUser(candidate.userId).catch(() => {})
 }

@@ -1,53 +1,128 @@
 import { expect, test } from '@playwright/test'
 
-/**
- * Consola admin de membresía (Fase 4): un admin aprueba la solicitud, verifica el
- * pago y activa la cuenta. La activación solo se habilita con solicitud aprobada
- * + pago verificado. Requiere un admin de plataforma y la solicitud de "Marcos"
- * con un pago en estado submitted.
- */
+import { signInThroughUi } from './support/auth'
+import {
+  cleanupMembershipFixture,
+  createServiceClient,
+  membershipEnvReady,
+  provisionPlatformAdmin,
+  provisionUser,
+  seedApplication,
+  seedPayment,
+  setPaymentStatus,
+  type ProvisionedCandidate,
+  type ServiceClient,
+} from './support/membership'
 
-const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? ''
-const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? 'Admin2Test123!'
+/**
+ * Fase 4: un admin de plataforma aprueba la solicitud y activa la membresía
+ * desde `/admin/membership`.
+ *
+ * Dos reglas se comprueban aquí, y son distintas: la **activación exige
+ * solicitud aprobada y pago verificado** —el botón sigue deshabilitado mientras
+ * falte una de las dos—, y una vez cumplidas, activa.
+ *
+ * Sobre el pago: la consola **no tiene forma de verificarlo**. La RPC
+ * `verify_membership_payment` existe en la base pero ningún componente la llama;
+ * hoy el único camino a `verified` es la liquidación de AZUL. Por eso el fixture
+ * lo mueve como lo movería la pasarela, en vez de simular un botón inexistente.
+ * La versión anterior de esta prueba pulsaba "Verificar pago", un botón que no
+ * está en el producto — y como la prueba se saltaba siempre, nadie lo notó.
+ */
 
 test.use({ viewport: { width: 1440, height: 1200 }, isMobile: false, hasTouch: false })
 
-test('un admin revisa, verifica el pago y activa una cuenta', async ({ page }) => {
-  test.skip(!ADMIN_EMAIL, 'Define E2E_ADMIN_EMAIL para correr esta validación.')
+test.describe('consola de administración de membresías', () => {
+  test.skip(!membershipEnvReady(), 'Define E2E_SERVICE_ROLE_KEY y E2E_SUPABASE_URL (o usa .env.local).')
 
-  const pageErrors: string[] = []
-  page.on('pageerror', (error) => pageErrors.push(`${error.name}: ${error.message}`))
+  let admin: ServiceClient
+  let platformAdmin: ProvisionedCandidate | null = null
+  let applicant: ProvisionedCandidate | null = null
+  let paymentId = ''
 
-  // Login admin
-  await page.goto('/auth/sign-in')
-  await page.getByPlaceholder('john.doe@empresa.com.do').fill(ADMIN_EMAIL)
-  await page.getByPlaceholder('Tu contraseña').fill(ADMIN_PASSWORD)
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click()
-  await expect(page).not.toHaveURL(/\/auth\/sign-in/)
+  test.beforeAll(async () => {
+    admin = createServiceClient()
 
-  // Consola admin
-  await page.goto('/admin/membership')
-  await expect(page.getByRole('heading', { name: /Consola de membresía/i })).toBeVisible()
+    platformAdmin = await provisionPlatformAdmin(admin)
+    applicant = await provisionUser(admin, {
+      prefix: 'applicant-e2e',
+      fullName: 'Marcos Miembro',
+      withAsiAccess: false,
+    })
 
-  // Tarjeta de Marcos (tiene un pago por verificar)
-  const card = page.locator('[class*="rounded"]').filter({ hasText: 'Marcos Miembro' }).first()
-  await expect(card).toBeVisible()
+    const applicationId = await seedApplication(admin, {
+      userId: applicant.userId,
+      firstName: 'Marcos',
+      lastName: 'Miembro',
+      email: applicant.email,
+    })
+    paymentId = await seedPayment(admin, {
+      applicationId,
+      userId: applicant.userId,
+      status: 'submitted',
+    })
+  })
 
-  await page.screenshot({ path: 'tmp/admin-console-before.png', fullPage: true })
+  test.afterAll(async () => {
+    if (!admin) {
+      return
+    }
+    await cleanupMembershipFixture(admin, [applicant, platformAdmin])
+  })
 
-  // 1. Aprobar la solicitud
-  await card.getByRole('button', { name: 'Aprobar' }).click()
-  await expect(card.getByText(/Aprobada/i)).toBeVisible()
+  test('un admin aprueba la solicitud y activa la cuenta cuando el pago está verificado', async ({ page }) => {
 
-  // 2. Verificar el pago
-  await card.getByRole('button', { name: 'Verificar pago' }).click()
-  await expect(card.getByText(/Pago verificado/i)).toBeVisible()
+    const pageErrors: string[] = []
+    page.on('pageerror', (error) => pageErrors.push(`${error.name}: ${error.message}`))
 
-  // 3. Activar la cuenta (ahora habilitado)
-  await card.getByRole('button', { name: 'Activar cuenta' }).click()
-  await expect(card.getByText(/Cuenta activada/i)).toBeVisible()
+    await signInThroughUi(page, platformAdmin!)
 
-  await page.screenshot({ path: 'tmp/admin-console-after.png', fullPage: true })
+    await page.goto('/admin/membership')
+    await expect(page.getByRole('heading', { name: /Administración de membresías/i })).toBeVisible()
 
-  expect(pageErrors).toEqual([])
+    // La consola lista todas las solicitudes en curso: se busca la del fixture
+    // en vez de confiar en que sea la primera de la lista. Por correo y no por
+    // nombre porque la búsqueda compara columna a columna —nombre y apellido son
+    // dos— y "Marcos Miembro" no coincide con ninguna.
+    await page.getByPlaceholder('Buscar por nombre, email, categoría…').fill(applicant!.email)
+
+    const card = page.locator('[class*="rounded"]').filter({ hasText: 'Marcos Miembro' }).first()
+    await expect(card).toBeVisible()
+
+    // 1. Con el pago sin verificar, activar no está disponible. Es la regla que
+    //    la Fase 4 tenía que garantizar.
+    await expect(card.getByRole('button', { name: /Activar membres[ií]a/i })).toBeDisabled()
+
+    // 2. El admin aprueba la solicitud.
+    await card.getByRole('button', { name: /^Aprobar$/ }).click()
+    await expect(card.getByText('Aprobada')).toBeVisible()
+
+    // Aprobada pero sin pago verificado: sigue sin poder activarse.
+    await expect(card.getByRole('button', { name: /Activar membres[ií]a/i })).toBeDisabled()
+
+    // 3. La pasarela liquida el pago (lo que hoy hace AZUL, no la consola).
+    await setPaymentStatus(admin, paymentId, 'verified')
+    await expect(card.getByText('Pago verificado')).toBeVisible()
+
+    // 4. Ahora sí: activar. Se comprueba la confirmación del producto y, sobre
+    //    todo, el efecto en la base: el badge de la tarjeta depende de que la
+    //    lista refresque, pero que el miembro quede activo no depende de nada.
+    const activar = card.getByRole('button', { name: /Activar membres[ií]a/i })
+    await expect(activar).toBeEnabled()
+    await activar.click()
+    await expect(page.getByText(/Cuenta activada/i)).toBeVisible()
+
+    await expect
+      .poll(async () => {
+        const { data } = await admin
+          .from('users')
+          .select('asi_membership_status')
+          .eq('id', applicant!.userId)
+          .maybeSingle<{ asi_membership_status: string }>()
+        return data?.asi_membership_status ?? null
+      })
+      .toBe('active')
+
+    expect(pageErrors).toEqual([])
+  })
 })

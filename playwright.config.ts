@@ -2,6 +2,25 @@ import { defineConfig, devices } from '@playwright/test'
 
 import { webServerEnv } from './tests/e2e/support/env'
 
+/**
+ * Pruebas que solo corren en escritorio.
+ *
+ * Fijan un viewport de 1440 con `test.use`, así que en los proyectos móviles
+ * serían exactamente la misma prueba otra vez —y, peor, montarían otra vez su
+ * fixture: cuentas, roles y solicitudes creados y borrados en el proyecto
+ * remoto por triplicado sin cubrir nada nuevo.
+ *
+ * Se excluyen aquí y no con un `test.skip` por prueba porque el `beforeAll`
+ * corre antes que cualquier skip: el fixture se crearía igual para tirarlo
+ * después.
+ */
+const DESKTOP_ONLY_SPECS = [
+  '**/membership-admin-console.spec.ts',
+  '**/membership-full-submission.spec.ts',
+  '**/membership-needs-more-info.spec.ts',
+  '**/pastor-membership-queue.spec.ts'
+]
+
 export default defineConfig({
   testDir: './tests/e2e',
   // Las pruebas del service worker no corren aquí: exigen el build de
@@ -66,12 +85,14 @@ export default defineConfig({
     },
     {
       name: 'mobile-chromium',
+      testIgnore: DESKTOP_ONLY_SPECS,
       use: {
         ...devices['Pixel 7']
       }
     },
     {
       name: 'mobile-webkit',
+      testIgnore: DESKTOP_ONLY_SPECS,
       use: {
         ...devices['iPhone 13']
       }
