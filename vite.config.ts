@@ -83,8 +83,8 @@ const criticalCssPath = fileURLToPath(new URL('./src/styles/critical.css', impor
  * falta el JS de todas formas. Lo que sí costaba era medible: `index.html` tiene
  * que revalidarse en cada visita —es la entrada de la SPA—, así que esos 33 KB
  * gzip de CSS se volvían a descargar **siempre**, incluso cuando no habían
- * cambiado. Como archivo con hash en `/assets/`, `netlify.toml` los cachea un año
- * como `immutable`.
+ * cambiado. Como archivo con hash en `/assets/`, tanto `netlify.toml` como
+ * `public/.htaccess` los cachean un año como `immutable`.
  *
  * El `<link>` se deja bloqueante a propósito: es lo que evita el FOUC cuando
  * React monta, y no retrasa nada porque la hoja pesa mucho menos que el JS y
@@ -149,7 +149,8 @@ export default defineConfig({
     // `hidden` genera los .map pero **no** escribe el comentario
     // `//# sourceMappingURL`, asi que el navegador no los pide y no quedan
     // enlazados desde el bundle. Siguen existiendo en el artefacto para poder
-    // mapear un stack a mano; `netlify.toml` bloquea su descarga publica.
+    // mapear un stack a mano; `netlify.toml` y `public/.htaccess` bloquean su
+    // descarga publica.
     sourcemap: 'hidden',
     rollupOptions: {
       output: {

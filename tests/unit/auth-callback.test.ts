@@ -33,11 +33,11 @@ describe('auth callback helpers', () => {
   })
 
   it('builds the auth redirect URL without localhost when a public auth site URL is configured', async () => {
-    vi.stubEnv('VITE_AUTH_SITE_URL', 'https://asi-do.netlify.app')
-    vi.stubEnv('APP_URL', 'https://asi-do.netlify.app')
+    vi.stubEnv('VITE_AUTH_SITE_URL', 'https://asidominicana.do')
+    vi.stubEnv('APP_URL', 'https://asidominicana.do')
 
     const { getAuthRedirectUrl } = await import('@/features/auth/lib/auth-api')
 
-    expect(getAuthRedirectUrl()).toBe('https://asi-do.netlify.app/auth/confirm')
+    expect(getAuthRedirectUrl()).toBe('https://asidominicana.do/auth/confirm')
   })
 })

@@ -10,7 +10,7 @@ const completeEnv: Record<string, string> = {
   VITE_SUPABASE_URL: 'https://proyecto.supabase.co',
   VITE_SUPABASE_ANON_KEY: 'anon-key-de-ejemplo',
   VITE_AZUL_PAYMENTS_URL: 'https://pagos.example.com',
-  VITE_AUTH_SITE_URL: 'https://asi-do.netlify.app'
+  VITE_AUTH_SITE_URL: 'https://asidominicana.do'
 }
 
 describe('contrato de variables de produccion', () => {

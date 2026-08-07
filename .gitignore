@@ -1,6 +1,10 @@
 node_modules
 dist
 coverage
+
+# Sourcemaps apartados por `npm run build:hosting`: no se suben al hosting
+# publico, pero se guardan en local para poder mapear un stack a mano.
+.sourcemaps/
 .DS_Store
 .env
 .env.local

@@ -303,6 +303,7 @@ Add structured logs/events for critical flows where possible.
 - `npm run verify` is the required CI command for pull requests and `main`
 - Netlify handles preview deployments for pull requests once the repository is connected
 - Netlify publishes production from `main`
+- since 2026-08-07 the SPA is also served from Hostinger on `asidominicana.do` (manual `dist/` upload, rules in `public/.htaccess`); Netlify remains the rollback target until Hostinger is validated — see `docs/architecture/DESPLIEGUE_HOSTINGER.md`
 - environment variables managed per environment
 - Netlify manages build-time frontend environments for preview and production
 - Supabase project separation is required once production data exists

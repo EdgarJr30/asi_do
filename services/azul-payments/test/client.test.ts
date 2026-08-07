@@ -5,10 +5,10 @@ import type { AppConfig } from '../src/config.ts'
 
 const baseConfig: AppConfig = {
   port: 0,
-  allowedOrigin: 'https://asi-do.netlify.app',
-  allowedOrigins: ['https://asi-do.netlify.app'],
+  allowedOrigin: 'https://asidominicana.do',
+  allowedOrigins: ['https://asidominicana.do'],
   servicePublicUrl: 'https://svc.example.com',
-  appUrl: 'https://asi-do.netlify.app',
+  appUrl: 'https://asidominicana.do',
   supabaseUrl: 'https://example.supabase.co',
   supabaseAnonKey: 'anon',
   supabaseServiceRoleKey: 'service',

@@ -7,6 +7,7 @@ import { release, releaseLabel } from '@/shared/config/release'
 
 const viteConfig = readFileSync(resolve(process.cwd(), 'vite.config.ts'), 'utf8')
 const netlifyConfig = readFileSync(resolve(process.cwd(), 'netlify.toml'), 'utf8')
+const htaccess = readFileSync(resolve(process.cwd(), 'public/.htaccess'), 'utf8')
 const errorLogger = readFileSync(
   resolve(process.cwd(), 'src/lib/errors/client-error-logger.ts'),
   'utf8'
@@ -49,6 +50,19 @@ describe('identidad del release', () => {
     // para leerse el codigo fuente entero, aunque no esten enlazados.
     expect(netlifyConfig).toMatch(/from = "\/assets\/\*\.map"/)
     expect(netlifyConfig).toMatch(/status = 404/)
+  })
+
+  it('el .htaccess de hostinger bloquea los .map igual que netlify', () => {
+    // Los dos hosts sirven el mismo artefacto, asi que la proteccion tiene que
+    // existir en ambos. Este aserto es lo que impide que el .htaccess se quede
+    // atras cuando se toca netlify.toml, o al reves.
+    expect(htaccess).toMatch(/RewriteRule \^assets\/\.\*\\\.map\$ - \[R=404,L\]/)
+  })
+
+  it('el .htaccess trae el fallback de la SPA', () => {
+    // Sin el catch-all, cualquier recarga en una ruta profunda como
+    // /workspace/applications devuelve 404 de Apache en vez de cargar la SPA.
+    expect(htaccess).toMatch(/RewriteRule \^ index\.html \[L\]/)
   })
 
   it('el logger adjunta el release a cada error', () => {

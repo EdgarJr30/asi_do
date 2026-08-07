@@ -2,13 +2,17 @@
 
 Runbook para servir el frontend desde **Hostinger**, con el dominio comprado en **nic.do** y el DNS en **Cloudflare**.
 
-> **Estado: propuesta de migración, no la topología vigente.**
-> Hoy el frontend se publica en **Netlify** (`netlify.toml`, `asi-do.netlify.app`), y así lo dicen
-> `README.md`, `docs/architecture/ENVIRONMENTS.md`, `TECHNICAL_ARCHITECTURE.md` y
-> `docs/pasarelaDePagos/despliegue-azul.md` — este último con una corrección explícita del 2026-08-04
-> que retiró a Hostinger por ser texto obsoleto.
-> Este documento describe cómo sería el cambio. **El día que se ejecute, hay que actualizar esos cuatro
-> documentos en el mismo commit**, o el repo vuelve a contradecirse (ver §9).
+> **Estado: en ejecución desde 2026-08-07. Prueba de hosting, no corte a producción.**
+> El dominio es **`asidominicana.do`** y la parte del repo ya está hecha: existe `public/.htaccess`,
+> y `.env.production`, `supabase/config.toml` y los tests apuntan al dominio nuevo.
+> Falta lo que solo se hace desde los paneles: Hostinger (§2, §3), Cloudflare (§2, §3) y la subida (§5).
+>
+> **Netlify sigue publicado** (`asi-do.netlify.app`) como vuelta atrás, y `netlify.toml` se mantiene.
+> Deliberadamente **fuera de alcance** en esta fase, porque el objetivo es solo que la app cargue:
+> - **AZUL sigue sin desplegar** (`VITE_AZUL_PAYMENTS_URL` apunta a `localhost:8080`). Los pagos con
+>   tarjeta **no funcionarán** en el sitio de Hostinger. Es lo esperado, no un fallo del despliegue.
+> - **No se rota la `service_role` key.** Sigue siendo requisito del corte a producción real
+>   (`ENVIRONMENTS.md` §5), no de esta prueba.
 
 ---
 
@@ -19,7 +23,7 @@ Runbook para servir el frontend desde **Hostinger**, con el dominio comprado en 
 | SPA (frontend) | Netlify | **Hostinger** (hosting compartido, Apache/LiteSpeed) |
 | Registrador del dominio | nic.do | nic.do — **sin cambios** |
 | DNS autoritativo | Cloudflare | Cloudflare — **sin cambios** |
-| `services/azul-payments` | Railway | Railway — **sin cambios** |
+| `services/azul-payments` | sin desplegar (`localhost:8080`) | sin desplegar — **fuera de alcance de esta fase** |
 | Supabase (BD, Auth, Storage, Edge Functions) | Supabase | Supabase — **sin cambios** |
 
 **No muevas los nameservers a Hostinger.** El DNS sigue en Cloudflare; Hostinger solo aporta el servidor
@@ -36,7 +40,7 @@ secretos, healthcheck y cron de conciliación. Se queda en Railway (ver `docs/pa
 (`*.ns.cloudflare.com`).
 
 **En Hostinger** (hPanel):
-1. *Sitios web* → **Añadir sitio web existente** → `tudominio.do`.
+1. *Sitios web* → **Añadir sitio web existente** → `asidominicana.do`.
 2. Cuando ofrezca cambiar los nameservers, **omítelo** / elige "usaré mi propio DNS".
 3. Copia la **IP del servidor** (*Plan de hosting* → Detalles).
 
@@ -58,7 +62,7 @@ falla si Cloudflare intercepta.
 
 1. Con el proxy en gris y el DNS ya propagado (10–30 min), hPanel → *Seguridad* → **SSL** → instalar el
    certificado gratuito.
-2. Verifica que `https://tudominio.do` cargue sin advertencia.
+2. Verifica que `https://asidominicana.do` cargue sin advertencia.
 3. Ahora sí, pon las nubes en **naranja** en Cloudflare.
 4. Cloudflare → *SSL/TLS* → modo de cifrado: **Full (strict)**.
 5. Cloudflare → *SSL/TLS* → *Edge Certificates* → activa **Always Use HTTPS**.
@@ -76,81 +80,15 @@ origen detrás del proxy es precisamente lo que provoca el bucle.
 Todo lo que hoy resuelve `netlify.toml` (SPA fallback, redirects, cache, bloqueo de sourcemaps) hay que
 reimplementarlo en Apache. Este archivo va en la **raíz de `public_html`**.
 
-Ubicación recomendada en el repo: **`public/.htaccess`**, para que `vite build` lo copie a `dist/`
-automáticamente. Verifica tras el primer build que llegó: `ls -a dist/.htaccess`.
+**El archivo vive en el repo: [`public/.htaccess`](../../public/.htaccess).** Es la única copia; este
+documento no la duplica a propósito, porque una copia pegada aquí se queda desfasada al primer cambio.
 
-```apache
-# ==========================================================
-# asi_do — Hostinger (Apache / LiteSpeed) · public_html
-# Traducción de netlify.toml. Si cambias uno, cambia el otro.
-# ==========================================================
+`vite build` copia todo `public/` a `dist/`, así que el `.htaccess` viaja solo con el artefacto.
+Confírmalo tras el build: `ls -a dist/.htaccess`.
 
-Options -Indexes
-DirectoryIndex index.html
-
-# ---------- Rewrites ----------
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-
-  # QR de la presentación: /go → home.
-  # El QR está quemado apuntando a /go; para cambiar el destino, edita esta línea.
-  RewriteRule ^go/?$ / [R=302,L]
-
-  # Sourcemaps: se generan como `hidden`. Si por lo que sea acaban en el
-  # servidor, no deben ser descargables (bastaría adivinar la URL del bundle).
-  RewriteRule ^assets/.*\.map$ - [R=404,L]
-
-  # Archivos y directorios reales se sirven tal cual.
-  # Esto cubre /presentation (directorio con su propio index.html) y todo /public.
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
-
-  # Catch-all de la SPA: cualquier otra ruta la resuelve React Router.
-  RewriteRule ^ index.html [L]
-</IfModule>
-
-# ---------- Cache-Control ----------
-# Sin esto el servidor revalida los assets en cada navegación (304), que es lo
-# que hace que "se recarguen" las imágenes al moverse por la plataforma.
-<IfModule mod_headers.c>
-  # Bundles con hash en el nombre (Vite) y medios estáticos: seguro cachear
-  # para siempre. Si actualizas una imagen, renómbrala para invalidar.
-  SetEnvIf Request_URI "^/(assets|brand|payment|media|icons)/" ASI_CACHE_INMUTABLE
-  Header set Cache-Control "public, max-age=31536000, immutable" env=ASI_CACHE_INMUTABLE
-
-  # Manifest de la PWA.
-  SetEnvIf Request_URI "^/manifest\.webmanifest$" ASI_CACHE_DIA
-  Header set Cache-Control "public, max-age=86400" env=ASI_CACHE_DIA
-
-  # El service worker debe revalidarse siempre o los updates no se propagan.
-  <Files "sw.js">
-    Header set Cache-Control "public, max-age=0, must-revalidate"
-  </Files>
-
-  # El HTML nunca se cachea: es lo que apunta a los bundles nuevos.
-  # Va al final: en un empate de directivas Header, gana la última.
-  <FilesMatch "\.html$">
-    Header set Cache-Control "public, max-age=0, must-revalidate"
-  </FilesMatch>
-</IfModule>
-
-# ---------- MIME ----------
-<IfModule mod_mime.c>
-  AddType application/manifest+json .webmanifest
-  AddType image/avif  .avif
-  AddType image/webp  .webp
-  AddType font/woff2  .woff2
-</IfModule>
-
-# ---------- Compresión ----------
-<IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/css text/plain \
-    application/javascript application/json application/manifest+json \
-    image/svg+xml
-</IfModule>
-```
+Lo que resuelve, en orden: redirect `/go` → home, 404 de los `.map` y del `.DS_Store`, passthrough de
+archivos y directorios reales (esto es lo que sirve `/presentation`), catch-all de la SPA a `index.html`,
+`Cache-Control` por tipo de recurso, MIME de `.webmanifest`/`.avif`/`.webp`/`.woff2` y compresión.
 
 ### Diferencias respecto a `netlify.toml`
 
@@ -174,17 +112,22 @@ en CI y se sube.
 
 ```bash
 npm run verify          # puerta de calidad: lint + typecheck + test + build
-# el artefacto queda en dist/
+npm run build:hosting   # rebuild + aparta los sourcemaps; deja dist/ listo para subir
 ```
 
-**Antes de subir, saca los sourcemaps del artefacto público:**
+> ⚠️ **El build local hornea tu `.env.local`.** En Netlify las llaves las inyectaba el panel; aquí no hay
+> panel, así que `vite build` toma `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+> `VITE_AZUL_PAYMENTS_URL` y `VITE_WEB_PUSH_PUBLIC_KEY` del `.env.local` de tu máquina y las escribe
+> **dentro del bundle**. Revisa esos cuatro valores antes de cada build de release: lo que tengas en local
+> es lo que queda publicado. Hoy `VITE_AZUL_PAYMENTS_URL=http://localhost:8080`, y por eso los pagos con
+> tarjeta no funcionan en el sitio publicado.
 
-```bash
-mkdir -p ../sourcemaps-<tag> && mv dist/assets/*.map ../sourcemaps-<tag>/
-```
+**Los sourcemaps no se suben.** De eso se encarga `build:hosting`: los mueve a
+`.sourcemaps/<sha-corto>/` (ignorado por git) y deja `dist/` limpio. Son ~200 archivos y existen para
+poder mapear a mano un stack de `app_error_logs`, así que consérvalos en local junto al release. La
+regla 404 del `.htaccess` es la segunda línea de defensa, no la primera.
 
-Existen para poder mapear a mano un stack de `app_error_logs`; guárdalos junto al tag de release, fuera
-de `public_html`. La regla 404 del `.htaccess` es la segunda línea de defensa, no la primera.
+Si construyes con `npm run build` a secas, sácalos tú antes de subir.
 
 **Subida** — cualquiera de las tres:
 
@@ -209,38 +152,52 @@ defecto. En el Administrador de archivos hay que activar "mostrar archivos ocult
 El dominio nuevo aparece en varios sitios. Si te saltas uno, el síntoma típico es **el login rebota** o
 **el pago vuelve a la URL vieja**.
 
-| Dónde | Qué | Nota |
+| Dónde | Qué | Estado |
 |---|---|---|
-| `.env.production` | `VITE_AUTH_SITE_URL`, `APP_URL` | Versionado. Hoy `https://asi-do.netlify.app` |
-| `supabase/config.toml` `[auth]` | `site_url` + los 4 `additional_redirect_urls` | Si no coincide, Auth rechaza el redirect |
-| Edge Functions (secretos del proyecto) | `APP_URL` | Enlaces de los correos |
-| Railway (`services/azul-payments`) | `ALLOWED_ORIGIN`, `APP_URL` | CORS y redirects post-pago de AZUL |
-| Cloudflare | registros `A`, modo SSL | §2 y §3 |
+| `.env.production` | `VITE_AUTH_SITE_URL`, `APP_URL` | ✅ `https://asidominicana.do` |
+| `supabase/config.toml` `[auth]` | `site_url` + `additional_redirect_urls` | ✅ en el repo — ⚠️ **falta aplicarlo al proyecto remoto** |
+| Edge Functions (secretos del proyecto) | `APP_URL` | ⬜ Pendiente. Solo afecta a los enlaces de los correos |
+| Railway (`services/azul-payments`) | `ALLOWED_ORIGIN`, `APP_URL` | ⬜ N/A: AZUL no está desplegado |
+| Cloudflare | registros `A`, modo SSL | ⬜ Pendiente (§2 y §3) |
+
+**Lo del `config.toml` no es automático.** Ese archivo gobierna el Supabase *local*; el proyecto remoto
+lee su propia configuración. Hay que empujarla:
+
+```bash
+supabase config push --linked
+```
+
+O a mano en el dashboard → *Authentication* → *URL Configuration*. Si no se hace, **el login rebota**:
+Auth rechaza el redirect a un dominio que no tiene en su lista. Es el fallo número uno de este cambio.
+
+Se dejaron también los cuatro redirects de `asi-do.netlify.app` en la lista, para que Netlify siga
+sirviendo de vuelta atrás mientras se valida Hostinger.
 
 Los `VITE_*` se hornean en el bundle: cambiarlos **exige rebuild**, no basta con reiniciar nada.
 
-Tests que llevan el dominio quemado y hay que actualizar en el mismo commit:
-`tests/unit/auth-callback.test.ts`, `tests/unit/required-env.test.ts`,
-`services/azul-payments/test/app.test.ts`, `services/azul-payments/test/client.test.ts`.
+Tests que llevaban el dominio quemado, ya actualizados: `tests/unit/auth-callback.test.ts`,
+`tests/unit/required-env.test.ts`, `services/azul-payments/test/app.test.ts`,
+`services/azul-payments/test/client.test.ts`.
 
 ---
 
 ## 7. Verificación post-deploy
 
 ```bash
-curl -I https://tudominio.do/                      # 200, Cache-Control must-revalidate
-curl -I https://tudominio.do/workspace             # 200 (SPA fallback, no 404)
-curl -I https://tudominio.do/go                    # 302 → /
-curl -I https://tudominio.do/presentation          # 200
-curl -I https://tudominio.do/sw.js                 # 200, max-age=0
-curl -sI https://tudominio.do/assets/index-*.js | grep -i cache-control   # immutable
-curl -o /dev/null -w '%{http_code}\n' https://tudominio.do/assets/index-abc.js.map  # 404
+curl -I https://asidominicana.do/                      # 200, Cache-Control must-revalidate
+curl -I https://asidominicana.do/workspace             # 200 (SPA fallback, no 404)
+curl -I https://asidominicana.do/go                    # 302 → /
+curl -I https://asidominicana.do/presentation          # 200
+curl -I https://asidominicana.do/sw.js                 # 200, max-age=0
+curl -sI https://asidominicana.do/assets/index-*.js | grep -i cache-control   # immutable
+curl -o /dev/null -w '%{http_code}\n' https://asidominicana.do/assets/index-abc.js.map  # 404
 ```
 
 Y a mano, en el navegador:
 1. Login completo (el redirect de Auth es lo primero que se rompe con dominio nuevo).
 2. Una foto de perfil (valida Storage + CORS).
-3. Un pago de prueba de membresía end-to-end (valida el redirect de vuelta desde AZUL).
+3. ~~Un pago de prueba de membresía end-to-end~~ — **no aplica**: AZUL no está desplegado. Recupera este
+   paso el día que el microservicio salga a Railway.
 4. Recarga dura en una ruta profunda como `/workspace/applications` → debe cargar, no dar 404.
 
 ---
@@ -262,24 +219,36 @@ A cambio: coste fijo predecible y un panel único para dominio, correo y hosting
 
 ## 9. Checklist de ejecución de la migración
 
-- [ ] Contratar el plan de Hostinger y añadir el dominio (§2).
-- [ ] Añadir `public/.htaccess` al repo con el contenido de §4 y confirmar que llega a `dist/`.
-- [ ] Actualizar el dominio en los 5 sitios de §6 y sus 4 archivos de test.
-- [ ] `npm run verify` en verde.
-- [ ] Registros `A` en Cloudflare, en gris (§2).
+### Hecho en el repo (commit del 2026-08-07)
+
+- [x] `public/.htaccess` (§4).
+- [x] `npm run build:hosting`: build + aparta los ~200 sourcemaps fuera de `dist/` (§5).
+- [x] Dominio actualizado en `.env.production` y `supabase/config.toml`.
+- [x] Los 4 archivos de test con el dominio quemado.
+- [x] `tests/unit/release-metadata.test.ts`: ahora asserta la regla `.map` **de los dos** hosts, más el
+      fallback de la SPA del `.htaccess`.
+- [x] Comentarios de `vite.config.ts` que nombraban solo a `netlify.toml`.
+- [x] Documentos de topología: `README.md`, `ENVIRONMENTS.md`, `TECHNICAL_ARCHITECTURE.md`,
+      `docs/pasarelaDePagos/despliegue-azul.md`.
+- [x] `netlify.toml` y `.github/workflows/ci.yml` **se mantienen**: Netlify sigue siendo la vuelta atrás.
+
+### Pendiente — solo se hace desde los paneles
+
+- [ ] Contratar/activar el plan de Hostinger y añadir `asidominicana.do` (§2).
+- [ ] Registros `A` (`@` y `www`) en Cloudflare, **en gris** (§2).
 - [ ] Emitir SSL en Hostinger, luego naranja + Full (strict) + Always Use HTTPS (§3).
-- [ ] Subir `dist/` sin los `.map` (§5).
-- [ ] Pasar la verificación de §7 completa.
-- [ ] Actualizar los documentos que declaran Netlify como topología:
-      `README.md`, `docs/architecture/ENVIRONMENTS.md` (§4.2 y tabla de topología),
-      `docs/architecture/TECHNICAL_ARCHITECTURE.md`,
-      `docs/pasarelaDePagos/despliegue-azul.md` (la tabla de topología y la corrección del 2026-08-04).
-- [ ] Adaptar `tests/unit/release-metadata.test.ts`: hoy asserta que **`netlify.toml`** bloquea los
-      `.map`; debe pasar a assertar la regla equivalente del `.htaccess`.
-- [ ] Actualizar los comentarios de `vite.config.ts:86` y `vite.config.ts:152`, que nombran `netlify.toml`.
-- [ ] Decidir qué pasa con `netlify.toml` y con `.github/workflows/ci.yml:74`: se borran o se
-      mantienen como entorno de staging.
-- [ ] Mantener el dominio `asi-do.netlify.app` activo unos días como plan de vuelta atrás.
+- [ ] **`supabase config push --linked`** (o el dashboard) para que Auth acepte el dominio nuevo (§6).
+      Sin esto el login rebota.
+- [ ] Revisar los `VITE_*` de `.env.local` (§5), `npm run verify` en verde, `npm run build:hosting` y
+      subir el `dist/` resultante.
+- [ ] Pasar la verificación de §7 (salvo el paso 3, que no aplica).
+- [ ] Mantener `asi-do.netlify.app` activo unos días como plan de vuelta atrás.
+
+### Aplazado a propósito
+
+- [ ] Desplegar `services/azul-payments` en Railway y apuntar `VITE_AZUL_PAYMENTS_URL` al dominio real.
+- [ ] Rotar la `service_role` key (requisito del corte a producción, `ENVIRONMENTS.md` §5).
+- [ ] Automatizar la subida por FTP en CI, o asumir el deploy manual.
 
 ---
 

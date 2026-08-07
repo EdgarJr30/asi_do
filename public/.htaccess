@@ -1,0 +1,75 @@
+# ==========================================================
+# asi_do — Hostinger (Apache / LiteSpeed) · public_html
+# Traducción de netlify.toml. Si cambias uno, cambia el otro.
+# Vive en public/ para que `vite build` lo copie a dist/.
+# ==========================================================
+
+Options -Indexes
+DirectoryIndex index.html
+
+# ---------- Rewrites ----------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # QR de la presentación: /go → home.
+  # El QR está quemado apuntando a /go; para cambiar el destino, edita esta línea.
+  RewriteRule ^go/?$ / [R=302,L]
+
+  # Sourcemaps: se generan como `hidden`. Si por lo que sea acaban en el
+  # servidor, no deben ser descargables (bastaría adivinar la URL del bundle).
+  RewriteRule ^assets/.*\.map$ - [R=404,L]
+
+  # Basura de macOS: `vite build` copia todo `public/` a `dist/`, y ahí se cuela
+  # el .DS_Store que crea Finder. Apache ya oculta los .ht*, pero este no.
+  RewriteRule (^|/)\.DS_Store$ - [R=404,L]
+
+  # Archivos y directorios reales se sirven tal cual.
+  # Esto cubre /presentation (directorio con su propio index.html) y todo /public.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Catch-all de la SPA: cualquier otra ruta la resuelve React Router.
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# ---------- Cache-Control ----------
+# Sin esto el servidor revalida los assets en cada navegación (304), que es lo
+# que hace que "se recarguen" las imágenes al moverse por la plataforma.
+<IfModule mod_headers.c>
+  # Bundles con hash en el nombre (Vite) y medios estáticos: seguro cachear
+  # para siempre. Si actualizas una imagen, renómbrala para invalidar.
+  SetEnvIf Request_URI "^/(assets|brand|payment|media|icons)/" ASI_CACHE_INMUTABLE
+  Header set Cache-Control "public, max-age=31536000, immutable" env=ASI_CACHE_INMUTABLE
+
+  # Manifest de la PWA.
+  SetEnvIf Request_URI "^/manifest\.webmanifest$" ASI_CACHE_DIA
+  Header set Cache-Control "public, max-age=86400" env=ASI_CACHE_DIA
+
+  # El service worker debe revalidarse siempre o los updates no se propagan.
+  <Files "sw.js">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </Files>
+
+  # El HTML nunca se cachea: es lo que apunta a los bundles nuevos.
+  # Va al final: en un empate de directivas Header, gana la última.
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# ---------- MIME ----------
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+  AddType image/avif  .avif
+  AddType image/webp  .webp
+  AddType font/woff2  .woff2
+</IfModule>
+
+# ---------- Compresión ----------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain \
+    application/javascript application/json application/manifest+json \
+    image/svg+xml
+</IfModule>

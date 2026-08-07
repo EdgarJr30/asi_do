@@ -74,6 +74,8 @@ Todo lo que es específico de entorno. Esta es la lista que hay que recorrer al 
 
 Las URLs por entorno ya están separadas en `.env.development` y `.env.production` (versionados, solo contienen URLs). Los valores sensibles viven en `.env.local` y en el panel de Netlify.
 
+> En el build para **Hostinger** no hay panel: `vite build` corre en local y hornea en el bundle los `VITE_*` del `.env.local` de esa máquina. Revísalos antes de cada release (ver `DESPLIEGUE_HOSTINGER.md` §5).
+
 ### 4.3 Edge Functions (secretos del proyecto Supabase)
 
 `ASI_SUPABASE_PUBLISHABLE_KEY` · `ASI_SUPABASE_SECRET_KEY` · `APP_URL` · `EMAIL_FROM_ADDRESS` · `RESEND_API_KEY` · `EMAIL_PROCESSOR_SECRET` · `WEB_PUSH_VAPID_PUBLIC_KEY` · `WEB_PUSH_VAPID_PRIVATE_KEY` · `WEB_PUSH_CONTACT_EMAIL` · `STRESS_HARNESS_ENABLED` · `HARNESS_ENV` · `HARNESS_PRODUCTION_TARGETS`
@@ -116,6 +118,8 @@ Para que la activación de staging sea "cambiar entornos y ya", esto conviene re
 - [ ] **Cero cambios manuales desde el dashboard de Supabase.** Todo por migración. Un `GRANT` o una policy hecha a mano no viaja a staging.
 - [ ] **Despliegue de Edge Functions por CI**, no `supabase functions deploy` desde la laptop.
 - [x] **Unificar la topología documentada.** ✅ 2026-08-04. Resuelto: no era una decisión pendiente sino texto obsoleto en un solo documento. **No existe ni un archivo de configuración de Hostinger en el repositorio**, mientras que `netlify.toml`, `railway.json` y el `Dockerfile` del microservicio sí están, y tres documentos ya decían Netlify. La topología única —SPA en Netlify, `services/azul-payments` en Railway, plataforma en Supabase— queda declarada en `docs/pasarelaDePagos/despliegue-azul.md`, que es el runbook que manda.
+
+  **Reabierto el 2026-08-07:** ahora sí hay configuración de Hostinger en el repo (`public/.htaccess`) y el dominio propio `asidominicana.do` está conmutado en `.env.production` y `supabase/config.toml`. La SPA se sirve desde **dos** sitios a propósito y de forma temporal: Netlify como vuelta atrás mientras se valida Hostinger. Runbook: `docs/architecture/DESPLIEGUE_HOSTINGER.md`. Vuelve a quedar una sola topología en cuanto se retire uno de los dos.
 
 ## 6. Runbook: activar staging
 

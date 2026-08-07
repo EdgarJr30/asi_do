@@ -186,10 +186,15 @@ El flujo por defecto queda en **local + preview + production** usando **GitHub A
 - `Preview`: Netlify crea `Deploy Previews` automáticamente para cada PR al conectar el repo.
 - `Production`: Netlify publica automáticamente desde la rama `main`.
 
+Desde 2026-08-07 se está probando además **Hostinger** con el dominio propio `asidominicana.do`, con
+subida manual del `dist/` y sin deploy automático. Netlify se mantiene como vuelta atrás. El runbook
+completo es `docs/architecture/DESPLIEGUE_HOSTINGER.md`.
+
 Archivos clave:
 
 - `.github/workflows/ci.yml`
 - `netlify.toml`
+- `public/.htaccess` (equivalente de `netlify.toml` para Hostinger; si tocas uno, toca el otro)
 
 Configuración recomendada:
 
@@ -268,10 +273,15 @@ The default delivery flow is **local + preview + production** using **GitHub Act
 - `Preview`: Netlify creates Deploy Previews automatically for each pull request once the repository is connected.
 - `Production`: Netlify publishes automatically from the `main` branch.
 
+Since 2026-08-07 **Hostinger** is also being trialled on the project's own domain `asidominicana.do`,
+with manual `dist/` uploads and no automatic deploy. Netlify stays as the rollback target. Full runbook
+in `docs/architecture/DESPLIEGUE_HOSTINGER.md`.
+
 Key files:
 
 - `.github/workflows/ci.yml`
 - `netlify.toml`
+- `public/.htaccess` (the Hostinger counterpart of `netlify.toml`; change one, change the other)
 
 Recommended setup:
 

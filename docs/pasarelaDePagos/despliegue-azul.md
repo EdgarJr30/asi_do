@@ -5,14 +5,18 @@ Pasos para poner en producción los pagos de membresía y donaciones con AZUL. V
 
 ## Topología de despliegue
 
-**Frontend en Netlify, microservicio AZUL en Railway.** Es la única topología del proyecto; si algún
-documento dice otra cosa, este es el que manda.
+**Microservicio AZUL en Railway.** El frontend está en transición: Netlify sigue publicado y, desde
+2026-08-07, se está probando Hostinger con el dominio propio `asidominicana.do`.
 
 | Pieza | Dónde | Config en el repo |
 |---|---|---|
-| SPA (frontend) | **Netlify**, publicando desde `main` | `netlify.toml` |
+| SPA (frontend) | **Netlify** (`asi-do.netlify.app`, desde `main`) y **Hostinger** (`asidominicana.do`, subida manual) | `netlify.toml`, `public/.htaccess` |
 | `services/azul-payments` | **Railway**, build por Dockerfile | `services/azul-payments/railway.json`, `Dockerfile` |
 | Base de datos, Auth, Storage, Edge Functions | **Supabase** | `supabase/config.toml` |
+
+> **AZUL todavía no está desplegado.** `VITE_AZUL_PAYMENTS_URL` apunta a `http://localhost:8080`, así
+> que los pagos con tarjeta no funcionan en ningún sitio publicado. Este runbook es lo que hay que
+> ejecutar para cambiarlo.
 
 Van separados porque son cargas distintas: la SPA es un artefacto estático con CDN, mientras que el
 microservicio Node maneja secretos de AZUL y Supabase, recibe callbacks firmados, corre la conciliación
@@ -22,6 +26,12 @@ por cron y necesita healthcheck, logs y reinicios.
 > a `docs/architecture/ENVIRONMENTS.md` y a `TECHNICAL_ARCHITECTURE.md`, que dicen Netlify. No era una
 > decisión pendiente sino texto obsoleto: **no existe ni un archivo de configuración de Hostinger en el
 > repositorio**, mientras que `netlify.toml` sí está y el dominio activo es `asi-do.netlify.app`.
+>
+> **Actualización 2026-08-07.** Hostinger dejó de ser texto obsoleto y pasó a ser una migración en
+> curso: ya existe `public/.htaccess` y el dominio `asidominicana.do` está conmutado en el repo. El
+> runbook es `docs/architecture/DESPLIEGUE_HOSTINGER.md`. Netlify se mantiene como vuelta atrás hasta
+> que Hostinger quede validado, así que **por ahora conviven los dos**; la contradicción de agosto era
+> tener dos documentos afirmando cosas distintas, no tener dos hosts a propósito.
 
 ## 1. Base de datos (Supabase)
 Aplica las migraciones nuevas al proyecto remoto:
