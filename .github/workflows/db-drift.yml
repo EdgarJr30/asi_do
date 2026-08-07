@@ -80,8 +80,19 @@ jobs:
       # una decisión visible y no un silencio.
       - name: Apartar el residuo conocido de pg_net
         run: |
-          grep -iE '^[[:space:]]*create extension.*pg_net' drift.raw.sql > drift.ignorado.sql || true
-          grep -ivE '^[[:space:]]*create extension.*pg_net' drift.raw.sql \
+          # Primero normalizar. El CLI escribe el diff como JSON cuando la
+          # salida no es un terminal —`{"diff":"create extension ...","file":null,...}`—
+          # y como SQL suelto en otros casos. Sin este paso, el diff entero
+          # viajaría en una sola línea JSON y un filtro por líneas no vería nada:
+          # el job quedaría en rojo para siempre por la línea que no tiene arreglo.
+          if head -c 1 drift.raw.sql | grep -q '{'; then
+            jq -r '.diff // ""' drift.raw.sql > drift.norm.sql
+          else
+            cp drift.raw.sql drift.norm.sql
+          fi
+
+          grep -iE '^[[:space:]]*create extension.*pg_net' drift.norm.sql > drift.ignorado.sql || true
+          grep -ivE '^[[:space:]]*create extension.*pg_net' drift.norm.sql \
             | sed -e 's/[[:space:]]*$//' \
             | grep -vE '^$' > drift.sql || true
 

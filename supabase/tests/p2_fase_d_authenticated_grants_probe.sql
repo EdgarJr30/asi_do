@@ -85,6 +85,7 @@ declare
   v_ok int := 0;
   v_fail int := 0;
   v_n bigint;
+  r record;
   v_legibles text[] := array[
 
     'app_error_logs',
@@ -248,6 +249,74 @@ begin
     end;
   end loop;
   reset role;
+
+  -- ── G) Comportamiento: la escritura, en los dos sentidos ───────────────────
+  -- Leer no basta. Esta parte ejecuta el INSERT, el UPDATE y el DELETE reales
+  -- de cada tabla y comprueba que pasa exactamente lo declarado: que la
+  -- operación concedida no da 42501, y que la retirada sí.
+  --
+  -- `where false` es lo que lo hace seguro: Postgres verifica el privilegio al
+  -- planificar, antes de mirar una sola fila, así que la comprobación es real
+  -- pero no toca ni un dato. Tampoco evalúa RLS —sin filas no hay política que
+  -- aplicar—, que es justo lo que se quiere: aquí se mide el grant, no la
+  -- política. Y la columna se elige del catálogo evitando identidad y
+  -- generadas, que no admiten asignación.
+  for r in
+    select
+      split_part(m, '=', 1) as tabla,
+      split_part(m, '=', 2) as privs,
+      (
+        select a.attname
+        from pg_attribute a
+        where a.attrelid = to_regclass('public.' || quote_ident(split_part(m, '=', 1)))
+          and a.attnum > 0
+          and not a.attisdropped
+          and a.attidentity = ''
+          and a.attgenerated = ''
+        order by a.attnum
+        limit 1
+      ) as col
+    from unnest(v_matriz) m
+  loop
+    if r.col is null then
+      continue;
+    end if;
+
+    foreach v_item in array array['I', 'U', 'D'] loop
+      v_esperado := case when position(v_item in r.privs) > 0 then 'permitido' else 'denegado' end;
+      v_real := 'permitido';
+
+      begin
+        set local role authenticated;
+        case v_item
+          when 'I' then
+            execute format(
+              'insert into public.%I (%I) select %I from public.%I where false',
+              r.tabla, r.col, r.col, r.tabla
+            );
+          when 'U' then
+            execute format('update public.%I set %I = %I where false', r.tabla, r.col, r.col);
+          when 'D' then
+            execute format('delete from public.%I where false', r.tabla);
+        end case;
+      exception
+        when insufficient_privilege then
+          v_real := 'denegado';
+        when others then
+          -- Cualquier otro error (una restricción, un trigger) significa que el
+          -- privilegio existía: el statement llegó a ejecutarse.
+          v_real := 'permitido';
+      end;
+      reset role;
+
+      if v_real = v_esperado then
+        v_ok := v_ok + 1;
+      else
+        v_fail := v_fail + 1;
+        v_out := v_out || format(E'\n  G: %s con %s → %s, se esperaba %s', r.tabla, v_item, v_real, v_esperado);
+      end if;
+    end loop;
+  end loop;
 
   raise exception E'Probe Fase D (grants de authenticated) — OK: %, FALLOS: % %',
     v_ok, v_fail, coalesce(nullif(v_out, ''), E'\n  (sin desviaciones)');

@@ -36,7 +36,15 @@ supabase db query --linked --file <f>    # verificar/impersonar contra el remoto
 supabase db lint --linked                # detecta RPC rotas en tiempo de ejecución
 ```
 
-**No hay Docker en esta máquina**, así que `supabase start` y todo lo local-first no corre aquí. Toda verificación de base de datos va contra el proyecto remoto.
+**Docker sí existe en esta máquina, pero no es Docker Desktop:** es `colima` (instalado con `brew install colima docker`). Hay que arrancarlo a mano y el CLI de Supabase no lee los contextos de Docker, así que necesita el socket explícito:
+
+```bash
+colima start                                   # una vez por sesión de trabajo
+export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock
+supabase db diff --linked --schema public      # reproduce el job de drift en local
+```
+
+Con eso se puede reproducir el drift sin esperar al job de GitHub. La primera corrida descarga varias imágenes y tarda ~10 min; las siguientes, poco. Lo demás sigue igual: **la verificación de datos y privilegios va contra el proyecto remoto** con `supabase db query --linked`.
 
 ## Git
 
