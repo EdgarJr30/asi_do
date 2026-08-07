@@ -13,8 +13,7 @@ export function LegalCenterPage() {
       <InstitutionalSection reveal="mount">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.46fr)] lg:items-start">
           <div>
-            <p className="asi-kicker">Centro legal · ASI</p>
-            <h1 className="asi-heading-lg mt-4 max-w-[18ch] text-[clamp(2rem,4.4vw,2.8rem)]">
+            <h1 className="asi-heading-lg max-w-[18ch] text-[clamp(2rem,4.4vw,2.8rem)]">
               Todas nuestras políticas, en un solo lugar
             </h1>
             <p className="asi-copy mt-5 max-w-[64ch] text-[1.05rem]">
