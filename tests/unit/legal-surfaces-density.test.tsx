@@ -15,7 +15,9 @@ describe('legal surface density', () => {
     )
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveClass(
-      'text-[clamp(1.5rem,2.5vw,1.85rem)]'
+      'text-[clamp(1.5rem,2.5vw,1.85rem)]',
+      'lg:max-w-none',
+      'lg:whitespace-nowrap'
     )
     expect(screen.getByTestId('legal-center-masthead')).toHaveClass('py-5', 'lg:py-6')
     expect(screen.getByTestId('legal-policy-grid')).toHaveClass('gap-2.5', 'py-5')

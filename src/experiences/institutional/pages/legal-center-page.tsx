@@ -15,7 +15,7 @@ export function LegalCenterPage() {
           data-testid="legal-center-masthead"
         >
           <div>
-            <h1 className="asi-heading-lg max-w-[28ch] text-[clamp(1.5rem,2.5vw,1.85rem)]">
+            <h1 className="asi-heading-lg max-w-[28ch] text-[clamp(1.5rem,2.5vw,1.85rem)] lg:max-w-none lg:whitespace-nowrap">
               Todas nuestras políticas, en un solo lugar
             </h1>
             <p className="asi-copy mt-2 max-w-[66ch] text-[0.88rem] leading-5">
