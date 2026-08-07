@@ -51,6 +51,7 @@ supabase db lint --linked                # detecta RPC rotas en tiempo de ejecuc
 
 - **Las migraciones aplicadas son inmutables.** Si una necesita corrección, se añade otra encima. Editar un archivo ya desplegado hace que el repo y el remoto digan cosas distintas sin que nada lo detecte.
 - **Toda RPC nueva que llame el cliente necesita su `grant execute ... to authenticated` explícito.** Se revocó el default privilege de Supabase, así que sin el grant falla en desarrollo. Es intencional: fallo ruidoso en dev antes que agujero silencioso en producción.
+- **Lo mismo para las tablas nuevas:** desde la Fase D (`20260807145727`) tampoco hay default privilege de tablas para `authenticated`. Una tabla que el cliente deba leer o escribir necesita su `grant select[, insert, update, delete] ... to authenticated` en la misma migración, acotado a lo que la aplicación hace de verdad. Nunca `grant all`: incluye TRUNCATE, que no pasa por RLS.
 - **Las migraciones sensibles llevan una probe** en `supabase/tests/`. Convención: un bloque `DO` que termina siempre en `RAISE EXCEPTION` para que la transacción se revierta y no queden filas de prueba en producción. Ver `p0_notification_authz_probe.sql`.
 - **El repo no es la fuente de verdad completa.** Hay objetos en el Supabase remoto que no están en `migrations/`, y las migraciones nunca se han reproducido desde cero. No asumas que el estado remoto se deduce de los archivos: verifícalo con `supabase db query --linked`.
 

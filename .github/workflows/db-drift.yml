@@ -60,16 +60,46 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
-          supabase db diff --linked --schema public > drift.sql 2> drift.err || {
+          supabase db diff --linked --schema public > drift.raw.sql 2> drift.err || {
             echo "El cálculo de la diferencia falló:"
             cat drift.err
             exit 1
           }
           cat drift.err || true
 
+      # Residuo conocido: `pg_net` está instalada en `public` en el proyecto
+      # desplegado y ahí se queda. No es relocatable —`alter extension ... set
+      # schema` no aplica— y su owner es `supabase_admin`, así que `drop
+      # extension` da permission denied igual desde una migración que desde el
+      # SQL editor del dashboard, que corre como el mismo `postgres`. Está
+      # documentado en `supabase/README.md`.
+      #
+      # Se filtra **solo** la línea que crea la extensión, no todo lo que
+      # mencione pg_net: un grant nuevo sobre el esquema `net` seguiría fallando
+      # el job. Y lo filtrado se publica en el resumen, para que ignorarlo sea
+      # una decisión visible y no un silencio.
+      - name: Apartar el residuo conocido de pg_net
+        run: |
+          grep -iE '^[[:space:]]*create extension.*pg_net' drift.raw.sql > drift.ignorado.sql || true
+          grep -ivE '^[[:space:]]*create extension.*pg_net' drift.raw.sql \
+            | sed -e 's/[[:space:]]*$//' \
+            | grep -vE '^$' > drift.sql || true
+
       - name: Publicar el resultado
         id: report
         run: |
+          if [ -s drift.ignorado.sql ]; then
+            {
+              echo "### Residuo conocido, ignorado a propósito"
+              echo
+              echo '```sql'
+              cat drift.ignorado.sql
+              echo '```'
+              echo
+              echo "Motivo en \`supabase/README.md\`: \`pg_net\` no se puede mover de \`public\`."
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
           if [ -s drift.sql ]; then
             {
               echo "## Drift detectado"
@@ -95,7 +125,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: drift-sql
-          path: drift.sql
+          # También el crudo: lo que se apartó por conocido tiene que poder
+          # revisarse sin volver a correr el job.
+          path: |
+            drift.sql
+            drift.raw.sql
           retention-days: 30
 
       - name: Fallar si hay drift

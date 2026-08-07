@@ -26,11 +26,10 @@ begin
   where n.nspname = 'public'
     and pg_get_userbyid(d.defaclrole) = 'postgres'
     and d.defaclobjtype = 'r'
-    and d.defaclacl::text like '%authenticated=arwdDxtm/postgres%'
     and d.defaclacl::text like '%service_role=arwdDxtm/postgres%';
   if v_n = 1 then v_ok := v_ok + 1; else
     v_fail := v_fail + 1;
-    v_out := v_out || E'\n  A1: faltan los default privileges de tablas para authenticated/service_role';
+    v_out := v_out || E'\n  A1: faltan los default privileges de tablas para service_role';
   end if;
 
   select count(*) into v_n
@@ -65,8 +64,11 @@ begin
   end if;
 
   -- ── B) Tablas ───────────────────────────────────────────────────────────────
-  -- `service_role` con los 7 privilegios en las 58; `authenticated` igual salvo
-  -- las dos excepciones que declararon sus propias migraciones.
+  -- `service_role` con los 7 privilegios en las 58.
+  --
+  -- `authenticated` ya no se comprueba aquí: la Fase D (20260807145727) le quitó
+  -- el ALL heredado y su matriz —tabla por tabla, con lectura real
+  -- impersonando el rol— vive en `p2_fase_d_authenticated_grants_probe.sql`.
   select count(*) into v_n
   from pg_tables t
   where t.schemaname = 'public'
@@ -80,40 +82,13 @@ begin
     v_out := v_out || format(E'\n  B1: %s tablas sin ALL para service_role', v_n);
   end if;
 
-  select count(*) into v_n
-  from pg_tables t
-  where t.schemaname = 'public'
-    and t.tablename not in ('app_error_logs', 'user_access_logs')
-    and 7 <> (
-      select count(distinct g.privilege_type)
-      from information_schema.role_table_grants g
-      where g.table_schema = 'public' and g.table_name = t.tablename and g.grantee = 'authenticated'
-    );
-  if v_n = 0 then v_ok := v_ok + 1; else
-    v_fail := v_fail + 1;
-    v_out := v_out || format(E'\n  B2: %s tablas sin ALL para authenticated', v_n);
-  end if;
-
-  -- Las excepciones siguen siendo excepciones: `app_error_logs` se escribe por
-  -- RPC (SELECT + UPDATE, sin DELETE ni TRUNCATE) y `user_access_logs` se lee
-  -- solo por RPC de administrador.
-  if has_table_privilege('authenticated', 'public.app_error_logs', 'select')
-     and has_table_privilege('authenticated', 'public.app_error_logs', 'update')
-     and not has_table_privilege('authenticated', 'public.app_error_logs', 'delete')
-     and not has_table_privilege('authenticated', 'public.app_error_logs', 'truncate')
-     and not has_table_privilege('authenticated', 'public.user_access_logs', 'select')
-  then v_ok := v_ok + 1; else
-    v_fail := v_fail + 1;
-    v_out := v_out || E'\n  B3: cambiaron los grants de app_error_logs / user_access_logs';
-  end if;
-
   -- `anon` sigue limitado a las 5 tablas de solo lectura de 20260802190000.
   select count(distinct g.table_name) into v_n
   from information_schema.role_table_grants g
   where g.table_schema = 'public' and g.grantee = 'anon' and g.privilege_type = 'SELECT';
   if v_n = 5 then v_ok := v_ok + 1; else
     v_fail := v_fail + 1;
-    v_out := v_out || format(E'\n  B4: `anon` lee %s tablas de public, se esperaban 5', v_n);
+    v_out := v_out || format(E'\n  B2: `anon` lee %s tablas de public, se esperaban 5', v_n);
   end if;
 
   -- ── C) Funciones ────────────────────────────────────────────────────────────
