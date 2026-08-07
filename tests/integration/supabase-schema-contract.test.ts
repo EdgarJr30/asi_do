@@ -86,6 +86,10 @@ const platformAccessUsersPaginationMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260706133000_platform_access_users_pagination.sql'
 )
+const newestPlatformUsersMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260807160000_platform_access_users_newest_first.sql'
+)
 const platformRolePermissionEditMigrationPath = resolve(
   repoRoot,
   'supabase/migrations/20260706160000_allow_owner_edit_platform_role_permissions.sql'
@@ -369,6 +373,15 @@ describe('supabase schema contract', () => {
     expect(migration).toContain("'users_page'")
     expect(migration).toContain('offset v_offset')
     expect(migration).toContain('grant execute on function public.admin_platform_rbac_snapshot(text, integer, integer) to authenticated;')
+  })
+
+  it('keeps platform access users ordered by creation date newest first', () => {
+    expect(existsSync(newestPlatformUsersMigrationPath)).toBe(true)
+    const migration = readFileSync(newestPlatformUsersMigrationPath, 'utf8')
+
+    expect(migration).toContain("E'created_at desc,\\n      id desc'")
+    expect(migration).toContain("E'u.created_at desc,\\n            u.id desc'")
+    expect(migration).toContain("raise exception 'Legacy role-priority ordering remains")
   })
 
   it('allows platform owners to edit permissions on locked platform roles without editing role metadata', () => {

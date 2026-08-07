@@ -1,7 +1,19 @@
 import { useId, useMemo, useState } from 'react'
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Banknote, CheckCircle2, Infinity as InfinityIcon, Power, Search, ShieldCheck, Sparkles, UserPlus, X } from 'lucide-react'
+import {
+  Banknote,
+  CalendarDays,
+  CheckCircle2,
+  Infinity as InfinityIcon,
+  Power,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  UserPlus,
+  UserRound,
+  X
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -70,6 +82,13 @@ function positiveBadge(active: boolean) {
     : ''
 }
 
+function formatCreatedAt(value: string) {
+  return new Date(value).toLocaleString('es-DO', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  })
+}
+
 export function MembershipConsolePage() {
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<MembershipFilter>('all')
@@ -131,18 +150,21 @@ export function MembershipConsolePage() {
 
         <ManualAccessPanel />
 
-        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
-          <AdminTabs
-            value={filter}
-            onChange={setFilter}
-            tabs={[
-              { value: 'all', label: 'Todas', count: counts?.all },
-              { value: 'review', label: 'En revisión', count: counts?.review },
-              { value: 'approved', label: 'Aprobadas', count: counts?.approved },
-              { value: 'active', label: 'Activas', count: counts?.active },
-              { value: 'inactive', label: 'Inactivas', count: counts?.inactive }
-            ]}
-          />
+        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-1.5">
+            <AdminTabs
+              value={filter}
+              onChange={setFilter}
+              tabs={[
+                { value: 'all', label: 'Todas', count: counts?.all },
+                { value: 'review', label: 'En revisión', count: counts?.review },
+                { value: 'approved', label: 'Aprobadas', count: counts?.approved },
+                { value: 'active', label: 'Activas', count: counts?.active },
+                { value: 'inactive', label: 'Inactivas', count: counts?.inactive }
+              ]}
+            />
+            <p className="text-[0.72rem] text-(--app-text-subtle)">Más recientes primero · la lista se actualiza automáticamente.</p>
+          </div>
           <div className="relative lg:max-w-sm lg:flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
             <Input
@@ -245,17 +267,26 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
   const fullName = `${application.applicant_first_name} ${application.applicant_last_name}`.trim()
 
   return (
-    <Card className="rounded-card p-3.5 sm:p-4">
+    <Card className="overflow-hidden rounded-card border-l-4 border-l-primary-500 p-3.5 shadow-[0_1px_2px_rgba(20,40,90,0.04),0_8px_28px_rgba(20,40,90,0.06)] sm:p-4">
       <CardHeader className="pb-1">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-0.5">
-            <CardTitle className="text-[0.9rem]">{fullName || 'Solicitante'}</CardTitle>
-            <CardDescription className="text-[0.78rem]">
-              {application.category_name} · Cuota {application.dues} · {application.home_church_name} · {application.church_city}
-            </CardDescription>
-            <p className="text-[0.72rem] text-(--app-text-muted)">{application.applicant_email}</p>
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-control border border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-500/25 dark:bg-primary-500/12 dark:text-primary-200">
+              <UserRound className="size-5" />
+            </span>
+            <div className="min-w-0 space-y-0.5">
+              <CardTitle className="truncate text-[0.95rem]">{fullName || 'Solicitante'}</CardTitle>
+              <CardDescription className="text-[0.78rem]">
+                {application.category_name} · Cuota {application.dues}
+              </CardDescription>
+              <p className="truncate text-[0.72rem] text-(--app-text-muted)">{application.applicant_email}</p>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
+            <span className="inline-flex items-center gap-1.5 rounded-control bg-(--app-surface-muted) px-2.5 py-1.5 text-[0.7rem] font-semibold text-(--app-text-muted)">
+              <CalendarDays className="size-3.5 text-primary-600" />
+              <span><span className="text-(--app-text-subtle)">Solicitud creada</span> · {formatCreatedAt(application.created_at)}</span>
+            </span>
             {isActivated ? (
               <Badge variant="outline" className={positiveBadge(true)}>
                 <Sparkles className="size-3.5" /> Membresía activa
@@ -280,7 +311,23 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
       </CardHeader>
 
       <CardContent className="mt-2.5 space-y-2.5">
-        <div className="grid gap-1.5 text-[0.8rem] text-(--app-text-muted) sm:grid-cols-2">
+        <div className="grid overflow-hidden rounded-control border border-(--app-border) bg-(--app-surface-muted)/45 sm:grid-cols-3">
+          <div className="border-b border-(--app-border) px-3 py-2.5 sm:border-r sm:border-b-0">
+            <p className="text-[0.64rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">1 · Solicitud</p>
+            <p className="mt-1 text-[0.78rem] font-semibold text-(--app-text)">{workflowLabels[application.status] ?? application.status}</p>
+          </div>
+          <div className="border-b border-(--app-border) px-3 py-2.5 sm:border-r sm:border-b-0">
+            <p className="text-[0.64rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">2 · Pago</p>
+            <p className="mt-1 text-[0.78rem] font-semibold text-(--app-text)">{payment ? paymentLabels[payment.status] ?? payment.status : 'Pendiente de envío'}</p>
+          </div>
+          <div className="px-3 py-2.5">
+            <p className="text-[0.64rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">3 · Acceso</p>
+            <p className="mt-1 text-[0.78rem] font-semibold text-(--app-text)">{membershipStatusLabels[memberStatus] ?? memberStatus}</p>
+          </div>
+        </div>
+
+        <div className="grid gap-1.5 rounded-control border border-(--app-border)/70 px-3 py-2.5 text-[0.8rem] text-(--app-text-muted) sm:grid-cols-2">
+          <span><span className="font-semibold text-(--app-text)">Iglesia:</span> {application.home_church_name} · {application.church_city}</span>
           {member ? (
             <>
               <span>Acceso: {membershipStatusLabels[memberStatus] ?? memberStatus}</span>

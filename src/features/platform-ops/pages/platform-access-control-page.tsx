@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { keepPreviousData, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
+  CalendarDays,
   Check,
   Eye,
   FileClock,
@@ -14,6 +15,7 @@ import {
   ShieldCheck,
   Trash2,
   UserPlus,
+  UserRound,
   X
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -672,8 +674,11 @@ export function PlatformAccessControlPage() {
 
         {snapshot && tab === 'users' ? (
           <section className="space-y-3">
-            <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
-              <AdminSectionLabel title="Usuarios de plataforma" count={`${users.length} de ${totalUsers || users.length}`} />
+            <div className="flex flex-col gap-2.5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-1.5">
+                <AdminSectionLabel title="Usuarios de plataforma" count={`${users.length} de ${totalUsers || users.length}`} />
+                <p className="text-[0.72rem] text-(--app-text-subtle)">Más recientes primero · administra sus roles desde cada registro.</p>
+              </div>
               <label className="relative lg:max-w-sm lg:flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-(--app-text-subtle)" />
                 <Input
@@ -692,15 +697,26 @@ export function PlatformAccessControlPage() {
                 const selectedRoleIds = selectedRolesByUser[user.id] ?? []
 
                 return (
-                  <AdminCard key={user.id} className="overflow-hidden">
+                  <AdminCard key={user.id} className="overflow-hidden border-l-4 border-l-primary-500">
                     <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1.35fr)_minmax(250px,0.65fr)] lg:items-start">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="truncate text-[0.88rem] font-bold text-(--app-text)">{displayUserName(user)}</p>
-                            <p className="mt-0.5 truncate text-[0.78rem] text-(--app-text-muted)">{user.email ?? 'Sin correo'}</p>
+                          <div className="flex min-w-0 items-start gap-3">
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-control border border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-500/25 dark:bg-primary-500/12 dark:text-primary-200">
+                              <UserRound className="size-5" />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="truncate text-[0.9rem] font-bold text-(--app-text)">{displayUserName(user)}</p>
+                              <p className="mt-0.5 truncate text-[0.78rem] text-(--app-text-muted)">{user.email ?? 'Sin correo'}</p>
+                            </div>
                           </div>
-                          <Badge variant="outline" className="px-1.5 py-0.5 text-[0.68rem]">{userStatusLabel(user.status)}</Badge>
+                          <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
+                            <span className="inline-flex items-center gap-1.5 rounded-control bg-(--app-surface-muted) px-2.5 py-1.5 text-[0.7rem] font-semibold text-(--app-text-muted)">
+                              <CalendarDays className="size-3.5 text-primary-600" />
+                              <span><span className="text-(--app-text-subtle)">Usuario creado</span> · {formatDateTime(user.created_at)}</span>
+                            </span>
+                            <Badge variant="outline" className="px-1.5 py-0.5 text-[0.68rem]">{userStatusLabel(user.status)}</Badge>
+                          </div>
                         </div>
 
                         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -728,9 +744,16 @@ export function PlatformAccessControlPage() {
                           )}
                         </div>
 
-                        <p className="mt-1.5 text-[0.72rem] text-(--app-text-subtle)">
-                          {user.permissions.length} permiso{user.permissions.length === 1 ? '' : 's'} efectivo{user.permissions.length === 1 ? '' : 's'} · Último acceso: {formatDateTime(user.last_sign_in_at)}
-                        </p>
+                        <div className="mt-2 grid overflow-hidden rounded-control border border-(--app-border) bg-(--app-surface-muted)/45 sm:grid-cols-2">
+                          <div className="border-b border-(--app-border) px-3 py-2 sm:border-r sm:border-b-0">
+                            <p className="text-[0.64rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">Permisos efectivos</p>
+                            <p className="mt-0.5 text-[0.78rem] font-semibold text-(--app-text)">{user.permissions.length}</p>
+                          </div>
+                          <div className="px-3 py-2">
+                            <p className="text-[0.64rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">Último acceso</p>
+                            <p className="mt-0.5 text-[0.78rem] font-semibold text-(--app-text)">{formatDateTime(user.last_sign_in_at)}</p>
+                          </div>
+                        </div>
                       </div>
 
                       <div className="grid gap-2 rounded-card border border-(--app-border) bg-(--app-surface-muted)/55 p-2">

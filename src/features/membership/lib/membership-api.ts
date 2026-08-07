@@ -276,7 +276,8 @@ export async function fetchAdminMembershipApplications(): Promise<AdminMembershi
     .from('institutional_membership_applications')
     .select('*')
     .in('status', ['submitted', 'under_review', 'needs_more_info', 'approved'])
-    .order('submitted_at', { ascending: false })
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
 
   if (error) {
     throw error
@@ -385,7 +386,8 @@ export async function fetchAdminMembershipPage(params: {
     .from('institutional_membership_applications')
     .select(`*, ${memberEmbed}`, { count: 'exact' })
     .in('status', statusesForFilter(params.filter))
-    .order('submitted_at', { ascending: false })
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .range(params.offset, params.offset + params.limit - 1)
 
   if (params.filter === 'active') {
@@ -597,7 +599,8 @@ export async function fetchPastorMembershipQueue(): Promise<PastorQueueItem[]> {
     .select('*')
     .in('status', ['submitted', 'under_review', 'needs_more_info'])
     .not('church_id', 'is', null)
-    .order('submitted_at', { ascending: false })
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
 
   if (error) {
     throw error

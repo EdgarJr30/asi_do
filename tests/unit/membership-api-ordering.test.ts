@@ -42,7 +42,12 @@ describe('membership admin ordering', () => {
 
     expect(orderCalls).toContainEqual({
       table: 'institutional_membership_applications',
-      column: 'submitted_at',
+      column: 'created_at',
+      options: { ascending: false }
+    })
+    expect(orderCalls).toContainEqual({
+      table: 'institutional_membership_applications',
+      column: 'id',
       options: { ascending: false }
     })
   })
@@ -54,7 +59,12 @@ describe('membership admin ordering', () => {
 
     expect(orderCalls).toContainEqual({
       table: 'institutional_membership_applications',
-      column: 'submitted_at',
+      column: 'created_at',
+      options: { ascending: false }
+    })
+    expect(orderCalls).toContainEqual({
+      table: 'institutional_membership_applications',
+      column: 'id',
       options: { ascending: false }
     })
   })
@@ -66,7 +76,12 @@ describe('membership admin ordering', () => {
 
     expect(orderCalls).toContainEqual({
       table: 'institutional_membership_applications',
-      column: 'submitted_at',
+      column: 'created_at',
+      options: { ascending: false }
+    })
+    expect(orderCalls).toContainEqual({
+      table: 'institutional_membership_applications',
+      column: 'id',
       options: { ascending: false }
     })
   })
