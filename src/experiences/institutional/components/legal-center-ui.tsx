@@ -191,7 +191,7 @@ export function LegalTableOfContents({
   activeId: string | null
 }) {
   return (
-    <aside className="sticky top-32 hidden lg:block" data-legal-chrome>
+    <aside className="sticky top-32 hidden self-start lg:block" data-legal-chrome>
       <p className="mb-3 pl-3 text-[0.66rem] font-bold uppercase tracking-[0.12em] text-(--asi-secondary)">
         Contenido
       </p>

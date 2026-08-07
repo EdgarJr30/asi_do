@@ -75,6 +75,16 @@ describe('legal surface density', () => {
     expect(screen.queryByRole('button', { name: 'Ver cambios' })).not.toBeInTheDocument()
   })
 
+  it('keeps the legal table of contents visible while the document scrolls on desktop', () => {
+    render(
+      <MemoryRouter initialEntries={['/terms']}>
+        <LegalDocumentPage kind="terms" />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByRole('complementary')).toHaveClass('sticky', 'top-32', 'self-start')
+  })
+
   it('keeps the legal tabs horizontally scrollable without a vertical scrollbar', () => {
     render(
       <MemoryRouter initialEntries={['/terms']}>
