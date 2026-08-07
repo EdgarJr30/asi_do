@@ -145,6 +145,16 @@ ERROR: function public.rls_auto_enable() does not exist (SQLSTATE 42883)
 
 No era cosmético. Ese event trigger **activa RLS automáticamente en cada tabla nueva de `public`**, así que un entorno creado desde las migraciones se habría quedado sin esa red de seguridad, y nadie lo habría notado hasta que una tabla nueva quedara expuesta. Repuesto en `20260801110000_backfill_rls_auto_enable.sql`, con timestamp anterior a la migración que lo necesita.
 
+### El drift de grants: por qué existía y por qué ya no vuelve
+
+La otra mitad del drift no eran objetos, eran **privilegios**. El proyecto desplegado tiene `default privileges` sobre `public` —tablas con ALL para `authenticated` y `service_role`, funciones con EXECUTE para `service_role`— y la base sombra que construye `db diff` nace sin ellos. Consecuencia: cada objeto creado por una migración tenía en el remoto grants que ningún archivo explicaba, y un entorno nuevo habría salido sin ellos (PostgREST devolviendo `permission denied` en cada tabla y cada RPC).
+
+`20260807042236_p2_declara_grants_de_plataforma.sql` lo cierra por los dos lados: declara los `alter default privileges` —para que el objeto que cree la próxima migración nazca igual en los dos sitios— y hace el backfill explícito de las 58 tablas y las 112 funciones que ya existían, medido objeto por objeto contra el remoto. **No cambia nada en la base desplegada**: se comprobó aplicándola entera dentro de una transacción revertida y comparando la huella de todas las ACL antes y después; idéntica.
+
+Lo que sí cambia es que ahora está escrito, y eso deja dos cosas a la vista que antes no se veían en ningún diff: `authenticated` tiene ALL —incluido TRUNCATE, que no pasa por RLS— sobre 56 tablas, y 22 funciones conservan EXECUTE para PUBLIC. Ninguna de las dos es una decisión que se tomara: son el default de la plataforma. Restringirlas es cambio de comportamiento y va aparte. `supabase/tests/p2_platform_grants_probe.sql` fija los conteos, así que crecer esa superficie obliga a tocar el archivo.
+
+**`pg_net` es la excepción que no se puede cerrar.** Está instalada en `public` en el remoto (sus 12 funciones viven en el esquema `net`, pero el registro de la extensión está en `public`), y ahí se queda: la extensión no es relocatable —`alter extension ... set schema` no aplica— y su owner es `supabase_admin`, así que `drop extension` da `permission denied` igual desde una migración que desde el SQL editor del dashboard, que corre como el mismo `postgres`. Es la misma pared que los `REVOKE` de `storage`.
+
 ### Los jobs
 
 | Job | Pregunta que responde | Cuándo corre |
