@@ -17,6 +17,7 @@ describe('legal surface density', () => {
       'text-[clamp(1.75rem,3.2vw,2.2rem)]'
     )
     expect(screen.getByRole('link', { name: /Términos y condiciones/i })).toHaveClass('p-4')
+    expect(screen.queryByText(/¿Vas a citar una política\?/i)).not.toBeInTheDocument()
   })
 
   it('keeps every legal document on the compact reading rhythm', () => {

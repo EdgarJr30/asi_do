@@ -1,7 +1,6 @@
 import { ArrowRight, Clock, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-import { surfacePaths } from '@/app/router/surface-paths'
 import { InstitutionalSection } from '@/experiences/institutional/components/institutional-ui'
 import { LegalIdentityPanel } from '@/experiences/institutional/components/legal-center-ui'
 import { legalDocumentList } from '@/experiences/institutional/content/legal-center-content'
@@ -68,14 +67,6 @@ export function LegalCenterPage() {
             )
           })}
         </div>
-
-        <p className="mt-4 max-w-[68ch] text-[0.82rem] leading-5 text-(--asi-text-muted)">
-          ¿Vas a citar una política? Cada documento vive en su propia URL —por ejemplo{' '}
-          <Link className="font-semibold text-(--asi-primary) hover:underline" to={surfacePaths.institutional.privacy}>
-            {surfacePaths.institutional.privacy}
-          </Link>
-          — para poder enlazarla desde un correo, un comprobante o el checkout.
-        </p>
       </InstitutionalSection>
 
       <InstitutionalSection spacing="none">
