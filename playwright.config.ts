@@ -15,6 +15,11 @@ import { webServerEnv } from './tests/e2e/support/env'
  * después.
  */
 const DESKTOP_ONLY_SPECS = [
+  // `testIgnore` de proyecto **reemplaza** al de nivel raíz, no se suma: sin
+  // repetir aquí la exclusión de `pwa/`, las pruebas del service worker se
+  // vuelven a colar en los proyectos móviles (y allí fallan las 6, porque esta
+  // config sirve `npm run dev`).
+  '**/pwa/**',
   '**/membership-admin-console.spec.ts',
   '**/membership-full-submission.spec.ts',
   '**/membership-needs-more-info.spec.ts',

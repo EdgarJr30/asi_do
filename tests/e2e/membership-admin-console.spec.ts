@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 import { signInThroughUi } from './support/auth'
+import { collectPageErrors } from './support/page-errors'
 import {
   cleanupMembershipFixture,
   createServiceClient,
@@ -72,8 +73,7 @@ test.describe('consola de administración de membresías', () => {
 
   test('un admin aprueba la solicitud y activa la cuenta cuando el pago está verificado', async ({ page }) => {
 
-    const pageErrors: string[] = []
-    page.on('pageerror', (error) => pageErrors.push(`${error.name}: ${error.message}`))
+    const pageErrors = collectPageErrors(page)
 
     await signInThroughUi(page, platformAdmin!)
 

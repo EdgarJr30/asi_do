@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
 import { signInThroughUi } from './support/auth'
+import { collectPageErrors } from './support/page-errors'
 import {
   cleanupMembershipFixture,
   createServiceClient,
@@ -86,8 +87,7 @@ test('un miembro envía su solicitud vía draft sin duplicar la fila', async ({ 
   // Estado en cero → el flujo crea un draft nuevo y luego lo envía.
   await resetMemberApplications(admin, applicant!.userId)
 
-  const pageErrors: string[] = []
-  page.on('pageerror', (error) => pageErrors.push(`${error.name}: ${error.message}`))
+  const pageErrors = collectPageErrors(page)
 
   await signIn(page)
 

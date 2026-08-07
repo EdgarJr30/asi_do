@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 import { signInThroughUi } from './support/auth'
+import { collectPageErrors } from './support/page-errors'
 import {
   assertRoutedToPastor,
   cleanupMembershipFixture,
@@ -84,8 +85,7 @@ test.describe.serial('cola de membresía del pastor', () => {
 
   test('un pastor de otra iglesia NO ve las solicitudes ajenas (RLS scoped)', async ({ page }) => {
 
-    const pageErrors: string[] = []
-    page.on('pageerror', (error) => pageErrors.push(`${error.name}: ${error.message}`))
+    const pageErrors = collectPageErrors(page)
 
     await signInThroughUi(page, pastorB!)
     await page.goto('/account/membership-queue')
@@ -102,8 +102,7 @@ test.describe.serial('cola de membresía del pastor', () => {
 
   test('el pastor ve su cola scoped y aprueba la solicitud de su iglesia', async ({ page }) => {
 
-    const pageErrors: string[] = []
-    page.on('pageerror', (error) => pageErrors.push(`${error.name}: ${error.message}`))
+    const pageErrors = collectPageErrors(page)
 
     await signInThroughUi(page, pastorA!)
     await page.goto('/account/membership-queue')

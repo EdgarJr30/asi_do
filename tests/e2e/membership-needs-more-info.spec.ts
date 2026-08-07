@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 import { signInThroughUi } from './support/auth'
+import { collectPageErrors } from './support/page-errors'
 import {
   cleanupMembershipFixture,
   createServiceClient,
@@ -59,8 +60,7 @@ test.describe('miembro con solicitud en falta de información', () => {
 
   test('el miembro ve la nota del pastor y reenvía su solicitud a revisión', async ({ page }) => {
 
-    const pageErrors: string[] = []
-    page.on('pageerror', (error) => pageErrors.push(`${error.name}: ${error.message}`))
+    const pageErrors = collectPageErrors(page)
 
     await signInThroughUi(page, member!)
 
