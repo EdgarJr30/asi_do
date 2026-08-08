@@ -68,6 +68,16 @@ Todo lo que es específico de entorno. Esta es la lista que hay que recorrer al 
 
 > Las llaves migraron al formato `sb_publishable_` / `sb_secret_` el 2026-08-02; las JWT `anon` / `service_role` quedaron retiradas.
 
+**Llamando a las APIs a mano (`curl`, `fetch`):** la API de **Storage** rechaza las llaves nuevas si solo van en `Authorization: Bearer` — responde `403 {"message":"Invalid Compact JWS"}` porque intenta parsearlas como JWT. Hay que mandar **además** el header `apikey`. PostgREST se conforma con cualquiera de los dos, así que el fallo aparece solo al tocar Storage y el mensaje no apunta a la causa.
+
+```bash
+curl -X DELETE "$URL/storage/v1/object/avatars" \
+  -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+  -H "Content-Type: application/json" -d '{"prefixes":["<ruta>"]}'
+```
+
+Esto **no afecta al código del proyecto**: `supabase-js` pone los dos headers solo con `createClient(url, key)`, así que `scripts/media-orphans.ts` y las Edge Functions no necesitan nada especial. Es una trampa exclusiva de las llamadas crudas desde la terminal.
+
 ### 4.2 Frontend (build de Vite / Netlify)
 
 `VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` · `VITE_AUTH_SITE_URL` · `APP_URL` · `VITE_AZUL_PAYMENTS_URL` · `VITE_WEB_PUSH_PUBLIC_KEY`
