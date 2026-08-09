@@ -23,22 +23,32 @@ declare
   v_prev text;
   v_rupturas int;
   v_fila jsonb;
+  v_fail int := 0;
 begin
-  -- Un tenant real con un miembro que pueda leer el directorio.
-  select m.tenant_id, m.user_id
-  into v_tenant, v_user
-  from public.memberships m
-  join public.membership_roles mr on mr.membership_id = m.id and mr.revoked_at is null
-  join public.tenant_role_permissions trp on trp.role_id = mr.role_id
-  join public.permissions p on p.id = trp.permission_id
-  where m.status = 'active' and p.code = 'candidate_directory:read'
-  limit 1;
+  -- Tenant, reclutador y tenant vecino fijos del fixture. El bloque G afirma que
+  -- el banco de talento de uno no se filtra al otro: con `limit 1` los dos
+  -- extremos de esa afirmacion cambiaban en cada corrida, y sobre base vacia
+  -- `v_otro_tenant` quedaba null — es decir, "no se filtra al otro" se cumplia
+  -- porque no habia otro.
+  v_tenant := 'f2000000-0000-4000-a000-000000000001';
+  v_user := 'f1000000-0000-4000-a000-000000000006';
+  v_otro_tenant := 'f2000000-0000-4000-a000-000000000002';
 
-  if v_tenant is null then
-    raise exception 'PROBE_RESULT: no hay tenant con un miembro que tenga candidate_directory:read';
+  if not exists (select 1 from public.tenants where id = v_tenant)
+     or not exists (select 1 from public.tenants where id = v_otro_tenant) then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | faltan los dos tenants del fixture: carga supabase/tests/fixtures.sql';
   end if;
 
-  select id into v_otro_tenant from public.tenants where id <> v_tenant limit 1;
+  if not exists (
+    select 1 from public.memberships m
+    join public.membership_roles mr on mr.membership_id = m.id and mr.revoked_at is null
+    join public.tenant_role_permissions trp on trp.role_id = mr.role_id
+    join public.permissions p on p.id = trp.permission_id
+    where m.tenant_id = v_tenant and m.user_id = v_user and m.status = 'active'
+      and p.code = 'candidate_directory:read'
+  ) then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | el fixture % no puede leer el directorio de %', v_user, v_tenant;
+  end if;
 
   -- 1500 candidatos sintéticos. `auth.users` dispara el alta en `public.users`.
   insert into auth.users (id, email, raw_user_meta_data)
@@ -123,6 +133,7 @@ begin
 
   v_res := public.search_candidate_profiles(v_tenant, null, null, null, null, 50, 'relevance', false, null);
   v_total := (v_res -> 'page' ->> 'total_count')::int;
+  if v_total <> v_real then v_fail := v_fail + 1; end if;
   v_out := format('A) total %s vs real %s -> %s', v_total, v_real,
     case when v_total = v_real then 'OK' else 'DESCUADRA' end);
 
@@ -137,6 +148,7 @@ begin
     exit when v_cursor is null or v_paginas > 60;
   end loop;
   select count(distinct id)::int into v_unicos from unnest(v_ids) as id;
+  if v_unicos <> v_real or coalesce(array_length(v_ids, 1), 0) <> v_real then v_fail := v_fail + 1; end if;
   v_out := v_out || format(' | B) relevancia: %s paginas, %s filas, %s unicas vs %s -> %s',
     v_paginas, coalesce(array_length(v_ids, 1), 0), v_unicos, v_real,
     case when v_unicos = v_real and coalesce(array_length(v_ids, 1), 0) = v_real
@@ -159,6 +171,7 @@ begin
     exit when v_cursor is null or v_paginas > 60;
   end loop;
   select count(distinct id)::int into v_unicos from unnest(v_ids) as id;
+  if v_unicos <> v_real or v_rupturas <> 0 then v_fail := v_fail + 1; end if;
   v_out := v_out || format(' | C) nombre: %s unicas vs %s, rupturas de orden %s -> %s',
     v_unicos, v_real, v_rupturas,
     case when v_unicos = v_real and v_rupturas = 0 then 'OK' else 'FALLA' end);
@@ -174,6 +187,7 @@ begin
     exit when v_cursor is null or v_paginas > 60;
   end loop;
   select count(distinct id)::int into v_unicos from unnest(v_ids) as id;
+  if v_unicos <> v_real then v_fail := v_fail + 1; end if;
   v_out := v_out || format(' | D) experiencia: %s unicas vs %s -> %s',
     v_unicos, v_real, case when v_unicos = v_real then 'OK' else 'OMITE O REPITE' end);
 
@@ -182,6 +196,7 @@ begin
   select count(*)::int into v_real
   from public.candidate_profiles cp
   where cp.is_visible_to_recruiters = true and coalesce(cp.summary, '') ilike '%zoltarium%';
+  if (v_res -> 'page' ->> 'total_count')::int <> v_real then v_fail := v_fail + 1; end if;
   v_out := v_out || format(' | E) busqueda texto %s vs real %s -> %s',
     (v_res -> 'page' ->> 'total_count')::int, v_real,
     case when (v_res -> 'page' ->> 'total_count')::int = v_real then 'OK' else 'DESCUADRA' end);
@@ -190,6 +205,7 @@ begin
   v_res := public.search_candidate_profiles(v_tenant, null, 'US', null, null, 24, 'relevance', false, null);
   select count(*)::int into v_real
   from public.candidate_profiles where is_visible_to_recruiters = true and country_code = 'US';
+  if (v_res -> 'page' ->> 'total_count')::int <> v_real then v_fail := v_fail + 1; end if;
   v_out := v_out || format(' | F) pais %s vs %s -> %s',
     (v_res -> 'page' ->> 'total_count')::int, v_real,
     case when (v_res -> 'page' ->> 'total_count')::int = v_real then 'OK' else 'DESCUADRA' end);
@@ -199,6 +215,7 @@ begin
   from public.candidate_profiles cp
   join public.candidate_skills cs on cs.candidate_profile_id = cp.id
   where cp.is_visible_to_recruiters = true and cs.skill_name ilike '%PostgreSQL%';
+  if (v_res -> 'page' ->> 'total_count')::int <> v_real then v_fail := v_fail + 1; end if;
   v_out := v_out || format(' + habilidad %s vs %s -> %s',
     (v_res -> 'page' ->> 'total_count')::int, v_real,
     case when (v_res -> 'page' ->> 'total_count')::int = v_real then 'OK' else 'DESCUADRA' end);
@@ -208,6 +225,7 @@ begin
   from public.candidate_profiles cp
   join public.candidate_languages cl on cl.candidate_profile_id = cp.id
   where cp.is_visible_to_recruiters = true and cl.language_name ilike '%Ingles%';
+  if (v_res -> 'page' ->> 'total_count')::int <> v_real then v_fail := v_fail + 1; end if;
   v_out := v_out || format(' + idioma %s vs %s -> %s',
     (v_res -> 'page' ->> 'total_count')::int, v_real,
     case when (v_res -> 'page' ->> 'total_count')::int = v_real then 'OK' else 'DESCUADRA' end);
@@ -232,6 +250,9 @@ begin
     select 1 from public.talent_pool_entries tpe
     where tpe.tenant_id = v_tenant and tpe.candidate_profile_id = u.candidate_id
   );
+  -- La fuga entre tenants es el fallo sin botón de deshacer: el banco de
+  -- talento de una organizacion visible desde otra.
+  if v_unicos <> v_real or v_ajenos <> 0 then v_fail := v_fail + 1; end if;
   v_out := v_out || format(' | G) guardados %s vs %s, ajenos %s -> %s',
     v_unicos, v_real, v_ajenos,
     case when v_unicos = v_real and v_ajenos = 0 then 'OK' else 'FUGA ENTRE TENANTS' end);
@@ -239,6 +260,13 @@ begin
   -- H) El detalle agregado llega completo en las filas de la página.
   v_res := public.search_candidate_profiles(v_tenant, null, null, null, null, 5, 'relevance', false, null);
   v_fila := v_res -> 'rows' -> 0;
+  if v_fila is null
+     or coalesce((v_fila ->> 'total_experiences')::int, 0) = 0
+     or coalesce(jsonb_array_length(v_fila -> 'skill_names'), 0) = 0
+     or coalesce(jsonb_array_length(v_fila -> 'language_names'), 0) = 0
+     or v_fila ->> 'latest_role_title' is null then
+    v_fail := v_fail + 1;
+  end if;
   v_out := v_out || format(' | H) detalle: experiencias %s, habilidades %s, idiomas %s, ultimo puesto %s',
     v_fila ->> 'total_experiences',
     jsonb_array_length(v_fila -> 'skill_names'),
@@ -250,12 +278,14 @@ begin
     json_build_object('sub', gen_random_uuid(), 'role', 'authenticated')::text, true);
   begin
     perform public.search_candidate_profiles(v_tenant, null, null, null, null, 5, 'relevance', false, null);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | I) sin permiso -> PERMITIDO (fallo de seguridad)';
   exception when others then
     v_out := v_out || ' | I) sin permiso -> BLOQUEADO';
   end;
 
   perform set_config('request.jwt.claims', '', true);
-  raise exception 'PROBE_RESULT: %', v_out;
+  raise exception 'PROBE_VERDICT status=% fails=% | %',
+    case when v_fail = 0 then 'PASS' else 'FAIL' end, v_fail, v_out;
 end;
 $probe$;

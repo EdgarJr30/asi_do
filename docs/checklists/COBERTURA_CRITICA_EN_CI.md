@@ -16,7 +16,7 @@ Cada tarea se identifica `R{hallazgo}.{n}` y dice **cómo se sabe que está hech
 
 | Id | Hallazgo | Gravedad | Estado |
 |---|---|---|---|
-| [R1](#r1--probes-sql-que-nadie-ejecuta) | 0 de 17 probes SQL corren en CI | 🔴 bloqueante | ◧ Fase 1 hecha — 5/17 en CI |
+| [R1](#r1--probes-sql-que-nadie-ejecuta) | 0 de 17 probes SQL corren en CI | 🔴 bloqueante | ✅ **17/17 en CI** |
 | [R2](#r2--lo-que-parece-prueba-de-negocio-es-grep-sobre-sql) | Pruebas de negocio = `grep` sobre SQL | 🔴 bloqueante | ☐ deuda |
 | [R3](#r3--pipeline-de-correo-sin-pruebas) | 1.085 LOC de correo, cero tests | 🔴 bloqueante | ☐ abierto |
 | [R4](#r4--pagos-buena-criptografía-ningún-camino-feliz) | Pagos sin camino feliz probado | 🔴 bloqueante | ☐ abierto |
@@ -159,19 +159,35 @@ Las deterministas sobre base vacía. Cubren la clase de bug de la Fase D (grants
 
 ### Fase 2 — Fixtures deterministas *(desbloquea R5, R6, R9.2)*
 
-- [ ] **R1.5 · Crear `supabase/tests/fixtures.sql`**
-  Mínimo y explícito: 2 iglesias, un admin de plataforma, un pastor por iglesia, 2 usuarios sin
-  rol, una solicitud de membresía, un empleo con una postulación. **UUID literales**, para que
-  las probes no busquen con `limit 1`.
-  *Hecho cuando:* cargarlo sobre base recién reproducida no deja drift.
+- [x] **R1.5 · Crear `supabase/tests/fixtures.sql`**
+  2 iglesias (con su cadena unión→asociación→distrito propia), 2 tenants con reclutador,
+  7 usuarios con **UUID literales**, una solicitud de membresía, un empleo por tenant con
+  postulación. Idempotente; se carga con `--fixtures`.
+  *Hecho:* no deja drift — `db diff` compara esquema, no datos, y por eso los fixtures viven
+  fuera de `seed.sql`.
+  Dos cosas que solo se vieron al construirlo:
+  · Las personas entran por `auth.users` y es el trigger `on_auth_user_created` quien crea la
+    fila de `public.users`. Hay FK que lo exige, pero además es la puerta real de un alta:
+    sembrar `public.users` por debajo produciría usuarios que en producción no existen.
+  · El usuario privilegiado es `platform_owner`, no `platform_admin`. De los 12 roles
+    sembrados es el único que reúne `moderation:act`, `pastor_authority_request:review` y
+    `regional_authority_request:review` y además sirve para el visor de accesos. Con
+    `platform_admin` las revisiones salían denegadas — y esa denegación era correcta.
 
-- [ ] **R1.6 · Quitar los `limit 1` de las probes de datos**
-  Que apunten a los IDs del fixture. Es lo que elimina el falso verde de O3.
-  *Hecho cuando:* ninguna probe de datos elige sujeto con `limit 1`.
+- [x] **R1.6 · Quitar los `limit 1` de las probes de datos**
+  *Hecho:* ninguna elige sujeto con `limit 1`. Además se corrigió el reparto de
+  `p1_access_log_page`, que sembraba con `offset (s.i % 20)` sobre una tabla con menos de 20
+  filas: la mayoría de iteraciones no insertaba nada, así que el volumen de la prueba dependía
+  de cuánta gente hubiera registrada. Ahora siembra 300 accesos siempre.
 
 ### Fase 3 — Cierre
 
-- [ ] **R1.7 · Migrar las 12 probes de datos al contrato** (ver inventario)
+- [x] **R1.7 · Migrar las 12 probes de datos al contrato**
+  Las 17 en verde sobre base reproducida desde cero + fixtures. Lo que ahora se comprueba de
+  verdad, y antes solo se imprimía: la liquidación de pagos AZUL (sin `Amount` falla, correcto
+  liquida, manipulado falla), las 17 aserciones de autorización de notificaciones, el recorrido
+  keyset de 2.501 postulaciones sin omitir ni repetir, y que el banco de talento de un tenant
+  no se filtra al otro (40 guardados, 0 ajenos).
 - [x] **R1.8 · Guardia anti-probe-huérfana**
   El manifiesto de `run-db-probes.ts` es obligatorio y se verifica en los dos sentidos: un
   `.sql` sin declarar rompe el runner, y una entrada cuyo archivo ya no existe también.
@@ -193,18 +209,18 @@ Las deterministas sobre base vacía. Cubren la clase de bug de la Fase D (grants
 | 3 | `p1_storage_truncate_grants` | catálogo | ✅ | ✅ |
 | 4 | `p2_fase_d_authenticated_grants` | catálogo | ✅ | ✅ |
 | 5 | `p2_platform_grants` | catálogo | ✅ | ✅ |
-| 6 | `p0_anon_surface` | datos | ☐ | ☐ |
-| 7 | `p0_azul_settlement` | datos | ☐ | ☐ |
-| 8 | `p0_email_claim` | datos | ☐ | ☐ |
-| 9 | `p0_error_ingestion` | datos | ☐ | ☐ |
-| 10 | `p0_notification_authz` | datos | ☐ | ☐ |
-| 11 | `p0_users_guard` | datos | ☐ | ☐ |
-| 12 | `p1_access_log_page` | datos | ☐ | ☐ |
-| 13 | `p1_audit_logs` | datos | ☐ | ☐ |
-| 14 | `p1_rbac_review_moderation` | datos | ☐ | ☐ |
-| 15 | `p1_rls_initplan` | datos (+catálogo) | ☐ | ☐ |
-| 16 | `p2_talent_directory_search` | datos | ☐ | ☐ |
-| 17 | `p2_tenant_applications_page` | datos | ☐ | ☐ |
+| 6 | `p0_anon_surface` | datos | ✅ | ✅ |
+| 7 | `p0_azul_settlement` | datos | ✅ | ✅ |
+| 8 | `p0_email_claim` | datos | ✅ | ✅ |
+| 9 | `p0_error_ingestion` | datos | ✅ | ✅ |
+| 10 | `p0_notification_authz` | datos | ✅ | ✅ |
+| 11 | `p0_users_guard` | datos | ✅ | ✅ |
+| 12 | `p1_access_log_page` | datos | ✅ | ✅ |
+| 13 | `p1_audit_logs` | datos | ✅ | ✅ |
+| 14 | `p1_rbac_review_moderation` | datos | ✅ | ✅ |
+| 15 | `p1_rls_initplan` | datos (+catálogo) | ✅ | ✅ |
+| 16 | `p2_talent_directory_search` | datos | ✅ | ✅ |
+| 17 | `p2_tenant_applications_page` | datos | ✅ | ✅ |
 
 ---
 

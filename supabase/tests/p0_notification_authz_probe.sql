@@ -15,19 +15,25 @@ declare
   v_id uuid;
   v_before bigint;
   v_after bigint;
+  v_fail int := 0;
 begin
-  select u.id into v_uid
-  from public.users u
-  where u.status = 'active'
-    and not exists (select 1 from public.user_platform_roles r where r.user_id = u.id)
-  limit 1;
+  -- Sujeto fijo del fixture: activo y sin rol de plataforma. Con `limit 1` la
+  -- probe podia acabar usando al propio admin —o ninguno— y entonces los
+  -- bloques de ACL median el caso equivocado.
+  v_uid := 'f1000000-0000-4000-a000-000000000004';
 
-  if v_uid is null then
-    select u.id into v_uid from public.users u limit 1;
+  if not exists (select 1 from public.users where id = v_uid) then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | falta el fixture %: carga supabase/tests/fixtures.sql', v_uid;
   end if;
 
-  if v_uid is null then
-    raise exception 'PROBE_RESULT: no hay usuarios para armar el caso de prueba';
+  -- El fanout del bloque P necesita al menos un admin al que notificar. Sin
+  -- destinatarios, "se enviaron 0" saldria igual con el fanout roto.
+  if not exists (
+    select 1 from public.user_platform_roles r
+    join public.platform_roles pr on pr.id = r.role_id
+    where r.revoked_at is null and pr.code in ('platform_admin', 'platform_owner', 'super_administrator')
+  ) then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | sin admins de plataforma: carga supabase/tests/fixtures.sql';
   end if;
 
   -- Emula el único uso legítimo: una función SECURITY DEFINER (trigger o RPC de
@@ -50,6 +56,7 @@ begin
   begin
     perform public.system_create_notification(
       v_uid, 'abuse.forged', 'Notificacion falsificada', 'Cuerpo arbitrario', null, '{}'::jsonb, null);
+    v_fail := v_fail + 1;
     v_out := v_out || 'A) anon -> system_create_notification PERMITIDA (fallo de seguridad)';
   exception when others then
     v_out := v_out || 'A) anon -> BLOQUEADA por ACL';
@@ -62,6 +69,7 @@ begin
   begin
     perform public.notify_membership_admins(
       'abuse.fanout', 'Fanout falsificado', 'Cuerpo arbitrario', '/admin/membership', '{}'::jsonb);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | B) authenticated -> notify_membership_admins PERMITIDA (fallo de seguridad)';
   exception when others then
     v_out := v_out || ' | B) authenticated -> BLOQUEADA por ACL';
@@ -69,6 +77,7 @@ begin
 
   begin
     perform public.set_harness_email_suppression(true);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | C) authenticated -> suppression toggle PERMITIDO (fallo de seguridad)';
   exception when others then
     v_out := v_out || ' | C) authenticated -> BLOQUEADO por ACL';
@@ -86,6 +95,7 @@ begin
   begin
     perform public.system_create_notification(
       v_uid, 'abuse.forged', 'Notificacion falsificada', 'Cuerpo arbitrario', null, '{}'::jsonb, null);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | D) con GRANT, llamada directa -> PERMITIDA (fallo de seguridad)';
   exception when others then
     get stacked diagnostics v_err = message_text;
@@ -96,6 +106,7 @@ begin
   begin
     perform public.notify_membership_admins(
       'abuse.fanout', 'Fanout falsificado', 'Cuerpo arbitrario', '/admin/membership', '{}'::jsonb);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | E) con GRANT, fanout directo -> PERMITIDO (fallo de seguridad)';
   exception when others then
     get stacked diagnostics v_err = message_text;
@@ -105,6 +116,7 @@ begin
 
   begin
     perform public.set_harness_email_suppression(true);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | F) con GRANT, suppression toggle -> PERMITIDO (fallo de seguridad)';
   exception when others then
     get stacked diagnostics v_err = message_text;
@@ -116,12 +128,14 @@ begin
   -- intermedia, como ocurre en los triggers de membresía. Debe seguir pasando.
   begin
     v_id := public._probe_nested_notify(v_uid);
+    if v_id is null then v_fail := v_fail + 1; end if;
     v_out := v_out || case
       when v_id is not null then ' | G) llamada anidada legitima -> PERMITIDA'
       else ' | G) llamada anidada legitima -> sin id (regresion)'
     end;
   exception when others then
     get stacked diagnostics v_err = message_text;
+    v_fail := v_fail + 1;
     v_out := v_out || format(' | G) llamada anidada legitima -> ROTA: %s', v_err);
   end;
 
@@ -136,6 +150,7 @@ begin
   begin
     perform public.system_create_notification(
       null, 'probe.test', 'Titulo', 'Cuerpo', null, '{}'::jsonb, null);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | H) destinatario NULL -> ACEPTADO (fallo)';
   exception when others then
     v_out := v_out || ' | H) destinatario NULL -> RECHAZADO';
@@ -144,6 +159,7 @@ begin
   begin
     perform public.system_create_notification(
       '00000000-0000-0000-0000-0000000000ff'::uuid, 'probe.test', 'Titulo', 'Cuerpo', null, '{}'::jsonb, null);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | I) destinatario inexistente -> ACEPTADO (fallo)';
   exception when others then
     v_out := v_out || ' | I) destinatario inexistente -> RECHAZADO';
@@ -154,6 +170,7 @@ begin
     perform public.system_create_notification(
       v_uid, 'probe.test', 'Titulo', 'Cuerpo', null,
       jsonb_build_object('to', 'atacante@example.com'), null);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | J) payload.to (relay de correo) -> ACEPTADO (fallo de seguridad)';
   exception when others then
     v_out := v_out || ' | J) payload.to (relay de correo) -> RECHAZADO';
@@ -162,6 +179,7 @@ begin
   begin
     perform public.system_create_notification(
       v_uid, 'probe.test', 'Titulo', 'Cuerpo', '//evil.example.com/phish', '{}'::jsonb, null);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | K) action_url externa -> ACEPTADA (fallo de seguridad)';
   exception when others then
     v_out := v_out || ' | K) action_url externa -> RECHAZADA';
@@ -170,6 +188,7 @@ begin
   begin
     perform public.system_create_notification(
       v_uid, 'probe.test', '   ', 'Cuerpo', null, '{}'::jsonb, null);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | L) titulo vacio -> ACEPTADO (fallo)';
   exception when others then
     v_out := v_out || ' | L) titulo vacio -> RECHAZADO';
@@ -178,6 +197,7 @@ begin
   begin
     perform public.system_create_notification(
       v_uid, 'Probe Type Con Espacios', 'Titulo', 'Cuerpo', null, '{}'::jsonb, null);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | M) type invalido -> ACEPTADO (fallo)';
   exception when others then
     v_out := v_out || ' | M) type invalido -> RECHAZADO';
@@ -187,6 +207,7 @@ begin
     perform public.system_create_notification(
       v_uid, 'probe.test', 'Titulo', 'Cuerpo', null,
       jsonb_build_object('blob', repeat('x', 9000)), null);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | N) payload desmedido -> ACEPTADO (fallo)';
   exception when others then
     v_out := v_out || ' | N) payload desmedido -> RECHAZADO';
@@ -201,10 +222,12 @@ begin
       'Cuerpo legitimo de la notificacion.', '/account/membership',
       jsonb_build_object('application_id', gen_random_uuid()), null);
     select count(*) into v_after from public.notifications where recipient_user_id = v_uid;
+    if v_id is null or v_after <> v_before + 1 then v_fail := v_fail + 1; end if;
     v_out := v_out || format(' | O) notificacion legitima -> %s (filas %s->%s)',
       case when v_id is not null then 'CREADA' else 'sin id (regresion)' end, v_before, v_after);
   exception when others then
     get stacked diagnostics v_err = message_text;
+    v_fail := v_fail + 1;
     v_out := v_out || format(' | O) notificacion legitima -> ROTA: %s', v_err);
   end;
 
@@ -215,9 +238,11 @@ begin
       'probe.fanout', 'Fanout legitimo', 'Cuerpo legitimo del fanout.',
       '/admin/membership', jsonb_build_object('probe', true));
     select count(*) into v_after from public.notifications where type = 'probe.fanout';
+    if v_after - v_before < 1 then v_fail := v_fail + 1; end if;
     v_out := v_out || format(' | P) fanout legitimo -> %s notificacion(es) a admins', v_after - v_before);
   exception when others then
     get stacked diagnostics v_err = message_text;
+    v_fail := v_fail + 1;
     v_out := v_out || format(' | P) fanout legitimo -> ROTO: %s', v_err);
   end;
 
@@ -225,9 +250,11 @@ begin
   begin
     perform public.set_harness_email_suppression(true);
     if not public.harness_email_suppressed() then
+      v_fail := v_fail + 1;
       v_out := v_out || ' | Q) suppression on -> NO se activo (regresion)';
     else
       perform public.set_harness_email_suppression(false);
+      if public.harness_email_suppressed() then v_fail := v_fail + 1; end if;
       v_out := v_out || case
         when public.harness_email_suppressed() then ' | Q) suppression off -> NO se apago (regresion)'
         else ' | Q) suppression on/off legitimo -> OK'
@@ -235,9 +262,11 @@ begin
     end if;
   exception when others then
     get stacked diagnostics v_err = message_text;
+    v_fail := v_fail + 1;
     v_out := v_out || format(' | Q) suppression legitimo -> ROTO: %s', v_err);
   end;
 
-  raise exception 'PROBE_RESULT: %', v_out;
+  raise exception 'PROBE_VERDICT status=% fails=% | %',
+    case when v_fail = 0 then 'PASS' else 'FAIL' end, v_fail, v_out;
 end;
 $probe$;

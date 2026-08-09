@@ -270,16 +270,20 @@ Measured risk that is knowingly accepted — like the `storage` TRUNCATE grants 
 
 `scripts/run-db-probes.ts` carries a manifest mapping each probe to a tier:
 
-- `catalogo` — reads only `pg_catalog`, `information_schema` or `has_*_privilege`. Deterministic against a database replayed from migrations, so it runs in `db-migrations.yml` today.
-- `datos` — needs business rows. Excluded from CI until deterministic fixtures exist, because on an empty database these probes are mute rather than green.
+- `catalogo` — reads only `pg_catalog`, `information_schema` or `has_*_privilege`. Deterministic against a database replayed from migrations, and runnable without fixtures.
+- `datos` — needs the business rows in `supabase/tests/fixtures.sql`, loaded with `--fixtures`.
+
+Both tiers run in `db-migrations.yml` against the database it has just replayed from migrations.
 
 A `.sql` file in `supabase/tests/` that is absent from the manifest fails the runner, and so does a manifest entry whose file is gone. This is deliberate: an unregistered probe would be born already outside CI, which is exactly how seventeen of them ended up unexecuted.
 
 ### 11.3 Commands
 
 ```bash
-npm run test:probes            # every registered probe
-npm run test:probes:catalogo   # the tier CI runs
+npm run test:probes            # loads fixtures, then runs all 17 — what CI runs
+npm run test:probes:catalogo   # the 5 that need no fixtures
 node scripts/run-db-probes.ts --filter=fase_d
 node scripts/run-db-probes.ts --db-url=…   # defaults to the local stack
 ```
+
+`--fixtures` writes rows and **commits them**, unlike the probes themselves. Point it only at a disposable database — the local stack or the one CI replays. Never at the remote project.

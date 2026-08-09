@@ -198,10 +198,12 @@ Sin estos tres, el job falla al enlazar. El de replay no necesita ninguno: corre
 La autorización de este producto vive entera en la base de datos, así que las probes son lo único que la comprueba. Hasta que existió `scripts/run-db-probes.ts` **no las ejecutaba nadie**: se corrieron a mano el día que se escribieron y nada volvió a mirarlas.
 
 ```bash
-npm run test:probes             # todas las registradas
-npm run test:probes:catalogo    # el tier que corre en CI
+npm run test:probes             # carga fixtures y corre las 17 — lo que corre CI
+npm run test:probes:catalogo    # las 5 que no necesitan fixtures
 node scripts/run-db-probes.ts --filter=fase_d
 ```
+
+`--fixtures` escribe filas y **las deja commiteadas**, al revés que las probes. Solo tiene sentido sobre una base desechable: la local o la que CI reproduce. Nunca contra el remoto — de ahí que sea una bandera explícita.
 
 Por omisión apuntan a la base local (`supabase start`). Para ejecutarlas contra el remoto se pasa `--db-url` o se sigue usando `supabase db query --linked --file <archivo>`, que sigue siendo la vía cuando lo que se quiere es leer el detalle a ojo.
 
@@ -221,7 +223,9 @@ Sin esto la probe sale como `MUDA`, que cuenta como fallo: una probe que no emit
 **2. Queda declarada en el manifiesto** de `scripts/run-db-probes.ts`, con su tier:
 
 - `catalogo` — solo lee `pg_catalog`, `information_schema` o `has_*_privilege`. Determinista sobre la base reproducida, así que entra en `db-migrations.yml`.
-- `datos` — necesita filas de negocio. Fuera de CI hasta que existan fixtures deterministas, porque sobre base vacía no salen verdes: salen **mudas de sujeto**. `p0_users_guard_probe` reportaba `BLOQUEADA` sin datos, porque `update … where id = null` no afecta a ninguna fila y por tanto nunca lanza `insufficient_privilege`.
+- `datos` — necesita las filas de `supabase/tests/fixtures.sql`. Sin ellas no salen verdes: salen **mudas de sujeto**. `p0_users_guard_probe` reportaba `BLOQUEADA` sin datos, porque `update … where id = null` no afecta a ninguna fila y por tanto nunca lanza `insufficient_privilege`.
+
+Si una probe nueva necesita un sujeto, se le añade al fixture con UUID literal. Nunca se elige con `limit 1`: eso hace que la probe mida "alguien" en vez de "este", y sobre base vacía que no mida nada.
 
 Un `.sql` sin declarar rompe el runner a propósito: es lo que evita que la siguiente probe nazca ya fuera de CI.
 

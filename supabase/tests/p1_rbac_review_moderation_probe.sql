@@ -16,39 +16,44 @@ declare
   v_assoc uuid;
   v_district uuid;
   i integer;
+  v_fail int := 0;
 begin
-  -- El trigger de alta exige jerarquía completa y atestación.
-  select id into v_union from public.church_unions limit 1;
-  select id into v_assoc from public.church_associations where union_id = v_union limit 1;
-  select id into v_district from public.church_districts where association_id = v_assoc limit 1;
-  -- Usuario con ambos permisos.
-  select upr.user_id into v_priv
-  from public.user_platform_roles upr
-  join public.platform_roles pr on pr.id = upr.role_id
-  join public.platform_role_permissions prp on prp.role_id = pr.id
-  join public.permissions p on p.id = prp.permission_id
-  where upr.revoked_at is null
-    and p.code in ('moderation:act','pastor_authority_request:review')
-  limit 1;
+  -- Sujetos fijos del fixture. Los tres `limit 1` de antes elegian a quien
+  -- tocara: el "usuario con permisos" podia no existir y la probe se rendia, y
+  -- los dos "sin permisos" podian salir en cualquier orden, asi que 4b y 7 —las
+  -- dos autoaprobaciones— no siempre atacaban a la misma persona.
+  v_union    := 'fa000000-0000-4000-a000-000000000001';
+  v_assoc    := 'fa000000-0000-4000-a000-000000000002';
+  v_district := 'fa000000-0000-4000-a000-000000000003';
+  v_priv     := 'f1000000-0000-4000-a000-000000000001';
+  v_plain    := 'f1000000-0000-4000-a000-000000000004';
+  v_plain2   := 'f1000000-0000-4000-a000-000000000005';
 
-  -- Usuario sin ningún rol de plataforma.
-  select u.id into v_plain
-  from public.users u
-  where not exists (
-    select 1 from public.user_platform_roles r where r.user_id = u.id and r.revoked_at is null
-  )
-  limit 1;
+  if not exists (select 1 from public.church_districts where id = v_district)
+     or (select count(*) from public.users where id in (v_priv, v_plain, v_plain2)) <> 3 then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | faltan fixtures: carga supabase/tests/fixtures.sql';
+  end if;
 
-  select u.id into v_plain2
-  from public.users u
-  where u.id <> v_plain
-    and not exists (
-      select 1 from public.user_platform_roles r where r.user_id = u.id and r.revoked_at is null
-    )
-  limit 1;
+  -- El sujeto privilegiado tiene que tener de verdad los dos permisos, o los
+  -- bloques 3, 4, 6 y 8 medirian una denegacion legitima y la leeriamos como
+  -- regresion.
+  if not exists (
+    select 1 from public.user_platform_roles upr
+    join public.platform_role_permissions prp on prp.role_id = upr.role_id
+    join public.permissions p on p.id = prp.permission_id
+    where upr.user_id = v_priv and upr.revoked_at is null
+      and p.code in ('moderation:act', 'pastor_authority_request:review')
+  ) then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | el fixture % no tiene moderation:act ni pastor_authority_request:review', v_priv;
+  end if;
 
-  if v_priv is null or v_plain is null or v_plain2 is null then
-    raise exception 'PROBE_RESULT: faltan usuarios de prueba (priv=%, plain=%, plain2=%)', v_priv, v_plain, v_plain2;
+  -- Y los dos "sin permisos" tienen que seguir sin tenerlos: es lo que hace
+  -- significativas las denegaciones de 1, 2, 4b, 5 y 7.
+  if exists (
+    select 1 from public.user_platform_roles r
+    where r.user_id in (v_plain, v_plain2) and r.revoked_at is null
+  ) then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | los sujetos sin rol ganaron un rol de plataforma';
   end if;
 
   -- ═══ review_pastor_authority_request (TASK-263) ═════════════════════════
@@ -69,6 +74,7 @@ begin
   perform set_config('request.jwt.claims', '', true);
   begin
     perform public.review_pastor_authority_request(v_req, 'approved', 'nota');
+    v_fail := v_fail + 1;
     v_out := v_out || '1) pastor sin auth -> PERMITIDA (fallo)';
   exception when others then
     v_out := v_out || format('1) pastor sin auth -> DENEGADA (%s)', left(sqlerrm, 24));
@@ -78,6 +84,7 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub', v_plain, 'role','authenticated')::text, true);
   begin
     perform public.review_pastor_authority_request(v_req, 'approved', 'nota');
+    v_fail := v_fail + 1;
     v_out := v_out || ' | 2) pastor sin permiso -> PERMITIDA (fallo)';
   exception when others then
     v_out := v_out || ' | 2) pastor sin permiso -> DENEGADA';
@@ -88,8 +95,10 @@ begin
   begin
     perform public.review_pastor_authority_request(v_req, 'rejected', 'no procede');
     select status::text into v_status from public.pastor_authority_requests where id = v_req;
+    if v_status is distinct from 'rejected' then v_fail := v_fail + 1; end if;
     v_out := v_out || format(' | 3) pastor con permiso rechaza -> %s', v_status);
   exception when others then
+    v_fail := v_fail + 1;
     v_out := v_out || format(' | 3) pastor con permiso rechaza -> ERROR: %s', left(sqlerrm, 40));
   end;
 
@@ -110,6 +119,7 @@ begin
     update public.pastor_authority_requests
     set status = 'approved', reviewed_by_user_id = v_plain2
     where id = v_req;
+    v_fail := v_fail + 1;
     v_out := v_out || ' | 4b) autoaprobacion por UPDATE -> PERMITIDA (fallo)';
   exception when others then
     v_out := v_out || ' | 4b) autoaprobacion por UPDATE -> BLOQUEADA';
@@ -119,8 +129,10 @@ begin
   begin
     perform public.review_pastor_authority_request(v_req, 'approved', 'procede');
     select status::text into v_status from public.pastor_authority_requests where id = v_req;
+    if v_status is distinct from 'approved' then v_fail := v_fail + 1; end if;
     v_out := v_out || format(' | 4) pastor con permiso aprueba -> %s', v_status);
   exception when others then
+    v_fail := v_fail + 1;
     v_out := v_out || format(' | 4) pastor con permiso aprueba -> ERROR: %s', left(sqlerrm, 40));
   end;
 
@@ -134,6 +146,7 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub', v_plain, 'role','authenticated')::text, true);
   begin
     perform public.apply_moderation_action(v_case, 'warn'::public.moderation_action_type, 'nota');
+    v_fail := v_fail + 1;
     v_out := v_out || ' | 5) moderacion sin permiso -> PERMITIDA (fallo)';
   exception when others then
     v_out := v_out || ' | 5) moderacion sin permiso -> DENEGADA';
@@ -153,6 +166,9 @@ begin
       select status::text into v_status from public.moderation_cases where id = v_case;
       v_out := v_out || format(' %s->%s', v_action, v_status);
     exception when others then
+      -- Cada valor del enum tiene que ser aplicable por quien tiene el permiso.
+      -- Uno que reviente es una accion declarada y no implementada.
+      v_fail := v_fail + 1;
       v_out := v_out || format(' %s->ERROR(%s)', v_action, sqlstate);
     end;
   end loop;
@@ -172,6 +188,7 @@ begin
   begin
     update public.regional_administrator_authority_requests
     set status = 'approved' where id = v_req;
+    v_fail := v_fail + 1;
     v_out := v_out || ' | 7) regional autoaprobacion -> PERMITIDA (fallo)';
   exception when others then
     v_out := v_out || ' | 7) regional autoaprobacion -> BLOQUEADA';
@@ -182,11 +199,14 @@ begin
   begin
     perform public.review_regional_authority_request(v_req, 'rejected', 'no procede');
     select status::text into v_status from public.regional_administrator_authority_requests where id = v_req;
+    if v_status is distinct from 'rejected' then v_fail := v_fail + 1; end if;
     v_out := v_out || format(' | 8) regional revisor rechaza -> %s', v_status);
   exception when others then
+    v_fail := v_fail + 1;
     v_out := v_out || format(' | 8) regional revisor rechaza -> ERROR: %s', left(sqlerrm, 40));
   end;
 
-  raise exception 'PROBE_RESULT: %', v_out;
+  raise exception 'PROBE_VERDICT status=% fails=% | %',
+    case when v_fail = 0 then 'PASS' else 'FAIL' end, v_fail, v_out;
 end;
 $probe$;

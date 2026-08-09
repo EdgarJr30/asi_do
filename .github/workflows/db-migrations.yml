@@ -79,12 +79,12 @@ jobs:
       # mano una vez y nadie volvió a ejecutarlas: entre aquel día y hoy, nada
       # comprobaba que los grants y las políticas siguieran donde se dejaron.
       #
-      # Solo corre el tier `catalogo`: son las deterministas sobre una base
-      # recién reproducida. Las de datos necesitan filas de negocio y sobre una
-      # base vacía saldrían verdes por ausencia de sujeto, que es peor que no
-      # correrlas. Entran cuando existan los fixtures deterministas.
+      # `--fixtures` escribe datos y los deja commiteados. Es seguro aquí y solo
+      # aquí: la base la acaba de construir el step anterior y muere con el job.
+      # El drift se comprueba después y no lo afecta — `db diff` compara esquema,
+      # no filas.
       - name: Probes de autorización sobre el esquema reproducido
-        run: npm run test:probes:catalogo
+        run: npm run test:probes
 
       # Detecta RPC que se despliegan bien pero fallan en tiempo de ejecución
       # (enums mal casteados, referencias ambiguas). Ya encontró cuatro reales.

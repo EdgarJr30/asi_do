@@ -73,11 +73,33 @@ where id in (
   'f1000000-0000-4000-a000-000000000006', 'f1000000-0000-4000-a000-000000000007'
 );
 
+-- Los dos reclutadores necesitan membresía ASI viva: el ATS está gateado por
+-- `has_active_asi_access`, así que sin esto un miembro con rol de reclutador
+-- sigue sin poder leer una sola postulación — y la probe mediría el bloqueo del
+-- gate en vez del permiso que quiere comprobar.
+update public.users
+set asi_membership_status = 'active',
+    user_subscription_status = 'active',
+    membership_activated_at = timezone('utc', now()),
+    membership_expires_at = timezone('utc', now()) + interval '1 year',
+    subscription_expires_at = timezone('utc', now()) + interval '1 year'
+where id in (
+  'f1000000-0000-4000-a000-000000000006', 'f1000000-0000-4000-a000-000000000007'
+);
+
 -- Solo `f1…01` tiene rol de plataforma. Es la frontera que separa "puede
 -- administrar" de "no puede", y las probes de autorización la cruzan en los dos
 -- sentidos.
+--
+-- El rol es `platform_owner`, no `platform_admin`, y la razón es de catálogo:
+-- de los doce roles sembrados, `platform_owner` es el único que reúne los tres
+-- permisos que las probes necesitan del lado privilegiado —`moderation:act`,
+-- `pastor_authority_request:review` y `regional_authority_request:review`— y a
+-- la vez sigue valiendo para el visor de accesos, que admite `platform_owner` o
+-- `platform_admin`. Con `platform_admin` las revisiones pastoral y regional
+-- salían denegadas y esa denegación es correcta: `platform_admin` no las tiene.
 insert into public.user_platform_roles (user_id, role_id)
-select 'f1000000-0000-4000-a000-000000000001', id from public.platform_roles where code = 'platform_admin'
+select 'f1000000-0000-4000-a000-000000000001', id from public.platform_roles where code = 'platform_owner'
 on conflict do nothing;
 
 -- ── Iglesias ────────────────────────────────────────────────────────────────

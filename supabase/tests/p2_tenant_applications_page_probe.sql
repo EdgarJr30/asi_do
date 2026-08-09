@@ -21,31 +21,32 @@ declare
   v_unicos int;
   v_prev text;
   v_desordenadas int := 0;
+  v_fail int := 0;
 begin
-  -- Un tenant real con un miembro que pueda leer postulaciones.
-  select m.tenant_id, m.user_id
-  into v_tenant, v_user
-  from public.memberships m
-  join public.membership_roles mr on mr.membership_id = m.id and mr.revoked_at is null
-  join public.tenant_role_permissions trp on trp.role_id = mr.role_id
-  join public.permissions p on p.id = trp.permission_id
-  where m.status = 'active'
-    and p.code = 'application:read'
-    and public.has_active_asi_access(m.user_id)
-  limit 1;
+  -- Tenant, reclutador y empresa fijos del fixture. El `limit 1` de antes
+  -- elegia un tenant distinto en cada corrida —o ninguno, y entonces la probe
+  -- se rendia sin comprobar nada— asi que el aislamiento que dice medir
+  -- dependia de con quien hubiera topado.
+  v_tenant := 'f2000000-0000-4000-a000-000000000001';
+  v_user := 'f1000000-0000-4000-a000-000000000006';
+  v_company := 'f3000000-0000-4000-a000-000000000001';
 
-  if v_tenant is null then
-    raise exception 'PROBE_RESULT: no hay tenant con un miembro que tenga application:read';
+  if not exists (select 1 from public.tenants where id = v_tenant)
+     or not exists (select 1 from public.company_profiles where id = v_company) then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | faltan los fixtures de tenant: carga supabase/tests/fixtures.sql';
   end if;
 
-  select company_profile_id into v_company
-  from public.job_postings where tenant_id = v_tenant limit 1;
-
-  if v_company is null then
-    select id into v_company from public.company_profiles limit 1;
+  -- El gate del ATS es previo al permiso: sin membresia viva, el reclutador no
+  -- lee nada y la probe mediria el bloqueo del gate, no el permiso.
+  if not public.has_active_asi_access(v_user) then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | el reclutador % no tiene acceso ASI activo', v_user;
   end if;
 
   select array_agg(id) into v_profiles from public.candidate_profiles;
+
+  if coalesce(array_length(v_profiles, 1), 0) = 0 then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | sin perfiles de candidato: carga supabase/tests/fixtures.sql';
+  end if;
 
   insert into public.job_postings (tenant_id, company_profile_id, title, slug, summary, description)
   select v_tenant, v_company, 'Probe vacante ' || i, 'probe-267-' || i, 'probe', 'probe'
@@ -76,6 +77,7 @@ begin
 
   v_res := public.tenant_applications_page(v_tenant, null, null, 'recent', 100, null);
   v_total := (v_res -> 'page' ->> 'total_count')::int;
+  if v_total <> v_real then v_fail := v_fail + 1; end if;
   v_out := format('A) total %s vs real %s -> %s', v_total, v_real,
     case when v_total = v_real then 'OK' else 'DESCUADRA' end);
 
@@ -95,6 +97,11 @@ begin
   end loop;
 
   select count(distinct id)::int into v_unicos from unnest(v_ids) as id;
+  -- El recorrido keyset es lo que sustituyo al tope de 2000 que el cliente
+  -- aplicaba en silencio. Que omita o repita una sola fila es el fallo.
+  if v_unicos <> v_real or coalesce(array_length(v_ids, 1), 0) <> v_real then
+    v_fail := v_fail + 1;
+  end if;
   v_out := v_out || format(' | B) keyset: %s paginas, %s filas, %s unicas vs %s reales -> %s',
     v_paginas, array_length(v_ids, 1), v_unicos, v_real,
     case when v_unicos = v_real and array_length(v_ids, 1) = v_real then 'OK'
@@ -113,10 +120,12 @@ begin
     end if;
     v_prev := v_res ->> 'sa';
   end loop;
+  if v_desordenadas <> 0 then v_fail := v_fail + 1; end if;
   v_out := v_out || format(' | C) rupturas de orden: %s (esperado 0)', v_desordenadas);
 
   -- D) Búsqueda más allá del viejo tope: la vacante 2400 debe aparecer.
   v_res := public.tenant_applications_page(v_tenant, null, 'Probe vacante 2400', 'recent', 20, null);
+  if (v_res -> 'page' ->> 'total_count')::int < 1 then v_fail := v_fail + 1; end if;
   v_out := v_out || format(' | D) busqueda vacante 2400: %s resultados -> %s',
     (v_res -> 'page' ->> 'total_count')::int,
     case when (v_res -> 'page' ->> 'total_count')::int >= 1 then 'OK' else 'OMITIDA' end);
@@ -127,6 +136,7 @@ begin
   from public.applications a
   join public.job_postings jp on jp.id = a.job_posting_id
   where jp.tenant_id = v_tenant and a.status_public = 'interviewing';
+  if (v_res -> 'page' ->> 'total_count')::int <> v_real then v_fail := v_fail + 1; end if;
   v_out := v_out || format(' | E) filtro interviewing %s vs real %s -> %s',
     (v_res -> 'page' ->> 'total_count')::int, v_real,
     case when (v_res -> 'page' ->> 'total_count')::int = v_real then 'OK' else 'DESCUADRA' end);
@@ -136,6 +146,7 @@ begin
     v_res := public.tenant_applications_page(v_tenant, 'no-existe', null, 'recent', 5, null);
     v_out := v_out || ' | F) estado invalido -> ignorado (correcto)';
   exception when others then
+    v_fail := v_fail + 1;
     v_out := v_out || ' | F) estado invalido -> ERROR (regresion)';
   end;
 
@@ -145,6 +156,10 @@ begin
   from public.applications a
   join public.job_postings jp on jp.id = a.job_posting_id
   where jp.tenant_id = v_tenant;
+  if (v_res ->> 'total')::int <> v_real
+     or (v_res ->> 'interviewing')::int is distinct from coalesce((v_res -> 'by_status' ->> 'interviewing')::int, 0) then
+    v_fail := v_fail + 1;
+  end if;
   v_out := v_out || format(' | G) stats total %s vs real %s -> %s, interviewing %s vs by_status %s',
     (v_res ->> 'total')::int, v_real,
     case when (v_res ->> 'total')::int = v_real then 'OK' else 'DESCUADRA' end,
@@ -160,6 +175,9 @@ begin
   begin
     v_res := public.tenant_applications_page(v_tenant, null, null, 'name', 50, v_cursor);
     v_segunda := (v_res -> 'rows' -> 0 ->> 'candidate_display_name_snapshot');
+    if v_segunda is null or lower(v_segunda) <= lower(v_primera) then
+      v_fail := v_fail + 1;
+    end if;
     v_out := v_out || format(' | H) nombre: corte %s -> siguiente %s -> %s',
       v_primera, v_segunda,
       case when lower(v_segunda) > lower(v_primera) then 'OK' else 'SOLAPA' end);
@@ -170,6 +188,7 @@ begin
     json_build_object('sub', gen_random_uuid(), 'role', 'authenticated')::text, true);
   begin
     perform public.tenant_applications_page(v_tenant, null, null, 'recent', 5, null);
+    v_fail := v_fail + 1;
     v_out := v_out || ' | I) sin permiso -> PERMITIDO (fallo de seguridad)';
   exception when others then
     v_out := v_out || ' | I) sin permiso -> BLOQUEADO';
@@ -177,12 +196,14 @@ begin
 
   begin
     perform public.tenant_applications_stats(v_tenant);
+    v_fail := v_fail + 1;
     v_out := v_out || ' + stats PERMITIDO (fallo de seguridad)';
   exception when others then
     v_out := v_out || ' + stats BLOQUEADO';
   end;
 
   perform set_config('request.jwt.claims', '', true);
-  raise exception 'PROBE_RESULT: %', v_out;
+  raise exception 'PROBE_VERDICT status=% fails=% | %',
+    case when v_fail = 0 then 'PASS' else 'FAIL' end, v_fail, v_out;
 end;
 $probe$;
