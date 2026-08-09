@@ -130,3 +130,335 @@ Deno.test('la reserva pide el lote con el lease y el tope de intentos del contra
     { p_limit: 7, p_lease_seconds: 300, p_max_attempts: 5 }
   ])
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// R3.2 — las cinco reglas cuyo incumplimiento no se puede deshacer.
+//
+// Reparto de capas: que dos reservas no devuelvan la misma fila, que la clave
+// de idempotencia sobreviva al reintento y que el tope de intentos cierre la
+// fila lo comprueba `p0_email_claim_probe` contra la base. Aquí se comprueba lo
+// que decide el procesador una vez tiene la fila en la mano, que es lo que
+// ninguna probe puede ver: a qué dirección sale el correo y qué se escribe
+// después.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Regla 1 · No enviar dos veces la misma entrega ──────────────────────────
+
+Deno.test('regla 1: cada entrega del lote sale una sola vez, con su propia clave', async () => {
+  const deliveries = ['a', 'b', 'c'].map((suffix, index) =>
+    buildDelivery({
+      delivery_id: `1111111${index}-1111-4111-8111-111111111111`,
+      claim_token: `2222222${index}-2222-4222-8222-222222222222`,
+      idempotency_key: `idempotency-${suffix}`,
+      recipient_email: `${suffix}@example.com`
+    })
+  )
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: deliveries }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resend = createResendDouble()
+
+  const result = await processEmailDeliveries({
+    database: database.client,
+    fetch: resend.fetch,
+    ...validConfig
+  })
+
+  assertEquals(result, { processedCount: 3, sentCount: 3, failedCount: 0 })
+  assertEquals(resend.sent.map((email) => email.idempotencyKey), [
+    'idempotency-a',
+    'idempotency-b',
+    'idempotency-c'
+  ])
+  // Una clave repetida significaría dos envíos de la misma entrega.
+  assertEquals(new Set(resend.sent.map((email) => email.idempotencyKey)).size, 3)
+  assertEquals(database.argsFor('complete_email_delivery').length, 3)
+})
+
+// ── Regla 2 · El modo de prueba no se escapa a destinatarios reales ─────────
+
+Deno.test('regla 2: con payload.to el correo sale al probador y el real no aparece', async () => {
+  // Lo que deja `email_test_send` en la fila: is_test = true y el destinatario
+  // arbitrario dentro del payload.
+  const delivery = buildDelivery({
+    notification_type: 'email.test',
+    payload: { to: 'probador@asidominicana.do', simulate: 'send', test: true },
+    recipient_email: 'miembro-real@example.com',
+    recipient_display_name: 'Miembro Real'
+  })
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: [delivery] }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resend = createResendDouble()
+
+  await processEmailDeliveries({
+    database: database.client,
+    fetch: resend.fetch,
+    ...validConfig
+  })
+
+  assertEquals(resend.sent.length, 1)
+  assertEquals(resend.sent[0].to, ['probador@asidominicana.do'])
+
+  // La dirección real no puede aparecer en ninguna parte del envío, ni siquiera
+  // incrustada en el cuerpo.
+  const wholeRequest = JSON.stringify(resend.sent[0])
+  assertEquals(wholeRequest.includes('miembro-real@example.com'), false)
+})
+
+Deno.test('regla 2: un payload.to en blanco no se toma como override', async () => {
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({
+      data: [buildDelivery({ payload: { to: '   ', test: true } })]
+    }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resend = createResendDouble()
+
+  await processEmailDeliveries({
+    database: database.client,
+    fetch: resend.fetch,
+    ...validConfig
+  })
+
+  assertEquals(resend.sent[0].to, ['miembro@example.com'])
+})
+
+// ── Regla 3 · Destinatario correcto ─────────────────────────────────────────
+
+Deno.test('regla 3: el contenido de una entrega no puede salir al destinatario de otra', async () => {
+  const iglesiaA = buildDelivery({
+    delivery_id: 'aaaaaaaa-1111-4111-8111-111111111111',
+    idempotency_key: 'idempotency-a',
+    title: 'Solicitud de la iglesia A',
+    recipient_email: 'pastor-a@example.com',
+    recipient_display_name: 'Pastor A'
+  })
+  const iglesiaB = buildDelivery({
+    delivery_id: 'bbbbbbbb-1111-4111-8111-111111111111',
+    idempotency_key: 'idempotency-b',
+    title: 'Solicitud de la iglesia B',
+    recipient_email: 'pastor-b@example.com',
+    recipient_display_name: 'Pastor B'
+  })
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: [iglesiaA, iglesiaB] }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resend = createResendDouble()
+
+  await processEmailDeliveries({
+    database: database.client,
+    fetch: resend.fetch,
+    ...validConfig
+  })
+
+  // El emparejamiento asunto→destinatario es la regla: se rompe si alguien saca
+  // el destinatario o el contenido fuera del bucle.
+  assertEquals(
+    resend.sent.map((email) => [email.subject, email.to[0]]),
+    [
+      ['Solicitud de la iglesia A', 'pastor-a@example.com'],
+      ['Solicitud de la iglesia B', 'pastor-b@example.com']
+    ]
+  )
+  assertEquals(resend.sent[0].text.includes('Hola Pastor A,'), true)
+  assertEquals(resend.sent[1].text.includes('Hola Pastor A,'), false)
+})
+
+Deno.test('regla 3: una entrega sin destinatario se cierra fallida y no llega al proveedor', async () => {
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({
+      data: [
+        buildDelivery({
+          recipient_email: '   ',
+          recipient_display_name: null,
+          recipient_full_name: null
+        })
+      ]
+    }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resend = createResendDouble()
+
+  const result = await processEmailDeliveries({
+    database: database.client,
+    fetch: resend.fetch,
+    ...validConfig
+  })
+
+  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 1 })
+  assertEquals(resend.sent.length, 0)
+  assertEquals(database.argsFor('complete_email_delivery')[0].p_status, 'failed')
+  assertEquals(database.argsFor('complete_email_delivery')[0].p_response_code, 422)
+})
+
+Deno.test('regla 3: sin configuración de proveedor falla cerrado, no envía a ciegas', async () => {
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: [buildDelivery()] }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resend = createResendDouble()
+
+  const result = await processEmailDeliveries({
+    database: database.client,
+    fetch: resend.fetch,
+    ...validConfig,
+    resendApiKey: ''
+  })
+
+  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 1 })
+  assertEquals(resend.sent.length, 0)
+  assertEquals(database.argsFor('complete_email_delivery')[0].p_status, 'failed')
+  assertEquals(database.argsFor('complete_email_delivery')[0].p_response_code, 503)
+})
+
+// ── Regla 4 · Reintento tras fallo sin duplicar ─────────────────────────────
+
+Deno.test('regla 4: un fallo transitorio deja la entrega pendiente y el reintento reusa la clave', async () => {
+  const primerIntento = buildDelivery({ attempt_count: 1 })
+  const firstDatabase = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: [primerIntento] }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const firstResend = createResendDouble(() => ({
+    status: 500,
+    body: { message: 'Internal server error' }
+  }))
+
+  const firstRun = await processEmailDeliveries({
+    database: firstDatabase.client,
+    fetch: firstResend.fetch,
+    ...validConfig
+  })
+
+  assertEquals(firstRun, { processedCount: 1, sentCount: 0, failedCount: 1 })
+  // 'pending' y no 'failed': marcarlo definitivo aquí convertía un fallo
+  // transitorio del proveedor en un correo que no se envía nunca.
+  assertEquals(firstDatabase.argsFor('complete_email_delivery')[0].p_status, 'pending')
+
+  // Segundo ciclo: la reserva devuelve la misma fila con el intento ya
+  // incrementado y —esto es lo que importa— la misma clave de idempotencia.
+  const segundoIntento = buildDelivery({ attempt_count: 2 })
+  const secondDatabase = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: [segundoIntento] }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const secondResend = createResendDouble()
+
+  await processEmailDeliveries({
+    database: secondDatabase.client,
+    fetch: secondResend.fetch,
+    ...validConfig
+  })
+
+  assertEquals(secondDatabase.argsFor('complete_email_delivery')[0].p_status, 'sent')
+  // Misma clave en los dos intentos: si el primer envío sí llegó a salir y solo
+  // se perdió la respuesta, Resend no lo reenvía.
+  assertEquals(firstResend.sent[0].idempotencyKey, secondResend.sent[0].idempotencyKey)
+})
+
+Deno.test('regla 4: agotados los intentos el fallo pasa a definitivo', async () => {
+  for (const [attemptCount, expectedStatus] of [[4, 'pending'], [5, 'failed'], [6, 'failed']] as const) {
+    const database = createDatabaseDouble({
+      claim_email_deliveries: () => ({ data: [buildDelivery({ attempt_count: attemptCount })] }),
+      complete_email_delivery: () => ({ data: true })
+    })
+
+    await processEmailDeliveries({
+      database: database.client,
+      fetch: createResendDouble(() => ({ status: 500, body: {} })).fetch,
+      ...validConfig
+    })
+
+    assertEquals(
+      database.argsFor('complete_email_delivery')[0].p_status,
+      expectedStatus,
+      `intento ${attemptCount}`
+    )
+  }
+})
+
+// ── Regla 5 · Estado consistente si Resend responde error ───────────────────
+
+Deno.test('regla 5: el rechazo del proveedor se guarda entero y no se marca enviada', async () => {
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: [buildDelivery()] }),
+    complete_email_delivery: () => ({ data: true })
+  })
+
+  const result = await processEmailDeliveries({
+    database: database.client,
+    fetch: createResendDouble(() => ({
+      status: 422,
+      body: { name: 'validation_error', message: 'Invalid `to` field.' }
+    })).fetch,
+    ...validConfig
+  })
+
+  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 1 })
+
+  const closeArgs = database.argsFor('complete_email_delivery')[0]
+  assertEquals(closeArgs.p_response_code, 422)
+  assertEquals(closeArgs.p_response_payload, {
+    name: 'validation_error',
+    message: 'Invalid `to` field.'
+  })
+  // Sin id de proveedor: no hay nada que rastrear porque no se envió nada.
+  assertEquals(closeArgs.p_provider_message_id, null)
+
+  // El diagnóstico queda con el código y el intento, que es lo que permite
+  // distinguir un rechazo permanente de uno transitorio sin adivinar.
+  const log = database.inserts[0].values
+  assertEquals(log.log_level, 'error')
+  assertEquals((log.metadata as Record<string, unknown>).responseCode, 422)
+  assertEquals((log.metadata as Record<string, unknown>).attemptCount, 1)
+})
+
+Deno.test('regla 5: una respuesta que no es JSON no rompe el ciclo ni inventa un id', async () => {
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: [buildDelivery(), buildDelivery({ idempotency_key: 'segunda' })] }),
+    complete_email_delivery: () => ({ data: true })
+  })
+
+  const result = await processEmailDeliveries({
+    database: database.client,
+    fetch: createResendDouble((_email, callIndex) =>
+      callIndex === 0
+        ? { status: 502, rawBody: '<html><body>502 Bad Gateway</body></html>' }
+        : { status: 202, rawBody: '' }
+    ).fetch,
+    ...validConfig
+  })
+
+  // La segunda entrega se procesa igual: un cuerpo ilegible del proveedor no
+  // puede tumbar el resto del lote.
+  assertEquals(result, { processedCount: 2, sentCount: 1, failedCount: 1 })
+
+  const closeArgs = database.argsFor('complete_email_delivery')
+  assertEquals(closeArgs[0].p_status, 'pending')
+  assertEquals(closeArgs[0].p_response_payload, {})
+  assertEquals(closeArgs[1].p_status, 'sent')
+  // Aceptado pero sin id legible: se registra la ausencia en vez de inventarlo.
+  assertEquals(closeArgs[1].p_provider_message_id, null)
+})
+
+Deno.test('regla 5: un cierre rechazado por token caducado deja rastro', async () => {
+  // El lease venció mientras se hablaba con Resend y otro worker reclamó la
+  // fila: `complete_email_delivery` devuelve false y no escribe nada.
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: [buildDelivery()] }),
+    complete_email_delivery: () => ({ data: false })
+  })
+
+  await processEmailDeliveries({
+    database: database.client,
+    fetch: createResendDouble().fetch,
+    ...validConfig
+  })
+
+  const levels = database.inserts.map((insert) => insert.values.log_level)
+  assertEquals(levels.includes('warn'), true, 'el cierre rechazado debe quedar registrado')
+})

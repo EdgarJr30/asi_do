@@ -18,7 +18,7 @@ Cada tarea se identifica `R{hallazgo}.{n}` y dice **cómo se sabe que está hech
 |---|---|---|---|
 | [R1](#r1--probes-sql-que-nadie-ejecuta) | 0 de 17 probes SQL corren en CI | 🔴 bloqueante | ✅ **17/17 en CI** |
 | [R2](#r2--lo-que-parece-prueba-de-negocio-es-grep-sobre-sql) | Pruebas de negocio = `grep` sobre SQL | 🔴 bloqueante | ☐ deuda |
-| [R3](#r3--pipeline-de-correo-sin-pruebas) | 1.085 LOC de correo, cero tests | 🔴 bloqueante | ◐ **R3.1 y R3.3 ✅** — faltan las 5 reglas |
+| [R3](#r3--pipeline-de-correo-sin-pruebas) | 1.085 LOC de correo, cero tests | 🔴 bloqueante | ✅ **correo cerrado** — 41 tests Deno en CI; queda push (ver [R3.4](#r3--pipeline-de-correo-sin-pruebas)) |
 | [R4](#r4--pagos-buena-criptografía-ningún-camino-feliz) | Pagos sin camino feliz probado | 🔴 bloqueante | ☐ abierto |
 | [R5](#r5--el-bucle-ats-sin-e2e) | Bucle ATS sin e2e | 🟠 | ☐ abierto |
 | [R6](#r6--las-mejores-specs-nunca-corren) | 1 de 11 specs e2e corre en CI | 🟠 | ☐ abierto |
@@ -277,16 +277,23 @@ Se hace cuando exista el runner de R1.2 y los fixtures de R1.5, que es lo que pe
 
 ## Estado medido
 
-| Archivo | LOC | Tests |
-|---|---|---|
-| `process-email-deliveries/` (era `index.ts`, 741) | 741 | ✅ `process.test.ts` — el bucle de entrega |
-| `send-notification/index.ts` | 344 | **ninguno** |
-| `_shared/metrics.ts` | 167 | ✅ `metrics.test.ts` |
-| `_shared/harness-guards.ts` | 91 | ✅ `harness-guards.test.ts` |
+| Archivo | LOC | Canal | Tests |
+|---|---|---|---|
+| `process-email-deliveries/` (era `index.ts`, 741) | 741 | correo | ✅ `process.test.ts` — 15 tests |
+| `send-notification/index.ts` | 344 | **web push** | **ninguno** → R3.4 |
+| `_shared/metrics.ts` | 167 | — | ✅ `metrics.test.ts` |
+| `_shared/harness-guards.ts` | 91 | — | ✅ `harness-guards.test.ts` |
 
 **1.085 LOC sin una sola prueba.** Lo único cubierto de Edge Functions es el arnés de estrés.
 `process-email-deliveries` corre por `pg_cron`, **sin humano en el bucle**, y un correo enviado
 no tiene botón de deshacer.
+
+**Corrección de alcance:** el informe contó los 1.085 LOC como "pipeline de correo", pero
+`send-notification` es **web push** (`webpush.sendNotification`, VAPID, `queue_push_notification`),
+no correo. Se descubrió al buscar dónde vivía `is_test` para la regla 2. Las tres tareas de R3
+cubren el correo —741 LOC, el canal que sale a direcciones reales sin humano delante—; el push
+queda separado en R3.4 porque es otro proveedor, otro fallo y otra gravedad: una notificación
+push perdida no llega a la bandeja de nadie ajeno.
 
 **Corrección al informe original:** `ci.yml` ya ejecutaba `deno test supabase/functions`
 (step "Run Edge Function tests"), no solo `deno check`. R3.3 estaba hecho antes de empezar. La
@@ -320,19 +327,52 @@ CI solo**, sin tocar el workflow.
   nuevo en cada intento —la regresión que haría que un reintento duplicase el correo— el camino
   feliz pasa a FAILED.
 
-- [ ] **R3.2 · Cubrir las cinco reglas que causan daño irreversible**
+- [x] **R3.2 · Cubrir las cinco reglas que causan daño irreversible**
   Prioridad por consecuencia, no por cobertura:
   1. No enviar dos veces la misma entrega.
   2. Respetar `is_test` — el modo de prueba no se escapa a destinatarios reales.
   3. Destinatario correcto: nunca correo de otra iglesia.
   4. Reintento tras fallo sin duplicar.
   5. Estado consistente si Resend responde error.
-  *Hecho cuando:* los 5 tienen test y **fallan al invertir la condición**.
-  *Listo para empezar:* el arnés de R3.1 ya está. Nota del camino: la regla 3 necesita test
-  propio con `payload.to` — en el camino feliz el override y `recipient_email` coinciden, así que
-  una regresión en la resolución del destinatario **no** se ve ahí.
-  Falta además refactorizar `send-notification/index.ts` (344 LOC) igual que R3.1, o sus reglas
-  seguirán sin poder ejecutarse.
+  *Hecho:* 11 tests nuevos en `process.test.ts` (41 tests Deno en total). **Los 5 verificados
+  con mutación**: se inyectó una regresión por regla y las 6 murieron, cada una acusada por el
+  test que nombra su regla.
+
+  | Regresión inyectada | La mata |
+  |---|---|
+  | `Idempotency-Key` constante en vez de la de la entrega | regla 1 |
+  | Ignorar el override de `payload.to` | regla 2 |
+  | Asunto tomado de la primera entrega del lote | regla 3 |
+  | Fallo del proveedor marcado definitivo siempre | regla 4 |
+  | No guardar el cuerpo del rechazo | regla 5 |
+  | Cierre rechazado sin registrar | regla 5 |
+
+  **Dónde estaba de verdad `is_test`** (la regla 2 se entendía mal): no está en
+  `send-notification` —esa función es *web push*, no correo— sino en `email_test_send`
+  (`20260622170000`), que marca `is_test = true` y mete el destinatario del probador en
+  `payload.to`. El override de `payload.to` del procesador **es** el modo de prueba, así que la
+  regla sí era ejercitable sin tocar nada más.
+
+  **Reparto de capas, para no duplicar con R1:** que dos reservas no devuelvan la misma fila,
+  que la clave sobreviva al reintento y que el tope de intentos cierre la fila lo comprueba
+  `p0_email_claim_probe` contra la base. Estos tests cubren lo que ninguna probe puede ver:
+  a qué dirección sale el correo una vez el procesador tiene la fila en la mano, y qué se
+  escribe después.
+
+  **Defecto encontrado al escribir las pruebas (corregido):** `completeDelivery` documentaba que
+  devuelve si el cierre se aplicó *"para poder registrarlo cuando no"* — y ningún llamador usaba
+  el valor. Cuando el lease vencía y otro worker reclamaba la fila, el intento del worker zombi
+  quedaba indistinguible del bueno: mismo log de éxito, ningún rastro. Se registra ahora con
+  nivel `warn`, en un solo sitio dentro de `completeDelivery`. El correo no se duplicaba —la
+  clave de idempotencia lo impide—, pero el rastro para diagnosticarlo no existía.
+
+- [ ] **R3.4 · `send-notification` (web push), 344 LOC sin pruebas** *(nace de la corrección de alcance)*
+  Mismo tratamiento que R3.1: sacar la lógica de `Deno.serve` e inyectar `webpush` y la base.
+  Las reglas que importan son distintas a las del correo: no reenviar a una suscripción ya
+  desactivada, dar de baja la suscripción ante 404/410 (hoy lo hace, sin test), y no perder el
+  resto del lote cuando una suscripción falla.
+  *Hecho cuando:* las 3 tienen test y mueren al invertir la condición.
+  🟠 no bloqueante para salir: un push fallido no llega a la bandeja de nadie ajeno.
 
 - [x] **R3.3 · `deno test` en `ci.yml`**
   Junto al `deno check` que ya existe.
@@ -563,6 +603,7 @@ comprobación de accesibilidad automatizada en ninguna capa.
 | 2026-08-09 | Fixtures fuera de `seed.sql` | `supabase start` aplica `seed.sql`, y el mismo job compara `db diff` para detectar drift: los datos de prueba lo ensuciarían. |
 | 2026-08-09 | R2 se trata como deuda, no como prelanzamiento | Reemplazar 156 aserciones con prisa produce tests frágiles, que es un hueco peor que el actual porque también se disfraza de cobertura. |
 | 2026-08-09 | Numeración canónica R1…R10 del informe | Un tracker que renumera obliga a traducir cada vez que se cruza con el informe. |
+| 2026-08-09 | El push (`send-notification`) sale de R3 a R3.4 en vez de mantener R3 abierto | R3 se priorizó como 🔴 por el daño irreversible de un correo mal dirigido. El push no lo comparte: no llega a la bandeja de nadie ajeno. Mantenerlos juntos obligaba a elegir entre bloquear la salida por algo 🟠 o dar por cubierto algo que no lo está. |
 | 2026-08-09 | Una tabla nueva sin entrada en la matriz de la Fase D **rompe** la probe, no avisa | Es el mecanismo que obliga a decidir la superficie de cada tabla en vez de heredarla de los default privileges. Costó una línea en `email_delivery_events` y detectó el hueco el mismo día. |
 
 ---
@@ -577,4 +618,5 @@ comprobación de accesibilidad automatizada en ninguna capa.
 | 2026-08-09 | R1 fase 2: `fixtures.sql` determinista + 6 probes de datos migradas | `c27d4b7` |
 | 2026-08-09 | **R1 cerrado**: 17/17 en CI con fixtures | `3649892` |
 | 2026-08-09 | Primeros dos hallazgos del runner ya en `main`, sobre `email_delivery_events` (`5caf1b1`): política de sesión sin envolver y tabla fuera de la matriz de la Fase D | `e41429a` |
-| 2026-08-09 | **R3.1**: `process-email-deliveries` partido en render / procesador / shell; dobles de Resend y Supabase en `_shared/email-test-doubles.ts`; 4 tests. R3.3 ya estaba hecho | _(este commit)_ |
+| 2026-08-09 | **R3.1**: `process-email-deliveries` partido en render / procesador / shell; dobles de Resend y Supabase en `_shared/email-test-doubles.ts`; 4 tests. R3.3 ya estaba hecho | `1c17950` |
+| 2026-08-09 | **R3.2 / R3 cerrado para correo**: las 5 reglas cubiertas y verificadas con 6 mutantes; corregido el rastro perdido del cierre rechazado; `send-notification` (push) separado en R3.4 | _(este commit)_ |

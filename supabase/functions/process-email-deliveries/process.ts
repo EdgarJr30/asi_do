@@ -126,7 +126,25 @@ async function completeDelivery(
     throw response.error
   }
 
-  return response.data === true
+  const applied = response.data === true
+
+  if (!applied) {
+    // El lease venció y otro worker ya reclamó la entrega, así que este cierre
+    // no escribió nada. Sin esta nota el intento del worker zombi queda
+    // indistinguible del que sí escribió el resultado: la fila muestra lo que
+    // dejó el worker vivo y el log dice que todo fue bien dos veces.
+    await insertDeliveryLog(database, {
+      deliveryId: input.deliveryId,
+      logLevel: 'warn',
+      message: 'Email delivery close was rejected because the claim token is no longer valid.',
+      metadata: {
+        attemptedStatus: input.status,
+        responseCode: input.responseCode ?? null
+      }
+    })
+  }
+
+  return applied
 }
 
 export async function processEmailDeliveries(

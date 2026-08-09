@@ -114,7 +114,13 @@ export interface RecordedEmail {
 
 export interface ResendOutcome {
   status: number
-  body: Record<string, unknown>
+  body?: Record<string, unknown>
+  /**
+   * Cuerpo crudo, para lo que un proveedor real devuelve cuando algo se rompe
+   * delante de él: el HTML de un 502 de la CDN, o una respuesta vacía. Gana
+   * sobre `body`.
+   */
+  rawBody?: string
 }
 
 export type ResendResponder = (email: RecordedEmail, callIndex: number) => ResendOutcome
@@ -160,10 +166,12 @@ export function createResendDouble(respond?: ResendResponder): ResendDouble {
       body: { id: `resend-message-${callIndex + 1}` }
     }
 
+    const isRaw = typeof outcome.rawBody === 'string'
+
     return Promise.resolve(
-      new Response(JSON.stringify(outcome.body), {
+      new Response(isRaw ? outcome.rawBody : JSON.stringify(outcome.body ?? {}), {
         status: outcome.status,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': isRaw ? 'text/html' : 'application/json' }
       })
     )
   }
