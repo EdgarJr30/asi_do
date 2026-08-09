@@ -80,9 +80,11 @@ Esto **no afecta al código del proyecto**: `supabase-js` pone los dos headers s
 
 ### 4.2 Frontend (build de Vite / Netlify)
 
-`VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` · `VITE_AUTH_SITE_URL` · `APP_URL` · `VITE_AZUL_PAYMENTS_URL` · `VITE_WEB_PUSH_PUBLIC_KEY`
+`VITE_DEPLOY_ENV` · `VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` · `VITE_AUTH_SITE_URL` · `VITE_PRODUCTION_SITE_URL` · `VITE_AZUL_PAYMENTS_URL` · `VITE_WEB_PUSH_PUBLIC_KEY`
 
-Las URLs por entorno ya están separadas en `.env.development` y `.env.production` (versionados, solo contienen URLs). Los valores sensibles viven en `.env.local` y en el panel de Netlify.
+Los archivos versionados solo declaran la clase del entorno: `.env.development`, `.env.staging` y `.env.production`. No contienen endpoints. En desarrollo, Auth siempre deriva el origen de `window.location.origin`, aunque una URL pública haya quedado por accidente en `.env.local`. Staging y producción reciben `VITE_AUTH_SITE_URL` y `VITE_PRODUCTION_SITE_URL` desde el proveedor de despliegue; el build falla si falta una, si usa HTTP/localhost, si producción no coincide con su origen canónico o si staging intenta usarlo.
+
+Staging se empaqueta con `npm run build:staging`; producción con `npm run build`. Para cada proyecto Supabase, `site_url` y la lista de redirects deben configurarse con los dominios de ese mismo entorno. El `supabase/config.toml` versionado incluye además callbacks locales exactos para el stack de desarrollo; nunca se debe usar una lista global indiscriminada entre proyectos.
 
 > En el build para **Hostinger** no hay panel: `vite build` corre en local y hornea en el bundle los `VITE_*` del `.env.local` de esa máquina. Revísalos antes de cada release (ver `DESPLIEGUE_HOSTINGER.md` §5).
 
@@ -122,7 +124,7 @@ Un sitio o dos contextos de build: `main` → staging, tag/rama de release → p
 
 Para que la activación de staging sea "cambiar entornos y ya", esto conviene resolverlo antes, no el día del corte:
 
-- [x] **URLs por entorno separadas** en `.env.development` / `.env.production`.
+- [x] **Contrato de URLs por entorno** sin endpoints versionados: origen vivo en desarrollo, variables inyectadas en staging/producción y validación cruzada en CI.
 - [x] **Replay de migraciones en CI** (`.github/workflows/db-migrations.yml`): garantiza que un proyecto nuevo se puede construir desde cero. Sin esto, crear staging es una apuesta.
 - [x] **Vigilancia de drift** (`.github/workflows/db-drift.yml`): detecta cambios hechos fuera de migraciones, que son justamente los que no se propagan a un entorno nuevo.
 - [ ] **Rotar la `service_role` key antes del corte a producción.** Estuvo escrita en claro en `audit_logs` desde marzo hasta el saneamiento de TASK-260, legible por cualquier portador de `audit_log:read`. El saneamiento la quitó de la base pero **no invalida la llave**, y esa llave **bypassa RLS por completo**. Decisión del propietario (2026-08-02): **no se rota ahora**, porque el acceso a `audit_log:read` estuvo limitado a personas de confianza y no hay indicio de filtración. Queda como paso obligatorio del corte a producción, no como remediación pendiente. Al rotarla hay que resincronizar `.env.local`, el microservicio AZUL y las Edge Functions.
@@ -131,7 +133,7 @@ Para que la activación de staging sea "cambiar entornos y ya", esto conviene re
 - [ ] **Despliegue de Edge Functions por CI**, no `supabase functions deploy` desde la laptop.
 - [x] **Unificar la topología documentada.** ✅ 2026-08-04. Resuelto: no era una decisión pendiente sino texto obsoleto en un solo documento. **No existe ni un archivo de configuración de Hostinger en el repositorio**, mientras que `netlify.toml`, `railway.json` y el `Dockerfile` del microservicio sí están, y tres documentos ya decían Netlify. La topología única —SPA en Netlify, `services/azul-payments` en Railway, plataforma en Supabase— queda declarada en `docs/pasarelaDePagos/despliegue-azul.md`, que es el runbook que manda.
 
-  **Reabierto el 2026-08-07:** ahora sí hay configuración de Hostinger en el repo (`public/.htaccess`) y el dominio propio `asidominicana.do` está conmutado en `.env.production` y `supabase/config.toml`. La SPA se sirve desde **dos** sitios a propósito y de forma temporal: Netlify como vuelta atrás mientras se valida Hostinger. Runbook: `docs/architecture/DESPLIEGUE_HOSTINGER.md`. Vuelve a quedar una sola topología en cuanto se retire uno de los dos.
+  **Reabierto el 2026-08-07:** ahora sí hay configuración de Hostinger en el repo (`public/.htaccess`) y el dominio propio `asidominicana.do` está configurado en Supabase. Desde 2026-08-09 el frontend ya no lo conserva en `.env.production`: el entorno de despliegue lo inyecta y el build valida su correspondencia. La SPA se sirve desde **dos** sitios a propósito y de forma temporal: Netlify como vuelta atrás mientras se valida Hostinger. Runbook: `docs/architecture/DESPLIEGUE_HOSTINGER.md`. Vuelve a quedar una sola topología en cuanto se retire uno de los dos.
 
 ## 6. Runbook: activar staging
 

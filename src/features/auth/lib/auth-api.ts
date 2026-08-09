@@ -127,6 +127,20 @@ function normalizeStoragePath(filePath: string) {
  */
 export const IMMUTABLE_CACHE_CONTROL = '31536000, immutable'
 
+function getAuthRedirectOrigin() {
+  const browserOrigin = typeof window !== 'undefined' ? window.location.origin : undefined
+
+  // Desarrollo siempre vuelve al servidor que realmente abrió el navegador.
+  // Así un VITE_AUTH_SITE_URL residual en `.env.local` no puede enviar una
+  // confirmación local a staging o producción. Los builds desplegados toman la
+  // URL pública validada antes de empaquetarse.
+  if (env.deployEnvironment === 'development' || env.deployEnvironment === 'test') {
+    return browserOrigin
+  }
+
+  return env.authSiteUrl
+}
+
 function getFileExtension(file: File) {
   const extension = file.name.split('.').pop()?.trim().toLowerCase()
 
@@ -146,7 +160,7 @@ function normalizeStorageUploadErrorMessage(file: File, errorMessage: string) {
 }
 
 export function getAuthRedirectUrl(nextPath = surfacePaths.candidate.profile) {
-  const originCandidate = env.authSiteUrl || (typeof window !== 'undefined' ? window.location.origin : null)
+  const originCandidate = getAuthRedirectOrigin()
 
   if (!originCandidate) {
     return undefined
@@ -167,7 +181,7 @@ export function getAuthRedirectUrl(nextPath = surfacePaths.candidate.profile) {
 // `additional_redirect_urls` de `supabase/config.toml` o GoTrue la ignora y
 // devuelve al `site_url`.
 export function getPasswordRecoveryRedirectUrl() {
-  const originCandidate = env.authSiteUrl || (typeof window !== 'undefined' ? window.location.origin : null)
+  const originCandidate = getAuthRedirectOrigin()
 
   if (!originCandidate) {
     return undefined

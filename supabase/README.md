@@ -47,6 +47,8 @@ Dos detalles que no son obvios:
 1. `/auth/forgot-password` pide el correo y llama a `resetPasswordForEmail` con
    `redirectTo = {site_url}/auth/reset-password`. **Esa URL tiene que estar en `additional_redirect_urls`**
    o GoTrue la ignora en silencio y devuelve al `site_url`.
+   En desarrollo, `{site_url}` se deriva del origen real del navegador. En staging y producción sale de
+   `VITE_AUTH_SITE_URL`, validada contra `VITE_DEPLOY_ENV` y `VITE_PRODUCTION_SITE_URL` durante el build.
 2. La confirmación en pantalla es idéntica exista o no la cuenta. Es deliberado: distinguir convertiría la
    pantalla en un verificador de quién tiene cuenta en ASI.
 3. El correo usa `templates/recovery.html` con `{{ .ConfirmationURL }}`. Al abrirlo, GoTrue valida el token
@@ -271,10 +273,10 @@ The deployed Edge Function `send-notification` dispatches browser push messages 
 - `WEB_PUSH_VAPID_PRIVATE_KEY`
 - `WEB_PUSH_CONTACT_EMAIL`
 
-The deployed Edge Function `process-email-deliveries` and the hosted Supabase Auth mailer expect the production app URL to stay aligned with the public Netlify surface:
+The deployed Edge Function `process-email-deliveries` and the hosted Supabase Auth mailer expect the app URL to stay aligned with the frontend in each environment:
 
-- `APP_URL=https://asi-do.netlify.app`
-- Auth `site_url=https://asi-do.netlify.app`
+- `APP_URL=<public URL for that environment>`
+- Auth `site_url=<same environment URL>`
 - confirmation callback route `/auth/confirm`
 
 Custom hosted Auth emails now live in `supabase/templates/` and are pushed through `supabase/config.toml`.

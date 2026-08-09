@@ -34,7 +34,37 @@ function mustBeHttpUrl(value: string): string | null {
   }
 }
 
+function mustBeDeployEnvironment(value: string): string | null {
+  return value === 'staging' || value === 'production'
+    ? null
+    : 'debe ser "staging" o "production" en un build desplegable'
+}
+
+function parseHttpUrl(value: string | undefined): URL | null {
+  if (!value) return null
+
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url : null
+  } catch {
+    return null
+  }
+}
+
+function isLocalHostname(hostname: string) {
+  return hostname === 'localhost' || hostname === '::1' || hostname === '[::1]' || /^127\./.test(hostname)
+}
+
+function normalizedOrigin(url: URL) {
+  return url.origin.toLowerCase()
+}
+
 export const REQUIRED_PRODUCTION_ENV: RequiredEnvVar[] = [
+  {
+    key: 'VITE_DEPLOY_ENV',
+    why: 'sin un entorno explicito no se puede impedir que staging y produccion crucen sus enlaces',
+    validate: mustBeDeployEnvironment
+  },
   {
     key: 'VITE_SUPABASE_URL',
     why: 'sin ella el cliente de Supabase no se crea y nadie puede iniciar sesion',
@@ -52,6 +82,11 @@ export const REQUIRED_PRODUCTION_ENV: RequiredEnvVar[] = [
   {
     key: 'VITE_AUTH_SITE_URL',
     why: 'sin ella los correos de confirmacion y de recuperacion apuntan al origen del navegador, que en produccion puede no ser el dominio publico',
+    validate: mustBeHttpUrl
+  },
+  {
+    key: 'VITE_PRODUCTION_SITE_URL',
+    why: 'es el origen canonico contra el que CI valida que staging y produccion no crucen enlaces',
     validate: mustBeHttpUrl
   }
 ]
@@ -84,6 +119,34 @@ export function validateProductionEnv(
     if (formatProblem) {
       problems.push({ key: variable.key, problem: formatProblem, why: variable.why })
     }
+  }
+
+  const deployEnvironment = source.VITE_DEPLOY_ENV?.trim()
+  const authSiteUrl = parseHttpUrl(source.VITE_AUTH_SITE_URL?.trim())
+  const productionSiteUrl = parseHttpUrl(source.VITE_PRODUCTION_SITE_URL?.trim())
+
+  if (authSiteUrl && (authSiteUrl.protocol !== 'https:' || isLocalHostname(authSiteUrl.hostname))) {
+    problems.push({
+      key: 'VITE_AUTH_SITE_URL',
+      problem: 'debe ser HTTPS y no puede ser una URL local en staging o produccion',
+      why: 'un correo desplegado nunca debe devolver al navegador de una computadora de desarrollo'
+    })
+  }
+
+  if (authSiteUrl && productionSiteUrl && deployEnvironment === 'production' && normalizedOrigin(authSiteUrl) !== normalizedOrigin(productionSiteUrl)) {
+    problems.push({
+      key: 'VITE_AUTH_SITE_URL',
+      problem: 'no coincide con VITE_PRODUCTION_SITE_URL para produccion',
+      why: 'las confirmaciones y recuperaciones de produccion deben volver al origen canonico de produccion'
+    })
+  }
+
+  if (authSiteUrl && productionSiteUrl && deployEnvironment === 'staging' && normalizedOrigin(authSiteUrl) === normalizedOrigin(productionSiteUrl)) {
+    problems.push({
+      key: 'VITE_AUTH_SITE_URL',
+      problem: 'staging no puede usar el mismo origen que produccion',
+      why: 'un correo de staging nunca debe abrir una sesion en la aplicacion de produccion'
+    })
   }
 
   return problems

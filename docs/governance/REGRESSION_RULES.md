@@ -496,6 +496,9 @@ Do not let route-level and render-level stale chunk failures drift into separate
 ### R-141 — Resend sending credentials keep one explicit naming contract
 Do not reintroduce `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS`, or `RESEND_WEBHOOK_SECRET` as aliases or fallbacks. The email pipeline must read only `RESEND_API_KEY_DEV`, `EMAIL_FROM_ADDRESS_DEV`, and the separate `RESEND_WEBHOOK_SECRET_DEV` required for signed delivery-event verification. None of these values may use a `VITE_*` prefix or be exposed to the browser.
 
+### R-142 — Auth email links must never cross environments
+Do not commit a runtime Auth endpoint into `.env.development`, `.env.staging`, or `.env.production`. Development must build confirmation and recovery callbacks from the browser origin even if a public URL leaks into local configuration. Staging and production must inject `VITE_AUTH_SITE_URL`; every deployed build must declare `VITE_DEPLOY_ENV` and `VITE_PRODUCTION_SITE_URL`, reject HTTP/localhost, require production to match its canonical origin, and forbid staging from using that origin. Every callback must also exist in the corresponding Supabase project's redirect allow-list, because an unlisted `redirectTo` silently falls back to `site_url`.
+
 ---
 
 ## Maintenance rule

@@ -243,11 +243,25 @@ New helpers that wait for a protected surface follow the same shape: catch the t
 
 ---
 
-## 11. Database probes must announce a machine-readable verdict
+## 11. Auth email URLs are a CI contract
+
+Registration and password recovery pass a redirect URL to Supabase. Supabase silently falls back to its `site_url` when that redirect is not allowed, so checking only that the SDK call succeeds does not protect the user journey.
+
+CI must keep both layers executable:
+
+1. `tests/unit/auth-callback.test.ts` proves that development always uses the live browser origin and that staging/production use their injected origin.
+2. `tests/unit/required-env.test.ts` proves deployed builds reject missing or ambiguous environments, HTTP/localhost callbacks, production-to-staging mismatches, and staging-to-production reuse.
+3. `tests/integration/project-contract.test.ts` proves the exact local confirmation and recovery routes remain in `supabase/config.toml` for both `localhost` and `127.0.0.1`.
+
+Never replace these checks with a single snapshot of a committed production URL. Endpoints belong to deployment configuration; the repository owns the invariants that decide whether those values are safe.
+
+---
+
+## 12. Database probes must announce a machine-readable verdict
 
 Authorization in this product lives in the database, not in the client. The probes under `supabase/tests/` are what verifies it — and until `run-db-probes.ts` existed, none of them ran anywhere. They were executed by hand once, on the day each was written.
 
-### 11.1 The verdict contract
+### 12.1 The verdict contract
 
 Every probe ends in this exact shape:
 
@@ -266,7 +280,7 @@ Three consequences that are not negotiable:
 
 Measured risk that is knowingly accepted — like the `storage` TRUNCATE grants that cannot be revoked on a hosted project — is reported as informational and excluded from the accumulator, with the reason written in the probe. A probe permanently in FAIL teaches the team to ignore it.
 
-### 11.2 Registration is mandatory
+### 12.2 Registration is mandatory
 
 `scripts/run-db-probes.ts` carries a manifest mapping each probe to a tier:
 
@@ -277,7 +291,7 @@ Both tiers run in `db-migrations.yml` against the database it has just replayed 
 
 A `.sql` file in `supabase/tests/` that is absent from the manifest fails the runner, and so does a manifest entry whose file is gone. This is deliberate: an unregistered probe would be born already outside CI, which is exactly how seventeen of them ended up unexecuted.
 
-### 11.3 Commands
+### 12.3 Commands
 
 ```bash
 npm run test:probes            # loads fixtures, then runs all 17 — what CI runs

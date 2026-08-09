@@ -77,6 +77,27 @@ describe('project contract', () => {
     }
   })
 
+  it('keeps local Auth callbacks allow-listed in the local Supabase stack', () => {
+    const supabaseConfig = readFileSync(resolve(repoRoot, 'supabase/config.toml'), 'utf8')
+
+    for (const host of ['localhost', '127.0.0.1']) {
+      expect(supabaseConfig).toContain(`http://${host}:5173/auth/confirm`)
+      expect(supabaseConfig).toContain(`http://${host}:5173/auth/reset-password`)
+    }
+  })
+
+  it('keeps deploy endpoints out of committed mode files', () => {
+    const modeFiles = ['.env.development', '.env.staging', '.env.production']
+
+    for (const file of modeFiles) {
+      const contents = readFileSync(resolve(repoRoot, file), 'utf8')
+
+      expect(contents).not.toContain('VITE_AUTH_SITE_URL=')
+      expect(contents).not.toContain('VITE_PRODUCTION_SITE_URL=')
+      expect(contents).not.toContain('APP_URL=')
+    }
+  })
+
   it('does not reintroduce the removed vulnerable PWA plugin chain', () => {
     const packageJson = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')) as {
       dependencies?: Record<string, string>

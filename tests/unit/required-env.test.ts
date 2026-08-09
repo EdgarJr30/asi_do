@@ -7,10 +7,12 @@ import {
 } from '@/shared/config/required-env'
 
 const completeEnv: Record<string, string> = {
+  VITE_DEPLOY_ENV: 'production',
   VITE_SUPABASE_URL: 'https://proyecto.supabase.co',
   VITE_SUPABASE_ANON_KEY: 'anon-key-de-ejemplo',
   VITE_AZUL_PAYMENTS_URL: 'https://pagos.example.com',
-  VITE_AUTH_SITE_URL: 'https://asidominicana.do'
+  VITE_AUTH_SITE_URL: 'https://app.production.example.com',
+  VITE_PRODUCTION_SITE_URL: 'https://app.production.example.com'
 }
 
 describe('contrato de variables de produccion', () => {
@@ -56,6 +58,52 @@ describe('contrato de variables de produccion', () => {
 
     expect(problems).toHaveLength(1)
     expect(problems[0].problem).toContain('http(s)')
+  })
+
+  it('rechaza una URL local en un build de produccion', () => {
+    const problems = validateProductionEnv({
+      ...completeEnv,
+      VITE_AUTH_SITE_URL: 'http://localhost:5173'
+    })
+
+    const authProblem = problems.find((problem) => problem.key === 'VITE_AUTH_SITE_URL')
+    expect(authProblem?.problem).toContain('local')
+  })
+
+  it('rechaza produccion cuando el origen de Auth no coincide con el origen canonico', () => {
+    const problems = validateProductionEnv({
+      ...completeEnv,
+      VITE_AUTH_SITE_URL: 'https://staging.example.com'
+    })
+
+    const authProblem = problems.find((problem) => problem.key === 'VITE_AUTH_SITE_URL')
+    expect(authProblem?.problem).toContain('produccion')
+  })
+
+  it('rechaza staging cuando intenta emitir enlaces hacia produccion', () => {
+    const problems = validateProductionEnv({
+      ...completeEnv,
+      VITE_DEPLOY_ENV: 'staging',
+      VITE_AUTH_SITE_URL: completeEnv.VITE_PRODUCTION_SITE_URL
+    })
+
+    const authProblem = problems.find((problem) => problem.key === 'VITE_AUTH_SITE_URL')
+    expect(authProblem?.problem).toContain('staging')
+  })
+
+  it('acepta staging con un origen HTTPS distinto de produccion', () => {
+    expect(validateProductionEnv({
+      ...completeEnv,
+      VITE_DEPLOY_ENV: 'staging',
+      VITE_AUTH_SITE_URL: 'https://staging.example.com'
+    })).toEqual([])
+  })
+
+  it('rechaza un nombre de entorno ambiguo', () => {
+    const problems = validateProductionEnv({ ...completeEnv, VITE_DEPLOY_ENV: 'preview' })
+
+    const deployProblem = problems.find((problem) => problem.key === 'VITE_DEPLOY_ENV')
+    expect(deployProblem?.problem).toContain('staging')
   })
 
   it('reporta todas las que faltan, no solo la primera', () => {

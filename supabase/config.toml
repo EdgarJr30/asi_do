@@ -25,10 +25,15 @@ enabled = false
 [auth]
 enabled = true
 site_url = "https://asidominicana.do"
-# Se mantienen los cuatro redirects de Netlify ademas de los del dominio propio:
-# `asi-do.netlify.app` sigue publicado como vuelta atras mientras se valida
-# Hostinger. Cuando se retire, borra el segundo bloque.
+# `redirectTo` solo se respeta si coincide con esta lista. Los callbacks locales
+# son exactos (sin wildcard) para que registro y recuperacion funcionen durante
+# desarrollo; el cliente desplegado no puede emitirlos porque su build rechaza
+# URLs locales. Netlify sigue como vuelta atras temporal de Hostinger.
 additional_redirect_urls = [
+  "http://localhost:5173/auth/confirm",
+  "http://localhost:5173/auth/reset-password",
+  "http://127.0.0.1:5173/auth/confirm",
+  "http://127.0.0.1:5173/auth/reset-password",
   "https://asidominicana.do/auth/confirm",
   "https://asidominicana.do/auth/sign-in",
   "https://asidominicana.do/auth/reset-password",

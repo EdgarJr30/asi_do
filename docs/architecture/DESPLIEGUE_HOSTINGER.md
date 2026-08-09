@@ -3,8 +3,9 @@
 Runbook para servir el frontend desde **Hostinger**, con el dominio comprado en **nic.do** y el DNS en **Cloudflare**.
 
 > **Estado: en ejecución desde 2026-08-07. Prueba de hosting, no corte a producción.**
-> El dominio es **`asidominicana.do`** y la parte del repo ya está hecha: existe `public/.htaccess`,
-> y `.env.production`, `supabase/config.toml` y los tests apuntan al dominio nuevo.
+> El dominio es **`asidominicana.do`** y la parte del repo ya está hecha: existe `public/.htaccess`
+> y Supabase conserva el dominio en su configuración. El endpoint ya no vive en `.env.production`:
+> se inyecta al construir para impedir que otro entorno lo herede.
 > Falta lo que solo se hace desde los paneles: Hostinger (§2, §3), Cloudflare (§2, §3) y la subida (§5).
 >
 > **Netlify sigue publicado** (`asi-do.netlify.app`) como vuelta atrás, y `netlify.toml` se mantiene.
@@ -154,7 +155,7 @@ El dominio nuevo aparece en varios sitios. Si te saltas uno, el síntoma típico
 
 | Dónde | Qué | Estado |
 |---|---|---|
-| `.env.production` | `VITE_AUTH_SITE_URL`, `APP_URL` | ✅ `https://asidominicana.do` |
+| Entorno del build de producción | `VITE_AUTH_SITE_URL`, `VITE_PRODUCTION_SITE_URL` | Deben contener el mismo origen HTTPS público; no se versionan |
 | `supabase/config.toml` `[auth]` | `site_url` + `additional_redirect_urls` | ✅ en el repo — ⚠️ **falta aplicarlo al proyecto remoto** |
 | Edge Functions (secretos del proyecto) | `APP_URL` | ⬜ Pendiente. Solo afecta a los enlaces de los correos |
 | Railway (`services/azul-payments`) | `ALLOWED_ORIGIN`, `APP_URL` | ⬜ N/A: AZUL no está desplegado |
@@ -173,7 +174,7 @@ Auth rechaza el redirect a un dominio que no tiene en su lista. Es el fallo núm
 Se dejaron también los cuatro redirects de `asi-do.netlify.app` en la lista, para que Netlify siga
 sirviendo de vuelta atrás mientras se valida Hostinger.
 
-Los `VITE_*` se hornean en el bundle: cambiarlos **exige rebuild**, no basta con reiniciar nada.
+Los `VITE_*` se hornean en el bundle: cambiarlos **exige rebuild**, no basta con reiniciar nada. Antes de `npm run build:hosting`, exporta ambas URLs públicas; el build aborta si apuntan a orígenes distintos o locales.
 
 Tests que llevaban el dominio quemado, ya actualizados: `tests/unit/auth-callback.test.ts`,
 `tests/unit/required-env.test.ts`, `services/azul-payments/test/app.test.ts`,
@@ -223,7 +224,7 @@ A cambio: coste fijo predecible y un panel único para dominio, correo y hosting
 
 - [x] `public/.htaccess` (§4).
 - [x] `npm run build:hosting`: build + aparta los ~200 sourcemaps fuera de `dist/` (§5).
-- [x] Dominio actualizado en `.env.production` y `supabase/config.toml`.
+- [x] Dominio retirado de `.env.production`; el build exige inyectarlo y validarlo contra el origen canónico.
 - [x] Los 4 archivos de test con el dominio quemado.
 - [x] `tests/unit/release-metadata.test.ts`: ahora asserta la regla `.map` **de los dos** hosts, más el
       fallback de la SPA del `.htaccess`.

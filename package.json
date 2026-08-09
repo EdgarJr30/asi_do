@@ -11,6 +11,7 @@
     "changeset": "changeset",
     "dev": "NODE_OPTIONS=--disable-warning=DEP0205 vite",
     "build": "tsc -b && NODE_OPTIONS=--disable-warning=DEP0205 vite build",
+    "build:staging": "tsc -b && NODE_OPTIONS=--disable-warning=DEP0205 vite build --mode staging",
     "build:hosting": "npm run build && D=.sourcemaps/$(git rev-parse --short HEAD) && mkdir -p \"$D\" && mv dist/assets/*.map \"$D\"/ && echo \"dist/ listo para subir a Hostinger · sourcemaps apartados en $D\"",
     "preview": "NODE_OPTIONS=--disable-warning=DEP0205 vite preview",
     "lint": "eslint .",

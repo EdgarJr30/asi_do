@@ -22,8 +22,13 @@ export const env = {
   appName: readEnvValue(import.meta.env.VITE_APP_NAME, readProcessEnv('VITE_APP_NAME')) || 'ASI Rep. Dominicana',
   authSiteUrl: readEnvValue(
     import.meta.env.VITE_AUTH_SITE_URL,
-    readProcessEnv('VITE_AUTH_SITE_URL'),
-    readProcessEnv('APP_URL')
+    readProcessEnv('VITE_AUTH_SITE_URL')
+  ),
+  deployEnvironment: readEnvValue(
+    import.meta.env.VITE_DEPLOY_ENV,
+    readProcessEnv('VITE_DEPLOY_ENV'),
+    import.meta.env.MODE,
+    readProcessEnv('MODE')
   ),
   supabaseUrl: readEnvValue(import.meta.env.VITE_SUPABASE_URL, readProcessEnv('VITE_SUPABASE_URL')),
   supabaseAnonKey: readEnvValue(import.meta.env.VITE_SUPABASE_ANON_KEY, readProcessEnv('VITE_SUPABASE_ANON_KEY')),
