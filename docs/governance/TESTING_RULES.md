@@ -153,6 +153,7 @@ The repository must keep these commands meaningful:
 - `npm run test:mutation`
 - `npm run test:e2e`
 - `npm run test:e2e:smoke`
+- `npm run test:functions`
 - `npm run test:probes`
 - `npm run test:probes:catalogo`
 - `npm run version:plan`
@@ -301,3 +302,35 @@ node scripts/run-db-probes.ts --db-url=…   # defaults to the local stack
 ```
 
 `--fixtures` writes rows and **commits them**, unlike the probes themselves. Point it only at a disposable database — the local stack or the one CI replays. Never at the remote project.
+
+---
+
+## 13. Edge Functions: keep the decisions out of `Deno.serve`
+
+`ci.yml` already runs `deno test supabase/functions`, so **any `*.test.ts` under that directory joins CI by existing** — no workflow change needed. What blocks coverage is structural, not infrastructural.
+
+### 13.1 The shell holds no decisions
+
+A function whose logic lives inside the `Deno.serve` callback cannot be tested at all: importing the module starts a server. Split it the way `resend-webhook/` and `process-email-deliveries/` are split:
+
+- `index.ts` — the HTTP shell only: authentication, `Deno.env`, `createClient`, response shaping.
+- a sibling module — everything that decides *what happens*, taking its side effects as parameters.
+
+### 13.2 Inject the boundary, not a summary of it
+
+`process-email-deliveries/process.ts` receives the database and `fetch` itself, not a `sendEmail()` helper. That keeps the parts where the damage actually lives — the `Idempotency-Key` header, the `to` array, the bearer token — inside the assertion surface. A higher-level port would have hidden all three.
+
+Declare the client surface **structurally** (`rpc`, `from().insert()`) instead of importing `SupabaseClient`. The double then implements four methods instead of the whole client, and `deno check` still proves the real client satisfies the interface with no cast — so the double cannot drift away from the real shape unnoticed.
+
+### 13.3 Doubles live in `_shared/email-test-doubles.ts`
+
+`createDatabaseDouble` records every RPC call and insert, and **fails loudly on an RPC the test did not declare** rather than returning a silent `null`. `createResendDouble` records what would have been sent and rejects any URL that is not Resend's endpoint. No production module imports them, so they never reach a deployed bundle.
+
+### 13.4 Local runs need Deno installed
+
+CI provisions it with `denoland/setup-deno`; a workstation does not have it by default.
+
+```bash
+brew install deno
+npm run test:functions
+```

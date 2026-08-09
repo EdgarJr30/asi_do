@@ -18,7 +18,7 @@ Cada tarea se identifica `R{hallazgo}.{n}` y dice **cómo se sabe que está hech
 |---|---|---|---|
 | [R1](#r1--probes-sql-que-nadie-ejecuta) | 0 de 17 probes SQL corren en CI | 🔴 bloqueante | ✅ **17/17 en CI** |
 | [R2](#r2--lo-que-parece-prueba-de-negocio-es-grep-sobre-sql) | Pruebas de negocio = `grep` sobre SQL | 🔴 bloqueante | ☐ deuda |
-| [R3](#r3--pipeline-de-correo-sin-pruebas) | 1.085 LOC de correo, cero tests | 🔴 bloqueante | ☐ abierto |
+| [R3](#r3--pipeline-de-correo-sin-pruebas) | 1.085 LOC de correo, cero tests | 🔴 bloqueante | ◐ **R3.1 y R3.3 ✅** — faltan las 5 reglas |
 | [R4](#r4--pagos-buena-criptografía-ningún-camino-feliz) | Pagos sin camino feliz probado | 🔴 bloqueante | ☐ abierto |
 | [R5](#r5--el-bucle-ats-sin-e2e) | Bucle ATS sin e2e | 🟠 | ☐ abierto |
 | [R6](#r6--las-mejores-specs-nunca-corren) | 1 de 11 specs e2e corre en CI | 🟠 | ☐ abierto |
@@ -73,7 +73,7 @@ conviene no resolver R6 duplicando el atajo del `service_role` contra el remoto.
                                       └── R9.2 (ejercitar RPC críticas)
 
   Pistas independientes, avanzan en paralelo:
-  R3 (deno test + doble de Resend) · R4 (callback aprobado) · R7 · R8 · R9.1 · R10
+  R3 (5 reglas de correo) · R4 (callback aprobado) · R7 · R8 · R9.1 · R10
 ```
 
 ---
@@ -279,7 +279,7 @@ Se hace cuando exista el runner de R1.2 y los fixtures de R1.5, que es lo que pe
 
 | Archivo | LOC | Tests |
 |---|---|---|
-| `process-email-deliveries/index.ts` | 741 | **ninguno** |
+| `process-email-deliveries/` (era `index.ts`, 741) | 741 | ✅ `process.test.ts` — el bucle de entrega |
 | `send-notification/index.ts` | 344 | **ninguno** |
 | `_shared/metrics.ts` | 167 | ✅ `metrics.test.ts` |
 | `_shared/harness-guards.ts` | 91 | ✅ `harness-guards.test.ts` |
@@ -288,14 +288,37 @@ Se hace cuando exista el runner de R1.2 y los fixtures de R1.5, que es lo que pe
 `process-email-deliveries` corre por `pg_cron`, **sin humano en el bucle**, y un correo enviado
 no tiene botón de deshacer.
 
-CI ya ejecuta `deno check supabase/functions`, así que el runtime de Deno está disponible en el
-pipeline: falta el `deno test`.
+**Corrección al informe original:** `ci.yml` ya ejecutaba `deno test supabase/functions`
+(step "Run Edge Function tests"), no solo `deno check`. R3.3 estaba hecho antes de empezar. La
+consecuencia práctica es buena: **cualquier `.test.ts` nuevo bajo `supabase/functions/` entra en
+CI solo**, sin tocar el workflow.
 
 ## Tareas
 
-- [ ] **R3.1 · Doble de Resend + doble de Supabase**
+- [x] **R3.1 · Doble de Resend + doble de Supabase**
   Inyectables, para aseverar *qué se habría enviado* sin enviar nada.
-  *Hecho cuando:* existe el doble y un test lo usa.
+  *Hecho:* `_shared/email-test-doubles.ts` (`createDatabaseDouble`, `createResendDouble`) y
+  4 tests en `process-email-deliveries/process.test.ts` que los usan. 30 tests Deno en verde.
+
+  El obstáculo real no era escribir los dobles: las 741 líneas colgaban de `Deno.serve`, así que
+  **importar el módulo desde un test levantaba un servidor**. Hizo falta partirlo siguiendo el
+  precedente de `resend-webhook/` (`verify.ts` + `verify.test.ts` + shell):
+  · `email-content.ts` — render puro del correo (tema, HTML, texto).
+  · `process.ts` — `processEmailDeliveries(deps)`, con la base de datos y `fetch` como
+    parámetros. Es donde se decide a quién se le envía.
+  · `index.ts` — solo el shell HTTP: autenticación, entorno, `createClient`.
+
+  Dos decisiones que valen por sí solas:
+  · La superficie de la base se declara **estructuralmente** (`EmailDeliveryDatabase`: `rpc` y
+    `from().insert()`), no importando `SupabaseClient`. El doble no tiene que implementar el
+    cliente entero **y** el cliente real se asigna sin cast — verificado con `deno check` —, así
+    que el doble no puede alejarse de la forma real sin que CI lo note.
+  · Se inyecta `fetch`, no un `sendEmail` de alto nivel. Así quedan bajo prueba la cabecera
+    `Idempotency-Key`, el `to` y el `Authorization`, que es exactamente donde vive el daño.
+
+  Verificado que las pruebas pueden fallar: al sustituir `delivery.idempotency_key` por un UUID
+  nuevo en cada intento —la regresión que haría que un reintento duplicase el correo— el camino
+  feliz pasa a FAILED.
 
 - [ ] **R3.2 · Cubrir las cinco reglas que causan daño irreversible**
   Prioridad por consecuencia, no por cobertura:
@@ -305,10 +328,16 @@ pipeline: falta el `deno test`.
   4. Reintento tras fallo sin duplicar.
   5. Estado consistente si Resend responde error.
   *Hecho cuando:* los 5 tienen test y **fallan al invertir la condición**.
+  *Listo para empezar:* el arnés de R3.1 ya está. Nota del camino: la regla 3 necesita test
+  propio con `payload.to` — en el camino feliz el override y `recipient_email` coinciden, así que
+  una regresión en la resolución del destinatario **no** se ve ahí.
+  Falta además refactorizar `send-notification/index.ts` (344 LOC) igual que R3.1, o sus reglas
+  seguirán sin poder ejecutarse.
 
-- [ ] **R3.3 · `deno test` en `ci.yml`**
+- [x] **R3.3 · `deno test` en `ci.yml`**
   Junto al `deno check` que ya existe.
-  *Hecho cuando:* el job ejecuta los tests y falla si uno falla.
+  *Hecho:* ya existía — `ci.yml` step "Run Edge Function tests". El informe original lo dio por
+  ausente; lo que faltaba eran los tests, no el step.
 
 ---
 
@@ -547,4 +576,5 @@ comprobación de accesibilidad automatizada en ninguna capa.
 | 2026-08-09 | R1 fase 1: contrato `PROBE_VERDICT`, runner con manifiesto, 5 probes de catálogo en `db-migrations.yml` | `2212e74` |
 | 2026-08-09 | R1 fase 2: `fixtures.sql` determinista + 6 probes de datos migradas | `c27d4b7` |
 | 2026-08-09 | **R1 cerrado**: 17/17 en CI con fixtures | `3649892` |
-| 2026-08-09 | Primeros dos hallazgos del runner ya en `main`, sobre `email_delivery_events` (`5caf1b1`): política de sesión sin envolver y tabla fuera de la matriz de la Fase D | _(este commit)_ |
+| 2026-08-09 | Primeros dos hallazgos del runner ya en `main`, sobre `email_delivery_events` (`5caf1b1`): política de sesión sin envolver y tabla fuera de la matriz de la Fase D | `e41429a` |
+| 2026-08-09 | **R3.1**: `process-email-deliveries` partido en render / procesador / shell; dobles de Resend y Supabase en `_shared/email-test-doubles.ts`; 4 tests. R3.3 ya estaba hecho | _(este commit)_ |
