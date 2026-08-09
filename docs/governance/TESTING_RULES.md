@@ -153,6 +153,8 @@ The repository must keep these commands meaningful:
 - `npm run test:mutation`
 - `npm run test:e2e`
 - `npm run test:e2e:smoke`
+- `npm run test:probes`
+- `npm run test:probes:catalogo`
 - `npm run version:plan`
 - `npm run verify`
 
@@ -238,3 +240,46 @@ New helpers that wait for a protected surface follow the same shape: catch the t
 2. No `expect.soft` on business invariants, no `try/catch` that downgrades a failure to a warning, and no assertion deleted because it is inconvenient. Diagnosis is added; verification is not removed.
 3. Widening a matcher to make it pass — `/Acceso|Restringido|No puedes/` — is the opposite of this section. Narrow the assertion to the state and widen the *message*.
 4. An unexplained CI failure is recorded per `REGRESSION_RULES.md` R-133 (checklist on `TASK-255`, area `Calidad, CI y observabilidad`), never closed as "it passes locally".
+
+---
+
+## 11. Database probes must announce a machine-readable verdict
+
+Authorization in this product lives in the database, not in the client. The probes under `supabase/tests/` are what verifies it — and until `run-db-probes.ts` existed, none of them ran anywhere. They were executed by hand once, on the day each was written.
+
+### 11.1 The verdict contract
+
+Every probe ends in this exact shape:
+
+```sql
+raise exception 'PROBE_VERDICT status=% fails=% | %',
+  case when v_fail = 0 then 'PASS' else 'FAIL' end, v_fail, v_out;
+```
+
+The `raise exception` stays. It is what rolls the transaction back so no test rows survive in production — it is *not* a failure signal, because a clean pass and a security hole exit with the identical error code. The verdict travels **inside the message**.
+
+Three consequences that are not negotiable:
+
+1. **A probe that emits no `PROBE_VERDICT` is a failure**, reported as `MUDA`. It is indistinguishable from a probe that never ran — including one that crashed on a syntax error before reaching its final `raise`.
+2. **"Fixtures are missing" increments `v_fail`.** A probe that goes green because there was no subject to attack is worse than no probe: `p0_users_guard_probe` reported `BLOQUEADA` on an empty database because `update … where id = null` touches no rows and therefore never raises `insufficient_privilege`.
+3. **Per-block counters must roll up into a single accumulator.** Resetting `v_ok`/`v_fail` between sections, as several probes did, silently discards the earlier section's failures.
+
+Measured risk that is knowingly accepted — like the `storage` TRUNCATE grants that cannot be revoked on a hosted project — is reported as informational and excluded from the accumulator, with the reason written in the probe. A probe permanently in FAIL teaches the team to ignore it.
+
+### 11.2 Registration is mandatory
+
+`scripts/run-db-probes.ts` carries a manifest mapping each probe to a tier:
+
+- `catalogo` — reads only `pg_catalog`, `information_schema` or `has_*_privilege`. Deterministic against a database replayed from migrations, so it runs in `db-migrations.yml` today.
+- `datos` — needs business rows. Excluded from CI until deterministic fixtures exist, because on an empty database these probes are mute rather than green.
+
+A `.sql` file in `supabase/tests/` that is absent from the manifest fails the runner, and so does a manifest entry whose file is gone. This is deliberate: an unregistered probe would be born already outside CI, which is exactly how seventeen of them ended up unexecuted.
+
+### 11.3 Commands
+
+```bash
+npm run test:probes            # every registered probe
+npm run test:probes:catalogo   # the tier CI runs
+node scripts/run-db-probes.ts --filter=fase_d
+node scripts/run-db-probes.ts --db-url=…   # defaults to the local stack
+```

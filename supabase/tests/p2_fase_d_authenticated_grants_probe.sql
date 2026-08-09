@@ -318,7 +318,8 @@ begin
     end loop;
   end loop;
 
-  raise exception E'Probe Fase D (grants de authenticated) — OK: %, FALLOS: % %',
-    v_ok, v_fail, coalesce(nullif(v_out, ''), E'\n  (sin desviaciones)');
+  raise exception E'PROBE_VERDICT status=% fails=% | OK: % %',
+    case when v_fail = 0 then 'PASS' else 'FAIL' end, v_fail,
+    v_ok, coalesce(nullif(v_out, ''), E'\n  (sin desviaciones)');
 end;
 $probe$;

@@ -133,7 +133,8 @@ begin
     v_out := v_out || format(E'\n  C4: %s funciones con ACL nula (PUBLIC ejecuta por omisión)', v_n);
   end if;
 
-  raise exception E'Probe de grants de plataforma — OK: %, FALLOS: % %',
-    v_ok, v_fail, coalesce(nullif(v_out, ''), E'\n  (sin desviaciones)');
+  raise exception E'PROBE_VERDICT status=% fails=% | OK: % %',
+    case when v_fail = 0 then 'PASS' else 'FAIL' end, v_fail,
+    v_ok, coalesce(nullif(v_out, ''), E'\n  (sin desviaciones)');
 end;
 $probe$;

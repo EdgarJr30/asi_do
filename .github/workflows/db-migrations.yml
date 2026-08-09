@@ -67,6 +67,25 @@ jobs:
         if: failure()
         run: docker ps -a && docker logs supabase_db_asi_do --tail 120 || true
 
+      # El runner no necesita dependencias del proyecto —solo módulos nativos de
+      # Node—, así que no hace falta `npm ci`.
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      # Las probes de `supabase/tests/` comprueban la autorización, que en este
+      # producto vive entera en la base de datos. Se escribieron, se corrieron a
+      # mano una vez y nadie volvió a ejecutarlas: entre aquel día y hoy, nada
+      # comprobaba que los grants y las políticas siguieran donde se dejaron.
+      #
+      # Solo corre el tier `catalogo`: son las deterministas sobre una base
+      # recién reproducida. Las de datos necesitan filas de negocio y sobre una
+      # base vacía saldrían verdes por ausencia de sujeto, que es peor que no
+      # correrlas. Entran cuando existan los fixtures deterministas.
+      - name: Probes de autorización sobre el esquema reproducido
+        run: npm run test:probes:catalogo
+
       # Detecta RPC que se despliegan bien pero fallan en tiempo de ejecución
       # (enums mal casteados, referencias ambiguas). Ya encontró cuatro reales.
       - name: Lint del esquema resultante

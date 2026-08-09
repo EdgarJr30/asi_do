@@ -193,6 +193,40 @@ Sin estos tres, el job falla al enlazar. El de replay no necesita ninguno: corre
 
 > Los jobs programados se desactivan solos tras 60 días sin actividad en el repositorio. Si el repo queda inactivo, hay que reactivarlos a mano desde la pestaña *Actions*.
 
+## Las probes de `supabase/tests/`
+
+La autorización de este producto vive entera en la base de datos, así que las probes son lo único que la comprueba. Hasta que existió `scripts/run-db-probes.ts` **no las ejecutaba nadie**: se corrieron a mano el día que se escribieron y nada volvió a mirarlas.
+
+```bash
+npm run test:probes             # todas las registradas
+npm run test:probes:catalogo    # el tier que corre en CI
+node scripts/run-db-probes.ts --filter=fase_d
+```
+
+Por omisión apuntan a la base local (`supabase start`). Para ejecutarlas contra el remoto se pasa `--db-url` o se sigue usando `supabase db query --linked --file <archivo>`, que sigue siendo la vía cuando lo que se quiere es leer el detalle a ojo.
+
+### Escribir una probe nueva
+
+Dos requisitos, y el runner falla si falta cualquiera de los dos.
+
+**1. Termina en el contrato de veredicto.** El `raise exception` final se mantiene —es lo que revierte la transacción y evita filas de prueba en producción—, pero el veredicto viaja dentro del mensaje:
+
+```sql
+raise exception 'PROBE_VERDICT status=% fails=% | %',
+  case when v_fail = 0 then 'PASS' else 'FAIL' end, v_fail, v_out;
+```
+
+Sin esto la probe sale como `MUDA`, que cuenta como fallo: una probe que no emite veredicto es indistinguible de una que no se ejecutó. Y si un bloque acumula en un contador propio, hay que sumarlo al total — reiniciar `v_fail` entre bloques descarta en silencio los fallos del anterior.
+
+**2. Queda declarada en el manifiesto** de `scripts/run-db-probes.ts`, con su tier:
+
+- `catalogo` — solo lee `pg_catalog`, `information_schema` o `has_*_privilege`. Determinista sobre la base reproducida, así que entra en `db-migrations.yml`.
+- `datos` — necesita filas de negocio. Fuera de CI hasta que existan fixtures deterministas, porque sobre base vacía no salen verdes: salen **mudas de sujeto**. `p0_users_guard_probe` reportaba `BLOQUEADA` sin datos, porque `update … where id = null` no afecta a ninguna fila y por tanto nunca lanza `insufficient_privilege`.
+
+Un `.sql` sin declarar rompe el runner a propósito: es lo que evita que la siguiente probe nazca ya fuera de CI.
+
+El seguimiento de qué falta está en `docs/checklists/COBERTURA_CRITICA_EN_CI.md`.
+
 ## Current baseline note
 
 The connected Supabase project already contained the identity/RBAC baseline migrations:

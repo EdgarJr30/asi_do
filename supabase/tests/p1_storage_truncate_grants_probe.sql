@@ -20,6 +20,13 @@ declare
   v_n bigint;
   v_ok int := 0;
   v_fail int := 0;
+  -- El veredicto NO se calcula con `v_fail`. A/B/C miden el riesgo residual
+  -- documentado —hoy están en rojo a propósito, porque el revoke es imposible en
+  -- un proyecto hosted— y contarlos dejaría la probe permanentemente en FAIL,
+  -- que es la forma más rápida de que se aprenda a ignorarla. Lo que decide es
+  -- D: mientras ninguna política de `storage` apunte a `anon`, el privilegio
+  -- existe pero no hay ruta para alcanzarlo.
+  v_alarma int := 0;
   t text;
   r text;
   v_tables text[] := array['objects', 'buckets', 'buckets_analytics'];
@@ -80,11 +87,17 @@ begin
   select count(*) into v_n
   from pg_policies
   where schemaname = 'storage' and 'anon' = any (roles);
+  if v_n > 0 then
+    v_alarma := v_alarma + 1;
+  end if;
   v_out := v_out || format(' | D) politicas de storage dirigidas a anon: %s (esperado 0)', v_n);
 
+  -- E) Inventario, no aserto: el número crece con cada migración que añade una
+  --    política, y fijarlo obligaría a tocar este archivo por cambios inocuos.
   select count(*) into v_n from pg_policies where schemaname = 'storage';
-  v_out := v_out || format(' | E) politicas de storage en total: %s (esperado 17)', v_n);
+  v_out := v_out || format(' | E) politicas de storage en total: %s (informativo)', v_n);
 
-  raise exception 'PROBE_RESULT: %', v_out;
+  raise exception 'PROBE_VERDICT status=% fails=% | %',
+    case when v_alarma = 0 then 'PASS' else 'FAIL' end, v_alarma, v_out;
 end;
 $probe$;

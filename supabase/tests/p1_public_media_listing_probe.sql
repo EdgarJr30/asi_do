@@ -90,6 +90,7 @@ begin
     v_out := v_out || format(' | E) policies de SELECT con anon en storage.objects: %s (esperado 0)', v_n);
   end if;
 
-  raise exception 'PROBE_RESULT: %/% asertos en verde | %', v_ok, v_total, v_out;
+  raise exception 'PROBE_VERDICT status=% fails=% | %/% asertos en verde | %',
+    case when v_ok = v_total then 'PASS' else 'FAIL' end, v_total - v_ok, v_ok, v_total, v_out;
 end;
 $probe$;

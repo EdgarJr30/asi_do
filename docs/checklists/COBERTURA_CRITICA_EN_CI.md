@@ -16,7 +16,7 @@ Cada tarea se identifica `R{hallazgo}.{n}` y dice **cómo se sabe que está hech
 
 | Id | Hallazgo | Gravedad | Estado |
 |---|---|---|---|
-| [R1](#r1--probes-sql-que-nadie-ejecuta) | 0 de 17 probes SQL corren en CI | 🔴 bloqueante | ☐ abierto |
+| [R1](#r1--probes-sql-que-nadie-ejecuta) | 0 de 17 probes SQL corren en CI | 🔴 bloqueante | ◧ Fase 1 hecha — 5/17 en CI |
 | [R2](#r2--lo-que-parece-prueba-de-negocio-es-grep-sobre-sql) | Pruebas de negocio = `grep` sobre SQL | 🔴 bloqueante | ☐ deuda |
 | [R3](#r3--pipeline-de-correo-sin-pruebas) | 1.085 LOC de correo, cero tests | 🔴 bloqueante | ☐ abierto |
 | [R4](#r4--pagos-buena-criptografía-ningún-camino-feliz) | Pagos sin camino feliz probado | 🔴 bloqueante | ☐ abierto |
@@ -124,29 +124,38 @@ ver. Una probe que pasa porque no hay datos es peor que ninguna probe.
 Las deterministas sobre base vacía. Cubren la clase de bug de la Fase D (grants a
 `authenticated` que se cuelan sin querer). Llegan a `main` sin esperar a los fixtures.
 
-- [ ] **R1.1 · Definir el contrato de veredicto**
+- [x] **R1.1 · Definir el contrato de veredicto**
   Cada probe acumula `v_fail int := 0` y termina en:
   ```sql
   raise exception 'PROBE_VERDICT status=% fails=% | %',
     case when v_fail = 0 then 'PASS' else 'FAIL' end, v_fail, v_out;
   ```
   Los casos "faltan fixtures" incrementan `v_fail` — nunca salen PASS.
-  *Hecho cuando:* el contrato está en este documento y en `TESTING_RULES.md`.
+  *Hecho:* contrato en `TESTING_RULES.md` §11.1 y en `supabase/README.md`.
 
-- [ ] **R1.2 · Runner `scripts/run-db-probes.ts`**
-  Recorre `supabase/tests/*.sql`, ejecuta cada uno, extrae `status=`, imprime tabla y resumen.
+- [x] **R1.2 · Runner `scripts/run-db-probes.ts`**
+  Recorre el manifiesto, ejecuta cada probe, extrae `status=`, imprime tabla y resumen.
   Sale 1 si alguna es FAIL **o si alguna no emite `PROBE_VERDICT`** (probe muda = fallo).
-  Acepta `--filter`.
-  *Hecho cuando:* `npm run test:probes` corre en local y falla si se rompe una probe a propósito.
+  Acepta `--tier`, `--filter` y `--db-url`.
+  *Hecho:* `npm run test:probes` / `test:probes:catalogo`. Verificado con regresión inyectada
+  (`grant select on audit_logs to anon` + `grant truncate on users to authenticated`): 3 de las
+  5 probes pasaron a FAIL nombrando la tabla y el privilegio; al revocar, verde otra vez.
 
-- [ ] **R1.3 · Migrar las 5 probes de catálogo al contrato**
+- [x] **R1.3 · Migrar las 5 probes de catálogo al contrato**
   `p1_anon_table_grants`, `p1_public_media_listing`, `p1_storage_truncate_grants`,
   `p2_fase_d_authenticated_grants`, `p2_platform_grants`.
-  *Hecho cuando:* las 5 salen PASS y una regresión inyectada a mano sale FAIL.
+  *Hecho:* las 5 en PASS sobre base reproducida desde cero, ~250 ms en total.
+  Dos correcciones que hicieron falta y que valen por sí solas:
+  · `p1_anon_table_grants` reiniciaba `v_ok`/`v_fail` entre bloques, así que los fallos del
+    bloque A se perdían; y los bloques C, D y E reportaban `PERMITIDO` sin contarlo. Ahora
+    todo suma en un acumulador único.
+  · `p1_storage_truncate_grants` calcula el veredicto **solo con D**. A/B/C miden el riesgo
+    residual documentado —el revoke es imposible en un proyecto hosted— y contarlos dejaría la
+    probe en FAIL permanente, que es la forma más rápida de que se aprenda a ignorarla.
 
-- [ ] **R1.4 · Enchufar el runner en `db-migrations.yml`**
-  Step tras "Aplicar todas las migraciones desde cero", antes del lint.
-  *Hecho cuando:* el job pasa en verde en `main` y el summary lista las probes ejecutadas.
+- [x] **R1.4 · Enchufar el runner en `db-migrations.yml`**
+  Step tras "Aplicar todas las migraciones desde cero", antes del lint. Corre `--tier=catalogo`.
+  *Hecho:* el step existe y el summary lista probe, tier, veredicto y tiempo.
 
 ### Fase 2 — Fixtures deterministas *(desbloquea R5, R6, R9.2)*
 
@@ -163,11 +172,14 @@ Las deterministas sobre base vacía. Cubren la clase de bug de la Fase D (grants
 ### Fase 3 — Cierre
 
 - [ ] **R1.7 · Migrar las 12 probes de datos al contrato** (ver inventario)
-- [ ] **R1.8 · Guardia anti-probe-huérfana**
-  Test que falla si aparece un `.sql` en `supabase/tests/` que el runner no reconozca. Evita
-  que la próxima probe nazca ya sin ejecutar — que es exactamente cómo llegamos aquí.
-- [ ] **R1.9 · Documentar en `TESTING_RULES.md` y `supabase/README.md`**
-  Convención nueva: probe nueva → contrato de veredicto → corre sola en CI.
+- [x] **R1.8 · Guardia anti-probe-huérfana**
+  El manifiesto de `run-db-probes.ts` es obligatorio y se verifica en los dos sentidos: un
+  `.sql` sin declarar rompe el runner, y una entrada cuyo archivo ya no existe también.
+  *Hecho:* verificado creando un `zz_huerfana_probe.sql` — el runner sale 1 antes de conectar
+  a la base, con el mensaje que dice qué declarar.
+- [x] **R1.9 · Documentar en `TESTING_RULES.md` y `supabase/README.md`**
+  `TESTING_RULES.md` §11 (contrato, registro obligatorio, comandos) y `supabase/README.md`
+  → "Las probes de `supabase/tests/`".
 
 ## Inventario de las 17 probes
 
@@ -176,11 +188,11 @@ Las deterministas sobre base vacía. Cubren la clase de bug de la Fase D (grants
 
 | # | Probe | Tipo | Contrato | En CI |
 |---|---|---|---|---|
-| 1 | `p1_anon_table_grants` | catálogo | ☐ | ☐ |
-| 2 | `p1_public_media_listing` | catálogo | ☐ | ☐ |
-| 3 | `p1_storage_truncate_grants` | catálogo | ☐ | ☐ |
-| 4 | `p2_fase_d_authenticated_grants` | catálogo | ☐ | ☐ |
-| 5 | `p2_platform_grants` | catálogo | ☐ | ☐ |
+| 1 | `p1_anon_table_grants` | catálogo | ✅ | ✅ |
+| 2 | `p1_public_media_listing` | catálogo | ✅ | ✅ |
+| 3 | `p1_storage_truncate_grants` | catálogo | ✅ | ✅ |
+| 4 | `p2_fase_d_authenticated_grants` | catálogo | ✅ | ✅ |
+| 5 | `p2_platform_grants` | catálogo | ✅ | ✅ |
 | 6 | `p0_anon_surface` | datos | ☐ | ☐ |
 | 7 | `p0_azul_settlement` | datos | ☐ | ☐ |
 | 8 | `p0_email_claim` | datos | ☐ | ☐ |
