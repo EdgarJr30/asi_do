@@ -494,7 +494,7 @@ Do not let a test carry its point on decorative copy, and do not leave a failure
 Do not let route-level and render-level stale chunk failures drift into separate screens, unaccented Spanish, technical browser language, or a blank page. Both paths must reuse the shared version-update fallback with its calm SVG illustration, the exact recovery context, and one clear `Recargar` action that loads the latest frontend version.
 
 ### R-141 — Resend sending credentials keep one explicit naming contract
-Do not reintroduce `RESEND_API_KEY` or `EMAIL_FROM_ADDRESS` as aliases or fallbacks. The email processor must read only `RESEND_API_KEY_DEV` and `EMAIL_FROM_ADDRESS_DEV`, while `RESEND_WEBHOOK_SECRET` remains separate and mandatory for signed delivery-event verification. None of these values may use a `VITE_*` prefix or be exposed to the browser.
+Do not reintroduce `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS`, or `RESEND_WEBHOOK_SECRET` as aliases or fallbacks. The email pipeline must read only `RESEND_API_KEY_DEV`, `EMAIL_FROM_ADDRESS_DEV`, and the separate `RESEND_WEBHOOK_SECRET_DEV` required for signed delivery-event verification. None of these values may use a `VITE_*` prefix or be exposed to the browser.
 
 ---
 

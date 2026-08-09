@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.99.1'
 
+import { resolveResendWebhookSecret } from '../_shared/resend-config.ts'
 import { parseResendEmailEvent } from '../_shared/resend-webhook.ts'
 import { resolveServiceKey } from '../_shared/supabase-keys.ts'
 import { verifyResendWebhook } from './verify.ts'
@@ -24,7 +25,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Method not allowed.' }, 405)
   }
 
-  const webhookSecret = Deno.env.get('RESEND_WEBHOOK_SECRET') ?? ''
+  const webhookSecret = resolveResendWebhookSecret((name) => Deno.env.get(name))
   if (!webhookSecret) {
     return jsonResponse({ error: 'Webhook configuration is unavailable.' }, 503)
   }

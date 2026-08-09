@@ -6,3 +6,7 @@ export function resolveResendConfig(getEnvironmentVariable: GetEnvironmentVariab
     fromAddress: getEnvironmentVariable('EMAIL_FROM_ADDRESS_DEV') ?? ''
   }
 }
+
+export function resolveResendWebhookSecret(getEnvironmentVariable: GetEnvironmentVariable) {
+  return getEnvironmentVariable('RESEND_WEBHOOK_SECRET_DEV') ?? ''
+}

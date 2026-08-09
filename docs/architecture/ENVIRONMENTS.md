@@ -88,9 +88,9 @@ Las URLs por entorno ya están separadas en `.env.development` y `.env.productio
 
 ### 4.3 Edge Functions (secretos del proyecto Supabase)
 
-`ASI_SUPABASE_PUBLISHABLE_KEY` · `ASI_SUPABASE_SECRET_KEY` · `APP_URL` · `EMAIL_FROM_ADDRESS_DEV` · `RESEND_API_KEY_DEV` · `RESEND_WEBHOOK_SECRET` · `EMAIL_PROCESSOR_SECRET` · `WEB_PUSH_VAPID_PUBLIC_KEY` · `WEB_PUSH_VAPID_PRIVATE_KEY` · `WEB_PUSH_CONTACT_EMAIL` · `STRESS_HARNESS_ENABLED` · `HARNESS_ENV` · `HARNESS_PRODUCTION_TARGETS`
+`ASI_SUPABASE_PUBLISHABLE_KEY` · `ASI_SUPABASE_SECRET_KEY` · `APP_URL` · `EMAIL_FROM_ADDRESS_DEV` · `RESEND_API_KEY_DEV` · `RESEND_WEBHOOK_SECRET_DEV` · `EMAIL_PROCESSOR_SECRET` · `WEB_PUSH_VAPID_PUBLIC_KEY` · `WEB_PUSH_VAPID_PRIVATE_KEY` · `WEB_PUSH_CONTACT_EMAIL` · `STRESS_HARNESS_ENABLED` · `HARNESS_ENV` · `HARNESS_PRODUCTION_TARGETS`
 
-`RESEND_WEBHOOK_SECRET` es exclusivo de cada endpoint/entorno. La Edge Function `resend-webhook` valida el cuerpo crudo y los headers `svix-*`; nunca debe reutilizarse como llave de envío ni exponerse al frontend. El procesador usa exclusivamente `RESEND_API_KEY_DEV` y `EMAIL_FROM_ADDRESS_DEV` en todos los entornos; no se mantienen alias antiguos sin sufijo.
+`RESEND_WEBHOOK_SECRET_DEV` es exclusivo de cada endpoint/entorno. La Edge Function `resend-webhook` valida el cuerpo crudo y los headers `svix-*`; nunca debe reutilizarse como llave de envío ni exponerse al frontend. El procesador y el webhook usan exclusivamente los tres nombres `_DEV` en todos los entornos; no se mantienen alias antiguos sin sufijo.
 
 **Las claves VAPID deben ser distintas por entorno.** Compartirlas hace que una suscripción push de staging reciba notificaciones de producción.
 

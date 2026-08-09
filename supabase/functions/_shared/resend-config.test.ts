@@ -1,6 +1,6 @@
 import { assertEquals } from 'jsr:@std/assert@1'
 
-import { resolveResendConfig } from './resend-config.ts'
+import { resolveResendConfig, resolveResendWebhookSecret } from './resend-config.ts'
 
 Deno.test('usa exclusivamente las variables DEV acordadas para Resend', () => {
   const values: Record<string, string> = {
@@ -26,4 +26,19 @@ Deno.test('no acepta los nombres canónicos antiguos como fallback', () => {
     apiKey: '',
     fromAddress: ''
   })
+})
+
+Deno.test('el webhook usa exclusivamente RESEND_WEBHOOK_SECRET_DEV', () => {
+  const values: Record<string, string> = {
+    RESEND_WEBHOOK_SECRET_DEV: 'whsec_dev',
+    RESEND_WEBHOOK_SECRET: 'whsec_obsoleto'
+  }
+
+  assertEquals(resolveResendWebhookSecret((name) => values[name]), 'whsec_dev')
+  assertEquals(
+    resolveResendWebhookSecret((name) =>
+      name === 'RESEND_WEBHOOK_SECRET' ? values.RESEND_WEBHOOK_SECRET : undefined
+    ),
+    ''
+  )
 })
