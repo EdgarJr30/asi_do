@@ -4,11 +4,17 @@ Cómo se separan desarrollo, staging y producción, y qué hay que cambiar el d�
 
 Este documento está escrito **antes** de que exista staging, a propósito: su objetivo es que el día de la activación no haya que descubrir nada, solo ejecutar el runbook de la sección 6.
 
-## 1. Estado actual (2026-08-02)
+## 1. Estado actual (2026-08-09)
 
-**Hay un solo proyecto Supabase.** Hace de entorno de desarrollo y, a la vez, es el que sirve el sitio publicado en Netlify. No existe staging.
+**Hay un solo proyecto Supabase y es exclusivamente desarrollo.** Su frontend público se sirve desde
+`https://dev.asidominicana.do` en Hostinger. Todavía no existe el proyecto Supabase de producción.
 
-Es una decisión consciente mientras el producto está en desarrollo: montar staging ahora añade fricción sin proteger nada, porque todavía no hay usuarios reales que puedan verse afectados por un error. **Deja de ser válida en cuanto entre el primer usuario real o el primer pago real.**
+Aunque el producto lo llama desarrollo, el build público usa `VITE_DEPLOY_ENV=staging`: esa clase significa
+«desplegado pero no productivo» y obliga a usar HTTPS y un origen distinto de producción. `development` se
+reserva para `npm run dev`, donde Auth vuelve al origen real del navegador.
+
+Es una decisión consciente mientras el producto está en desarrollo. El proyecto de producción se crea antes
+de admitir usuarios o pagos reales y tendrá base, Auth, SMTP y secretos propios.
 
 Consecuencias que hay que tener presentes mientras dure:
 
@@ -20,11 +26,12 @@ Consecuencias que hay que tener presentes mientras dure:
 
 | Entorno | Supabase | Frontend | AZUL | Datos |
 |---|---|---|---|---|
-| **Development** | proyecto `dev` (el actual) | local (`npm run dev`) | merchant de pruebas | sintéticos, desechables |
-| **Staging** | proyecto `staging` | Netlify branch deploy | merchant de pruebas | sintéticos o anonimizados |
-| **Production** | proyecto `prod` | Netlify production | **merchant real** | reales |
+| **Development** | proyecto `dev` (el actual) | local y `dev.asidominicana.do` | merchant de pruebas | sintéticos, desechables |
+| **Staging** | opcional en el futuro | branch deploy | merchant de pruebas | sintéticos o anonimizados |
+| **Production** | proyecto `prod` | `asidominicana.do` en Hostinger | **merchant real** | reales |
 
-Tres proyectos Supabase distintos. La alternativa de pago es Supabase Branching (ramas efímeras integradas con Git), que evita mantener un proyecto staging permanente; si se contrata, sustituye a la fila de staging sin cambiar el resto del documento.
+Desarrollo y producción usan obligatoriamente proyectos Supabase distintos. Staging es opcional; si se
+activa, tendrá un tercer proyecto o Supabase Branching con datos sintéticos, sin compartir secretos.
 
 ## 3. Flujo de promoción
 
@@ -62,7 +69,7 @@ Todo lo que es específico de entorno. Esta es la lista que hay que recorrer al 
 | Elemento | Dónde vive | Nota |
 |---|---|---|
 | `project_id` | `supabase/config.toml` | Uno por entorno |
-| `site_url`, `additional_redirect_urls` | `supabase/config.toml` (`[auth]`) | Deben apuntar al dominio del entorno o el login rebota |
+| `site_url`, `additional_redirect_urls` | `supabase/config.toml` (`[auth]`) | Hoy describen solo el proyecto dev; producción tendrá configuración aislada |
 | Llave publicable (`sb_publishable_…`) | Netlify, `.env.local`, AZUL, Edge Functions | Pública por diseño |
 | Llave secreta (`sb_secret_…`) | Solo servidor: AZUL y Edge Functions | Omite RLS. Nunca en el browser |
 

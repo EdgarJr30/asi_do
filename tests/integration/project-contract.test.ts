@@ -86,6 +86,25 @@ describe('project contract', () => {
     }
   })
 
+  it('keeps the linked development Auth project isolated from production origins', () => {
+    const supabaseConfig = readFileSync(resolve(repoRoot, 'supabase/config.toml'), 'utf8')
+    const developmentOrigin = 'https://dev.asidominicana.do'
+
+    expect(supabaseConfig).toContain(`site_url = "${developmentOrigin}"`)
+
+    for (const path of [
+      '/auth/confirm',
+      '/auth/sign-in',
+      '/auth/reset-password',
+      '/candidate/profile'
+    ]) {
+      expect(supabaseConfig).toContain(`"${developmentOrigin}${path}"`)
+    }
+
+    expect(supabaseConfig).not.toContain('"https://asidominicana.do/')
+    expect(supabaseConfig).not.toContain('"https://asi-do.netlify.app/')
+  })
+
   it('keeps deploy endpoints out of committed mode files', () => {
     const modeFiles = ['.env.development', '.env.staging', '.env.production']
 

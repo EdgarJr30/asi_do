@@ -82,7 +82,7 @@ contraseña SMTP de Resend.
 SUPABASE_ACCESS_TOKEN=... \
 SUPABASE_PROJECT_REF=<ref-destino> \
 AUTH_DEPLOY_ENV=development \
-EXPECTED_AUTH_SITE_URL=http://localhost:5173 \
+EXPECTED_AUTH_SITE_URL=https://dev.asidominicana.do \
 PRODUCTION_SUPABASE_PROJECT_REF=<ref-produccion> \
 PRODUCTION_AUTH_SITE_URL=https://asidominicana.do \
 npx tsx scripts/sync-auth-email-template.ts --dry-run
@@ -95,6 +95,18 @@ Para producción se usa exactamente el mismo comando con el ref de producción,
 secreto del entorno de CI; los refs y URLs, como variables separadas de cada environment protegido. El test
 de contrato en `tests/integration/project-contract.test.ts` falla si cualquier plantilla vuelve a incluir
 un `href` o `src` HTTP absoluto, y el test unitario cubre el bloqueo cruzado dev/prod.
+
+Mientras producción todavía no existe, `supabase/config.toml` describe exclusivamente el proyecto de
+desarrollo enlazado (`jgmojkzthfogynqixkob`). Después de revisar el diff y commitearlo, su configuración se
+aplica con:
+
+```bash
+npx supabase config push --project-ref jgmojkzthfogynqixkob --yes
+```
+
+Ese comando publica Auth y sus plantillas; `db push` no participa. Cuando exista producción, se usará el
+sincronizador protegido de arriba y credenciales separadas, sin convertir este archivo en una allowlist
+compartida.
 
 ### Verificar sin esperar un correo
 

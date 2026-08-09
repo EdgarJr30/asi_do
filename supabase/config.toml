@@ -24,24 +24,20 @@ enabled = false
 
 [auth]
 enabled = true
-site_url = "https://asidominicana.do"
+site_url = "https://dev.asidominicana.do"
 # `redirectTo` solo se respeta si coincide con esta lista. Los callbacks locales
-# son exactos (sin wildcard) para que registro y recuperacion funcionen durante
-# desarrollo; el cliente desplegado no puede emitirlos porque su build rechaza
-# URLs locales. Netlify sigue como vuelta atras temporal de Hostinger.
+# son exactos (sin wildcard) para que registro y recuperacion funcionen desde la
+# computadora del desarrollador. Este config pertenece al proyecto Supabase de
+# desarrollo y no admite ningun origen de produccion.
 additional_redirect_urls = [
   "http://localhost:5173/auth/confirm",
   "http://localhost:5173/auth/reset-password",
   "http://127.0.0.1:5173/auth/confirm",
   "http://127.0.0.1:5173/auth/reset-password",
-  "https://asidominicana.do/auth/confirm",
-  "https://asidominicana.do/auth/sign-in",
-  "https://asidominicana.do/auth/reset-password",
-  "https://asidominicana.do/candidate/profile",
-  "https://asi-do.netlify.app/auth/confirm",
-  "https://asi-do.netlify.app/auth/sign-in",
-  "https://asi-do.netlify.app/auth/reset-password",
-  "https://asi-do.netlify.app/candidate/profile"
+  "https://dev.asidominicana.do/auth/confirm",
+  "https://dev.asidominicana.do/auth/sign-in",
+  "https://dev.asidominicana.do/auth/reset-password",
+  "https://dev.asidominicana.do/candidate/profile"
 ]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
