@@ -62,6 +62,18 @@ const TYPE_LABEL: Record<string, string> = {
   'membership.activated': 'Membresía activada'
 }
 
+const PROVIDER_EVENT_LABEL: Record<string, string> = {
+  'email.sent': 'Aceptado por Resend',
+  'email.delivered': 'Entregado al servidor',
+  'email.delivery_delayed': 'Entrega retrasada',
+  'email.failed': 'Envío fallido',
+  'email.suppressed': 'Suprimido',
+  'email.bounced': 'Rebotado',
+  'email.complained': 'Marcado como spam',
+  'email.opened': 'Abierto',
+  'email.clicked': 'Enlace abierto'
+}
+
 const FORCE_OPTIONS: { value: EmailDeliveryStatus; label: string }[] = [
   { value: 'pending', label: 'En cola' },
   { value: 'processing', label: 'Enviando (colgado)' },
@@ -78,6 +90,11 @@ function statusMeta(status: EmailDeliveryStatus) {
 function typeLabel(type: string | undefined) {
   if (!type) return '—'
   return TYPE_LABEL[type] ?? type
+}
+
+function providerEventLabel(type: string | null | undefined) {
+  if (!type) return 'Sin confirmación del proveedor'
+  return PROVIDER_EVENT_LABEL[type] ?? type
 }
 
 /** Destinatario mostrado: override de prueba (payload.to) o el email del usuario. */
@@ -283,6 +300,11 @@ function DeliveryTable({
                 <tr key={row.id} className="border-b border-(--app-border)/60 transition-colors hover:bg-(--app-surface-muted)/60">
                   <td className="px-3 py-2.5">
                     <Badge variant={meta.variant}>{meta.label}</Badge>
+                    {row.latest_provider_event ? (
+                      <span className="mt-1 block text-xs text-(--app-text-subtle)">
+                        {providerEventLabel(row.latest_provider_event)}
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-3 py-2.5 font-medium text-(--app-text)">{recipientOf(row)}</td>
                   <td className="px-3 py-2.5 max-w-60 truncate text-(--app-text-muted)">
@@ -517,6 +539,9 @@ function DetailModal({
 
   const meta = statusMeta(log.delivery_status)
   const errorPayload = log.delivery_status === 'failed' ? log.response_payload : null
+  const providerEvents = [...(log.events ?? [])].sort(
+    (left, right) => Date.parse(right.event_created_at) - Date.parse(left.event_created_at)
+  )
 
   const timeline = [
     { label: 'Creado', at: log.created_at },
@@ -540,6 +565,7 @@ function DetailModal({
             <Info label="Asunto" value={log.notification?.title ?? '—'} />
             <Info label="Tipo" value={typeLabel(log.notification?.type)} />
             <Info label="ID del proveedor" value={log.provider_message_id ?? '—'} />
+            <Info label="Último evento" value={providerEventLabel(log.latest_provider_event)} />
             <Info label="Intentos" value={String(log.attempt_count)} />
           </div>
 
@@ -565,6 +591,32 @@ function DetailModal({
               </ul>
             </div>
           ) : null}
+
+          <div className="rounded-card border border-(--app-border) bg-(--app-surface-elevated) p-4">
+            <p className="mb-2 text-[0.68rem] uppercase tracking-[0.16em] text-(--app-text-subtle)">
+              Eventos reales de Resend
+            </p>
+            {providerEvents.length === 0 ? (
+              <p className="text-sm text-(--app-text-muted)">Aún no se ha recibido confirmación por webhook.</p>
+            ) : (
+              <ul className="space-y-2">
+                {providerEvents.map((event) => (
+                  <li key={event.id} className="rounded-control bg-(--app-surface-muted) px-3 py-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <span className="font-medium text-(--app-text)">{providerEventLabel(event.event_type)}</span>
+                      <span className="text-(--app-text-muted)">{formatDate(event.event_created_at)}</span>
+                    </div>
+                    <details className="mt-1 text-xs text-(--app-text-muted)">
+                      <summary className="cursor-pointer select-none">Ver datos del evento</summary>
+                      <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap wrap-break-word font-mono">
+                        {JSON.stringify(event.payload, null, 2)}
+                      </pre>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           {log.notification?.body ? (
             <div>

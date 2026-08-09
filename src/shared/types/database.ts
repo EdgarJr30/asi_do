@@ -1218,6 +1218,47 @@ export type Database = {
           },
         ]
       }
+      email_delivery_events: {
+        Row: {
+          created_at: string
+          delivery_id: string
+          event_created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          provider_event_id: string
+          provider_message_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_id: string
+          event_created_at: string
+          event_type: string
+          id?: string
+          payload?: Json
+          provider_event_id: string
+          provider_message_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_id?: string
+          event_created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          provider_event_id?: string
+          provider_message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_delivery_events_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "notification_deliveries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
           code: string
@@ -2040,6 +2081,8 @@ export type Database = {
           idempotency_key: string
           is_test: boolean
           last_attempt_at: string | null
+          latest_provider_event: string | null
+          latest_provider_event_at: string | null
           notification_id: string
           provider_message_id: string | null
           provider_name: string
@@ -2061,6 +2104,8 @@ export type Database = {
           idempotency_key?: string
           is_test?: boolean
           last_attempt_at?: string | null
+          latest_provider_event?: string | null
+          latest_provider_event_at?: string | null
           notification_id: string
           provider_message_id?: string | null
           provider_name?: string
@@ -2082,6 +2127,8 @@ export type Database = {
           idempotency_key?: string
           is_test?: boolean
           last_attempt_at?: string | null
+          latest_provider_event?: string | null
+          latest_provider_event_at?: string | null
           notification_id?: string
           provider_message_id?: string | null
           provider_name?: string
@@ -4273,6 +4320,16 @@ export type Database = {
           subscription_locale: string
         }[]
       }
+      record_resend_webhook_event: {
+        Args: {
+          p_event_created_at: string
+          p_event_type: string
+          p_payload?: Json
+          p_provider_event_id: string
+          p_provider_message_id: string
+        }
+        Returns: Json
+      }
       register_push_subscription: {
         Args: {
           p_auth_key: string
@@ -4687,6 +4744,8 @@ export type Database = {
           idempotency_key: string
           is_test: boolean
           last_attempt_at: string | null
+          latest_provider_event: string | null
+          latest_provider_event_at: string | null
           notification_id: string
           provider_message_id: string | null
           provider_name: string

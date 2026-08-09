@@ -262,6 +262,7 @@ Technical log line for provider attempts, failures, and retries.
 | push_subscriptions | id, user_id, tenant_id nullable, endpoint, p256dh_key, auth_key, is_active, last_seen_at |
 | notification_deliveries | id, notification_id nullable, event_id nullable, recipient_user_id, channel, provider nullable, delivery_status, attempt_count, response_payload |
 | notification_delivery_logs | id, delivery_id, log_level, message, metadata |
+| email_delivery_events | id, delivery_id, provider_event_id unique, provider_message_id, event_type, event_created_at, payload |
 | moderation_cases | id, entity_type, entity_id, tenant_id nullable, status, severity, reason, opened_by_user_id, assigned_to_user_id nullable |
 | moderation_actions | id, moderation_case_id, action_type, actor_user_id, note nullable, payload, created_at |
 
@@ -269,7 +270,7 @@ Launch-readiness notes:
 - `memberships.status = invited` is a first-class MVP state used by employer invitations and invite revocation.
 - `job_alerts.criteria_json` stores the current MVP discovery filters: query, workplace type, and country code.
 - Commercial plan behavior must follow `docs/product/COMMERCIAL_PLAN_MODEL.md`; individual user subscriptions and tenant subscriptions must remain separate concepts.
-- Email workflow notifications remain durable in `notification_deliveries` until the processor marks them `sent` or `failed` and writes `notification_delivery_logs`.
+- Email workflow notifications remain durable in `notification_deliveries`; signed Resend callbacks append immutable `email_delivery_events`, update the delivery summary without state regression, and write technical `notification_delivery_logs`.
 - Notification events, preferences, templates, inbox items, deliveries, and push subscriptions must evolve according to `docs/product/NOTIFICATION_IMPLEMENTATION_PLAN.md`.
 - `recruiter_requests.request_metadata` stores tenant-kind-specific operator onboarding data such as `operating_scope`, `sponsoring_entity`, `field_region`, and `conversion_intent`. The table name is a legacy technical identifier; visible product copy should call this an operator request.
 

@@ -73,6 +73,7 @@ Security includes protecting:
 13. Operational app errors that reach the user should be logged to Supabase in a dedicated reviewable store without blocking the main UX flow.
 14. Candidate CV files must stay in a private bucket with ownership-based path policies and signed URL access.
 15. Email workflow processors must authenticate with a server-side secret or equivalent non-browser credential and must keep provider keys only in Edge Function secrets.
+15a. Email provider webhooks must disable platform JWT verification only when the handler validates the provider signature over the untouched raw body, rejects stale/invalid signatures, and deduplicates the signed event id before changing delivery state.
 16. Internal QA, foundations, and operational tooling must never be publicly exposed by default in the customer-facing app shell or landing routes.
 17. Protected opportunity discovery, including `/account/jobs*`, must require approved user status, ASI membership, and active subscription status before returning full job data. Historical `/platform/jobs*` URLs may redirect there, but must not expose full job data as guest-visible public browsing.
 18. Pastor and regional administrator validation must be form-backed, admin-reviewed, and auditable before elevated access or tenant-operational privileges are granted.

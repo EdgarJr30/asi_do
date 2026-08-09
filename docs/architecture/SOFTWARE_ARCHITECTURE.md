@@ -578,7 +578,7 @@ Examples:
 - third-party integrations
 - email sending orchestration
 - `process-email-deliveries` edge worker with provider config in Supabase secrets
-- webhook receivers
+- `resend-webhook` receiver with raw-body Svix signature verification, retry-safe idempotency, and durable provider event history
 - secrets handling
 - admin-only secure operations
 - AI processing or external APIs

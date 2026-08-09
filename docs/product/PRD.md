@@ -194,7 +194,7 @@ The MVP should **not** initially include:
 - email notifications
 - web push notifications with explicit opt-in and revocation
 - preference center by topic/category, channel, frequency, tenant context, role context, quiet hours, and timezone
-- auditable email delivery processing for workflow notifications
+- auditable email delivery processing with signed provider callbacks and reviewable delivery, delay, failure, bounce, complaint, open, and click events
 - new applicant alerts
 - stage/status updates
 - tenant-operator request review updates
@@ -383,7 +383,7 @@ The MVP can be considered launch-ready when:
 - an authorized coordinator can filter pipeline applicants and export the filtered set to CSV
 - key flows are permission-safe and tenant-safe
 - the app is installable as a PWA
-- workflow email deliveries can leave `pending` and land in `sent` or `failed` with technical logs
+- workflow email deliveries can leave `pending`, record the provider outcome, and expose an auditable Resend event timeline without duplicate webhook effects
 - loading/error/empty states exist across core screens
 
 ---

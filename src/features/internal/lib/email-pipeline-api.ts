@@ -5,6 +5,14 @@ export type EmailDeliveryStatus = 'pending' | 'processing' | 'sent' | 'failed' |
 export type EmailStatusFilter = EmailDeliveryStatus | 'all' | 'problem'
 export type SimulateScenario = 'send' | 'fail' | 'hang'
 
+export interface EmailDeliveryEventRow {
+  id: string
+  provider_event_id: string
+  event_type: string
+  event_created_at: string
+  payload: Record<string, unknown>
+}
+
 const PROBLEM_STATUSES: EmailDeliveryStatus[] = ['failed']
 const DELIVERED_STATUSES: EmailDeliveryStatus[] = ['sent', 'read', 'clicked']
 
@@ -14,6 +22,8 @@ export interface EmailDeliveryRow {
   delivery_status: EmailDeliveryStatus
   provider_name: string
   provider_message_id: string | null
+  latest_provider_event: string | null
+  latest_provider_event_at: string | null
   response_code: number | null
   response_payload: Record<string, unknown> | null
   attempt_count: number
@@ -22,6 +32,7 @@ export interface EmailDeliveryRow {
   failed_at: string | null
   created_at: string
   is_test: boolean
+  events: EmailDeliveryEventRow[] | null
   notification: {
     type: string
     title: string
@@ -53,6 +64,8 @@ const SELECT = `
   delivery_status,
   provider_name,
   provider_message_id,
+  latest_provider_event,
+  latest_provider_event_at,
   response_code,
   response_payload,
   attempt_count,
@@ -61,6 +74,13 @@ const SELECT = `
   failed_at,
   created_at,
   is_test,
+  events:email_delivery_events (
+    id,
+    provider_event_id,
+    event_type,
+    event_created_at,
+    payload
+  ),
   notification:notifications!notification_deliveries_notification_id_fkey (
     type,
     title,

@@ -538,8 +538,8 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const serviceRoleKey = resolveServiceKey()
-    const resendApiKey = Deno.env.get('RESEND_API_KEY') ?? ''
-    const fromEmail = Deno.env.get('EMAIL_FROM_ADDRESS') ?? ''
+    const resendApiKey = Deno.env.get('RESEND_API_KEY') ?? Deno.env.get('RESEND_API_KEY_DEV') ?? ''
+    const fromEmail = Deno.env.get('EMAIL_FROM_ADDRESS') ?? Deno.env.get('EMAIL_FROM_ADDRESS_DEV') ?? ''
     const appUrl = Deno.env.get('APP_URL') ?? 'http://localhost:5173'
 
     if (!supabaseUrl || !serviceRoleKey) {

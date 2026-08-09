@@ -221,6 +221,16 @@ Expected data:
 - attempt count
 - provider response metadata
 
+### `email_delivery_events`
+Immutable, provider-signed lifecycle events for one email delivery.
+
+Expected data:
+- delivery reference
+- unique provider event ID
+- provider message ID
+- event type and provider timestamp
+- reviewable provider payload
+
 ### `notification_templates`
 Versioned copy and structure per event, channel, and language.
 
@@ -337,6 +347,7 @@ Build:
 - retry controls where safe
 - volume metrics by event/channel
 - provider error visibility
+- signed Resend event timeline for sent, delivered, delayed, failed, suppressed, bounced, complained, opened, and clicked outcomes
 - audit links to event source
 
 Done when:
@@ -353,6 +364,7 @@ Done when:
 6. Notification templates must not encode permission decisions.
 7. Delivery processors must be idempotent and safe to retry.
 8. Failed delivery must not block the core business transaction unless the notification itself is the transaction.
+9. Provider webhooks must verify their signature over the raw body and deduplicate the provider event ID before changing delivery state.
 
 ---
 
