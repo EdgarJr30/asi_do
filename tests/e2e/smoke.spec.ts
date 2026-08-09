@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 import { expectAuthenticated, signInThroughUi } from './support/auth'
-import { expectSurfaceStatus, waitForAppSettled } from './support/guards'
+import { expectSurfaceStatus, logAuthRejections } from './support/guards'
 import {
   cleanupRealtimeCandidate,
   createServiceClient,
@@ -78,6 +78,14 @@ test.describe.serial('mvp authenticated smoke', () => {
     candidate = null
   })
 
+  // Una pasada completa hace seis inicios de sesión seguidos contra el mismo
+  // proyecto remoto. Si alguno lo rechaza, la prueba muere en `waitForURL` con
+  // un timeout que no dice por qué; esto deja el motivo en el log. Silencioso
+  // mientras Supabase responda bien.
+  test.beforeEach(({ page }) => {
+    logAuthRejections(page)
+  })
+
   test('recorre las superficies protegidas con una sesión real', async ({ page }) => {
     const activeCandidate = candidate
     expect(activeCandidate).not.toBeNull()
@@ -116,12 +124,6 @@ test.describe.serial('mvp authenticated smoke', () => {
     expect(activeCandidate).not.toBeNull()
 
     await signInThroughUi(page, activeCandidate!)
-
-    // El login no ha terminado cuando cambia la URL: la app aún decide en
-    // cliente a dónde lleva al usuario. Navegar dentro de esa ventana es la
-    // carrera que dejaba a la prueba en `/account` esperando una pantalla que
-    // allí no existe; el porqué, en `support/guards.ts`.
-    await waitForAppSettled(page)
 
     // Tener sesión no es tener acceso a todo: el candidato no pertenece a ningún
     // tenant, así que el pipeline del empleador debe seguir fuera de su alcance.

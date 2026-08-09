@@ -70,6 +70,36 @@ export async function waitForAppSettled(page: Page, timeout = FRESH_SESSION_CONT
     .toBe(true)
 }
 
+/**
+ * Deja constancia de un rechazo de Supabase Auth, que si no es invisible.
+ *
+ * Cuando el login no navega, la prueba muere en `waitForURL` con "Timeout
+ * 30000ms exceeded": un mensaje que no distingue un defecto del formulario de
+ * un `429` del proyecto remoto, que es compartido y recibe seis inicios de
+ * sesión seguidos en una pasada completa del smoke.
+ *
+ * Solo habla cuando `/auth/v1/token` responde con error. **Nunca vuelca el
+ * cuerpo de una respuesta correcta**: ahí viaja el `access_token` del usuario y
+ * el log de CI es público. El cuerpo de un error no lleva credenciales y es
+ * justo lo que hace falta para separar "límite del remoto" de "defecto".
+ */
+export function logAuthRejections(page: Page) {
+  page.on('response', (response) => {
+    if (!response.url().includes('/auth/v1/token') || response.ok()) {
+      return
+    }
+
+    void response
+      .text()
+      .catch(() => '(cuerpo ilegible)')
+      .then((body) => {
+        console.error(
+          `[auth] ${response.status()} ${response.statusText()} en ${response.url()}\n[auth] ${body.slice(0, 500)}`
+        )
+      })
+  })
+}
+
 /** Superficies que pueden renderizar `SurfaceStatusPage`. */
 export type GuardSurface = 'institutional' | 'storefront' | 'auth' | 'candidate' | 'workspace' | 'admin'
 export type GuardStatusKind = 'forbidden' | 'not-found'
