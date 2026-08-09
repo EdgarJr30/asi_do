@@ -185,6 +185,12 @@ export function SurfaceStatusPage({
 
   return (
     <motion.div
+      // Contrato estable para el e2e: qué superficie bloqueó y por qué. El
+      // texto de la pantalla (eyebrow, título) es copy y se reescribe; estos
+      // tres atributos son el estado, y son lo que las pruebas deben afirmar.
+      data-testid="surface-status"
+      data-surface={surface}
+      data-kind={kind}
       className="mx-auto w-full max-w-6xl space-y-8 py-2"
       variants={pageStagger}
       initial={shouldReduceMotion ? false : 'hidden'}

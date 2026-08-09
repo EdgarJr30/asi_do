@@ -94,6 +94,11 @@ export function PageLoader({
     <div
       role="status"
       aria-live="polite"
+      // Ancla del e2e para saber que la app **sigue cargando**. No se puede
+      // distinguir por `role="status"`: el asistente de onboarding tiene el
+      // suyo fijo, así que el conteo por rol nunca baja a cero y una espera
+      // basada en él no terminaría nunca.
+      data-testid="page-loader"
       className={cn('flex w-full flex-col items-center justify-center gap-6 px-6 text-center', minHeight, className)}
     >
       <div className="relative flex size-24 items-center justify-center">

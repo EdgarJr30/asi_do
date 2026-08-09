@@ -204,3 +204,37 @@ Rules:
 2. Raising a budget is legitimate only for latency. An element that never appears must still fail.
 3. A test that only passes on a fast machine is unverified, not passing.
 4. Retries are not a budget. `retries: 0` is deliberate: re-running the suite would paper over a flake and a real defect identically.
+
+---
+
+## 10. An assertion must be able to explain its own failure
+A test that blocks the branch without saying what it saw costs more than it protects. The smoke asserted `getByText('Acceso restringido')` on `/workspace/pipeline` and reported `element(s) not found` from CI. That single message is equally compatible with four different endings — the app stayed on the platform loader, it went to `/auth/sign-in`, the onboarding gate diverted it to `/account/profile`, or the membership gate diverted it to `/account/membership` — and none of them is the authorization defect the test claims to guard. The trace existed, but nobody can read a trace from a failure message, and the local run passed.
+
+Strictness is not the problem to solve; blindness is. These rules make a failure name its cause without weakening what is verified.
+
+### 10.1 Assert the state, not the copy
+Product copy is rewritten constantly and is the least stable thing on screen. A test about **authorization** must not break because a heading changed, and must not pass because an unrelated screen happens to contain the same words.
+
+- Screens that represent a state publish that state as data: `SurfaceStatusPage` carries `data-testid="surface-status"` with `data-surface` and `data-kind`, and `PageLoader` carries `data-testid="page-loader"`.
+- Prefer, in order: a role + accessible name (`getByRole('heading', { level: 1, name })`), then a `data-testid` that names a *state*, then text. Loose `getByText` on a decorative label — an eyebrow, a badge, a chip — is the weakest option available and must not carry the point of a test.
+- Copy is still product, so it can still be asserted — as its own separate assertion. When it changes, what fails is a copy test, not the authorization test next to it.
+- A `data-testid` is added to express a contract the DOM does not otherwise expose. It is not a shortcut around an accessible name that already exists.
+
+### 10.2 Wait for the terminal state, not for a number
+An assertion that races a client-side redirect times out on the budget and blames the element. Wait for the app to *finish*, then assert what it finished as.
+
+- `page.getByTestId('page-loader')` is the "still working" signal. Waiting for it to disappear is a state wait; it fails fast and honestly when the app is stuck, instead of consuming the full budget.
+- `role="status"` cannot be used for this: the onboarding wizard keeps a permanent one, so the count never reaches zero.
+- Signing in is not finished when the URL changes. `sign-in-page.tsx` picks the destination client-side *after* hydrating session, profile, and permissions, so a `goto` fired inside that window races a navigation that has not happened yet. Serving the production build makes the race audible (`Navigation to "/workspace/pipeline" is interrupted by another navigation to "/account"`); under `vite dev`, which is how CI runs, the same race is silent — the pending navigation simply wins afterwards and the assertion then waits on the wrong screen until the budget runs out. Call `waitForAppSettled` from `tests/e2e/support/guards.ts` after any sign-in, before navigating anywhere else.
+- Do not follow a `goto` immediately with an assertion on a route the app may still redirect away from. Either wait for the terminal state first, or navigate with `waitUntil: 'commit'` so a legitimate client-side redirect cannot report as `Navigation ... is interrupted by another navigation`.
+
+### 10.3 A failed guard assertion must report where the app actually went
+Use `expectSurfaceStatus` from `tests/e2e/support/guards.ts` for anything that asserts a guard blocked a route. On failure it raises the real URL, the visible `h1`, and whether the platform was still loading — which separates "authorization is broken" from "the session never hydrated" in the CI log itself, with no trace download and no local re-run.
+
+New helpers that wait for a protected surface follow the same shape: catch the timeout, attach `describeCurrentScreen(page)`, rethrow. A helper that swallows context and re-raises a bare Playwright error is not acceptable.
+
+### 10.4 What this does *not* license
+1. No retries. §9.2 rule 4 stands unchanged: a flake and a defect must not be made to look alike.
+2. No `expect.soft` on business invariants, no `try/catch` that downgrades a failure to a warning, and no assertion deleted because it is inconvenient. Diagnosis is added; verification is not removed.
+3. Widening a matcher to make it pass — `/Acceso|Restringido|No puedes/` — is the opposite of this section. Narrow the assertion to the state and widen the *message*.
+4. An unexplained CI failure is recorded per `REGRESSION_RULES.md` R-133 (checklist on `TASK-255`, area `Calidad, CI y observabilidad`), never closed as "it passes locally".

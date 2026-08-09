@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 import { expectAuthenticated, signInThroughUi } from './support/auth'
+import { expectSurfaceStatus, waitForAppSettled } from './support/guards'
 import {
   cleanupRealtimeCandidate,
   createServiceClient,
@@ -116,6 +117,12 @@ test.describe.serial('mvp authenticated smoke', () => {
 
     await signInThroughUi(page, activeCandidate!)
 
+    // El login no ha terminado cuando cambia la URL: la app aún decide en
+    // cliente a dónde lleva al usuario. Navegar dentro de esa ventana es la
+    // carrera que dejaba a la prueba en `/account` esperando una pantalla que
+    // allí no existe; el porqué, en `support/guards.ts`.
+    await waitForAppSettled(page)
+
     // Tener sesión no es tener acceso a todo: el candidato no pertenece a ningún
     // tenant, así que el pipeline del empleador debe seguir fuera de su alcance.
     // Sin este aserto, el smoke solo probaría que la autenticación funciona y no
@@ -127,10 +134,19 @@ test.describe.serial('mvp authenticated smoke', () => {
     // la URL y pasaba por un motivo ajeno —al candidato lo desviaba antes el
     // gate de onboarding—, así que dejaba sin verificar justo lo que dice
     // verificar.
+    //
+    // Lo que se afirma es el **estado** publicado por la pantalla
+    // (`data-surface`/`data-kind`), no su copy: el aserto anterior buscaba el
+    // texto del eyebrow y, cuando falló en CI, solo supo decir "element(s) not
+    // found" —igual de compatible con un fallo de autorización que con un
+    // redirect del gate de onboarding o con la app atascada en el loader—.
     await page.goto('/workspace/pipeline')
-    await expect(page.getByText('Acceso restringido')).toBeVisible({
-      timeout: FRESH_SESSION_CONTENT_TIMEOUT
-    })
-    await expect(page.getByText(/No puedes abrir esta vista del workspace/i)).toBeVisible()
+    await expectSurfaceStatus(page, { surface: 'workspace', kind: 'forbidden' })
+
+    // El copy sí se verifica, pero como aserto propio y separado: si un día
+    // cambia, lo que falla es una prueba de texto, no la de autorización.
+    await expect(
+      page.getByRole('heading', { level: 1, name: /No puedes abrir esta vista del workspace/i })
+    ).toBeVisible()
   })
 })
