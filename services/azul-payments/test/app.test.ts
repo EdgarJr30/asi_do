@@ -2,37 +2,16 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 
 import { buildApp } from '../src/app.ts'
-import type { AppConfig } from '../src/config.ts'
+import { createSettlementDouble, testConfig } from './helpers.ts'
 
-const config: AppConfig = {
-  port: 0,
-  allowedOrigin: 'https://asidominicana.do',
-  allowedOrigins: ['https://asidominicana.do', 'http://localhost:5173'],
-  servicePublicUrl: 'https://svc.example.com',
-  appUrl: 'https://asidominicana.do',
-  supabaseUrl: 'https://example.supabase.co',
-  supabaseAnonKey: 'anon',
-  supabaseServiceRoleKey: 'service',
-  azul: {
-    merchantId: '39038540035',
-    merchantName: 'ASI Rep. Dominicana',
-    merchantType: 'ECommerce',
-    authKey: 'test-auth-key-xyz',
-    paymentUrl: 'https://pruebas.azul.com.do/PaymentPage/',
-    paymentAltUrl: '',
-    environment: 'test',
-    currencyCode: '$',
-    showTransactionResult: false,
-    verifyApiUrl: '',
-    verifyApiKey: ''
-  },
-  reconcile: { cron: '*/5 * * * *', staleMinutes: 15, enabled: false }
-}
+const config = testConfig
 
 let app: FastifyInstance
 
 beforeAll(async () => {
-  app = await buildApp(config)
+  // Con el doble, los casos de cancelación dejan de intentar una conexión real a
+  // `example.supabase.co`: antes fallaban por DNS y el error se tragaba en silencio.
+  app = await buildApp(config, { settlementDb: createSettlementDouble().db })
   await app.ready()
 })
 

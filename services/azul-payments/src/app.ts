@@ -3,17 +3,23 @@ import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import Fastify, { type FastifyInstance } from 'fastify'
 
+import type { SettlementDatabase } from './azul/settle.ts'
 import type { AppConfig } from './config.ts'
 import { registerCallbackRoute } from './routes/callback.ts'
 import { registerCreateRoute } from './routes/create.ts'
 import { registerDonationRoutes } from './routes/donations.ts'
 import { registerHealthRoute } from './routes/health.ts'
 
+export interface AppDependencies {
+  /** Base de datos que liquida el callback. Se inyecta en pruebas; en producción es service_role. */
+  settlementDb?: SettlementDatabase
+}
+
 /**
  * Construye la app Fastify con seguridad base. Separada de `server.ts` para poder
  * instanciarla en tests sin escuchar en un puerto.
  */
-export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
+export async function buildApp(config: AppConfig, deps: AppDependencies = {}): Promise<FastifyInstance> {
   const app = Fastify({
     logger: {
       level: process.env.LOG_LEVEL ?? 'info',
@@ -41,7 +47,7 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   registerHealthRoute(app)
   registerCreateRoute(app, config)
   registerDonationRoutes(app, config)
-  registerCallbackRoute(app, config)
+  registerCallbackRoute(app, config, deps.settlementDb)
 
   return app
 }

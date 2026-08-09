@@ -232,10 +232,10 @@ export default defineConfig({
       // numero real se despega. Un umbral inalcanzable se termina bajando o
       // ignorando, que es como estos controles dejan de servir.
       thresholds: {
-        lines: 21,
-        functions: 26,
-        branches: 15,
-        statements: 21
+        lines: 26,
+        functions: 30,
+        branches: 19,
+        statements: 26
       }
     }
   }

@@ -27,6 +27,23 @@ npm test               # vitest (incluye el vector de hash oficial de AZUL)
 npm run verify         # typecheck + test
 ```
 
+### Cómo se prueba lo que cobra
+Ningún test toca Supabase: la liquidación se inyecta como doble.
+
+- **`SettlementDatabase`** (`src/azul/settle.ts`) declara la superficie de base de datos que usa
+  el cobro —solo `rpc`— de forma **estructural**, sin importar `SupabaseClient`. El cliente real
+  se asigna sin cast, así que un doble que se aleje de la forma real rompe `tsc`.
+- **`buildApp(config, { settlementDb })`** inyecta ese doble en el callback. Es lo que permite
+  aseverar *qué se habría escrito* —y, en los casos anti-tamper, que **no** se escribió nada—
+  sin liquidar un pago de verdad. Los ayudantes comunes están en `test/helpers.ts`
+  (`createSettlementDouble`, `signedCallbackUrl`).
+- **`reconcileOnce`** se exporta para poder ejercitar el cron con un doble que registra la
+  consulta y con `fetch` sustituido en lugar del webservice de AZUL.
+
+El reparto con las probes SQL (`p0_azul_settlement_probe` valida el monto y la idempotencia
+dentro del RPC; estos tests validan que se llegue a llamarlo y con qué) está en
+`docs/checklists/COBERTURA_CRITICA_EN_CI.md` → R4.4.
+
 ## Despliegue recomendado: Railway + Hostinger
 Usa **Hostinger** para servir la SPA/dominio principal y **Railway** para este microservicio Node.js.
 El backend de pagos necesita proceso persistente, variables secretas, logs, healthcheck y HTTPS estable

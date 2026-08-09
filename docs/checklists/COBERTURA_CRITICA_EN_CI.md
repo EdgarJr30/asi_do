@@ -19,7 +19,7 @@ Cada tarea se identifica `R{hallazgo}.{n}` y dice **cómo se sabe que está hech
 | [R1](#r1--probes-sql-que-nadie-ejecuta) | 0 de 17 probes SQL corren en CI | 🔴 bloqueante | ✅ **17/17 en CI** |
 | [R2](#r2--lo-que-parece-prueba-de-negocio-es-grep-sobre-sql) | Pruebas de negocio = `grep` sobre SQL | 🔴 bloqueante | ☐ deuda |
 | [R3](#r3--pipeline-de-correo-sin-pruebas) | 1.085 LOC de correo, cero tests | 🔴 bloqueante | ✅ **correo cerrado** — 41 tests Deno en CI; queda push (ver [R3.4](#r3--pipeline-de-correo-sin-pruebas)) |
-| [R4](#r4--pagos-buena-criptografía-ningún-camino-feliz) | Pagos sin camino feliz probado | 🔴 bloqueante | ☐ abierto |
+| [R4](#r4--pagos-buena-criptografía-ningún-camino-feliz) | Pagos sin camino feliz probado | 🔴 bloqueante | ✅ **cerrado** — 26 tests nuevos en el servicio + 25 en el cliente |
 | [R5](#r5--el-bucle-ats-sin-e2e) | Bucle ATS sin e2e | 🟠 | ☐ abierto |
 | [R6](#r6--las-mejores-specs-nunca-corren) | 1 de 11 specs e2e corre en CI | 🟠 | ☐ abierto |
 | [R7](#r7--recuperar-contraseña-sin-pruebas) | Recuperar contraseña sin pruebas | 🟠 | ☐ abierto |
@@ -28,9 +28,9 @@ Cada tarea se identifica `R{hallazgo}.{n}` y dice **cómo se sabe que está hech
 | [R10](#r10--sin-axe-en-runtime) | Sin `axe` en runtime | 🟡 | ☐ abierto |
 | [L1](#limpieza) | `membership-apply-debug.spec.ts` es resto de depuración | 🧹 | ☐ abierto |
 
-**Números medidos, no estimados:** 288 tests pasan (52 archivos, 10 s). Cobertura 23,35 % de
-líneas sobre un denominador que **ya excluye páginas y componentes**; el umbral está fijado
-en 21 %.
+**Números medidos, no estimados:** 329 tests pasan en la raíz (55 archivos, 11 s) y 57 en
+`services/azul-payments`. Cobertura 27,12 % de líneas sobre un denominador que **ya excluye
+páginas y componentes**; el umbral subió de 21 % a 26 % con el trinquete de R4.
 
 ---
 
@@ -73,7 +73,7 @@ conviene no resolver R6 duplicando el atajo del `service_role` contra el remoto.
                                       └── R9.2 (ejercitar RPC críticas)
 
   Pistas independientes, avanzan en paralelo:
-  R3 (5 reglas de correo) · R4 (callback aprobado) · R7 · R8 · R9.1 · R10
+  R3 (5 reglas de correo) ✅ · R4 (callback aprobado) ✅ · R7 · R8 · R9.1 · R10
 ```
 
 ---
@@ -393,35 +393,108 @@ Lo que no prueba:
 
 | Archivo | LOC | Estado |
 |---|---|---|
-| `src/jobs/reconcile.ts` | 164 | **cero tests** — es el que recupera pagos colgados |
-| `src/routes/callback.ts` | 137 | ningún test de callback **aprobado** que escriba en la BD |
-| `src/features/membership/lib/azul-api.ts` | 107 | 0 % |
-| `src/features/donations/lib/donation-api.ts` | 266 | 0 % |
+| `src/jobs/reconcile.ts` | 164 | ✅ `reconcile.test.ts` — 12 tests |
+| `src/routes/callback.ts` | 137 | ✅ `callback.test.ts` — 14 tests |
+| `src/features/membership/lib/azul-api.ts` | 107 | ✅ 97 % — `tests/unit/azul-api.test.ts` |
+| `src/features/donations/lib/donation-api.ts` | 266 | ✅ 58 % — `tests/unit/donation-api.test.ts` |
 
-Verificado: **0 archivos de test referencian `azul-api` ni `donation-api`.**
+Verificado (antes): **0 archivos de test referencian `azul-api` ni `donation-api`.**
 
 El riesgo concreto: un pago aprobado que no active la membresía. Dinero cobrado sin servicio.
 Lo único que lo evita hoy es `reconcile.ts`, que es precisamente lo no probado.
 
+**Los tests nuevos entran en CI solos**, sin tocar el workflow: el job `azul-service` de
+`ci.yml` corre `npm run verify` dentro de `services/azul-payments`, y la raíz recoge
+`tests/unit/**`. Mismo efecto colateral bueno que R3.3.
+
 ## Tareas
 
-- [ ] **R4.1 · Test de callback aprobado que escribe en la BD**
-  El camino feliz completo: AZUL responde aprobado → hash válido → se registra el pago → la
-  solicitud avanza. Hoy no existe ninguno.
-  *Hecho cuando:* el test falla si la escritura se rompe.
+- [x] **R4.1 · Test de callback aprobado que escribe en la BD**
+  *Hecho:* `test/callback.test.ts`, 14 tests. El camino feliz completo —AZUL aprueba, el hash
+  verifica, se llama `azul_settle_membership_payment` con la orden y los campos de la
+  respuesta, y el usuario vuelve con `payment=approved`— más el mismo recorrido para
+  donaciones.
 
-- [ ] **R4.2 · Cubrir `reconcile.ts`**
-  Escenarios: pago aprobado en AZUL pero colgado en local → se concilia; ya conciliado → no
-  duplica; AZUL no responde → no marca nada.
-  *Hecho cuando:* los 3 escenarios tienen test.
+  El obstáculo era el mismo de R3.1 en otra forma: la ruta construía su cliente de Supabase
+  dentro de `registerCallbackRoute`, así que no había forma de ver qué se escribía sin escribir
+  de verdad. Se resolvió igual: `SettlementDatabase` en `azul/settle.ts` declara **solo `rpc`**
+  y de forma **estructural**, no importando `SupabaseClient`. El doble no implementa el cliente
+  entero y el cliente real se asigna sin cast (`tsc` lo comprueba), así que el doble no puede
+  alejarse de la forma real sin que CI lo note. `buildApp(config, { settlementDb })` lo inyecta.
 
-- [ ] **R4.3 · Cubrir `azul-api.ts` y `donation-api.ts`**
-  *Hecho cuando:* dejan de estar al 0 %.
+  Dos cosas que solo se vieron al escribir las pruebas:
+  · Los tests de cancelación de `app.test.ts` **hacían una petición de red real** a
+    `example.supabase.co`. Fallaban por DNS y el `catch` del handler se tragaba el error, así
+    que pasaban igual: verde por el camino equivocado. Con el doble ya no salen a la red.
+  · El anti-tamper solo estaba probado por su redirect. Ahora se asevera lo que de verdad
+    importa —que **no se llamó a la base**— en los tres vectores: `Amount` cambiado tras la
+    firma, respuesta firmada con otra AuthKey, y respuesta sin `AuthHash`.
 
-- [ ] **R4.4 · Correlacionar con la probe `p0_azul_settlement`**
-  Ya existe y verifica el lado SQL. Debe quedar en el runner de R1.2 y no duplicar lo que
-  cubran los tests del servicio.
-  *Hecho cuando:* está claro qué capa cubre qué, escrito aquí.
+  **Verificado con mutación** (4 regresiones inyectadas, las 4 muertas):
+
+  | Regresión inyectada | La mata |
+  |---|---|
+  | No verificar el `AuthHash` de la respuesta | los 3 tests anti-tamper |
+  | Liquidar sin reenviar los campos de AZUL | `Amount`/`IsoCode` al RPC + PAN enmascarado |
+  | Guardar el número de tarjeta sin enmascarar | PAN enmascarado |
+  | Tratar solo `ResponseCode=approved` como aprobación | aprobación por `ResponseMessage` |
+
+- [x] **R4.2 · Cubrir `reconcile.ts`**
+  *Hecho:* `test/reconcile.test.ts`, 12 tests. `reconcileOnce` pasa a exportarse (era privada) y
+  se ejercita con un doble que **registra la consulta en vez de ejecutarla**, más `fetch`
+  sustituido para el webservice de AZUL. Los 3 escenarios del enunciado, y qué los mata:
+
+  | Escenario | Cómo se asevera | Regresión que lo mata |
+  |---|---|---|
+  | Colgado en local, aprobado en AZUL → se concilia | `azul_settle_*` con `p_approved: true` y `reconciledBy: 'cron'` | quitar el rastro `reconciledBy` |
+  | Ya conciliado → no duplica | el filtro `status=initiated` + `gateway=azul` + corte por `staleMinutes` | consultar `status=verified` |
+  | AZUL no responde → no marca nada | 4 formas de no-veredicto (sin webservice, 500, red caída, respuesta sin `ResponseCode`) → cero RPC | liquidar como aprobado sin veredicto |
+
+  Aquí **sí hizo falta un cast** para el doble, al revés que en R4.1: comparar el encadenado
+  `from().select().eq()…` contra una interfaz propia hace que `tsc` aborte con TS2589 ("type
+  instantiation is excessively deep") por los genéricos de `PostgrestFilterBuilder`. Comprobado
+  antes de escribirlo, y anotado en el propio archivo para que no se reintente.
+
+  **Defecto encontrado al escribir las pruebas (corregido):** un error leyendo
+  `membership_payments` hacía `return` y dejaba **las donaciones sin conciliar en esa pasada**,
+  mientras que el mismo error en `donations` solo se registraba y seguía. Asimetría sin motivo:
+  son dos tablas y dos cobros distintos. Ahora los dos casos registran y siguen. Un timeout
+  transitorio en una tabla ya no retrasa el rescate de la otra.
+
+- [x] **R4.3 · Cubrir `azul-api.ts` y `donation-api.ts`**
+  *Hecho:* `tests/unit/azul-api.test.ts` (10) y `tests/unit/donation-api.test.ts` (15).
+  `azul-api` al 97 %, `donation-api` al 58 %. Cobertura global de líneas: 23,35 % → 27,12 %, y
+  el umbral del trinquete sube de 21 % a 26 % (funciones 26→30, ramas 15→19).
+
+  Lo que se eligió aseverar, por consecuencia y no por línea: que el JWT llega al servicio (sin
+  él el RPC con RLS no puede calcular la cuota), que un fallo de red **no** se presenta como
+  tarjeta rechazada, que el formulario posteado a AZUL lleva **exactamente** los campos
+  firmados —uno de más invalida el `AuthHash`— y que el JWT no viaja en él. En donaciones, que
+  un visitante anónimo puede donar sin cabecera `Authorization` pero uno con sesión sí la
+  manda: es lo que decide si la donación queda atribuida.
+
+  **Queda fuera a propósito** el 42 % restante de `donation-api`: el CRUD administrativo de
+  montos (`createDonationAmountOption`, `update…`, `delete…`, `listDonations`,
+  `listMyDonations`). Son envoltorios de PostgREST protegidos por RLS, sin lógica propia;
+  probarlos exige un doble del encadenado `from().insert().select().single()` que solo
+  aseveraría que el encadenado se escribió como se escribió. Es exactamente el tipo de test
+  frágil que la decisión de R2 evita. R4 se cierra por irreversibilidad, no por porcentaje.
+
+- [x] **R4.4 · Correlacionar con la probe `p0_azul_settlement`**
+  *Hecho:* la probe ya está en el runner de R1.2 (nº 7 del inventario, tier `datos`). El reparto
+  de capas, para que ninguna repita a la otra:
+
+  | Pregunta | Quién la responde | Por qué ahí y no en la otra capa |
+  |---|---|---|
+  | ¿El `AuthHash` de la respuesta es legítimo? | `hash.test.ts` + los 3 anti-tamper de `callback.test.ts` | La base nunca ve el hash: la firma se verifica antes de llamar al RPC. |
+  | ¿Se llega a llamar la liquidación, y con qué campos? | `callback.test.ts` | La base no puede observar una llamada que nunca ocurrió. Es el hueco que tenía R4. |
+  | ¿El monto liquidado coincide con el cobrado? | `p0_azul_settlement_probe` (casos A y C) | La validación vive dentro de `azul_settle_membership_payment`; el servicio solo reenvía `Amount`. |
+  | ¿Reenvía el servicio el `Amount` que esa validación necesita? | `callback.test.ts` | La defensa SQL del caso A es inútil si el campo no sale del servicio: nadie cubría esa costura. |
+  | ¿Una segunda liquidación de la misma orden duplica el cobro? | probe (idempotencia en SQL) **y** `reconcile.test.ts` (el filtro `status=initiated` que impide reintentarla) | Dos mecanismos distintos del mismo riesgo, no la misma prueba dos veces. |
+  | ¿Se recupera un pago cobrado cuyo callback nunca llegó? | `reconcile.test.ts` | No hay SQL implicado: es orquestación más el webservice de AZUL. |
+
+  Ningún test del servicio asevera qué hace el RPC por dentro (solo con qué se le llama), y la
+  probe no asevera nada de HTTP. La costura entre las dos capas es `p_response`.
 
 ---
 
@@ -605,6 +678,9 @@ comprobación de accesibilidad automatizada en ninguna capa.
 | 2026-08-09 | Numeración canónica R1…R10 del informe | Un tracker que renumera obliga a traducir cada vez que se cruza con el informe. |
 | 2026-08-09 | El push (`send-notification`) sale de R3 a R3.4 en vez de mantener R3 abierto | R3 se priorizó como 🔴 por el daño irreversible de un correo mal dirigido. El push no lo comparte: no llega a la bandeja de nadie ajeno. Mantenerlos juntos obligaba a elegir entre bloquear la salida por algo 🟠 o dar por cubierto algo que no lo está. |
 | 2026-08-09 | Una tabla nueva sin entrada en la matriz de la Fase D **rompe** la probe, no avisa | Es el mecanismo que obliga a decidir la superficie de cada tabla en vez de heredarla de los default privileges. Costó una línea en `email_delivery_events` y detectó el hueco el mismo día. |
+| 2026-08-09 | La superficie de base de datos se declara **estructuralmente** siempre que TypeScript lo permita; si no, cast documentado | Es lo que impide que el doble se aleje del cliente real sin que CI lo note. Funciona con `rpc` (R3.1, R4.1) y **no** con el encadenado de PostgREST: `tsc` aborta con TS2589. Comprobado, no supuesto — y anotado donde se reintentaría. |
+| 2026-08-09 | El CRUD administrativo de `donation-api` se deja sin cubrir con R4 cerrado | R4 se prioriza por irreversibilidad, no por porcentaje. Un envoltorio de PostgREST sin lógica solo se puede "probar" aseverando el propio encadenado: el test frágil que la decisión de R2 evita. |
+| 2026-08-09 | Los umbrales de cobertura suben a 26/30/19/26 en el mismo commit que R4 | El trinquete solo sirve si se aprieta cuando el número real se despega; dejarlo en 21 % con 27 % medido regala 6 puntos de margen para que la cobertura baje sin que nadie se entere. |
 
 ---
 
@@ -619,4 +695,5 @@ comprobación de accesibilidad automatizada en ninguna capa.
 | 2026-08-09 | **R1 cerrado**: 17/17 en CI con fixtures | `3649892` |
 | 2026-08-09 | Primeros dos hallazgos del runner ya en `main`, sobre `email_delivery_events` (`5caf1b1`): política de sesión sin envolver y tabla fuera de la matriz de la Fase D | `e41429a` |
 | 2026-08-09 | **R3.1**: `process-email-deliveries` partido en render / procesador / shell; dobles de Resend y Supabase en `_shared/email-test-doubles.ts`; 4 tests. R3.3 ya estaba hecho | `1c17950` |
-| 2026-08-09 | **R3.2 / R3 cerrado para correo**: las 5 reglas cubiertas y verificadas con 6 mutantes; corregido el rastro perdido del cierre rechazado; `send-notification` (push) separado en R3.4 | _(este commit)_ |
+| 2026-08-09 | **R3.2 / R3 cerrado para correo**: las 5 reglas cubiertas y verificadas con 6 mutantes; corregido el rastro perdido del cierre rechazado; `send-notification` (push) separado en R3.4 | `55cbb8a` |
+| 2026-08-09 | **R4 cerrado**: camino feliz del callback y `reconcile` con dobles (26 tests en el servicio), `azul-api`/`donation-api` fuera del 0 % (25 tests), reparto de capas con `p0_azul_settlement`; corregido el `return` que dejaba las donaciones sin conciliar; umbrales de cobertura al alza | _(este commit)_ |

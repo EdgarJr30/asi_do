@@ -1,10 +1,20 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
-
 import {
   buildResponseAuthHash,
   safeHashEqual,
   type AzulResponseHashFields
 } from './hash.ts'
+
+/**
+ * Superficie de base de datos que necesita la liquidación: solo `rpc`.
+ *
+ * Se declara **estructuralmente** en vez de importar `SupabaseClient` por lo mismo
+ * que `EmailDeliveryDatabase` (R3.1): el doble de pruebas no tiene que implementar
+ * el cliente entero **y** el cliente real se asigna sin cast, así que el doble no
+ * puede alejarse de la forma real sin que `tsc` lo note.
+ */
+export interface SettlementDatabase {
+  rpc(fn: string, params: Record<string, unknown>): PromiseLike<{ data: unknown; error: unknown }>
+}
 
 /** Campos de respuesta de AZUL, normalizados desde el querystring del redirect. */
 export interface AzulResponse extends AzulResponseHashFields {
@@ -113,7 +123,7 @@ export interface DonationSettleResult {
  * en SQL). Devuelve el estado resultante para construir el redirect/notificación.
  */
 export async function settlePaymentViaRpc(
-  service: SupabaseClient,
+  service: SettlementDatabase,
   input: { orderNumber: string; approved: boolean; response: Record<string, unknown> }
 ): Promise<SettleResult> {
   const { data, error } = await service.rpc('azul_settle_membership_payment', {
@@ -137,7 +147,7 @@ export async function settlePaymentViaRpc(
  * Mantiene las donaciones separadas del pipeline de membresía.
  */
 export async function settleDonationViaRpc(
-  service: SupabaseClient,
+  service: SettlementDatabase,
   input: { orderNumber: string; approved: boolean; response: Record<string, unknown> }
 ): Promise<DonationSettleResult> {
   const { data, error } = await service.rpc('azul_settle_donation_payment', {

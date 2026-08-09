@@ -7,7 +7,8 @@ import {
   parseAzulResponse,
   settleDonationViaRpc,
   settlePaymentViaRpc,
-  verifyResponseAuthHash
+  verifyResponseAuthHash,
+  type SettlementDatabase
 } from '../azul/settle.ts'
 import { serviceClient } from '../supabase.ts'
 
@@ -62,7 +63,7 @@ function readOrderNumber(query: Record<string, unknown>): string {
 }
 
 async function settleByFlow(
-  service: ReturnType<typeof serviceClient>,
+  service: SettlementDatabase,
   input: { orderNumber: string; approved: boolean; response: Record<string, unknown> }
 ) {
   return resolveFlow(input.orderNumber) === 'donation'
@@ -74,9 +75,16 @@ async function settleByFlow(
  * GET /payments/azul/callback
  * Destino de Approved/Declined/CancelUrl. Verifica el AuthHash firmado por AZUL
  * (anti-tamper), liquida el pago de forma idempotente y redirige a la SPA.
+ *
+ * `database` se inyecta en pruebas para aseverar **qué se habría escrito** sin
+ * tocar Supabase; en producción es el cliente con service_role.
  */
-export function registerCallbackRoute(app: FastifyInstance, config: AppConfig): void {
-  const service = serviceClient(config)
+export function registerCallbackRoute(
+  app: FastifyInstance,
+  config: AppConfig,
+  database?: SettlementDatabase
+): void {
+  const service = database ?? serviceClient(config)
 
   app.get('/payments/azul/callback', async (request, reply) => {
     const query = request.query as Record<string, unknown>

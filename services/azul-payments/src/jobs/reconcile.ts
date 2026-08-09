@@ -65,7 +65,16 @@ async function queryAzulTransaction(
   }
 }
 
-async function reconcileOnce(config: AppConfig, service: SupabaseClient, log: FastifyBaseLogger): Promise<void> {
+/**
+ * Una pasada de conciliación. Exportada para poder ejercitarla con dobles: es el
+ * único mecanismo que recupera un pago cobrado en AZUL que se quedó `initiated`
+ * en local (el usuario cerró el navegador antes del callback).
+ */
+export async function reconcileOnce(
+  config: AppConfig,
+  service: SupabaseClient,
+  log: FastifyBaseLogger
+): Promise<void> {
   const cutoff = new Date(Date.now() - config.reconcile.staleMinutes * 60_000).toISOString()
 
   const { data, error } = await service
@@ -79,8 +88,9 @@ async function reconcileOnce(config: AppConfig, service: SupabaseClient, log: Fa
     .limit(50)
 
   if (error) {
+    // Se registra y se sigue: un fallo leyendo membresías no debe dejar sin
+    // conciliar las donaciones, que son una tabla y un cobro distintos.
     log.error({ err: error }, 'Conciliación: no se pudieron leer pagos de membresía pendientes')
-    return
   }
 
   const { data: donationData, error: donationError } = await service
