@@ -311,18 +311,26 @@ function ConsoleCard({ row, onChanged }: { row: AdminMembershipRow; onChanged: (
       </CardHeader>
 
       <CardContent className="mt-2.5 space-y-2.5">
+        {/*
+          La tira de tres pasos repite a propósito los mismos rótulos que los
+          badges de la cabecera: son la misma verdad contada dos veces, una para
+          leer de un vistazo y otra en su sitio del flujo. Por eso cada valor
+          lleva `data-testid`: buscar la card por texto encuentra ambos y el
+          modo estricto de Playwright aborta el aserto (o, peor, pasa por
+          casualidad si la lista aún no ha refrescado).
+        */}
         <div className="grid overflow-hidden rounded-control border border-(--app-border) bg-(--app-surface-muted)/45 sm:grid-cols-3">
           <div className="border-b border-(--app-border) px-3 py-2.5 sm:border-r sm:border-b-0">
             <p className="text-[0.64rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">1 · Solicitud</p>
-            <p className="mt-1 text-[0.78rem] font-semibold text-(--app-text)">{workflowLabels[application.status] ?? application.status}</p>
+            <p data-testid="membership-step-application" className="mt-1 text-[0.78rem] font-semibold text-(--app-text)">{workflowLabels[application.status] ?? application.status}</p>
           </div>
           <div className="border-b border-(--app-border) px-3 py-2.5 sm:border-r sm:border-b-0">
             <p className="text-[0.64rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">2 · Pago</p>
-            <p className="mt-1 text-[0.78rem] font-semibold text-(--app-text)">{payment ? paymentLabels[payment.status] ?? payment.status : 'Pendiente de envío'}</p>
+            <p data-testid="membership-step-payment" className="mt-1 text-[0.78rem] font-semibold text-(--app-text)">{payment ? paymentLabels[payment.status] ?? payment.status : 'Pendiente de envío'}</p>
           </div>
           <div className="px-3 py-2.5">
             <p className="text-[0.64rem] font-bold uppercase tracking-[0.08em] text-(--app-text-subtle)">3 · Acceso</p>
-            <p className="mt-1 text-[0.78rem] font-semibold text-(--app-text)">{membershipStatusLabels[memberStatus] ?? memberStatus}</p>
+            <p data-testid="membership-step-access" className="mt-1 text-[0.78rem] font-semibold text-(--app-text)">{membershipStatusLabels[memberStatus] ?? memberStatus}</p>
           </div>
         </div>
 

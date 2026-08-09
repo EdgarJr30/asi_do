@@ -94,15 +94,21 @@ test.describe('consola de administración de membresías', () => {
     await expect(card.getByRole('button', { name: /Activar membres[ií]a/i })).toBeDisabled()
 
     // 2. El admin aprueba la solicitud.
+    //
+    // El estado se lee en la tira de pasos por `testid`, no por texto: la card
+    // muestra cada rótulo dos veces —badge de cabecera y paso— así que buscar
+    // 'Aprobada' dentro de la card resuelve a dos elementos. Con `getByText`
+    // esto pasaba por casualidad, cuando el aserto llegaba antes de que la lista
+    // refrescara y solo había una coincidencia.
     await card.getByRole('button', { name: /^Aprobar$/ }).click()
-    await expect(card.getByText('Aprobada')).toBeVisible()
+    await expect(card.getByTestId('membership-step-application')).toHaveText('Aprobada')
 
     // Aprobada pero sin pago verificado: sigue sin poder activarse.
     await expect(card.getByRole('button', { name: /Activar membres[ií]a/i })).toBeDisabled()
 
     // 3. La pasarela liquida el pago (lo que hoy hace AZUL, no la consola).
     await setPaymentStatus(admin, paymentId, 'verified')
-    await expect(card.getByText('Pago verificado')).toBeVisible()
+    await expect(card.getByTestId('membership-step-payment')).toHaveText('Pago verificado')
 
     // 4. Ahora sí: activar. Se comprueba la confirmación del producto y, sobre
     //    todo, el efecto en la base: el badge de la tarjeta depende de que la
