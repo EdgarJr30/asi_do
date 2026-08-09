@@ -334,3 +334,45 @@ CI provisions it with `denoland/setup-deno`; a workstation does not have it by d
 brew install deno
 npm run test:functions
 ```
+
+---
+
+## 14. A client RPC without its grant is a runtime failure, not a type error
+
+The Supabase default privilege on functions was revoked in this project, so a new RPC
+without an explicit `grant execute … to authenticated` compiles, ships, and then fails
+with `permission denied` the first time a real user calls it. TypeScript cannot see it:
+`supabase.rpc('name')` type-checks against generated types, not against privileges.
+
+`npm run check:rpc-grants` (part of `npm run verify`, therefore part of CI) closes the
+cheap half of that gap statically. It extracts every `.rpc('…')` name from `src/` and,
+for each one, asserts against `supabase/migrations/`:
+
+1. the function is created somewhere, and
+2. the **last** privilege event naming it together with `authenticated` is a `grant`,
+   not a `revoke` — ordered by migration filename, then by position within the file,
+   which is the order Postgres applies them.
+
+Two limits worth stating, because a guard whose reach is misunderstood is worse than no
+guard. It reads **files**, so it inherits R2's weakness: the deployed database is not
+fully derivable from `migrations/`. And it indexes **by name, not by signature**, so an
+overload where only one version carries the grant still passes. Exercising the RPC for
+real is a separate, more expensive check (R9.2 in `docs/checklists/COBERTURA_CRITICA_EN_CI.md`).
+
+### 14.1 The guard must fail when the guard breaks
+
+Its worst possible ending is the one the probes of §12 already had: staying green while
+checking nothing. If the extractors stop matching, "0 problems out of 0" reads exactly
+like "everything is fine".
+
+A partial failure on the migration side is self-announcing — fewer grants found means
+*more* RPCs reported as non-compliant. The two silent paths carry an explicit floor:
+
+- no `.rpc()` call found in `src/` at all → exit 1;
+- either grant parser (the static statements, or the dynamic `foreach … loop` block of
+  `20260807042236`) finding zero statements → exit 1.
+
+The second floor is not hypothetical. Every one of today's 51 RPCs draws its *current*
+grant from the dynamic block, so breaking the static parser alone left the guard green —
+verified by injecting it. The static parser is precisely the one that has to carry the
+future, since new migrations write `grant execute … to authenticated` by hand.

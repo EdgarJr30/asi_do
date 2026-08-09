@@ -24,12 +24,12 @@ Cada tarea se identifica `R{hallazgo}.{n}` y dice **cómo se sabe que está hech
 | [R6](#r6--las-mejores-specs-nunca-corren) | 1 de 11 specs e2e corre en CI | 🟠 | ☐ abierto |
 | [R7](#r7--recuperar-contraseña-sin-pruebas) | Recuperar contraseña sin pruebas | 🟠 | ☐ abierto |
 | [R8](#r8--liberrorsapits-al-0-) | `lib/errors/api.ts` al 0 % | 🟡 | ☐ abierto |
-| [R9](#r9--51-rpc-de-cliente-verificadas-a-mano) | Check de grants de RPC sin automatizar | 🟡 | ☐ abierto |
+| [R9](#r9--51-rpc-de-cliente-verificadas-a-mano) | Check de grants de RPC sin automatizar | 🟡 | ✅ **R9.1 en `verify`** — 51/51; queda R9.2, ya desbloqueado por R1.5 |
 | [R10](#r10--sin-axe-en-runtime) | Sin `axe` en runtime | 🟡 | ☐ abierto |
 | [L1](#limpieza) | `membership-apply-debug.spec.ts` es resto de depuración | 🧹 | ☐ abierto |
 
-**Números medidos, no estimados:** 329 tests pasan en la raíz (55 archivos, 11 s) y 57 en
-`services/azul-payments`. Cobertura 27,12 % de líneas sobre un denominador que **ya excluye
+**Números medidos, no estimados:** 337 tests pasan en la raíz (56 archivos, 11 s) y 57 en
+`services/azul-payments`. Cobertura 27,29 % de líneas sobre un denominador que **ya excluye
 páginas y componentes**; el umbral subió de 21 % a 26 % con el trinquete de R4.
 
 ---
@@ -42,7 +42,7 @@ botón de deshacer.
 
 | Cuándo | Qué | Por qué |
 |---|---|---|
-| **Antes de salir** (~2 días) | R1 + R3 + R4 + R9 | Lo irreversible |
+| **Antes de salir** (~2 días) | R1 ✅ + R3 ✅ + R4 ✅ + R9.1 ✅ | Lo irreversible — **completo** |
 | **Semana 1** (~4 días) | R5, R6, R7, R8, R10, L1 | Lo que duele pero se arregla |
 | **Deuda** | R2 | Hacerlo con prisa produce tests frágiles — peor que el hueco actual |
 
@@ -70,10 +70,10 @@ conviene no resolver R6 duplicando el atajo del `service_role` contra el remoto.
   R1.5 FIXTURES DETERMINISTAS ────────┼── R1.6/R1.7 ────────────→ R1 completo (17/17)
         (el desbloqueo)               ├── R5 (bucle ATS e2e)
                                       ├── R6 (specs de membresía)
-                                      └── R9.2 (ejercitar RPC críticas)
+                                      └── R9.2 (ejercitar RPC críticas) ← ya desbloqueado
 
   Pistas independientes, avanzan en paralelo:
-  R3 (5 reglas de correo) ✅ · R4 (callback aprobado) ✅ · R7 · R8 · R9.1 · R10
+  R3 (5 reglas de correo) ✅ · R4 (callback aprobado) ✅ · R9.1 (guardia de grants) ✅ · R7 · R8 · R10
 ```
 
 ---
@@ -627,14 +627,46 @@ Dos riesgos con coste de arreglo muy distinto:
 
 ## Tareas
 
-- [ ] **R9.1 · Guardia estática nombre + grant** *(prelanzamiento, ~40 líneas)*
-  Extrae los nombres de `.rpc('…')` en `src/`, comprueba contra las migraciones que cada una
-  existe y tiene su `grant execute … to authenticated`. Falla si falta cualquiera de las dos.
-  *Hecho cuando:* corre en `npm run verify` y falla si se borra un grant a propósito.
-  *Límite conocido:* comprobar contra archivos hereda la debilidad de R2 — el repo no es la
-  fuente de verdad completa. Aun así atrapa el caso frecuente: RPC nueva sin grant.
+- [x] **R9.1 · Guardia estática nombre + grant** *(prelanzamiento, ~40 líneas)*
+  *Hecho:* `scripts/check-rpc-grants.ts`, `npm run check:rpc-grants`, dentro de `npm run verify`
+  entre el typecheck y los tests. Sale en verde: **51 de 51**, el mismo resultado que la
+  verificación manual del 2026-08-09 — que es la primera comprobación de que el parser dice la
+  verdad.
 
-- [ ] **R9.2 · Ejercitar las RPC que mueven dinero o accesos** *(bloqueado por R1.5)*
+  Salieron 40 líneas cortas, pero el modelo tenía que ser más fino que "existe un grant":
+  hay `revoke` posteriores en el repo (`20260801120000`, `20260801160000`, `20260801161000`) y
+  un `grant` viejo que un `revoke` nuevo anula. La regla es **último evento gana**, ordenando
+  por nombre de archivo y, dentro de un archivo, por posición: el mismo orden en que Postgres
+  las aplica. Solo cuentan los eventos que nombran a `authenticated` — un
+  `revoke … from public` no toca un grant directo al rol, porque en Postgres PUBLIC es otro
+  concesionario.
+
+  **Verificado con mutación** (5 inyectadas, las 5 muertas):
+
+  | Regresión inyectada | Qué reporta |
+  |---|---|
+  | `.rpc('funcion_inexistente')` en `src/` | no se crea en ninguna migración |
+  | Borrar los 3 grants de `move_application_stage` | no tiene grant execute … to authenticated |
+  | Migración posterior que revoca `submit_application` | su último evento es un revoke, y en qué archivo |
+  | RPC nueva creada sin grant + llamada desde `src/` | la nombra, dice quién la invoca; verde al añadir el grant |
+  | Quitar un nombre de la lista de `20260807042236` | **sigue verde, y es correcto**: conserva grants en otras dos migraciones |
+
+  Ese último caso es el que valida el modelo: la guardia no reconoce un patrón en un archivo,
+  reconstruye el estado final.
+
+  **Hueco encontrado al probar la propia guardia (corregido):** exigir `events.length > 0` como
+  suelo anti-falso-verde **no era suficiente**. Las 51 reciben su grant *vigente* del bloque
+  dinámico `foreach … loop` de `20260807042236`, así que romper el parser de grants **estáticos**
+  dejaba la guardia en verde — y ese es justo el parser que sostiene el futuro, porque las
+  migraciones nuevas escriben el grant a mano. Ahora cada parser lleva su propio suelo y los tres
+  (llamadas, estático, bucle) salen 1 al romperse. Es el mismo modo de fallo que R1 llamó
+  "probe muda": una guardia rota es indistinguible de una guardia satisfecha.
+
+  *Límite conocido:* comprobar contra archivos hereda la debilidad de R2 — el repo no es la
+  fuente de verdad completa. Y se indexa por **nombre, no por firma**: una sobrecarga donde solo
+  una versión lleva grant pasa. Ejecutarlas de verdad es R9.2.
+
+- [ ] **R9.2 · Ejercitar las RPC que mueven dinero o accesos** *(ya desbloqueado: R1.5 está hecho)*
   Subconjunto, no las 51: `activate_member`, `admin_assign_platform_role`,
   `admin_clear_manual_access_override` y las de pago/aprobación. Sobre el fixture, con
   impersonación: llamada legítima pasa, llamada sin rol falla.
@@ -696,4 +728,5 @@ comprobación de accesibilidad automatizada en ninguna capa.
 | 2026-08-09 | Primeros dos hallazgos del runner ya en `main`, sobre `email_delivery_events` (`5caf1b1`): política de sesión sin envolver y tabla fuera de la matriz de la Fase D | `e41429a` |
 | 2026-08-09 | **R3.1**: `process-email-deliveries` partido en render / procesador / shell; dobles de Resend y Supabase en `_shared/email-test-doubles.ts`; 4 tests. R3.3 ya estaba hecho | `1c17950` |
 | 2026-08-09 | **R3.2 / R3 cerrado para correo**: las 5 reglas cubiertas y verificadas con 6 mutantes; corregido el rastro perdido del cierre rechazado; `send-notification` (push) separado en R3.4 | `55cbb8a` |
+| 2026-08-09 | **R9.1**: `check-rpc-grants.ts` en `verify` — 51/51, modelo "último evento gana"; suelo por parser tras descubrir que romper el estático dejaba la guardia en verde | _(este commit)_ |
 | 2026-08-09 | **R4 cerrado**: camino feliz del callback y `reconcile` con dobles (26 tests en el servicio), `azul-api`/`donation-api` fuera del 0 % (25 tests), reparto de capas con `p0_azul_settlement`; corregido el `return` que dejaba las donaciones sin conciliar; umbrales de cobertura al alza | `8a2c79f` |

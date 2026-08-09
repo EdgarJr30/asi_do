@@ -37,9 +37,10 @@
     "media:orphans": "node scripts/media-orphans.ts",
     "media:orphans:apply": "node scripts/media-orphans.ts --apply --yes",
     "audit:policy": "node scripts/audit-policy.ts",
+    "check:rpc-grants": "node scripts/check-rpc-grants.ts",
     "version:plan": "node scripts/release-plan.mjs",
     "version:apply": "changeset version && npm install --package-lock-only",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run test:acceptance && npm run build"
+    "verify": "npm run lint && npm run typecheck && npm run check:rpc-grants && npm run test && npm run test:acceptance && npm run build"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
