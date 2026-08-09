@@ -490,6 +490,9 @@ Do not expose `tenant`, `slug`, `operator`, provisioning, internal role keys, or
 ### R-139 — A test must assert state and explain its own failure
 Do not let a test carry its point on decorative copy, and do not leave a failure that cannot say what the app actually rendered. Assertions about a state —authorization, loading, emptiness, blocking— must target that state as data (`data-testid="surface-status"` with `data-surface`/`data-kind`, `data-testid="page-loader"`) or a role plus accessible name; copy may be asserted, but as a separate assertion so a rewording breaks a copy test and not an authorization test. Wait for the terminal state instead of racing a timeout budget, and never follow a `goto` with an assertion on a route the app may still redirect away from; signing in is not finished when the URL changes, so call `waitForAppSettled` after any sign-in before navigating elsewhere. Every helper that waits for a protected surface must attach the real URL, the visible heading, and whether the platform was still loading before rethrowing —`expectSurfaceStatus` in `tests/e2e/support/guards.ts` is the reference implementation. None of this authorizes retries, soft assertions, widened matchers, or deleted checks: diagnosis is added, verification is not weakened. See `docs/governance/TESTING_RULES.md` §10.
 
+### R-140 — The stale-version recovery state must stay polished and correctly written
+Do not let route-level and render-level stale chunk failures drift into separate screens, unaccented Spanish, technical browser language, or a blank page. Both paths must reuse the shared version-update fallback with its calm SVG illustration, the exact recovery context, and one clear `Recargar` action that loads the latest frontend version.
+
 ---
 
 ## Maintenance rule

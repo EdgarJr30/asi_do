@@ -112,7 +112,13 @@ describe('ErrorBoundary', () => {
 
     const alert = screen.getByRole('alert')
 
-    expect(alert.textContent).toContain('version nueva')
+    expect(screen.getByRole('heading', { name: 'Hay una versión nueva disponible' })).toBeTruthy()
+    expect(
+      screen.getByText(
+        'Esta pestaña conservó una versión anterior de la aplicación y no pudo cargar esta página. Recarga para usar la versión más reciente.'
+      )
+    ).toBeTruthy()
+    expect(alert.querySelector('svg[aria-hidden="true"]')).toBeTruthy()
     // Reintentar el render no sirve: el chunk sigue sin existir en el servidor.
     expect(screen.queryByRole('button', { name: 'Reintentar' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Recargar' })).toBeTruthy()

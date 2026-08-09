@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router-dom'
 
 import { ErrorFallback } from '@/components/errors/error-fallback'
+import { StaleVersionFallback } from '@/components/errors/stale-version-fallback'
 import { isStaleChunkError } from '@/components/errors/stale-chunk'
 import { captureClientError } from '@/lib/errors/client-error-logger'
 import { surfacePaths } from '@/app/router/surface-paths'
@@ -48,14 +49,7 @@ export function RouteErrorElement() {
   }
 
   if (isStaleChunkError(error)) {
-    return (
-      <ErrorFallback
-        title="Hay una version nueva disponible"
-        description="Esta pestana quedo con una version anterior de la aplicacion y no pudo cargar esta pagina. Recarga para tomar la ultima."
-        actionLabel="Recargar"
-        onAction={() => window.location.reload()}
-      />
-    )
+    return <StaleVersionFallback onReload={() => window.location.reload()} />
   }
 
   return (

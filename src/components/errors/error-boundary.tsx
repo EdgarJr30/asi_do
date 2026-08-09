@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 
 import { ErrorFallback } from '@/components/errors/error-fallback'
+import { StaleVersionFallback } from '@/components/errors/stale-version-fallback'
 import { isStaleChunkError } from '@/components/errors/stale-chunk'
 import { captureClientError } from '@/lib/errors/client-error-logger'
 
@@ -64,14 +65,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 
     if (isStaleChunkError(error)) {
-      return (
-        <ErrorFallback
-          title="Hay una version nueva disponible"
-          description="Esta pestana quedo con una version anterior de la aplicacion y no pudo cargar una parte. Recarga para tomar la ultima."
-          actionLabel="Recargar"
-          onAction={this.handleReload}
-        />
-      )
+      return <StaleVersionFallback onReload={this.handleReload} />
     }
 
     return (

@@ -497,6 +497,7 @@ Rules:
 3. Use `sonner` toasts for lightweight transient confirmation, not for critical information that can disappear too quickly.
 4. When an action is destructive or expensive, prefer explicit confirmation over relying on a toast alone.
 5. Do not introduce a second toast system such as `react-toastify`; all transient app feedback should remain visually and behaviorally consistent through `sonner`.
+6. A stale frontend version must use one shared recovery state across route and render failures, with a calm update illustration, concise Spanish copy, and one primary `Recargar` action.
 
 ---
 
