@@ -31,27 +31,40 @@ const environmentMeta: Record<
 }
 
 export function AppEnvironmentBadge({
-  environment = resolveAppEnvironment(env.deployEnvironment, env.mode)
+  className,
+  compact = false,
+  environment = resolveAppEnvironment(env.deployEnvironment, env.mode),
+  surface = 'default'
 }: {
+  className?: string
+  compact?: boolean
   environment?: AppEnvironment
+  surface?: 'default' | 'dark'
 }) {
   const meta = environmentMeta[environment]
 
   return (
-    <div className="pointer-events-none fixed right-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 sm:right-4 lg:bottom-4">
-      <Badge
-        aria-label={`Entorno ${meta.label}; fase Beta`}
-        variant="outline"
-        className={cn(
-          'gap-2 px-2.5 py-1.5 text-[0.68rem] shadow-sm backdrop-blur-md',
-          meta.badgeClassName
-        )}
-      >
-        <span aria-hidden="true" className={cn('size-1.5 rounded-full', meta.dotClassName)} />
-        <span>{meta.label}</span>
-        <span aria-hidden="true" className="h-3 w-px bg-current opacity-25" />
-        <span className="uppercase tracking-[0.14em]">Beta</span>
-      </Badge>
-    </div>
+    <Badge
+      aria-label={`Entorno ${meta.label}; fase Beta`}
+      title={`Entorno ${meta.label} · Beta`}
+      variant="outline"
+      className={cn(
+        'gap-2 px-2.5 py-1.5 text-[0.68rem] shadow-none',
+        surface === 'dark'
+          ? 'border-white/14 bg-white/8 text-white/74'
+          : meta.badgeClassName,
+        compact && 'size-8 justify-center gap-0 px-0 py-0',
+        className
+      )}
+    >
+      <span aria-hidden="true" className={cn('size-1.5 shrink-0 rounded-full', meta.dotClassName)} />
+      {!compact ? (
+        <>
+          <span>{meta.label}</span>
+          <span aria-hidden="true" className="h-3 w-px bg-current opacity-25" />
+          <span className="uppercase tracking-[0.14em]">Beta</span>
+        </>
+      ) : null}
+    </Badge>
   )
 }

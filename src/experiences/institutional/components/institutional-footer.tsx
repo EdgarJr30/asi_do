@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { surfacePaths } from '@/app/router/surface-paths';
 import { BrandLockup } from '@/components/ui/app-brand';
+import { AppEnvironmentBadge } from '@/components/ui/app-environment-badge';
 import { institutionalNavigation } from '@/experiences/institutional/content/site-content';
 import {
   merchantCompliance,
@@ -135,9 +136,12 @@ export function InstitutionalFooter({
               </div>
             </div>
           </div>
-          <div className="mt-8 border-t border-white/12 pt-5 text-center text-sm leading-6 text-white/68 sm:text-left">
-            Copyright © {currentYear} ASI República Dominicana. Compartiendo el
-            mensaje de esperanza a través de la fe y el servicio.
+          <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/12 pt-5 text-center text-sm leading-6 text-white/68 sm:flex-row sm:justify-between sm:text-left">
+            <p>
+              Copyright © {currentYear} ASI República Dominicana. Compartiendo el
+              mensaje de esperanza a través de la fe y el servicio.
+            </p>
+            <AppEnvironmentBadge className="shrink-0" surface="dark" />
           </div>
         </div>
       </footer>

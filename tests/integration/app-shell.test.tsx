@@ -211,6 +211,7 @@ describe('route shells', () => {
     expect(screen.queryByRole('link', { name: /Plataforma ASI/i })).not.toBeInTheDocument()
     expect(screen.queryByText(/Hiring workspace para empresas y equipos de selección/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Ver pricing' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Entorno Local; fase Beta').closest('footer')).toBeInTheDocument()
   })
 
 })

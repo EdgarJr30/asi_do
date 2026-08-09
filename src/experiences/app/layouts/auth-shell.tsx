@@ -4,6 +4,7 @@ import { useAppSession } from '@/app/providers/app-session-provider'
 import { RouteScrollManager } from '@/app/router/route-scroll-manager'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { BrandLockup } from '@/components/ui/app-brand'
+import { AppEnvironmentBadge } from '@/components/ui/app-environment-badge'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { AuthHeroPanel } from '@/features/auth/components/auth-hero-panel'
@@ -54,6 +55,7 @@ export function AuthShell() {
           <footer className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-(--app-border) pt-5 text-center text-xs text-(--app-text-subtle) sm:mt-8 sm:flex-row sm:pt-6 sm:text-left">
             <p>© 2026 ASI Rep. Dominicana</p>
             <div className="flex items-center gap-4">
+              <AppEnvironmentBadge />
               <button
                 className="transition hover:text-(--app-text)"
                 type="button"

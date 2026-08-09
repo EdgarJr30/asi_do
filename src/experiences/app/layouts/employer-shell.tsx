@@ -39,6 +39,7 @@ import { useAppSession } from '@/app/providers/app-session-provider'
 import { RouteScrollManager } from '@/app/router/route-scroll-manager'
 import { surfacePaths } from '@/app/router/surface-paths'
 import { BrandLockup, BrandMark } from '@/components/ui/app-brand'
+import { AppEnvironmentBadge } from '@/components/ui/app-environment-badge'
 import { AppBottomNav, type AppNavGroup, type AppNavItem } from '@/components/ui/app-shell-navigation'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/loader'
@@ -699,7 +700,7 @@ function SidebarFooter({
 
   if (!session.isAuthenticated) {
     return (
-      <div className="border-t border-white/10 px-2.5 py-3">
+      <div data-sidebar-footer className="border-t border-white/10 px-2.5 py-3">
         <button
           className={cn(
             'flex min-h-11 w-full items-center rounded-control text-left text-sm font-medium transition',
@@ -731,6 +732,10 @@ function SidebarFooter({
           ))}
         </div>
 
+        <div className="mt-4 flex justify-center border-t border-white/10 pt-4">
+          <AppEnvironmentBadge compact={showCollapsedLabels} surface="dark" />
+        </div>
+
         {!showCollapsedLabels ? (
           <div className="mt-4 border-t border-white/10 pt-4 text-center">
             <p className="text-xs leading-5 text-white/42">© {footerYear} {config.brand}</p>
@@ -742,7 +747,7 @@ function SidebarFooter({
   }
 
   return (
-    <div className="border-t border-white/10 px-2.5 py-3">
+    <div data-sidebar-footer className="border-t border-white/10 px-2.5 py-3">
       {!config.hideFooterChrome ? (
         <button
           className={cn(
@@ -782,6 +787,10 @@ function SidebarFooter({
           </>
         )}
       </button>
+
+      <div className="mt-3 flex justify-center border-t border-white/10 pt-3">
+        <AppEnvironmentBadge compact={showCollapsedLabels} surface="dark" />
+      </div>
 
       {!showCollapsedLabels && !config.hideFooterChrome ? (
         <div className="mt-4 border-t border-white/10 pt-4 text-center">

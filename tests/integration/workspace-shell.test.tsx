@@ -568,6 +568,15 @@ describe('workspace shell', () => {
     expect(await screen.findByText('Landing pública')).toBeInTheDocument()
   })
 
+  it('keeps the environment badge inside the authenticated sidebar footer', async () => {
+    seedWorkspaceSession(['workspace:read', 'role:read'])
+    renderWorkspaceShell()
+
+    const environmentBadge = await screen.findByLabelText('Entorno Local; fase Beta')
+
+    expect(environmentBadge.closest('[data-sidebar-footer]')).toBeInTheDocument()
+  })
+
   it('locks document scrolling while the mobile sidebar is open', async () => {
     seedWorkspaceSession(['workspace:read', 'role:read'])
     renderWorkspaceShell()

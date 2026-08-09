@@ -499,6 +499,9 @@ Do not reintroduce `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS`, or `RESEND_WEBHOOK_SE
 ### R-142 — Auth email links must never cross environments
 Do not commit a runtime Auth endpoint into `.env.development`, `.env.staging`, or `.env.production`. Development must build confirmation and recovery callbacks from the browser origin even if a public URL leaks into local configuration. Staging and production must inject `VITE_AUTH_SITE_URL`; every deployed build must declare `VITE_DEPLOY_ENV` and `VITE_PRODUCTION_SITE_URL`, reject HTTP/localhost, require production to match its canonical origin, and forbid staging from using that origin. Every callback must also exist in the corresponding Supabase project's redirect allow-list, because an unlisted `redirectTo` silently falls back to `site_url`.
 
+### R-143 — Environment status belongs to structural chrome, never floating content
+Do not render the Local, Staging, or Producción status badge as a fixed or floating overlay. Public and authentication surfaces must keep it inside their footer, while authenticated product surfaces must keep it in the sidebar footer with a compact state when the desktop sidebar is collapsed. The same component remains the future home of application versioning, but until versioning is introduced it shows only the environment and `Beta`.
+
 ---
 
 ## Maintenance rule
