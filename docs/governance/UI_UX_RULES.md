@@ -39,6 +39,7 @@ When a future redesign changes these rules, the new decision must still be bench
 9. **Customer-facing entrypoints must look like product, not tooling.** Public landing and shell surfaces must avoid exposing QA or operations language by default.
 10. **Platform-internal surfaces must reuse one shared shell.** Candidate routes, workspace routes, and operational `/platform/*` routes such as jobs should share the same sidebar/navbar construction, adapting only navigation copy and allowed destinations instead of diverging into separate chrome patterns.
 11. **First-run profile setup must feel guided, not administrative.** Required account setup should live inside the user's profile experience with short staged disclosure, visible progress, concise copy, and one primary action per step. Optional profile depth must be deferred to the normal profile editor.
+12. **The running environment must remain visible without competing with the task.** A single global status badge identifies Local, Staging, or Producción and the current release phase. It lives above mobile navigation, uses restrained semantic color, and is the future home of the application version; version numbers must not be duplicated elsewhere in the product chrome.
 
 ## 3.1 Mandatory UI libraries
 The project must standardize on the same libraries for reusable UI building blocks.

@@ -8,6 +8,7 @@ import { NotificationEventBridge } from '@/app/providers/notification-event-brid
 import { SessionRealtimeBridge } from '@/app/providers/session-realtime-bridge'
 import { AppSessionProvider } from '@/app/providers/app-session-provider'
 import { ThemeProvider } from '@/app/providers/theme-provider'
+import { AppEnvironmentBadge } from '@/components/ui/app-environment-badge'
 import { OfflineBanner } from '@/components/ui/offline-banner'
 
 function AppToaster() {
@@ -55,6 +56,7 @@ export function AppProviders({ children }: PropsWithChildren) {
           <SessionRealtimeBridge />
           {children}
           <OfflineBanner />
+          <AppEnvironmentBadge />
           <AppToaster />
         </ThemeProvider>
       </AppSessionProvider>
