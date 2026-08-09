@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 
 import { corsHeaders } from '../_shared/cors.ts'
+import { resolveResendConfig } from '../_shared/resend-config.ts'
 import { resolveServiceKey } from '../_shared/supabase-keys.ts'
 
 /**
@@ -538,8 +539,7 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const serviceRoleKey = resolveServiceKey()
-    const resendApiKey = Deno.env.get('RESEND_API_KEY') ?? Deno.env.get('RESEND_API_KEY_DEV') ?? ''
-    const fromEmail = Deno.env.get('EMAIL_FROM_ADDRESS') ?? Deno.env.get('EMAIL_FROM_ADDRESS_DEV') ?? ''
+    const { apiKey: resendApiKey, fromAddress: fromEmail } = resolveResendConfig((name) => Deno.env.get(name))
     const appUrl = Deno.env.get('APP_URL') ?? 'http://localhost:5173'
 
     if (!supabaseUrl || !serviceRoleKey) {
@@ -609,8 +609,8 @@ Deno.serve(async (req) => {
           responseCode: 503,
           responsePayload: {
             missingConfig: [
-              !resendApiKey ? 'RESEND_API_KEY' : null,
-              !fromEmail ? 'EMAIL_FROM_ADDRESS' : null
+              !resendApiKey ? 'RESEND_API_KEY_DEV' : null,
+              !fromEmail ? 'EMAIL_FROM_ADDRESS_DEV' : null
             ].filter(Boolean)
           }
         })
