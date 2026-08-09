@@ -3,21 +3,27 @@
 -- de modo que la transacción se revierte siempre.
 do $probe$
 declare
-  v_uid uuid;
+  -- Sujeto fijo del fixture: activo, aprobado y **sin rol de plataforma**, que
+  -- es lo que hace que el guard aplique.
+  --
+  -- Antes se elegía con `limit 1`, y ahí estaba el falso verde: sobre una base
+  -- sin usuarios `v_uid` quedaba null, el `update … where id = null` no afectaba
+  -- a ninguna fila, no lanzaba `insufficient_privilege` y la probe reportaba
+  -- BLOQUEADA — exactamente el veredicto que se quiere ver. Pasaba por no tener
+  -- a quién atacar.
+  v_uid uuid := 'f1000000-0000-4000-a000-000000000004';
   v_name text;
   v_out text := '';
+  v_fail int := 0;
 begin
-  -- Usuario no administrador de plataforma, para que el guard aplique.
-  select u.id, u.full_name into v_uid, v_name
-  from public.users u
-  where u.status = 'active'
-    and not exists (
-      select 1 from public.user_platform_roles r where r.user_id = u.id
-    )
-  limit 1;
+  select u.full_name into v_name from public.users u where u.id = v_uid;
 
-  if v_uid is null then
-    select u.id, u.full_name into v_uid, v_name from public.users u limit 1;
+  if v_name is null then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | falta el fixture %: carga supabase/tests/fixtures.sql', v_uid;
+  end if;
+
+  if exists (select 1 from public.user_platform_roles r where r.user_id = v_uid and r.revoked_at is null) then
+    raise exception 'PROBE_VERDICT status=FAIL fails=1 | el sujeto % tiene rol de plataforma; el guard no aplica', v_uid;
   end if;
 
   perform set_config('request.jwt.claims', json_build_object('sub', v_uid, 'role', 'authenticated')::text, true);
@@ -31,10 +37,11 @@ begin
         user_subscription_status = 'active',
         membership_expires_at = timezone('utc', now()) + interval '10 years'
     where id = v_uid;
+    v_fail := v_fail + 1;
     v_out := v_out || 'A) autoactivacion -> PERMITIDA (fallo de seguridad)';
   exception
     when insufficient_privilege then v_out := v_out || 'A) autoactivacion -> BLOQUEADA';
-    when others then v_out := v_out || format('A) autoactivacion -> otro error: %s', sqlerrm);
+    when others then v_out := v_out || format('A) autoactivacion -> BLOQUEADA (%s)', sqlerrm);
   end;
 
   -- Caso B: override de acceso manual.
@@ -42,10 +49,11 @@ begin
     update public.users
     set manual_access_override_until = timezone('utc', now()) + interval '1 year'
     where id = v_uid;
+    v_fail := v_fail + 1;
     v_out := v_out || ' | B) manual_access_override -> PERMITIDA (fallo de seguridad)';
   exception
     when insufficient_privilege then v_out := v_out || ' | B) manual_access_override -> BLOQUEADA';
-    when others then v_out := v_out || format(' | B) manual_access_override -> otro error: %s', sqlerrm);
+    when others then v_out := v_out || format(' | B) manual_access_override -> BLOQUEADA (%s)', sqlerrm);
   end;
 
   -- Caso C: edición legítima de perfil — debe seguir funcionando.
@@ -58,9 +66,12 @@ begin
     where id = v_uid;
     v_out := v_out || ' | C) perfil legitimo -> PERMITIDA';
   exception
-    when others then v_out := v_out || format(' | C) perfil legitimo -> BLOQUEADA (regresion): %s', sqlerrm);
+    when others then
+      v_fail := v_fail + 1;
+      v_out := v_out || format(' | C) perfil legitimo -> BLOQUEADA (regresion): %s', sqlerrm);
   end;
 
-  raise exception 'PROBE_RESULT: %', v_out;
+  raise exception 'PROBE_VERDICT status=% fails=% | %',
+    case when v_fail = 0 then 'PASS' else 'FAIL' end, v_fail, v_out;
 end;
 $probe$;

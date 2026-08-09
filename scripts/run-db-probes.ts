@@ -78,7 +78,7 @@ const MANIFIESTO: Record<string, Tier> = {
 }
 
 /** Archivos de `supabase/tests/` que no son probes y no se ejecutan sueltos. */
-const NO_SON_PROBES = new Set<string>([])
+const NO_SON_PROBES = new Set<string>(['fixtures'])
 
 const TESTS_DIR = resolve('supabase/tests')
 
@@ -108,7 +108,32 @@ function parseArgs(argv: string[]) {
     tier: (tier ?? 'todos') as Tier | 'todos',
     filter: get('filter'),
     dbUrl: get('db-url') ?? process.env.PROBE_DB_URL ?? DB_URL_LOCAL,
+    fixtures: argv.includes('--fixtures'),
   }
+}
+
+/**
+ * Carga `fixtures.sql` y lo deja **commiteado**, al revés que las probes.
+ *
+ * Escribe de verdad, así que solo tiene sentido sobre una base desechable: la
+ * que levanta `supabase start` o la que CI reproduce desde las migraciones.
+ * Nunca contra el remoto — de ahí que sea una bandera explícita y no el
+ * comportamiento por omisión.
+ */
+function cargarFixtures(dbUrl: string) {
+  const proceso = spawnSync(
+    'psql',
+    [dbUrl, '--no-psqlrc', '--quiet', '-v', 'ON_ERROR_STOP=1', '--file', `${TESTS_DIR}/fixtures.sql`],
+    { encoding: 'utf8' }
+  )
+
+  if (proceso.status !== 0) {
+    console.error('\n⛔ No se pudieron cargar los fixtures:\n')
+    console.error(`${proceso.stdout ?? ''}${proceso.stderr ?? ''}`)
+    process.exit(1)
+  }
+
+  console.log('  Fixtures cargados (supabase/tests/fixtures.sql)')
 }
 
 /**
@@ -219,7 +244,7 @@ function primeraLineaUtil(salida: string): string {
 }
 
 function main() {
-  const { tier, filter, dbUrl } = parseArgs(process.argv.slice(2))
+  const { tier, filter, dbUrl, fixtures } = parseArgs(process.argv.slice(2))
 
   const problemas = verificarManifiesto()
   if (problemas.length > 0) {
@@ -243,6 +268,8 @@ function main() {
 
   console.log(`\n  PROBES DE BASE DE DATOS · ${seleccionadas.length} a ejecutar${omitidas > 0 ? ` · ${omitidas} fuera de selección` : ''}`)
   console.log('  ' + '─'.repeat(76))
+
+  if (fixtures) cargarFixtures(dbUrl)
 
   const resultados: Resultado[] = []
   for (const { nombre, tier: t } of seleccionadas) {
