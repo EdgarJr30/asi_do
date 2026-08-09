@@ -27,6 +27,17 @@
   status = 200
   force = true
 
+# Un asset con hash que ya no existe (pestaña abierta con el index.html previo
+# al despliegue) debe dar 404 y no caer en el catch-all de abajo: devolver
+# index.html con 200 y text/html hace que el import dinámico falle con
+# "Failed to fetch dynamically imported module". Sin `force`, solo se aplica
+# cuando el archivo no existe. Tiene que ir ANTES del catch-all: Netlify aplica
+# la primera regla que casa.
+[[redirects]]
+  from = "/assets/*"
+  to = "/index.html"
+  status = 404
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

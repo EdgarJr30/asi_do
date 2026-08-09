@@ -1,3 +1,7 @@
+// Primero de todo: parchea `.at()` antes de que la app o sus dependencias
+// lleguen a llamarlo en navegadores viejos.
+import '@/lib/polyfills/array-at'
+
 // Solo subset `latin`: el sitio es en español, así evitamos cargar (y declarar
 // en el CSS inline) los subsets cyrillic/greek/vietnamese que nunca se usan.
 import '@fontsource/inter/latin-400.css'
@@ -14,9 +18,11 @@ import { createRoot } from 'react-dom/client'
 
 import { App } from '@/app/App'
 import '@/lib/i18n/config'
+import { handleStaleBundle } from '@/lib/pwa/handle-stale-bundle'
 import { registerServiceWorker } from '@/lib/pwa/register-service-worker'
 import '@/styles/index.css'
 
+handleStaleBundle()
 registerServiceWorker()
 
 const rootElement = document.getElementById('root')

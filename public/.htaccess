@@ -12,6 +12,13 @@ DirectoryIndex index.html
   RewriteEngine On
   RewriteBase /
 
+  # Origen canónico: www → apex. Con los dos hosts vivos el navegador registra
+  # un service worker y una caché por origen, así que un despliegue solo
+  # invalida la mitad y el otro host sigue sirviendo un bundle viejo.
+  # El apex es el canónico en .env.production y en supabase/config.toml.
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
   # QR de la presentación: /go → home.
   # El QR está quemado apuntando a /go; para cambiar el destino, edita esta línea.
   RewriteRule ^go/?$ / [R=302,L]
@@ -23,6 +30,15 @@ DirectoryIndex index.html
   # Basura de macOS: `vite build` copia todo `public/` a `dist/`, y ahí se cuela
   # el .DS_Store que crea Finder. Apache ya oculta los .ht*, pero este no.
   RewriteRule (^|/)\.DS_Store$ - [R=404,L]
+
+  # Un asset con hash que ya no existe —una pestaña abierta con el index.html
+  # anterior al despliegue— tiene que dar 404, no caer en el catch-all de la
+  # SPA. Si devuelve index.html con 200 y text/html, el import dinámico intenta
+  # ejecutar HTML como módulo y muere con "Failed to fetch dynamically imported
+  # module", que no dice nada de la causa real. Con el 404, el handler de
+  # `vite:preloadError` en el cliente detecta el bundle viejo y recarga.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^assets/ - [R=404,L]
 
   # Archivos y directorios reales se sirven tal cual.
   # Esto cubre /presentation (directorio con su propio index.html) y todo /public.
