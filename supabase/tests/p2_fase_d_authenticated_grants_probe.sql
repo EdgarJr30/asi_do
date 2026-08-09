@@ -40,6 +40,10 @@ declare
     'company_profiles=SU',
     'donation_amount_options=SIUD',
     'donations=S',
+    -- Solo lectura, y solo para quien tenga `email:read`: el historial de
+    -- eventos de Resend lo escribe `record_resend_webhook_event`, que es
+    -- `service_role`. El cliente lo consulta desde /admin/correos.
+    'email_delivery_events=S',
     'feature_flags=SU',
     'institutional_membership_applications=SIU',
     'job_alerts=SIUD',
@@ -108,6 +112,7 @@ declare
     'company_profiles',
     'donation_amount_options',
     'donations',
+    'email_delivery_events',
     'feature_flags',
     'institutional_membership_applications',
     'job_alerts',

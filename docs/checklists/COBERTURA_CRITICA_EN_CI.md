@@ -534,6 +534,7 @@ comprobación de accesibilidad automatizada en ninguna capa.
 | 2026-08-09 | Fixtures fuera de `seed.sql` | `supabase start` aplica `seed.sql`, y el mismo job compara `db diff` para detectar drift: los datos de prueba lo ensuciarían. |
 | 2026-08-09 | R2 se trata como deuda, no como prelanzamiento | Reemplazar 156 aserciones con prisa produce tests frágiles, que es un hueco peor que el actual porque también se disfraza de cobertura. |
 | 2026-08-09 | Numeración canónica R1…R10 del informe | Un tracker que renumera obliga a traducir cada vez que se cruza con el informe. |
+| 2026-08-09 | Una tabla nueva sin entrada en la matriz de la Fase D **rompe** la probe, no avisa | Es el mecanismo que obliga a decidir la superficie de cada tabla en vez de heredarla de los default privileges. Costó una línea en `email_delivery_events` y detectó el hueco el mismo día. |
 
 ---
 
@@ -542,4 +543,8 @@ comprobación de accesibilidad automatizada en ninguna capa.
 | Fecha | Qué se hizo | Commit |
 |---|---|---|
 | 2026-08-09 | Auditoría R1: 0/17 en CI, clasificadas catálogo vs datos, identificado el falso verde por ausencia de fixtures | `7a839ab` |
-| 2026-08-09 | Ampliado a los 10 hallazgos con numeración canónica; verificados R2, R4, R5, R7, R8, R10 contra el código | _(este commit)_ |
+| 2026-08-09 | Ampliado a los 10 hallazgos con numeración canónica; verificados R2, R4, R5, R7, R8, R10 contra el código | `98847cc` |
+| 2026-08-09 | R1 fase 1: contrato `PROBE_VERDICT`, runner con manifiesto, 5 probes de catálogo en `db-migrations.yml` | `2212e74` |
+| 2026-08-09 | R1 fase 2: `fixtures.sql` determinista + 6 probes de datos migradas | `c27d4b7` |
+| 2026-08-09 | **R1 cerrado**: 17/17 en CI con fixtures | `3649892` |
+| 2026-08-09 | Primeros dos hallazgos del runner ya en `main`, sobre `email_delivery_events` (`5caf1b1`): política de sesión sin envolver y tabla fuera de la matriz de la Fase D | _(este commit)_ |
