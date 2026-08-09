@@ -59,6 +59,43 @@ Dos detalles que no son obvios:
    credencial de un solo uso que llegó por correo; mantenerla viva después del cambio alarga su vida sin
    razón, y obligar a entrar con la contraseña nueva es la única confirmación real de que quedó guardada.
 
+## Plantillas Auth dinámicas por proyecto
+
+Las plantillas de `supabase/templates/` son únicas para todos los entornos y no contienen dominios
+quemados. Supabase resuelve cada envío con la configuración y los datos del proyecto que lo originó:
+
+- `{{ .SiteURL }}`: dominio configurado en Auth para ese proyecto; sirve el logo y los enlaces internos.
+- `{{ .ConfirmationURL }}`: enlace firmado y redirect generado por ese proyecto.
+- `{{ .Data.full_name }}` y `{{ .Email }}`: metadatos y correo del usuario que disparó el registro.
+
+Por tanto, desarrollo y producción necesitan proyectos Supabase, bases, SMTP y `site_url` independientes.
+No se mantiene una copia HTML por entorno: se promueve el mismo archivo y cambia el contexto que Supabase
+inyecta al renderizarlo.
+
+### Sincronizar `Confirm sign up` sin cruzar entornos
+
+El script consulta primero el `site_url` remoto y aborta antes del `PATCH` si el proyecto o dominio no
+corresponde al entorno declarado. Usa un token personal de Supabase Management API; no usa ni reemplaza la
+contraseña SMTP de Resend.
+
+```bash
+SUPABASE_ACCESS_TOKEN=... \
+SUPABASE_PROJECT_REF=<ref-destino> \
+AUTH_DEPLOY_ENV=development \
+EXPECTED_AUTH_SITE_URL=http://localhost:5173 \
+PRODUCTION_SUPABASE_PROJECT_REF=<ref-produccion> \
+PRODUCTION_AUTH_SITE_URL=https://asidominicana.do \
+npx tsx scripts/sync-auth-email-template.ts --dry-run
+
+# Quitar --dry-run solo después de comprobar el destino impreso.
+```
+
+Para producción se usa exactamente el mismo comando con el ref de producción,
+`AUTH_DEPLOY_ENV=production` y `EXPECTED_AUTH_SITE_URL=https://asidominicana.do`. El token se guarda como
+secreto del entorno de CI; los refs y URLs, como variables separadas de cada environment protegido. El test
+de contrato en `tests/integration/project-contract.test.ts` falla si cualquier plantilla vuelve a incluir
+un `href` o `src` HTTP absoluto, y el test unitario cubre el bloqueo cruzado dev/prod.
+
 ### Verificar sin esperar un correo
 
 El mínimo efectivo del remoto se lee provocando el rechazo, sin llegar a crear usuario:

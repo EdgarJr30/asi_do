@@ -7,7 +7,7 @@
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;margin:0 auto;border-collapse:collapse;">
             <tr>
               <td style="padding:0 0 18px;border-top:4px solid #3955b8;">
-                <img src="https://asi-do.netlify.app/brand/asi-logo-light.no-bg.png" alt="ASI Rep. Dominicana" width="160" style="display:block;width:160px;max-width:100%;height:auto;padding-top:18px;" />
+                <img src="{{ .SiteURL }}/brand/asi-logo-light.no-bg.png" alt="ASI Rep. Dominicana" width="160" style="display:block;width:160px;max-width:100%;height:auto;padding-top:18px;" />
               </td>
             </tr>
             <tr>
@@ -25,7 +25,10 @@
                         Confirma tu correo electronico
                       </h1>
                       <p style="margin:18px 0 0;font-size:16px;line-height:1.7;color:#586680;">
-                        Ya casi terminamos. Confirma tu cuenta para activar tu acceso a ASI y continuar en la plataforma.
+                        {{ if .Data.full_name }}Hola, {{ .Data.full_name }}. {{ end }}Ya casi terminamos. Confirma tu cuenta para activar tu acceso a ASI y continuar en la plataforma.
+                      </p>
+                      <p style="margin:12px 0 0;font-size:14px;line-height:1.7;color:#8290ab;">
+                        Esta confirmación corresponde a {{ .Email }}.
                       </p>
                     </td>
                   </tr>
@@ -61,7 +64,7 @@
                         <tr>
                           <td style="padding:24px 0 0;font-size:12px;line-height:1.8;color:#8290ab;">
                             Si no creaste esta cuenta, puedes ignorar este mensaje. Inicia sesión en
-                            <a href="https://asi-do.netlify.app/auth/sign-in" style="color:#3955b8;text-decoration:none;">asi-do.netlify.app</a>
+                            <a href="{{ .SiteURL }}/auth/sign-in" style="color:#3955b8;text-decoration:none;">la plataforma de ASI</a>
                             para revisar tu acceso.
                           </td>
                         </tr>

@@ -68,6 +68,22 @@ Todo lo que es específico de entorno. Esta es la lista que hay que recorrer al 
 
 > Las llaves migraron al formato `sb_publishable_` / `sb_secret_` el 2026-08-02; las JWT `anon` / `service_role` quedaron retiradas.
 
+#### Correo de Auth por entorno
+
+Cada proyecto posee su propia base de usuarios, configuración Auth y SMTP. Las plantillas HTML sí son el
+mismo artefacto versionado: usan `SiteURL`, `ConfirmationURL`, `Data` y `Email`, variables que Supabase
+resuelve dentro del proyecto que genera el correo. Así, un registro de desarrollo no puede construir el
+logo, el acceso ni la confirmación con el dominio de producción.
+
+`scripts/sync-auth-email-template.ts` promociona `Confirm sign up` mediante la Management API. Antes de
+escribir, compara el `project_ref` y el `site_url` remoto con los valores esperados y conoce explícitamente
+la identidad de producción; rechaza tanto producción apuntando a otro proyecto como desarrollo apuntando a
+producción. El comando y sus variables están documentados en `supabase/README.md`.
+
+En CI, desarrollo y producción deben ser environments protegidos distintos, cada uno con su
+`SUPABASE_PROJECT_REF`, `EXPECTED_AUTH_SITE_URL` y token. `PRODUCTION_SUPABASE_PROJECT_REF` y
+`PRODUCTION_AUTH_SITE_URL` actúan como límite común, no como destino implícito.
+
 **Llamando a las APIs a mano (`curl`, `fetch`):** la API de **Storage** rechaza las llaves nuevas si solo van en `Authorization: Bearer` — responde `403 {"message":"Invalid Compact JWS"}` porque intenta parsearlas como JWT. Hay que mandar **además** el header `apikey`. PostgREST se conforma con cualquiera de los dos, así que el fallo aparece solo al tocar Storage y el mensaje no apunta a la causa.
 
 ```bash

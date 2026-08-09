@@ -98,6 +98,37 @@ describe('project contract', () => {
     }
   })
 
+  it('keeps Supabase Auth email templates independent from deployment URLs', () => {
+    const templateFiles = [
+      'confirmation.html',
+      'email_change.html',
+      'invite.html',
+      'magic_link.html',
+      'reauthentication.html',
+      'recovery.html'
+    ]
+
+    for (const file of templateFiles) {
+      const contents = readFileSync(resolve(repoRoot, 'supabase/templates', file), 'utf8')
+      const absoluteAssetUrls = contents.match(/(?:href|src)="https?:\/\/[^"]+"/g) ?? []
+
+      expect(absoluteAssetUrls, `${file} must resolve links from Supabase variables`).toEqual([])
+      expect(contents, `${file} must resolve its brand assets from the project Site URL`).toContain(
+        '{{ .SiteURL }}/brand/asi-logo-light.no-bg.png'
+      )
+    }
+
+    const confirmation = readFileSync(
+      resolve(repoRoot, 'supabase/templates/confirmation.html'),
+      'utf8'
+    )
+
+    expect(confirmation).toContain('{{ .ConfirmationURL }}')
+    expect(confirmation).toContain('{{ .SiteURL }}/auth/sign-in')
+    expect(confirmation).toContain('{{ .Data.full_name }}')
+    expect(confirmation).toContain('{{ .Email }}')
+  })
+
   it('does not reintroduce the removed vulnerable PWA plugin chain', () => {
     const packageJson = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')) as {
       dependencies?: Record<string, string>
