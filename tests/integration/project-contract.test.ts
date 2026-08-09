@@ -118,6 +118,7 @@ describe('project contract', () => {
   })
 
   it('keeps Supabase Auth email templates independent from deployment URLs', () => {
+    const emailLogoPath = 'public/brand/asi-logo-light.no-bg.png'
     const templateFiles = [
       'confirmation.html',
       'email_change.html',
@@ -126,6 +127,8 @@ describe('project contract', () => {
       'reauthentication.html',
       'recovery.html'
     ]
+
+    expect(existsSync(resolve(repoRoot, emailLogoPath)), `${emailLogoPath} should exist`).toBe(true)
 
     for (const file of templateFiles) {
       const contents = readFileSync(resolve(repoRoot, 'supabase/templates', file), 'utf8')
