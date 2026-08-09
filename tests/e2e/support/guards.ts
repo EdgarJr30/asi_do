@@ -84,6 +84,21 @@ export async function waitForAppSettled(page: Page, timeout = FRESH_SESSION_CONT
  * justo lo que hace falta para separar "límite del remoto" de "defecto".
  */
 export function logAuthRejections(page: Page) {
+  // Una petición que ni siquiera llega a tener respuesta —DNS caído, red
+  // cortada, TLS rechazado— no pasa por `response`. Ya ocurrió: un
+  // `getaddrinfo ENOTFOUND` contra el host de Supabase tumbó el login y la
+  // prueba solo supo decir que `waitForURL` agotó 30s. Sin esta rama, el
+  // registro deja fuera justo el caso en el que la causa no es del producto.
+  page.on('requestfailed', (request) => {
+    if (!request.url().includes('/auth/v1/')) {
+      return
+    }
+
+    console.error(
+      `[auth] petición sin respuesta a ${request.url()}: ${request.failure()?.errorText ?? '(motivo desconocido)'}`
+    )
+  })
+
   page.on('response', (response) => {
     if (!response.url().includes('/auth/v1/token') || response.ok()) {
       return
