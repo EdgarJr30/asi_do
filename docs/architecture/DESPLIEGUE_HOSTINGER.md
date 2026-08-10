@@ -170,9 +170,10 @@ hPanel entrega la IP del servidor como hostname FTP, pero el endpoint FTPS prese
 `*.hstgr.io`. El workflow mantiene `ssl:verify-certificate=yes` para validar la cadena TLS y desactiva
 solo `ssl:check-hostname`, porque el nombre del certificado no puede coincidir con una dirección IP.
 
-La primera fase usa `mirror --reverse` **sin `--delete`**. Después del primer deploy hay que confirmar en
-hPanel que el listado inicial corresponde solo al directorio `zzz_dev`; entonces una tarea posterior
-puede activar la limpieza de bundles obsoletos con su propia prueba de contrato.
+El primer deploy se ejecutó con `mirror --reverse` sin borrado y se confirmó en hPanel que la raíz FTP
+corresponde exclusivamente a `zzz_dev`. El workflow usa ahora `--delete` para retirar del staging los
+bundles obsoletos que ya no existen en `dist/`; esta limpieza no puede alcanzar `public_html` de
+producción porque la cuenta FTP está limitada al directorio de staging.
 
 El mirror usa una sola transferencia, reanuda archivos parciales y tolera hasta cinco reconexiones.
 Hostinger puede cerrar conexiones FTPS paralelas durante cargas largas; una transferencia serial es

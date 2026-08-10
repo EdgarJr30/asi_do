@@ -71,7 +71,7 @@ describe('project contract', () => {
     }
   })
 
-  it('keeps staging deployment gated by CI and non-destructive until its FTP root is verified', () => {
+  it('keeps staging deployment gated by CI and removes stale files from its verified FTP root', () => {
     const ciWorkflow = readFileSync(resolve(repoRoot, '.github/workflows/ci.yml'), 'utf8')
 
     expect(ciWorkflow).toMatch(/branches:\s*\n\s*- main\s*\n\s*- staging/)
@@ -87,8 +87,7 @@ describe('project contract', () => {
     expect(ciWorkflow).not.toContain('cd \\"$HOSTINGER_PATH\\";')
     expect(ciWorkflow).toContain('set net:max-retries 5;')
     expect(ciWorkflow).toContain('set net:timeout 60;')
-    expect(ciWorkflow).toContain('mirror --reverse --continue --verbose --parallel=1')
-    expect(ciWorkflow).not.toContain('mirror --reverse --delete')
+    expect(ciWorkflow).toContain('mirror --reverse --delete --continue --verbose --parallel=1')
   })
 
   it('keeps the deployment configuration files in place', () => {

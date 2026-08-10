@@ -324,12 +324,12 @@ jobs:
       - name: Install FTP client
         run: sudo apt-get update && sudo apt-get install --yes lftp
 
-      # Primera fase deliberadamente no destructiva: la cuenta inicia dentro del
-      # document root de staging, pero no se habilita `--delete` hasta observar
-      # un deploy real y confirmar en Hostinger que `.` sigue siendo zzz_dev.
+      # La cuenta inicia dentro del document root aislado de staging. El primer
+      # deploy se observo sin borrado y se confirmo en Hostinger que `.` es solo
+      # `zzz_dev`, por lo que el mirror ya puede retirar bundles obsoletos.
       # hPanel entrega una IP como hostname, aunque FTPS presenta `*.hstgr.io`:
       # se valida la cadena del certificado y se omite solo la coincidencia CN/IP.
-      - name: Inspect scoped FTP root and upload without deletion
+      - name: Synchronize verified staging FTP root
         run: |
           lftp -u "$HOSTINGER_USERNAME","$HOSTINGER_PASSWORD" \
             -p "$HOSTINGER_PORT" "$HOSTINGER_HOST" -e "
@@ -344,6 +344,6 @@ jobs:
               set net:reconnect-interval-max 15;
               pwd;
               cls -la;
-              mirror --reverse --continue --verbose --parallel=1 --no-perms dist/ .;
+              mirror --reverse --delete --continue --verbose --parallel=1 --no-perms dist/ .;
               bye
             "
