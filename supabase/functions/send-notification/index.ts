@@ -15,6 +15,16 @@ const DATABASE_REQUEST_TIMEOUT_MS = 8_000
  */
 const PUSH_REQUEST_TIMEOUT_MS = 10_000
 
+/**
+ * Lo que se lee de la respuesta de web-push. Se declara aquí porque los tipos
+ * del paquete llegan sin estrechar y antes se leía a ciegas.
+ */
+interface WebPushResult {
+  statusCode?: number
+  headers?: Record<string, unknown>
+  body?: string
+}
+
 interface SendNotificationRequest {
   recipientUserId: string
   tenantId?: string | null
@@ -277,7 +287,7 @@ Deno.serve(async (req) => {
 
     for (const row of pushRows) {
       try {
-        const result = await withTimeout(
+        const result = await withTimeout<WebPushResult>(
           webpush.sendNotification(
             {
               endpoint: row.subscription_endpoint,
