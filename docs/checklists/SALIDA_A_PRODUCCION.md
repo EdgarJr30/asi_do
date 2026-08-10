@@ -141,4 +141,4 @@ sobre `storage.*` (exige consulta al remoto).
 | Fecha | Qué | Commit |
 |---|---|---|
 | 2026-08-10 | Auditoría de lanzamiento. Hallazgo: `asidominicana.do` sirve la base de desarrollo | `85ad726` |
-| 2026-08-10 | **A cerrado salvo A3.** Inventario: 0 terceros, nada que migrar. Borrada la cuenta e2e huérfana y hecho visible el fallo de limpieza que la escondía | pendiente |
+| 2026-08-10 | **A cerrado salvo A3.** Inventario: 0 terceros, nada que migrar. Borrada la cuenta e2e huérfana y hecho visible el fallo de limpieza que la escondía | `de5ecf6` |
