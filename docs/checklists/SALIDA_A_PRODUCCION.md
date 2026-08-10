@@ -70,7 +70,8 @@ Runbook `ENVIRONMENTS.md` §6. El replay de migraciones y las 17 probes ya está
       `required-env.ts`. Es exactamente el fallo de A, que pasó el build en verde porque no faltaba
       ninguna variable —estaban todas, y una estaba mal—. La comprobación se acota a los artefactos
       con origen canónico alcanzable, para no dejar el `verify` local en rojo. 4 mutantes muertos.
-      ⚠️ *Requiere que crees el environment `production` con sus vars y secrets antes del primer uso.*
+      ⚠️ *Requiere que crees el environment `production` con sus vars y secrets antes del primer uso:
+      paso a paso en `CONFIGURAR_DEPLOY_PRODUCCION.md`.*
 - [x] **D2 · Retirar una topología** — ✅ 2026-08-10. Netlify eliminado del repo; `public/.htaccess` es la única configuración de servidor del frontend. Queda quitar del panel de Supabase Auth los 4 redirects de `asi-do.netlify.app`.
 - [x] **D3 · Edge Functions por CI** — ✅ 2026-08-10. Job `deploy-edge-functions`, de `staging` y de
       `main`, cada rama contra el proyecto de su propio environment (si `main` empujara al proyecto de
