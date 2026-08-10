@@ -102,7 +102,14 @@ La card "Evento destacado" (`institutional-home-page.tsx:1141`) se ve vacía.
 
 Los 5 están en `Duplicate` en Linear: hoy no aparecen en ninguna vista. Re-verificados en código, ninguno empezado.
 
-- [ ] **G1 · [TASK-276](https://linear.app/mooncode/issue/TASK-276) + [277](https://linear.app/mooncode/issue/TASK-277) juntos** — `dashboard-api.ts:117` baja el pipeline entero y agrega en cliente; `listTenantJobs` (`jobs-api.ts:192`) sin paginación. Copiar el patrón de TASK-267/268. **El de mayor ganancia por esfuerzo.**
+- [x] **G1a · [TASK-276](https://linear.app/mooncode/issue/TASK-276) dashboard agregado** — ✅ 2026-08-10, `655b446`.
+      RPC `workspace_dashboard_metrics` con guarda de `application:read`; el cliente ya no descarga
+      ni una postulación. Las fronteras del periodo siguen saliendo del navegador para no perder la
+      medianoche local. Probe de 9 casos + denegación cruzada (4 mutantes muertos) y 5 tests de
+      unidad (2 mutantes). 18/18 probes, `db lint` limpio, `anon` sin execute en el remoto.
+- [ ] **G1b · [TASK-277](https://linear.app/mooncode/issue/TASK-277) paginar vacantes** — `listTenantJobs`
+      (`jobs-api.ts:192`) sigue sin paginación y `jobs-overview-page.tsx` deriva los contadores en
+      cliente. Mismo patrón: keyset + contadores agregados.
 - [ ] **G2 · [TASK-274](https://linear.app/mooncode/issue/TASK-274)** — `auth-api.ts:394` hace un `rpc('has_platform_permission')` por permiso. No existe `get_session_snapshot`.
 - [ ] **G3 · [TASK-275](https://linear.app/mooncode/issue/TASK-275)** — `pipeline-api.ts:12` sin keyset por etapa.
 - [ ] **G4 · [TASK-278](https://linear.app/mooncode/issue/TASK-278)** — 203 chunks; fijar budgets en CI ([TASK-24](https://linear.app/mooncode/issue/TASK-24)).
@@ -153,3 +160,4 @@ sobre `storage.*` (exige consulta al remoto).
 | 2026-08-10 | Auditoría de lanzamiento. Hallazgo: `asidominicana.do` sirve la base de desarrollo | `85ad726` |
 | 2026-08-10 | **A cerrado salvo A3.** Inventario: 0 terceros, nada que migrar. Borrada la cuenta e2e huérfana y hecho visible el fallo de limpieza que la escondía | `de5ecf6` |
 | 2026-08-10 | Barrido de verificación contra código: E2, H1 y D4 ya estaban cerrados (D4 nunca fue tarea: el job ya bloqueaba). E1 bloqueado por falta de archivos. C5, D3, D5, F4, H3, H4 confirmados abiertos con su evidencia | — |
+| 2026-08-10 | **G1a (TASK-276)**: métricas del dashboard agregadas en la base. La probe de la Fase D cazó de paso que `create function` deja la función invocable por `anon` pese al grant nominal | `655b446` |
