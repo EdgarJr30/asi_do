@@ -49,7 +49,9 @@ Con eso se puede reproducir el drift sin esperar al job de GitHub. La primera co
 
 ## Git
 
-- **Commitear directo en `main`.** No crear ramas salvo que se pida explícitamente.
+- **Commitear directo en `staging`.** Es la rama de trabajo desde el 2026-08-09: `main` dejó de ser el destino por defecto cuando `staging` pasó a publicar en Hostinger (job `deploy-staging` de `ci.yml`, que solo se dispara en `refs/heads/staging`). Un cambio commiteado en `main` no se despliega ni se prueba en el sitio de staging.
+- **No crear ramas** salvo que se pida explícitamente. `staging` ya es la rama; no hace falta otra encima.
+- `main` recibe lo que se promueve desde `staging`, no commits directos.
 - Todo cambio termina en un commit dentro de la misma tarea (`AGENTS.md` #9).
 - Mensajes de commit en español, con el porqué del cambio, no solo el qué.
 - **Puede haber otras sesiones trabajando este repo a la vez.** Corre `git status` antes de commitear y **añade archivos por ruta explícita, nunca `git add -A`**: es fácil llevarte trabajo ajeno a medias.
