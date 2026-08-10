@@ -17,7 +17,7 @@ REGISTRO          SOLICITUD           PAGO              APROBACIÓN          VER
  ATS bloqueado     (auto-ruteo)       status=submitted    (pastoral ref ✓)  (solo admin)       sub=active +1 año
 ```
 
-El ATS se desbloquea **solo** cuando se cumplen las 3 condiciones y un **admin** hace clic en "Activar". El botón "Activar" permanece deshabilitado hasta que (aprobación ✓ + pago verificado ✓). Separación de funciones (initiator ≠ reviewer ≠ verifier ≠ activator).
+El ATS se desbloquea **solo** cuando se cumplen las 3 condiciones y un **admin** hace clic en "Activar". El botón "Activar" permanece deshabilitado hasta que (aprobación ✓ + pago verificado ✓), y la vigencia pagada comienza en ese instante, no en la fecha del pago. Separación de funciones (initiator ≠ reviewer ≠ verifier ≠ activator).
 
 ## 2. Actores y responsabilidades
 
@@ -56,7 +56,7 @@ autoridad a pastores.
 
 ## 5. Gating (enforcement)
 - `hasActiveAsiAccess()` + `RequireActiveAsiAccess` ya bloquean el ATS. Activar = flip de flags
-  (`status=active, approval=approved, membership=active, subscription=active, +1 año`).
+  (`status=active, approval=approved, membership=active, subscription=active`) e inicio del término adquirido desde la fecha de activación.
 - **Nuevo guard**: usuario autenticado pero NO activo → redirige al **panel de membresía** (no a "forbidden").
 - **Edge**: pastores/admins se activan por el admin (override) sin requerir pago.
 
@@ -92,7 +92,7 @@ autoridad a pastores.
    - Nota: el helper se refactorizó en `20260622140000` (join directo contra `user_authority_scopes`, equivalente; no corrige bug — un falso negativo en pruebas se debió a un usuario sembrado que fue eliminado, lo que dejó la solicitud sin `requester` y borró su pago en cascada).
 4. **Consola admin** — solicitudes + pagos, validar pago, botón Activar/Inactivar, módulo de datos bancarios, audit. **✅ COMPLETA**
    - ✅ Página `MembershipConsolePage` en `/admin/membership` (gateada por `membership_payment:verify`); nav admin "Administrar membresías". Lista cada solicitud accionable con su último pago y el estado de la cuenta del miembro, con filtros de activas/inactivas y paginación.
-   - ✅ Acciones por solicitud: revisar (aprobar/más-info/rechazar) vía RPC `review_membership_application`; verificar/rechazar pago vía `verify_membership_payment`; ver comprobante (URL firmada); **Activar membresía** vía `activate_member` (habilitado solo con solicitud aprobada + pago verificado; flip de flags + `+1 año`); **Inactivar membresía** vía `deactivate_member` (retira acceso protegido con auditoría). Todo audita.
+   - ✅ Acciones por solicitud: revisar (aprobar/más-info/rechazar) vía RPC `review_membership_application`; verificar/rechazar pago vía `verify_membership_payment`; ver comprobante (URL firmada); **Activar membresía** vía `activate_member` (habilitado solo con solicitud aprobada + pago verificado; inicia desde ese momento el término comprado); **Inactivar membresía** vía `deactivate_member` (retira acceso protegido con auditoría). Todo audita.
    - ✅ Consolidación: se retiró la sección de membresía de `RecruiterReviewPage` (`/admin/approvals`) que usaba un UPDATE directo sin auditoría; se eliminaron las funciones muertas `reviewInstitutionalMembershipApplication`/`listPendingInstitutionalMembershipApplications`. El módulo de datos bancarios ya existía en `/admin/payments`.
    - ✅ **Validado e2e** (`tests/e2e/membership-admin-console.spec.ts`): un admin de plataforma aprueba → verifica pago → activa; confirmado en BD (flags del miembro a `active`/`approved`, `+1 año`) y en `audit_logs` (`membership_payment.verified`, `member.activated`, actor=admin).
 5. **Notificaciones + pulido** — eventos por transición; recordatorios de renovación (después). **✅ COMPLETA (envío automático)**

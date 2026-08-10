@@ -18,6 +18,7 @@ const repoRoot = resolve(import.meta.dirname, '../..')
 
 const contractPaths = {
   deactivateMembership: 'supabase/migrations/20260703120000_deactivate_active_membership.sql',
+  activateMembershipTerm: 'supabase/migrations/20260810010000_start_initial_membership_term_on_activation.sql',
   submitApplication: 'supabase/migrations/20260625100000_application_submit_pipeline_stage.sql',
   movePipeline: 'supabase/migrations/20260315083000_ats_lite_pipeline.sql',
   publishLimit: 'supabase/migrations/20260315103000_platform_ops_foundations.sql',
@@ -130,8 +131,16 @@ Given('el contrato administrativo de inactivación de membresía', function (thi
   this.contract = readContract(contractPaths.deactivateMembership)
 })
 
+Given('el contrato de inicio de vigencia de membresía', function (this: BusinessWorld) {
+  this.contract = readContract(contractPaths.activateMembershipTerm)
+})
+
 When('se inspecciona su efecto persistente', function () {
   // La verificación ocurre sobre la migración versionada que define el RPC.
+})
+
+When('se inspecciona la transición de activación final', function () {
+  // La verificación ocurre sobre el trigger y la RPC versionados.
 })
 
 Then('la membresía queda suspendida y la suscripción finalizada', function (this: BusinessWorld) {
@@ -149,6 +158,28 @@ Then('se registra el evento auditado {string}', function (this: BusinessWorld, e
 
 Then('exige autenticación y rol de administrador de plataforma', function (this: BusinessWorld) {
   assertContains(this.contract, 'if auth.uid() is null', 'if not public.is_platform_admin()')
+})
+
+Then(
+  'el pago inicial permanece sin período mientras la membresía no está activa',
+  function (this: BusinessWorld) {
+    assertContains(
+      this.contract,
+      "if new.intent = 'initial'",
+      "v_membership_status is distinct from 'active'",
+      'new.period_start := null',
+      'new.period_end := null'
+    )
+  }
+)
+
+Then('la activación fija el inicio y vencimiento del término pagado', function (this: BusinessWorld) {
+  assertContains(
+    this.contract,
+    'membership_activated_at = v_now',
+    'period_start = v_now::date',
+    'period_end = v_expires::date'
+  )
 })
 
 Given(

@@ -511,6 +511,9 @@ Codex and Claude Code must answer directly, concretely, and briefly. Lead with t
 ### R-146 — The membership payment trust notice must not attach to the checkout button
 Do not render the AZUL security notice as inline content beside the membership payment button. It must begin on its own row below the primary action with a visible vertical gap on mobile and desktop.
 
+### R-147 — Initial membership time starts at final activation
+Do not derive an inactive member's activation or expiration dates from payment initiation or verification. An initial verified payment must remain pending final activation with no effective period; the authorized activation RPC sets the activation timestamp, expiration, and payment period together, and the pending UI must show no running countdown.
+
 ---
 
 ## Maintenance rule

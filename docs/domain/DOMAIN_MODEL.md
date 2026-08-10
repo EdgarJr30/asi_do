@@ -290,6 +290,7 @@ Launch-readiness notes:
 11. Candidate profile completeness should stay derivable from database state after row changes in profile sections or resumes.
 12. Pastor and regional administrator authority must be scoped to the approved church territory and must not grant access outside that scope.
 13. Pastor/regional authorization and final license activation are separate domain events.
+14. An initial verified membership payment has no effective period until final activation; activation sets `membership_activated_at`, `membership_expires_at`, and the payment period from the same timestamp.
 
 ---
 

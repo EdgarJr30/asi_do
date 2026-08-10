@@ -23,6 +23,7 @@
 17. User access records are retained for at most 180 days and then deleted automatically.
 18. Only platform administrators with `audit_log:read` may inspect user access records, and each administrative read must leave a separate semantic audit event.
 19. IP address, timezone, browser, operating system, and device category are approximate technical context and must not be represented as exact physical location or conclusive identity.
+20. An initial membership payment confirms the purchased term but does not start it. The term starts only when an authorized administrator performs final activation; until then, the membership remains pending and accrues no elapsed days.
 
 ---
 

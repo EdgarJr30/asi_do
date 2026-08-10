@@ -318,12 +318,25 @@ export function MembershipStatusPage() {
   // Renovar solo tiene sentido sobre una solicitud ya aprobada; el acceso puede venir
   // de un override manual con la solicitud todavía en revisión.
   const canRenew = session.hasActiveAsiAccess && bundle.application?.status === 'approved'
+  const awaitingFinalActivation =
+    !session.hasActiveAsiAccess &&
+    bundle.application?.status === 'approved' &&
+    bundle.verifiedPayment?.status === 'verified'
   const importantStep = steps.find((step) => step.state === 'blocked') ?? steps.find((step) => step.state === 'current')
-  const routeStatusLabel = session.hasActiveAsiAccess ? 'Activa' : importantStep?.title ?? 'En proceso'
-  const membershipActivatedAt =
-    session.profile?.membership_activated_at ?? bundle.verifiedPayment?.period_start ?? bundle.verifiedPayment?.verified_at ?? null
-  const membershipExpiresAt = latestDateValue(session.profile?.membership_expires_at, bundle.verifiedPayment?.period_end)
-  const remainingMembership = formatRemainingMembership(membershipExpiresAt)
+  const routeStatusLabel = session.hasActiveAsiAccess
+    ? 'Activa'
+    : awaitingFinalActivation
+      ? 'Pendiente de aprobación final'
+      : importantStep?.title ?? 'En proceso'
+  const membershipActivatedAt = session.hasActiveAsiAccess
+    ? session.profile?.membership_activated_at ?? bundle.verifiedPayment?.period_start ?? null
+    : null
+  const membershipExpiresAt = session.hasActiveAsiAccess
+    ? latestDateValue(session.profile?.membership_expires_at, bundle.verifiedPayment?.period_end)
+    : null
+  const remainingMembership = session.hasActiveAsiAccess
+    ? formatRemainingMembership(membershipExpiresAt)
+    : 'Pendiente de activación'
   const receiptsTotalPages = Math.ceil(bundle.verifiedPayments.length / RECEIPTS_PAGE_SIZE)
   const safeReceiptsPage = receiptsTotalPages > 0 ? Math.min(Math.max(receiptsPage, 0), receiptsTotalPages - 1) : 0
   const visibleReceipts = bundle.verifiedPayments.slice(
@@ -726,22 +739,31 @@ function MembershipOverviewCard({
           </div>
         </div>
 
-        <div className="mt-4 sm:mt-6">
-          <div className="mb-2 flex items-baseline justify-between gap-4">
-            <span className="text-[0.8rem] text-(--app-text-muted) sm:text-sm">Vigencia restante</span>
-            <span className="text-right text-[0.8rem] font-semibold text-(--app-text) sm:text-sm">{remaining}</span>
+        {isActive ? (
+          <div className="mt-4 sm:mt-6">
+            <div className="mb-2 flex items-baseline justify-between gap-4">
+              <span className="text-[0.8rem] text-(--app-text-muted) sm:text-sm">Vigencia restante</span>
+              <span className="text-right text-[0.8rem] font-semibold text-(--app-text) sm:text-sm">{remaining}</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-(--app-border)">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-primary-700 to-primary-400 transition-[width] duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-4 text-[0.7rem] text-(--app-text-subtle) sm:text-xs">
+              <span>Activación · {formatShortDate(activatedAt)}</span>
+              <span className="text-right">Vence · {formatShortDate(expiresAt)}</span>
+            </div>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-(--app-border)">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary-700 to-primary-400 transition-[width] duration-300"
-              style={{ width: `${progress}%` }}
-            />
+        ) : (
+          <div className="mt-4 rounded-control border border-amber-200 bg-amber-50 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10 sm:mt-6">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Vigencia pendiente de activación</p>
+            <p className="mt-1 text-xs leading-5 text-amber-700/90 dark:text-amber-200/80">
+              La vigencia comenzará cuando un administrador active tu membresía. No perderás días mientras esperas.
+            </p>
           </div>
-          <div className="mt-2 flex items-center justify-between gap-4 text-[0.7rem] text-(--app-text-subtle) sm:text-xs">
-            <span>Activación · {formatShortDate(activatedAt)}</span>
-            <span className="text-right">Vence · {formatShortDate(expiresAt)}</span>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   )

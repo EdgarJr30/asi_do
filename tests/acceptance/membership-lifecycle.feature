@@ -19,3 +19,11 @@ Característica: Ciclo de vida de la membresía ASI
     Escenario: Proteger la operación administrativa
       Dado el contrato administrativo de inactivación de membresía
       Entonces exige autenticación y rol de administrador de plataforma
+
+  Regla: El pago inicial no consume vigencia antes de la activación final
+
+    Escenario: Conservar completo el término pagado mientras espera aprobación
+      Dado el contrato de inicio de vigencia de membresía
+      Cuando se inspecciona la transición de activación final
+      Entonces el pago inicial permanece sin período mientras la membresía no está activa
+      Y la activación fija el inicio y vencimiento del término pagado
