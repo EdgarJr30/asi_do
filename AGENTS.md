@@ -33,6 +33,13 @@ This file is intentionally compact. Keep the root guidance lightweight and use `
 ## Context-efficiency protocol
 Use the minimum context needed to complete the task well.
 
+## Communication and document brevity
+- Respond directly, concretely, and briefly. Do not add background, explanations, recaps, or next steps unless they help make a decision or the user asks for them.
+- Use plain language. Lead with the result; when useful, limit the structure to: what will be done, what was achieved, why it matters, and what remains.
+- Keep plans and Markdown documents short and scannable. Include only decisions, actions, owners, dependencies, acceptance criteria, and real risks that are needed.
+- Remove filler, repeated context, ceremonial introductions, obvious explanations, and speculative sections.
+- Prefer a compact checklist or table over long prose. Add detail only on request or when omitting it would create a material technical, security, or operational risk.
+
 1. Start from the smallest relevant surface:
 - prefer targeted files over broad repo scans
 - read only the docs directly related to the change

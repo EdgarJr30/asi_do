@@ -17,6 +17,8 @@ Documentation is a living contract, not an afterthought.
 7. Keep `AGENTS.md` concise and operational. Detailed product, architecture, and governance content should be referenced from `docs/` instead of duplicated at the repo root.
 8. If a task closes with any unresolved follow-up, that follow-up must be recorded immediately as a Linear issue in the canonical project for the repository, assigned to `me`, and created without waiting for user confirmation.
 9. If a task changes the repository, it must also create a git commit in the same task before closure.
+10. Keep every document as short as its purpose allows. Plans must favor compact checklists or tables and contain only decision-relevant actions, owners, dependencies, acceptance criteria, real risks, and pending work.
+11. Do not add filler, ceremonial introductions, repeated context, obvious explanations, speculative sections, or summaries that duplicate the document. Expand only when requested or when brevity would hide a material technical, security, or operational risk.
 
 ---
 

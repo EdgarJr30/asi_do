@@ -93,5 +93,7 @@ No pongas texto "Cargando…" suelto: usa el loader. No metas `updated_at` en la
 ## Estilo de trabajo
 
 - **Ediciones quirúrgicas.** No reescribas archivos o componentes completos cuando bastan cambios puntuales.
+- **Comunicación directa.** Responde con el resultado y solo el contexto necesario para decidir. Sin introducciones, recapitulaciones ni explicaciones no solicitadas.
+- **Documentos breves.** Los planes y archivos Markdown deben ser escaneables: qué se hará, qué se logró, por qué importa y qué falta. Usa listas o tablas compactas; elimina relleno y amplía solo si el usuario lo pide o existe un riesgo material.
 - Comentarios de código en español, igual que el resto del repo.
 - Prefiere la implementación correcta más pequeña (`AGENTS.md` #10).

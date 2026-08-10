@@ -505,6 +505,9 @@ Do not render the Local, Staging, or Producción status badge as a fixed or floa
 ### R-144 — Hostinger deployments promote branches and publish built artifacts only
 Do not connect Hostinger hPanel Git directly to the Vite checkout or publish repository source files. GitHub Actions owns the build and publishes only `dist/`: `staging` targets `dev.asidominicana.do`, while `main` is reserved for the protected production target. Staging must wait for every CI quality job and use its own GitHub Environment. With active traffic, never run `mirror --delete` against the document root or publish `index.html` before its hashed assets: upload missing assets first, replace mutable files through same-directory temporaries, activate `index.html` and `sw.js` last, verify the public release, and restore the previous entrypoints when that verification fails. Old hashed bundles are retained so tabs opened on the prior release can finish lazy imports.
 
+### R-145 — AI communication and documents must stay brief
+Codex and Claude Code must answer directly, concretely, and briefly. Lead with the result and include only decision-relevant context; do not add introductions, recaps, obvious explanations, or unsolicited next steps. Plans and Markdown documents must be short and scannable, preferably as compact checklists or tables, limited to what will be done, what was achieved, why it matters, what remains, and any real dependency, acceptance criterion, or material risk. Add detail only when the user asks or when omitting it would create a technical, security, or operational risk.
+
 ---
 
 ## Maintenance rule
