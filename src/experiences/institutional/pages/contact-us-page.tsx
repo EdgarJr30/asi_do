@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
+import { useMutation } from '@tanstack/react-query';
 import { Mail, PhoneCall, Send, UsersRound } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
+import { toast } from 'sonner';
 
 // import { surfacePaths } from '@/app/router/surface-paths';
 import {
@@ -11,6 +13,9 @@ import {
   InstitutionalSection,
 } from '@/experiences/institutional/components/institutional-ui';
 import { contactPoints } from '@/experiences/institutional/content/site-content';
+import { submitContactMessage } from '@/experiences/institutional/lib/contact-api';
+import { toErrorMessage } from '@/lib/errors/error-utils';
+import { Spinner } from '@/components/ui/loader';
 import { unsplashSrcSet } from '@/shared/ui/unsplash';
 
 const containerVariants = {
@@ -80,17 +85,26 @@ export function ContactUsPage() {
         variants: containerVariants,
       };
 
-  const mailtoHref = useMemo(
-    () =>
-      `mailto:secretaria@asirdo.org?subject=${encodeURIComponent(
-        `${topic} - ${name || 'ASI'}`
-      )}&body=${encodeURIComponent(
-        `Nombre: ${name || '-'}\nCorreo: ${
-          email || '-'
-        }\nAsunto: ${topic}\n\nMensaje:\n${message || '-'}`
-      )}`,
-    [email, message, name, topic]
-  );
+  // El correo sale del servidor (RPC → outbox → Resend). Antes esto solo abría
+  // el cliente de correo del visitante con un `mailto:`, así que la consulta se
+  // perdía si no tenía uno configurado y no quedaba rastro en la plataforma.
+  const sendMutation = useMutation({
+    mutationFn: () => submitContactMessage({ name, email, topic, message }),
+    onSuccess: () => {
+      setName('');
+      setEmail('');
+      setTopic('Consulta general');
+      setMessage('');
+      toast.success('Consulta enviada', {
+        description: 'Te responderemos al correo que nos dejaste.',
+      });
+    },
+    onError: (error) => {
+      toast.error('No pudimos enviar tu consulta', {
+        description: toErrorMessage(error),
+      });
+    },
+  });
 
   return (
     <div>
@@ -200,7 +214,7 @@ export function ContactUsPage() {
                   eyebrow: 'Formulario',
                   title: 'Déjanos tu mensaje.',
                   description:
-                    'Si prefieres escribir con más detalle, completa este formulario y prepararemos tu correo con toda la información básica.',
+                    'Si prefieres escribir con más detalle, completa este formulario y tu consulta llega directamente a nuestro equipo.',
                 }}
               />
               <motion.div className="hidden lg:block" variants={itemVariants}>
@@ -229,14 +243,19 @@ export function ContactUsPage() {
                 className="grid gap-5"
                 onSubmit={(event) => {
                   event.preventDefault();
-                  window.location.href = mailtoHref;
+                  if (sendMutation.isPending) return;
+                  sendMutation.mutate();
                 }}
               >
                 <label className="grid gap-2">
                   <span className="asi-field-label">Nombre</span>
                   <input
                     className="asi-field"
+                    disabled={sendMutation.isPending}
+                    maxLength={120}
+                    minLength={2}
                     onChange={(event) => setName(event.target.value)}
+                    required
                     type="text"
                     value={name}
                   />
@@ -246,7 +265,10 @@ export function ContactUsPage() {
                   <span className="asi-field-label">Correo</span>
                   <input
                     className="asi-field"
+                    disabled={sendMutation.isPending}
+                    maxLength={254}
                     onChange={(event) => setEmail(event.target.value)}
+                    required
                     type="email"
                     value={email}
                   />
@@ -256,6 +278,7 @@ export function ContactUsPage() {
                   <span className="asi-field-label">Motivo</span>
                   <select
                     className="asi-field"
+                    disabled={sendMutation.isPending}
                     onChange={(event) => setTopic(event.target.value)}
                     value={topic}
                   >
@@ -270,14 +293,26 @@ export function ContactUsPage() {
                   <textarea
                     // el arrastre queda acotado: crece hasta 20rem y luego hace scroll
                     className="asi-field max-h-80 min-h-40 resize-y"
+                    disabled={sendMutation.isPending}
+                    maxLength={4000}
+                    minLength={10}
                     onChange={(event) => setMessage(event.target.value)}
+                    required
                     value={message}
                   />
                 </label>
 
-                <button className="asi-button asi-button-primary" type="submit">
-                  <Send className="size-4" />
-                  Enviar consulta
+                <button
+                  className="asi-button asi-button-primary disabled:cursor-not-allowed disabled:opacity-70"
+                  disabled={sendMutation.isPending}
+                  type="submit"
+                >
+                  {sendMutation.isPending ? (
+                    <Spinner className="size-4" size="sm" />
+                  ) : (
+                    <Send className="size-4" />
+                  )}
+                  {sendMutation.isPending ? 'Enviando…' : 'Enviar consulta'}
                 </button>
               </form>
             </InstitutionalCard>

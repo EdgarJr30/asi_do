@@ -187,6 +187,13 @@ export async function processEmailDeliveries(
       typeof delivery.payload?.recipientName === 'string'
         ? (delivery.payload.recipientName as string).trim()
         : ''
+    // Solo se acepta si parece una dirección: llega de un payload que, en el
+    // caso del formulario de contacto, escribe una persona anónima.
+    const replyToCandidate =
+      typeof delivery.payload?.reply_to === 'string'
+        ? (delivery.payload.reply_to as string).trim()
+        : ''
+    const replyTo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(replyToCandidate) ? replyToCandidate : ''
     const recipientEmail = overrideTo || (delivery.recipient_email?.trim() ?? '')
     const recipientName =
       overrideRecipientName ||
@@ -311,6 +318,10 @@ export async function processEmailDeliveries(
         body: JSON.stringify({
           from: fromEmail,
           to: [recipientEmail],
+          // Lo usa el formulario público de contacto: el correo llega al buzón
+          // institucional desde el dominio verificado, pero "Responder" escribe
+          // a quien envió la consulta, no a la dirección de envío del sistema.
+          ...(replyTo ? { reply_to: [replyTo] } : {}),
           subject: delivery.title,
           html: emailContent.html,
           text: emailContent.text

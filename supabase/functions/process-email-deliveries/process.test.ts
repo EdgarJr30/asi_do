@@ -258,6 +258,59 @@ Deno.test('regla 2: un payload.to en blanco no se toma como override', async () 
   assertEquals(resend.sent[0].to, ['miembro@example.com'])
 })
 
+Deno.test('contacto: payload.reply_to hace que "Responder" escriba al visitante', async () => {
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({
+      data: [
+        buildDelivery({
+          notification_type: 'contact.message',
+          payload: {
+            to: 'hola@asidominicana.do',
+            reply_to: 'visitante@example.com',
+            recipientName: 'Equipo ASI'
+          },
+          recipient_email: null
+        })
+      ]
+    }),
+    email_delivery_is_suppressed: () => ({ data: false }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resend = createResendDouble()
+
+  await processEmailDeliveries({
+    database: database.client,
+    fetch: resend.fetch,
+    ...validConfig
+  })
+
+  assertEquals(resend.sent[0].to, ['hola@asidominicana.do'])
+  assertEquals(resend.sent[0].replyTo, ['visitante@example.com'])
+})
+
+Deno.test('contacto: un reply_to que no es una dirección se descarta', async () => {
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({
+      data: [
+        buildDelivery({
+          payload: { reply_to: 'no es un correo\nBcc: alguien@example.com' }
+        })
+      ]
+    }),
+    email_delivery_is_suppressed: () => ({ data: false }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resend = createResendDouble()
+
+  await processEmailDeliveries({
+    database: database.client,
+    fetch: resend.fetch,
+    ...validConfig
+  })
+
+  assertEquals(resend.sent[0].replyTo, [])
+})
+
 // ── Regla 3 · Destinatario correcto ─────────────────────────────────────────
 
 Deno.test('regla 3: el contenido de una entrega no puede salir al destinatario de otra', async () => {
