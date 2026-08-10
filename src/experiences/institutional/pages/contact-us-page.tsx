@@ -268,7 +268,8 @@ export function ContactUsPage() {
                 <label className="grid gap-2">
                   <span className="asi-field-label">Mensaje</span>
                   <textarea
-                    className="asi-field min-h-40 resize-y"
+                    // el arrastre queda acotado: crece hasta 20rem y luego hace scroll
+                    className="asi-field max-h-80 min-h-40 resize-y"
                     onChange={(event) => setMessage(event.target.value)}
                     value={message}
                   />
