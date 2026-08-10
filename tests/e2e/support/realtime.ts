@@ -16,6 +16,11 @@ loadLocalEnv()
 export const realtimeConfig = {
   supabaseUrl: process.env.E2E_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '',
   serviceRoleKey: process.env.E2E_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+  // La llave pública, la misma que usa el navegador. Solo la necesita la prueba
+  // de recuperación de contraseña, que canjea el token del enlace como lo haría
+  // un visitante: con `service_role` el canje pasaría por alto justo la parte
+  // que se quiere verificar.
+  anonKey: process.env.E2E_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? '',
   // Dueño de la vacante de prueba. Vacío = se descubre de la base al arrancar
   // (ver `resolveJobPublisher`); las variables existen para fijarlo a propósito.
   tenantId: process.env.E2E_REALTIME_TENANT_ID ?? '',

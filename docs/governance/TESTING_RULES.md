@@ -153,6 +153,7 @@ The repository must keep these commands meaningful:
 - `npm run test:mutation`
 - `npm run test:e2e`
 - `npm run test:e2e:smoke`
+- `npm run test:e2e:recovery`
 - `npm run test:functions`
 - `npm run test:probes`
 - `npm run test:probes:catalogo`

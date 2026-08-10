@@ -215,6 +215,19 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
 
+      # Recuperar contrasena es el unico flujo que usa quien ya no puede entrar:
+      # si se rompe, la persona afectada no tiene como reportarlo desde dentro
+      # del producto. Se provee su propia cuenta efimera y la borra, igual que el
+      # smoke autenticado, asi que no deja rastro en el proyecto remoto.
+      - name: Run password recovery suite
+        run: npm run test:e2e:recovery
+        env:
+          E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          E2E_SERVICE_ROLE_KEY: ${{ secrets.E2E_SERVICE_ROLE_KEY }}
+          E2E_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+
       - name: Upload Playwright report on failure
         if: failure()
         uses: actions/upload-artifact@v4
