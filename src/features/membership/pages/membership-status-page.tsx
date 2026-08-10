@@ -1079,7 +1079,7 @@ function AzulPayCard({
         </p>
       ) : null}
       {button}
-      <p className="mt-3 inline-flex items-center gap-1.5 rounded-control bg-(--app-surface) px-3 py-2 text-xs text-(--app-text-muted)">
+      <p className="mt-3 flex w-fit items-center gap-1.5 rounded-control bg-(--app-surface) px-3 py-2 text-xs text-(--app-text-muted)">
         <ShieldCheck className="size-3.5" /> Transacción procesada por AZUL. No almacenamos los datos de tu tarjeta.
       </p>
     </div>
