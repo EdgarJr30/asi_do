@@ -338,10 +338,12 @@ jobs:
               set ftp:ssl-protect-data true;
               set ssl:verify-certificate yes;
               set ssl:check-hostname no;
-              set net:max-retries 2;
-              set net:timeout 20;
+              set net:max-retries 5;
+              set net:timeout 60;
+              set net:reconnect-interval-base 5;
+              set net:reconnect-interval-max 15;
               pwd;
               cls -la;
-              mirror --reverse --verbose --parallel=2 --no-perms dist/ .;
+              mirror --reverse --continue --verbose --parallel=1 --no-perms dist/ .;
               bye
             "

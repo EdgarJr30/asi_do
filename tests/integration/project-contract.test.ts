@@ -85,7 +85,9 @@ describe('project contract', () => {
     expect(ciWorkflow).toContain('set ssl:check-hostname no;')
     expect(ciWorkflow).not.toContain('HOSTINGER_PATH:')
     expect(ciWorkflow).not.toContain('cd \\"$HOSTINGER_PATH\\";')
-    expect(ciWorkflow).toContain('mirror --reverse --verbose')
+    expect(ciWorkflow).toContain('set net:max-retries 5;')
+    expect(ciWorkflow).toContain('set net:timeout 60;')
+    expect(ciWorkflow).toContain('mirror --reverse --continue --verbose --parallel=1')
     expect(ciWorkflow).not.toContain('mirror --reverse --delete')
   })
 

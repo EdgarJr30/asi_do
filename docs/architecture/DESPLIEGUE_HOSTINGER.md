@@ -174,6 +174,10 @@ La primera fase usa `mirror --reverse` **sin `--delete`**. Después del primer d
 hPanel que el listado inicial corresponde solo al directorio `zzz_dev`; entonces una tarea posterior
 puede activar la limpieza de bundles obsoletos con su propia prueba de contrato.
 
+El mirror usa una sola transferencia, reanuda archivos parciales y tolera hasta cinco reconexiones.
+Hostinger puede cerrar conexiones FTPS paralelas durante cargas largas; una transferencia serial es
+más lenta, pero evita reiniciar una publicación ya parcialmente subida.
+
 ---
 
 ## 6. Variables de entorno y URLs a conmutar
