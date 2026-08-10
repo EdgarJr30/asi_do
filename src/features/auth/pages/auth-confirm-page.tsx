@@ -4,12 +4,33 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
-import { Badge } from '@/components/ui/badge'
+import { surfacePaths } from '@/app/router/surface-paths'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageLoader } from '@/components/ui/loader'
 import { completeAuthConfirmation, toErrorMessage } from '@/features/auth/lib/auth-api'
 import { resolveAuthCallback } from '@/features/auth/lib/auth-callback'
 import { captureClientError } from '@/lib/errors/client-error-logger'
+
+/**
+ * GoTrue devuelve el motivo en inglés y con vocabulario de plomería («token
+ * hash», «code verifier»). Quien confirma su correo no puede hacer nada con
+ * eso: aquí solo queda lo accionable, y el texto crudo vive en el registro de
+ * errores, que es donde sirve.
+ */
+function toConfirmationMessage(error: unknown) {
+  const raw = toErrorMessage(error).toLowerCase()
+
+  if (raw.includes('expired') || raw.includes('invalid') || raw.includes('not found')) {
+    return 'Este enlace ya caducó o se usó antes. Pide uno nuevo desde el acceso.'
+  }
+
+  if (raw.includes('verifier') || raw.includes('pkce')) {
+    return 'Abre el enlace en el mismo navegador donde creaste tu cuenta, o pide uno nuevo desde el acceso.'
+  }
+
+  return 'No pudimos completar el enlace de confirmación. Pide uno nuevo desde el acceso.'
+}
 
 export function AuthConfirmPage() {
   const navigate = useNavigate()
@@ -18,25 +39,34 @@ export function AuthConfirmPage() {
   const [status, setStatus] = useState<'loading' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const hasStartedRef = useRef(false)
+  const isMountedRef = useRef(true)
+
+  // El efecto corre **una sola vez** (deps vacías) y lee lo último por ref.
+  // Tenerlos en dependencias era el bug: confirmar el correo cambia la sesión,
+  // el provider re-renderiza con un objeto nuevo, el efecto se limpiaba a media
+  // confirmación y su `isActive` apagado hacía que ni navegara ni mostrara error.
+  // Resultado: la pantalla se quedaba en «Procesando confirmacion» para siempre.
+  const latestRef = useRef({ navigate, searchParams, session })
+
+  // Sin dependencias: se sincroniza tras cada render, así el flujo en vuelo
+  // siempre usa la sesión y el navegador actuales sin volver a arrancar.
+  useEffect(() => {
+    latestRef.current = { navigate, searchParams, session }
+  })
 
   useEffect(() => {
-    if (hasStartedRef.current) {
-      return
-    }
-
-    hasStartedRef.current = true
-
-    let isActive = true
-    const callback = resolveAuthCallback(searchParams)
+    // En un remontaje (StrictMode en desarrollo) volvemos a marcar montado sin
+    // reiniciar el flujo: el enlace del correo es de un solo uso y reintentar el
+    // intercambio del código fallaría.
+    isMountedRef.current = true
 
     async function confirmAuth() {
-      if (!session.isSupabaseConfigured) {
-        if (!isActive) {
-          return
-        }
+      const { session: currentSession } = latestRef.current
+      const callback = resolveAuthCallback(latestRef.current.searchParams)
 
+      if (!currentSession.isSupabaseConfigured) {
         setStatus('error')
-        setErrorMessage('El servicio de confirmacion aun no esta disponible para procesar este enlace.')
+        setErrorMessage('El servicio de confirmación aún no está disponible para procesar este enlace.')
         return
       }
 
@@ -46,73 +76,72 @@ export function AuthConfirmPage() {
           tokenHash: callback.tokenHash,
           type: callback.type
         })
-        await session.refresh()
-
-        if (!isActive) {
-          return
-        }
-
-        toast.success('Correo confirmado', {
-          description: 'Tu cuenta ya puede iniciar sesión y preparar tu perfil.'
-        })
-        await navigate(callback.nextPath, { replace: true })
       } catch (error) {
-        if (!isActive) {
-          return
-        }
-
         await captureClientError({
           source: 'auth.confirm',
-          route: '/auth/confirm',
-          userId: session.authUser?.id ?? null,
+          route: surfacePaths.auth.confirm,
+          userId: latestRef.current.session.authUser?.id ?? null,
           userMessage: 'No pudimos confirmar tu correo.',
           error,
-          metadata: {
-            nextPath: callback.nextPath
-          }
+          metadata: { nextPath: callback.nextPath }
         })
-        setStatus('error')
-        setErrorMessage(toErrorMessage(error))
+
+        if (isMountedRef.current) {
+          setStatus('error')
+          setErrorMessage(toConfirmationMessage(error))
+        }
+        return
       }
+
+      // A partir de aquí el enlace ya se consumió: hidratar es una mejora, no un
+      // requisito. Si falla, el provider vuelve a intentarlo por el evento de
+      // auth y el destino pide lo que le falte; bloquear aquí dejaría a la
+      // persona confirmada pero atrapada en una pantalla de error.
+      try {
+        await latestRef.current.session.refresh()
+      } catch (error) {
+        void captureClientError({
+          source: 'auth.confirm.refresh',
+          route: surfacePaths.auth.confirm,
+          error,
+          severity: 'warning',
+          userMessage: 'No pudimos cargar tu sesion tras confirmar el correo.'
+        })
+      }
+
+      toast.success('Correo confirmado', {
+        description: 'Tu cuenta ya puede iniciar sesión y preparar tu perfil.'
+      })
+      await latestRef.current.navigate(callback.nextPath, { replace: true })
     }
 
-    void confirmAuth()
+    if (!hasStartedRef.current) {
+      hasStartedRef.current = true
+      void confirmAuth()
+    }
 
     return () => {
-      isActive = false
+      isMountedRef.current = false
     }
-  }, [navigate, searchParams, session])
+  }, [])
 
   if (status === 'error') {
     return (
-      <Card className="mx-auto max-w-3xl">
+      <Card className="mx-auto w-full max-w-xl text-center">
         <CardHeader>
-          <Badge variant="soft">Auth callback</Badge>
           <CardTitle>No pudimos confirmar tu correo</CardTitle>
           <CardDescription>
-            El enlace de confirmacion no se pudo completar correctamente.
+            {errorMessage ?? 'No pudimos completar el enlace de confirmación. Pide uno nuevo desde el acceso.'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">{errorMessage ?? 'Error inesperado.'}</p>
-          <Button onClick={() => void navigate('/auth/sign-in', { replace: true })}>Volver a acceso</Button>
+        <CardContent className="flex justify-center">
+          <Button className="h-12 rounded-control text-sm" onClick={() => void navigate(surfacePaths.auth.signIn, { replace: true })}>
+            Volver a acceso
+          </Button>
         </CardContent>
       </Card>
     )
   }
 
-  return (
-    <Card className="mx-auto max-w-3xl">
-      <CardHeader>
-        <Badge variant="soft">Auth callback</Badge>
-        <CardTitle>Procesando confirmacion</CardTitle>
-        <CardDescription>
-          Estamos validando tu correo y cerrando tu acceso para llevarte de vuelta al producto.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="text-sm text-zinc-600 dark:text-zinc-400">
-        Si todo sale bien te llevaremos al siguiente paso automaticamente.
-      </CardContent>
-    </Card>
-  )
+  return <PageLoader className="min-h-full" label="Confirmando tu correo" hint="Un momento" />
 }
