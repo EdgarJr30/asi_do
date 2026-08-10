@@ -514,6 +514,9 @@ Do not render the AZUL security notice as inline content beside the membership p
 ### R-147 — Initial membership time starts at final activation
 Do not derive an inactive member's activation or expiration dates from payment initiation or verification. An initial verified payment must remain pending final activation with no effective period; the authorized activation RPC sets the activation timestamp, expiration, and payment period together, and the pending UI must show no running countdown.
 
+### R-148 — Base onboarding exits to the step the member can actually complete
+Do not send everyone to the payment panel after the base profile wizard, and do not rely on an intermediate summary screen or countdown: saving the profile rehydrates the session and unmounts the wizard, so the exit must navigate immediately. Resolve the destination with `resolveMembershipOnboardingStep` against fresh membership state — incomplete profile → profile, no application → eligibility, draft → the application form, submitted application without payment → the membership panel, already paid → profile. While the application is missing or still a draft, the membership panel must state that payment is blocked and what unlocks it, instead of showing payment as merely "pending".
+
 ---
 
 ## Maintenance rule

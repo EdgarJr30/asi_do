@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
   ArrowRight,
@@ -35,6 +36,13 @@ import {
 } from '@/features/auth/lib/auth-api'
 import { onboardingSchema, type OnboardingValues } from '@/features/auth/lib/auth-schemas'
 import { hasCompletedBaseOnboarding } from '@/features/auth/lib/onboarding-status'
+import { fetchMyMembershipStatus } from '@/features/membership/lib/membership-api'
+import {
+  membershipOnboardingStepPath,
+  resolveMembershipOnboardingStep,
+  toMembershipOnboardingState,
+  type MembershipOnboardingStep
+} from '@/features/membership/lib/membership-onboarding-route'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
 import { ImageCropDialog } from '@/shared/ui/image-crop-dialog'
 import { getCountryFlagLabel, getCountryOptionByCode } from '@/shared/geo/location-options'
@@ -49,10 +57,29 @@ import {
 } from '@/lib/uploads/media'
 import { cn } from '@/lib/utils/cn'
 
-// Tras completar el perfil base redirigimos al pago de la membresía. 8s deja
-// leer el mensaje de éxito y respeta a usuarios con lectores de pantalla, sin
-// frenar el objetivo de "llenar formulario y pagar de inmediato".
-const MEMBERSHIP_REDIRECT_SECONDS = 8
+// Qué sigue después del perfil base. El destino lo decide
+// resolveMembershipOnboardingStep; aquí solo vive el texto de cada caso.
+const nextStepCopy: Record<Exclude<MembershipOnboardingStep, 'profile'>, { description: string; action: string }> = {
+  payment: {
+    description:
+      'El siguiente paso es pagar tu membresía. La activación final ocurre después de la aprobación, así que te llevamos directo al pago.',
+    action: 'Pagar mi membresía ahora'
+  },
+  application: {
+    description:
+      'Tu solicitud de membresía quedó sin terminar. Todavía no puedes pagar: primero termínala y envíala, y ahí mismo se habilita el pago.',
+    action: 'Continuar mi solicitud'
+  },
+  eligibility: {
+    description:
+      'Antes de pagar necesitas enviar tu solicitud de membresía. Elige tu categoría, complétala y el pago se habilita al enviarla.',
+    action: 'Iniciar mi solicitud'
+  },
+  done: {
+    description: 'Tu pago ya está registrado. Te llevamos a tu perfil para que termines de completarlo.',
+    action: 'Ir a mi perfil'
+  }
+}
 
 const steps = [
   {
@@ -186,7 +213,8 @@ function OnboardingFrame({
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary-700 dark:text-primary-200" />
           <p className="text-xs leading-5 text-(--app-text-muted)">
-            Con tus datos base completados podemos llevarte al pago. El CV y la experiencia los completas después.
+            Con tus datos base completados te llevamos al siguiente paso de tu membresía. El CV y la experiencia los
+            completas después.
           </p>
         </div>
       </div>
@@ -205,11 +233,32 @@ export function ProfileOnboardingFlow() {
   const [avatarFileError, setAvatarFileError] = useState<string | null>(null)
   const [isPreparingAvatar, setIsPreparingAvatar] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
-  // `justSubmitted` solo es true cuando el usuario acaba de enviar el formulario
-  // en esta sesión (no al revisitar con el perfil ya completo), para que el
-  // auto-redireccionamiento al pago no dispare en visitas posteriores.
-  const [justSubmitted, setJustSubmitted] = useState(false)
-  const [redirectCountdown, setRedirectCountdown] = useState(MEMBERSHIP_REDIRECT_SECONDS)
+
+  // Estado de membresía para decidir a dónde sale el wizard. Comparte queryKey con
+  // la pantalla de membresía, así que la caché se reutiliza al llegar allí.
+  const queryClient = useQueryClient()
+  const membershipUserId = session.authUser?.id ?? null
+  const membershipStatusQueryOptions = {
+    queryKey: ['membership', 'status', membershipUserId] as const,
+    queryFn: async () => fetchMyMembershipStatus(membershipUserId!)
+  }
+  const membershipStatusQuery = useQuery({
+    ...membershipStatusQueryOptions,
+    enabled: Boolean(membershipUserId)
+  })
+
+  // Si el estado de membresía no se pudo leer, salimos a la pantalla de membresía:
+  // es la que explica el bloqueo y ofrece el siguiente paso sin adivinar.
+  const nextStep: Exclude<MembershipOnboardingStep, 'profile'> = membershipStatusQuery.isError
+    ? 'payment'
+    : (resolveMembershipOnboardingStep(
+        toMembershipOnboardingState({
+          bundle: membershipStatusQuery.data,
+          hasCompletedProfile: true,
+          hasActiveAsiAccess: session.hasActiveAsiAccess
+        })
+      ) as Exclude<MembershipOnboardingStep, 'profile'>)
+  const nextStepPath = membershipOnboardingStepPath(nextStep)
 
   const form = useForm<OnboardingValues>({
     resolver: zodResolver(onboardingSchema),
@@ -255,36 +304,6 @@ export function ProfileOnboardingFlow() {
     }
   }, [avatarPreviewUrl])
 
-  // Ref estable para que el intervalo del countdown invoque siempre la última
-  // versión de leaveToMembership sin re-ejecutar el efecto en cada render.
-  const leaveToMembershipRef = useRef<() => void>(() => {})
-
-  // Auto-redireccionamiento al pago de la membresía con cuenta regresiva visible.
-  // Solo corre cuando el usuario acaba de enviar el formulario en esta sesión.
-  useEffect(() => {
-    if (!justSubmitted) {
-      return
-    }
-
-    setRedirectCountdown(MEMBERSHIP_REDIRECT_SECONDS)
-
-    const intervalId = window.setInterval(() => {
-      setRedirectCountdown((value) => {
-        if (value <= 1) {
-          window.clearInterval(intervalId)
-          leaveToMembershipRef.current()
-          return 0
-        }
-
-        return value - 1
-      })
-    }, 1000)
-
-    return () => {
-      window.clearInterval(intervalId)
-    }
-  }, [justSubmitted])
-
   const activeStep = steps[activeStepIndex]
   const ActiveStepIcon = activeStep.icon
   const completedStepCount = isComplete ? steps.length : activeStepIndex
@@ -299,13 +318,14 @@ export function ProfileOnboardingFlow() {
     : previewCountry.toUpperCase()
   const previewLocale = form.watch('locale') === 'en' ? 'English' : 'Español'
   const isLastStep = activeStepIndex === steps.length - 1
-  const primaryActionLabel = form.formState.isSubmitting ? 'Guardando...' : isLastStep ? 'Guardar e ir al pago' : 'Continuar'
+  const primaryActionLabel = form.formState.isSubmitting ? 'Guardando...' : isLastStep ? 'Guardar y continuar' : 'Continuar'
 
   // Refresca la sesión (para que el guard de onboarding completo deje pasar) y
-  // navega. Idempotente: el countdown, el botón de pago y "Completar después"
-  // pueden dispararlo, pero solo una salida corre. Si el refresh o la navegación
-  // fallan, liberamos el cerrojo para permitir reintentar en lugar de dejar el
-  // botón muerto.
+  // navega. El refresh va primero a propósito: `RequireCompletedBaseOnboarding`
+  // devuelve al perfil cualquier ruta de /account mientras el perfil siga
+  // incompleto. Idempotente: el botón y la salida automática pueden dispararlo,
+  // pero solo una corre. Si algo falla liberamos el cerrojo para reintentar en
+  // lugar de dejar el botón muerto.
   const isLeavingRef = useRef(false)
   async function refreshAndNavigate(path: string) {
     if (isLeavingRef.current) {
@@ -323,17 +343,39 @@ export function ProfileOnboardingFlow() {
     }
   }
 
-  function goToMembership() {
-    void refreshAndNavigate(surfacePaths.account.membership)
+  /**
+   * Sale al paso que de verdad toca. Resuelve el destino con el estado de
+   * membresía FRESCO (no con lo que hubiera en caché al montar): equivocarse aquí
+   * es mandar al pago a quien todavía no puede pagar.
+   */
+  async function leaveToNextStep() {
+    let resolvedPath = nextStepPath
+
+    if (membershipUserId) {
+      try {
+        const bundle = await queryClient.fetchQuery(membershipStatusQueryOptions)
+        resolvedPath = membershipOnboardingStepPath(
+          resolveMembershipOnboardingStep(
+            toMembershipOnboardingState({
+              bundle,
+              hasCompletedProfile: true,
+              hasActiveAsiAccess: session.hasActiveAsiAccess
+            })
+          )
+        )
+      } catch {
+        // Sin estado de membresía legible, la pantalla de membresía es el destino
+        // seguro: explica el bloqueo y ofrece el siguiente paso.
+        resolvedPath = membershipOnboardingStepPath('payment')
+      }
+    }
+
+    await refreshAndNavigate(resolvedPath)
   }
 
-  // Mantén el ref del countdown apuntando siempre a la última versión, sin
-  // mutarlo durante el render (lo hacemos en un efecto, como recomienda React).
-  useEffect(() => {
-    leaveToMembershipRef.current = () => {
-      void refreshAndNavigate(surfacePaths.account.membership)
-    }
-  })
+  function goToNextStep() {
+    void leaveToNextStep()
+  }
 
   async function prepareAvatarFile(file: File) {
     setAvatarFileError(null)
@@ -453,15 +495,17 @@ export function ProfileOnboardingFlow() {
         await discardReplacedFileQuietly(AVATARS_BUCKET, previousAvatarPath)
       }
 
-      // No refrescamos la sesión aquí: hacerlo marca el onboarding como completo
-      // y CandidateProfilePage desmontaría este wizard antes de mostrar el
-      // resumen con el CTA de pago. Refrescamos justo antes de salir al pago
-      // (ver leaveToMembership), para que el resumen + cuenta regresiva sí se vean.
       setIsComplete(true)
-      setJustSubmitted(true)
       toast.success('Perfil listo', {
-        description: 'Te llevamos al pago de membresía.'
+        description:
+          nextStep === 'payment' ? 'Te llevamos al pago de membresía.' : 'Te llevamos al siguiente paso de tu membresía.'
       })
+
+      // Salida inmediata, sin pantalla intermedia: guardar el perfil dispara la
+      // rehidratación de la sesión y CandidateProfilePage sustituye este asistente
+      // por el editor de perfil. Cualquier resumen o cuenta regresiva aquí no llega
+      // a verse y el usuario terminaba en su perfil en vez de en el paso que toca.
+      await leaveToNextStep()
     } catch (error) {
       await captureClientError({
         source: 'profile.onboarding.submit',
@@ -545,23 +589,18 @@ export function ProfileOnboardingFlow() {
                           Listo, {previewName.split(' ')[0]}
                         </h2>
                         <p className="mt-2 max-w-xl text-sm leading-6 text-(--app-text-muted)">
-                          El siguiente paso es pagar tu membresía. La activación final ocurre después de la aprobación, así que te llevamos directo al pago.
+                          {nextStepCopy[nextStep].description}
                         </p>
                       </div>
 
+                      {/* Salvavidas: la salida es automática al guardar, así que esto
+                          solo se ve si la navegación falló o el usuario volvió aquí. */}
                       <div className="mt-8">
-                        <Button className="h-12 w-full rounded-card px-5 sm:w-auto" onClick={goToMembership}>
-                          <CreditCard className="size-5" />
-                          Pagar mi membresía ahora
+                        <Button className="h-12 w-full rounded-card px-5 sm:w-auto" onClick={goToNextStep}>
+                          {nextStep === 'payment' ? <CreditCard className="size-5" /> : null}
+                          {nextStepCopy[nextStep].action}
                           <ArrowRight className="size-5" />
                         </Button>
-
-                        {justSubmitted ? (
-                          <p aria-live="polite" className="mt-3 text-xs leading-5 text-(--app-text-muted)" role="status">
-                            Te llevaremos al pago automáticamente en {redirectCountdown}{' '}
-                            {redirectCountdown === 1 ? 'segundo' : 'segundos'}.
-                          </p>
-                        ) : null}
                       </div>
                     </motion.div>
                   ) : (

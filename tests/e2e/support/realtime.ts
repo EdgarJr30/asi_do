@@ -145,6 +145,12 @@ export interface ProvisionUserOptions {
   fullName?: string
   /** Acceso ASI sin pasar por el pipeline de membresía. Por defecto, sí. */
   withAsiAccess?: boolean
+  /**
+   * Onboarding base ya completado. Por defecto sí, porque casi toda la suite
+   * quiere entrar a la aplicación y no al asistente. Ponlo en `false` para
+   * probar justo el asistente y a dónde sale.
+   */
+  withBaseOnboarding?: boolean
 }
 
 /**
@@ -159,7 +165,7 @@ export async function provisionUser(
   admin: ServiceClient,
   options: ProvisionUserOptions = {}
 ): Promise<ProvisionedCandidate> {
-  const { prefix = 'rt-e2e', fullName = 'Realtime E2E', withAsiAccess = true } = options
+  const { prefix = 'rt-e2e', fullName = 'Realtime E2E', withAsiAccess = true, withBaseOnboarding = true } = options
   // El sufijo aleatorio evita colisiones entre pruebas que arrancan en el mismo
   // milisegundo; el correo tiene que ser único en `auth.users`.
   const email = `${prefix}+${Date.now()}-${Math.random().toString(36).slice(2, 8)}@asido.test`
@@ -205,10 +211,14 @@ export async function provisionUser(
       // Se completa solo el mínimo del gate. El *perfil de candidato* sigue
       // vacío a propósito: es lo que hace visible el aviso "Completa tu perfil"
       // y lo que mantiene a la cuenta representando a un usuario nuevo.
-      full_name: fullName,
-      display_name: fullName,
+      //
+      // Con `withBaseOnboarding: false` se deja el perfil como el de un recién
+      // registrado ("New user" sin país), que es lo que hace aparecer el
+      // asistente.
+      full_name: withBaseOnboarding ? fullName : 'New user',
+      display_name: withBaseOnboarding ? fullName : 'New user',
       locale: 'es',
-      country_code: 'DO'
+      country_code: withBaseOnboarding ? 'DO' : null
     })
     .eq('id', userId)
   if (grantError) {

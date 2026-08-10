@@ -45,6 +45,7 @@ import {
   type MembershipPayment,
   type MembershipStatusBundle
 } from '@/features/membership/lib/membership-api'
+import { isPaymentBlockedByApplication } from '@/features/membership/lib/membership-onboarding-route'
 import { cn } from '@/lib/utils/cn'
 
 type StepState = 'done' | 'current' | 'pending' | 'blocked'
@@ -198,9 +199,11 @@ function computeSteps(bundle: MembershipStatusBundle, isActive: boolean): StepVi
         : isActive || paymentVerified
           ? 'done'
           : 'current',
-      description: !appExists
-        ? 'Disponible cuando envíes tu solicitud.'
-        : isActive || paymentVerified
+      description: !application
+        ? 'Bloqueado: primero llena y envía tu solicitud. El pago se habilita al enviarla.'
+        : isDraft
+          ? 'Bloqueado: tu solicitud está sin terminar. Termínala y envíala para poder pagar.'
+          : isActive || paymentVerified
           ? 'Tu pago con tarjeta fue confirmado.'
           : paymentInitiated
             ? 'Estamos procesando tu pago. Si ya pagaste, esta página se actualizará en breve.'
@@ -314,6 +317,10 @@ export function MembershipStatusPage() {
   const azulEnabled = Boolean(bundle.settings?.azul_enabled)
   const showPayStep = paymentStep?.state === 'current' && Boolean(bundle.application)
   const hasDraftApplication = bundle.application?.status === 'draft'
+  // Sin solicitud enviada no hay pago posible: decirlo explícitamente evita que el
+  // recién registrado se quede mirando un "Pago · Pendiente" sin saber qué le falta.
+  const isPaymentBlocked =
+    !session.hasActiveAsiAccess && isPaymentBlockedByApplication(bundle.application?.status)
   const startApplicationLabel = hasDraftApplication ? 'Continuar mi solicitud' : 'Iniciar mi solicitud'
   // Renovar solo tiene sentido sobre una solicitud ya aprobada; el acceso puede venir
   // de un override manual con la solicitud todavía en revisión.
@@ -465,6 +472,22 @@ export function MembershipStatusPage() {
                         {currentStep?.description ?? 'Completa el siguiente paso para avanzar tu membresía.'}
                       </p>
                     </div>
+                    {isPaymentBlocked ? (
+                      <div className="flex items-start gap-3 rounded-card border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+                        <CreditCard className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-300" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                            Todavía no puedes pagar
+                          </p>
+                          <p className="mt-0.5 text-xs leading-5 text-amber-700/90 dark:text-amber-200/80">
+                            {hasDraftApplication
+                              ? 'Tu solicitud está sin terminar. Complétala y envíala; el pago se habilita apenas la envíes.'
+                              : 'Primero llena y envía tu solicitud de membresía; el pago se habilita apenas la envíes.'}
+                          </p>
+                        </div>
+                      </div>
+                    ) : null}
+
                     {!session.hasActiveAsiAccess && bundle.application?.status === 'needs_more_info' ? (
                       <NeedsMoreInfoResponse
                         applicationId={bundle.application.id}
@@ -560,7 +583,16 @@ export function MembershipStatusPage() {
                       <SummaryRow
                         icon={CreditCard}
                         label="Pago"
-                        value={session.hasActiveAsiAccess ? 'Verificado' : bundle.payment ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status : 'Pendiente'}
+                        hint={isPaymentBlocked ? 'Se habilita al enviar tu solicitud' : undefined}
+                        value={
+                          session.hasActiveAsiAccess
+                            ? 'Verificado'
+                            : isPaymentBlocked
+                              ? 'Bloqueado'
+                              : bundle.payment
+                                ? paymentStatusLabels[bundle.payment.status] ?? bundle.payment.status
+                                : 'Pendiente'
+                        }
                         tone={session.hasActiveAsiAccess || bundle.payment?.status === 'verified' ? 'success' : 'neutral'}
                       />
                       <SummaryRow icon={ShieldCheck} label="Acceso" value={session.hasActiveAsiAccess ? 'Activo' : 'Pendiente'} tone={session.hasActiveAsiAccess ? 'success' : 'neutral'} />
@@ -805,11 +837,14 @@ function SummaryRow({
   icon: Icon,
   label,
   value,
+  hint,
   tone = 'plain'
 }: {
   icon: typeof FileText
   label: string
   value: string
+  /** Aclara por qué el valor está como está (p. ej. qué falta para desbloquearlo). */
+  hint?: string
   tone?: 'success' | 'neutral' | 'plain'
 }) {
   return (
@@ -817,7 +852,10 @@ function SummaryRow({
       <span className="flex size-9 shrink-0 items-center justify-center rounded-control border border-(--app-border) bg-(--app-surface-muted) text-(--app-text-muted)">
         <Icon className="size-4" />
       </span>
-      <span className="min-w-0 flex-1 text-sm text-(--app-text-muted)">{label}</span>
+      <span className="min-w-0 flex-1 text-sm text-(--app-text-muted)">
+        {label}
+        {hint ? <span className="mt-0.5 block text-xs leading-4 text-(--app-text-subtle)">{hint}</span> : null}
+      </span>
       <span className="text-right text-sm font-semibold text-(--app-text)">
         {tone === 'plain' ? value : <StatusPill label={value} tone={tone} />}
       </span>
