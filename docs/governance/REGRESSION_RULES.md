@@ -517,6 +517,9 @@ Do not derive an inactive member's activation or expiration dates from payment i
 ### R-148 — Base onboarding exits to the step the member can actually complete
 Do not send everyone to the payment panel after the base profile wizard, and do not rely on an intermediate summary screen or countdown: saving the profile rehydrates the session and unmounts the wizard, so the exit must navigate immediately. Resolve the destination with `resolveMembershipOnboardingStep` against fresh membership state — incomplete profile → profile, no application → eligibility, draft → the application form, submitted application without payment → the membership panel, already paid → profile. While the application is missing or still a draft, the membership panel must state that payment is blocked and what unlocks it, instead of showing payment as merely "pending".
 
+### R-149 — Institutional headings must own their contrast
+Do not use an undefined institutional heading class or let headings inside light institutional surfaces inherit the global application theme color. Every `asi-heading-*` variant used by institutional pages must define its own `--asi-text` color so headings remain readable even when the global theme is dark.
+
 ---
 
 ## Maintenance rule
