@@ -43,7 +43,7 @@ jobs:
       # Los valores son ficticios a proposito: lo que CI comprueba es que el
       # proyecto compila y empaqueta, no la configuracion del despliegue. Esa la
       # sigue guardando el mismo `validateProductionEnv` en el build real de
-      # Netlify, que es el unico que se publica y el unico que ve los valores
+      # despliegue, que es el unico que se publica y el unico que ve los valores
       # verdaderos.
       - name: Run repository verification
         run: npm run verify
@@ -75,7 +75,7 @@ jobs:
       - name: Enforce coverage thresholds
         run: npm run test:coverage
 
-      # Los sourcemaps se generan como `hidden` y `netlify.toml` bloquea su
+      # Los sourcemaps se generan como `hidden` y `public/.htaccess` bloquea su
       # descarga publica, asi que la unica copia utilizable para mapear un stack
       # de `app_error_logs` es esta.
       - name: Upload sourcemaps

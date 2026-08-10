@@ -59,7 +59,7 @@ Runbook `ENVIRONMENTS.md` §6. El replay de migraciones y las 17 probes ya está
 ## D · Despliegue 🟠
 
 - [ ] **D1 · Job `deploy-production`** sobre `main` con environment protegido, espejo de `deploy-staging` (`ci.yml:269`).
-- [ ] **D2 · Retirar una topología** — `netlify.toml` o `public/.htaccess`. Hoy conviven (`ENVIRONMENTS.md:163`).
+- [x] **D2 · Retirar una topología** — ✅ 2026-08-10. Netlify eliminado del repo; `public/.htaccess` es la única configuración de servidor del frontend. Queda quitar del panel de Supabase Auth los 4 redirects de `asi-do.netlify.app`.
 - [ ] **D3 · Edge Functions por CI**, no desde la laptop (`ENVIRONMENTS.md:160`).
 - [ ] **D4 · Que el drift bloquee** en vez de informar (`db-drift.yml`) → cero cambios manuales en el dashboard (`:159`).
 - [ ] **D5 · Activar `--delete` del mirror FTP** tras confirmar el aislamiento en hPanel.

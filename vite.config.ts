@@ -25,13 +25,13 @@ const packageVersion = (
  * no se pueden mapear a ningun sourcemap: no hay forma de saber de que build
  * salieron.
  *
- * En Netlify y en GitHub Actions llega por variable de entorno; en local se
+ * En GitHub Actions llega por variable de entorno; en local se
  * pregunta a git. Si nada de eso funciona —un tarball sin `.git`— se marca como
  * `unknown` en vez de romper el build: un release sin identificar es peor que
  * uno identificado, pero mucho mejor que no poder desplegar.
  */
 function resolveReleaseCommit(): string {
-  const fromEnv = process.env.COMMIT_REF ?? process.env.GITHUB_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA
+  const fromEnv = process.env.GITHUB_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA
 
   if (fromEnv) {
     return fromEnv
@@ -61,8 +61,8 @@ function requireProductionEnv(): PluginOption {
       loaded = loadEnv(config.mode, config.envDir, '')
     },
     buildStart() {
-      // El entorno del proceso gana: en Netlify y en CI las variables llegan por
-      // ahi, no por un archivo `.env`.
+      // El entorno del proceso gana: en CI las variables llegan por ahi, no por
+      // un archivo `.env`.
       const problems = validateProductionEnv({ ...loaded, ...process.env })
 
       if (problems.length > 0) {
@@ -83,8 +83,8 @@ const criticalCssPath = fileURLToPath(new URL('./src/styles/critical.css', impor
  * falta el JS de todas formas. Lo que sí costaba era medible: `index.html` tiene
  * que revalidarse en cada visita —es la entrada de la SPA—, así que esos 33 KB
  * gzip de CSS se volvían a descargar **siempre**, incluso cuando no habían
- * cambiado. Como archivo con hash en `/assets/`, tanto `netlify.toml` como
- * `public/.htaccess` los cachean un año como `immutable`.
+ * cambiado. Como archivo con hash en `/assets/`, `public/.htaccess` los cachea
+ * un año como `immutable`.
  *
  * El `<link>` se deja bloqueante a propósito: es lo que evita el FOUC cuando
  * React monta, y no retrasa nada porque la hoja pesa mucho menos que el JS y
@@ -149,8 +149,7 @@ export default defineConfig({
     // `hidden` genera los .map pero **no** escribe el comentario
     // `//# sourceMappingURL`, asi que el navegador no los pide y no quedan
     // enlazados desde el bundle. Siguen existiendo en el artefacto para poder
-    // mapear un stack a mano; `netlify.toml` y `public/.htaccess` bloquean su
-    // descarga publica.
+    // mapear un stack a mano; `public/.htaccess` bloquea su descarga publica.
     sourcemap: 'hidden',
     rollupOptions: {
       output: {

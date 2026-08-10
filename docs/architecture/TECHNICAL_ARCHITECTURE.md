@@ -90,7 +90,7 @@ tests/
 
 ### Environment strategy
 - Local development is the primary integration environment.
-- Netlify Deploy Previews are the default shared validation surface for branch and pull request work.
+- `dev.asidominicana.do`, published from the `staging` branch, is the default shared validation surface for branch and pull request work.
 - Production deploys from `main`.
 - Do not add a dedicated or long-lived staging environment unless a reviewed architecture decision changes that rule.
 - Stress, migration, and high-risk operational validation must target local or explicitly approved development/preview environments, never production by default.
@@ -301,16 +301,15 @@ Add structured logs/events for critical flows where possible.
 - local development remains the primary day-to-day workflow
 - GitHub Actions is the source of truth for CI quality gates
 - `npm run verify` is the required CI command for pull requests, `staging`, and `main`
-- Netlify handles preview deployments for pull requests once the repository is connected
 - Hostinger receives the built SPA through GitHub Actions: `staging` publishes to
   `dev.asidominicana.do`; `main` is reserved for the separately protected production target
 - Hostinger releases upload immutable hashed assets before atomically replacing `index.html` and
   `sw.js`, verify the public result over HTTPS, and restore the prior entrypoints on failure; routine
   activation never deletes the previous release's bundles
-- the FTP account must remain scoped to the intended document root; Netlify remains the rollback target
-  until Hostinger is validated — see `docs/architecture/DESPLIEGUE_HOSTINGER.md`
+- the FTP account must remain scoped to the intended document root — see
+  `docs/architecture/DESPLIEGUE_HOSTINGER.md`
 - environment variables managed per environment
-- Netlify manages build-time frontend environments for preview and production
+- GitHub Actions environments hold the build-time frontend variables for staging and production
 - Supabase project separation is required once production data exists
 - Supabase MCP or other LLM-connected developer tooling must target a non-production scoped project or branch by default
 - migrations applied consistently

@@ -162,7 +162,6 @@ describe('project contract', () => {
     }
 
     expect(supabaseConfig).not.toContain('"https://asidominicana.do/')
-    expect(supabaseConfig).not.toContain('"https://asi-do.netlify.app/')
   })
 
   it('keeps deploy endpoints out of committed mode files', () => {

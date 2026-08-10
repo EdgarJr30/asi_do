@@ -161,7 +161,7 @@ export function formatEnvValidationError(problems: EnvValidationProblem[]): stri
   return (
     `Build de produccion abortado: ${problems.length} variable(s) de entorno sin configurar.\n\n` +
     `${lines.join('\n')}\n\n` +
-    'Configuralas en el entorno del build (Netlify, CI o .env.production) y vuelve a intentar.\n' +
+    'Configuralas en el entorno del build (CI o .env.production) y vuelve a intentar.\n' +
     'Se aborta aqui a proposito: sin estas variables el build termina igual, pero publica una\n' +
     'aplicacion que no puede autenticar ni cobrar, y el fallo no se ve hasta que un usuario lo sufre.'
   )

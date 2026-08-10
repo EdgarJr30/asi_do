@@ -71,6 +71,6 @@ export const requiredTestingFiles = [
 
 export const requiredWorkflowFiles = ['.github/workflows/ci.yml'] as const
 
-export const requiredDeploymentFiles = ['netlify.toml'] as const
+export const requiredDeploymentFiles = ['public/.htaccess'] as const
 
 export const disallowedPackages = ['vite-plugin-pwa', 'workbox-build', '@rollup/plugin-terser'] as const

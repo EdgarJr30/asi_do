@@ -23,7 +23,7 @@ This folder contains the canonical Markdown documentation for the repository.
 - `architecture/TECHNICAL_ARCHITECTURE.md`
 - `architecture/SOFTWARE_ARCHITECTURE.md`
 - `architecture/ENVIRONMENTS.md` (entornos, promoción dev → staging → producción y runbook de activación)
-- `architecture/DESPLIEGUE_HOSTINGER.md` (migración y publicación segura del frontend en Hostinger con DNS en Cloudflare; Netlify sigue como vuelta atrás temporal)
+- `architecture/DESPLIEGUE_HOSTINGER.md` (publicación segura del frontend en Hostinger con DNS en Cloudflare)
 - `architecture/REALTIME.md`
 - `architecture/arquitectura-db.md` (esquema de BD; `.html` = versión renderizada)
 - `architecture/plataforma-flujograma.md` (flujograma de la plataforma; `.html` = versión renderizada)

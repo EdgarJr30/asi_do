@@ -75,7 +75,7 @@ Todo lo que es específico de entorno. Esta es la lista que hay que recorrer al 
 |---|---|---|
 | `project_id` | `supabase/config.toml` | Uno por entorno |
 | `site_url`, `additional_redirect_urls` | `supabase/config.toml` (`[auth]`) | Hoy describen solo el proyecto dev; producción tendrá configuración aislada |
-| Llave publicable (`sb_publishable_…`) | Netlify, `.env.local`, AZUL, Edge Functions | Pública por diseño |
+| Llave publicable (`sb_publishable_…`) | Entorno de build, `.env.local`, AZUL, Edge Functions | Pública por diseño |
 | Llave secreta (`sb_secret_…`) | Solo servidor: AZUL y Edge Functions | Omite RLS. Nunca en el browser |
 
 > Las llaves migraron al formato `sb_publishable_` / `sb_secret_` el 2026-08-02; las JWT `anon` / `service_role` quedaron retiradas.
@@ -112,7 +112,7 @@ curl -X DELETE "$URL/storage/v1/object/avatars" \
 
 Esto **no afecta al código del proyecto**: `supabase-js` pone los dos headers solo con `createClient(url, key)`, así que `scripts/media-orphans.ts` y las Edge Functions no necesitan nada especial. Es una trampa exclusiva de las llamadas crudas desde la terminal.
 
-### 4.2 Frontend (build de Vite / Netlify)
+### 4.2 Frontend (build de Vite)
 
 `VITE_DEPLOY_ENV` · `VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` · `VITE_AUTH_SITE_URL` · `VITE_PRODUCTION_SITE_URL` · `VITE_AZUL_PAYMENTS_URL` · `VITE_WEB_PUSH_PUBLIC_KEY`
 
@@ -168,9 +168,7 @@ Para que la activación de staging sea "cambiar entornos y ya", esto conviene re
 
 - [ ] **Cero cambios manuales desde el dashboard de Supabase.** Todo por migración. Un `GRANT` o una policy hecha a mano no viaja a staging.
 - [ ] **Despliegue de Edge Functions por CI**, no `supabase functions deploy` desde la laptop.
-- [x] **Unificar la topología documentada.** ✅ 2026-08-04. Resuelto: no era una decisión pendiente sino texto obsoleto en un solo documento. **No existe ni un archivo de configuración de Hostinger en el repositorio**, mientras que `netlify.toml`, `railway.json` y el `Dockerfile` del microservicio sí están, y tres documentos ya decían Netlify. La topología única —SPA en Netlify, `services/azul-payments` en Railway, plataforma en Supabase— queda declarada en `docs/pasarelaDePagos/despliegue-azul.md`, que es el runbook que manda.
-
-  **Reabierto el 2026-08-07:** ahora sí hay configuración de Hostinger en el repo (`public/.htaccess`) y el dominio propio `asidominicana.do` está configurado en Supabase. Desde 2026-08-09 el frontend ya no lo conserva en `.env.production`: el entorno de despliegue lo inyecta y el build valida su correspondencia. La SPA se sirve desde **dos** sitios a propósito y de forma temporal: Netlify como vuelta atrás mientras se valida Hostinger. Runbook: `docs/architecture/DESPLIEGUE_HOSTINGER.md`. Vuelve a quedar una sola topología en cuanto se retire uno de los dos.
+- [x] **Unificar la topología documentada.** ✅ 2026-08-10. Hubo un periodo con dos hosts del frontend conviviendo a propósito; se cerró retirando Netlify por completo del repositorio. Topología única: **SPA en Hostinger** (`public/.htaccess`, runbook `docs/architecture/DESPLIEGUE_HOSTINGER.md`), `services/azul-payments` en **Railway** (`railway.json`, `Dockerfile`), plataforma en **Supabase**. El dominio ya no vive en `.env.production` desde 2026-08-09: lo inyecta el entorno de despliegue y el build valida su correspondencia.
 
 ## 6. Runbook: activar staging
 
@@ -187,7 +185,7 @@ Cuando llegue el momento, en orden:
 4. **Ajustar `email_dispatch_url`** al ref de staging. Verificar que apunta al proyecto correcto antes de habilitar el cron de correo.
 5. **Desplegar las Edge Functions** al proyecto de staging.
 6. ~~**Desplegar el microservicio AZUL** de staging, con credenciales de prueba, y apuntar `VITE_AZUL_PAYMENTS_URL` ahí.~~ ✅ 2026-08-09 — `https://azul-payments-staging-staging.up.railway.app`. La URL **no se versiona**: vive en las *environment variables* del entorno `staging` de GitHub, que es de donde la toma el job `deploy-staging`.
-7. **Configurar el contexto de Netlify** para staging con su juego de variables.
+7. **Configurar el entorno `staging` de GitHub** con su juego de variables de build.
 8. **Sembrar datos** con `npm run harness:seed`. Nunca copiar producción con PII.
 9. **Verificar de punta a punta:** login, solicitud de membresía, pago con tarjeta de prueba, envío de correo, notificación push.
 10. **Promover el flujo de trabajo:** a partir de aquí, producción solo recibe cambios que ya pasaron por staging.

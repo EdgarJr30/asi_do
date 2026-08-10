@@ -5,12 +5,12 @@ Pasos para poner en producción los pagos de membresía y donaciones con AZUL. V
 
 ## Topología de despliegue
 
-**Microservicio AZUL en Railway.** El frontend está en transición: Netlify sigue publicado y, desde
-2026-08-07, se está probando Hostinger con el dominio propio `asidominicana.do`.
+**Microservicio AZUL en Railway.** El frontend vive en Hostinger con el dominio propio
+`asidominicana.do`.
 
 | Pieza | Dónde | Config en el repo |
 |---|---|---|
-| SPA (frontend) | **Netlify** (`asi-do.netlify.app`, desde `main`) y **Hostinger** (`asidominicana.do`, subida manual) | `netlify.toml`, `public/.htaccess` |
+| SPA (frontend) | **Hostinger** (`asidominicana.do`) | `public/.htaccess` |
 | `services/azul-payments` | **Railway**, build por Dockerfile | `services/azul-payments/railway.json`, `Dockerfile` |
 | Base de datos, Auth, Storage, Edge Functions | **Supabase** | `supabase/config.toml` |
 
@@ -33,16 +33,8 @@ Van separados porque son cargas distintas: la SPA es un artefacto estático con 
 microservicio Node maneja secretos de AZUL y Supabase, recibe callbacks firmados, corre la conciliación
 por cron y necesita healthcheck, logs y reinicios.
 
-> **Corrección 2026-08-04.** Este runbook decía «Hostinger» para el frontend, contradiciendo al `README`,
-> a `docs/architecture/ENVIRONMENTS.md` y a `TECHNICAL_ARCHITECTURE.md`, que dicen Netlify. No era una
-> decisión pendiente sino texto obsoleto: **no existe ni un archivo de configuración de Hostinger en el
-> repositorio**, mientras que `netlify.toml` sí está y el dominio activo es `asi-do.netlify.app`.
->
-> **Actualización 2026-08-07.** Hostinger dejó de ser texto obsoleto y pasó a ser una migración en
-> curso: ya existe `public/.htaccess` y el dominio `asidominicana.do` está conmutado en el repo. El
-> runbook es `docs/architecture/DESPLIEGUE_HOSTINGER.md`. Netlify se mantiene como vuelta atrás hasta
-> que Hostinger quede validado, así que **por ahora conviven los dos**; la contradicción de agosto era
-> tener dos documentos afirmando cosas distintas, no tener dos hosts a propósito.
+> **Topología única desde 2026-08-10.** El frontend se sirve solo desde Hostinger: `public/.htaccess`
+> es su única configuración de servidor y el runbook es `docs/architecture/DESPLIEGUE_HOSTINGER.md`.
 
 ## 1. Base de datos (Supabase)
 Aplica las migraciones nuevas al proyecto remoto:
@@ -95,13 +87,14 @@ Variables de entorno (secret store del proveedor — ver `.env.example`):
 > En producción, cambia a las URLs `https://pagos.azul.com.do/...`, `AZUL_ENVIRONMENT=production`,
 > el `MerchantName` de la afiliación real y la `AuthKey` de producción (distinta a la de pruebas).
 
-## 3. SPA en Netlify
-Define la variable de build del frontend en el panel de Netlify:
+## 3. SPA (frontend)
+Define la variable de build del frontend en el entorno que construye el artefacto (GitHub Actions para
+staging; ver §5 de `DESPLIEGUE_HOSTINGER.md` para el camino manual):
 ```
 VITE_AZUL_PAYMENTS_URL=https://<subdominio-pagos-o-railway>
 ```
-Netlify republica solo al empujar a `main`. Si usas un subdominio propio para pagos, apunta ese DNS al
-dominio que te entregue Railway y usa ese mismo valor en `SERVICE_PUBLIC_URL`.
+Si usas un subdominio propio para pagos, apunta ese DNS al dominio que te entregue Railway y usa ese
+mismo valor en `SERVICE_PUBLIC_URL`.
 
 El build **falla** si falta esta variable o cualquier otra crítica: lo comprueba el plugin
 `asi-require-production-env` (ver `src/shared/config/required-env.ts`). Es deliberado — sin él, un
@@ -110,7 +103,7 @@ hasta que un usuario lo sufría.
 
 ### Origins de CORS
 `ALLOWED_ORIGIN` del microservicio acepta lista separada por comas y debe incluir el dominio de
-producción de Netlify. `APP_URL` es a dónde vuelve el usuario tras pagar; `SERVICE_PUBLIC_URL` es la URL
+producción de la SPA. `APP_URL` es a dónde vuelve el usuario tras pagar; `SERVICE_PUBLIC_URL` es la URL
 pública del propio microservicio, la que se registra con AZUL para los callbacks.
 
 ## 4. Configuración con AZUL

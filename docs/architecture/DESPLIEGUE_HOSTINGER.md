@@ -8,7 +8,6 @@ Runbook para servir el frontend desde **Hostinger**, con el dominio comprado en 
 > se inyecta al construir para impedir que otro entorno lo herede.
 > Falta lo que solo se hace desde los paneles: Hostinger (§2, §3), Cloudflare (§2, §3) y la subida (§5).
 >
-> **Netlify sigue publicado** (`asi-do.netlify.app`) como vuelta atrás, y `netlify.toml` se mantiene.
 > Deliberadamente **fuera de alcance** en esta fase, porque el objetivo es solo que la app cargue:
 > - **AZUL ya está desplegado para staging** (2026-08-09) en
 >   `https://azul-payments-staging-staging.up.railway.app`, con merchant de pruebas. Verificado:
@@ -24,7 +23,7 @@ Runbook para servir el frontend desde **Hostinger**, con el dominio comprado en 
 
 | Pieza | Antes | Después |
 |---|---|---|
-| SPA (frontend) | Netlify | **Hostinger** (hosting compartido, Apache/LiteSpeed) |
+| SPA (frontend) | sin hosting propio | **Hostinger** (hosting compartido, Apache/LiteSpeed) |
 | Registrador del dominio | nic.do | nic.do — **sin cambios** |
 | DNS autoritativo | Cloudflare | Cloudflare — **sin cambios** |
 | `services/azul-payments` | sin desplegar (`localhost:8080`) | **Railway**: staging desplegado; producción pendiente |
@@ -55,7 +54,7 @@ secretos, healthcheck y cron de conciliación. Se queda en Railway (ver `docs/pa
 | `A` | `@` | IP de Hostinger | 🔘 **DNS only** (gris) |
 | `A` | `www` | IP de Hostinger | 🔘 **DNS only** (gris) |
 
-Elimina los registros `A`/`CNAME` anteriores que apuntaran a Netlify.
+Elimina cualquier registro `A`/`CNAME` anterior que apunte a otro hosting.
 
 Empieza en gris a propósito: el certificado gratuito de Hostinger se valida por HTTP contra el origen y
 falla si Cloudflare intercepta.
@@ -79,10 +78,10 @@ origen detrás del proxy es precisamente lo que provoca el bucle.
 
 ---
 
-## 4. `.htaccess` — traducción de `netlify.toml`
+## 4. `.htaccess` — configuración del servidor
 
-Todo lo que hoy resuelve `netlify.toml` (SPA fallback, redirects, cache, bloqueo de sourcemaps) hay que
-reimplementarlo en Apache. Este archivo va en la **raíz de `public_html`**.
+Todo lo que necesita la SPA en el servidor (fallback, redirects, cache, bloqueo de sourcemaps) se
+resuelve en Apache. Este archivo va en la **raíz de `public_html`**.
 
 **El archivo vive en el repo: [`public/.htaccess`](../../public/.htaccess).** Es la única copia; este
 documento no la duplica a propósito, porque una copia pegada aquí se queda desfasada al primer cambio.
@@ -94,13 +93,13 @@ Lo que resuelve, en orden: redirect `/go` → home, 404 de los `.map` y del `.DS
 archivos y directorios reales (esto es lo que sirve `/presentation`), catch-all de la SPA a `index.html`,
 `Cache-Control` por tipo de recurso, MIME de `.webmanifest`/`.avif`/`.webp`/`.woff2` y compresión.
 
-### Diferencias respecto a `netlify.toml`
+### Particularidades de Apache/LiteSpeed
 
-| Regla de Netlify | En Hostinger |
+| Necesidad | Cómo se resuelve |
 |---|---|
-| `/presentation` y `/presentation/*` → 200 | Lo resuelve el passthrough de `-f`/`-d` + `DirectoryIndex` |
-| `/presentation/*` con cache de 7 días | Su `index.html` cae en la regla `\.html$` (revalida). Inofensivo: es una página estática pequeña |
-| `/assets/*.map` → 404 forzado | Igual, más la recomendación de §5 de no subirlos |
+| `/presentation` y `/presentation/*` sirven su estático | Passthrough de `-f`/`-d` + `DirectoryIndex` |
+| Cache de `/presentation` | Su `index.html` cae en la regla `\.html$` (revalida). Inofensivo: es una página estática pequeña |
+| `/assets/*.map` → 404 | `RewriteRule` forzada, más la recomendación de §5 de no subirlos |
 | Headers por ruta | `SetEnvIf Request_URI` (Apache no permite `<Directory>` dentro de `.htaccess`) |
 
 Hostinger corre **LiteSpeed**, que lee `.htaccess` con sintaxis compatible con `mod_rewrite`,
@@ -119,8 +118,8 @@ npm run verify          # puerta de calidad: lint + typecheck + test + build
 npm run build:hosting   # rebuild + aparta los sourcemaps; deja dist/ listo para subir
 ```
 
-> ⚠️ **El build local hornea tu `.env.local`.** En Netlify las llaves las inyectaba el panel; aquí no hay
-> panel, así que `vite build` toma `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+> ⚠️ **El build local hornea tu `.env.local`.** No hay panel que inyecte las llaves, así que
+> `vite build` toma `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
 > `VITE_AZUL_PAYMENTS_URL` y `VITE_WEB_PUSH_PUBLIC_KEY` del `.env.local` de tu máquina y las escribe
 > **dentro del bundle**. Revisa esos cuatro valores antes de cada build de release: lo que tengas en local
 > es lo que queda publicado. Hoy `.env.local` y `.env.staging.local` traen
@@ -227,9 +226,6 @@ supabase config push --linked
 O a mano en el dashboard → *Authentication* → *URL Configuration*. Si no se hace, **el login rebota**:
 Auth rechaza el redirect a un dominio que no tiene en su lista. Es el fallo número uno de este cambio.
 
-Se dejaron también los cuatro redirects de `asi-do.netlify.app` en la lista, para que Netlify siga
-sirviendo de vuelta atrás mientras se valida Hostinger.
-
 Los `VITE_*` se hornean en el bundle: cambiarlos **exige rebuild**, no basta con reiniciar nada. Antes de `npm run build:hosting`, exporta ambas URLs públicas; el build aborta si apuntan a orígenes distintos o locales.
 
 Tests que llevaban el dominio quemado, ya actualizados: `tests/unit/auth-callback.test.ts`,
@@ -260,16 +256,15 @@ Y a mano, en el navegador:
 
 ---
 
-## 8. Qué pierdes al salir de Netlify
+## 8. Límites del hosting compartido
 
 Decisión informada, no sorpresas:
 
-- **Deploy automático desde `main`.** Pasa a ser manual (§5) o hay que montar un job de FTP en CI.
-- **Deploy previews por rama** y **rollback de un clic** al deploy anterior.
-- **CDN global.** Hostinger sirve desde un solo datacenter; el proxy naranja de Cloudflare lo compensa
-  en buena medida para los estáticos.
-- **Headers y redirects versionados junto al código** con la garantía de que se aplican. Con `.htaccess`
-  el archivo se puede quedar sin subir y nadie se entera.
+- **No hay deploy previews por rama** ni **rollback de un clic** al deploy anterior.
+- **No hay CDN global.** Hostinger sirve desde un solo datacenter; el proxy naranja de Cloudflare lo
+  compensa en buena medida para los estáticos.
+- **Los headers y redirects viajan en `.htaccess`**, sin garantía de que se apliquen: el archivo se
+  puede quedar sin subir y nadie se entera. Por eso `release-metadata.test.ts` asserta sus reglas.
 
 A cambio: coste fijo predecible y un panel único para dominio, correo y hosting.
 
@@ -283,12 +278,13 @@ A cambio: coste fijo predecible y un panel único para dominio, correo y hosting
 - [x] `npm run build:hosting`: build + aparta los ~200 sourcemaps fuera de `dist/` (§5).
 - [x] Dominio retirado de `.env.production`; el build exige inyectarlo y validarlo contra el origen canónico.
 - [x] Los 4 archivos de test con el dominio quemado.
-- [x] `tests/unit/release-metadata.test.ts`: ahora asserta la regla `.map` **de los dos** hosts, más el
-      fallback de la SPA del `.htaccess`.
-- [x] Comentarios de `vite.config.ts` que nombraban solo a `netlify.toml`.
+- [x] `tests/unit/release-metadata.test.ts`: asserta la regla `.map` del `.htaccess`, más el fallback
+      de la SPA.
+- [x] Comentarios de `vite.config.ts` sobre la configuración del servidor.
 - [x] Documentos de topología: `README.md`, `ENVIRONMENTS.md`, `TECHNICAL_ARCHITECTURE.md`,
       `docs/pasarelaDePagos/despliegue-azul.md`.
-- [x] `netlify.toml` y `.github/workflows/ci.yml` **se mantienen**: Netlify sigue siendo la vuelta atrás.
+- [x] **2026-08-10: Netlify retirado del repo por completo** — `netlify.toml`, sus asserts, comentarios
+      y menciones en documentos. Hostinger es la única topología del frontend.
 
 ### Pendiente — solo se hace desde los paneles
 
@@ -300,7 +296,8 @@ A cambio: coste fijo predecible y un panel único para dominio, correo y hosting
 - [ ] Revisar los `VITE_*` de `.env.local` (§5), `npm run verify` en verde, `npm run build:hosting` y
       subir el `dist/` resultante.
 - [ ] Pasar la verificación de §7 (salvo el paso 3, que no aplica).
-- [ ] Mantener `asi-do.netlify.app` activo unos días como plan de vuelta atrás.
+- [ ] Quitar del panel de Supabase Auth los 4 redirects de `asi-do.netlify.app` que quedan en la
+      allow-list del proyecto remoto (el `config.toml` del repo ya no los trae).
 - [ ] Crear `A dev → 212.1.208.190` en Cloudflare inicialmente como **DNS only**, emitir/verificar SSL y
       comprobar que `dev.asidominicana.do` responde antes de habilitar proxy.
 
@@ -322,4 +319,4 @@ A cambio: coste fijo predecible y un panel único para dominio, correo y hosting
 
 - `docs/architecture/ENVIRONMENTS.md` — inventario de conmutación por entorno
 - `docs/pasarelaDePagos/despliegue-azul.md` — microservicio AZUL en Railway
-- `netlify.toml` — la configuración que este documento traduce
+- `public/.htaccess` — la configuración de servidor que este documento explica

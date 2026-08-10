@@ -194,7 +194,7 @@ Every runner therefore gets its own values, and all three must stay in sync:
 Rules:
 1. Do not make a test's result depend on `.env.local`. If a module reads an environment variable at load time and that variable changes what renders, stub it in `src/test/env.ts`.
 2. The `build` that closes `verify` runs in production mode, so it passes through `validateProductionEnv`. Adding a variable to `REQUIRED_PRODUCTION_ENV` without adding it to the verify step's `env:` block aborts the build **in CI only**. Change both in the same task.
-3. CI values are deliberately fictitious: CI proves the project compiles, bundles, and renders, not that the deployment is configured. The real guard stays in the Netlify build, which is the only one that publishes and the only one that sees real values.
+3. CI values are deliberately fictitious: CI proves the project compiles, bundles, and renders, not that the deployment is configured. The real guard stays in the deploy build, which is the only one that publishes and the only one that sees real values.
 
 ### 9.2 Timing: budgets live in configuration, not in defaults
 `findBy*` and `waitFor` default to one second of wall-clock time, spent by the route's deferred chunk, the first render, and animated step transitions. A CI runner is slower than a laptop, and `--coverage` instruments every module on top of that, so the default turns the slowest tests into machine-dependent coin flips.

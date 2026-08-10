@@ -2,7 +2,7 @@
  * CSS crítico: lo único que se inyecta en línea dentro de `index.html`.
  *
  * Por qué existe. El resto de la hoja de estilos viaja como archivo con hash en
- * `/assets/`, que `netlify.toml` cachea un año como `immutable`. `index.html`, en
+ * `/assets/`, que `public/.htaccess` cachea un año como `immutable`. `index.html`, en
  * cambio, tiene que revalidarse en cada visita —es la entrada de la SPA; si se
  * cacheara, nadie recibiría un despliegue nuevo—. Todo lo que se inline aquí se
  * vuelve a descargar **siempre**, así que este archivo tiene que quedarse

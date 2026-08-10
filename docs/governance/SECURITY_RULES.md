@@ -46,7 +46,7 @@ Security includes protecting:
 - Configure strong security headers, including CSP where feasible, plus frame, referrer, and MIME-sniff protections.
 - Avoid loading third-party scripts without a documented reason and risk review.
 - Service worker caching must not expose tenant-sensitive data across sessions or tenants.
-- CI secrets and hosting environment variables must live in GitHub Actions or Netlify configuration, never in the repository.
+- CI secrets and hosting environment variables must live in GitHub Actions environments or the hosting panel, never in the repository.
 - Preview and production build-time environments must stay separated so preview does not reuse production configuration accidentally.
 - Auth callback origins must be environment-bound: development uses the live browser origin; staging and production use injected HTTPS origins validated at build time. Production must match its canonical production origin, staging must differ from it, and neither deployed environment may emit localhost links.
 

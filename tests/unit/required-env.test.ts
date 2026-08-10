@@ -34,8 +34,8 @@ describe('contrato de variables de produccion', () => {
   )
 
   it('trata una variable vacia o de solo espacios como ausente', () => {
-    // Netlify devuelve cadena vacia para una variable declarada sin valor, que es
-    // el caso que mas facil se cuela: la variable "existe" en el panel.
+    // Un panel de hosting o CI devuelve cadena vacia para una variable declarada
+    // sin valor, que es el caso que mas facil se cuela: la variable "existe".
     expect(validateProductionEnv({ ...completeEnv, VITE_SUPABASE_URL: '' })).toHaveLength(1)
     expect(validateProductionEnv({ ...completeEnv, VITE_SUPABASE_URL: '   ' })).toHaveLength(1)
   })

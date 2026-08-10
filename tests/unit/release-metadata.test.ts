@@ -6,7 +6,6 @@ import { describe, expect, it } from 'vitest'
 import { release, releaseLabel } from '@/shared/config/release'
 
 const viteConfig = readFileSync(resolve(process.cwd(), 'vite.config.ts'), 'utf8')
-const netlifyConfig = readFileSync(resolve(process.cwd(), 'netlify.toml'), 'utf8')
 const htaccess = readFileSync(resolve(process.cwd(), 'public/.htaccess'), 'utf8')
 const errorLogger = readFileSync(
   resolve(process.cwd(), 'src/lib/errors/client-error-logger.ts'),
@@ -45,17 +44,9 @@ describe('identidad del release', () => {
     expect(viteConfig).toContain("sourcemap: 'hidden'")
   })
 
-  it('netlify bloquea la descarga publica de los .map', () => {
+  it('el .htaccess de hostinger bloquea la descarga publica de los .map', () => {
     // Sin esta regla basta adivinar la URL del bundle y cambiar la extension
     // para leerse el codigo fuente entero, aunque no esten enlazados.
-    expect(netlifyConfig).toMatch(/from = "\/assets\/\*\.map"/)
-    expect(netlifyConfig).toMatch(/status = 404/)
-  })
-
-  it('el .htaccess de hostinger bloquea los .map igual que netlify', () => {
-    // Los dos hosts sirven el mismo artefacto, asi que la proteccion tiene que
-    // existir en ambos. Este aserto es lo que impide que el .htaccess se quede
-    // atras cuando se toca netlify.toml, o al reves.
     expect(htaccess).toMatch(/RewriteRule \^assets\/\.\*\\\.map\$ - \[R=404,L\]/)
   })
 
