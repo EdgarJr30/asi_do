@@ -140,16 +140,20 @@ regla 404 del `.htaccess` es la segunda línea de defensa, no la primera.
 
 Si construyes con `npm run build` a secas, sácalos tú antes de subir.
 
-**Subida** — cualquiera de las tres:
+**Subida** — para una primera carga sin tráfico todavía sirven hPanel o una copia manual. Con usuarios
+activos, usa el script versionado:
 
-- **hPanel → Administrador de archivos**: comprime `dist/` en zip, súbelo a `public_html` y extrae.
-  Lo más simple para la primera vez. Ojo: el zip debe contener el *contenido* de `dist/`, no la carpeta.
-- **FTP/SFTP** (repetible):
+- **GitHub Actions** (recomendado): ejecuta `scripts/deploy-hostinger-release.sh` después de construir y
+  preservar el artefacto. Es el camino descrito en §5.1.
+- **FTP/FTPS manual**, solo para recuperación operativa y con las mismas credenciales acotadas:
   ```bash
-  lftp -u <usuario>,<clave> ftp://<host> -e \
-    "mirror -R --delete --verbose dist/ /public_html; bye"
+  HOSTINGER_HOST=<host> HOSTINGER_PORT=<puerto> \
+  HOSTINGER_USERNAME=<usuario> HOSTINGER_PASSWORD=<clave> \
+    scripts/deploy-hostinger-release.sh dist https://dev.asidominicana.do
   ```
-  `--delete` es lo que evita que queden bundles viejos huérfanos acumulándose.
+- **hPanel → Administrador de archivos**: queda reservado para la primera carga sin tráfico o para
+  restaurar un artefacto conocido. Extraer un zip directamente sobre el document root no es un deploy
+  sin interrupciones.
 - **hPanel → Git**: apunta al repo y despliega por `git pull`. Solo sirve si versionas `dist/`, cosa que
   este repo no hace (`dist/` no se commitea). No recomendado.
 
@@ -170,14 +174,27 @@ hPanel entrega la IP del servidor como hostname FTP, pero el endpoint FTPS prese
 `*.hstgr.io`. El workflow mantiene `ssl:verify-certificate=yes` para validar la cadena TLS y desactiva
 solo `ssl:check-hostname`, porque el nombre del certificado no puede coincidir con una dirección IP.
 
-El primer deploy se ejecutó con `mirror --reverse` sin borrado y se confirmó en hPanel que la raíz FTP
-corresponde exclusivamente a `zzz_dev`. El workflow usa ahora `--delete` para retirar del staging los
-bundles obsoletos que ya no existen en `dist/`; esta limpieza no puede alcanzar `public_html` de
-producción porque la cuenta FTP está limitada al directorio de staging.
+El primer deploy se ejecutó sin borrado y confirmó en hPanel que la raíz FTP corresponde exclusivamente
+a `zzz_dev`. Aun con ese aislamiento, el deploy normal **no usa `--delete`**: una pestaña abierta puede
+pedir después un chunk del release anterior y no debe recibir 404 durante una navegación diferida.
+
+`scripts/deploy-hostinger-release.sh` aplica tres fases:
+
+1. Sube a `assets/` únicamente los bundles con hash que todavía no existen.
+2. Actualiza los demás archivos, salvo `index.html` y `sw.js`, mediante un temporal en el mismo
+   directorio y un renombrado. Después comprueba por HTTPS el tamaño de cada asset del release.
+3. Activa `index.html` y luego `sw.js`, también mediante temporales; comprueba que ambos coinciden con el
+   artefacto y, si falla, restaura automáticamente los dos entrypoints anteriores.
 
 El mirror usa una sola transferencia, reanuda archivos parciales y tolera hasta cinco reconexiones.
-Hostinger puede cerrar conexiones FTPS paralelas durante cargas largas; una transferencia serial es
-más lenta, pero evita reiniciar una publicación ya parcialmente subida.
+Hostinger puede cerrar conexiones FTPS paralelas durante cargas largas; la transferencia serial es más
+lenta, pero evita reiniciar una publicación parcialmente subida. GitHub Actions también cancela la
+corrida anterior de la misma rama antes de que dos releases compitan por el document root.
+
+Los assets con hash de releases anteriores se conservan a propósito. La limpieza es mantenimiento de
+capacidad, no parte de la activación: debe hacerse fuera del deploy, con respaldo, conservando como
+mínimo los dos releases más recientes y comprobando primero que ningún `index.html` retenido referencia
+los archivos candidatos. Nunca se ejecuta un `mirror --delete` sobre el document root con tráfico.
 
 ---
 
@@ -290,9 +307,9 @@ A cambio: coste fijo predecible y un panel único para dominio, correo y hosting
       propia `VITE_AZUL_PAYMENTS_URL`. Sin esto, el sitio de producción cobra contra el merchant de
       pruebas o contra nada.
 - [ ] Rotar la `service_role` key (requisito del corte a producción, `ENVIRONMENTS.md` §5).
-- [x] Automatizar staging por FTP en CI con un primer mirror no destructivo.
-- [ ] Tras observar el primer deploy, confirmar que `/` es exclusivamente `zzz_dev` y habilitar
-      `--delete` para evitar bundles obsoletos.
+- [x] Automatizar staging por FTPS en CI y confirmar que `/` es exclusivamente `zzz_dev`.
+- [x] Sustituir el mirror destructivo por activación en tres fases, verificación HTTPS y rollback de
+      entrypoints; los bundles anteriores se conservan para las pestañas activas.
 
 ---
 

@@ -337,26 +337,9 @@ jobs:
       - name: Install FTP client
         run: sudo apt-get update && sudo apt-get install --yes lftp
 
-      # La cuenta inicia dentro del document root aislado de staging. El primer
-      # deploy se observo sin borrado y se confirmo en Hostinger que `.` es solo
-      # `zzz_dev`, por lo que el mirror ya puede retirar bundles obsoletos.
-      # hPanel entrega una IP como hostname, aunque FTPS presenta `*.hstgr.io`:
-      # se valida la cadena del certificado y se omite solo la coincidencia CN/IP.
-      - name: Synchronize verified staging FTP root
-        run: |
-          lftp -u "$HOSTINGER_USERNAME","$HOSTINGER_PASSWORD" \
-            -p "$HOSTINGER_PORT" "$HOSTINGER_HOST" -e "
-              set cmd:fail-exit yes;
-              set ftp:ssl-force true;
-              set ftp:ssl-protect-data true;
-              set ssl:verify-certificate yes;
-              set ssl:check-hostname no;
-              set net:max-retries 5;
-              set net:timeout 60;
-              set net:reconnect-interval-base 5;
-              set net:reconnect-interval-max 15;
-              pwd;
-              cls -la;
-              mirror --reverse --delete --continue --verbose --parallel=1 --no-perms dist/ .;
-              bye
-            "
+      # Publica primero los assets con hash, activa index.html y sw.js al final
+      # mediante temporales, verifica por HTTPS y restaura los entrypoints si la
+      # comprobacion posterior falla. Los bundles anteriores se conservan para
+      # no romper las pestañas que estaban abiertas durante el despliegue.
+      - name: Activate verified staging release
+        run: scripts/deploy-hostinger-release.sh dist https://dev.asidominicana.do

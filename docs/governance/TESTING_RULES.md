@@ -279,9 +279,10 @@ Never replace these checks with a single snapshot of a committed production URL.
 
 `tests/integration/project-contract.test.ts` must keep the staging branch in CI, require the Hostinger
 job to wait for the quality jobs, build with the staging mode, use the protected `staging` GitHub
-Environment, and preserve the first FTP rollout as non-destructive. Enabling remote deletion is a
-separate behavioral change: first observe a successful upload and verify that the scoped FTP root is
-only the staging document root, then change the command and its contract together.
+Environment, and preserve the production-safe activation order. Its contract rejects destructive root
+mirrors and requires missing hashed assets first, temporary-file replacement, `index.html` before
+`sw.js`, pre-activation asset checks, post-activation HTTPS verification, and automatic restoration of
+the previous entrypoints on failure.
 
 ---
 

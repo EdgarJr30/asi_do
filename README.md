@@ -277,8 +277,10 @@ The default delivery flow is **local + preview + production** using **GitHub Act
 
 Since 2026-08-07 **Hostinger** is also being trialled on the project's own domain `asidominicana.do`.
 The `dev.asidominicana.do` environment deploys from the `staging` branch through GitHub Actions; the
-first FTP mirror phase does not delete remote files until the scoped account root is verified. Netlify
-stays as the rollback target. Full runbook
+release uploads hashed assets first, activates `index.html` and `sw.js` last through temporary files,
+verifies the public result, and restores the previous entrypoints on failure. Routine deployment does
+not delete prior bundles, so an already-open tab can finish loading its release. Netlify stays as the
+rollback target. Full runbook
 in `docs/architecture/DESPLIEGUE_HOSTINGER.md`.
 
 Key files:

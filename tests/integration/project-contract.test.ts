@@ -71,8 +71,12 @@ describe('project contract', () => {
     }
   })
 
-  it('keeps staging deployment gated by CI and removes stale files from its verified FTP root', () => {
+  it('keeps staging deployment gated by CI and activates complete Hostinger releases safely', () => {
     const ciWorkflow = readFileSync(resolve(repoRoot, '.github/workflows/ci.yml'), 'utf8')
+    const deployScript = readFileSync(
+      resolve(repoRoot, 'scripts/deploy-hostinger-release.sh'),
+      'utf8'
+    )
 
     expect(ciWorkflow).toMatch(/branches:\s*\n\s*- main\s*\n\s*- staging/)
     expect(ciWorkflow).toContain("github.ref == 'refs/heads/staging'")
@@ -81,13 +85,32 @@ describe('project contract', () => {
     expect(ciWorkflow).toContain('name: staging')
     expect(ciWorkflow).toContain('npm run build:staging')
     expect(ciWorkflow).toContain('HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}')
-    expect(ciWorkflow).toContain('set ssl:verify-certificate yes;')
-    expect(ciWorkflow).toContain('set ssl:check-hostname no;')
     expect(ciWorkflow).not.toContain('HOSTINGER_PATH:')
     expect(ciWorkflow).not.toContain('cd \\"$HOSTINGER_PATH\\";')
-    expect(ciWorkflow).toContain('set net:max-retries 5;')
-    expect(ciWorkflow).toContain('set net:timeout 60;')
-    expect(ciWorkflow).toContain('mirror --reverse --delete --continue --verbose --parallel=1')
+    expect(ciWorkflow).toContain('scripts/deploy-hostinger-release.sh dist https://dev.asidominicana.do')
+    expect(ciWorkflow).not.toContain('mirror --reverse --delete')
+
+    expect(deployScript).toContain('set ssl:verify-certificate yes;')
+    expect(deployScript).toContain('set ssl:check-hostname no;')
+    expect(deployScript).toContain('set net:max-retries 5;')
+    expect(deployScript).toContain('set net:timeout 60;')
+    expect(deployScript).not.toContain('--delete')
+    expect(deployScript).toContain('mirror --reverse --only-missing')
+    expect(deployScript).toContain('$artifact_dir/assets/ assets/')
+    expect(deployScript).toContain('set xfer:use-temp-file yes;')
+    expect(deployScript).toContain('--exclude-glob index.html')
+    expect(deployScript).toContain('--exclude-glob sw.js')
+    expect(deployScript).toContain('put $artifact_dir/index.html -o index.html;')
+    expect(deployScript).toContain('put $artifact_dir/sw.js -o sw.js;')
+    expect(deployScript.indexOf('put $artifact_dir/index.html -o index.html;')).toBeLessThan(
+      deployScript.indexOf('put $artifact_dir/sw.js -o sw.js;')
+    )
+    expect(deployScript.indexOf('entrypoints_activated=true')).toBeLessThan(
+      deployScript.indexOf('put $artifact_dir/index.html -o index.html;')
+    )
+    expect(deployScript).toContain('verify-hostinger-release.mjs assets')
+    expect(deployScript).toContain('verify-hostinger-release.mjs live')
+    expect(deployScript).toContain('Restoring the previous entrypoints')
   })
 
   it('keeps the deployment configuration files in place', () => {

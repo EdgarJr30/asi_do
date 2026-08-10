@@ -304,9 +304,11 @@ Add structured logs/events for critical flows where possible.
 - Netlify handles preview deployments for pull requests once the repository is connected
 - Hostinger receives the built SPA through GitHub Actions: `staging` publishes to
   `dev.asidominicana.do`; `main` is reserved for the separately protected production target
-- the initial staging mirror is non-destructive until its FTP account is verified to be scoped to the
-  staging document root; Netlify remains the rollback target until Hostinger is validated — see
-  `docs/architecture/DESPLIEGUE_HOSTINGER.md`
+- Hostinger releases upload immutable hashed assets before atomically replacing `index.html` and
+  `sw.js`, verify the public result over HTTPS, and restore the prior entrypoints on failure; routine
+  activation never deletes the previous release's bundles
+- the FTP account must remain scoped to the intended document root; Netlify remains the rollback target
+  until Hostinger is validated — see `docs/architecture/DESPLIEGUE_HOSTINGER.md`
 - environment variables managed per environment
 - Netlify manages build-time frontend environments for preview and production
 - Supabase project separation is required once production data exists
