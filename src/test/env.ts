@@ -21,3 +21,20 @@ import { vi } from 'vitest'
  */
 vi.stubEnv('VITE_SUPABASE_URL', 'https://proyecto-de-prueba.supabase.co')
 vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'sb_publishable_de_prueba')
+
+/**
+ * Lo mismo con el entorno de despliegue, por la razón inversa: aquí el valor
+ * ambiental no falta, **sobra**.
+ *
+ * El step "Run repository verification" de `ci.yml` exporta
+ * `VITE_DEPLOY_ENV=production` para que el `build` del final de `verify` ejercite
+ * el guardia de variables obligatorias. Pero `verify` corre `npm run test` con ese
+ * mismo entorno, así que el valor se colaba en la suite: `AppEnvironmentBadge`
+ * rendereaba "Entorno Producción" en CI y "Entorno Local" en un portátil, y los tres
+ * tests que lo aseveran fallaban **solo** en CI.
+ *
+ * Los tests que sí hablan del entorno lo fijan ellos mismos —`auth-callback.test.ts`
+ * con `vi.stubEnv`, `required-env.test.ts` pasando el objeto— así que nadie depende
+ * de heredarlo. Fijarlo aquí es lo que hace que el resultado no dependa de la máquina.
+ */
+vi.stubEnv('VITE_DEPLOY_ENV', 'development')
