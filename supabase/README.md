@@ -15,11 +15,12 @@ supabase/
 SQL migrations remain authoritative for schema, constraints, helper functions, and RLS policies.
 `supabase/config.toml` is the source of truth for hosted Auth and Storage configuration that is managed through `supabase config push`.
 
-> **`config push` no termina en este proyecto.** El paso de Auth se aplica, pero el de Storage falla con
-> `402: Please upgrade the project to a paid tier to enable vector buckets`: el CLI envía
-> `vector.enabled = true` por defecto y el plan gratuito lo rechaza. Consecuencia práctica: **Auth sí se
-> sincroniza, Storage no**. Al terminar, comprueba que dice `Remote Auth config is up to date` — eso es lo
-> que confirma que tu cambio llegó.
+> **`config push` ya termina entero** (verificado el 2026-08-09 con el CLI 2.109.0: las cuatro secciones
+> —API, DB, Auth y Storage— responden `up to date`). Antes moría en Storage con
+> `402: Please upgrade the project to a paid tier to enable vector buckets`, porque el CLI envía
+> `vector.enabled = true` por defecto y el plan gratuito lo rechaza; lo que lo desatascó fue declararlo
+> explícitamente en falso (`[storage.vector]` en `config.toml`, con el porqué al lado). Si el 402 vuelve,
+> es que alguien quitó ese bloque, no que el plan cambió.
 
 ## Contraseñas: política y recuperación
 
