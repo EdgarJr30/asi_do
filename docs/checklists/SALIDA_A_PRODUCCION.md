@@ -109,9 +109,14 @@ permiso `email:broadcast` solo para owner/super admin. **Nada envía hasta que J
       `email_suppressions`, permiso `email:broadcast`, RPC `email_broadcast_enqueue` (normaliza,
       deduplica por caja, descarta inválidas y suprimidas) y `email_unsubscribe` (token uuid por
       destinatario, sin oráculo). Probe de 14 asertos, 6 mutantes muertos.
-- [ ] **J2 · Procesador** — `process-email-deliveries` debe (a) comprobar `email_delivery_is_suppressed`
-      antes de enviar, porque entre encolar y enviar alguien puede darse de baja, y (b) inyectar el
-      enlace de baja en el cuerpo de los correos `email.broadcast`. Sin esto el enlace no existe.
+- [x] **J2 · Procesador** — ✅ 2026-08-10, `d1ffd0d`. Comprueba la supresión **al enviar** (entre
+      encolar y enviar pasan minutos y es ahí donde alguien se da de baja) e inyecta el enlace en
+      HTML y texto, solo en los correos de campaña. Estado `suppressed` nuevo: `failed` habría dicho
+      que algo se rompió e inflado el contador de problemas. 4 mutantes muertos, 17 tests Deno.
+      ⚠️ **Pendiente de desplegar:** el remoto no respondía al terminar. Falta
+      `supabase db push --linked` (migración `20260810120429`) y
+      `supabase functions deploy process-email-deliveries`. Git va por delante de la base, que es
+      el lado seguro.
 - [ ] **J3 · Interfaz** — carga de `.txt`/`.csv` en `/admin/correos` con vista previa (cuántos
       válidos, duplicados y suprimidos antes de enviar), envío en modo prueba primero, y ruta
       pública `/correos/baja` que canjea el token.
@@ -189,4 +194,5 @@ sobre `storage.*` (exige consulta al remoto).
 | 2026-08-10 | **G1a (TASK-276)**: métricas del dashboard agregadas en la base. La probe de la Fase D cazó de paso que `create function` deja la función invocable por `anon` pese al grant nominal | `655b446` |
 | 2026-08-10 | **G1b (TASK-277)**: contador de postulaciones por vacante en un `group by`. Bajaba el tablero completo y se reinvalidaba con cada postulación del tenant | `38c1422` |
 | 2026-08-10 | **F4**: filtro por evento real del proveedor en `/admin/correos` | `5f0f7fc` |
+| 2026-08-10 | **J2**: la baja bloquea el envío y el enlace viaja en la campaña. Sin desplegar: el remoto no respondía | `d1ffd0d` |
 | 2026-08-10 | **J1**: base de datos del envío masivo. Los dos guardarraíles del repo saltaron y tenían razón: tabla nueva sin declarar en la matriz de la Fase D, y superficie de `anon` ampliada de 23 a 24 funciones | `074fe6e`, `656363e` |
