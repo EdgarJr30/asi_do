@@ -221,6 +221,14 @@
   overflow: visible;
 }
 
+.institutional-home__ecosystem-motion-clip {
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--radius-card-lg);
+  backface-visibility: hidden;
+  contain: paint;
+}
+
 .institutional-home__ecosystem-hero-overlay {
   background-image: linear-gradient(
     180deg,

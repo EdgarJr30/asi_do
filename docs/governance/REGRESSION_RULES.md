@@ -558,6 +558,9 @@ Do not render an empty select instruction with the same dark text used for a sel
 ### R-156 — Notification email links must stay inside their environment
 Do not keep `APP_URL` as an independently maintained Edge Function secret or trust an absolute `action_url` stored by an older notification. Edge Function deployment must derive `APP_URL` from the protected environment's `VITE_AUTH_SITE_URL`, reject an origin that does not match staging or production, and rewrite legacy absolute actions onto that current origin while preserving only their internal path, query, and fragment.
 
+### R-157 — Animated ecosystem images must keep clean rounded edges
+Do not combine continuous floating motion with pointer-driven rotation or scale on institutional ecosystem images. Keep the media layer clipped and isolated so browser compositing cannot paint image fragments outside the rounded card.
+
 ---
 
 ## Maintenance rule

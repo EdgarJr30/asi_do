@@ -140,12 +140,6 @@ function FloatingEcosystemMedia({
   floatIndex: number;
 }) {
   const shouldReduceMotion = useReducedMotion();
-  const [hoverOffset, setHoverOffset] = useState({
-    x: 0,
-    y: 0,
-    rotate: 0,
-    scale: 1,
-  });
 
   const floatAmplitude = 7 + floatIndex * 1.5;
   const floatDuration = 7.6 + floatIndex * 0.55;
@@ -167,42 +161,9 @@ function FloatingEcosystemMedia({
         delay: floatIndex * 0.32,
       }}
     >
-      <motion.div
-        className="h-full"
-        animate={shouldReduceMotion ? undefined : hoverOffset}
-        transition={{
-          type: 'spring',
-          stiffness: 94,
-          damping: 22,
-          mass: 0.88,
-        }}
-        onMouseLeave={() => {
-          setHoverOffset({
-            x: 0,
-            y: 0,
-            rotate: 0,
-            scale: 1,
-          });
-        }}
-        onMouseMove={(event) => {
-          const rect = event.currentTarget.getBoundingClientRect();
-          const normalizedX = (event.clientX - rect.left) / rect.width - 0.5;
-          const normalizedY = (event.clientY - rect.top) / rect.height - 0.5;
-          const intensity = Math.min(
-            1,
-            Math.max(Math.abs(normalizedX), Math.abs(normalizedY)) * 2
-          );
-
-          setHoverOffset({
-            x: normalizedX * 14,
-            y: normalizedY * 11,
-            rotate: normalizedX * 2.4,
-            scale: 1 + intensity * 0.018,
-          });
-        }}
-      >
+      <div className="institutional-home__ecosystem-motion-clip h-full">
         {children}
-      </motion.div>
+      </div>
     </motion.div>
   );
 }

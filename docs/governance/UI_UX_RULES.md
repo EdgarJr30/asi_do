@@ -564,6 +564,7 @@ Rules:
 27. Payment trust notices that follow a primary checkout action must occupy their own row with a visible spacing gap. Do not let inline layout attach the notice to the button at wider viewports.
 28. Active membership summaries may show remaining time and activation/expiration dates, but must not render a decorative term-progress bar.
 29. The membership church-reference card must present `Unión` and `Asociación` before `Iglesia local` and `Distrito`. Until complete church and district catalogs exist, the latter two controls must remain required text fields instead of disabled or incomplete selects.
+30. Continuously animated image cards must clip and isolate their media layer. Do not combine perpetual translation with pointer-driven rotation or scale when it can expose raster artifacts outside rounded edges.
 
 ---
 
