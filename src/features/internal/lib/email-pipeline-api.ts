@@ -3,6 +3,26 @@ import { supabase } from '@/lib/supabase/client'
 // Estados de entrega que modela asi_do (constraint de notification_deliveries).
 export type EmailDeliveryStatus = 'pending' | 'processing' | 'sent' | 'failed' | 'read' | 'clicked'
 export type EmailStatusFilter = EmailDeliveryStatus | 'all' | 'problem'
+
+/**
+ * Eventos del proveedor que se pueden filtrar (TASK-255, F4).
+ *
+ * Solo estos cuatro, y no los nueve que el visor sabe etiquetar, porque el
+ * filtro opera sobre `latest_provider_event` y **eso limita lo que se puede
+ * afirmar sin mentir**: un rebote, una queja y una supresión son terminales, así
+ * que "el último evento fue X" equivale a "le pasó X". Un `opened` seguido de un
+ * `clicked` deja de ser el último, de modo que filtrar aperturas por aquí
+ * perdería justo las que más interesan — y para eso ya existen los estados
+ * agregados `read` y `clicked`, que el pipeline mantiene aparte.
+ *
+ * `delivery_delayed` se ofrece como *retraso vigente* por la misma razón: si el
+ * correo terminó entregándose, deja de aparecer, que es la lectura útil.
+ */
+export type EmailProviderEventFilter =
+  | 'email.bounced'
+  | 'email.complained'
+  | 'email.suppressed'
+  | 'email.delivery_delayed'
 export type SimulateScenario = 'send' | 'fail' | 'hang'
 
 export interface EmailDeliveryEventRow {
@@ -108,6 +128,7 @@ export async function fetchEmailDeliveriesPage(params: {
   pageSize: number
   search?: string
   status?: EmailStatusFilter
+  event?: EmailProviderEventFilter
 }): Promise<PageResult<EmailDeliveryRow>> {
   const client = requireSupabase()
   const from = (params.page - 1) * params.pageSize
@@ -124,6 +145,14 @@ export async function fetchEmailDeliveriesPage(params: {
     query = query.in('delivery_status', PROBLEM_STATUSES)
   } else if (params.status && params.status !== 'all') {
     query = query.eq('delivery_status', params.status)
+  }
+
+  // El filtro por evento va contra `latest_provider_event` y no contra un join a
+  // `email_delivery_events`: un `!inner` con `eq` sobre la tabla embebida
+  // devolvería solo el evento que casó, y la cronología del detalle —que se pinta
+  // desde esta misma fila— quedaría reducida a un punto.
+  if (params.event) {
+    query = query.eq('latest_provider_event', params.event)
   }
 
   const { data, error, count } = await query.range(from, to)

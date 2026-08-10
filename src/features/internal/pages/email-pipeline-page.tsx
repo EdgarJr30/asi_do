@@ -37,6 +37,7 @@ import {
   type EmailDeliveryRow,
   type EmailDeliveryStatus,
   type EmailStatusFilter,
+  type EmailProviderEventFilter,
   type SimulateScenario
 } from '@/features/internal/lib/email-pipeline-api'
 
@@ -127,6 +128,7 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<EmailStatusFilter>('all')
+  const [eventFilter, setEventFilter] = useState<EmailProviderEventFilter | 'all'>('all')
   const [selected, setSelected] = useState<EmailDeliveryRow | null>(null)
 
   // El input responde en vivo; la búsqueda paginada solo golpea el servidor
@@ -141,11 +143,22 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
     setStatusFilter(value)
     setPage(1)
   }
+  const onEventFilter = (value: EmailProviderEventFilter | 'all') => {
+    setEventFilter(value)
+    setPage(1)
+  }
 
   const statsQuery = useQuery({ queryKey: STATS_KEY, queryFn: fetchEmailDeliveryStats })
   const pageQuery = useQuery({
-    queryKey: [...PAGE_KEY, { page, search: debouncedSearch, statusFilter }],
-    queryFn: () => fetchEmailDeliveriesPage({ page, pageSize: PAGE_SIZE, search: debouncedSearch, status: statusFilter }),
+    queryKey: [...PAGE_KEY, { page, search: debouncedSearch, statusFilter, eventFilter }],
+    queryFn: () =>
+      fetchEmailDeliveriesPage({
+        page,
+        pageSize: PAGE_SIZE,
+        search: debouncedSearch,
+        status: statusFilter,
+        event: eventFilter === 'all' ? undefined : eventFilter
+      }),
     placeholderData: keepPreviousData
   })
 
@@ -216,6 +229,22 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
           <option value="failed">Fallidos</option>
           <option value="read">Leídos</option>
           <option value="clicked">Con clic</option>
+        </Select>
+        {/*
+          Separado del selector de estado a propósito: el estado es lo que
+          asi_do sabe de la entrega, y esto es lo que dijo Resend. Mezclarlos en
+          una sola lista sugeriría que se pueden combinar, y no se pueden.
+        */}
+        <Select
+          aria-label="Evento del proveedor"
+          value={eventFilter}
+          onChange={(event) => onEventFilter(event.target.value as EmailProviderEventFilter | 'all')}
+        >
+          <option value="all">Cualquier evento</option>
+          <option value="email.bounced">Rebotados</option>
+          <option value="email.complained">Marcados como spam</option>
+          <option value="email.suppressed">Suprimidos</option>
+          <option value="email.delivery_delayed">Con retraso vigente</option>
         </Select>
       </div>
 
