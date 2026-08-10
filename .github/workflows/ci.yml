@@ -279,7 +279,6 @@ jobs:
       VITE_WEB_PUSH_PUBLIC_KEY: ${{ vars.VITE_WEB_PUSH_PUBLIC_KEY }}
       HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
       HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}
-      HOSTINGER_PATH: ${{ secrets.HOSTINGER_PATH }}
       HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
       HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
     steps:
@@ -325,9 +324,9 @@ jobs:
       - name: Install FTP client
         run: sudo apt-get update && sudo apt-get install --yes lftp
 
-      # Primera fase deliberadamente no destructiva: la cuenta esta limitada al
+      # Primera fase deliberadamente no destructiva: la cuenta inicia dentro del
       # document root de staging, pero no se habilita `--delete` hasta observar
-      # un deploy real y confirmar en Hostinger que `/` sigue siendo zzz_dev.
+      # un deploy real y confirmar en Hostinger que `.` sigue siendo zzz_dev.
       # hPanel entrega una IP como hostname, aunque FTPS presenta `*.hstgr.io`:
       # se valida la cadena del certificado y se omite solo la coincidencia CN/IP.
       - name: Inspect scoped FTP root and upload without deletion
@@ -341,7 +340,6 @@ jobs:
               set ssl:check-hostname no;
               set net:max-retries 2;
               set net:timeout 20;
-              cd \"$HOSTINGER_PATH\";
               pwd;
               cls -la;
               mirror --reverse --verbose --parallel=2 --no-perms dist/ .;
