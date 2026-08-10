@@ -15,6 +15,7 @@ import {
 import { contactPoints } from '@/experiences/institutional/content/site-content';
 import { submitContactMessage } from '@/experiences/institutional/lib/contact-api';
 import {
+  MAX_CONTACT_MESSAGE_LENGTH,
   validateContactMessage,
   type ContactField,
   type ContactFieldError,
@@ -330,21 +331,32 @@ export function ContactUsPage() {
                   <FieldError error={fieldError} field="topic" />
                 </label>
 
-                <label className="grid gap-2">
-                  <span className="asi-field-label">Mensaje</span>
+                <div className="grid gap-2">
+                  <label className="asi-field-label" htmlFor="contact-message">
+                    Mensaje
+                  </label>
                   <textarea
+                    aria-describedby="contact-message-counter"
                     aria-invalid={fieldError?.field === 'message'}
                     // el arrastre queda acotado: crece hasta 20rem y luego hace scroll
                     className="asi-field max-h-80 min-h-40 resize-y"
                     disabled={sendMutation.isPending}
-                    maxLength={4000}
+                    id="contact-message"
+                    maxLength={MAX_CONTACT_MESSAGE_LENGTH}
                     minLength={10}
                     onChange={(event) => setMessage(event.target.value)}
                     required
                     value={message}
                   />
+                  <span
+                    aria-live="polite"
+                    className="text-right text-xs text-(--asi-text-muted)"
+                    id="contact-message-counter"
+                  >
+                    {MAX_CONTACT_MESSAGE_LENGTH - message.length} caracteres disponibles
+                  </span>
                   <FieldError error={fieldError} field="message" />
-                </label>
+                </div>
 
                 <button
                   className="asi-button asi-button-primary disabled:cursor-not-allowed disabled:opacity-70"

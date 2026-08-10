@@ -18,6 +18,8 @@ export interface ContactFieldError {
   message: string
 }
 
+export const MAX_CONTACT_MESSAGE_LENGTH = 4000
+
 /** Empieza por letra y sigue con letras, espacios y los signos de un nombre real. */
 const NAME_RE = /^\p{L}[\p{L}\p{M} .'’-]*$/u
 
@@ -72,8 +74,11 @@ export function validateContactMessage(values: {
     return { field: 'topic', message: 'Selecciona un motivo válido.' }
   }
 
-  if (message.length < 10 || message.length > 4000) {
-    return { field: 'message', message: 'El mensaje debe tener entre 10 y 4000 caracteres.' }
+  if (message.length < 10 || message.length > MAX_CONTACT_MESSAGE_LENGTH) {
+    return {
+      field: 'message',
+      message: `El mensaje debe tener entre 10 y ${MAX_CONTACT_MESSAGE_LENGTH} caracteres.`
+    }
   }
 
   if (SINGLE_CHAR_RE.test(message.replace(/\s/gu, ''))) {
