@@ -50,6 +50,13 @@ Security includes protecting:
 - Preview and production build-time environments must stay separated so preview does not reuse production configuration accidentally.
 - Auth callback origins must be environment-bound: development uses the live browser origin; staging and production use injected HTTPS origins validated at build time. Production must match its canonical production origin, staging must differ from it, and neither deployed environment may emit localhost links.
 
+### Production data and E2E isolation
+- Never provide a production `service_role`/secret key to Playwright, CI test jobs, or developer test environments.
+- Suites that create, modify, or delete data may target only Supabase local, development, or staging.
+- Every remote mutating E2E run must declare `E2E_TARGET_ENV`, and its project ref must belong to the allow-list versioned in `target-guard.ts`; changing CI variables cannot expand it.
+- `E2E_SUPABASE_URL` outside that allow-list or matching `PRODUCTION_SUPABASE_PROJECT_REF` must abort before the administrative client is created.
+- Production verification uses only `npm run test:e2e:production-smoke`, without administrative credentials or data mutations.
+
 ### Dependency and release hygiene
 - Keep dependencies reviewable and minimal.
 - Remove or replace dependencies with known unresolved high-severity vulnerabilities when a compatible safe path exists.

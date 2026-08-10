@@ -71,6 +71,12 @@ These tests should prioritize mobile viewport coverage for the core hiring loop.
 Minimum smoke coverage now includes auth callback shell, first-run profile setup, tenant-operator request, jobs discovery, applications, and pipeline surfaces.
 Institutional motion carousels that depend on looping, autoplay, or gesture negotiation must add browser coverage for the affected engines when their behavior changes, including WebKit desktop/mobile checks, Android-like mobile Chromium checks when touch behavior changes, and assertions that the visible viewport does not expose a blank edge while the loop advances.
 
+Mutating E2E suites run only against local, development, or staging. Remote runs must set
+`E2E_TARGET_ENV`, and their project ref must belong to the allow-list versioned in `target-guard.ts`;
+`PRODUCTION_SUPABASE_PROJECT_REF` adds an explicit deny when production exists. The administrative client
+aborts before connecting when the destination is production or cannot be proven safe. Production runs only
+`npm run test:e2e:production-smoke`, which has no `service_role`, login fixture, or data mutation.
+
 ### Manual QA
 Manual checks remain required for:
 - installability
@@ -153,6 +159,7 @@ The repository must keep these commands meaningful:
 - `npm run test:mutation`
 - `npm run test:e2e`
 - `npm run test:e2e:smoke`
+- `npm run test:e2e:production-smoke`
 - `npm run test:e2e:recovery`
 - `npm run test:functions`
 - `npm run test:probes`

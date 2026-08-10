@@ -211,6 +211,37 @@ describe('project contract', () => {
     expect(confirmation).toContain('{{ .Email }}')
   })
 
+  it('keeps production smoke read-only and mutating E2E behind the target guard', () => {
+    const packageJson = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')) as {
+      scripts?: Record<string, string>
+    }
+    const productionSmoke = readFileSync(
+      resolve(repoRoot, 'tests/e2e/production-smoke.spec.ts'),
+      'utf8'
+    )
+    const productionSmokeImports = productionSmoke.match(/^import .*$/gm)?.join('\n') ?? ''
+    const realtimeSupport = readFileSync(resolve(repoRoot, 'tests/e2e/support/realtime.ts'), 'utf8')
+    const targetGuard = readFileSync(resolve(repoRoot, 'tests/e2e/support/target-guard.ts'), 'utf8')
+    const ciWorkflow = readFileSync(resolve(repoRoot, '.github/workflows/ci.yml'), 'utf8')
+
+    expect(packageJson.scripts?.['test:e2e:production-smoke']).toContain(
+      'tests/e2e/production-smoke.spec.ts'
+    )
+    expect(packageJson.scripts?.['test:e2e:production-smoke']).toContain('E2E_SKIP_WEBSERVER=1')
+    expect(packageJson.scripts?.['test:e2e:production-smoke']).toContain(
+      'E2E_BASE_URL=https://asidominicana.do'
+    )
+    expect(packageJson.scripts?.['test:e2e:production-smoke']).toContain('E2E_SERVICE_ROLE_KEY=')
+    expect(packageJson.scripts?.['test:e2e:production-smoke']).toContain('SUPABASE_SERVICE_ROLE_KEY=')
+    expect(productionSmokeImports).not.toMatch(/support\/realtime|target-guard|supabase/)
+    expect(productionSmoke).not.toMatch(/auth\.admin|createServiceClient\(/)
+    expect(realtimeSupport).toContain('assertSafeMutatingE2ETarget')
+    expect(targetGuard).toContain('ALLOWED_REMOTE_E2E_PROJECT_REFS')
+    expect(targetGuard).toContain('jgmojkzthfogynqixkob')
+    expect(ciWorkflow).toContain('E2E_TARGET_ENV: development')
+    expect(ciWorkflow).toContain('PRODUCTION_SUPABASE_PROJECT_REF: ${{ vars.PRODUCTION_SUPABASE_PROJECT_REF }}')
+  })
+
   it('does not reintroduce the removed vulnerable PWA plugin chain', () => {
     const packageJson = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')) as {
       dependencies?: Record<string, string>

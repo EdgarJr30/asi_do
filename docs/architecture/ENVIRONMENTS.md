@@ -60,6 +60,10 @@ Reglas que sostienen el flujo:
 3. **El artefacto que se promueve es un commit**, no un archivo suelto ni un cambio hecho a mano en el dashboard.
 4. **Staging no lleva datos de producción con PII.** Si hace falta volumen realista, se genera con el arnés (`npm run harness:seed`) o se anonimiza antes de cargar.
 5. **Los secretos no se comparten entre entornos.** Cada proyecto tiene su propio juego completo. Un secreto que sirve en dos entornos convierte un incidente de staging en un incidente de producción.
+6. **Los E2E que escriben datos nunca apuntan a producción.** `E2E_TARGET_ENV` solo admite
+   `development` o `staging`; todo destino remoto debe pertenecer a la allow-list versionada y se rechaza
+   si coincide con `PRODUCTION_SUPABASE_PROJECT_REF`. Producción usa únicamente
+   `npm run test:e2e:production-smoke`, sin `service_role`.
 
 ## 4. Inventario de conmutación
 
@@ -91,6 +95,12 @@ producción. El comando y sus variables están documentados en `supabase/README.
 En CI, desarrollo y producción deben ser environments protegidos distintos, cada uno con su
 `SUPABASE_PROJECT_REF`, `EXPECTED_AUTH_SITE_URL` y token. `PRODUCTION_SUPABASE_PROJECT_REF` y
 `PRODUCTION_AUTH_SITE_URL` actúan como límite común, no como destino implícito.
+
+La allow-list `ALLOWED_REMOTE_E2E_PROJECT_REFS` vive en `tests/e2e/support/target-guard.ts`; agregar staging
+requiere un cambio revisable en el repositorio, no solo editar un secreto. La variable de repositorio
+`PRODUCTION_SUPABASE_PROJECT_REF` no es secreta y añade una segunda negación explícita cuando exista
+producción. Si `E2E_TARGET_ENV` no es `development`/`staging`, el destino no está autorizado o coincide con
+producción, `createServiceClient()` aborta antes de usar la llave administrativa. No existe bandera de emergencia.
 
 **Llamando a las APIs a mano (`curl`, `fetch`):** la API de **Storage** rechaza las llaves nuevas si solo van en `Authorization: Bearer` — responde `403 {"message":"Invalid Compact JWS"}` porque intenta parsearlas como JWT. Hay que mandar **además** el header `apikey`. PostgREST se conforma con cualquiera de los dos, así que el fallo aparece solo al tocar Storage y el mensaje no apunta a la causa.
 

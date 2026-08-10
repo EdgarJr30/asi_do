@@ -520,6 +520,9 @@ Do not send everyone to the payment panel after the base profile wizard, and do 
 ### R-149 — Institutional headings must own their contrast
 Do not use an undefined institutional heading class or let headings inside light institutional surfaces inherit the global application theme color. Every `asi-heading-*` variant used by institutional pages must define its own `--asi-text` color so headings remain readable even when the global theme is dark.
 
+### R-150 — Mutating E2E suites must fail closed before reaching production
+Do not give Playwright a production `service_role`/secret key or run account, membership, payment, job, or cleanup fixtures against production. Every remote administrative E2E run must declare `E2E_TARGET_ENV=development|staging`, and its project ref must belong to the allow-list versioned in `target-guard.ts`; changing environment variables alone must never expand that list. A target outside the allow-list or matching `PRODUCTION_SUPABASE_PROJECT_REF` must abort before `createClient`. Production verification is limited to `npm run test:e2e:production-smoke`, which must remain read-only and independent from `support/realtime`.
+
 ---
 
 ## Maintenance rule

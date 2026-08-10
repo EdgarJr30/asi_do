@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 import { loadLocalEnv } from './env'
+import { ALLOWED_REMOTE_E2E_PROJECT_REFS, assertSafeMutatingE2ETarget } from './target-guard'
 
 /**
  * Soporte para la prueba e2e de datos en vivo (Supabase Realtime).
@@ -25,7 +26,9 @@ export const realtimeConfig = {
   // (ver `resolveJobPublisher`); las variables existen para fijarlo a propósito.
   tenantId: process.env.E2E_REALTIME_TENANT_ID ?? '',
   companyProfileId: process.env.E2E_REALTIME_COMPANY_PROFILE_ID ?? '',
-  candidatePassword: process.env.E2E_REALTIME_PASSWORD ?? 'RealtimeTest!2026'
+  candidatePassword: process.env.E2E_REALTIME_PASSWORD ?? 'RealtimeTest!2026',
+  targetEnvironment: process.env.E2E_TARGET_ENV ?? '',
+  productionProjectRef: process.env.PRODUCTION_SUPABASE_PROJECT_REF ?? ''
 }
 
 export function realtimeEnvReady() {
@@ -53,6 +56,13 @@ if (!realtimeEnvReady() && process.env.CI) {
 }
 
 export function createServiceClient() {
+  assertSafeMutatingE2ETarget({
+    allowedRemoteProjectRefs: ALLOWED_REMOTE_E2E_PROJECT_REFS,
+    e2eSupabaseUrl: realtimeConfig.supabaseUrl,
+    productionProjectRef: realtimeConfig.productionProjectRef,
+    targetEnvironment: realtimeConfig.targetEnvironment
+  })
+
   return createClient(realtimeConfig.supabaseUrl, realtimeConfig.serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false }
   })

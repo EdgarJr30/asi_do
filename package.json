@@ -26,6 +26,7 @@
     "test:mutation": "stryker run",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.ts",
+    "test:e2e:production-smoke": "E2E_SKIP_WEBSERVER=1 E2E_BASE_URL=https://asidominicana.do E2E_SERVICE_ROLE_KEY= SUPABASE_SERVICE_ROLE_KEY= E2E_TARGET_ENV=production playwright test tests/e2e/production-smoke.spec.ts",
     "test:e2e:recovery": "playwright test tests/e2e/password-recovery.spec.ts --project=desktop-webkit",
     "test:e2e:realtime": "playwright test tests/e2e/realtime-job-board.spec.ts --project=desktop-webkit",
     "test:e2e:pwa": "playwright test --config=playwright.pwa.config.ts",
