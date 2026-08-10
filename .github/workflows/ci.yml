@@ -328,6 +328,8 @@ jobs:
       # Primera fase deliberadamente no destructiva: la cuenta esta limitada al
       # document root de staging, pero no se habilita `--delete` hasta observar
       # un deploy real y confirmar en Hostinger que `/` sigue siendo zzz_dev.
+      # hPanel entrega una IP como hostname, aunque FTPS presenta `*.hstgr.io`:
+      # se valida la cadena del certificado y se omite solo la coincidencia CN/IP.
       - name: Inspect scoped FTP root and upload without deletion
         run: |
           lftp -u "$HOSTINGER_USERNAME","$HOSTINGER_PASSWORD" \
@@ -336,6 +338,7 @@ jobs:
               set ftp:ssl-force true;
               set ftp:ssl-protect-data true;
               set ssl:verify-certificate yes;
+              set ssl:check-hostname no;
               set net:max-retries 2;
               set net:timeout 20;
               cd \"$HOSTINGER_PATH\";

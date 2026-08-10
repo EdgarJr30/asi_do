@@ -166,6 +166,10 @@ Las credenciales viven en el GitHub Environment `staging`, nunca en el repositor
 limitada al document root de `dev.asidominicana.do`, por lo que `HOSTINGER_PATH=/` significa la raíz de
 staging y no la raíz completa de la cuenta Hostinger.
 
+hPanel entrega la IP del servidor como hostname FTP, pero el endpoint FTPS presenta un certificado
+`*.hstgr.io`. El workflow mantiene `ssl:verify-certificate=yes` para validar la cadena TLS y desactiva
+solo `ssl:check-hostname`, porque el nombre del certificado no puede coincidir con una dirección IP.
+
 La primera fase usa `mirror --reverse` **sin `--delete`**. Después del primer deploy hay que confirmar en
 hPanel que el listado observado corresponde solo al directorio `zzz_dev`; entonces una tarea posterior
 puede activar la limpieza de bundles obsoletos con su propia prueba de contrato.

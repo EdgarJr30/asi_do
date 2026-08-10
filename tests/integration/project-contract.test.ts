@@ -81,6 +81,8 @@ describe('project contract', () => {
     expect(ciWorkflow).toContain('name: staging')
     expect(ciWorkflow).toContain('npm run build:staging')
     expect(ciWorkflow).toContain('HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}')
+    expect(ciWorkflow).toContain('set ssl:verify-certificate yes;')
+    expect(ciWorkflow).toContain('set ssl:check-hostname no;')
     expect(ciWorkflow).toContain('mirror --reverse --verbose')
     expect(ciWorkflow).not.toContain('mirror --reverse --delete')
   })
