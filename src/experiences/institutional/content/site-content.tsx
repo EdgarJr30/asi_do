@@ -119,8 +119,10 @@ export type InstitutionalSection =
 
 export type InstitutionalPageContent = {
   hero: InstitutionalLeadContent & {
-    primaryAction: InstitutionalAction;
-    secondaryAction: InstitutionalAction;
+    // Opcionales: una página puede quedarse sin acción si su destino está
+    // oculto (Proyectos) en vez de enlazar a una sección que no existe.
+    primaryAction?: InstitutionalAction;
+    secondaryAction?: InstitutionalAction;
     aside: InstitutionalHeroCard[];
     image?: string;
     imageAlt?: string;
@@ -129,21 +131,24 @@ export type InstitutionalPageContent = {
   cta?: {
     title: string;
     description: string;
-    primaryAction: InstitutionalAction;
-    secondaryAction: InstitutionalAction;
+    primaryAction?: InstitutionalAction;
+    secondaryAction?: InstitutionalAction;
   };
 };
 
 export const institutionalNavigation = [
   { label: 'Inicio', to: surfacePaths.institutional.home },
   { label: 'Membresía', to: surfacePaths.institutional.membership },
+  // Proyectos oculto hasta que la sección esté lista (la ruta sigue viva).
+  // { label: 'Proyectos', to: surfacePaths.institutional.projects },
   { label: 'Quiénes somos', to: surfacePaths.institutional.whoWeAre },
-  { label: 'Proyectos', to: surfacePaths.institutional.projects },
   { label: 'Contáctanos', to: surfacePaths.institutional.contactUs },
 ] as const;
 
 export const institutionalPrimaryNavigation = [
   { label: 'Membresía', to: surfacePaths.institutional.membership },
+  // Proyectos oculto hasta que la sección esté lista (la ruta sigue viva).
+  // { label: 'Proyectos', to: surfacePaths.institutional.projects },
   { label: 'Quiénes somos', to: surfacePaths.institutional.whoWeAre },
   { label: 'Contáctanos', to: surfacePaths.institutional.contactUs },
 ] as const;

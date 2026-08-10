@@ -33,10 +33,11 @@ const LegalCenterPage = lazy(() =>
 const LegalDocumentPage = lazy(() =>
   import('@/experiences/institutional/pages/legal-document-page').then(({ LegalDocumentPage }) => ({ default: LegalDocumentPage }))
 )
-const ProjectFundingPage = lazy(() =>
-  import('@/experiences/institutional/pages/project-funding-page').then(({ ProjectFundingPage }) => ({ default: ProjectFundingPage }))
-)
-const ProjectsPage = lazy(() => import('@/experiences/institutional/pages/projects-page').then(({ ProjectsPage }) => ({ default: ProjectsPage })))
+// Imports de Proyectos comentados junto con sus rutas (ver más abajo).
+// const ProjectFundingPage = lazy(() =>
+//   import('@/experiences/institutional/pages/project-funding-page').then(({ ProjectFundingPage }) => ({ default: ProjectFundingPage }))
+// )
+// const ProjectsPage = lazy(() => import('@/experiences/institutional/pages/projects-page').then(({ ProjectsPage }) => ({ default: ProjectsPage })))
 const WhoWeArePage = lazy(() => import('@/experiences/institutional/pages/who-we-are-page').then(({ WhoWeArePage }) => ({ default: WhoWeArePage })))
 
 export const institutionalRoutes: RouteObject[] = [
@@ -96,22 +97,25 @@ export const institutionalRoutes: RouteObject[] = [
           </RouteSuspense>
         )
       },
-      {
-        path: 'projects',
-        element: (
-          <RouteSuspense>
-            <ProjectsPage />
-          </RouteSuspense>
-        )
-      },
-      {
-        path: 'projects/funding',
-        element: (
-          <RouteSuspense>
-            <ProjectFundingPage />
-          </RouteSuspense>
-        )
-      },
+      // Proyectos oculto hasta que la sección esté lista: sin ruta, /projects y
+      // /projects/funding caen en el comodín '*' y responden 404. Las páginas y
+      // su contenido siguen en el repo para reactivarlas descomentando esto.
+      // {
+      //   path: 'projects',
+      //   element: (
+      //     <RouteSuspense>
+      //       <ProjectsPage />
+      //     </RouteSuspense>
+      //   )
+      // },
+      // {
+      //   path: 'projects/funding',
+      //   element: (
+      //     <RouteSuspense>
+      //       <ProjectFundingPage />
+      //     </RouteSuspense>
+      //   )
+      // },
       {
         path: 'donate',
         element: (
