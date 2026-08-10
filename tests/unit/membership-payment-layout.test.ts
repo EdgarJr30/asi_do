@@ -14,4 +14,8 @@ describe('membership payment layout', () => {
       /className="mt-3 flex w-fit items-center gap-1\.5 rounded-control bg-\(--app-surface\) px-3 py-2 text-xs text-\(--app-text-muted\)"/
     )
   })
+
+  it('does not render a remaining membership progress bar', () => {
+    expect(source).not.toContain('style={{ width: `${progress}%` }}')
+  })
 })

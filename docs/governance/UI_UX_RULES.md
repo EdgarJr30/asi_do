@@ -559,6 +559,7 @@ Rules:
 25. Public legal surfaces must use an editorial, highly compact reading rhythm rather than marketing-hero proportions. Keep the legal-center masthead shallow, its heading below display scale and on one line at desktop widths, policy cards low-padding and scannable, document mastheads short, navigation tabs tight, and clauses comfortably readable without oversized headings or vertical gaps. Do not expose internal document version numbers or effective-date badges. Export/print and change-history controls are operational and must appear only to `platform_owner`. At desktop widths, the center heading and first row of policy cards should fit comfortably within a short viewport without making the cards feel like feature panels. Do not add explanatory copy about each policy having a citable URL; the policy links already communicate that behavior. The compact treatment must apply consistently to `/legal` and every linked policy route on mobile and desktop.
 26. Secondary entity-registration details on public legal surfaces must use progressive disclosure. Keep the trigger compact, descriptive, keyboard accessible, and closed by default; reveal the complete legal identity only when the reader requests it.
 27. Payment trust notices that follow a primary checkout action must occupy their own row with a visible spacing gap. Do not let inline layout attach the notice to the button at wider viewports.
+28. Active membership summaries may show remaining time and activation/expiration dates, but must not render a decorative term-progress bar.
 
 ---
 

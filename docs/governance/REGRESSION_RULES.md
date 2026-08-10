@@ -549,6 +549,9 @@ Three specifics that follow, and that were each violated in the 2026-08-10 incid
 
 A limit only counts if it is enforced by PostgreSQL, by a test, or by `npm run verify`. A comment, a form's `maxlength`, or a reviewer's attention does not count.
 
+### R-154 — Active membership validity must not use a progress bar
+Do not render a decorative progress bar for the remaining active-membership term. Keep the remaining-time label and activation/expiration dates as the compact validity summary.
+
 ---
 
 ## Maintenance rule

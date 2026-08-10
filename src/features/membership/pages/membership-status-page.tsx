@@ -441,10 +441,6 @@ export function MembershipStatusPage() {
     safeReceiptsPage * RECEIPTS_PAGE_SIZE,
     safeReceiptsPage * RECEIPTS_PAGE_SIZE + RECEIPTS_PAGE_SIZE
   );
-  const membershipProgress = computeMembershipTermProgress(
-    membershipActivatedAt,
-    membershipExpiresAt
-  );
   const activeTabPanelVariants = shouldReduceMotion
     ? reducedTabPanelReveal
     : tabPanelReveal;
@@ -591,7 +587,6 @@ export function MembershipStatusPage() {
                 activatedAt={membershipActivatedAt}
                 expiresAt={membershipExpiresAt}
                 remaining={remainingMembership}
-                progress={membershipProgress}
                 isActive={session.hasActiveAsiAccess}
               />
             </motion.div>
@@ -974,40 +969,12 @@ export function MembershipStatusPage() {
   );
 }
 
-function computeMembershipTermProgress(
-  activatedAt: string | null,
-  expiresAt: string | null
-) {
-  if (!activatedAt || !expiresAt) {
-    return 0;
-  }
-  const start = new Date(activatedAt).getTime();
-  const end = new Date(expiresAt).getTime();
-  const now = Date.now();
-  if (
-    !Number.isFinite(start) ||
-    !Number.isFinite(end) ||
-    end <= start ||
-    now >= end
-  ) {
-    return 0;
-  }
-  if (now <= start) {
-    return 100;
-  }
-  return Math.max(
-    4,
-    Math.min(100, Math.round(((end - now) / (end - start)) * 100))
-  );
-}
-
 function MembershipOverviewCard({
   category,
   statusLabel,
   activatedAt,
   expiresAt,
   remaining,
-  progress,
   isActive,
 }: {
   category: string;
@@ -1015,7 +982,6 @@ function MembershipOverviewCard({
   activatedAt: string | null;
   expiresAt: string | null;
   remaining: string;
-  progress: number;
   isActive: boolean;
 }) {
   return (
@@ -1049,12 +1015,6 @@ function MembershipOverviewCard({
               <span className="text-right text-[0.8rem] font-semibold text-(--app-text) sm:text-sm">
                 {remaining}
               </span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-(--app-border)">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-primary-700 to-primary-400 transition-[width] duration-300"
-                style={{ width: `${progress}%` }}
-              />
             </div>
             <div className="mt-2 flex items-center justify-between gap-4 text-[0.7rem] text-(--app-text-subtle) sm:text-xs">
               <span>Activación · {formatShortDate(activatedAt)}</span>
