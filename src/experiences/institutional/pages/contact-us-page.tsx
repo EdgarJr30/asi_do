@@ -55,14 +55,14 @@ const contactFormImage = {
 const quickActions = [
   {
     label: 'Llámanos',
-    value: '+1 809 555 0140',
-    href: 'tel:+18095550140',
+    value: '+1 829 910 0333',
+    href: 'tel:+18299100333',
     icon: PhoneCall,
   },
   {
     label: 'Escríbenos',
-    value: 'secretaria@asirdo.org',
-    href: 'mailto:secretaria@asirdo.org',
+    value: 'hola@asidominicana.do',
+    href: 'mailto:hola@asidominicana.do',
     icon: Mail,
   },
 ] as const;

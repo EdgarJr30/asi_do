@@ -316,27 +316,27 @@ export const contactPoints: InstitutionalFeatureItem[] = [
     description:
       'Canal principal para orientación institucional, agenda y solicitudes generales.',
     icon: PhoneCall,
-    meta: 'secretaria@asirdo.org · +1 809 555 0140',
+    meta: 'hola@asidominicana.do · +1 829 910 0333',
   },
   {
     title: 'Membresía',
     description:
       'Acompañamiento para ingreso, activación y comunidad de miembros.',
     icon: UsersRound,
-    meta: 'membership@asirdo.org',
+    meta: 'hola@asidominicana.do',
   },
   {
     title: 'Proyectos y financiamiento',
     description:
       'Conversaciones sobre proyectos, alianzas y oportunidades de patrocinio.',
     icon: CircleDollarSign,
-    meta: 'projects@asirdo.org',
+    meta: 'hola@asidominicana.do',
   },
   {
     title: 'Multimedia y comunicaciones',
     description:
       'Solicitudes editoriales, cobertura, materiales y uso de marca.',
     icon: MonitorPlay,
-    meta: 'media@asirdo.org',
+    meta: 'hola@asidominicana.do',
   },
 ] as const;
