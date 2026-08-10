@@ -242,6 +242,13 @@ export function buildEmailContent(input: {
   body: string
   actionUrl: string | null
   recipientName: string
+  /**
+   * Enlace de baja. Solo lo llevan los correos de campaña: un transaccional
+   * —confirmar la cuenta, recuperar la contraseña— no se puede "dar de baja",
+   * y ofrecerlo invitaría a apagar justo los correos sin los que no se entra al
+   * producto.
+   */
+  unsubscribeUrl?: string | null
 }) {
   const ctaUrl = normalizeActionUrl(input.actionUrl, input.appUrl)
   const theme = getEmailTheme(input.type)
@@ -256,6 +263,10 @@ export function buildEmailContent(input: {
   const escapedActionLabel = escapeHtml(theme.actionLabel)
   const logoUrl = `${input.appUrl.replace(/\/+$/, '')}/brand/asi-logo-light.no-bg.png`
   const contentHtml = formatHtmlParagraphs(input.body)
+  const unsubscribeUrl = input.unsubscribeUrl?.trim() ?? ''
+  const unsubscribeHtml = unsubscribeUrl
+    ? `<br /><a href="${escapeHtml(unsubscribeUrl)}" style="color:#8290ab; text-decoration:underline;">Darse de baja de estos correos</a>`
+    : ''
   const summaryItemsHtml = theme.summaryItems
     .map(
       (item) => `
@@ -285,7 +296,8 @@ export function buildEmailContent(input: {
     '',
     `${theme.actionLabel}: ${ctaUrl}`,
     '',
-    `${theme.supportTitle}: ${theme.supportBody}`
+    `${theme.supportTitle}: ${theme.supportBody}`,
+    ...(unsubscribeUrl ? ['', `Darse de baja de estos correos: ${unsubscribeUrl}`] : [])
   ].join('\n')
   const html = `
     <div style="margin:0; padding:0; background:#f4f7ff;">
@@ -396,7 +408,7 @@ export function buildEmailContent(input: {
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-top:1px solid #e8edf5;">
                           <tr>
                             <td style="padding:24px 0 0; font-size:12px; line-height:1.8; color:#8290ab;">
-                              Este correo fue enviado por ASI Rep. Dominicana como parte de la experiencia oficial de asi_do.
+                              Este correo fue enviado por ASI Rep. Dominicana como parte de la experiencia oficial de asi_do.${unsubscribeHtml}
                             </td>
                           </tr>
                         </table>

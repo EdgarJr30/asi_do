@@ -27,7 +27,6 @@
     "npm:@vitejs/plugin-react@^5.2.0": "5.2.0_vite@7.3.6__@types+node@25.9.5__tsx@4.23.7_@types+node@25.9.5_tsx@4.23.7",
     "npm:@vitest/coverage-v8@^4.1.10": "4.1.10_vitest@4.1.10_@types+node@25.9.5_jsdom@28.1.0_vite@7.3.6__@types+node@25.9.5__tsx@4.23.7",
     "npm:clsx@^2.1.1": "2.1.1",
-    "npm:countries-states-cities@^1.0.6": "1.0.6",
     "npm:eslint-plugin-jsx-a11y@^6.10.2": "6.10.2_eslint@9.39.5",
     "npm:eslint-plugin-react-hooks@^7.0.1": "7.1.1_eslint@9.39.5",
     "npm:eslint-plugin-react-refresh@~0.5.2": "0.5.3_eslint@9.39.5",
@@ -2319,9 +2318,6 @@
     },
     "cookie@1.1.1": {
       "integrity": "sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ=="
-    },
-    "countries-states-cities@1.0.6": {
-      "integrity": "sha512-cQAQRfaI/jaxC0bdDUCXDAaO6DRpyKcDo/5jOsKByg01Oo7JPksqEfTblwYtKJJAelB3pVv2I5xepdzyVs+YEA=="
     },
     "cross-spawn@7.0.6": {
       "integrity": "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==",
@@ -5037,7 +5033,6 @@
         "npm:@vitejs/plugin-react@^5.2.0",
         "npm:@vitest/coverage-v8@^4.1.10",
         "npm:clsx@^2.1.1",
-        "npm:countries-states-cities@^1.0.6",
         "npm:eslint-plugin-jsx-a11y@^6.10.2",
         "npm:eslint-plugin-react-hooks@^7.0.1",
         "npm:eslint-plugin-react-refresh@~0.5.2",

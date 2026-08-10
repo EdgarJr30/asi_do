@@ -1,7 +1,17 @@
 import { supabase } from '@/lib/supabase/client'
 
 // Estados de entrega que modela asi_do (constraint de notification_deliveries).
-export type EmailDeliveryStatus = 'pending' | 'processing' | 'sent' | 'failed' | 'read' | 'clicked'
+export type EmailDeliveryStatus =
+  | 'pending'
+  | 'processing'
+  | 'sent'
+  | 'failed'
+  | 'read'
+  | 'clicked'
+  // No salió porque el destinatario se dio de baja. Es terminal, pero **no** es
+  // un fallo: contarlo como tal infla el número que alguien mira para decidir
+  // si el pipeline está averiado.
+  | 'suppressed'
 export type EmailStatusFilter = EmailDeliveryStatus | 'all' | 'problem'
 
 /**

@@ -51,7 +51,8 @@ const STATUS_META: Record<EmailDeliveryStatus, { label: string; variant: BadgeVa
   sent: { label: 'Enviado', variant: 'default' },
   failed: { label: 'Fallido', variant: 'soft' },
   read: { label: 'Leído', variant: 'default' },
-  clicked: { label: 'Con clic', variant: 'default' }
+  clicked: { label: 'Con clic', variant: 'default' },
+  suppressed: { label: 'Dado de baja', variant: 'outline' }
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -229,6 +230,7 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
           <option value="failed">Fallidos</option>
           <option value="read">Leídos</option>
           <option value="clicked">Con clic</option>
+          <option value="suppressed">Dados de baja</option>
         </Select>
         {/*
           Separado del selector de estado a propósito: el estado es lo que

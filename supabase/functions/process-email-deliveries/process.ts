@@ -72,6 +72,8 @@ export interface ProcessEmailDeliveriesResult {
   processedCount: number
   sentCount: number
   failedCount: number
+  /** Entregas que no salieron porque el destinatario se dio de baja. No son fallos. */
+  suppressedCount: number
 }
 
 async function insertDeliveryLog(
@@ -107,7 +109,7 @@ async function completeDelivery(
   input: {
     deliveryId: string
     claimToken: string
-    status: 'sent' | 'failed' | 'pending'
+    status: 'sent' | 'failed' | 'pending' | 'suppressed'
     responseCode?: number | null
     providerMessageId?: string | null
     responsePayload?: Record<string, unknown>
@@ -169,11 +171,12 @@ export async function processEmailDeliveries(
   const deliveries = (pendingResponse.data ?? []) as ClaimedEmailDeliveryRow[]
 
   if (deliveries.length === 0) {
-    return { processedCount: 0, sentCount: 0, failedCount: 0 }
+    return { processedCount: 0, sentCount: 0, failedCount: 0, suppressedCount: 0 }
   }
 
   let sentCount = 0
   let failedCount = 0
+  let suppressedCount = 0
 
   for (const delivery of deliveries) {
     // Override del destinatario (lo usa el módulo de prueba de /admin/correos para
@@ -243,13 +246,54 @@ export async function processEmailDeliveries(
       continue
     }
 
+    // La baja se comprueba **aquí** y no solo al encolar. Entre encolar una
+    // campaña y enviarla pasan minutos —el cron corre cada uno— y es
+    // exactamente en esa ventana donde alguien abre el correo anterior y se da
+    // de baja. Sin esta comprobación el enlace sería decoración: la persona
+    // pide no recibir y recibe igual.
+    const suppressedResponse = await database.rpc('email_delivery_is_suppressed', {
+      p_delivery_id: delivery.delivery_id
+    })
+
+    if (suppressedResponse.error) {
+      throw suppressedResponse.error
+    }
+
+    if (suppressedResponse.data === true) {
+      suppressedCount += 1
+      await completeDelivery(database, {
+        deliveryId: delivery.delivery_id,
+        claimToken: delivery.claim_token,
+        status: 'suppressed',
+        responseCode: null,
+        responsePayload: { suppressed: true, recipientEmail }
+      })
+      await insertDeliveryLog(database, {
+        deliveryId: delivery.delivery_id,
+        logLevel: 'info',
+        message: 'Email delivery skipped because the recipient is suppressed.',
+        metadata: { recipientEmail }
+      })
+      continue
+    }
+
+    // Solo las campañas llevan token, así que solo ellas llevan enlace de baja.
+    const unsubscribeToken =
+      typeof delivery.payload?.unsubscribe_token === 'string'
+        ? (delivery.payload.unsubscribe_token as string).trim()
+        : ''
+    const unsubscribeUrl = unsubscribeToken
+      ? `${appUrl.replace(/\/+$/, '')}/correos/baja?token=${encodeURIComponent(unsubscribeToken)}`
+      : null
+
     const emailContent = buildEmailContent({
       appUrl,
       type: delivery.notification_type,
       title: delivery.title,
       body: delivery.body,
       actionUrl: delivery.action_url,
-      recipientName
+      recipientName,
+      unsubscribeUrl
     })
 
     const providerResponse = await deps.fetch(RESEND_EMAILS_ENDPOINT, {
@@ -323,6 +367,7 @@ export async function processEmailDeliveries(
   return {
     processedCount: deliveries.length,
     sentCount,
-    failedCount
+    failedCount,
+    suppressedCount
   }
 }
