@@ -10,8 +10,11 @@ Runbook para servir el frontend desde **Hostinger**, con el dominio comprado en 
 >
 > **Netlify sigue publicado** (`asi-do.netlify.app`) como vuelta atrás, y `netlify.toml` se mantiene.
 > Deliberadamente **fuera de alcance** en esta fase, porque el objetivo es solo que la app cargue:
-> - **AZUL sigue sin desplegar** (`VITE_AZUL_PAYMENTS_URL` apunta a `localhost:8080`). Los pagos con
->   tarjeta **no funcionarán** en el sitio de Hostinger. Es lo esperado, no un fallo del despliegue.
+> - **AZUL ya está desplegado para staging** (2026-08-09) en
+>   `https://azul-payments-staging-staging.up.railway.app`, con merchant de pruebas. Verificado:
+>   `/healthz` responde 200 y el preflight CORS acepta `https://dev.asidominicana.do` y **no** un
+>   origen ajeno. **De producción no hay nada verificado**: sigue pendiente su propio servicio con
+>   credenciales reales.
 > - **No se rota la `service_role` key.** Sigue siendo requisito del corte a producción real
 >   (`ENVIRONMENTS.md` §5), no de esta prueba.
 
@@ -24,7 +27,7 @@ Runbook para servir el frontend desde **Hostinger**, con el dominio comprado en 
 | SPA (frontend) | Netlify | **Hostinger** (hosting compartido, Apache/LiteSpeed) |
 | Registrador del dominio | nic.do | nic.do — **sin cambios** |
 | DNS autoritativo | Cloudflare | Cloudflare — **sin cambios** |
-| `services/azul-payments` | sin desplegar (`localhost:8080`) | sin desplegar — **fuera de alcance de esta fase** |
+| `services/azul-payments` | sin desplegar (`localhost:8080`) | **Railway**: staging desplegado; producción pendiente |
 | Supabase (BD, Auth, Storage, Edge Functions) | Supabase | Supabase — **sin cambios** |
 
 **No muevas los nameservers a Hostinger.** El DNS sigue en Cloudflare; Hostinger solo aporta el servidor
@@ -120,8 +123,15 @@ npm run build:hosting   # rebuild + aparta los sourcemaps; deja dist/ listo para
 > panel, así que `vite build` toma `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
 > `VITE_AZUL_PAYMENTS_URL` y `VITE_WEB_PUSH_PUBLIC_KEY` del `.env.local` de tu máquina y las escribe
 > **dentro del bundle**. Revisa esos cuatro valores antes de cada build de release: lo que tengas en local
-> es lo que queda publicado. Hoy `VITE_AZUL_PAYMENTS_URL=http://localhost:8080`, y por eso los pagos con
-> tarjeta no funcionan en el sitio publicado.
+> es lo que queda publicado. Hoy `.env.local` y `.env.staging.local` traen
+> `VITE_AZUL_PAYMENTS_URL=http://localhost:8080`, así que **un build hecho a mano publica una app cuyos
+> pagos apuntan a tu máquina**.
+>
+> Esto vale solo para el camino manual. El job `deploy-staging` de `ci.yml` no lee ningún `.env`: inyecta
+> las 8 `VITE_*` desde las *environment variables* del entorno `staging` de GitHub, y el guardia de
+> `validateProductionEnv` aborta el build si falta alguna de las 6 obligatorias. Si añades una variable a
+> `REQUIRED_PRODUCTION_ENV` sin darla de alta ahí, el build falla **solo en CI** — ya pasó con
+> `VITE_AZUL_PAYMENTS_URL` el 2026-08-09.
 
 **Los sourcemaps no se suben.** De eso se encarga `build:hosting`: los mueve a
 `.sourcemaps/<sha-corto>/` (ignorado por git) y deja `dist/` limpio. Son ~200 archivos y existen para
@@ -172,7 +182,8 @@ El dominio nuevo aparece en varios sitios. Si te saltas uno, el síntoma típico
 | Entorno del build de producción | `VITE_AUTH_SITE_URL`, `VITE_PRODUCTION_SITE_URL` | Deben contener el mismo origen HTTPS público; no se versionan |
 | `supabase/config.toml` `[auth]` | `site_url` + `additional_redirect_urls` | ✅ en el repo — ⚠️ **falta aplicarlo al proyecto remoto** |
 | Edge Functions (secretos del proyecto) | `APP_URL` | ⬜ Pendiente. Solo afecta a los enlaces de los correos |
-| Railway (`services/azul-payments`) | `ALLOWED_ORIGIN`, `APP_URL` | ⬜ N/A: AZUL no está desplegado |
+| Railway (`services/azul-payments`) | `ALLOWED_ORIGIN`, `APP_URL` | ✅ staging: preflight desde `https://dev.asidominicana.do` aceptado y origen ajeno rechazado — ⬜ producción pendiente |
+| GitHub → entorno `staging` | las 8 `VITE_*` del job (6 obligatorias para `validateProductionEnv`) | ✅ completas desde 2026-08-09 — faltaba `VITE_AZUL_PAYMENTS_URL` y el build abortaba solo en CI |
 | Cloudflare | registros `A`, modo SSL | ⬜ Pendiente (§2 y §3) |
 
 **Lo del `config.toml` no es automático.** Ese archivo gobierna el Supabase *local*; el proyecto remoto
@@ -211,8 +222,9 @@ curl -o /dev/null -w '%{http_code}\n' https://asidominicana.do/assets/index-abc.
 Y a mano, en el navegador:
 1. Login completo (el redirect de Auth es lo primero que se rompe con dominio nuevo).
 2. Una foto de perfil (valida Storage + CORS).
-3. ~~Un pago de prueba de membresía end-to-end~~ — **no aplica**: AZUL no está desplegado. Recupera este
-   paso el día que el microservicio salga a Railway.
+3. Un pago de prueba de membresía end-to-end. **Ya aplica en staging**: el microservicio está en Railway
+   con merchant de pruebas. Que `/healthz` responda y que CORS acepte el origen no prueba que se cobre:
+   eso solo lo dice recorrer el pago con una tarjeta de prueba de AZUL y ver la membresía activarse.
 4. Recarga dura en una ruta profunda como `/workspace/applications` → debe cargar, no dar 404.
 
 ---
@@ -263,7 +275,11 @@ A cambio: coste fijo predecible y un panel único para dominio, correo y hosting
 
 ### Aplazado a propósito
 
-- [ ] Desplegar `services/azul-payments` en Railway y apuntar `VITE_AZUL_PAYMENTS_URL` al dominio real.
+- [x] Desplegar `services/azul-payments` **de staging** en Railway y apuntar ahí `VITE_AZUL_PAYMENTS_URL`.
+      ✅ 2026-08-09 — `https://azul-payments-staging-staging.up.railway.app`, merchant de pruebas.
+- [ ] Desplegar el `services/azul-payments` **de producción** con las credenciales reales de AZUL y su
+      propia `VITE_AZUL_PAYMENTS_URL`. Sin esto, el sitio de producción cobra contra el merchant de
+      pruebas o contra nada.
 - [ ] Rotar la `service_role` key (requisito del corte a producción, `ENVIRONMENTS.md` §5).
 - [x] Automatizar staging por FTP en CI con un primer mirror no destructivo.
 - [ ] Tras observar el primer deploy, confirmar que `/` es exclusivamente `zzz_dev` y habilitar

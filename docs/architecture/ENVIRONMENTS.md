@@ -27,7 +27,7 @@ Consecuencias que hay que tener presentes mientras dure:
 | Entorno | Supabase | Frontend | AZUL | Datos |
 |---|---|---|---|---|
 | **Development** | proyecto `dev` (el actual) | local y `dev.asidominicana.do` | merchant de pruebas | sintéticos, desechables |
-| **Staging** | opcional en el futuro | branch deploy | merchant de pruebas | sintéticos o anonimizados |
+| **Staging** | opcional en el futuro | `dev.asidominicana.do` desde la rama `staging` (job `deploy-staging`) | merchant de pruebas, en Railway desde 2026-08-09 | sintéticos o anonimizados |
 | **Production** | proyecto `prod` | `asidominicana.do` en Hostinger | **merchant real** | reales |
 
 Desarrollo y producción usan obligatoriamente proyectos Supabase distintos. Staging es opcional; si se
@@ -176,7 +176,7 @@ Cuando llegue el momento, en orden:
 3. **Cargar los secretos** de las secciones 4.3 y 4.4 con valores **nuevos** de staging. Generar claves VAPID propias y un `EMAIL_PROCESSOR_SECRET` propio.
 4. **Ajustar `email_dispatch_url`** al ref de staging. Verificar que apunta al proyecto correcto antes de habilitar el cron de correo.
 5. **Desplegar las Edge Functions** al proyecto de staging.
-6. **Desplegar el microservicio AZUL** de staging, con credenciales de prueba, y apuntar `VITE_AZUL_PAYMENTS_URL` ahí.
+6. ~~**Desplegar el microservicio AZUL** de staging, con credenciales de prueba, y apuntar `VITE_AZUL_PAYMENTS_URL` ahí.~~ ✅ 2026-08-09 — `https://azul-payments-staging-staging.up.railway.app`. La URL **no se versiona**: vive en las *environment variables* del entorno `staging` de GitHub, que es de donde la toma el job `deploy-staging`.
 7. **Configurar el contexto de Netlify** para staging con su juego de variables.
 8. **Sembrar datos** con `npm run harness:seed`. Nunca copiar producción con PII.
 9. **Verificar de punta a punta:** login, solicitud de membresía, pago con tarjeta de prueba, envío de correo, notificación push.

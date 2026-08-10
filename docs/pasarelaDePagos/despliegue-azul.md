@@ -14,9 +14,20 @@ Pasos para poner en producción los pagos de membresía y donaciones con AZUL. V
 | `services/azul-payments` | **Railway**, build por Dockerfile | `services/azul-payments/railway.json`, `Dockerfile` |
 | Base de datos, Auth, Storage, Edge Functions | **Supabase** | `supabase/config.toml` |
 
-> **AZUL todavía no está desplegado.** `VITE_AZUL_PAYMENTS_URL` apunta a `http://localhost:8080`, así
-> que los pagos con tarjeta no funcionan en ningún sitio publicado. Este runbook es lo que hay que
-> ejecutar para cambiarlo.
+> **Estado 2026-08-09: staging desplegado, producción no.**
+>
+> El servicio de **staging** vive en `https://azul-payments-staging-staging.up.railway.app` con el
+> merchant de pruebas. Verificado ese día: `/healthz` responde 200, y el preflight CORS acepta
+> `https://dev.asidominicana.do` y **no** un origen ajeno. La URL no se versiona: la toma el job
+> `deploy-staging` de las *environment variables* del entorno `staging` de GitHub.
+>
+> **Producción sigue sin desplegar.** Este runbook es lo que hay que ejecutar para cambiarlo, ahora
+> con la diferencia que importa: credenciales reales de AZUL en vez del merchant de pruebas
+> (`ENVIRONMENTS.md` §4.5).
+>
+> Ojo con lo local: `.env.local` y `.env.staging.local` siguen con `VITE_AZUL_PAYMENTS_URL=http://localhost:8080`,
+> así que un build hecho a mano publica una app cuyos pagos apuntan a tu máquina. Solo el build de CI
+> inyecta la URL buena.
 
 Van separados porque son cargas distintas: la SPA es un artefacto estático con CDN, mientras que el
 microservicio Node maneja secretos de AZUL y Supabase, recibe callbacks firmados, corre la conciliación
