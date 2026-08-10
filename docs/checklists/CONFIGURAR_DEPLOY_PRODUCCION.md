@@ -93,30 +93,73 @@ https://github.com/EdgarJr30/asi_do/settings/environments → **`staging`**
 
 ---
 
-# Paso 2 · Aplicar el esquema
+# Paso 2 · Levantar la arquitectura de la base
+
+**No se copia nada desde desarrollo.** Producción se construye desde cero reproduciendo las 116
+migraciones del repositorio. Es la misma secuencia con la que se construyó desarrollo, así que el
+resultado es idéntico por construcción, no por copia.
 
 ```bash
-supabase link --project-ref <REF-PROD>
-supabase db push --linked
+supabase link --project-ref <REF-PROD>    # ⚠️ esto te desenlaza de desarrollo
+supabase db push --linked                 # aplica las 116 en orden
 ```
 
-Si falla por falta de `pg_cron` o `pg_net`: Database → Extensions, actívalas y repite.
-
-Verificación (las dos deben salir limpias antes de seguir):
+🔴 **`link` es global y persistente.** Mientras estés enlazado a producción, cualquier `db push`,
+`db query` o `db diff` que corras —incluido el de otra tarea— va contra producción. Al terminar:
 
 ```bash
-supabase db lint --linked          # sin errores
-npm run test:probes                # 22/22
+supabase link --project-ref jgmojkzthfogynqixkob    # de vuelta a desarrollo
 ```
 
-- [ ] Esquema aplicado y verificado.
+### Qué viaja en el `db push` y qué no
 
-**Esto arranca cinco cron de Postgres de inmediato:** `dispatch-membership-emails`,
-`membership-renewal-reminders`, `archive-audit-logs`, `purge-cron-run-details` y
-`purge-user-access-logs`. Los dos primeros van a fallar hasta que hagas el Paso 4 y hasta que las Edge
+Verificado el 2026-08-10 con `supabase db diff --linked` contra desarrollo: los esquemas `private`,
+`storage` y `auth` no tienen ni una diferencia, y `public` solo difiere en dónde queda instalada
+`pg_net` (artefacto del stack local, no una migración que falte). **El repositorio reproduce la
+arquitectura completa.**
+
+| Viaja solo ✅ | Hay que hacerlo a mano ❌ |
+|---|---|
+| Tablas, RLS, funciones, triggers, grants | Filas de `private.runtime_secrets` (Paso 4) |
+| Extensiones: `pg_net`, `pg_cron`, `pg_trgm`, `pgcrypto` | Configuración de Auth: URLs, plantillas, protección de contraseñas (Paso 5) |
+| Los 6 buckets de Storage (vacíos) | Su contenido: videos, logos, avatares (Paso 14) |
+| Las 18 tablas de la publicación Realtime | Secretos de Edge Functions (Paso 3) |
+| Los 6 cron de Postgres | El primer administrador (Paso 13) |
+| Roles, permisos y las 3 categorías de membresía con sus precios | Tope global de subida de Storage (está en `config.toml`, que es de desarrollo) |
+
+### Verificación
+
+```bash
+supabase db lint --linked     # sin errores
+npm run test:probes           # 22/22
+supabase db diff --linked --schema public,private,storage,auth   # debe salir vacío
+```
+
+El tercero es el que importa: si sale algo, producción tiene objetos que ninguna migración explica y
+acabas de nacer con drift. (Necesita colima: `colima start` y
+`export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock`.)
+
+- [ ] Las tres verificaciones limpias.
+
+**El push arranca seis cron de inmediato:** `dispatch-membership-emails`,
+`membership-renewal-reminders`, `archive-audit-logs`, `purge-app-error-logs`, `purge-cron-run-details`
+y `purge-user-access-logs`. Los dos primeros fallarán hasta que hagas el Paso 4 y hasta que las Edge
 Functions estén desplegadas (Paso 12). Es ruido esperado, no un problema — pero no lo dejes ahí.
 
-Las tres categorías de membresía y sus precios vienen en las migraciones: no hay que cargarlas a mano.
+### Después del corte: cómo se mantienen sincronizadas
+
+Una sola dirección, **dev → producción**, y siempre por migración:
+
+1. Escribes la migración y la pruebas contra desarrollo (`db push` estando enlazado a dev).
+2. Commit + push a `staging`, con CI en verde.
+3. `supabase link --project-ref <REF-PROD>` y `supabase db push --linked`.
+4. Vuelves a enlazar desarrollo y recién entonces mergeas a `main`.
+
+La base va **por delante** del frontend a propósito: un esquema nuevo con el frontend viejo funciona;
+al revés, no.
+
+⛔ **Cero cambios desde el dashboard.** Un `GRANT` o una policy hechos a mano no existen en ninguna
+migración: no viajan al siguiente entorno y reaparecen como drift.
 
 ---
 
@@ -410,7 +453,7 @@ Cierra el corte cuando todo esto pase **en `asidominicana.do`**:
 | Qué | Por qué |
 |---|---|
 | `supabase db push` a producción | no hay job de CI que aplique migraciones al remoto; se hace antes de cada merge a `main` |
-| Vigilancia de drift | `db-drift.yml` usa un solo `SUPABASE_PROJECT_REF` de repositorio: vigila un proyecto, no los dos |
+| Vigilancia de drift | `db-drift.yml` usa el `SUPABASE_PROJECT_REF` del repositorio, que apunta a desarrollo: **el día que exista producción, es a producción a quien hay que vigilar**. Cambia esa variable o duplica el job |
 | Poda de bundles viejos en Hostinger | `deploy-hostinger-release.sh` no borra a propósito: los chunks viejos sostienen las pestañas abiertas durante el despliegue (D5) |
 
 ## Si algo falla
