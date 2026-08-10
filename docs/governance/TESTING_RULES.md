@@ -283,7 +283,10 @@ Environment, and preserve the production-safe activation order. Its contract rej
 mirrors and requires missing hashed assets first, temporary-file replacement, `index.html` before
 `sw.js`, pre-activation SHA-256 checks over downloaded asset bodies, post-activation HTTPS verification,
 and automatic restoration of the previous entrypoints on failure. Asset verification must not depend
-on `HEAD` exposing `Content-Length`; Cloudflare/LiteSpeed is allowed to omit that response header.
+on `HEAD` exposing `Content-Length`; Cloudflare/LiteSpeed is allowed to omit that response header. The
+rollback backup must read the public entrypoints over retrying HTTPS rather than opening an FTPS
+download: a transient FTP read failure must stop before activation only when the public backup also
+cannot be obtained.
 
 ---
 

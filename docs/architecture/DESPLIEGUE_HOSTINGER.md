@@ -187,6 +187,10 @@ pedir después un chunk del release anterior y no debe recibir 404 durante una n
 3. Activa `index.html` y luego `sw.js`, también mediante temporales; comprueba que ambos coinciden con el
    artefacto y, si falla, restaura automáticamente los dos entrypoints anteriores.
 
+Antes de transferir, descarga por HTTPS los entrypoints vigentes que usaría un rollback. No los lee por
+FTPS: Hostinger puede agotar los reintentos incluso en un `get` pequeño mientras el mismo archivo sigue
+respondiendo correctamente por HTTPS. FTPS queda reservado para las escrituras del release y del rollback.
+
 El mirror usa una sola transferencia, reanuda archivos parciales y tolera hasta cinco reconexiones.
 Hostinger puede cerrar conexiones FTPS paralelas durante cargas largas; la transferencia serial es más
 lenta, pero evita reiniciar una publicación parcialmente subida. GitHub Actions también cancela la

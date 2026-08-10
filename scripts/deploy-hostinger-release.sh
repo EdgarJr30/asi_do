@@ -62,6 +62,19 @@ run_lftp() {
     "
 }
 
+backup_entrypoint() {
+  local filename=$1
+  local cache_buster=${GITHUB_SHA:-manual}-${GITHUB_RUN_ATTEMPT:-0}
+
+  curl --fail --silent --show-error --location \
+    --retry 5 --retry-all-errors --retry-delay 2 \
+    --connect-timeout 20 --max-time 90 \
+    --header 'Accept-Encoding: identity' \
+    --header 'Cache-Control: no-cache' \
+    "$deploy_origin/$filename?deploy-backup=$cache_buster" \
+    --output "$rollback_dir/$filename"
+}
+
 rollback_on_error() {
   local exit_code=$?
   trap - ERR
@@ -83,12 +96,10 @@ rollback_on_error() {
 trap cleanup EXIT
 trap rollback_on_error ERR
 
-# A rollback only needs the two mutable entrypoints. Immutable hashed assets from
-# the previous release stay available remotely for already-open browser tabs.
-run_lftp "
-  get index.html -o $rollback_dir/index.html;
-  get sw.js -o $rollback_dir/sw.js;
-"
+# A rollback only needs the two public entrypoints. Read them over HTTPS instead
+# of spending a fragile FTPS session on files that the web server already exposes.
+backup_entrypoint index.html
+backup_entrypoint sw.js
 
 test -s "$rollback_dir/index.html"
 test -s "$rollback_dir/sw.js"
