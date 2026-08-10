@@ -159,7 +159,7 @@ function normalizeStorageUploadErrorMessage(file: File, errorMessage: string) {
   return errorMessage
 }
 
-export function getAuthRedirectUrl(nextPath = surfacePaths.candidate.profile) {
+export function getAuthRedirectUrl(nextPath: string = surfacePaths.candidate.profile) {
   const originCandidate = getAuthRedirectOrigin()
 
   if (!originCandidate) {
@@ -264,6 +264,21 @@ export async function signUpWithPassword(values: {
   }
 
   return response.data
+}
+
+export async function resendSignUpConfirmation(values: { email: string; nextPath?: string | null }) {
+  const client = requireSupabase()
+  const response = await client.auth.resend({
+    type: 'signup',
+    email: values.email,
+    options: {
+      emailRedirectTo: getAuthRedirectUrl(values.nextPath ?? surfacePaths.candidate.profile)
+    }
+  })
+
+  if (response.error) {
+    throw response.error
+  }
 }
 
 export async function signInWithPassword(values: { email: string; password: string }) {
