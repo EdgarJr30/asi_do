@@ -39,4 +39,20 @@ describe('application environment badge', () => {
 
     expect(screen.getByLabelText(/Entorno Local; fase Beta/).closest('footer')).toBeInTheDocument()
   })
+
+  it('places the permanent address on a new line in the institutional footer', () => {
+    render(
+      <MemoryRouter>
+        <InstitutionalFooter />
+      </MemoryRouter>
+    )
+
+    const complianceText = screen.getByText((_, element) =>
+      element?.tagName === 'P' && element.textContent?.includes('Dirección permanente:') === true
+    )
+    const lineBreak = complianceText.querySelector('br')
+
+    expect(lineBreak).toBeInTheDocument()
+    expect(lineBreak?.nextSibling?.textContent).toMatch(/^Dirección permanente:/)
+  })
 })

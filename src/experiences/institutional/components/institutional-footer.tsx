@@ -47,8 +47,9 @@ export function InstitutionalFooter({
               </div>
               <p className="mt-5 max-w-xl text-sm leading-7 text-white/74 sm:mt-6">
                 {merchantCompliance.legalName}. Membresías y donaciones
-                procesadas en {merchantCompliance.currency}. Dirección
-                permanente: {merchantCompliance.address}.
+                procesadas en {merchantCompliance.currency}.
+                <br />
+                Dirección permanente: {merchantCompliance.address}.
               </p>
               <div className="mt-5">
                 <PaymentBrandStrip itemClassName="border-white/12 bg-white" />
