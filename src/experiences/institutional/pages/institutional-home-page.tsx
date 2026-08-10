@@ -318,7 +318,12 @@ function LazyAutoplayVideo({
           <source src={src} type="video/webm" />
         </video>
       ) : (
-        <div className={cn(className, 'bg-[linear-gradient(135deg,#203b87,#687fca)]')} />
+        <div
+          className={cn(
+            className,
+            'bg-[linear-gradient(135deg,#203b87,#687fca)]'
+          )}
+        />
       )}
     </div>
   );
@@ -338,7 +343,8 @@ export function InstitutionalHomePage() {
   const [testimonialInteractionTick, setTestimonialInteractionTick] =
     useState(0);
   const [platformVideoReady, setPlatformVideoReady] = useState(true);
-  const [christianEventVideoReady, setChristianEventVideoReady] = useState(true);
+  const [christianEventVideoReady, setChristianEventVideoReady] =
+    useState(true);
   const heroWheelNavigationTimeoutRef = useRef<number | null>(null);
   const carouselViewportRef = useRef<HTMLDivElement | null>(null);
   const carouselMeasureCardRef = useRef<HTMLElement | null>(null);
@@ -351,8 +357,14 @@ export function InstitutionalHomePage() {
   const carouselResumeTimeoutRef = useRef<number | null>(null);
   const carouselOffsetX = useMotionValue(0);
   // Videos servidos como WebM (VP9) desde Supabase Storage (bucket público `public-media`).
-  const platformDemoVideoPath = publicStorageUrl('public-media', 'videos/demoApp.webm');
-  const christianEventVideoPath = publicStorageUrl('public-media', 'videos/christian-event.webm');
+  const platformDemoVideoPath = publicStorageUrl(
+    'public-media',
+    'videos/demoApp.webm'
+  );
+  const christianEventVideoPath = publicStorageUrl(
+    'public-media',
+    'videos/christian-event.webm'
+  );
 
   useEffect(() => {
     if (shouldReduceMotion) {
@@ -825,7 +837,10 @@ export function InstitutionalHomePage() {
                       <div className="institutional-home__image-backdrop absolute inset-0">
                         <picture className="relative block h-full w-full">
                           {slide.mobileImage ? (
-                            <source media="(max-width: 767px)" srcSet={slide.mobileImage} />
+                            <source
+                              media="(max-width: 767px)"
+                              srcSet={slide.mobileImage}
+                            />
                           ) : null}
                           <img
                             alt={slide.imageAlt}
@@ -841,7 +856,10 @@ export function InstitutionalHomePage() {
                   ) : (
                     <picture className="block h-full w-full">
                       {slide.mobileImage ? (
-                        <source media="(max-width: 767px)" srcSet={slide.mobileImage} />
+                        <source
+                          media="(max-width: 767px)"
+                          srcSet={slide.mobileImage}
+                        />
                       ) : null}
                       <img
                         alt={slide.imageAlt}
@@ -1118,7 +1136,10 @@ export function InstitutionalHomePage() {
                     className="pointer-events-none h-full w-full select-none object-cover"
                     loading="lazy"
                     sizes="(max-width: 1280px) 100vw, 600px"
-                    srcSet={unsplashSrcSet(homeEcosystemCards[0].image, [600, 900, 1200])}
+                    srcSet={unsplashSrcSet(
+                      homeEcosystemCards[0].image,
+                      [600, 900, 1200]
+                    )}
                     src={homeEcosystemCards[0].image}
                   />
                 )}
@@ -1151,7 +1172,10 @@ export function InstitutionalHomePage() {
                     className="h-full w-full object-cover"
                     loading="lazy"
                     sizes="(max-width: 1280px) 100vw, 600px"
-                    srcSet={unsplashSrcSet(homeEcosystemCards[0].image, [600, 900, 1200])}
+                    srcSet={unsplashSrcSet(
+                      homeEcosystemCards[0].image,
+                      [600, 900, 1200]
+                    )}
                     src={homeEcosystemCards[0].image}
                   />
                   <div className="institutional-home__ecosystem-hero-overlay absolute inset-0" />
@@ -1296,9 +1320,9 @@ export function InstitutionalHomePage() {
             content={{
               eyebrow: 'Nuestros programas',
               title:
-                'Programas presentados con una lectura más sobria, menos ruidosa y mejor proporcionada.',
+                'Programas que forman líderes y sostienen proyectos con propósito.',
               description:
-                'Los títulos ahora viven en una escala más contenida y los cards aprovechan mejor el ancho del layout.',
+                'Formación, mentoría y acompañamiento para que laicos, profesionales y empresas conviertan su vocación en servicio con impacto real.',
             }}
           />
           <div className="grid gap-4 lg:grid-cols-3">
@@ -1335,9 +1359,9 @@ export function InstitutionalHomePage() {
               content={{
                 eyebrow: 'Testimonios',
                 title:
-                  'Testimonios de fe y servicio con transición suave y controles discretos.',
+                  'Historias de miembros que encontraron respaldo, propósito y comunidad.',
                 description:
-                  'Este último carrusel mantiene el mismo lenguaje visual: movimiento calmado, cards legibles y control intuitivo.',
+                  'Voces de laicos, profesionales y empresas que hoy sirven acompañados por una red que los sostiene.',
               }}
             />
             <div className="flex items-center gap-2">

@@ -154,9 +154,6 @@ export function ContactUsPage() {
             <div className="absolute inset-0 bg-linear-to-r from-[#071327]/88 via-[#0b2246]/58 to-[#0b2246]/24" />
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 lg:p-10">
               <div className="max-w-3xl">
-                <p className="asi-kicker border-white/15 bg-white/10 text-white/82">
-                  Contáctanos
-                </p>
                 <h1 className="asi-heading-lg mt-4 max-w-[16ch] text-white">
                   Habla con nosotros.
                 </h1>
@@ -192,10 +189,6 @@ export function ContactUsPage() {
             <motion.div variants={itemVariants}>
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-(--asi-secondary)">
                 Canales directos
-              </p>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-(--asi-text-muted)">
-                Si ya sabes a qué frente deseas escribir, aquí tienes los tres
-                accesos principales.
               </p>
             </motion.div>
 
@@ -353,7 +346,8 @@ export function ContactUsPage() {
                     className="text-right text-xs text-(--asi-text-muted)"
                     id="contact-message-counter"
                   >
-                    {MAX_CONTACT_MESSAGE_LENGTH - message.length} caracteres disponibles
+                    {MAX_CONTACT_MESSAGE_LENGTH - message.length} caracteres
+                    disponibles
                   </span>
                   <FieldError error={fieldError} field="message" />
                 </div>
