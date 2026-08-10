@@ -23,6 +23,23 @@ PR staging → main
 
 ---
 
+## Paso 0 · Arreglar `staging` primero (ya está roto)
+
+`deploy-edge-functions` se añadió el 2026-08-10 y corre **también desde `staging`**, tomando el token
+y el ref del environment `staging` — que hoy no los tiene. Ese job falla desde el commit `649669a`,
+que ya está en el remoto. Falla nombrando lo que falta, a propósito, pero falla.
+
+Settings → Environments → **`staging`**:
+
+| Tipo | Nombre | Valor |
+|---|---|---|
+| secret | `SUPABASE_ACCESS_TOKEN` | token personal del CLI |
+| var | `SUPABASE_PROJECT_REF` | ref del proyecto de desarrollo (`jgmojkzthfogynqixkob`) |
+
+Hasta que estén, ningún push a `staging` completa el despliegue de Edge Functions.
+
+---
+
 ## Paso 1 · Proyecto Supabase de producción
 
 | # | Acción | Cierra cuando |
