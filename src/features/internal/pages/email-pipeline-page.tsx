@@ -26,6 +26,7 @@ import { Select } from '@/components/ui/select'
 import { StatCard } from '@/components/ui/stat-card'
 import { Textarea } from '@/components/ui/textarea'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
+import { EmailBroadcastPanel } from '@/features/internal/components/email-broadcast-panel'
 import {
   clearTestEmails,
   fetchEmailDeliveriesPage,
@@ -57,6 +58,7 @@ const STATUS_META: Record<EmailDeliveryStatus, { label: string; variant: BadgeVa
 
 const TYPE_LABEL: Record<string, string> = {
   'email.test': 'Prueba',
+  'email.broadcast': 'Campaña',
   'membership.application_submitted': 'Solicitud enviada',
   'membership.payment_submitted': 'Comprobante subido',
   'membership.reviewed': 'Solicitud revisada',
@@ -124,6 +126,9 @@ const TEST_KEY = ['email-pipeline', 'test'] as const
 export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } = {}) {
   const { permissions, authUser } = useAppSession()
   const canResend = permissions.includes('email:resend')
+  // Permiso propio: reenviar un correo a una persona y escribirle a miles no son
+  // el mismo poder (solo dueño de plataforma y super administrador).
+  const canBroadcast = permissions.includes('email:broadcast')
   const queryClient = useQueryClient()
 
   const [page, setPage] = useState(1)
@@ -272,6 +277,8 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
           </div>
         </div>
       ) : null}
+
+      {canBroadcast ? <EmailBroadcastPanel defaultTestRecipient={authUser?.email ?? ''} /> : null}
 
       {canResend ? <TestPanel defaultTo={authUser?.email ?? ''} onView={setSelected} /> : null}
 

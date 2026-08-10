@@ -22,7 +22,13 @@ function latestMigrationContaining(fragment: string): string {
 
 describe('membership activation term contract', () => {
   it('keeps an initial payment without a membership term until final activation', () => {
-    const migration = latestMigrationContaining('enforce_initial_membership_period_after_activation')
+    // Se busca la **definición** y no una mención cualquiera: una migración
+    // posterior que solo toque privilegios de esta función nombra el símbolo sin
+    // redefinirlo, y buscar por nombre suelto haría que el contrato se leyera
+    // contra el archivo equivocado.
+    const migration = latestMigrationContaining(
+      'create or replace function public.enforce_initial_membership_period_after_activation'
+    )
 
     expect(migration).toContain("if new.intent = 'initial'")
     expect(migration).toContain("v_membership_status is distinct from 'active'")

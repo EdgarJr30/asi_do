@@ -14,7 +14,7 @@ en vivo). El pendiente se lleva aquí, no como issues nuevos (`REGRESSION_RULES.
 |---|---|
 | **Hoy** | ~~A1~~ ✅ · B1 · C1 · C4 · E1 · E2 |
 | **Corte** | B1→B7, luego C2, C3, C5, C6, C7, luego D1→D5 |
-| **Antes del primer usuario** | F1 · F2 |
+| **Antes del primer usuario** | J4 · F1 · F2 |
 | **Semana 1** | G, H, I |
 
 `B` desbloquea `A`, `C` y media `D`: no se puede rotar la llave de un proyecto que no existe.
@@ -103,7 +103,7 @@ La card "Evento destacado" (`institutional-home-page.tsx:1141`) se ve vacía.
 
 Pedido el 2026-08-10. Sube por el outbox existente (hereda idempotencia, lease,
 reintentos, modo de prueba y visibilidad en `/admin/correos`), con baja y supresión propias, y
-permiso `email:broadcast` solo para owner/super admin. **Nada envía hasta que J2 y J3 estén.**
+permiso `email:broadcast` solo para owner/super admin. **Escrito y probado; sin desplegar (J4).**
 
 - [x] **J1 · Base de datos** — ✅ 2026-08-10, `074fe6e` + `656363e`. Tablas `email_broadcasts` y
       `email_suppressions`, permiso `email:broadcast`, RPC `email_broadcast_enqueue` (normaliza,
@@ -113,13 +113,20 @@ permiso `email:broadcast` solo para owner/super admin. **Nada envía hasta que J
       encolar y enviar pasan minutos y es ahí donde alguien se da de baja) e inyecta el enlace en
       HTML y texto, solo en los correos de campaña. Estado `suppressed` nuevo: `failed` habría dicho
       que algo se rompió e inflado el contador de problemas. 4 mutantes muertos, 17 tests Deno.
-      ⚠️ **Pendiente de desplegar:** el remoto no respondía al terminar. Falta
-      `supabase db push --linked` (migración `20260810120429`) y
-      `supabase functions deploy process-email-deliveries`. Git va por delante de la base, que es
-      el lado seguro.
-- [ ] **J3 · Interfaz** — carga de `.txt`/`.csv` en `/admin/correos` con vista previa (cuántos
-      válidos, duplicados y suprimidos antes de enviar), envío en modo prueba primero, y ruta
-      pública `/correos/baja` que canjea el token.
+- [x] **J3 · Interfaz** — ✅ 2026-08-10. Panel de envío masivo en `/admin/correos` (solo con
+      `email:broadcast`), carga de `.txt`/`.csv`, y ruta pública `/correos/baja` que canjea el
+      token al abrir, sin pedir confirmación y sin distinguir un token inventado de uno usado.
+      Dos guardas: los conteos de la vista previa salen de `email_broadcast_preview`, que comparte
+      normalizador con el encolado —previsualizar y enviar no pueden discrepar—, y el botón de
+      envío real no se habilita hasta que ese asunto y ese cuerpo se mandaron en modo prueba a
+      direcciones propias; editarlos la invalida. De paso, `total_duplicated` deja de contar las
+      inválidas como repetidas: son dos diagnósticos distintos y uno de ellos significa que hay
+      que mirar el archivo. Probe de 13 asertos (5 mutantes muertos), 14 tests de unidad, 21/21
+      probes en verde en local, `db lint` limpio.
+- [ ] **J4 · Desplegar el bloque J** ⚠️ — git va por delante de la base, que es el lado seguro,
+      pero nada del bloque funciona hasta esto. Falta `supabase db push --linked` (migraciones
+      `20260810120429` y `20260810135307`) y `supabase functions deploy process-email-deliveries`.
+      Luego: `npm run test:probes` contra el remoto y un envío de prueba real de punta a punta.
 
 ## G · Rendimiento 🟡
 
@@ -195,4 +202,5 @@ sobre `storage.*` (exige consulta al remoto).
 | 2026-08-10 | **G1b (TASK-277)**: contador de postulaciones por vacante en un `group by`. Bajaba el tablero completo y se reinvalidaba con cada postulación del tenant | `38c1422` |
 | 2026-08-10 | **F4**: filtro por evento real del proveedor en `/admin/correos` | `5f0f7fc` |
 | 2026-08-10 | **J2**: la baja bloquea el envío y el enlace viaja en la campaña. Sin desplegar: el remoto no respondía | `d1ffd0d` |
+| 2026-08-10 | **J3**: interfaz del envío masivo y baja pública. La probe de superficie cazó de paso que `enforce_initial_membership_period_after_activation` (`1f0db27`) se creó sin `revoke`: PUBLIC y `anon` podían ejecutarla. Cerrado en la misma migración | pendiente |
 | 2026-08-10 | **J1**: base de datos del envío masivo. Los dos guardarraíles del repo saltaron y tenían razón: tabla nueva sin declarar en la matriz de la Fase D, y superficie de `anon` ampliada de 23 a 24 funciones | `074fe6e`, `656363e` |

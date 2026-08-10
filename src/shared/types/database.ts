@@ -1218,6 +1218,56 @@ export type Database = {
           },
         ]
       }
+      email_broadcasts: {
+        Row: {
+          body: string
+          created_at: string
+          created_by_user_id: string
+          id: string
+          is_test: boolean
+          name: string
+          subject: string
+          total_duplicated: number
+          total_queued: number
+          total_requested: number
+          total_suppressed: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by_user_id: string
+          id?: string
+          is_test?: boolean
+          name: string
+          subject: string
+          total_duplicated?: number
+          total_queued?: number
+          total_requested?: number
+          total_suppressed?: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by_user_id?: string
+          id?: string
+          is_test?: boolean
+          name?: string
+          subject?: string
+          total_duplicated?: number
+          total_queued?: number
+          total_requested?: number
+          total_suppressed?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_broadcasts_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_delivery_events: {
         Row: {
           created_at: string
@@ -1258,6 +1308,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_suppressions: {
+        Row: {
+          created_at: string
+          email: string
+          reason: string
+          source: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          reason: string
+          source?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          reason?: string
+          source?: string | null
+        }
+        Relationships: []
       }
       feature_flags: {
         Row: {
@@ -4006,6 +4077,20 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      email_broadcast_enqueue: {
+        Args: {
+          p_body: string
+          p_emails: string[]
+          p_is_test?: boolean
+          p_name: string
+          p_subject: string
+        }
+        Returns: Json
+      }
+      email_broadcast_preview: {
+        Args: { p_emails: string[] }
+        Returns: Json
+      }
       email_resend_delivery: {
         Args: { p_delivery_id: string }
         Returns: undefined
@@ -4023,6 +4108,10 @@ export type Database = {
           p_to: string
         }
         Returns: string
+      }
+      email_unsubscribe: {
+        Args: { p_token: string }
+        Returns: boolean
       }
       enqueue_donation_receipt_email: {
         Args: { p_donation_id: string }

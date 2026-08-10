@@ -13,6 +13,9 @@ const ContactUsPage = lazy(() => import('@/experiences/institutional/pages/conta
 const DirectoryPage = lazy(() => import('@/experiences/institutional/pages/directory-page').then(({ DirectoryPage }) => ({ default: DirectoryPage })))
 const DonatePage = lazy(() => import('@/experiences/institutional/pages/donate-page').then(({ DonatePage }) => ({ default: DonatePage })))
 const EligibilityPage = lazy(() => import('@/experiences/institutional/pages/eligibility-page').then(({ EligibilityPage }) => ({ default: EligibilityPage })))
+const EmailUnsubscribePage = lazy(() =>
+  import('@/experiences/institutional/pages/email-unsubscribe-page').then(({ EmailUnsubscribePage }) => ({ default: EmailUnsubscribePage }))
+)
 const InstitutionalHomePage = lazy(() =>
   import('@/experiences/institutional/pages/institutional-home-page').then(({ InstitutionalHomePage }) => ({ default: InstitutionalHomePage }))
 )
@@ -194,6 +197,17 @@ export const institutionalRoutes: RouteObject[] = [
         element: (
           <RouteSuspense>
             <NewsPage />
+          </RouteSuspense>
+        )
+      },
+      {
+        // Enlace del pie de las campañas. Ruta pública a propósito: quien se da
+        // de baja llega desde su cliente de correo y no tiene por qué tener
+        // cuenta — una lista cargada a mano no son todos usuarios.
+        path: 'correos/baja',
+        element: (
+          <RouteSuspense>
+            <EmailUnsubscribePage />
           </RouteSuspense>
         )
       },
