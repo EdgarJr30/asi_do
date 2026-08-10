@@ -36,34 +36,6 @@ function requireSupabase() {
   return supabase
 }
 
-export async function listModerationCases() {
-  const client = requireSupabase()
-  const response = await client
-    .from('moderation_cases' as never)
-    .select(
-      `
-        *,
-        actions:moderation_actions (
-          id,
-          moderation_case_id,
-          action_type,
-          actor_user_id,
-          note,
-          payload,
-          created_at
-        )
-      `
-    )
-    .order('created_at', { ascending: false })
-    .limit(24)
-
-  if (response.error) {
-    throw toControlledError(response.error)
-  }
-
-  return (response.data ?? []) as ModerationCaseRecord[]
-}
-
 export type ModerationStatusFilter = 'open' | 'resolved' | 'all'
 
 export interface ModerationCasePage {

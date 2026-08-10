@@ -10,23 +10,6 @@ export const approvalReviewPermissions: PermissionCode[] = [
   'scoped_user_authorization:review'
 ]
 
-export const publicNavigationItems: NavigationItem[] = [
-  {
-    title: 'Producto',
-    titleKey: 'navigation.home.title',
-    href: surfacePaths.public.home,
-    description: 'Conoce la experiencia',
-    descriptionKey: 'navigation.home.description'
-  },
-  {
-    title: 'Jobs',
-    titleKey: 'navigation.jobs.title',
-    href: surfacePaths.public.jobsRoot,
-    description: 'Oportunidades abiertas',
-    descriptionKey: 'navigation.jobs.description'
-  }
-]
-
 export const candidateNavigationItems: NavigationItem[] = [
   {
     title: 'Inicio',

@@ -607,32 +607,6 @@ export async function uploadPublicFile(options: {
   return uploadResponse.data.path
 }
 
-export async function removePublicFile(options: {
-  bucket: PublicStorageBucket
-  path: string
-}) {
-  const client = requireSupabase()
-  const normalizedPath = normalizeStoragePath(options.path)
-  // La miniatura se borra junto al original; `remove` ignora las rutas que no
-  // existen, así que sirve también para archivos previos a esta optimización.
-  const response = await client.storage
-    .from(options.bucket)
-    .remove([normalizedPath, deriveThumbnailPath(normalizedPath)])
-
-  if (response.error) {
-    throw response.error
-  }
-}
-
-/**
- * Descarta un objeto reemplazado sin propagar el fallo.
- *
- * El orden importa: solo se llama **después** de que la referencia en base ya
- * apunta al archivo nuevo. Si el borrado falla, la base queda consistente y el
- * archivo viejo se vuelve huérfano —lo recoge `npm run media:orphans`—; borrar
- * antes de actualizar la referencia sí perdería un archivo vivo, así que nunca
- * se hace en ese orden.
- */
 export async function discardReplacedFileQuietly(
   bucket: PublicStorageBucket,
   path: string | null | undefined

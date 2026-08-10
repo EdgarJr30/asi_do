@@ -250,17 +250,3 @@ export async function listDonations(limit = 200): Promise<DonationRow[]> {
   }
   return data ?? []
 }
-
-/** Historial del usuario logueado (RLS exige donor_user_id = auth.uid()). */
-export async function listMyDonations(userId: string): Promise<DonationRow[]> {
-  const client = requireSupabase()
-  const { data, error } = await client
-    .from('donations')
-    .select('*')
-    .eq('donor_user_id', userId)
-    .order('created_at', { ascending: false })
-  if (error) {
-    throw error
-  }
-  return data ?? []
-}

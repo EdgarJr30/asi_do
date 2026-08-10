@@ -1,5 +1,4 @@
 export const ELIGIBILITY_SESSION_KEY = 'asi:eligibility_result'
-export const ELIGIBILITY_DRAFT_STORAGE_KEY = 'asi:eligibility_draft'
 export const ELIGIBILITY_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 
 export interface EligibilityToken {
@@ -120,10 +119,6 @@ export const membershipCategoryDues = {
   profesional: 'RD$2,500.00',
   empresa: 'RD$3,000.00',
 } as const
-
-export function getMembershipCategoryDues(categorySlug: string) {
-  return membershipCategoryDues[categorySlug as keyof typeof membershipCategoryDues] ?? ''
-}
 
 export const membershipCategories: MembershipCategoryInfo[] = [
   {
