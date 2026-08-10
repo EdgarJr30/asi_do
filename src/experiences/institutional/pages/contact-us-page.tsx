@@ -14,6 +14,11 @@ import {
 } from '@/experiences/institutional/components/institutional-ui';
 import { contactPoints } from '@/experiences/institutional/content/site-content';
 import { submitContactMessage } from '@/experiences/institutional/lib/contact-api';
+import {
+  validateContactMessage,
+  type ContactField,
+  type ContactFieldError,
+} from '@/experiences/institutional/lib/contact-validation';
 import { toErrorMessage } from '@/lib/errors/error-utils';
 import { Spinner } from '@/components/ui/loader';
 import { unsplashSrcSet } from '@/shared/ui/unsplash';
@@ -69,12 +74,32 @@ const priorityContacts = contactPoints.filter(
     item.title === 'Proyectos y financiamiento'
 );
 
+function FieldError({
+  error,
+  field,
+}: {
+  error: ContactFieldError | null;
+  field: ContactField;
+}) {
+  if (error?.field !== field) {
+    return null;
+  }
+
+  return (
+    <p className="text-sm leading-6 text-rose-600" role="alert">
+      {error.message}
+    </p>
+  );
+}
+
 export function ContactUsPage() {
   const shouldReduceMotion = useReducedMotion();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [topic, setTopic] = useState('Consulta general');
   const [message, setMessage] = useState('');
+  // Espejo de las reglas de la RPC: aquí solo para avisar antes de enviar.
+  const [fieldError, setFieldError] = useState<ContactFieldError | null>(null);
 
   const revealProps = shouldReduceMotion
     ? {}
@@ -95,6 +120,7 @@ export function ContactUsPage() {
       setEmail('');
       setTopic('Consulta general');
       setMessage('');
+      setFieldError(null);
       toast.success('Consulta enviada', {
         description: 'Te responderemos al correo que nos dejaste.',
       });
@@ -241,15 +267,27 @@ export function ContactUsPage() {
             <InstitutionalCard className="bg-white">
               <form
                 className="grid gap-5"
+                noValidate
                 onSubmit={(event) => {
                   event.preventDefault();
                   if (sendMutation.isPending) return;
+
+                  const invalid = validateContactMessage({
+                    name,
+                    email,
+                    topic,
+                    message,
+                  });
+                  setFieldError(invalid);
+                  if (invalid) return;
+
                   sendMutation.mutate();
                 }}
               >
                 <label className="grid gap-2">
                   <span className="asi-field-label">Nombre</span>
                   <input
+                    aria-invalid={fieldError?.field === 'name'}
                     className="asi-field"
                     disabled={sendMutation.isPending}
                     maxLength={120}
@@ -259,11 +297,13 @@ export function ContactUsPage() {
                     type="text"
                     value={name}
                   />
+                  <FieldError error={fieldError} field="name" />
                 </label>
 
                 <label className="grid gap-2">
                   <span className="asi-field-label">Correo</span>
                   <input
+                    aria-invalid={fieldError?.field === 'email'}
                     className="asi-field"
                     disabled={sendMutation.isPending}
                     maxLength={254}
@@ -272,6 +312,7 @@ export function ContactUsPage() {
                     type="email"
                     value={email}
                   />
+                  <FieldError error={fieldError} field="email" />
                 </label>
 
                 <label className="grid gap-2">
@@ -286,11 +327,13 @@ export function ContactUsPage() {
                     <option>Membresía</option>
                     <option>Proyectos y financiamiento</option>
                   </select>
+                  <FieldError error={fieldError} field="topic" />
                 </label>
 
                 <label className="grid gap-2">
                   <span className="asi-field-label">Mensaje</span>
                   <textarea
+                    aria-invalid={fieldError?.field === 'message'}
                     // el arrastre queda acotado: crece hasta 20rem y luego hace scroll
                     className="asi-field max-h-80 min-h-40 resize-y"
                     disabled={sendMutation.isPending}
@@ -300,6 +343,7 @@ export function ContactUsPage() {
                     required
                     value={message}
                   />
+                  <FieldError error={fieldError} field="message" />
                 </label>
 
                 <button
