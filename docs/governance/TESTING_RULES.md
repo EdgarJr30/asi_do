@@ -170,7 +170,7 @@ When a production bug, user correction, or architectural safeguard exposes a rep
 ---
 
 ## 9. CI parity: a test must not depend on the machine that runs it
-A suite that passes locally and fails in CI is not a slower suite; it is a suite that reads something the repository does not control. Two things have already caused it here, and both hid behind misleading failure messages.
+A suite that passes locally and fails in CI is not a slower suite; it is a suite that reads something the repository does not control. Three things have already caused it here, and all three hid behind misleading failure messages.
 
 ### 9.1 Environment: never read Supabase config from `.env.local`
 `.env.local` is in `.gitignore`, so it exists on developer machines and never in CI. Without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, `getSupabaseConfig()` returns `null` and the app renders a **degraded shell** instead of failing: `/auth/sign-in` shows `El acceso aún no está disponible` in place of the form. The test then reports a missing heading, which reads like broken UI.
@@ -207,6 +207,24 @@ Rules:
 2. Raising a budget is legitimate only for latency. An element that never appears must still fail.
 3. A test that only passes on a fast machine is unverified, not passing.
 4. Retries are not a budget. `retries: 0` is deliberate: re-running the suite would paper over a flake and a real defect identically.
+
+### 9.3 Network: an unmocked query is a coin flip, not a background detail
+
+`src/test/env.ts` gives the suite a *plausible* Supabase URL, so `supabase` is non-null and every unmocked data call becomes a **real outbound request** to a host that does not exist. Nothing fails loudly. The request simply resolves or rejects at an unpredictable moment, and whichever render happens to be on screen when the assertion runs is the one that gets asserted.
+
+That produced the intermittent failure in `tests/integration/dashboard-failure-states.test.tsx`. The file mocked `listMyApplications` but left the fourth metric — *Vacantes para ti*, fed by `listPublicJobs` — talking to the network. When that request failed inside the assertion window, the metric flipped to its failed state and rendered one extra `aria-label="Dato no disponible"`:
+
+| Test | Asserts | Saw when the network lost the race |
+|---|---|---|
+| `las métricas no muestran un 0 que miente…` | exactly 3 unavailable | 4 |
+| `las métricas sí muestran 0 cuando el 0 es verdad` | none unavailable | 1 |
+
+Measured before the fix: **1 failure in 14 full-suite runs**, and it surfaced mostly inside `npm run verify` — a busier machine shifts the timing, which is exactly why it looked like "the suite is flaky under load" rather than "this test never controlled its inputs".
+
+Rules:
+1. A test that renders a component must mock **every** data source that component reaches, not only the one the test is about. The others are not background: they are inputs, and an uncontrolled input is a random variable.
+2. A double must return the **shape** the caller destructures. `listPublicJobs` returns `{ jobs, savedJobIds }` and the page reads `data?.jobs.length`; a `[]` double crashes the whole page and the resulting empty DOM says nothing about why.
+3. Waiting for "at least one" and then asserting "exactly N" is the same defect wearing a different hat — see §10.2. Assert the terminal count *inside* the wait.
 
 ---
 

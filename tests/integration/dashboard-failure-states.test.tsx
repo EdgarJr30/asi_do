@@ -6,11 +6,28 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const listMyApplications = vi.hoisted(() => vi.fn())
-const listOpenJobsPreview = vi.hoisted(() => vi.fn())
+const listPublicJobs = vi.hoisted(() => vi.fn())
 const captureClientError = vi.hoisted(() => vi.fn())
 
 vi.mock('@/features/applications/lib/applications-api', () => ({ listMyApplications }))
 vi.mock('@/lib/errors/client-error-logger', () => ({ captureClientError }))
+
+/**
+ * La cuarta métrica del panel —«Vacantes para ti»— la alimenta `listPublicJobs`, y
+ * sin este doble el test **salía a la red de verdad**: `listPublicJobs` usa el cliente
+ * de Supabase, que apunta al host inventado de `src/test/env.ts`. Cuando esa petición
+ * fallaba dentro de la ventana de las aserciones, esa métrica también se marcaba como
+ * fallida y aparecía un `Dato no disponible` de más. De ahí el fallo intermitente que
+ * solo se veía dentro de `npm run verify` —máquina más cargada, otro reparto de
+ * tiempos— y que reventaba dos de los tres tests de este archivo: uno esperaba 3
+ * etiquetas y veía 4, y el otro esperaba ninguna y veía 1.
+ *
+ * Medido antes de arreglarlo: 1 fallo en 14 corridas de la suite.
+ */
+vi.mock('@/features/jobs/lib/jobs-api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/jobs/lib/jobs-api')>()),
+  listPublicJobs
+}))
 
 vi.mock('@/app/providers/app-session-provider', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/app/providers/app-session-provider')>()
@@ -43,7 +60,12 @@ function renderDashboard(CandidateHomePage: () => ReactElement) {
 describe('dashboard del candidato: fallo distinguible de vacío', () => {
   beforeEach(() => {
     listMyApplications.mockReset()
-    listOpenJobsPreview.mockReset()
+    // Éxito por defecto: cada prueba habla del fallo de *aplicaciones*, así que la
+    // consulta de vacantes tiene que ser un fondo estable, no una tercera variable.
+    listPublicJobs.mockReset()
+    // La forma importa: la página lee `data?.jobs.length`, así que un `[]` la
+    // rompería entera en vez de dar cero vacantes.
+    listPublicJobs.mockResolvedValue({ jobs: [], savedJobIds: [] })
     captureClientError.mockClear()
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
@@ -82,13 +104,17 @@ describe('dashboard del candidato: fallo distinguible de vacío', () => {
 
     renderDashboard(CandidateHomePage)
 
+    // Se espera al estado final —las tres— y no a «al menos una». Con el umbral
+    // anterior la espera terminaba en cuanto aparecía la primera, y la aserción
+    // siguiente leía un render intermedio: el mismo patrón que prohíbe
+    // `TESTING_RULES` §10.2.
+    //
+    // Las tres métricas que dependen de las postulaciones: activas, entrevistas
+    // y tasa de respuesta. La cuarta, vacantes, carga bien a propósito.
     await waitFor(() => {
-      expect(screen.getAllByLabelText('Dato no disponible').length).toBeGreaterThan(0)
+      expect(screen.getAllByLabelText('Dato no disponible')).toHaveLength(3)
     })
 
-    // Las tres métricas que dependen de las postulaciones: activas, entrevistas
-    // y tasa de respuesta.
-    expect(screen.getAllByLabelText('Dato no disponible')).toHaveLength(3)
     expect(screen.getAllByText('No se pudo cargar').length).toBe(3)
   })
 
