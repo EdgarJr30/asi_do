@@ -4834,6 +4834,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      workspace_dashboard_metrics: {
+        Args: {
+          p_period_start?: string | null
+          p_previous_period_start?: string | null
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       application_public_status:

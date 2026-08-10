@@ -73,6 +73,7 @@ const MANIFIESTO: Record<string, Tier> = {
   p1_audit_logs_probe: 'datos',
   p1_rbac_review_moderation_probe: 'datos',
   p1_rls_initplan_probe: 'datos',
+  p1_workspace_dashboard_metrics_probe: 'datos',
   p2_talent_directory_search_probe: 'datos',
   p2_tenant_applications_page_probe: 'datos',
 }
