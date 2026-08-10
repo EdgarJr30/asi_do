@@ -529,6 +529,26 @@ Do not leave the sign-up form active after the confirmation email is sent. Repla
 ### R-152 — Email load must fail closed before PostgreSQL is saturated
 Do not allow bulk email, manual dispatch, cron, provider latency, or webhook retries to create unbounded database work. PostgreSQL must reject oversized/rate-limited campaigns and an over-capacity queue before inserting deliveries; dispatch stays single-flight and batch-bounded; database/provider calls have short timeouts; retries preserve idempotency; and operators can inspect queue depth, lease state, and the last dispatcher error. UI warnings alone never satisfy this rule.
 
+### R-153 — Repeated or remote work must carry its own ceiling
+R-152 states this for email. It is not an email rule. **No unit of work in this repository may repeat, grow, or wait without a limit written next to it**, whatever the feature.
+
+Four ceilings, each mandatory wherever the shape applies:
+
+| Shape | Required ceiling | Where it must live |
+|---|---|---|
+| **Waiting** on a remote service (database, provider, sibling service) | An explicit timeout | The call site. Enforced by `npm run check:bounded-io` |
+| **Retrying** anything, including a non-2xx we return to make a caller retry | A budget: max attempts, or an age window past which the work is dropped and logged | The retrying side, never only the caller's schedule |
+| **Fanning out** (recipients, rows, jobs, batch size, concurrency) | A hard numeric cap that rejects before doing the work | PostgreSQL where a client could reach it; a named constant otherwise |
+| **Accumulating** rows (logs, events, history, queues) | A retention or archival job scheduled in the same migration that creates the table | The migration |
+
+Three specifics that follow, and that were each violated in the 2026-08-10 incident:
+
+- **Returning a 4xx/5xx to a webhook provider is a retry request.** An endpoint that answers non-2xx to an event it can never process asks to be called forever. Bound it on our side and acknowledge past the budget; do not rely on the provider's retry schedule, which we neither control nor test.
+- **A degradation elsewhere must not become load here.** When a dependency stops answering, our request rate against it must fall, not stay flat or rise.
+- **The cheapest check goes first.** Shed a request before verifying signatures, before opening a client, and before touching the database — never after.
+
+A limit only counts if it is enforced by PostgreSQL, by a test, or by `npm run verify`. A comment, a form's `maxlength`, or a reviewer's attention does not count.
+
 ---
 
 ## Maintenance rule

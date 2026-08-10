@@ -13,6 +13,11 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+import { fetchWithTimeout } from '../_shared/fetch-with-timeout.ts'
+
+// Tope de espera a PostgREST. El arnés existe justamente para llevar la base al
+// límite, así que es donde menos se puede esperar sin plazo. Ver R-152.
+const DATABASE_REQUEST_TIMEOUT_MS = 15_000
 import {
   runHarness,
   resolveSeedPlan,
@@ -79,7 +84,10 @@ Deno.serve(async (request: Request) => {
   }
 
   const userClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
+    global: {
+      headers: { Authorization: authHeader },
+      fetch: fetchWithTimeout(fetch, DATABASE_REQUEST_TIMEOUT_MS)
+    },
     auth: { persistSession: false, autoRefreshToken: false }
   })
 
@@ -96,6 +104,7 @@ Deno.serve(async (request: Request) => {
   }
 
   const admin = createClient(supabaseUrl, serviceKey, {
+    global: { fetch: fetchWithTimeout(fetch, DATABASE_REQUEST_TIMEOUT_MS) },
     auth: { persistSession: false, autoRefreshToken: false }
   })
 

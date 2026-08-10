@@ -4,6 +4,7 @@ import { resolveResendWebhookSecret } from '../_shared/resend-config.ts'
 import { parseResendEmailEvent } from '../_shared/resend-webhook.ts'
 import { resolveServiceKey } from '../_shared/supabase-keys.ts'
 import { fetchWithTimeout } from '../_shared/fetch-with-timeout.ts'
+import { evaluateRetryBudget } from './retry-budget.ts'
 import { verifyResendWebhook } from './verify.ts'
 
 export const DATABASE_REQUEST_TIMEOUT_MS = 8_000
@@ -33,6 +34,20 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Webhook configuration is unavailable.' }, 503)
   }
 
+  const providerEventId = req.headers.get('svix-id') ?? ''
+
+  // Corte de carga: un reintento fuera de ventana se acepta y termina aquí, sin
+  // firma que verificar ni base que consultar. Es lo que impide que una caída
+  // larga se convierta en una tormenta de reintentos contra la base caída.
+  const retryBudget = evaluateRetryBudget(req.headers.get('svix-timestamp'), Date.now())
+  if (retryBudget.exhausted) {
+    console.error('Resend webhook dropped because its retry budget is exhausted.', {
+      providerEventId,
+      ageMs: retryBudget.ageMs
+    })
+    return jsonResponse({ received: true, recorded: false, dropped: 'retry_budget_exhausted' })
+  }
+
   const rawBody = await req.text()
 
   let event
@@ -48,7 +63,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Invalid webhook request.' }, 400)
   }
 
-  const providerEventId = req.headers.get('svix-id') ?? ''
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
   const serviceKey = resolveServiceKey()
 
@@ -82,7 +96,9 @@ Deno.serve(async (req) => {
   const result = (response.data ?? {}) as RecordEventResult
   if (result.reason === 'delivery_not_found') {
     // El webhook puede ganar la carrera contra el UPDATE que guarda el id de
-    // Resend. Un 503 hace que Resend lo reintente sin perder el evento.
+    // Resend. Un 503 hace que Resend lo reintente sin perder el evento; la
+    // carrera se resuelve en segundos, así que el presupuesto de reintentos de
+    // arriba corta el caso en el que la entrega no va a aparecer nunca.
     return jsonResponse({ error: 'Delivery is not ready for this event.' }, 503)
   }
 

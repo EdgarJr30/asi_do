@@ -402,6 +402,30 @@ fully derivable from `migrations/`. And it indexes **by name, not by signature**
 overload where only one version carries the grant still passes. Exercising the RPC for
 real is a separate, more expensive check (R9.2 in `docs/checklists/COBERTURA_CRITICA_EN_CI.md`).
 
+### 14.0 `check:bounded-io` — no remote call without a deadline
+
+Same shape, different gap. On 2026-08-10 PostgreSQL stopped accepting connections for
+two hours; the Edge Functions that talked to it without a time budget hung until the
+edge cut them at ~90–150 s, and every provider retry opened another identical wait. The
+outage became the outage *plus* a request storm aimed at the database that was already
+down.
+
+`npm run check:bounded-io` (part of `npm run verify`, therefore part of CI) asserts that
+every network boundary in `supabase/functions/` carries a deadline:
+
+1. each `createClient(…)` passes a `fetch` wrapped in `fetchWithTimeout`;
+2. each direct `fetch(…)` goes through that wrapper;
+3. each networked SDK that bypasses `fetch` — today only `webpush.sendNotification` —
+   is wrapped in `withTimeout`. That list is declared by hand in the script, because
+   adding one is a deliberate act that deserves the thought about its ceiling.
+
+It reads **files**, so it inherits the same R2 weakness as `check:rpc-grants`. And it
+bounds *waiting* only: caps on size — batches, recipients, queue depth — live in
+PostgreSQL and are covered by §13.4. Its anti-silence floor is finding zero boundaries
+at all, which means the extractor broke rather than the code improved.
+
+The rule it enforces is R-153, which generalizes R-152 past email.
+
 ### 14.1 The guard must fail when the guard breaks
 
 Its worst possible ending is the one the probes of §12 already had: staying green while
