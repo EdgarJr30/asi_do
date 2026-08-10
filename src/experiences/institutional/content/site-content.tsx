@@ -137,7 +137,14 @@ export type InstitutionalPageContent = {
 export const institutionalNavigation = [
   { label: 'Inicio', to: surfacePaths.institutional.home },
   { label: 'Membresía', to: surfacePaths.institutional.membership },
+  { label: 'Quiénes somos', to: surfacePaths.institutional.whoWeAre },
   { label: 'Proyectos', to: surfacePaths.institutional.projects },
+  { label: 'Contáctanos', to: surfacePaths.institutional.contactUs },
+] as const;
+
+export const institutionalPrimaryNavigation = [
+  { label: 'Membresía', to: surfacePaths.institutional.membership },
+  { label: 'Quiénes somos', to: surfacePaths.institutional.whoWeAre },
   { label: 'Contáctanos', to: surfacePaths.institutional.contactUs },
 ] as const;
 

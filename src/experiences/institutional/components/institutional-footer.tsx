@@ -70,7 +70,7 @@ export function InstitutionalFooter({
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
+            <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
               <div className="rounded-card-lg border border-white/10 bg-white/6 p-5 backdrop-blur-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
                   Explora
@@ -86,14 +86,6 @@ export function InstitutionalFooter({
                       <MoveRight className="size-4 text-white/44" />
                     </Link>
                   ))}
-                </div>
-              </div>
-
-              <div className="rounded-card-lg border border-white/10 bg-white/6 p-5 backdrop-blur-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
-                  Puente
-                </p>
-                <div className="mt-4 space-y-2.5">
                   <Link
                     className="flex items-center justify-between rounded-card bg-white/6 px-3.5 py-3 text-sm font-medium text-white/82 transition hover:bg-white/12 hover:text-white"
                     to={surfacePaths.public.home}

@@ -104,6 +104,7 @@ Do:
 1. Create an easy-to-read layout with clear alignment and grouping.
 2. Keep related items visually connected through spacing and structure.
 3. Reduce competing emphasis so the next action feels obvious.
+4. Keep public navigation links in plainly named groups; do not split related destinations under ambiguous labels.
 
 Don't:
 1. Scatter related information across disconnected sections.

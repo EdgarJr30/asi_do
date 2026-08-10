@@ -7,16 +7,12 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { RouteScrollManager } from '@/app/router/route-scroll-manager';
 import { surfacePaths } from '@/app/router/surface-paths';
 import { InstitutionalFooter } from '@/experiences/institutional/components/institutional-footer';
-import { institutionalNavigation } from '@/experiences/institutional/content/site-content';
+import {
+  institutionalNavigation,
+  institutionalPrimaryNavigation,
+} from '@/experiences/institutional/content/site-content';
 import { cn } from '@/lib/utils/cn';
 import { MAIN_CONTENT_ID, SkipToContent } from '@/components/ui/skip-to-content';
-
-const institutionalPrimaryNavigation = [
-  { label: 'Contáctanos', to: surfacePaths.institutional.contactUs },
-  { label: 'Membresía', to: surfacePaths.institutional.membership },
-  { label: 'Proyectos', to: surfacePaths.institutional.projects },
-  { label: 'Quiénes somos', to: surfacePaths.institutional.whoWeAre },
-] as const;
 
 const HEADER_BACKGROUND_SCROLL_DISTANCE = 72;
 const HEADER_BACKGROUND_ALPHA = 0.92;
