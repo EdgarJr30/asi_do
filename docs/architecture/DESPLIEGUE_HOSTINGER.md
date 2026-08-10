@@ -182,7 +182,8 @@ pedir después un chunk del release anterior y no debe recibir 404 durante una n
 
 1. Sube a `assets/` únicamente los bundles con hash que todavía no existen.
 2. Actualiza los demás archivos, salvo `index.html` y `sw.js`, mediante un temporal en el mismo
-   directorio y un renombrado. Después comprueba por HTTPS el tamaño de cada asset del release.
+   directorio y un renombrado. Después descarga por HTTPS cada asset y compara su SHA-256 con el
+   artefacto local; no depende de `Content-Length`, que Cloudflare/LiteSpeed puede omitir en `HEAD`.
 3. Activa `index.html` y luego `sw.js`, también mediante temporales; comprueba que ambos coinciden con el
    artefacto y, si falla, restaura automáticamente los dos entrypoints anteriores.
 

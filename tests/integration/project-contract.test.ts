@@ -77,6 +77,10 @@ describe('project contract', () => {
       resolve(repoRoot, 'scripts/deploy-hostinger-release.sh'),
       'utf8'
     )
+    const verifierScript = readFileSync(
+      resolve(repoRoot, 'scripts/verify-hostinger-release.mjs'),
+      'utf8'
+    )
 
     expect(ciWorkflow).toMatch(/branches:\s*\n\s*- main\s*\n\s*- staging/)
     expect(ciWorkflow).toContain("github.ref == 'refs/heads/staging'")
@@ -111,6 +115,12 @@ describe('project contract', () => {
     expect(deployScript).toContain('verify-hostinger-release.mjs assets')
     expect(deployScript).toContain('verify-hostinger-release.mjs live')
     expect(deployScript).toContain('Restoring the previous entrypoints')
+
+    expect(verifierScript).not.toContain("method: 'HEAD'")
+    expect(verifierScript).not.toContain("headers.get('content-length')")
+    expect(verifierScript).toContain('const expected = await readFile(localPath)')
+    expect(verifierScript).toContain('const actual = Buffer.from(await response.arrayBuffer())')
+    expect(verifierScript).toContain('Asset checksum mismatch')
   })
 
   it('keeps the deployment configuration files in place', () => {

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { readdir, readFile, stat } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
 
@@ -82,21 +82,21 @@ async function verifyAssets() {
     while (queue.length > 0) {
       const localPath = queue.shift()
       const remotePath = `/${relative(artifactDirectory, localPath).split(sep).join('/')}`
-      const localSize = (await stat(localPath)).size
+      const expected = await readFile(localPath)
 
       await retry(async () => {
-        const response = await fetchForDeploy(remotePath, { method: 'HEAD' })
-        const remoteSize = Number(response.headers.get('content-length'))
+        const response = await fetchForDeploy(remotePath)
+        const actual = Buffer.from(await response.arrayBuffer())
 
-        if (!Number.isFinite(remoteSize) || remoteSize !== localSize) {
-          throw new Error(`${remotePath} has ${remoteSize || 'unknown'} bytes; expected ${localSize}`)
+        if (digest(actual) !== digest(expected)) {
+          throw new Error(`Asset checksum mismatch: ${remotePath}`)
         }
       })
     }
   }
 
   await Promise.all(Array.from({ length: Math.min(6, files.length) }, () => worker()))
-  console.log(`Verified ${files.length} release assets before activation.`)
+  console.log(`Verified ${files.length} release asset checksums before activation.`)
 }
 
 function digest(contents) {

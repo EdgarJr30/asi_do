@@ -281,8 +281,9 @@ Never replace these checks with a single snapshot of a committed production URL.
 job to wait for the quality jobs, build with the staging mode, use the protected `staging` GitHub
 Environment, and preserve the production-safe activation order. Its contract rejects destructive root
 mirrors and requires missing hashed assets first, temporary-file replacement, `index.html` before
-`sw.js`, pre-activation asset checks, post-activation HTTPS verification, and automatic restoration of
-the previous entrypoints on failure.
+`sw.js`, pre-activation SHA-256 checks over downloaded asset bodies, post-activation HTTPS verification,
+and automatic restoration of the previous entrypoints on failure. Asset verification must not depend
+on `HEAD` exposing `Content-Length`; Cloudflare/LiteSpeed is allowed to omit that response header.
 
 ---
 
