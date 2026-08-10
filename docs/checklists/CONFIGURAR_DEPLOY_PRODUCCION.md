@@ -49,7 +49,9 @@ Necesitas a mano:
 - [ ] **Credenciales reales de AZUL** — merchant ID, merchant name y `AZUL_AUTH_KEY` de la afiliación
 - [ ] Acceso al panel de Resend y al DNS de `asidominicana.do`
 - [ ] Acceso a hPanel de Hostinger
-- [ ] CLI al día: `supabase --version` ≥ 2.111.0 y Node 22
+- [ ] **CLI de Supabase ≥ 2.111.0** — el de esta máquina es `2.109.0` (medido el 2026-08-10) y CI usa
+      2.111.0. Actualízalo antes de tocar producción: `brew upgrade supabase`
+- [ ] Node 22 y `colima start` para las verificaciones del Paso 2
 
 ---
 
@@ -89,7 +91,12 @@ https://github.com/EdgarJr30/asi_do/settings/environments → **`staging`**
        A partir de aquí lo llamo `<REF-PROD>`.
 4. [ ] Anótalo en `docs/architecture/ENVIRONMENTS.md` §2 y commitéalo.
 
-> El plan gratuito no admite Vector Buckets; el repo ya lo declara desactivado, así que no estorba.
+**Decide el plan antes de cargar datos reales.** En el gratuito los proyectos se pausan por
+inactividad y no hay respaldos diarios ni point-in-time recovery: es aceptable para desarrollo y no lo
+es para la base que guarda los pagos. Vector Buckets tampoco existe ahí, pero eso ya está declarado
+desactivado en el repo y no estorba.
+
+- [ ] Plan decidido y respaldos automáticos confirmados en Settings → Database → Backups.
 
 ---
 
@@ -125,7 +132,7 @@ arquitectura completa.**
 | Los 6 buckets de Storage (vacíos) | Su contenido: videos, logos, avatares (Paso 14) |
 | Las 18 tablas de la publicación Realtime | Secretos de Edge Functions (Paso 3) |
 | Los 6 cron de Postgres | El primer administrador (Paso 13) |
-| Roles, permisos y las 3 categorías de membresía con sus precios | Tope global de subida de Storage (está en `config.toml`, que es de desarrollo) |
+| Roles, permisos y las 3 categorías de membresía con sus precios | Tope global de subida de Storage: ponlo en **50 MiB** en Settings → Storage. Vive en `config.toml`, que describe desarrollo, así que no viaja. Cada bucket ya trae el suyo, más bajo, por migración — pero si el global se queda corto, `public-media` no puede recibir un solo video |
 
 ### Verificación
 
@@ -194,7 +201,15 @@ npx web-push generate-vapid-keys
 
 Guarda la **pública** también para el Paso 9 (`VITE_WEB_PUSH_PUBLIC_KEY`).
 
-- [ ] Los 12 secretos cargados. `HARNESS_PRODUCTION_TARGETS` no hace falta salvo que uses el arnés.
+- [ ] Los 12 secretos cargados.
+
+**Y uno en el proyecto de _desarrollo_, no en el de producción:** añade `<REF-PROD>` a
+`HARNESS_PRODUCTION_TARGETS` allí. Es la lista negra del arnés de estrés; con el ref de producción
+dentro, el arnés de desarrollo no puede sembrar decenas de miles de filas sintéticas en la base real
+aunque alguien se equivoque de URL. En producción no hace falta: `STRESS_HARNESS_ENABLED=false` y
+`HARNESS_ENV=production` ya lo bloquean dos veces.
+
+- [ ] `HARNESS_PRODUCTION_TARGETS` del proyecto de desarrollo incluye `<REF-PROD>`.
 
 ---
 
@@ -393,14 +408,31 @@ aprobación → publica**.
 
 # Paso 12 · Primer despliegue
 
-1. [ ] `supabase db push --linked` contra producción, ya con todo lo anterior hecho
-2. [ ] Abre el PR `staging` → `main` y espera los seis checks
-3. [ ] Merge
-4. [ ] GitHub te pedirá aprobar el environment `production` → **Approve and deploy**
-5. [ ] Espera a que terminen `deploy-production` y `deploy-edge-functions`
-6. [ ] El propio job corre `Smoke de producción` al final: si eso pasa, el sitio responde
+1. [ ] Si escribiste migraciones nuevas desde el Paso 2, aplícalas ahora:
+       `supabase link --project-ref <REF-PROD> && supabase db push --linked`
+2. [ ] **Vuelve a enlazar desarrollo** — `supabase link --project-ref jgmojkzthfogynqixkob`
+3. [ ] Abre el PR `staging` → `main` y espera los seis checks
+4. [ ] Merge
+5. [ ] GitHub te pedirá aprobar el environment `production` → **Approve and deploy**
+6. [ ] Espera a que terminen `deploy-production` y `deploy-edge-functions`
+7. [ ] El propio job corre `Smoke de producción` al final: si eso pasa, el sitio responde
 
-Si algo falla, el script restaura los `index.html` y `sw.js` anteriores: el sitio no queda a medias.
+Si el despliegue falla a media subida, el script restaura los `index.html` y `sw.js` anteriores: el
+sitio no queda a medias.
+
+### Si hay que revertir
+
+El sitio publicado y el commit son cosas distintas, y se revierten distinto:
+
+| Qué pasó | Qué hacer |
+|---|---|
+| El frontend salió mal | Actions → la corrida **anterior** de `deploy-production` → *Re-run job*. Vuelve a publicar aquel bundle |
+| Necesitas el artefacto exacto | Está guardado 90 días como `production-dist-<sha>` en esa corrida. Se puede subir por FTP a mano |
+| El código está mal | `git revert` en `staging`, PR a `main`, y el flujo normal republica |
+| La migración está mal | **No se revierte: se añade otra encima.** Una migración aplicada es inmutable |
+
+Los sourcemaps de cada release quedan 90 días como `production-sourcemaps-<sha>`: son la única forma de
+leer un stack de `app_error_logs`, porque no se publican con el sitio.
 
 ---
 
@@ -433,8 +465,15 @@ Sin ellos la página degrada a poster e imagen, no se rompe.
 
 Cierra el corte cuando todo esto pase **en `asidominicana.do`**:
 
-- [ ] El bundle público **no** contiene `jgmojkzthfogynqixkob`
-      → `curl -s https://asidominicana.do/assets/*.js | grep -c jgmojkz` debe dar `0`
+- [ ] El bundle público **no** contiene `jgmojkzthfogynqixkob` (el ref de desarrollo):
+
+      ```bash
+      curl -s https://asidominicana.do/ \
+        | grep -oE '/assets/[^"]+\.js' \
+        | while read -r asset; do curl -s "https://asidominicana.do$asset"; done \
+        | grep -c jgmojkzthfogynqixkob     # tiene que imprimir 0
+      ```
+
 - [ ] Registro + correo de confirmación + inicio de sesión
 - [ ] Recuperar contraseña vuelve a `asidominicana.do/auth/reset-password`
 - [ ] Solicitud de membresía completa
