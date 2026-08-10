@@ -213,6 +213,35 @@ export async function listTenantJobs(tenantId: string) {
   return (response.data ?? []) as unknown as JobPostingQueryRow[]
 }
 
+/**
+ * Postulaciones por vacante del tenant.
+ *
+ * La pantalla de vacantes obtenía esto recorriendo `fetchPipelineBoard` —el
+ * tablero completo, con notas, calificaciones y usuarios anidados— en memoria.
+ * Además de duplicar la consulta que ya hace el dashboard, `useRealtimeSync`
+ * invalida esta clave ante **cualquier** evento de `applications`, así que una
+ * postulación nueva volvía a bajar el histórico entero a cada reclutador con la
+ * pantalla abierta (TASK-277).
+ *
+ * Las vacantes sin postulaciones no vienen en el objeto: el consumidor resuelve
+ * la ausencia como 0, que es lo que ya hacía con el `Map`.
+ */
+export async function fetchTenantJobApplicationCounts(tenantId: string): Promise<Map<string, number>> {
+  const client = requireSupabase()
+  const response = await client.rpc('tenant_job_application_counts', { p_tenant_id: tenantId })
+
+  if (response.error) {
+    throw response.error
+  }
+
+  const counts = new Map<string, number>()
+  for (const [jobId, total] of Object.entries((response.data ?? {}) as Record<string, number>)) {
+    counts.set(jobId, Number(total))
+  }
+
+  return counts
+}
+
 export async function listOpportunityStageTemplates(opportunityType: Tables<'opportunity_stage_templates'>['opportunity_type']) {
   const client = requireSupabase()
   const response = await client

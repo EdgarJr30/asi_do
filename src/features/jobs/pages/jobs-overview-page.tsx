@@ -26,6 +26,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { PublicJobBoard } from '@/features/jobs/components/public-job-board'
 import {
   createOrUpdateJobPosting,
+  fetchTenantJobApplicationCounts,
   listOpportunityStageTemplates,
   listTenantJobs,
   updateJobPostingStatus,
@@ -45,7 +46,6 @@ import {
   getOpportunityTypeLabel,
   opportunityTypeOptions
 } from '@/features/opportunities/lib/opportunity-taxonomy'
-import { fetchPipelineBoard } from '@/features/pipeline/lib/pipeline-api'
 import { fetchWorkspaceBundle, type WorkspaceBundle } from '@/features/tenants/lib/workspace-api'
 import { useUrlParamState } from '@/hooks/use-url-param-state'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
@@ -992,17 +992,7 @@ function WorkspaceJobsManager() {
   const jobApplicationsQuery = useQuery({
     queryKey: ['jobs', 'application-counts', session.activeTenantId ?? null],
     enabled: canManageJobs && isWorkspaceContext && Boolean(session.activeTenantId),
-    queryFn: async () => {
-      const board = await fetchPipelineBoard(session.activeTenantId!)
-      const counts = new Map<string, number>()
-      for (const application of board.applications) {
-        const jobId = application.job_posting?.id
-        if (jobId) {
-          counts.set(jobId, (counts.get(jobId) ?? 0) + 1)
-        }
-      }
-      return counts
-    }
+    queryFn: async () => fetchTenantJobApplicationCounts(session.activeTenantId!)
   })
   const applicationCounts = useMemo(() => jobApplicationsQuery.data ?? new Map<string, number>(), [jobApplicationsQuery.data])
   const isInitialWorkspaceJobsLoading =

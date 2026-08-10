@@ -4692,6 +4692,10 @@ export type Database = {
         Args: { p_tenant_id: string }
         Returns: Json
       }
+      tenant_job_application_counts: {
+        Args: { p_tenant_id: string }
+        Returns: Json
+      }
       trigger_email_dispatch: { Args: never; Returns: undefined }
       update_application_resume: {
         Args: { p_application_id: string; p_submitted_resume_id: string }
