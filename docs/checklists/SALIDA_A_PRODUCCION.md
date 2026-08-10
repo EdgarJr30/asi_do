@@ -93,9 +93,10 @@ La card "Evento destacado" (`institutional-home-page.tsx:1141`) se ve vacía.
       · [TASK-160](https://linear.app/mooncode/issue/TASK-160) ¿el formulario de membresía coincide con los documentos de ASI?
       · [TASK-163](https://linear.app/mooncode/issue/TASK-163)/[165](https://linear.app/mooncode/issue/TASK-165) ¿Admin Console entra en el MVP?
 - [ ] **F3 · Cinco QA visuales** pendientes por falta de navegador: `/privacy` desktop · `/admin/membership` y `/admin/access-control` móvil+desktop · `/account/recruiter-request` · pantalla de versión desactualizada.
-- [ ] **F4 · Filtros por evento real en `/admin/correos`** — confirmado en
-      `email-pipeline-page.tsx`: las etiquetas de los 8 eventos ya existen (líneas 66-74) pero el
-      selector solo ofrece los 5 estados agregados (78-83). Faltan rebote, queja, retraso, apertura y clic.
+- [x] **F4 · Filtros por evento real en `/admin/correos`** — ✅ 2026-08-10, `5f0f7fc`. Selector propio
+      con rebote, queja, supresión y retraso vigente. Solo esos cuatro: el filtro va sobre
+      `latest_provider_event` y son los terminales, así que "el último evento fue X" equivale a "le
+      pasó X". Apertura y clic ya eran filtrables como estado (`read`/`clicked`).
 - [ ] **F5 · Re-verificar** [TASK-13](https://linear.app/mooncode/issue/TASK-13) (callback móvil) y [TASK-106](https://linear.app/mooncode/issue/TASK-106) (carrusel Safari iOS).
 
 ## J · Envío masivo de correos 🆕
