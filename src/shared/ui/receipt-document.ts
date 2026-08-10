@@ -25,13 +25,15 @@ export const RECEIPT_ASSETS = {
 
 /**
  * Trío de color + glifo del badge de estado.
- * Solo «Aprobado» viene del diseño entregado; pendiente y rechazado son la
- * extensión propuesta en el README, alineada a la misma paleta.
+ *
+ * El diseño entregado solo define «Aprobado». Cualquier otro estado usa un tono
+ * neutro de la misma paleta a propósito: inventar un verde/ámbar/rojo propio
+ * sería introducir color sin diseño detrás. Cuando haya diseño para pendiente y
+ * rechazado, se añaden aquí y `resolveStatusTone` los distingue.
  */
 const STATUS_TONES = {
   aprobado: { bg: '#eaf6ee', border: '#cbe6d5', dot: '#2e8b57', ink: '#22684a', glyph: '&#10003;' },
-  pendiente: { bg: '#fdf6e7', border: '#f0e2bd', dot: '#b8860b', ink: '#7a5b0a', glyph: '&middot;' },
-  rechazado: { bg: '#fdeeee', border: '#f2cfcf', dot: '#b3352f', ink: '#8a2823', glyph: '&#10005;' },
+  neutro: { bg: '#f4f6fa', border: '#dbe3f0', dot: '#8291a0', ink: '#2b3947', glyph: '&middot;' },
 } as const
 
 export type ReceiptStatusTone = keyof typeof STATUS_TONES
@@ -39,13 +41,7 @@ export type ReceiptStatusTone = keyof typeof STATUS_TONES
 /** Deduce el tono del badge a partir del texto de estado que ya muestra la app. */
 export function resolveStatusTone(value: string): ReceiptStatusTone {
   const normalized = value.trim().toLowerCase()
-  if (/^(aprobad|verified|pagad|complet)/.test(normalized)) {
-    return 'aprobado'
-  }
-  if (/^(rechazad|declined|failed|fallid|cancelad|anulad)/.test(normalized)) {
-    return 'rechazado'
-  }
-  return 'pendiente'
+  return /^(aprobad|verified|pagad|complet)/.test(normalized) ? 'aprobado' : 'neutro'
 }
 
 /** Datos ya formateados que consume la plantilla. La plantilla no formatea nada. */

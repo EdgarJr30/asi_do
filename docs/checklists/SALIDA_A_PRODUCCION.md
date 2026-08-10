@@ -14,7 +14,7 @@ en vivo). El pendiente se lleva aquí, no como issues nuevos (`REGRESSION_RULES.
 |---|---|
 | **Hoy** | ~~A1~~ ✅ · B1 · C1 · C4 · E1 · E2 |
 | **Corte** | B1→B7, luego C2, C3, C5, C6, C7, luego D5 (D1–D4 hechos; falta crear el environment `production` en GitHub) |
-| **Antes del primer usuario** | J4 · F2 |
+| **Antes del primer usuario** | J4 · F2 · F6 |
 | **Semana 1** | G, H, I |
 
 `B` desbloquea `A`, `C` y media `D`: no se puede rotar la llave de un proyecto que no existe.
@@ -121,6 +121,14 @@ La card "Evento destacado" (`institutional-home-page.tsx:1141`) se ve vacía.
       `latest_provider_event` y son los terminales, así que "el último evento fue X" equivale a "le
       pasó X". Apertura y clic ya eran filtrables como estado (`read`/`clicked`).
 - [ ] **F5 · Re-verificar** [TASK-13](https://linear.app/mooncode/issue/TASK-13) (callback móvil) y [TASK-106](https://linear.app/mooncode/issue/TASK-106) (carrusel Safari iOS).
+- [ ] **F6 · Licencia de Joanna Sans Nova en el comprobante** — *respuesta tuya, no código.* El
+      comprobante de pago sirve cuatro TTF de Monotype desde `public/brand/fonts/`, así que quedan
+      **descargables por cualquiera** que abra el sitio. Hay que confirmar con el contrato que la
+      licencia cubre uso web/embebido antes de publicar en producción; el handoff
+      (`design_handoff_comprobante_pago/README.md`) ya lo advierte. Si no la cubre: borrar los
+      `@font-face` de `src/shared/ui/receipt-document.ts` y las TTF de `public/brand/fonts/`. El
+      documento cae a `system-ui` sin romperse —mismo layout, el título cambia de ancho—, así que
+      no bloquea nada más que la fidelidad tipográfica.
 
 ## J · Envío masivo de correos 🆕
 

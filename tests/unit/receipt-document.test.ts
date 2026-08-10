@@ -66,11 +66,11 @@ describe('formatReceiptAmount', () => {
 });
 
 describe('resolveStatusTone', () => {
-  it('reconoce los estados que emite la plataforma', () => {
+  it('solo colorea el aprobado; el resto va al tono neutro', () => {
     expect(resolveStatusTone('Aprobado')).toBe('aprobado');
     expect(resolveStatusTone('verified')).toBe('aprobado');
-    expect(resolveStatusTone('Rechazada')).toBe('rechazado');
-    expect(resolveStatusTone('pending')).toBe('pendiente');
+    expect(resolveStatusTone('Rechazada')).toBe('neutro');
+    expect(resolveStatusTone('pending')).toBe('neutro');
   });
 });
 
@@ -98,7 +98,7 @@ describe('renderReceiptDocument', () => {
     expect(html).toContain('--status-bg: #eaf6ee;');
     expect(html).toContain('--status-ink: #22684a;');
     expect(renderReceiptDocument({ ...SAMPLE, estado: 'Rechazado' })).toContain(
-      '--status-bg: #fdeeee;'
+      '--status-bg: #f4f6fa;'
     );
   });
 
