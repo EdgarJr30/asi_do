@@ -116,6 +116,33 @@ Deno.test('sin entregas reclamadas no se toca al proveedor', async () => {
   assertEquals(database.inserts.length, 0)
 })
 
+Deno.test('un timeout del proveedor libera la entrega para reintento sin tumbar el lote', async () => {
+  const delivery = buildDelivery()
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: [delivery] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
+    complete_email_delivery: () => ({ data: true })
+  })
+
+  const result = await processEmailDeliveries({
+    database: database.client,
+    fetch: () => Promise.reject(new DOMException('timeout', 'AbortError')),
+    ...validConfig
+  })
+
+  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 1, suppressedCount: 0 })
+  assertEquals(database.argsFor('complete_email_delivery'), [
+    {
+      p_delivery_id: delivery.delivery_id,
+      p_claim_token: delivery.claim_token,
+      p_status: 'pending',
+      p_response_code: 504,
+      p_provider_message_id: null,
+      p_response_payload: { error: 'provider_timeout_or_network_error' }
+    }
+  ])
+})
+
 Deno.test('la reserva pide el lote con el lease y el tope de intentos del contrato', async () => {
   const database = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: [] })

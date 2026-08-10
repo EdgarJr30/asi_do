@@ -365,7 +365,11 @@ Declare the client surface **structurally** (`rpc`, `from().insert()`) instead o
 
 `createDatabaseDouble` records every RPC call and insert, and **fails loudly on an RPC the test did not declare** rather than returning a silent `null`. `createResendDouble` records what would have been sent and rejects any URL that is not Resend's endpoint. No production module imports them, so they never reach a deployed bundle.
 
-### 13.4 Local runs need Deno installed
+### 13.4 Email load safeguards are a CI contract
+
+`tests/integration/email-pipeline-safety-contract.test.ts` must fail if campaign/queue caps, the dispatcher lease, the Resend correlation index, or Edge Function timeouts disappear. Provider timeout tests must also prove that a delivery returns to the idempotent retry path instead of aborting an entire batch.
+
+### 13.5 Local runs need Deno installed
 
 CI provisions it with `denoland/setup-deno`; a workstation does not have it by default.
 

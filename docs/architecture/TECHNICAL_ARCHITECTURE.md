@@ -271,7 +271,7 @@ Add structured logs/events for critical flows where possible.
 - `/admin/access-logs` reads this sensitive history through `admin_user_access_log_page`, which enforces platform audit permission, records a `user_access_log.viewed` audit event, and preserves real server paging for infinite-scroll UX.
 - A daily `pg_cron` task removes user access records older than 180 days. The generic public-table audit trigger is intentionally removed from this table to avoid duplicating IP/user-agent into a store with a different retention policy.
 - Notification persistence is split into `notifications`, `notification_preferences`, `push_subscriptions`, `notification_deliveries`, and `notification_delivery_logs`.
-- `process-email-deliveries` drains pending email deliveries; `resend-webhook` verifies signed provider callbacks and records sent, delivered, delayed, failed, suppressed, bounced, complained, opened, and clicked outcomes idempotently.
+- `process-email-deliveries` drains pending email deliveries through a five-minute single-flight lease, batches of at most 20, idempotency, backpressure, and bounded database/provider calls; `resend-webhook` verifies signed callbacks, times out failed persistence quickly, and records provider outcomes idempotently through an indexed message correlation path.
 - Browser subscriptions are registered from the client through SQL RPC helpers, not ad hoc table writes.
 - Push dispatch runs through the `send-notification` Edge Function so VAPID secrets stay server-side while delivery status remains in Postgres.
 - The current repository migration extends an already-existing remote identity/RBAC baseline. Backfill missing baseline migrations into `supabase/migrations/` before altering that identity layer again.

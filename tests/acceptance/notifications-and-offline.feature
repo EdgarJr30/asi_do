@@ -29,3 +29,11 @@ Característica: Continuidad y comunicación operativa
       Entonces una navegación fallida recupera el shell desde caché
       Y se informa que se muestra la última información guardada
       Y existe una acción explícita para reintentar
+
+  Regla: Los envíos masivos no pueden saturar silenciosamente el pipeline
+
+    Escenario: Una campaña excede la capacidad segura de correos
+      Dado el contrato de protección del pipeline de correos
+      Cuando se intenta superar la capacidad segura de la cola
+      Entonces la campaña se rechaza antes de crear entregas
+      Y solo puede existir un procesador de correos activo

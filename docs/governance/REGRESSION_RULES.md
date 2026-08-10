@@ -526,6 +526,9 @@ Do not give Playwright a production `service_role`/secret key or run account, me
 ### R-151 — Sent registration must become a confirmation state
 Do not leave the sign-up form active after the confirmation email is sent. Replace it with a clear `Revisa tu correo` state that shows the destination, explains that the user must open the link instead of registering again, and offers confirmation-email resend only after a visible provider cooldown.
 
+### R-152 — Email load must fail closed before PostgreSQL is saturated
+Do not allow bulk email, manual dispatch, cron, provider latency, or webhook retries to create unbounded database work. PostgreSQL must reject oversized/rate-limited campaigns and an over-capacity queue before inserting deliveries; dispatch stays single-flight and batch-bounded; database/provider calls have short timeouts; retries preserve idempotency; and operators can inspect queue depth, lease state, and the last dispatcher error. UI warnings alone never satisfy this rule.
+
 ---
 
 ## Maintenance rule

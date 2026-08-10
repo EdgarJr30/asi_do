@@ -3,7 +3,10 @@ import { createClient } from 'npm:@supabase/supabase-js@2.99.1'
 import { resolveResendWebhookSecret } from '../_shared/resend-config.ts'
 import { parseResendEmailEvent } from '../_shared/resend-webhook.ts'
 import { resolveServiceKey } from '../_shared/supabase-keys.ts'
+import { fetchWithTimeout } from '../_shared/fetch-with-timeout.ts'
 import { verifyResendWebhook } from './verify.ts'
+
+export const DATABASE_REQUEST_TIMEOUT_MS = 8_000
 
 interface RecordEventResult {
   recorded?: boolean
@@ -54,7 +57,8 @@ Deno.serve(async (req) => {
   }
 
   const supabase = createClient(supabaseUrl, serviceKey, {
-    auth: { persistSession: false }
+    auth: { persistSession: false },
+    global: { fetch: fetchWithTimeout(fetch, DATABASE_REQUEST_TIMEOUT_MS) }
   })
 
   const response = await supabase.rpc('record_resend_webhook_event', {

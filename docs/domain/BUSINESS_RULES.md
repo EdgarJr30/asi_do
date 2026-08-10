@@ -173,6 +173,8 @@
 11. Core workflow notifications must be emitted from durable server-side workflows for application submit, operator-request review, membership/access changes, tenant/team changes, candidate-facing status changes, interviews, and moderation/support operations.
 12. The canonical notification implementation contract lives in `docs/product/NOTIFICATION_IMPLEMENTATION_PLAN.md`.
 13. Email provider callbacks must be signature-verified, idempotent, and retained as a chronological event history; delayed, bounced, complained, suppressed, opened, and clicked events must remain reviewable by authorized platform operators.
+14. Campaign email must be server-bounded: at most 200 requested recipients per campaign, no more than one campaign every 10 minutes, and no enqueue that would take the shared email queue above 500 in-flight deliveries.
+15. Email dispatch must be single-flight, use bounded batches and timeouts, and expose queue depth, lease state, and the last dispatcher error to authorized platform operators.
 
 ---
 

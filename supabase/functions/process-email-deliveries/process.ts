@@ -296,24 +296,43 @@ export async function processEmailDeliveries(
       unsubscribeUrl
     })
 
-    const providerResponse = await deps.fetch(RESEND_EMAILS_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-        // Si la respuesta se pierde (timeout, corte) y el lease expira, el
-        // reintento llega con la misma clave y el proveedor no reenvía. La
-        // clave solo se renueva en un reenvío deliberado desde /admin/correos.
-        'Idempotency-Key': delivery.idempotency_key
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [recipientEmail],
-        subject: delivery.title,
-        html: emailContent.html,
-        text: emailContent.text
+    let providerResponse: Response
+    try {
+      providerResponse = await deps.fetch(RESEND_EMAILS_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+          // Si la respuesta se pierde (timeout, corte) y el lease expira, el
+          // reintento llega con la misma clave y el proveedor no reenvía. La
+          // clave solo se renueva en un reenvío deliberado desde /admin/correos.
+          'Idempotency-Key': delivery.idempotency_key
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: [recipientEmail],
+          subject: delivery.title,
+          html: emailContent.html,
+          text: emailContent.text
+        })
       })
-    })
+    } catch {
+      failedCount += 1
+      await completeDelivery(database, {
+        deliveryId: delivery.delivery_id,
+        claimToken: delivery.claim_token,
+        status: delivery.attempt_count >= MAX_ATTEMPTS ? 'failed' : 'pending',
+        responseCode: 504,
+        responsePayload: { error: 'provider_timeout_or_network_error' }
+      })
+      await insertDeliveryLog(database, {
+        deliveryId: delivery.delivery_id,
+        logLevel: 'error',
+        message: 'Email provider request timed out or lost its network connection.',
+        metadata: { attemptCount: delivery.attempt_count }
+      })
+      continue
+    }
 
     const providerPayload = (await providerResponse.json().catch(() => ({}))) as Record<string, unknown>
 

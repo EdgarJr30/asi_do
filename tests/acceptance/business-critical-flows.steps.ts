@@ -24,7 +24,8 @@ const contractPaths = {
   publishLimit: 'supabase/migrations/20260315103000_platform_ops_foundations.sql',
   moderation: 'supabase/migrations/20260801150000_p1_fix_broken_rpc_enums_and_ambiguity.sql',
   serviceWorker: 'public/sw.js',
-  offlineBanner: 'src/components/ui/offline-banner.tsx'
+  offlineBanner: 'src/components/ui/offline-banner.tsx',
+  emailPipelineSafety: 'supabase/migrations/20260810143000_email_pipeline_backpressure.sql'
 } as const
 
 interface BusinessWorld {
@@ -46,6 +47,31 @@ interface BusinessWorld {
 function readContract(path: string) {
   return readFileSync(resolve(repoRoot, path), 'utf8')
 }
+
+Given('el contrato de protección del pipeline de correos', function (this: BusinessWorld) {
+  this.contract = readContract(contractPaths.emailPipelineSafety)
+})
+
+When('se intenta superar la capacidad segura de la cola', function () {
+  // La migración versionada contiene la decisión server-side.
+})
+
+Then('la campaña se rechaza antes de crear entregas', function (this: BusinessWorld) {
+  assertContains(
+    this.contract,
+    "v_queue_capacity constant integer := 500",
+    "raise exception 'EMAIL_PIPELINE_BACKPRESSURE",
+    "pg_advisory_xact_lock(hashtextextended('email_pipeline_enqueue', 0))"
+  )
+})
+
+Then('solo puede existir un procesador de correos activo', function (this: BusinessWorld) {
+  assertContains(
+    this.contract,
+    'create table if not exists private.email_pipeline_control',
+    "dispatch_lease_until = v_now + interval '5 minutes'"
+  )
+})
 
 function assertContains(contract: string | undefined, ...fragments: string[]) {
   assert.ok(contract, 'El escenario no cargó su contrato ejecutable')
