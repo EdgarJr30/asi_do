@@ -1,7 +1,8 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { PASSWORD_RESET_WINDOW_SECONDS } from '@/features/auth/lib/password-reset-window'
 import { ResetPasswordPage } from '@/features/auth/pages/reset-password-page'
 
 /**
@@ -42,6 +43,9 @@ const sessionState = vi.hoisted(() => ({
     isLoading: false,
     isAuthenticated: true,
     authUser: { id: 'usuario-en-recuperacion' },
+    // El plazo de la pantalla se lee del `iat` de este token; sin él se cuenta
+    // desde el montaje, que es lo que ve la mayoría de estas pruebas.
+    session: null as { access_token: string } | null,
     refresh: vi.fn()
   }
 }))
@@ -80,6 +84,7 @@ describe('pantalla de contraseña nueva', () => {
       isLoading: false,
       isAuthenticated: true,
       authUser: { id: 'usuario-en-recuperacion' },
+      session: null,
       refresh: vi.fn()
     }
   })
@@ -175,5 +180,76 @@ describe('pantalla de contraseña nueva', () => {
     // único camino de vuelta sería pedir otro correo.
     expect(signOutCurrentUser).not.toHaveBeenCalled()
     expect(navigate).not.toHaveBeenCalled()
+  })
+})
+
+/**
+ * Contador del plazo (R7.3).
+ *
+ * El enlace dura 15 minutos, pero abrirlo crea una sesión que dura una hora y se
+ * refresca sola. Sin este tope en la pantalla, acortar el enlace no acortaría
+ * nada para quien deja la pestaña abierta, y el contador estaría mintiendo.
+ */
+describe('plazo visible de la recuperación', () => {
+  const issuedAtMs = Date.UTC(2026, 7, 9, 12, 0, 0)
+
+  function tokenIssuedAt(seconds: number) {
+    const payload = Buffer.from(JSON.stringify({ iat: seconds })).toString('base64url')
+
+    return `cabecera.${payload}.firma`
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(issuedAtMs)
+    signOutCurrentUser.mockReset()
+    signOutCurrentUser.mockResolvedValue(undefined)
+    sessionState.value = {
+      isSupabaseConfigured: true,
+      isLoading: false,
+      isAuthenticated: true,
+      authUser: { id: 'usuario-en-recuperacion' },
+      session: { access_token: tokenIssuedAt(issuedAtMs / 1000) },
+      refresh: vi.fn()
+    }
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('dice cuánto queda y lo va descontando', () => {
+    renderPage()
+
+    expect(screen.getByRole('timer')).toHaveTextContent('15:00')
+
+    act(() => {
+      vi.advanceTimersByTime(90_000)
+    })
+
+    expect(screen.getByRole('timer')).toHaveTextContent('13:30')
+  })
+
+  it('el plazo se mide desde el token, así que recargar no regala tiempo', () => {
+    // Alguien que abre el enlace, se distrae diez minutos y recarga la pestaña.
+    vi.setSystemTime(issuedAtMs + 10 * 60 * 1000)
+
+    renderPage()
+
+    expect(screen.getByRole('timer')).toHaveTextContent('5:00')
+  })
+
+  it('al agotarse cierra la sesión de recuperación y ofrece pedir otro enlace', async () => {
+    renderPage()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PASSWORD_RESET_WINDOW_SECONDS * 1000 + 1_000)
+    })
+
+    // Dejar viva la credencial que llegó por correo convertiría el contador en
+    // decoración: bastaría recargar para seguir cambiando la contraseña.
+    expect(signOutCurrentUser).toHaveBeenCalledTimes(1)
+    expect(screen.getByText(/Este enlace ya no sirve/i)).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Tu contraseña nueva')).not.toBeInTheDocument()
   })
 })

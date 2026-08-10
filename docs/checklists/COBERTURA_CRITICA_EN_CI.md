@@ -609,14 +609,15 @@ no tiene un camino alternativo: no puede reportarlo desde dentro del producto.
 - [x] **R7.2 · Casos borde**
   *Hecho:* los 3, repartidos entre e2e y unidad según dónde se puedan observar.
   `tests/unit/password-recovery-request.test.tsx` (5), `tests/unit/password-reset-page.test.tsx`
-  (7) y `tests/unit/password-recovery-link.test.ts` (4) — 16 tests, dentro de `npm test` y por
-  tanto de `verify`.
+  (10), `tests/unit/password-recovery-link.test.ts` (4) y `tests/unit/password-reset-window.test.ts`
+  (5) — 24 tests, dentro de `npm test` y por tanto de `verify`.
 
   | Caso borde | Dónde | Qué se asevera |
   |---|---|---|
   | Correo inexistente | e2e + unidad | La confirmación es **carácter a carácter la misma** exista o no la cuenta (el correo se redacta antes de comparar). Un formulario que responde distinto es un verificador de padrón, y aquí el padrón son los miembros de una iglesia. |
   | Enlace ya usado | e2e | GoTrue rechaza el segundo canje del mismo token, y la pantalla que ve quien reabre el correo dice "Este enlace ya no sirve" con la salida a pedir otro. |
   | Enlace caducado / tecleado a mano | e2e + unidad | Mismo estado observable desde el cliente —sin sesión—: nunca se muestra el formulario, porque `updateUser` fallaría después de escribir la contraseña dos veces. |
+  | Plazo agotado con la pantalla abierta | unidad | El enlace dura 15 minutos (`otp_expiry`), pero abrirlo crea una sesión de una hora que el SDK refresca sola. La pantalla cuenta desde el `iat` del token —recargar no regala tiempo— y al llegar a cero cierra la sesión de recuperación de verdad, no solo el formulario. |
 
   **El aserto que no estaba en el enunciado y es el que más importa:** distinguir *«todavía
   hidratando»* de *«sin sesión»*. Confundirlas le dice «este enlace ya no sirve» a alguien cuyo
