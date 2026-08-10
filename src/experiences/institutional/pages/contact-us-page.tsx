@@ -116,7 +116,7 @@ export function ContactUsPage() {
                 <p className="asi-kicker border-white/15 bg-white/10 text-white/82">
                   Contáctanos
                 </p>
-                <h1 className="asi-heading-lg mt-4 max-w-[12ch] text-white">
+                <h1 className="asi-heading-lg mt-4 max-w-[16ch] text-white">
                   Habla con nosotros.
                 </h1>
                 <p className="mt-4 max-w-176 text-base leading-7 text-white/86 sm:text-[1.02rem]">
@@ -211,7 +211,10 @@ export function ContactUsPage() {
                     decoding="async"
                     loading="lazy"
                     sizes="(max-width: 1023px) 0px, 42vw"
-                    srcSet={unsplashSrcSet(contactFormImage.src, [480, 720, 960])}
+                    srcSet={unsplashSrcSet(
+                      contactFormImage.src,
+                      [480, 720, 960]
+                    )}
                     src={contactFormImage.src}
                   />
                   <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-[#071327]/45 via-transparent to-transparent" />
