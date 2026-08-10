@@ -10,6 +10,13 @@ import {
 import { surfacePaths } from '@/app/router/surface-paths';
 import type { InstitutionalPageContent } from '@/experiences/institutional/content/site-content';
 
+// La renovación solo existe dentro de la plataforma (panel de membresía), así que
+// el CTA público lleva al inicio de sesión con `next` al panel: quien ya tiene
+// sesión entra directo y quien no, aterriza ahí después de autenticarse.
+const membershipRenewalPath = `${surfacePaths.auth.signIn}?next=${encodeURIComponent(
+  surfacePaths.account.membership,
+)}`;
+
 export const membershipFeatures = [
   {
     name: 'Comunidad activa',
@@ -113,7 +120,7 @@ export const membershipActionCards = [
     title: 'Renovación de membresía',
     description:
       'Los miembros actuales pueden renovar su membresía anual en línea. Los nuevos deben completar la solicitud y cumplir con las cuotas correspondientes al iniciar.',
-    cta: { label: 'Renovar en línea', to: surfacePaths.institutional.contactUs },
+    cta: { label: 'Renovar en línea', to: membershipRenewalPath },
   },
 ] as const;
 
@@ -131,7 +138,7 @@ export const membershipPageContent: InstitutionalPageContent = {
     },
     secondaryAction: {
       label: 'Renovar membresía',
-      to: surfacePaths.institutional.contactUs,
+      to: membershipRenewalPath,
       variant: 'secondary',
     },
     aside: [
