@@ -44,7 +44,7 @@ jobs:
       # verifica, así que el CLI no debe cambiar bajo nuestros pies. Subir la
       # versión es un cambio deliberado, no un efecto secundario.
       - name: Set up Supabase CLI
-        uses: supabase/setup-cli@v1
+        uses: supabase/setup-cli@v3
         with:
           version: 2.111.0
 
