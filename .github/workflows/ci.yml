@@ -308,12 +308,27 @@ jobs:
       # Los valores llegan por `env:` y no interpolados en el script: una
       # expresion `${{ }}` dentro de un `run` se sustituye como texto antes de
       # que bash lo lea, asi que su contenido puede convertirse en comandos.
+      # Comprobar que **existen** no basta, y esa era la debilidad de este paso:
+      # un secret o una var que el environment no define **no queda vacia**, la
+      # hereda del repositorio. Como el repositorio tiene las de `db-drift.yml`
+      # —que apuntan al proyecto de desarrollo—, olvidarse de declarar
+      # `SUPABASE_PROJECT_REF` en el environment `production` no fallaba: pasaba
+      # en verde y publicaba las funciones de produccion en la base de
+      # desarrollo. Es el fallo B4 del checklist, y la herencia lo hacia
+      # silencioso justo donde mas caro sale.
+      #
+      # Por eso se comprueba el **valor**, no solo la presencia. La lista de refs
+      # que no son produccion se versiona aqui igual que en
+      # `src/shared/config/required-env.ts` y `tests/e2e/support/target-guard.ts`:
+      # cambiar una variable en el panel no puede bastar para cruzar entornos.
       - name: Comprobar configuracion del entorno
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
           ENTORNO: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
         run: |
+          refs_de_no_produccion=(jgmojkzthfogynqixkob) # development
+
           faltan=()
           [[ -n "${SUPABASE_ACCESS_TOKEN:-}" ]] || faltan+=("secret SUPABASE_ACCESS_TOKEN")
           [[ -n "${SUPABASE_PROJECT_REF:-}" ]] || faltan+=("var SUPABASE_PROJECT_REF")
@@ -324,6 +339,26 @@ jobs:
             echo "Configuralos en Settings → Environments → ese entorno." >&2
             exit 1
           fi
+
+          es_de_no_produccion=false
+          for ref in "${refs_de_no_produccion[@]}"; do
+            [[ "$SUPABASE_PROJECT_REF" == "$ref" ]] && es_de_no_produccion=true
+          done
+
+          if [[ "$ENTORNO" == "production" && "$es_de_no_produccion" == true ]]; then
+            echo "SUPABASE_PROJECT_REF apunta a un proyecto que no es el de produccion." >&2
+            echo "Desplegar aqui dejaria el cron de produccion disparando contra las" >&2
+            echo "funciones de desarrollo. Declaralo en el environment 'production'." >&2
+            exit 1
+          fi
+
+          if [[ "$ENTORNO" == "staging" && "$es_de_no_produccion" == false ]]; then
+            echo "SUPABASE_PROJECT_REF no es un proyecto de no-produccion." >&2
+            echo "Staging no debe publicar Edge Functions en la base de produccion." >&2
+            exit 1
+          fi
+
+          echo "Entorno '$ENTORNO' → proyecto $SUPABASE_PROJECT_REF."
 
       # `--use-api` empaqueta en el servidor. Sin la bandera, el CLI intenta
       # aplanar `node_modules` con Docker y termina en

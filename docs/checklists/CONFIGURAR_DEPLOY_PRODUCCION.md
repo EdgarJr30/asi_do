@@ -53,11 +53,22 @@ Necesitas a mano:
 
 ---
 
-# Paso 0 · Arreglar `staging` (hoy está roto)
+# Paso 0 · Declarar el token y el ref en `staging`
 
-`deploy-edge-functions` corre **también desde `staging`** y toma el token y el ref del environment
-`staging`, que solo tiene variables de build del frontend. Falla desde el commit `649669a`, que ya está
-en el remoto.
+`deploy-edge-functions` corre **también desde `staging`** y necesita `SUPABASE_ACCESS_TOKEN` y
+`SUPABASE_PROJECT_REF`. El environment `staging` solo tiene variables de build del frontend.
+
+**Esto no lo rompe: lo que un environment no declara, lo hereda del repositorio** — y el repositorio ya
+tiene esas dos por `db-drift.yml`, apuntando al proyecto de desarrollo, que resulta ser el destino
+correcto para `staging`. Funciona por casualidad, no por diseño.
+
+**El peligro es el inverso, en el Paso 9:** si el environment `production` no declara
+`SUPABASE_PROJECT_REF`, hereda ese mismo valor de desarrollo, el job pasa en verde y publica las
+funciones de producción **en la base de desarrollo**. Es el fallo que deja al cron de producción
+disparando contra las funciones equivocadas.
+
+Desde `f74ce19` el job comprueba el **valor**, no solo que exista: `main` con un ref de desarrollo
+—o `staging` con el de producción— falla nombrando el problema.
 
 https://github.com/EdgarJr30/asi_do/settings/environments → **`staging`**
 
@@ -66,7 +77,7 @@ https://github.com/EdgarJr30/asi_do/settings/environments → **`staging`**
 | secret | `SUPABASE_ACCESS_TOKEN` | token personal del CLI ([crearlo aquí](https://supabase.com/dashboard/account/tokens)) |
 | var | `SUPABASE_PROJECT_REF` | `jgmojkzthfogynqixkob` (el proyecto de desarrollo) |
 
-- [ ] Hecho. Compruébalo: el próximo push a `staging` debe terminar con `deploy-edge-functions` en verde.
+- [ ] Declaradas explícitamente en el environment, para que dejen de depender de la herencia.
 
 ---
 
@@ -288,7 +299,7 @@ https://github.com/EdgarJr30/asi_do/settings/environments → **New environment*
 | `VITE_AZUL_PAYMENTS_URL` | la URL del servicio AZUL del Paso 7 |
 | `VITE_WEB_PUSH_PUBLIC_KEY` | VAPID **pública** del Paso 3 |
 | `VITE_APP_NAME` | `ASI Rep. Dominicana` |
-| `SUPABASE_PROJECT_REF` | `<REF-PROD>` — lo usa `deploy-edge-functions` |
+| `SUPABASE_PROJECT_REF` | `<REF-PROD>` — 🔴 **obligatoria**: si falta, se hereda la del repositorio, que apunta a desarrollo |
 
 ### Environment secrets
 
@@ -408,7 +419,8 @@ Cierra el corte cuando todo esto pase **en `asidominicana.do`**:
 |---|---|
 | El build aborta nombrando variables | falta una del Paso 9, o `VITE_AUTH_SITE_URL` ≠ `VITE_PRODUCTION_SITE_URL` |
 | «apunta a un proyecto Supabase de desarrollo» | `VITE_SUPABASE_URL` quedó con el ref de dev |
-| `deploy-edge-functions` falla nombrando token o ref | falta el secret o la var en el environment de esa rama (Pasos 0 y 9) |
+| `deploy-edge-functions` falla nombrando token o ref | falta el secret o la var, y el repositorio tampoco la tiene (Pasos 0 y 9) |
+| «SUPABASE_PROJECT_REF apunta a un proyecto que no es el de produccion» | el environment `production` no la declara y heredó la de desarrollo (Paso 9) |
 | El sitio carga pero nadie puede entrar | `VITE_SUPABASE_ANON_KEY` de otro proyecto |
 | Los correos no salen y el cron falla | `private.runtime_secrets` sin cargar o con el ref equivocado (Paso 4) |
 | Los correos salen desde producción con datos de dev | `email_dispatch_url` con el ref de desarrollo (Paso 4) |
