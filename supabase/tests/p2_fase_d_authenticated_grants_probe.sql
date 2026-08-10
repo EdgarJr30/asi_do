@@ -44,6 +44,12 @@ declare
     -- eventos de Resend lo escribe `record_resend_webhook_event`, que es
     -- `service_role`. El cliente lo consulta desde /admin/correos.
     'email_delivery_events=S',
+    -- Campañas y supresiones: el cliente solo las lee. Encolar y dar de baja
+    -- pasa por `email_broadcast_enqueue` y `email_unsubscribe`, que son
+    -- `security definer`: escribir directo saltaria la guarda de permiso y la
+    -- deduplicacion.
+    'email_broadcasts=S',
+    'email_suppressions=S',
     'feature_flags=SU',
     'institutional_membership_applications=SIU',
     'job_alerts=SIUD',
@@ -112,7 +118,9 @@ declare
     'company_profiles',
     'donation_amount_options',
     'donations',
+    'email_broadcasts',
     'email_delivery_events',
+    'email_suppressions',
     'feature_flags',
     'institutional_membership_applications',
     'job_alerts',

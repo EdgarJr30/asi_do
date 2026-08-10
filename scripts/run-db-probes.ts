@@ -69,6 +69,7 @@ const MANIFIESTO: Record<string, Tier> = {
   p0_error_ingestion_probe: 'datos',
   p0_notification_authz_probe: 'datos',
   p0_users_guard_probe: 'datos',
+  p1_email_broadcast_probe: 'datos',
   p1_access_log_page_probe: 'datos',
   p1_audit_logs_probe: 'datos',
   p1_rbac_review_moderation_probe: 'datos',
