@@ -11,6 +11,7 @@ Este archivo **no repite** `AGENTS.md` ni `docs/`. Contiene solo dos cosas: el m
 | Necesitas | Mira |
 |---|---|
 | Reglas de producto, guardrails, definición de hecho | `AGENTS.md` |
+| Qué falta para salir a producción | `docs/checklists/SALIDA_A_PRODUCCION.md` |
 | Correcciones durables del usuario (R-001…) | `docs/governance/REGRESSION_RULES.md` |
 | Seguridad y las 35 reglas de Supabase | `docs/governance/SECURITY_RULES.md` |
 | Convenciones de código, TS, React, formularios | `docs/governance/CODING_RULES.md` |
