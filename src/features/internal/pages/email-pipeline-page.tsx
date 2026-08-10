@@ -63,7 +63,8 @@ const TYPE_LABEL: Record<string, string> = {
   'membership.payment_submitted': 'Comprobante subido',
   'membership.reviewed': 'Solicitud revisada',
   'membership.payment_reviewed': 'Pago revisado',
-  'membership.activated': 'Membresía activada'
+  'membership.activated': 'Membresía activada',
+  'membership.renewal_reminder': 'Aviso de renovación'
 }
 
 const PROVIDER_EVENT_LABEL: Record<string, string> = {

@@ -182,6 +182,27 @@ function getEmailTheme(type: string) {
     }
   }
 
+  // Aviso de vencimiento. El tono es el de un recordatorio útil y no el de una
+  // alerta roja: al primero de los cuatro le faltan treinta días y todavía no
+  // hay nada roto. El ámbar advierte sin llegar a alarmar.
+  if (type === 'membership.renewal_reminder') {
+    return {
+      eyebrow: 'Renovación de membresía',
+      accent: '#b45309',
+      accentSoft: '#fffbeb',
+      accentBorder: '#fde68a',
+      badgeLabel: 'Vencimiento próximo',
+      actionLabel: 'Renovar mi membresía',
+      summaryTitle: 'Qué hacer',
+      summaryItems: [
+        'Abre tu panel de membresía y completa el pago de renovación.',
+        'Tu acceso a la plataforma depende de la vigencia: al vencer, se suspende hasta que renueves.'
+      ],
+      supportTitle: 'Por qué recibes esto',
+      supportBody: 'Es un aviso de tu cuenta, no una campaña: te llega aunque hayas dado de baja los correos informativos.'
+    }
+  }
+
   if (type === 'membership.renewed') {
     return {
       eyebrow: 'Renovación de membresía',

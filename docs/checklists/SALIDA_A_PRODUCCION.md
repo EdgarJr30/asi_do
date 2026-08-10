@@ -14,7 +14,7 @@ en vivo). El pendiente se lleva aquí, no como issues nuevos (`REGRESSION_RULES.
 |---|---|
 | **Hoy** | ~~A1~~ ✅ · B1 · C1 · C4 · E1 · E2 |
 | **Corte** | B1→B7, luego C2, C3, C5, C6, C7, luego D1→D5 |
-| **Antes del primer usuario** | J4 · F1 · F2 |
+| **Antes del primer usuario** | J4 · F2 |
 | **Semana 1** | G, H, I |
 
 `B` desbloquea `A`, `C` y media `D`: no se puede rotar la llave de un proyecto que no existe.
@@ -85,7 +85,16 @@ La card "Evento destacado" (`institutional-home-page.tsx:1141`) se ve vacía.
 
 ## F · Producto 🟠
 
-- [ ] **F1 · Recordatorios de renovación de membresía.** No hay ningún cron (`grep cron.schedule` → solo correo, audit, access logs, errores). La métrica `membershipsExpiringSoon` ya existe. Ventanas: 30/7/1 día y post-vencimiento. Debe pasar por `claim_email_deliveries` y respetar `is_test`.
+- [x] **F1 · Recordatorios de renovación de membresía** — ✅ 2026-08-10. Cron diario (9:00 hora de
+      RD) que encola por `system_create_notification`, así que hereda outbox, `claim_email_deliveries`,
+      `is_test` y visibilidad en `/admin/correos`. Cuatro ventanas: 30/7/1 día y vencida. Dos
+      decisiones cargan el diseño: se elige **la más urgente ya alcanzada** en vez de la coincidencia
+      exacta de día —un cron caído una semana manda el aviso tarde en lugar de perderlo, y a quien
+      está a 5 días no se le dice "faltan 30"—, y la marca de idempotencia se lleva por
+      (persona, **fecha de vencimiento**, ventana), de modo que renovar rearma los avisos solos. No
+      consulta `email_suppressions`: es correo de cuenta, y `/correos/baja` promete que estos siguen
+      llegando. Probe de 15 asertos, 4 mutantes muertos; 22/22 probes, 53 tests Deno, `db lint` limpio.
+      ⚠️ **Sin desplegar (J4):** el cron vive en la migración `20260810143500`.
 - [ ] **F2 · Seis decisiones de producto** — *respuestas tuyas, no código:*
       · [TASK-173](https://linear.app/mooncode/issue/TASK-173)/[174](https://linear.app/mooncode/issue/TASK-174) ¿el MVP sale sin workflow pastoral ni endorsements territoriales?
       · [TASK-244](https://linear.app/mooncode/issue/TASK-244) ¿"aplicar ahora" y "aplicar con tu perfil" son uno o dos flujos?
@@ -125,7 +134,8 @@ permiso `email:broadcast` solo para owner/super admin. **Escrito y probado; sin 
       probes en verde en local, `db lint` limpio.
 - [ ] **J4 · Desplegar el bloque J** ⚠️ — git va por delante de la base, que es el lado seguro,
       pero nada del bloque funciona hasta esto. Falta `supabase db push --linked` (migraciones
-      `20260810120429` y `20260810135307`) y `supabase functions deploy process-email-deliveries`.
+      `20260810120429`, `20260810135307` y `20260810143500` —esta última trae también el cron de F1—)
+      y `supabase functions deploy process-email-deliveries`.
       Luego: `npm run test:probes` contra el remoto y un envío de prueba real de punta a punta.
 
 ## G · Rendimiento 🟡
@@ -202,5 +212,6 @@ sobre `storage.*` (exige consulta al remoto).
 | 2026-08-10 | **G1b (TASK-277)**: contador de postulaciones por vacante en un `group by`. Bajaba el tablero completo y se reinvalidaba con cada postulación del tenant | `38c1422` |
 | 2026-08-10 | **F4**: filtro por evento real del proveedor en `/admin/correos` | `5f0f7fc` |
 | 2026-08-10 | **J2**: la baja bloquea el envío y el enlace viaja en la campaña. Sin desplegar: el remoto no respondía | `d1ffd0d` |
+| 2026-08-10 | **F1**: recordatorios de renovación. El acceso ya caducaba por fecha (`hasActiveAsiAccess`) sin que nadie avisara nunca: se perdía la plataforma el día del vencimiento y en silencio | pendiente |
 | 2026-08-10 | **J3**: interfaz del envío masivo y baja pública. La probe de superficie cazó de paso que `enforce_initial_membership_period_after_activation` (`1f0db27`) se creó sin `revoke`: PUBLIC y `anon` podían ejecutarla. Cerrado en la misma migración | pendiente |
 | 2026-08-10 | **J1**: base de datos del envío masivo. Los dos guardarraíles del repo saltaron y tenían razón: tabla nueva sin declarar en la matriz de la Fase D, y superficie de `anon` ampliada de 23 a 24 funciones | `074fe6e`, `656363e` |

@@ -55,6 +55,9 @@ declare
     'job_alerts=SIUD',
     'job_postings=SIU',
     'job_screening_questions=SID',
+    -- Sin superficie de cliente: la escribe el cron de recordatorios y lo que
+    -- la consola necesita —cuándo vence cada quien— ya está en `users`.
+    'membership_renewal_reminders=',
     'membership_payment_settings=SU',
     'membership_payments=S',
     'membership_roles=SIU',
