@@ -186,8 +186,10 @@ El flujo por defecto queda en **local + preview + production** usando **GitHub A
 - `Preview`: Netlify crea `Deploy Previews` automáticamente para cada PR al conectar el repo.
 - `Production`: Netlify publica automáticamente desde la rama `main`.
 
-Desde 2026-08-07 se está probando además **Hostinger** con el dominio propio `asidominicana.do`, con
-subida manual del `dist/` y sin deploy automático. Netlify se mantiene como vuelta atrás. El runbook
+Desde 2026-08-07 se está probando además **Hostinger** con el dominio propio `asidominicana.do`. El
+entorno `dev.asidominicana.do` se publica desde la rama `staging` mediante GitHub Actions; la primera
+fase del mirror FTP no elimina archivos remotos hasta confirmar que la cuenta está aislada en su raíz.
+Netlify se mantiene como vuelta atrás. El runbook
 completo es `docs/architecture/DESPLIEGUE_HOSTINGER.md`.
 
 Archivos clave:
@@ -273,8 +275,10 @@ The default delivery flow is **local + preview + production** using **GitHub Act
 - `Preview`: Netlify creates Deploy Previews automatically for each pull request once the repository is connected.
 - `Production`: Netlify publishes automatically from the `main` branch.
 
-Since 2026-08-07 **Hostinger** is also being trialled on the project's own domain `asidominicana.do`,
-with manual `dist/` uploads and no automatic deploy. Netlify stays as the rollback target. Full runbook
+Since 2026-08-07 **Hostinger** is also being trialled on the project's own domain `asidominicana.do`.
+The `dev.asidominicana.do` environment deploys from the `staging` branch through GitHub Actions; the
+first FTP mirror phase does not delete remote files until the scoped account root is verified. Netlify
+stays as the rollback target. Full runbook
 in `docs/architecture/DESPLIEGUE_HOSTINGER.md`.
 
 Key files:

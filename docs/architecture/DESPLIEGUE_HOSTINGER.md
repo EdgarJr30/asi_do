@@ -146,6 +146,20 @@ Si construyes con `npm run build` a secas, sácalos tú antes de subir.
 **Verifica que `.htaccess` subió**: los clientes FTP y el extractor de zip ocultan los dotfiles por
 defecto. En el Administrador de archivos hay que activar "mostrar archivos ocultos".
 
+### 5.1 Staging automático desde GitHub Actions
+
+La rama `staging` pasa por todos los jobs de `.github/workflows/ci.yml`. Solo cuando terminan en verde,
+el job `deploy-staging` construye con `npm run build:staging`, conserva los sourcemaps como artefacto,
+los retira de `dist/`, comprueba `dist/.htaccess` y publica únicamente el artefacto estático.
+
+Las credenciales viven en el GitHub Environment `staging`, nunca en el repositorio. La cuenta FTP está
+limitada al document root de `dev.asidominicana.do`, por lo que `HOSTINGER_PATH=/` significa la raíz de
+staging y no la raíz completa de la cuenta Hostinger.
+
+La primera fase usa `mirror --reverse` **sin `--delete`**. Después del primer deploy hay que confirmar en
+hPanel que el listado observado corresponde solo al directorio `zzz_dev`; entonces una tarea posterior
+puede activar la limpieza de bundles obsoletos con su propia prueba de contrato.
+
 ---
 
 ## 6. Variables de entorno y URLs a conmutar
@@ -244,12 +258,16 @@ A cambio: coste fijo predecible y un panel único para dominio, correo y hosting
       subir el `dist/` resultante.
 - [ ] Pasar la verificación de §7 (salvo el paso 3, que no aplica).
 - [ ] Mantener `asi-do.netlify.app` activo unos días como plan de vuelta atrás.
+- [ ] Crear `A dev → 212.1.208.190` en Cloudflare inicialmente como **DNS only**, emitir/verificar SSL y
+      comprobar que `dev.asidominicana.do` responde antes de habilitar proxy.
 
 ### Aplazado a propósito
 
 - [ ] Desplegar `services/azul-payments` en Railway y apuntar `VITE_AZUL_PAYMENTS_URL` al dominio real.
 - [ ] Rotar la `service_role` key (requisito del corte a producción, `ENVIRONMENTS.md` §5).
-- [ ] Automatizar la subida por FTP en CI, o asumir el deploy manual.
+- [x] Automatizar staging por FTP en CI con un primer mirror no destructivo.
+- [ ] Tras observar el primer deploy, confirmar que `/` es exclusivamente `zzz_dev` y habilitar
+      `--delete` para evitar bundles obsoletos.
 
 ---
 

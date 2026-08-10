@@ -274,6 +274,14 @@ CI must keep both layers executable:
 
 Never replace these checks with a single snapshot of a committed production URL. Endpoints belong to deployment configuration; the repository owns the invariants that decide whether those values are safe.
 
+### 11.1 Staging deployment is an executable repository contract
+
+`tests/integration/project-contract.test.ts` must keep the staging branch in CI, require the Hostinger
+job to wait for the quality jobs, build with the staging mode, use the protected `staging` GitHub
+Environment, and preserve the first FTP rollout as non-destructive. Enabling remote deletion is a
+separate behavioral change: first observe a successful upload and verify that the scoped FTP root is
+only the staging document root, then change the command and its contract together.
+
 ---
 
 ## 12. Database probes must announce a machine-readable verdict

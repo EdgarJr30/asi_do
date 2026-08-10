@@ -42,14 +42,15 @@ activa, tendrá un tercer proyecto o Supabase Branching con datos sintéticos, s
    commit + push a una rama ──────► CI: verify + replay de migraciones
               │
               ▼
-        merge a main ─────────────► deploy automático a STAGING
+      merge a staging ────────────► deploy automático a STAGING
               │                     (frontend + migraciones + Edge Functions)
               ▼
      verificación en staging
      (probes, smoke E2E, QA manual)
               │
               ▼
-        tag de release ───────────► deploy a PRODUCCIÓN
+        merge a main ─────────────► deploy a PRODUCCIÓN
+                                     (environment protegido)
 ```
 
 Reglas que sostienen el flujo:
@@ -139,9 +140,12 @@ Staging se empaqueta con `npm run build:staging`; producción con `npm run build
 
 Cruzar credenciales aquí significa cobrar de verdad desde staging, o no cobrar en producción. Es el punto de mayor riesgo de toda la lista.
 
-### 4.6 Netlify
+### 4.6 Proveedor de frontend
 
-Un sitio o dos contextos de build: `main` → staging, tag/rama de release → producción. Cada contexto con su propio juego de variables.
+Dos destinos y dos GitHub Environments: `staging` → `dev.asidominicana.do` y `main` →
+`asidominicana.do`. Cada uno conserva su propio juego de variables. El deploy de Hostinger construye
+`dist/` en GitHub Actions y publica solo ese artefacto; nunca versiona `dist/` ni despliega el checkout
+crudo con hPanel Git.
 
 ## 5. Qué dejar preparado ahora
 

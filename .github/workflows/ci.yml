@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - staging
   # Relanzar a mano sin inventar un commit vacio: cuando el fallo esta en un
   # secreto (no en el codigo), la unica forma de reprobarlo era pushear algo.
   workflow_dispatch:
@@ -251,3 +252,95 @@ jobs:
       # `audit-exceptions.json`.
       - name: Enforce dependency audit policy
         run: npm run audit:policy
+
+  deploy-staging:
+    name: Deploy staging to Hostinger
+    if: github.ref == 'refs/heads/staging' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs:
+      - verify
+      - azul-service
+      - mutation-testing
+      - edge-functions
+      - e2e-smoke
+      - dependency-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: staging
+      url: https://dev.asidominicana.do
+    env:
+      VITE_APP_NAME: ${{ vars.VITE_APP_NAME }}
+      VITE_AUTH_SITE_URL: ${{ vars.VITE_AUTH_SITE_URL }}
+      VITE_AZUL_PAYMENTS_URL: ${{ vars.VITE_AZUL_PAYMENTS_URL }}
+      VITE_DEPLOY_ENV: ${{ vars.VITE_DEPLOY_ENV }}
+      VITE_PRODUCTION_SITE_URL: ${{ vars.VITE_PRODUCTION_SITE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_WEB_PUSH_PUBLIC_KEY: ${{ vars.VITE_WEB_PUSH_PUBLIC_KEY }}
+      HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+      HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}
+      HOSTINGER_PATH: ${{ secrets.HOSTINGER_PATH }}
+      HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
+      HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build staging artifact
+        run: npm run build:staging
+
+      - name: Preserve staging sourcemaps
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-sourcemaps-${{ github.sha }}
+          path: dist/assets/*.map
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Prepare public artifact
+        run: |
+          find dist/assets -type f -name '*.map' -delete
+          test -f dist/.htaccess
+          test -f dist/index.html
+          test -z "$(find dist -type f -name '*.map' -print -quit)"
+
+      - name: Preserve deployable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-dist-${{ github.sha }}
+          path: dist/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Install FTP client
+        run: sudo apt-get update && sudo apt-get install --yes lftp
+
+      # Primera fase deliberadamente no destructiva: la cuenta esta limitada al
+      # document root de staging, pero no se habilita `--delete` hasta observar
+      # un deploy real y confirmar en Hostinger que `/` sigue siendo zzz_dev.
+      - name: Inspect scoped FTP root and upload without deletion
+        run: |
+          lftp -u "$HOSTINGER_USERNAME","$HOSTINGER_PASSWORD" \
+            -p "$HOSTINGER_PORT" "$HOSTINGER_HOST" -e "
+              set cmd:fail-exit yes;
+              set ftp:ssl-force true;
+              set ftp:ssl-protect-data true;
+              set ssl:verify-certificate yes;
+              set net:max-retries 2;
+              set net:timeout 20;
+              cd \"$HOSTINGER_PATH\";
+              pwd;
+              cls -la;
+              mirror --reverse --verbose --parallel=2 --no-perms dist/ .;
+              bye
+            "

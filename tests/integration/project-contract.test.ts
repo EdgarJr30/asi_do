@@ -71,6 +71,20 @@ describe('project contract', () => {
     }
   })
 
+  it('keeps staging deployment gated by CI and non-destructive until its FTP root is verified', () => {
+    const ciWorkflow = readFileSync(resolve(repoRoot, '.github/workflows/ci.yml'), 'utf8')
+
+    expect(ciWorkflow).toMatch(/branches:\s*\n\s*- main\s*\n\s*- staging/)
+    expect(ciWorkflow).toContain("github.ref == 'refs/heads/staging'")
+    expect(ciWorkflow).toContain("github.event_name == 'workflow_dispatch'")
+    expect(ciWorkflow).toContain('environment:')
+    expect(ciWorkflow).toContain('name: staging')
+    expect(ciWorkflow).toContain('npm run build:staging')
+    expect(ciWorkflow).toContain('HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}')
+    expect(ciWorkflow).toContain('mirror --reverse --verbose')
+    expect(ciWorkflow).not.toContain('mirror --reverse --delete')
+  })
+
   it('keeps the deployment configuration files in place', () => {
     for (const file of requiredDeploymentFiles) {
       expect(existsSync(resolve(repoRoot, file)), `${file} should exist`).toBe(true)

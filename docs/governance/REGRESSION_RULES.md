@@ -502,6 +502,9 @@ Do not commit a runtime Auth endpoint into `.env.development`, `.env.staging`, o
 ### R-143 — Environment status belongs to structural chrome, never floating content
 Do not render the Local, Staging, or Producción status badge as a fixed or floating overlay. Public and authentication surfaces must keep it inside their footer, while authenticated product surfaces must keep it in the sidebar footer with a compact state when the desktop sidebar is collapsed. The same component remains the future home of application versioning, but until versioning is introduced it shows only the environment and `Beta`.
 
+### R-144 — Hostinger deployments promote branches and publish built artifacts only
+Do not connect Hostinger hPanel Git directly to the Vite checkout or publish repository source files. GitHub Actions owns the build and publishes only `dist/`: `staging` targets `dev.asidominicana.do`, while `main` is reserved for the protected production target. Staging must wait for every CI quality job and use its own GitHub Environment. A new FTP target starts without remote deletion; `--delete` may be enabled only after a real deployment proves that the account root is isolated to the intended document root.
+
 ---
 
 ## Maintenance rule

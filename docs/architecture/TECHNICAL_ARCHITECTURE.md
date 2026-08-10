@@ -300,10 +300,13 @@ Add structured logs/events for critical flows where possible.
 ## 10. Deployment assumptions
 - local development remains the primary day-to-day workflow
 - GitHub Actions is the source of truth for CI quality gates
-- `npm run verify` is the required CI command for pull requests and `main`
+- `npm run verify` is the required CI command for pull requests, `staging`, and `main`
 - Netlify handles preview deployments for pull requests once the repository is connected
-- Netlify publishes production from `main`
-- since 2026-08-07 the SPA is also served from Hostinger on `asidominicana.do` (manual `dist/` upload, rules in `public/.htaccess`); Netlify remains the rollback target until Hostinger is validated — see `docs/architecture/DESPLIEGUE_HOSTINGER.md`
+- Hostinger receives the built SPA through GitHub Actions: `staging` publishes to
+  `dev.asidominicana.do`; `main` is reserved for the separately protected production target
+- the initial staging mirror is non-destructive until its FTP account is verified to be scoped to the
+  staging document root; Netlify remains the rollback target until Hostinger is validated — see
+  `docs/architecture/DESPLIEGUE_HOSTINGER.md`
 - environment variables managed per environment
 - Netlify manages build-time frontend environments for preview and production
 - Supabase project separation is required once production data exists
