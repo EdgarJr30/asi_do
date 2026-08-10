@@ -13,7 +13,7 @@ en vivo). El pendiente se lleva aquí, no como issues nuevos (`REGRESSION_RULES.
 | Cuándo | Qué |
 |---|---|
 | **Hoy** | ~~A1~~ ✅ · B1 · C1 · C4 · E1 · E2 |
-| **Corte** | B1→B7, luego C2, C3, C5, C6, C7, luego D1→D5 |
+| **Corte** | B1→B7, luego C2, C3, C5, C6, C7, luego D5 (D1–D4 hechos; falta crear el environment `production` en GitHub) |
 | **Antes del primer usuario** | J4 · F2 |
 | **Semana 1** | G, H, I |
 
@@ -62,9 +62,22 @@ Runbook `ENVIRONMENTS.md` §6. El replay de migraciones y las 17 probes ya está
 
 ## D · Despliegue 🟠
 
-- [ ] **D1 · Job `deploy-production`** sobre `main` con environment protegido, espejo de `deploy-staging` (`ci.yml:269`).
+- [x] **D1 · Job `deploy-production`** — ✅ 2026-08-10. Espejo de `deploy-staging` sobre `main`, con
+      environment `production` (ahí se configura la revisión manual), la misma puerta de calidad de
+      seis jobs, sourcemaps apartados 90 días y smoke de solo lectura contra el dominio ya publicado.
+      Lo que faltaba de verdad no era el YAML: **el build de producción ahora se niega a publicar un
+      bundle que apunte al proyecto Supabase de desarrollo**, por allow-list versionada en
+      `required-env.ts`. Es exactamente el fallo de A, que pasó el build en verde porque no faltaba
+      ninguna variable —estaban todas, y una estaba mal—. La comprobación se acota a los artefactos
+      con origen canónico alcanzable, para no dejar el `verify` local en rojo. 4 mutantes muertos.
+      ⚠️ *Requiere que crees el environment `production` con sus vars y secrets antes del primer uso.*
 - [x] **D2 · Retirar una topología** — ✅ 2026-08-10. Netlify eliminado del repo; `public/.htaccess` es la única configuración de servidor del frontend. Queda quitar del panel de Supabase Auth los 4 redirects de `asi-do.netlify.app`.
-- [ ] **D3 · Edge Functions por CI**, no desde la laptop (`ENVIRONMENTS.md:160`).
+- [x] **D3 · Edge Functions por CI** — ✅ 2026-08-10. Job `deploy-edge-functions`, de `staging` y de
+      `main`, cada rama contra el proyecto de su propio environment (si `main` empujara al proyecto de
+      desarrollo, el cron de producción dispararía contra las funciones equivocadas: es B4). Lleva
+      `--use-api` porque el empaquetado local falla con un error opaco tras `Bundling Function`. Si
+      falta el token o el ref, falla nombrándolos en vez de saltarse callado.
+      ⚠️ *Requiere `SUPABASE_ACCESS_TOKEN` y `SUPABASE_PROJECT_REF` por environment.*
 - [x] **D4 · Que el drift bloquee** — ✅ ya lo hacía. `db-drift.yml:146-150` sale con `exit 1`. La
       entrada estaba mal escrita. *Lo que sí queda:* solo corre diario y a demanda, así que un
       cambio manual en el dashboard puede vivir hasta 24 h sin que nadie lo vea (`ENVIRONMENTS.md:159`).
@@ -212,6 +225,7 @@ sobre `storage.*` (exige consulta al remoto).
 | 2026-08-10 | **G1b (TASK-277)**: contador de postulaciones por vacante en un `group by`. Bajaba el tablero completo y se reinvalidaba con cada postulación del tenant | `38c1422` |
 | 2026-08-10 | **F4**: filtro por evento real del proveedor en `/admin/correos` | `5f0f7fc` |
 | 2026-08-10 | **J2**: la baja bloquea el envío y el enlace viaja en la campaña. Sin desplegar: el remoto no respondía | `d1ffd0d` |
+| 2026-08-10 | **D1 y D3**: despliegue de producción y de Edge Functions por CI. Lo que faltaba no era el YAML: el build de producción ahora se niega a publicar contra la base de desarrollo, que es lo que nadie comprobó en A | pendiente |
 | 2026-08-10 | **F1**: recordatorios de renovación. El acceso ya caducaba por fecha (`hasActiveAsiAccess`) sin que nadie avisara nunca: se perdía la plataforma el día del vencimiento y en silencio | pendiente |
 | 2026-08-10 | **J3**: interfaz del envío masivo y baja pública. La probe de superficie cazó de paso que `enforce_initial_membership_period_after_activation` (`1f0db27`) se creó sin `revoke`: PUBLIC y `anon` podían ejecutarla. Cerrado en la misma migración | pendiente |
 | 2026-08-10 | **J1**: base de datos del envío masivo. Los dos guardarraíles del repo saltaron y tenían razón: tabla nueva sin declarar en la matriz de la Fase D, y superficie de `anon` ampliada de 23 a 24 funciones | `074fe6e`, `656363e` |

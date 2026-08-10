@@ -157,6 +157,13 @@ Dos destinos y dos GitHub Environments: `staging` → `dev.asidominicana.do` y `
 `dist/` en GitHub Actions y publica solo ese artefacto; nunca versiona `dist/` ni despliega el checkout
 crudo con hPanel Git.
 
+Los dos jobs existen desde 2026-08-10: `deploy-staging` y `deploy-production` en `ci.yml`, espejos
+salvo por la rama, el environment y el modo de build. **El de producción no puede publicar un bundle
+que apunte a un proyecto Supabase de desarrollo:** `validateProductionEnv` lo rechaza por la
+allow-list versionada de `src/shared/config/required-env.ts`, que es la que faltaba cuando
+`asidominicana.do` sirvió tres días la base de desarrollo. La comprobación solo aplica cuando el
+origen canónico es alcanzable, para no dejar en rojo el `verify` de cada laptop.
+
 ## 5. Qué dejar preparado ahora
 
 Para que la activación de staging sea "cambiar entornos y ya", esto conviene resolverlo antes, no el día del corte:
@@ -167,7 +174,13 @@ Para que la activación de staging sea "cambiar entornos y ya", esto conviene re
 - [ ] **Rotar la `service_role` key antes del corte a producción.** Estuvo escrita en claro en `audit_logs` desde marzo hasta el saneamiento de TASK-260, legible por cualquier portador de `audit_log:read`. El saneamiento la quitó de la base pero **no invalida la llave**, y esa llave **bypassa RLS por completo**. Decisión del propietario (2026-08-02): **no se rota ahora**, porque el acceso a `audit_log:read` estuvo limitado a personas de confianza y no hay indicio de filtración. Queda como paso obligatorio del corte a producción, no como remediación pendiente. Al rotarla hay que resincronizar `.env.local`, el microservicio AZUL y las Edge Functions.
 
 - [ ] **Cero cambios manuales desde el dashboard de Supabase.** Todo por migración. Un `GRANT` o una policy hecha a mano no viaja a staging.
-- [ ] **Despliegue de Edge Functions por CI**, no `supabase functions deploy` desde la laptop.
+- [x] **Despliegue de Edge Functions por CI**, no `supabase functions deploy` desde la laptop. ✅ 2026-08-10.
+  Job `deploy-edge-functions` de `ci.yml`: sale de `staging` y de `main`, cada rama contra el proyecto de
+  su propio GitHub Environment, y usa `--use-api` porque el empaquetado local falla con un error opaco
+  justo después de `Bundling Function`. Requiere `secrets.SUPABASE_ACCESS_TOKEN` y `vars.SUPABASE_PROJECT_REF`
+  **por entorno**; si faltan, el job falla nombrándolos en vez de saltarse en silencio. Corre en paralelo
+  con el despliegue del frontend: un cambio que rompa el contrato entre ambos necesita dos despliegues,
+  primero el de la función.
 - [x] **Unificar la topología documentada.** ✅ 2026-08-10. Hubo un periodo con dos hosts del frontend conviviendo a propósito; se cerró retirando Netlify por completo del repositorio. Topología única: **SPA en Hostinger** (`public/.htaccess`, runbook `docs/architecture/DESPLIEGUE_HOSTINGER.md`), `services/azul-payments` en **Railway** (`railway.json`, `Dockerfile`), plataforma en **Supabase**. El dominio ya no vive en `.env.production` desde 2026-08-09: lo inyecta el entorno de despliegue y el build valida su correspondencia.
 
 ## 6. Runbook: activar staging

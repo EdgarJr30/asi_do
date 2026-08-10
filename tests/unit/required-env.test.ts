@@ -106,6 +106,70 @@ describe('contrato de variables de produccion', () => {
     expect(deployProblem?.problem).toContain('staging')
   })
 
+  // El incidente que motiva estos cuatro: `asidominicana.do` sirvió durante tres
+  // días un artefacto subido a mano cuyo bundle apuntaba al proyecto Supabase de
+  // **desarrollo**. Quien se registrara ahí quedaba en la base equivocada y sus
+  // pagos iban al merchant de pruebas. El build terminaba en verde, porque
+  // ninguna de las variables faltaba: estaban todas, y una estaba mal.
+  it('rechaza un build de produccion que apunta al proyecto Supabase de desarrollo', () => {
+    const problems = validateProductionEnv({
+      ...completeEnv,
+      VITE_SUPABASE_URL: 'https://jgmojkzthfogynqixkob.supabase.co'
+    })
+
+    const supabaseProblem = problems.find((problem) => problem.key === 'VITE_SUPABASE_URL')
+    expect(supabaseProblem?.problem).toContain('desarrollo')
+  })
+
+  it('no estorba a un build de produccion contra un origen inalcanzable', () => {
+    // `verify` construye en modo produccion tambien en CI y en cada laptop, y
+    // ahi `VITE_SUPABASE_URL` es la de desarrollo. Si esto fallara, la puerta de
+    // calidad quedaria en rojo permanente para todo el mundo — y el reflejo ante
+    // eso es quitar la guarda, no arreglar el despliegue.
+    for (const origen of ['https://app-de-ci.invalid', 'http://localhost:5173']) {
+      expect(validateProductionEnv({
+        ...completeEnv,
+        VITE_AUTH_SITE_URL: origen,
+        VITE_PRODUCTION_SITE_URL: origen,
+        VITE_SUPABASE_URL: 'https://jgmojkzthfogynqixkob.supabase.co'
+      // `localhost` incumple el requisito de HTTPS, que se comprueba aparte: lo
+      // que se afirma aqui es que ninguno de los dos se queja del proyecto.
+      }).some((problem) => problem.key === 'VITE_SUPABASE_URL')).toBe(false)
+    }
+  })
+
+  it('deja a staging usar el proyecto de desarrollo', () => {
+    // Staging contra la base de desarrollo es la topología de hoy y es legítima:
+    // la prohibición es sobre producción, no sobre cualquier build desplegable.
+    expect(validateProductionEnv({
+      ...completeEnv,
+      VITE_DEPLOY_ENV: 'staging',
+      VITE_AUTH_SITE_URL: 'https://staging.example.com',
+      VITE_SUPABASE_URL: 'https://jgmojkzthfogynqixkob.supabase.co'
+    })).toEqual([])
+  })
+
+  it('no se deja engañar por la caja ni por un ref que contenga al prohibido', () => {
+    // La caja la resuelve el propio parser —`new URL()` normaliza el host— pero
+    // se fija igualmente: si algún día se compara contra el texto crudo en vez
+    // de contra el host, esto lo dice.
+    const mayusculas = validateProductionEnv({
+      ...completeEnv,
+      VITE_SUPABASE_URL: 'https://JGMOJKZTHFOGYNQIXKOB.supabase.co'
+    })
+    expect(mayusculas.some((problem) => problem.key === 'VITE_SUPABASE_URL')).toBe(true)
+
+    // Y no bloquea a un proyecto distinto cuyo ref contenga al prohibido: la
+    // comparación es contra el ref completo, no una subcadena. Un falso positivo
+    // aquí bloquearía el despliegue de producción que sí es correcto — y el
+    // reflejo ante eso es desactivar la guarda.
+    const otroProyecto = validateProductionEnv({
+      ...completeEnv,
+      VITE_SUPABASE_URL: 'https://jgmojkzthfogynqixkobxyz.supabase.co'
+    })
+    expect(otroProyecto).toEqual([])
+  })
+
   it('reporta todas las que faltan, no solo la primera', () => {
     expect(validateProductionEnv({})).toHaveLength(REQUIRED_PRODUCTION_ENV.length)
   })

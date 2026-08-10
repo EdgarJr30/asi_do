@@ -59,6 +59,34 @@ function normalizedOrigin(url: URL) {
   return url.origin.toLowerCase()
 }
 
+/**
+ * Proyectos Supabase que **no** son producción, por ref.
+ *
+ * Lista versionada por la misma razón que la de `tests/e2e/support/target-guard.ts`:
+ * cambiar una variable en el panel de GitHub no puede bastar para publicar
+ * producción contra una base que no lo es.
+ *
+ * Esto existe por un incidente concreto: `asidominicana.do` sirvió durante tres
+ * días un artefacto cuyo bundle apuntaba aquí. Quien se registrara quedaba en la
+ * base de desarrollo y sus pagos iban al merchant de pruebas. Ninguna variable
+ * faltaba —estaban todas, y una estaba mal—, así que el build pasó en verde y
+ * nada lo detectó hasta la auditoría.
+ */
+const NON_PRODUCTION_SUPABASE_PROJECT_REFS = [
+  'jgmojkzthfogynqixkob' // development
+] as const
+
+const SUPABASE_PROJECT_HOST = /^([a-z0-9-]+)\.supabase\.co$/i
+
+/** Ref del proyecto, o null si la URL no es un host de Supabase alojado. */
+function supabaseProjectRef(url: URL | null): string | null {
+  if (!url) return null
+
+  const match = url.hostname.match(SUPABASE_PROJECT_HOST)
+
+  return match ? match[1].toLowerCase() : null
+}
+
 export const REQUIRED_PRODUCTION_ENV: RequiredEnvVar[] = [
   {
     key: 'VITE_DEPLOY_ENV',
@@ -146,6 +174,32 @@ export function validateProductionEnv(
       key: 'VITE_AUTH_SITE_URL',
       problem: 'staging no puede usar el mismo origen que produccion',
       why: 'un correo de staging nunca debe abrir una sesion en la aplicacion de produccion'
+    })
+  }
+
+  // Solo se prohibe en produccion: staging **si** puede correr contra la base de
+  // desarrollo, y de hecho es la topologia de hoy.
+  //
+  // Y solo cuando el artefacto puede llegar a alguien. Un build de produccion
+  // contra un origen inalcanzable —`.invalid` en CI, `localhost` en una
+  // laptop— no puede dejar a nadie registrado en la base equivocada, y hacerlo
+  // fallar solo lograria que se desactivara la guarda para poder trabajar.
+  const supabaseRef = supabaseProjectRef(parseHttpUrl(source.VITE_SUPABASE_URL?.trim()))
+  const canonicalOriginIsReachable =
+    productionSiteUrl !== null &&
+    !isLocalHostname(productionSiteUrl.hostname) &&
+    !productionSiteUrl.hostname.endsWith('.invalid')
+
+  if (
+    deployEnvironment === 'production' &&
+    canonicalOriginIsReachable &&
+    supabaseRef &&
+    NON_PRODUCTION_SUPABASE_PROJECT_REFS.includes(supabaseRef as never)
+  ) {
+    problems.push({
+      key: 'VITE_SUPABASE_URL',
+      problem: 'apunta a un proyecto Supabase de desarrollo, no al de produccion',
+      why: 'quien se registre en ese despliegue queda en la base equivocada y sus pagos van al merchant de pruebas'
     })
   }
 

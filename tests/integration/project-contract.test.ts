@@ -241,6 +241,57 @@ describe('project contract', () => {
     expect(ciWorkflow).toContain('PRODUCTION_SUPABASE_PROJECT_REF: ${{ vars.PRODUCTION_SUPABASE_PROJECT_REF }}')
   })
 
+  // Los dos despliegues automáticos (TASK-255, D1 y D3). Lo que se fija aquí no
+  // es que el YAML exista, sino las cuatro condiciones cuyo incumplimiento no se
+  // ve hasta que ya publicó: de qué rama sale cada uno, que producción pase por
+  // un environment protegido, que no se despliegue sin la puerta de calidad, y
+  // que las Edge Functions dejen de salir desde una laptop.
+  it('deploys production only from main and behind a protected environment', () => {
+    const ciWorkflow = readFileSync(resolve(repoRoot, '.github/workflows/ci.yml'), 'utf8')
+    const productionJob = ciWorkflow.slice(ciWorkflow.indexOf('  deploy-production:'))
+
+    expect(ciWorkflow).toContain('  deploy-production:')
+    expect(productionJob).toContain("github.ref == 'refs/heads/main'")
+    expect(productionJob).toContain('name: production')
+    expect(productionJob).toContain('url: https://asidominicana.do')
+
+    // El artefacto de producción se construye en modo producción: es lo que
+    // activa `validateProductionEnv` y, con él, la negativa a publicar contra la
+    // base de desarrollo.
+    expect(productionJob).toContain('npm run build')
+    expect(productionJob).toContain('VITE_DEPLOY_ENV: ${{ vars.VITE_DEPLOY_ENV }}')
+
+    // Y no publica sin haber pasado la misma puerta que staging.
+    for (const gate of ['verify', 'azul-service', 'edge-functions', 'e2e-smoke', 'dependency-audit']) {
+      expect(productionJob.slice(0, productionJob.indexOf('runs-on'))).toContain(`- ${gate}`)
+    }
+
+    // Los sourcemaps nunca viajan al público: se guardan como artefacto y se
+    // borran del `dist/` que se sube, igual que en staging.
+    expect(productionJob).toContain("find dist/assets -type f -name '*.map' -delete")
+  })
+
+  it('deploys Edge Functions from CI instead of a laptop', () => {
+    const ciWorkflow = readFileSync(resolve(repoRoot, '.github/workflows/ci.yml'), 'utf8')
+    const functionsJob = ciWorkflow.slice(ciWorkflow.indexOf('  deploy-edge-functions:'))
+
+    expect(ciWorkflow).toContain('  deploy-edge-functions:')
+
+    // `--use-api` no es opcional: sin él el empaquetado local falla con un error
+    // opaco justo después de `Bundling Function`.
+    expect(functionsJob).toContain('--use-api')
+    expect(functionsJob).toContain('SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}')
+
+    // Cada rama despliega contra su propio proyecto: si `main` empujara las
+    // funciones al proyecto de desarrollo, el cron de producción dispararía
+    // contra las funciones equivocadas.
+    expect(functionsJob).toContain("github.ref == 'refs/heads/main' && 'production' || 'staging'")
+    expect(functionsJob).toContain('vars.SUPABASE_PROJECT_REF')
+
+    // No se despliega una función que no pasó su propio lint, test y typecheck.
+    expect(functionsJob.slice(0, functionsJob.indexOf('runs-on'))).toContain('- edge-functions')
+  })
+
   it('does not reintroduce the removed vulnerable PWA plugin chain', () => {
     const packageJson = JSON.parse(readFileSync(resolve(repoRoot, 'package.json'), 'utf8')) as {
       dependencies?: Record<string, string>
