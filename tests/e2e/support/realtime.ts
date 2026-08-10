@@ -296,10 +296,22 @@ export async function cleanupRealtimeCandidate(admin: ServiceClient, candidate: 
   await cleanupUsers(admin, [candidate])
 }
 
+/** Motivo legible de un rechazo, venga como `Error` o como cualquier otra cosa. */
+function describeCleanupCause(cause: unknown): string {
+  return cause instanceof Error ? cause.message : String(cause)
+}
+
 /**
  * Borra cuentas de prueba. Nunca lanza: se llama desde `afterAll`, y si una
  * limpieza falla queremos ver el fallo real de la prueba, no el de la limpieza.
  * Lo que sí importa es que se intenten todas aunque una falle.
+ *
+ * Pero no lanzar no es lo mismo que callar. El `catch` vacío que había aquí
+ * hacía que una cuenta quedara viva en el proyecto remoto **sin dejar rastro**:
+ * el 2026-08-10 apareció `rt-e2e+…@asido.test` con una hora de antigüedad y no
+ * hubo forma de saber si el borrado falló o si la corrida se interrumpió antes
+ * del `afterAll`. Ahora el fallo se nombra —correo, id y motivo— para que la
+ * próxima vez la diferencia se pueda leer.
  */
 export async function cleanupUsers(
   admin: ServiceClient,
@@ -309,6 +321,11 @@ export async function cleanupUsers(
     if (!user) {
       continue
     }
-    await admin.auth.admin.deleteUser(user.userId).catch(() => {})
+    const { error } = await admin.auth.admin
+      .deleteUser(user.userId)
+      .catch((cause: unknown) => ({ error: { message: describeCleanupCause(cause) } }))
+    if (error) {
+      console.warn(`[cleanup] no se pudo borrar ${user.email} (${user.userId}): ${error.message}`)
+    }
   }
 }

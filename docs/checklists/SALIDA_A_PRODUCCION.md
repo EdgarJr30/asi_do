@@ -12,7 +12,7 @@ en vivo). El pendiente se lleva aquí, no como issues nuevos (`REGRESSION_RULES.
 
 | Cuándo | Qué |
 |---|---|
-| **Hoy** | A1 · C1 · C4 · E1 · E2 |
+| **Hoy** | ~~A1~~ ✅ · B1 · C1 · C4 · E1 · E2 |
 | **Corte** | B1→B7, luego C2, C3, C5, C6, C7, luego D1→D5 |
 | **Antes del primer usuario** | F1 · F2 |
 | **Semana 1** | G, H, I |
@@ -28,10 +28,13 @@ en vivo). El pendiente se lleva aquí, no como issues nuevos (`REGRESSION_RULES.
 `ENVIRONMENTS.md:9`). Quien se registre ahí queda en la base de desarrollo y sus pagos van al
 merchant de pruebas.
 
-- [ ] **A1 · Decidir qué hace el dominio hoy** — despublicar / redirigir a `dev.asidominicana.do` /
-      dejarlo asumiendo que esos datos son desechables. *Decisión tuya.*
-- [ ] **A2 · Contar qué entró desde el 7-ago** — `auth.users`, `institutional_membership_applications`,
-      `membership_payments`, `donations` vía `supabase db query --linked`. Decide si migrar o borrar.
+- [x] **A1 · Decidir qué hace el dominio hoy** — ✅ 2026-08-10. **Sin medida provisional:** el
+      proyecto de producción se crea hoy (B1), así que el dominio se repunta directo en A3 en vez
+      de pasar por un redirect o una holding page que habría que deshacer el mismo día.
+- [x] **A2 · Contar qué entró desde el 7-ago** — ✅ 2026-08-10. **No hay terceros: nada que migrar.**
+      3 cuentas (la del propietario, una de prueba y una cuenta e2e huérfana, ya borrada), 3
+      solicitudes y 2 pagos de RD$2.500 `verified` contra el merchant de **pruebas**, 0 donaciones.
+      Todo del 10-ago y de cuentas propias. La exposición era hacia adelante, no acumulada.
 - [ ] **A3 · Repuntarlo a producción** tras B. *Cierra cuando:* el bundle público no contiene el ref de desarrollo.
 
 ## B · Crear el proyecto Supabase de producción 🔴
@@ -138,3 +141,4 @@ sobre `storage.*` (exige consulta al remoto).
 | Fecha | Qué | Commit |
 |---|---|---|
 | 2026-08-10 | Auditoría de lanzamiento. Hallazgo: `asidominicana.do` sirve la base de desarrollo | `85ad726` |
+| 2026-08-10 | **A cerrado salvo A3.** Inventario: 0 terceros, nada que migrar. Borrada la cuenta e2e huérfana y hecho visible el fallo de limpieza que la escondía | pendiente |
