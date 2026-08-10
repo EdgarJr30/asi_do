@@ -192,6 +192,31 @@ beforeEach(() => {
 })
 
 describe('institutional membership application flow', () => {
+  it('shows empty select instructions in the same muted color as text placeholders', async () => {
+    seedAuthenticatedApplicant()
+    saveEligibilityToken({
+      category: 'Empresa',
+      categorySlug: 'empresa',
+      dues: 'RD$3,000.00',
+    })
+
+    renderRoute(surfacePaths.institutional.membershipApply)
+
+    const provinceSelect = await screen.findByRole('combobox', {
+      name: /provincia o estado/i,
+    })
+    const citySelect = screen.getByRole('combobox', { name: /^ciudad\*/i })
+
+    expect(provinceSelect).toHaveClass('text-[#8a96a8]')
+    expect(citySelect).toHaveClass('text-[#8a96a8]')
+
+    fireEvent.change(provinceSelect, { target: { value: 'Distrito Nacional' } })
+
+    expect(provinceSelect).toHaveClass('text-[#14223b]')
+    expect(provinceSelect).not.toHaveClass('text-[#8a96a8]')
+    expect(citySelect).toHaveClass('text-[#8a96a8]')
+  })
+
   it('redirects to the category selector when there is no valid eligibility token', async () => {
     renderRoute(surfacePaths.institutional.membershipApply)
 

@@ -552,6 +552,9 @@ A limit only counts if it is enforced by PostgreSQL, by a test, or by `npm run v
 ### R-154 — Active membership validity must not use a progress bar
 Do not render a decorative progress bar for the remaining active-membership term. Keep the remaining-time label and activation/expiration dates as the compact validity summary.
 
+### R-155 — Empty selects must not look completed
+Do not render an empty select instruction with the same dark text used for a selected value. Province/state, city, country, hierarchy, sector, and any equivalent select must use the form placeholder gray while empty and switch to the normal text color only after a real selection.
+
 ---
 
 ## Maintenance rule

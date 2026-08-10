@@ -424,6 +424,7 @@ Apple-inspired UI rules:
 8. Match the keyboard and input type to the field purpose.
 9. Use `autocomplete`, `inputmode`, and appropriate validation hints where supported.
 10. If a field has a tricky requirement, show helper text before the user fails validation.
+11. Empty select instructions must use the same muted color as text placeholders. Apply the normal text color only after the user has selected a real value.
 
 ### 10.3 Validation rules
 1. Validation messages must be specific and actionable.

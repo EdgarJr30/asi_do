@@ -794,10 +794,17 @@ function SelectField({
 }) {
   const generatedId = useId()
   const fieldId = props.id ?? generatedId
+  const hasValue = Array.isArray(props.value)
+    ? props.value.length > 0
+    : props.value !== undefined && props.value !== null && props.value !== ''
 
   return (
     <Field label={label} help={help} hint={hint} error={error} htmlFor={fieldId} required={required}>
-      <select id={fieldId} className={cn(fieldInputClassName, className)} {...props}>
+      <select
+        id={fieldId}
+        className={cn(fieldInputClassName, !hasValue && 'text-[#8a96a8]', className)}
+        {...props}
+      >
         {children}
       </select>
     </Field>
