@@ -61,10 +61,10 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const serviceRoleKey = resolveServiceKey()
     const { apiKey: resendApiKey, fromAddress: fromEmail } = resolveResendConfig((name) => Deno.env.get(name))
-    const appUrl = Deno.env.get('APP_URL') ?? 'http://localhost:5173'
+    const appUrl = Deno.env.get('APP_URL')?.trim() ?? ''
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.')
+    if (!supabaseUrl || !serviceRoleKey || !appUrl) {
+      throw new Error('SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and APP_URL are required.')
     }
 
     const body = (await req.json().catch(() => ({}))) as { leaseToken?: unknown }

@@ -60,3 +60,19 @@ Deno.test('el cuerpo del aviso viaja íntegro al HTML y al texto', () => {
   assert(html.includes('Tu membresía vence el 09/09/2026, en 7 días.'))
   assert(text.includes('Tu membresía vence el 09/09/2026, en 7 días.'))
 })
+
+Deno.test('los enlaces usan el origen del entorno aunque exista una URL absoluta antigua', () => {
+  const { html, text } = buildEmailContent({
+    ...base,
+    type: 'membership.renewal_reminder',
+    appUrl: 'https://dev.asidominicana.do',
+    actionUrl: 'https://asi-do.netlify.app/account/membership?from=email'
+  })
+
+  const expectedUrl = 'https://dev.asidominicana.do/account/membership?from=email'
+
+  assert(html.includes(expectedUrl))
+  assert(text.includes(expectedUrl))
+  assertEquals(html.includes('asi-do.netlify.app'), false)
+  assertEquals(text.includes('asi-do.netlify.app'), false)
+})

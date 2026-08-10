@@ -555,6 +555,9 @@ Do not render a decorative progress bar for the remaining active-membership term
 ### R-155 — Empty selects must not look completed
 Do not render an empty select instruction with the same dark text used for a selected value. Province/state, city, country, hierarchy, sector, and any equivalent select must use the form placeholder gray while empty and switch to the normal text color only after a real selection.
 
+### R-156 — Notification email links must stay inside their environment
+Do not keep `APP_URL` as an independently maintained Edge Function secret or trust an absolute `action_url` stored by an older notification. Edge Function deployment must derive `APP_URL` from the protected environment's `VITE_AUTH_SITE_URL`, reject an origin that does not match staging or production, and rewrite legacy absolute actions onto that current origin while preserving only their internal path, query, and fragment.
+
 ---
 
 ## Maintenance rule

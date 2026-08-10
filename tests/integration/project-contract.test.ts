@@ -288,6 +288,12 @@ describe('project contract', () => {
     expect(functionsJob).toContain("github.ref == 'refs/heads/main' && 'production' || 'staging'")
     expect(functionsJob).toContain('vars.SUPABASE_PROJECT_REF')
 
+    // El mismo environment que decide el frontend gobierna los enlaces del
+    // correo. Sin esta sincronización, APP_URL puede quedarse apuntando al host
+    // anterior aunque la Edge Function se despliegue correctamente.
+    expect(functionsJob).toContain('APP_URL: ${{ vars.VITE_AUTH_SITE_URL }}')
+    expect(functionsJob).toContain('supabase secrets set APP_URL="$APP_URL"')
+
     // No se despliega una función que no pasó su propio lint, test y typecheck.
     expect(functionsJob.slice(0, functionsJob.indexOf('runs-on'))).toContain('- edge-functions')
   })

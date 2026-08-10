@@ -211,7 +211,7 @@ El dominio nuevo aparece en varios sitios. Si te saltas uno, el síntoma típico
 |---|---|---|
 | Entorno del build de producción | `VITE_AUTH_SITE_URL`, `VITE_PRODUCTION_SITE_URL` | Deben contener el mismo origen HTTPS público; no se versionan |
 | `supabase/config.toml` `[auth]` | `site_url` + `additional_redirect_urls` | ✅ en el repo — ⚠️ **falta aplicarlo al proyecto remoto** |
-| Edge Functions (secretos del proyecto) | `APP_URL` | ⬜ Pendiente. Solo afecta a los enlaces de los correos |
+| Edge Functions (secretos del proyecto) | `APP_URL` | ✅ sincronizado por CI desde `VITE_AUTH_SITE_URL`; desarrollo corregido a `https://dev.asidominicana.do` |
 | Railway (`services/azul-payments`) | `ALLOWED_ORIGIN`, `APP_URL` | ✅ staging: preflight desde `https://dev.asidominicana.do` aceptado y origen ajeno rechazado — ⬜ producción pendiente |
 | GitHub → entorno `staging` | las 8 `VITE_*` del job (6 obligatorias para `validateProductionEnv`) | ✅ completas desde 2026-08-09 — faltaba `VITE_AZUL_PAYMENTS_URL` y el build abortaba solo en CI |
 | Cloudflare | registros `A`, modo SSL | ⬜ Pendiente (§2 y §3) |

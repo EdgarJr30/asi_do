@@ -323,6 +323,7 @@ jobs:
       # cambiar una variable en el panel no puede bastar para cruzar entornos.
       - name: Comprobar configuracion del entorno
         env:
+          APP_URL: ${{ vars.VITE_AUTH_SITE_URL }}
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
           ENTORNO: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
@@ -330,6 +331,7 @@ jobs:
           refs_de_no_produccion=(jgmojkzthfogynqixkob) # development
 
           faltan=()
+          [[ -n "${APP_URL:-}" ]] || faltan+=("var VITE_AUTH_SITE_URL para APP_URL")
           [[ -n "${SUPABASE_ACCESS_TOKEN:-}" ]] || faltan+=("secret SUPABASE_ACCESS_TOKEN")
           [[ -n "${SUPABASE_PROJECT_REF:-}" ]] || faltan+=("var SUPABASE_PROJECT_REF")
 
@@ -358,7 +360,22 @@ jobs:
             exit 1
           fi
 
+          origen_esperado='https://dev.asidominicana.do'
+          [[ "$ENTORNO" == "production" ]] && origen_esperado='https://asidominicana.do'
+          if [[ "$APP_URL" != "$origen_esperado" ]]; then
+            echo "VITE_AUTH_SITE_URL no corresponde al entorno '$ENTORNO'." >&2
+            echo "Esperado: $origen_esperado" >&2
+            exit 1
+          fi
+
           echo "Entorno '$ENTORNO' → proyecto $SUPABASE_PROJECT_REF."
+
+      - name: Sincronizar origen de enlaces de correo
+        env:
+          APP_URL: ${{ vars.VITE_AUTH_SITE_URL }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+        run: supabase secrets set APP_URL="$APP_URL" --project-ref "$SUPABASE_PROJECT_REF"
 
       # `--use-api` empaqueta en el servidor. Sin la bandera, el CLI intenta
       # aplanar `node_modules` con Docker y termina en

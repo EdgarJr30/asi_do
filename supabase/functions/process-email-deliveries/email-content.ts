@@ -8,15 +8,23 @@
  */
 
 function normalizeActionUrl(actionUrl: string | null | undefined, appUrl: string) {
-  if (!actionUrl || actionUrl.trim().length === 0) {
-    return appUrl
+  const appOrigin = appUrl.replace(/\/+$/, '')
+  const requestedUrl = actionUrl?.trim() ?? ''
+
+  if (!requestedUrl) {
+    return appOrigin
   }
 
-  if (actionUrl.startsWith('http://') || actionUrl.startsWith('https://')) {
-    return actionUrl
+  if (requestedUrl.startsWith('http://') || requestedUrl.startsWith('https://')) {
+    try {
+      const legacyUrl = new URL(requestedUrl)
+      return `${appOrigin}${legacyUrl.pathname}${legacyUrl.search}${legacyUrl.hash}`
+    } catch {
+      return appOrigin
+    }
   }
 
-  return `${appUrl.replace(/\/+$/, '')}/${actionUrl.replace(/^\/+/, '')}`
+  return `${appOrigin}/${requestedUrl.replace(/^\/+/, '')}`
 }
 
 function escapeHtml(value: string) {
