@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -71,6 +71,26 @@ vi.mock('@/features/auth/lib/auth-api', async () => {
   return {
     ...actual,
     fetchSessionSnapshot: vi.fn(() => Promise.resolve(authState.snapshot)),
+    fetchAuthorityHierarchy: vi.fn(() =>
+      Promise.resolve({
+        unions: [
+          {
+            id: '00000000-0000-4000-8000-000000000001',
+            code: 'union-dominicana',
+            name: 'Unión Dominicana',
+          },
+        ],
+        associations: [
+          {
+            id: '00000000-0000-4000-8000-000000000002',
+            union_id: '00000000-0000-4000-8000-000000000001',
+            name: 'Asociación Central Dominicana',
+          },
+        ],
+        districts: [],
+        churches: [],
+      })
+    ),
   }
 })
 
@@ -192,6 +212,51 @@ beforeEach(() => {
 })
 
 describe('institutional membership application flow', () => {
+  it('captures church and district as text below union and association', async () => {
+    seedAuthenticatedApplicant()
+    saveEligibilityToken({
+      category: 'Laico',
+      categorySlug: 'laico',
+      dues: 'RD$2,000.00',
+    })
+
+    renderRoute(surfacePaths.institutional.membershipApply)
+
+    const referenceButtons = await screen.findAllByRole('button', { name: 'Referencia' })
+    fireEvent.click(referenceButtons[0])
+
+    const union = screen.getByRole('combobox', { name: /^unión/i })
+    const association = screen.getByRole('combobox', { name: /^asociación/i })
+    const church = screen.getByRole('textbox', { name: /^iglesia local/i })
+    const district = screen.getByRole('textbox', { name: /^distrito/i })
+
+    expect(union.compareDocumentPosition(association)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(association.compareDocumentPosition(church)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(church.compareDocumentPosition(district)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(screen.queryByRole('combobox', { name: /^iglesia local/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: /^distrito/i })).not.toBeInTheDocument()
+
+    await waitFor(() => expect(association).toBeEnabled())
+    fireEvent.change(association, { target: { value: 'Asociación Central Dominicana' } })
+    fireEvent.change(church, { target: { value: 'Iglesia Esperanza' } })
+    fireEvent.change(district, { target: { value: 'Distrito Capital' } })
+    fireEvent.change(screen.getByRole('textbox', { name: /^ciudad/i }), {
+      target: { value: 'Santo Domingo' },
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: /^provincia o estado/i }), {
+      target: { value: 'Distrito Nacional' },
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: /^nombre del pastor/i }), {
+      target: { value: 'Pedro Pérez' },
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: /^teléfono del pastor/i }), {
+      target: { value: '8095550100' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
+
+    expect(await screen.findByRole('heading', { name: 'Cuotas de membresía' })).toBeInTheDocument()
+  })
+
   it('shows empty select instructions in the same muted color as text placeholders', async () => {
     seedAuthenticatedApplicant()
     saveEligibilityToken({

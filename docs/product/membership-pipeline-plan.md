@@ -45,7 +45,7 @@ notificaciones, audit log, RPCs de revisión de autoridad, `hasActiveAsiAccess()
 
 ## 4. Flujos (pipelines)
 
-**🧑 Miembro:** signup → panel de progreso (4 pasos en vivo) → solicitud (categoría + selector jerárquico de iglesia)
+**🧑 Miembro:** signup → panel de progreso (4 pasos en vivo) → solicitud (categoría + unión/asociación + iglesia/distrito escritos)
 → pantalla de pago (datos de transferencia + cuota + subir comprobante) → espera → notificación de activación → ATS habilitado.
 
 **⛪ Pastor:** signup → solicita autoridad (elige iglesias) → admin otorga alcance → cola con **solo** las solicitudes de
@@ -72,12 +72,12 @@ autoridad a pastores.
    - ✅ RLS de lectura scoped del pastor en `institutional_membership_applications` (guardada contra `church_id null`).
    - ✅ Fix de seguridad en `review_membership_application`: el camino del pastor exige `church_id not null` (sin iglesia → solo admin).
 2. **Flujo del miembro** — formulario (categoría + iglesia), panel de progreso, subida de comprobante. **✅ COMPLETA**
-   - ✅ Selector jerárquico de iglesia (unión→asociación→distrito→iglesia) → escribe `church_id` y dispara auto-ruteo.
+   - ✅ Unión y asociación usan los catálogos disponibles; iglesia local y distrito se capturan como texto libre. `church_id` queda vacío hasta conciliación administrativa y la solicitud entra a la cola admin.
    - ✅ Jerarquía de prueba sembrada (Unión Dominicana: 4 asociaciones, 8 distritos, 16 iglesias).
    - ✅ Subida de comprobante: upload al bucket privado `membership-receipts` + `insert` en `membership_payments` (status=submitted), reflejado en el panel; re-subida tras rechazo soportada.
    - ✅ Entrada del flujo: panel → "Iniciar mi solicitud" va a elegibilidad (categoría) → formulario; tras enviar, CTA "Ir a mi panel de membresía" regresa al panel de pago.
    - ✅ El miembro puede ver/descargar su comprobante subido (URL firmada) desde el panel.
-   - ✅ **Envío habilitado + validado e2e de punta a punta** (`tests/e2e/membership-full-submission.spec.ts`): flag `MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED=false`; un miembro logueado completa el formulario real de 6 pasos (categoría `retired`) y lo envía → se crea la solicitud con `requester_user_id` correcto (RLS insert_self), `church_id` del picker y **auto-ruteo al pastor** (`assigned_queue=pastor`). Los CTAs de registro del storefront/app derivan de `PLATFORM_REGISTRATION_LOCKED`.
+   - ✅ **Envío habilitado + validado e2e de punta a punta** (`tests/e2e/membership-full-submission.spec.ts`): flag `MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED=false`; un miembro logueado completa el formulario real de 6 pasos y lo envía → se crea la solicitud con `requester_user_id` correcto (RLS insert_self). Los CTAs de registro del storefront/app derivan de `PLATFORM_REGISTRATION_LOCKED`.
 3. **Cola del pastor** — bandeja scoped, aprobar/más-info/rechazar, subir comprobante. **✅ COMPLETA**
    - ✅ Detección del pastor en sesión: `activePastorScopeCount` en `SessionSnapshot` (cuenta de `user_authority_scopes` activos `pastor_administrator`) → `session.isMembershipReviewerPastor`.
    - ✅ Página `PastorMembershipQueuePage` en `/account/membership-queue` (dentro del shell; sin requerir ATS activo). Item de nav "Solicitudes de mi iglesia" (grupo Pastoral) solo visible para pastores.
@@ -106,7 +106,7 @@ autoridad a pastores.
 - **Datos bancarios** reales → se cargan desde el módulo admin (sembrados de prueba por ahora).
 
 ## Decisiones acordadas
-- Ruteo: el solicitante elige iglesia de la jerarquía → auto-ruteo al pastor con alcance; sin pastor → cola admin.
+- Ruteo: mientras iglesia y distrito sean texto libre, `church_id` queda vacío y la solicitud va a la cola admin; el auto-ruteo pastoral se habilita después de conciliarla con la jerarquía canónica.
 - Activación: aprobación + pago verificado + clic "Activar" de admin (admin-only el paso final).
 - Pago: anual por categoría, comprobante, renovación manual.
 - Validación del pago: solo admins. Pastor aprueba la referencia pastoral.

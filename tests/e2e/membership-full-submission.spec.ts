@@ -128,22 +128,15 @@ test('un miembro envía su solicitud vía draft sin duplicar la fila', async ({ 
   await next(page, /Referencia/i)
 
   // ── Paso 4: Referencia (iglesia + pastor) ──
-  // "Iglesia local" colisiona con "Nombre de la iglesia local": ubicamos el <select>
-  // por la opción que contiene.
-  await page
-    .locator('select')
-    .filter({ has: page.getByRole('option', { name: 'Iglesia Central de Santo Domingo' }) })
-    .selectOption({ label: 'Iglesia Central de Santo Domingo' })
-  // La iglesia va primero; su territorio y los campos visibles se autocompletan desde esa selección.
   await expect(page.getByRole('combobox', { name: /^Unión/ }).locator('option:checked')).toContainText(
     'Unión Dominicana'
   )
-  await expect(page.getByRole('combobox', { name: /^Asociación/ }).locator('option:checked')).toContainText(
-    'Asociación Central Dominicana'
-  )
-  await expect(page.getByRole('combobox', { name: /^Distrito/ }).locator('option:checked')).toContainText(
-    'Distrito Capital Norte'
-  )
+  await page.getByRole('combobox', { name: /^Asociación/ }).selectOption({
+    label: 'Asociación Central Dominicana',
+  })
+  await page.locator('[name="homeChurchName"]').fill('Iglesia Central de Santo Domingo')
+  await page.locator('[name="churchDistrict"]').fill('Distrito Capital Norte')
+  await page.locator('[name="churchCity"]').fill('Santo Domingo')
   await page.locator('[name="churchStateProvince"]').fill('Distrito Nacional')
   await page.locator('[name="pastorName"]').fill('Pedro Pastor')
   await page.locator('[name="pastorPhone"]').fill('8095550100')

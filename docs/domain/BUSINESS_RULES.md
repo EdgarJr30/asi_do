@@ -24,6 +24,7 @@
 18. Only platform administrators with `audit_log:read` may inspect user access records, and each administrative read must leave a separate semantic audit event.
 19. IP address, timezone, browser, operating system, and device category are approximate technical context and must not be represented as exact physical location or conclusive identity.
 20. An initial membership payment confirms the purchased term but does not start it. The term starts only when an authorized administrator performs final activation; until then, the membership remains pending and accrues no elapsed days.
+21. A membership application may capture church and district as required free text while their canonical catalogs are incomplete. Such an application must keep `church_id` empty and remain admin-reviewable until its church is reconciled; it must not be routed to a pastor by guessed territory.
 
 ---
 
