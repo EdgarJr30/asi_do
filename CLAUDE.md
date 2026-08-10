@@ -20,6 +20,7 @@ Este archivo **no repite** `AGENTS.md` ni `docs/`. Contiene solo dos cosas: el m
 | Flujo de trabajo de migraciones | `supabase/README.md` |
 | Por qué Realtime va por invalidación | `docs/adr/0001-realtime-via-react-query-invalidation.md` |
 | Pasarela AZUL | `docs/pasarelaDePagos/` |
+| Diseño del comprobante de pago (valores exactos) | `design_handoff_comprobante_pago/README.md` |
 
 Empieza por el `README.md` más cercano al código que tocas antes de abrir los docs canónicos.
 
