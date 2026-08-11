@@ -38,6 +38,7 @@ describe('legal surface density', () => {
     expect(screen.getByRole('link', { name: /Términos y condiciones/i })).toHaveClass('p-3')
     expect(screen.queryByText('v3.1')).not.toBeInTheDocument()
     expect(screen.queryByText(/¿Vas a citar una política\?/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Membresías y donaciones se procesan en RD\$ \/ DOP\$\./i)).toBeInTheDocument()
   })
 
   it('does not expose version labels in legal metadata or change history', async () => {

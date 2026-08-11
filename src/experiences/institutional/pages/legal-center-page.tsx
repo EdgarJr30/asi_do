@@ -22,6 +22,9 @@ export function LegalCenterPage() {
               Términos, privacidad, devoluciones, entrega y seguridad de pagos para membresías y donaciones de{' '}
               {merchantCompliance.businessName}.
             </p>
+            <p className="mt-1.5 text-[0.78rem] font-semibold text-(--asi-text-muted)">
+              Membresías y donaciones se procesan en {merchantCompliance.currency}.
+            </p>
           </div>
 
           {/* Destacado: no guardamos tu tarjeta */}

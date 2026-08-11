@@ -567,6 +567,9 @@ Do not treat one `lftp` session reaching `max-retries` as a final release failur
 ### R-159 — Institutional footer badges must stay restrained, stacked, and single-line
 Do not let the `Explora` or `Pagos y políticas` link badges become either tiny labels or large card-like controls, wrap their text, or return to a multi-column button grid. Stack every link in one column within its group, keep the visible badge moderately compact inside a 44px touch target, and keep the payment brand cards and images small.
 
+### R-160 — The institutional footer identity card prioritizes contact
+Do not place the white ASI logo on another colored tile, render the institution title with muted contrast, crowd the identity rows, or restore prominent platform and donation buttons inside the footer identity card. Keep the legal institution and address icon-led, expose email and telephone as actionable links, and keep payment-processing and currency copy in the Legal Center.
+
 ---
 
 ## Maintenance rule

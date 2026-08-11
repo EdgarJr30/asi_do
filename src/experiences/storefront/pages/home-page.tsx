@@ -1855,12 +1855,7 @@ export function HomePage() {
         </LandingReveal>
       </section>
 
-      <InstitutionalFooter
-        platformButton={{
-          label: 'Página institucional',
-          to: surfacePaths.institutional.home,
-        }}
-      />
+      <InstitutionalFooter />
     </div>
   );
 }

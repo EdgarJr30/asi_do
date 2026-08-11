@@ -1,4 +1,4 @@
-import { MoveRight } from 'lucide-react';
+import { Building2, Mail, MapPin, MoveRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { surfacePaths } from '@/app/router/surface-paths';
@@ -11,13 +11,6 @@ import {
 } from '@/experiences/institutional/content/payment-compliance-content';
 import { PaymentBrandStrip } from '@/shared/ui/payment-brand-strip';
 
-type InstitutionalFooterProps = {
-  platformButton?: {
-    label: string;
-    to: string;
-  };
-};
-
 function CompactFooterLink({ label, to }: { label: string; to: string }) {
   return (
     <Link className="group flex min-h-11 items-center focus:outline-none" to={to}>
@@ -29,55 +22,66 @@ function CompactFooterLink({ label, to }: { label: string; to: string }) {
   );
 }
 
-export function InstitutionalFooter({
-  platformButton = {
-    label: 'Plataforma ASI',
-    to: surfacePaths.public.home,
-  },
-}: InstitutionalFooterProps) {
+export function InstitutionalFooter() {
   const currentYear = new Date().getFullYear();
+  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(merchantCompliance.address)}`;
+  const phoneUrl = `tel:${merchantCompliance.phone.replace(/\s/g, '')}`;
 
   return (
     <div className="asi-site">
       <footer className="bg-(--asi-primary) text-white">
         <div className="asi-container py-7 sm:py-8">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] xl:gap-5">
-            <div className="rounded-card-lg border border-white/10 bg-white/6 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.12)] backdrop-blur-sm sm:p-5">
-              <div className="flex items-center gap-3">
-                <span className="flex h-12 w-20 shrink-0 items-center justify-center rounded-card bg-white/10 px-3 backdrop-blur-sm sm:w-24">
-                  <BrandLockup className="w-full" surface="dark" />
-                </span>
+            <div
+              className="rounded-card-lg border border-white/10 bg-white/6 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.12)] backdrop-blur-sm sm:p-6"
+              data-testid="institutional-footer-contact-card"
+            >
+              <div className="flex items-center gap-4 sm:gap-5">
+                <BrandLockup className="w-20 shrink-0 drop-shadow-sm sm:w-24" surface="dark" />
                 <div className="min-w-0">
                   <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-white/60">
                     Portal institucional
                   </p>
-                  <p className="mt-1 text-lg font-semibold leading-tight sm:text-[1.35rem]">
+                  <p className="mt-1.5 text-xl font-bold leading-tight tracking-tight text-white sm:text-2xl">
                     ASI República Dominicana
                   </p>
                 </div>
               </div>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-white/74">
-                {merchantCompliance.legalName}. Membresías y donaciones
-                procesadas en {merchantCompliance.currency}.
-                <br />
-                Dirección permanente: {merchantCompliance.address}
-              </p>
-              <div className="mt-3">
-                <PaymentBrandStrip compact itemClassName="border-white/12 bg-white" />
+
+              <div className="mt-5 grid gap-3.5 border-t border-white/10 pt-4 text-sm text-white/76">
+                <div className="flex items-start gap-3">
+                  <Building2 className="mt-0.5 size-4 shrink-0 text-white/58" />
+                  <span className="leading-5">{merchantCompliance.legalName}</span>
+                </div>
+                <a
+                  className="flex items-start gap-3 leading-5 transition hover:text-white"
+                  href={mapUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <MapPin className="mt-0.5 size-4 shrink-0 text-white/58" />
+                  <span>{merchantCompliance.address}</span>
+                </a>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <a
+                    className="flex min-h-11 items-center gap-3 rounded-control bg-white/5 px-3 transition hover:bg-white/10 hover:text-white"
+                    href={`mailto:${merchantCompliance.email}`}
+                  >
+                    <Mail className="size-4 shrink-0 text-white/58" />
+                    <span className="min-w-0 truncate">{merchantCompliance.email}</span>
+                  </a>
+                  <a
+                    className="flex min-h-11 items-center gap-3 rounded-control bg-white/5 px-3 transition hover:bg-white/10 hover:text-white"
+                    href={phoneUrl}
+                  >
+                    <Phone className="size-4 shrink-0 text-white/58" />
+                    <span>{merchantCompliance.phone}</span>
+                  </a>
+                </div>
               </div>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                <Link
-                  className="asi-button asi-button-secondary w-full justify-center"
-                  to={platformButton.to}
-                >
-                  {platformButton.label}
-                </Link>
-                <Link
-                  className="asi-button asi-button-primary w-full justify-center"
-                  to={surfacePaths.institutional.donate}
-                >
-                  Donaciones
-                </Link>
+
+              <div className="mt-4 border-t border-white/10 pt-4">
+                <PaymentBrandStrip compact itemClassName="border-white/12 bg-white" />
               </div>
             </div>
 
