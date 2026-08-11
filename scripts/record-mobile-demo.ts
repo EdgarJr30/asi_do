@@ -1,15 +1,17 @@
-// Grabación del demo móvil que se muestra en la home institucional.
+// Grabación del demo de la plataforma, en vista de teléfono o de escritorio.
 //
 // Uso (Node >= 22; corre TypeScript de forma nativa):
 //   node scripts/seed-demo-content.ts --candidate=<correo>     # 1. datos de prueba
 //   npm run dev -- --host 127.0.0.1 --port 4173                # 2. servidor
 //   node scripts/record-mobile-demo.ts \                       # 3. grabación
-//     --email=<correo> --password=<clave>
+//     --email=<correo> --password=<clave> [--layout=desktop]
 //
 // Opciones:
+//   --layout=desktop    graba a 1440×900 en vez del viewport de teléfono
 //   --base=<url>        origen a grabar (por defecto http://127.0.0.1:4173)
 //   --out=<dir>         carpeta de salida (por defecto reports/demo-movil)
 //   --headless          graba sin abrir la ventana del navegador
+//   --headed            fuerza la ventana (escritorio graba sin ella por defecto)
 //
 // Qué graba:
 //   El recorrido de un candidato en viewport de teléfono: panel → explorar
@@ -38,7 +40,7 @@
 
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, readdirSync, renameSync, rmSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { relative, resolve } from 'node:path'
 import { chromium, devices, type Locator, type Page } from '@playwright/test'
 
 import { qrCode } from './lib/qr-code.ts'
@@ -46,13 +48,50 @@ import { qrCode } from './lib/qr-code.ts'
 /** Destino del QR del banner. */
 const SITE_URL = 'https://asidominicana.do'
 
-const DEVICE = devices['iPhone 13']
-const VIEWPORT = { width: 390, height: 844 }
-/** El doble del viewport: el screencast se captura a la densidad del dispositivo. */
-const VIDEO_SIZE = { width: VIEWPORT.width * 2, height: VIEWPORT.height * 2 }
-/** Franja cómoda de la pantalla: por fuera tapan la cabecera y la barra de pestañas. */
-const SAFE_TOP = 120
-const SAFE_BOTTOM = VIEWPORT.height - 160
+interface Layout {
+  name: 'movil' | 'escritorio'
+  device: Record<string, unknown>
+  viewport: { width: number; height: number }
+  video: { width: number; height: number }
+  /** Franja cómoda de la pantalla: por fuera tapan cabeceras y barras. */
+  safeTop: number
+  safeBottom: number
+  /** Multiplicador de las medidas del banner. */
+  bannerScale: number
+  qrPixels: number
+  /** Si el cuadro grabado puede quedar con relleno gris cuando falla la densidad. */
+  checkFullFrame: boolean
+}
+
+const LAYOUTS: Record<'mobile' | 'desktop', Layout> = {
+  mobile: {
+    name: 'movil',
+    device: devices['iPhone 13'] as unknown as Record<string, unknown>,
+    viewport: { width: 390, height: 844 },
+    // El doble del viewport: el screencast se captura a la densidad del dispositivo.
+    video: { width: 780, height: 1688 },
+    safeTop: 120,
+    safeBottom: 844 - 160,
+    bannerScale: 1,
+    qrPixels: 152,
+    checkFullFrame: true
+  },
+  desktop: {
+    name: 'escritorio',
+    device: {},
+    viewport: { width: 1440, height: 900 },
+    // Se pide el mismo tamaño que el viewport a propósito: el navegador compone
+    // a 2× (2880×1800) y Playwright lo reduce, que es un remuestreo con cuatro
+    // muestras por píxel. Sale más nítido que grabar a 1×, y si la densidad
+    // fallara el cuadro seguiría llegando completo en vez de con relleno.
+    video: { width: 1440, height: 900 },
+    safeTop: 130,
+    safeBottom: 900 - 120,
+    bannerScale: 1.55,
+    qrPixels: 232,
+    checkFullFrame: false
+  }
+}
 
 function parseArgs(argv: string[]): Record<string, string | true> {
   const out: Record<string, string | true> = {}
@@ -280,6 +319,12 @@ const BANNER_SCRIPT = String.raw`
       'transition:opacity 620ms cubic-bezier(0.22,1,0.36,1)'
     ].join(';')
 
+    // Las medidas se escriben para móvil y se multiplican: el banner es el
+    // mismo dibujo en las dos vistas, solo que en escritorio ocupa lo que le
+    // corresponde en una pantalla ancha.
+    var k = options.scale || 1
+    function px(value) { return Math.round(value * k) + 'px' }
+
     var content = document.createElement('div')
     content.style.cssText = 'display:flex;flex-direction:column;align-items:center'
 
@@ -295,25 +340,34 @@ const BANNER_SCRIPT = String.raw`
     }
 
     var pieces = [
-      piece('<img alt="ASI" src="' + options.logo + '" style="width:74px;display:block" />', 'margin-bottom:20px'),
-      piece('EXPERIENCIA ASI', 'font-size:10.5px;font-weight:800;letter-spacing:0.2em;color:rgba(255,255,255,0.74)'),
+      piece(
+        '<img alt="ASI" src="' + options.logo + '" style="width:' + px(74) + ';display:block" />',
+        'margin-bottom:' + px(20)
+      ),
+      piece(
+        'EXPERIENCIA ASI',
+        'font-size:' + px(10.5) + ';font-weight:800;letter-spacing:0.2em;color:rgba(255,255,255,0.74)'
+      ),
       piece(
         'Regístrate y sé parte<br/>de la experiencia ASI',
-        'margin-top:12px;font-size:26px;line-height:1.18;font-weight:800;letter-spacing:-0.02em'
+        'margin-top:' + px(12) + ';font-size:' + px(26) + ';line-height:1.18;font-weight:800;letter-spacing:-0.02em'
       ),
       piece(
         'Empleo, negocios y comunidad cristiana en un solo lugar.',
-        'margin-top:12px;max-width:276px;font-size:13.5px;line-height:1.55;color:rgba(255,255,255,0.78)'
+        'margin-top:' + px(12) + ';max-width:' + px(276) + ';font-size:' + px(13.5) + ';line-height:1.55;color:rgba(255,255,255,0.78)'
       ),
       piece(
         options.qr,
-        'margin-top:22px;background:#ffffff;padding:13px;border-radius:22px;line-height:0;box-shadow:0 22px 46px rgba(0,0,0,0.34)'
+        'margin-top:' + px(22) + ';background:#ffffff;padding:' + px(13) + ';border-radius:' + px(22) + ';line-height:0;box-shadow:0 ' + px(22) + ' ' + px(46) + ' rgba(0,0,0,0.34)'
       ),
       piece(
-        '<span style="display:inline-flex;align-items:center;gap:9px">Escanea y regístrate<span style="font-size:16px">&#8594;</span></span>',
-        'margin-top:20px;background:#ffffff;color:#002f6e;font-size:14.5px;font-weight:800;padding:13px 26px;border-radius:9999px'
+        '<span style="display:inline-flex;align-items:center;gap:' + px(9) + '">Escanea y regístrate<span style="font-size:' + px(16) + '">&#8594;</span></span>',
+        'margin-top:' + px(20) + ';background:#ffffff;color:#002f6e;font-size:' + px(14.5) + ';font-weight:800;padding:' + px(13) + ' ' + px(26) + ';border-radius:9999px'
       ),
-      piece('asidominicana.do', 'margin-top:16px;font-size:12px;letter-spacing:0.08em;color:rgba(255,255,255,0.62)')
+      piece(
+        'asidominicana.do',
+        'margin-top:' + px(16) + ';font-size:' + px(12) + ';letter-spacing:0.08em;color:rgba(255,255,255,0.62)'
+      )
     ]
 
     wrap.appendChild(content)
@@ -353,9 +407,11 @@ class Demo {
   // Sin propiedad de parámetro: Node ejecuta TypeScript borrando tipos, no
   // transformando sintaxis, y `constructor(private page)` no se puede borrar.
   readonly page: Page
+  readonly layout: Layout
 
-  constructor(page: Page) {
+  constructor(page: Page, layout: Layout) {
     this.page = page
+    this.layout = layout
   }
 
   pause(ms: number) {
@@ -371,19 +427,16 @@ class Demo {
    * cualquier cuadro que el compositor no alcance a entregar se nota como un
    * tirón.
    */
-  async swipe(dy: number, ms?: number) {
+  async swipe(dy: number, at?: { x: number; y: number }, ms?: number) {
     const duration = ms ?? Math.max(900, Math.min(2400, Math.abs(dy) * 5.2))
-    return this.swipeFor(dy, duration)
-  }
-
-  private async swipeFor(dy: number, ms: number) {
     await this.page.evaluate(
-      ([delta, duration]: [number, number]) =>
-        (globalThis as { __demoSwipe?: (dy: number, ms: number) => Promise<void> }).__demoSwipe?.(
-          delta,
-          duration
-        ),
-      [dy, ms] as [number, number]
+      ([delta, ms2, x, y]: [number, number, number, number]) =>
+        (
+          globalThis as {
+            __demoSwipe?: (dy: number, ms: number, x?: number, y?: number) => Promise<void>
+          }
+        ).__demoSwipe?.(delta, ms2, x < 0 ? undefined : x, y < 0 ? undefined : y),
+      [dy, duration, at?.x ?? -1, at?.y ?? -1] as [number, number, number, number]
     )
     await this.pause(360)
   }
@@ -407,8 +460,8 @@ class Demo {
       }
 
       const center = box.y + box.height / 2
-      if (center > SAFE_TOP && center < SAFE_BOTTOM) return
-      await this.swipe(center - VIEWPORT.height * 0.48)
+      if (center > this.layout.safeTop && center < this.layout.safeBottom) return
+      await this.swipe(center - this.layout.viewport.height * 0.48)
     }
   }
 
@@ -451,12 +504,17 @@ class Demo {
     )
   }
 
-  async banner(options: { logo: string; qr: string; instant: boolean }) {
+  async banner(options: { logo: string; qr: string; instant: boolean; scale: number }) {
     await this.page.evaluate(
-      (opts: { logo: string; qr: string; instant: boolean }) =>
+      (opts: { logo: string; qr: string; instant: boolean; scale: number }) =>
         (
           globalThis as {
-            __demoBanner?: (o: { logo: string; qr: string; instant: boolean }) => Promise<void>
+            __demoBanner?: (o: {
+              logo: string
+              qr: string
+              instant: boolean
+              scale: number
+            }) => Promise<void>
           }
         ).__demoBanner?.(opts),
       options
@@ -473,6 +531,45 @@ class Demo {
 }
 
 /**
+ * Sustituye el correo de la cuenta por una etiqueta neutra.
+ *
+ * En escritorio la cabecera lo muestra bajo el nombre, y el video se publica:
+ * dejarlo sería repartir la dirección personal del dueño de la cuenta en una
+ * página pública. Se reemplaza el texto, no se oculta el elemento, para que la
+ * cabecera conserve su forma y no se vea un hueco.
+ */
+function maskEmailScript(email: string): string {
+  return String.raw`
+(() => {
+  var target = ${JSON.stringify(email)}
+  var replacement = 'cuenta ASI'
+
+  function scrub(root) {
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    var node
+    while ((node = walker.nextNode())) {
+      if (node.nodeValue && node.nodeValue.indexOf(target) !== -1) {
+        node.nodeValue = node.nodeValue.split(target).join(replacement)
+      }
+    }
+  }
+
+  function start() {
+    scrub(document.body)
+    new MutationObserver(function () { scrub(document.body) }).observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    })
+  }
+
+  if (document.body) start()
+  else document.addEventListener('DOMContentLoaded', start)
+})()
+`
+}
+
+/**
  * Comprueba que el cuadro grabado llegue hasta la esquina.
  *
  * El fallo que cubre es silencioso y caro: si el navegador entrega el
@@ -481,12 +578,12 @@ class Demo {
  * de la esquina inferior derecha —donde siempre hay interfaz— y avisa si es el
  * gris del relleno.
  */
-function assertFullFrame(videoPath: string): void {
+function assertFullFrame(videoPath: string, video: { width: number; height: number }): void {
   const raw = execFileSync('ffmpeg', [
     '-v', 'error',
     '-ss', '3',
     '-i', videoPath,
-    '-vf', `crop=2:2:${VIDEO_SIZE.width - 3}:${VIDEO_SIZE.height - 3},scale=1:1`,
+    '-vf', `crop=2:2:${video.width - 3}:${video.height - 3},scale=1:1`,
     '-frames:v', '1',
     '-f', 'rawvideo',
     '-pix_fmt', 'rgb24',
@@ -567,26 +664,35 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
+  const isDesktop = args.layout === 'desktop' || args.desktop === true
+  const layout = isDesktop ? LAYOUTS.desktop : LAYOUTS.mobile
+
+  const defaultName = isDesktop ? 'demo-escritorio' : 'demo-movil'
   const outDir = resolve(process.cwd(), typeof args.out === 'string' ? args.out : 'reports/demo-movil')
   const rawDir = resolve(outDir, 'raw')
   rmSync(rawDir, { recursive: true, force: true })
   mkdirSync(rawDir, { recursive: true })
 
   const logo = logoDataUri()
-  const qr = qrSvg(SITE_URL, 152)
+  const qr = qrSvg(SITE_URL, layout.qrPixels)
+
   // `--force-device-scale-factor=2` es lo que hace que el video salga a 2×.
   // El `deviceScaleFactor` del contexto no basta: Playwright escala el
   // screencast hacia abajo si hace falta, pero nunca hacia arriba, así que
   // cuando el navegador entrega cuadros de 390×844 el video de 780×1688 queda
   // con el contenido en una esquina y el resto relleno de gris. Con la bandera,
   // el navegador pinta directamente a 780×1688 y el cuadro va completo.
+  //
+  // En escritorio eso son 2880×1800 físicos, que no caben en una ventana real:
+  // por eso esa vista se graba sin ventana salvo que se pida lo contrario.
+  const headless = args.headed === true ? false : isDesktop || args.headless === true
   const browser = await chromium.launch({
-    headless: args.headless === true,
+    headless,
     args: ['--force-device-scale-factor=2']
   })
 
   // Inicio de sesión fuera de cámara: solo interesa la sesión resultante.
-  const authContext = await browser.newContext({ ...DEVICE, viewport: VIEWPORT })
+  const authContext = await browser.newContext({ ...layout.device, viewport: layout.viewport })
   const authPage = await authContext.newPage()
   await authPage.goto(`${base}/auth/sign-in`, { waitUntil: 'networkidle' })
   await authPage.fill('input[type=email]', email)
@@ -597,8 +703,8 @@ async function main(): Promise<void> {
   await authContext.close()
 
   const context = await browser.newContext({
-    ...DEVICE,
-    viewport: VIEWPORT,
+    ...layout.device,
+    viewport: layout.viewport,
     // El screencast sale a viewport × densidad; con 2 el video queda nítido sin
     // triplicar el costo de composición de cada cuadro.
     deviceScaleFactor: 2,
@@ -606,26 +712,32 @@ async function main(): Promise<void> {
     timezoneId: 'America/Santo_Domingo',
     colorScheme: 'light',
     storageState,
-    recordVideo: { dir: rawDir, size: VIDEO_SIZE }
+    recordVideo: { dir: rawDir, size: layout.video }
   })
   await context.addInitScript(MOTION_SCRIPT)
   await context.addInitScript(BANNER_SCRIPT)
+  await context.addInitScript(maskEmailScript(email))
 
   const page = await context.newPage()
-  const demo = new Demo(page)
+  const demo = new Demo(page, layout)
 
   // ── Banner de apertura ────────────────────────────────────────────────────
   // Se monta ya dibujado, sin entrada: es el primer cuadro útil del video y
   // tiene que ser idéntico al último para que el bucle no dé un salto.
   await page.goto(`${base}/account`, { waitUntil: 'networkidle' })
-  await demo.banner({ logo, qr, instant: true })
+  await demo.banner({ logo, qr, instant: true, scale: layout.bannerScale })
   await demo.pause(2800)
   await demo.hideBanner(760)
 
   // ── Panel del candidato ───────────────────────────────────────────────────
   await demo.pause(1200)
-  await demo.swipe(230)
-  await demo.pause(600)
+  if (!isDesktop) {
+    // En escritorio el panel entra entero en pantalla: no hay nada que recorrer.
+    await demo.swipe(230)
+    await demo.pause(600)
+  } else {
+    await demo.pause(900)
+  }
   // No hace falta devolver el scroll a mano: `tap` acerca el destino con el
   // mismo deslizamiento suave, y así no se repite el gesto dos veces seguidas.
   await demo.tap(page.getByRole('button', { name: /Explorar vacantes/i }), 1500)
@@ -633,30 +745,70 @@ async function main(): Promise<void> {
 
   // ── Explorar el board ─────────────────────────────────────────────────────
   await demo.pause(700)
-  await demo.swipe(280)
-  await demo.pause(750)
+  if (isDesktop) {
+    // El board de escritorio es una vista partida: la lista tiene su propio
+    // scroll y hay que apuntar el gesto ahí, porque en el centro del viewport
+    // cae el panel de detalle y la página en sí no se mueve.
+    // Más lento que en móvil: componer 2880×1800 cuesta lo suyo y, si el
+    // navegador no entrega algún cuadro, a esta velocidad no se nota.
+    const overList = { x: Math.round(layout.viewport.width * 0.34), y: 560 }
+    await demo.swipe(240, overList, 1700)
+    await demo.pause(800)
+    await demo.swipe(-240, overList, 1500)
+  } else {
+    await demo.swipe(280)
+    await demo.pause(750)
+  }
 
   // ── Buscar ────────────────────────────────────────────────────────────────
-  await demo.tap(page.getByRole('button', { name: /Buscar cargo, empresa o lugar/i }), 900)
-  await demo.type(
-    page.locator('#mobile-filters-form input[placeholder="Cargo, empresa o palabra clave"]'),
-    'desarrollador',
-    88
-  )
-  await demo.pause(650)
-  await demo.tap(page.locator('button[form="mobile-filters-form"]'), 1300)
+  //
+  // Las dos vistas resuelven la búsqueda de forma distinta: en móvil el
+  // catálogo manda y los filtros viven en una hoja inferior; en escritorio hay
+  // una barra con sus dos campos siempre visible.
+  if (isDesktop) {
+    await demo.type(
+      page.getByRole('searchbox', { name: /Buscar por cargo/i }).or(
+        page.locator('form[role="search"] input[placeholder="Cargo, empresa o palabra clave"]')
+      ),
+      'desarrollador',
+      88
+    )
+    await demo.pause(650)
+    await demo.tap(page.getByRole('button', { name: 'Buscar', exact: true }), 1500)
+  } else {
+    await demo.tap(page.getByRole('button', { name: /Buscar cargo, empresa o lugar/i }), 900)
+    await demo.type(
+      page.locator('#mobile-filters-form input[placeholder="Cargo, empresa o palabra clave"]'),
+      'desarrollador',
+      88
+    )
+    await demo.pause(650)
+    await demo.tap(page.locator('button[form="mobile-filters-form"]'), 1300)
+  }
 
   // ── Abrir la vacante ──────────────────────────────────────────────────────
   //
-  // Arriba del todo a propósito: el panel de detalle sustituye a la lista en su
-  // mismo sitio, así que desde aquí el cambio se ve como una transición y no
-  // como un hueco en blanco a media pantalla.
-  await demo.scrollTop(520)
+  // En móvil, arriba del todo a propósito: el panel de detalle sustituye a la
+  // lista en su mismo sitio, así que desde aquí el cambio se ve como una
+  // transición y no como un hueco en blanco a media pantalla. En escritorio la
+  // lista y el detalle conviven, así que no hace falta.
+  if (!isDesktop) await demo.scrollTop(520)
   await demo.tap(page.getByRole('button', { name: /Desarrollador Frontend React/i }), 2300)
-  await demo.swipe(340)
-  await demo.pause(750)
-  await demo.swipe(300)
-  await demo.pause(750)
+
+  // Recorrer la vacante. En escritorio el detalle vive en la columna derecha y
+  // tiene su propio scroll, así que el gesto se apunta ahí.
+  if (isDesktop) {
+    const overDetail = { x: Math.round(layout.viewport.width * 0.72), y: 520 }
+    await demo.swipe(260, overDetail, 1800)
+    await demo.pause(900)
+    await demo.swipe(-260, overDetail, 1600)
+    await demo.pause(600)
+  } else {
+    await demo.swipe(340)
+    await demo.pause(750)
+    await demo.swipe(300)
+    await demo.pause(750)
+  }
 
   // ── Asistente de postulación ──────────────────────────────────────────────
   await demo.tap(page.getByRole('link', { name: /Postularme ahora/i }), 2000)
@@ -698,7 +850,7 @@ async function main(): Promise<void> {
   // Se sostiene largo a propósito: el QR tiene que quedar quieto el tiempo
   // suficiente para que a alguien le dé tiempo a sacar el teléfono y escanear.
   await demo.hidePointer()
-  await demo.banner({ logo, qr, instant: false })
+  await demo.banner({ logo, qr, instant: false, scale: layout.bannerScale })
   await demo.pause(8500)
 
   await context.close()
@@ -706,13 +858,18 @@ async function main(): Promise<void> {
 
   const [file] = readdirSync(rawDir).filter((name) => name.endsWith('.webm'))
   if (!file) throw new Error('Playwright no produjo el video')
-  const finalPath = resolve(outDir, 'demo-movil.raw.webm')
+  const finalPath = resolve(outDir, `${defaultName}.raw.webm`)
   renameSync(resolve(rawDir, file), finalPath)
   rmSync(rawDir, { recursive: true, force: true })
-  assertFullFrame(finalPath)
+  if (layout.checkFullFrame) assertFullFrame(finalPath, layout.video)
 
-  console.log(`✓ video crudo: ${finalPath}`)
-  console.log('  Falta comprimirlo a VP9: ver el comando en la cabecera de scripts/encode-mobile-demo.sh')
+  console.log(`✓ video crudo (${layout.name}): ${finalPath}`)
+  console.log(
+    `  Falta comprimirlo a VP9:  scripts/encode-mobile-demo.sh ${relative(process.cwd(), finalPath)} ${relative(
+      process.cwd(),
+      resolve(outDir, `${isDesktop ? 'demoAppDesktop' : 'demoApp'}.webm`)
+    )}`
+  )
 }
 
 main().catch((error) => {
