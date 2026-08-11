@@ -190,10 +190,12 @@ Antes de transferir, descarga por HTTPS los entrypoints vigentes que usaría un 
 FTPS: Hostinger puede agotar los reintentos incluso en un `get` pequeño mientras el mismo archivo sigue
 respondiendo correctamente por HTTPS. FTPS queda reservado para las escrituras del release y del rollback.
 
-El mirror usa una sola transferencia, reanuda archivos parciales y tolera hasta cinco reconexiones.
-Hostinger puede cerrar conexiones FTPS paralelas durante cargas largas; la transferencia serial es más
-lenta, pero evita reiniciar una publicación parcialmente subida. GitHub Actions también cancela la
-corrida anterior de la misma rama antes de que dos releases compitan por el document root.
+El mirror usa una sola transferencia, reanuda archivos parciales y tolera hasta tres reconexiones por
+sesión. Si `lftp` agota ese límite, la fase completa abre una sesión nueva hasta dos veces más; las fases
+son reanudables y conservan los temporales, por lo que no repiten archivos completos ni activan un release
+incompleto. La transferencia serial evita que Hostinger cierre conexiones paralelas durante cargas largas
+y el límite total cabe dentro del timeout del job. GitHub Actions también cancela la corrida anterior de
+la misma rama antes de que dos releases compitan por el document root.
 
 Los assets con hash de releases anteriores se conservan a propósito. La limpieza es mantenimiento de
 capacidad, no parte de la activación: debe hacerse fuera del deploy, con respaldo, conservando como

@@ -43,23 +43,37 @@ cleanup() {
 
 run_lftp() {
   local commands=$1
+  local attempt
+  local max_attempts=3
 
-  lftp -u "$HOSTINGER_USERNAME","$HOSTINGER_PASSWORD" \
-    -p "$HOSTINGER_PORT" "$HOSTINGER_HOST" -e "
-      set cmd:fail-exit yes;
-      set ftp:ssl-force true;
-      set ftp:ssl-protect-data true;
-      set ssl:verify-certificate yes;
-      set ssl:check-hostname no;
-      set net:max-retries 5;
-      set net:timeout 60;
-      set net:reconnect-interval-base 5;
-      set net:reconnect-interval-max 15;
-      set xfer:use-temp-file yes;
-      set xfer:temp-file-name .deploying.*;
-      $commands
-      bye
-    "
+  for ((attempt = 1; attempt <= max_attempts; attempt += 1)); do
+    if lftp -u "$HOSTINGER_USERNAME","$HOSTINGER_PASSWORD" \
+      -p "$HOSTINGER_PORT" "$HOSTINGER_HOST" -e "
+        set cmd:fail-exit yes;
+        set ftp:ssl-force true;
+        set ftp:ssl-protect-data true;
+        set ssl:verify-certificate yes;
+        set ssl:check-hostname no;
+        set net:max-retries 3;
+        set net:timeout 60;
+        set net:reconnect-interval-base 5;
+        set net:reconnect-interval-max 15;
+        set xfer:use-temp-file yes;
+        set xfer:temp-file-name .deploying.*;
+        $commands
+        bye
+      "; then
+      return 0
+    fi
+
+    if ((attempt == max_attempts)); then
+      echo "FTPS operation failed after $max_attempts sessions." >&2
+      return 1
+    fi
+
+    echo "Retrying FTPS operation with a fresh session ($((attempt + 1))/$max_attempts)." >&2
+    sleep $((attempt * 10))
+  done
 }
 
 backup_entrypoint() {

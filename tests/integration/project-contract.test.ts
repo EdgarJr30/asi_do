@@ -96,8 +96,10 @@ describe('project contract', () => {
 
     expect(deployScript).toContain('set ssl:verify-certificate yes;')
     expect(deployScript).toContain('set ssl:check-hostname no;')
-    expect(deployScript).toContain('set net:max-retries 5;')
+    expect(deployScript).toContain('set net:max-retries 3;')
     expect(deployScript).toContain('set net:timeout 60;')
+    expect(deployScript).toContain('max_attempts=3')
+    expect(deployScript).toContain('Retrying FTPS operation with a fresh session')
     expect(deployScript).not.toContain('--delete')
     expect(deployScript).not.toContain('get index.html')
     expect(deployScript).not.toContain('get sw.js')

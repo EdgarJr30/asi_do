@@ -561,6 +561,9 @@ Do not keep `APP_URL` as an independently maintained Edge Function secret or tru
 ### R-157 — Animated ecosystem images must keep clean rounded edges
 Do not combine continuous floating motion with pointer-driven rotation or scale on institutional ecosystem images. Keep the media layer clipped and isolated so browser compositing cannot paint image fragments outside the rounded card.
 
+### R-158 — Hostinger deploy phases must recover from an exhausted FTPS session
+Do not treat one `lftp` session reaching `max-retries` as a final release failure. Every resumable FTPS upload or activation phase must retry through a fresh, bounded session while preserving atomic entrypoint writes, rollback behavior, and the GitHub Actions time budget.
+
 ---
 
 ## Maintenance rule
