@@ -125,10 +125,16 @@ La card "Evento destacado" (`institutional-home-page.tsx:1141`) se ve vacía.
       comprobante de pago sirve cuatro TTF de Monotype desde `public/brand/fonts/`, así que quedan
       **descargables por cualquiera** que abra el sitio. Hay que confirmar con el contrato que la
       licencia cubre uso web/embebido antes de publicar en producción; el handoff
-      (`design_handoff_comprobante_pago/README.md`) ya lo advierte. Si no la cubre: borrar los
-      `@font-face` de `src/shared/ui/receipt-document.ts` y las TTF de `public/brand/fonts/`. El
-      documento cae a `system-ui` sin romperse —mismo layout, el título cambia de ancho—, así que
-      no bloquea nada más que la fidelidad tipográfica.
+      (`design_handoff_comprobante_pago/README.md`) ya lo advierte.
+      **Dato leído de los archivos:** los cuatro traen `fsType = 0x0004` (*Preview & Print*), copyright
+      Monotype 2015. Ese bit permite **embeber la fuente en un documento** para verlo e imprimirlo
+      —justo lo que ocurre al guardar el comprobante como PDF—, pero no dice nada sobre servir el
+      `.ttf` por HTTP con `@font-face`, que es un derecho aparte (licencia *webfont*) y que estos
+      archivos de escritorio probablemente no incluyen. O sea: el PDF resultante es la parte
+      defendible; publicar las tipografías es la parte a confirmar.
+      Si no la cubre: borrar los `@font-face` de `src/shared/ui/receipt-document.ts` y las TTF de
+      `public/brand/fonts/`. El documento cae a `system-ui` sin romperse —mismo layout, el título
+      cambia de ancho—, así que no bloquea nada más que la fidelidad tipográfica.
 
 ## J · Envío masivo de correos 🆕
 
