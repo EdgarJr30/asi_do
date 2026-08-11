@@ -50,6 +50,10 @@ declare
     -- deduplicacion.
     'email_broadcasts=S',
     'email_suppressions=S',
+    -- Sin un solo privilegio para `authenticated`: solo la alcanza
+    -- `email_unsubscribe`, que es `security definer`. Legible por PostgREST
+    -- seria un listado de direcciones y un oraculo de tokens de baja validos.
+    'email_unsubscribe_tokens=',
     'feature_flags=SU',
     'institutional_membership_applications=SIU',
     'job_alerts=SIUD',

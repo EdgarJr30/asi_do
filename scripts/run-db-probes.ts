@@ -62,6 +62,9 @@ const MANIFIESTO: Record<string, Tier> = {
   p1_storage_truncate_grants_probe: 'catalogo',
   p2_fase_d_authenticated_grants_probe: 'catalogo',
   p2_platform_grants_probe: 'catalogo',
+  // Se monta su propio historial (notificación, entrega, evento, token) y no
+  // mira a ningún usuario del fixture, así que corre en base vacía.
+  p1_notification_retention_probe: 'catalogo',
 
   p0_anon_surface_probe: 'datos',
   p0_azul_settlement_probe: 'datos',

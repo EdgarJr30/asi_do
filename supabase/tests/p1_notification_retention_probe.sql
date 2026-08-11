@@ -17,19 +17,32 @@ declare
   v_err text;
   v_notif_viva uuid;
   v_notif_vieja uuid;
+  v_notif_reputacion uuid;
   v_entrega_viva uuid;
   v_entrega_vieja uuid;
+  v_entrega_reputacion uuid;
   v_token uuid := extensions.gen_random_uuid();
   v_email text := 'probe-retencion@example.invalid';
   v_antiguo timestamptz := timezone('utc', now()) - interval '400 days';
   v_res jsonb;
 begin
-  -- ── Montaje: una notificación vieja con entrega cerrada, y otra vieja con
-  -- entrega VIVA. La segunda es la que la purga no puede tocar.
+  -- ── Montaje: tres cadenas viejas de igual fecha, que deben correr suertes
+  -- distintas. Van separadas a propósito: colgar el rebote de la misma entrega
+  -- que se espera purgar hace la probe contradictoria consigo misma.
+  --
+  --   1. `vieja`      → cerrada y solo con telemetría  ⇒ se purga
+  --   2. `reputacion` → cerrada pero con un rebote     ⇒ sobrevive
+  --   3. `viva`       → entrega PENDING                ⇒ sobrevive
+
   insert into public.notifications (type, title, body, payload, created_at)
   values ('email.broadcast', 'probe vieja', 'cuerpo',
           jsonb_build_object('to', v_email, 'unsubscribe_token', v_token::text), v_antiguo)
   returning id into v_notif_vieja;
+
+  insert into public.notifications (type, title, body, payload, created_at)
+  values ('email.broadcast', 'probe reputacion', 'cuerpo',
+          jsonb_build_object('to', v_email), v_antiguo)
+  returning id into v_notif_reputacion;
 
   insert into public.notifications (type, title, body, payload, created_at)
   values ('email.broadcast', 'probe viva', 'cuerpo',
@@ -40,6 +53,11 @@ begin
     (notification_id, channel, delivery_status, provider_name, created_at)
   values (v_notif_vieja, 'email', 'sent', 'resend', v_antiguo)
   returning id into v_entrega_vieja;
+
+  insert into public.notification_deliveries
+    (notification_id, channel, delivery_status, provider_name, created_at)
+  values (v_notif_reputacion, 'email', 'sent', 'resend', v_antiguo)
+  returning id into v_entrega_reputacion;
 
   -- Vieja de fecha pero PENDING: sigue en la cola pese a la antigüedad.
   insert into public.notification_deliveries
@@ -54,7 +72,7 @@ begin
     (delivery_id, provider_event_id, provider_message_id, event_type, event_created_at, created_at)
   values
     (v_entrega_vieja, 'probe_evt_tel', 'probe_msg', 'email.delivered', v_antiguo, v_antiguo),
-    (v_entrega_vieja, 'probe_evt_rep', 'probe_msg', 'email.bounced',  v_antiguo, v_antiguo);
+    (v_entrega_reputacion, 'probe_evt_rep', 'probe_msg2', 'email.bounced', v_antiguo, v_antiguo);
 
   insert into public.email_unsubscribe_tokens (token, email, created_at)
   values (v_token, v_email, v_antiguo)
@@ -135,6 +153,19 @@ begin
     v_out := v_out || ' | C2) rebote a 400 días -> BORRADO (única evidencia de reputación)';
   else
     v_out := v_out || ' | C2) rebote conservado OK';
+  end if;
+
+  -- El rebote no se sostiene solo: si el CASCADE se lleva la entrega o la
+  -- notificación de la que cuelga, C2 pasaría hoy y fallaría en cuanto la
+  -- cadena se rompa. Esto es lo que falló de verdad en 20260811010800.
+  if not exists (select 1 from public.notification_deliveries where id = v_entrega_reputacion) then
+    v_fail := v_fail + 1;
+    v_out := v_out || ' | C3) entrega que sostiene el rebote -> BORRADA (CASCADE se lleva la evidencia)';
+  elsif not exists (select 1 from public.notifications where id = v_notif_reputacion) then
+    v_fail := v_fail + 1;
+    v_out := v_out || ' | C4) notificación que sostiene el rebote -> BORRADA (CASCADE en dos saltos)';
+  else
+    v_out := v_out || ' | C3) cadena que sostiene el rebote -> intacta OK';
   end if;
 
   -- ── D) El resultado se puede leer ──────────────────────────────────────────
