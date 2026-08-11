@@ -274,7 +274,7 @@ export function SurfaceStatusPage({
         </motion.div>
 
         <motion.div variants={cardReveal} className="relative">
-          <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-card-lg border border-(--app-border) bg-[linear-gradient(135deg,rgba(45,82,168,0.10),rgba(138,162,216,0.16))] dark:bg-[linear-gradient(135deg,rgba(45,82,168,0.18),rgba(20,28,52,0.4))]">
+          <div className="relative flex aspect-4/3 items-center justify-center overflow-hidden rounded-card-lg border border-(--app-border) bg-[linear-gradient(135deg,rgba(45,82,168,0.10),rgba(138,162,216,0.16))] dark:bg-[linear-gradient(135deg,rgba(45,82,168,0.18),rgba(20,28,52,0.4))]">
             <div className="text-center">
               <p className="text-[5rem] font-black leading-none tracking-[-0.04em] text-primary-600 sm:text-[7rem] dark:text-primary-300">
                 404
