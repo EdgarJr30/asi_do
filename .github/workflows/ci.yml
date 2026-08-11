@@ -303,6 +303,13 @@ jobs:
         with:
           version: 2.111.0
 
+      # Para la guarda de destino. No hace falta `npm ci`: el script no importa
+      # nada de `node_modules`, solo el modulo compartido del repositorio.
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
       # Fallo ruidoso y con instrucciones: un despliegue de funciones que se
       # salta en silencio es como se llega a "creiamos que estaban desplegadas".
       # Los valores llegan por `env:` y no interpolados en el script: una
@@ -317,58 +324,31 @@ jobs:
       # desarrollo. Es el fallo B4 del checklist, y la herencia lo hacia
       # silencioso justo donde mas caro sale.
       #
-      # Por eso se comprueba el **valor**, no solo la presencia. La lista de refs
-      # que no son produccion se versiona aqui igual que en
-      # `src/shared/config/required-env.ts` y `tests/e2e/support/target-guard.ts`:
-      # cambiar una variable en el panel no puede bastar para cruzar entornos.
+      # Por eso se comprueba el **valor**, no solo la presencia. La decision vive
+      # en `src/shared/config/deploy-target.ts` y no aqui: la comparte con la
+      # validacion del build del frontend y esta probada en
+      # `tests/unit/deploy-target.test.ts`. Reimplementarla en bash significaba
+      # mantener dos listas de refs, y dos listas se separan — momento en el que
+      # una de las dos deja de proteger sin decirlo.
       - name: Comprobar configuracion del entorno
         env:
           APP_URL: ${{ vars.VITE_AUTH_SITE_URL }}
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
-          ENTORNO: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          DEPLOY_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+        run: node scripts/assert-edge-deploy-target.ts
+
+      # El token no entra en la comprobacion de arriba porque su valor no se
+      # puede validar sin usarlo; lo unico afirmable es que existe.
+      - name: Comprobar que hay credencial
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          DEPLOY_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
         run: |
-          refs_de_no_produccion=(jgmojkzthfogynqixkob) # development
-
-          faltan=()
-          [[ -n "${APP_URL:-}" ]] || faltan+=("var VITE_AUTH_SITE_URL para APP_URL")
-          [[ -n "${SUPABASE_ACCESS_TOKEN:-}" ]] || faltan+=("secret SUPABASE_ACCESS_TOKEN")
-          [[ -n "${SUPABASE_PROJECT_REF:-}" ]] || faltan+=("var SUPABASE_PROJECT_REF")
-
-          if (( ${#faltan[@]} > 0 )); then
-            echo "No se pueden desplegar las Edge Functions del entorno '$ENTORNO'." >&2
-            printf '  · falta %s\n' "${faltan[@]}" >&2
-            echo "Configuralos en Settings → Environments → ese entorno." >&2
+          if [[ -z "${SUPABASE_ACCESS_TOKEN:-}" ]]; then
+            echo "Falta el secret SUPABASE_ACCESS_TOKEN del entorno '$DEPLOY_ENVIRONMENT'." >&2
+            echo "Configuralo en Settings → Environments → ese entorno." >&2
             exit 1
           fi
-
-          es_de_no_produccion=false
-          for ref in "${refs_de_no_produccion[@]}"; do
-            [[ "$SUPABASE_PROJECT_REF" == "$ref" ]] && es_de_no_produccion=true
-          done
-
-          if [[ "$ENTORNO" == "production" && "$es_de_no_produccion" == true ]]; then
-            echo "SUPABASE_PROJECT_REF apunta a un proyecto que no es el de produccion." >&2
-            echo "Desplegar aqui dejaria el cron de produccion disparando contra las" >&2
-            echo "funciones de desarrollo. Declaralo en el environment 'production'." >&2
-            exit 1
-          fi
-
-          if [[ "$ENTORNO" == "staging" && "$es_de_no_produccion" == false ]]; then
-            echo "SUPABASE_PROJECT_REF no es un proyecto de no-produccion." >&2
-            echo "Staging no debe publicar Edge Functions en la base de produccion." >&2
-            exit 1
-          fi
-
-          origen_esperado='https://dev.asidominicana.do'
-          [[ "$ENTORNO" == "production" ]] && origen_esperado='https://asidominicana.do'
-          if [[ "$APP_URL" != "$origen_esperado" ]]; then
-            echo "VITE_AUTH_SITE_URL no corresponde al entorno '$ENTORNO'." >&2
-            echo "Esperado: $origen_esperado" >&2
-            exit 1
-          fi
-
-          echo "Entorno '$ENTORNO' → proyecto $SUPABASE_PROJECT_REF."
 
       - name: Sincronizar origen de enlaces de correo
         env:

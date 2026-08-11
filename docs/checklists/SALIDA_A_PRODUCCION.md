@@ -14,7 +14,7 @@ en vivo). El pendiente se lleva aquí, no como issues nuevos (`REGRESSION_RULES.
 |---|---|
 | **Hoy** | ~~A1~~ ✅ · B1 · C1 · C4 · E1 · E2 |
 | **Corte** | B1→B7, luego C2, C3, C5, C6, C7, luego D5 (D1–D4 hechos; falta crear el environment `production` en GitHub) |
-| **Antes del primer usuario** | J4 · F2 · F6 |
+| **Antes del primer usuario** | J5 · F2 · F6 |
 | **Semana 1** | G, H, I |
 
 `B` desbloquea `A`, `C` y media `D`: no se puede rotar la llave de un proyecto que no existe.
@@ -76,8 +76,13 @@ Runbook `ENVIRONMENTS.md` §6. El replay de migraciones y las 17 probes ya está
 - [x] **D3 · Edge Functions por CI** — ✅ 2026-08-10. Job `deploy-edge-functions`, de `staging` y de
       `main`, cada rama contra el proyecto de su propio environment (si `main` empujara al proyecto de
       desarrollo, el cron de producción dispararía contra las funciones equivocadas: es B4). Lleva
-      `--use-api` porque el empaquetado local falla con un error opaco tras `Bundling Function`. Si
-      falta el token o el ref, falla nombrándolos en vez de saltarse callado.
+      `--use-api` porque el empaquetado local falla con un error opaco tras `Bundling Function`.
+      **Comprueba el valor, no la presencia:** en GitHub un job con `environment:` hereda los vars del
+      repositorio, así que un environment `production` sin su propio `SUPABASE_PROJECT_REF` recibiría
+      el de desarrollo —no vacío, válido y equivocado— y publicaría ahí las funciones de producción en
+      silencio. La decisión vive en `src/shared/config/deploy-target.ts`, compartida con la validación
+      del build y probada con 8 tests (5 mutantes muertos); el workflow solo la invoca, para que no
+      haya dos listas de refs que se separen.
       ⚠️ *Requiere `SUPABASE_ACCESS_TOKEN` y `SUPABASE_PROJECT_REF` por environment.*
 - [x] **D4 · Que el drift bloquee** — ✅ ya lo hacía. `db-drift.yml:146-150` sale con `exit 1`. La
       entrada estaba mal escrita. *Lo que sí queda:* solo corre diario y a demanda, así que un
@@ -108,7 +113,7 @@ La card "Evento destacado" (`institutional-home-page.tsx:1141`) se ve vacía.
       (persona, **fecha de vencimiento**, ventana), de modo que renovar rearma los avisos solos. No
       consulta `email_suppressions`: es correo de cuenta, y `/correos/baja` promete que estos siguen
       llegando. Probe de 15 asertos, 4 mutantes muertos; 22/22 probes, 53 tests Deno, `db lint` limpio.
-      ⚠️ **Sin desplegar (J4):** el cron vive en la migración `20260810143500`.
+      Desplegado: el cron `0 13 * * *` está activo en el remoto. Sin ejercitar todavía (J5).
 - [ ] **F2 · Seis decisiones de producto** — *respuestas tuyas, no código:*
       · [TASK-173](https://linear.app/mooncode/issue/TASK-173)/[174](https://linear.app/mooncode/issue/TASK-174) ¿el MVP sale sin workflow pastoral ni endorsements territoriales?
       · [TASK-244](https://linear.app/mooncode/issue/TASK-244) ¿"aplicar ahora" y "aplicar con tu perfil" son uno o dos flujos?
@@ -140,7 +145,7 @@ La card "Evento destacado" (`institutional-home-page.tsx:1141`) se ve vacía.
 
 Pedido el 2026-08-10. Sube por el outbox existente (hereda idempotencia, lease,
 reintentos, modo de prueba y visibilidad en `/admin/correos`), con baja y supresión propias, y
-permiso `email:broadcast` solo para owner/super admin. **Escrito y probado; sin desplegar (J4).**
+permiso `email:broadcast` solo para owner/super admin. **Desplegado; sin ejercitar en vivo (J5).**
 
 - [x] **J1 · Base de datos** — ✅ 2026-08-10, `074fe6e` + `656363e`. Tablas `email_broadcasts` y
       `email_suppressions`, permiso `email:broadcast`, RPC `email_broadcast_enqueue` (normaliza,
@@ -160,11 +165,14 @@ permiso `email:broadcast` solo para owner/super admin. **Escrito y probado; sin 
       inválidas como repetidas: son dos diagnósticos distintos y uno de ellos significa que hay
       que mirar el archivo. Probe de 13 asertos (5 mutantes muertos), 14 tests de unidad, 21/21
       probes en verde en local, `db lint` limpio.
-- [ ] **J4 · Desplegar el bloque J** ⚠️ — git va por delante de la base, que es el lado seguro,
-      pero nada del bloque funciona hasta esto. Falta `supabase db push --linked` (migraciones
-      `20260810120429`, `20260810135307` y `20260810143500` —esta última trae también el cron de F1—)
-      y `supabase functions deploy process-email-deliveries`.
-      Luego: `npm run test:probes` contra el remoto y un envío de prueba real de punta a punta.
+- [x] **J4 · Desplegar el bloque J** — ✅ 2026-08-10, verificado contra el remoto: 0 migraciones
+      pendientes, las 4 Edge Functions desplegadas (`process-email-deliveries` v51), y los objetos de
+      F1 en su sitio —RPC, tabla de marcas y el cron `0 13 * * *` activo—.
+- [ ] **J5 · Ejercitarlo en vivo** — nada del bloque se ha usado todavía: el remoto tiene 0 campañas,
+      0 bajas y 0 correos de campaña, y F1 lleva 0 avisos. Está desplegado, no probado, y son cosas
+      distintas. Falta: un envío en modo prueba de punta a punta, canjear un `/correos/baja` real, y
+      forzar una corrida de `private.enqueue_membership_renewal_reminders()` —el cron no manda nada
+      solo, porque de las 2 membresías activas con fecha ninguna está dentro de ventana—.
 
 ## G · Rendimiento 🟡
 

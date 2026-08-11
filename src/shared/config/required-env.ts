@@ -13,6 +13,10 @@
  * puedan usar el plugin de Vite y las pruebas sin arrastrar `import.meta.env`.
  */
 
+// Import relativo y no por alias `@/`: `vite.config.ts` importa este modulo
+// directamente, y ahi todavia no existe la resolucion de alias.
+import { isNonProductionProjectRef, supabaseProjectRefFromUrl } from './deploy-target'
+
 export interface RequiredEnvVar {
   key: string
   why: string
@@ -59,33 +63,16 @@ function normalizedOrigin(url: URL) {
   return url.origin.toLowerCase()
 }
 
-/**
- * Proyectos Supabase que **no** son producción, por ref.
- *
- * Lista versionada por la misma razón que la de `tests/e2e/support/target-guard.ts`:
- * cambiar una variable en el panel de GitHub no puede bastar para publicar
- * producción contra una base que no lo es.
- *
- * Esto existe por un incidente concreto: `asidominicana.do` sirvió durante tres
- * días un artefacto cuyo bundle apuntaba aquí. Quien se registrara quedaba en la
- * base de desarrollo y sus pagos iban al merchant de pruebas. Ninguna variable
- * faltaba —estaban todas, y una estaba mal—, así que el build pasó en verde y
- * nada lo detectó hasta la auditoría.
- */
-const NON_PRODUCTION_SUPABASE_PROJECT_REFS = [
-  'jgmojkzthfogynqixkob' // development
-] as const
-
-const SUPABASE_PROJECT_HOST = /^([a-z0-9-]+)\.supabase\.co$/i
-
-/** Ref del proyecto, o null si la URL no es un host de Supabase alojado. */
-function supabaseProjectRef(url: URL | null): string | null {
-  if (!url) return null
-
-  const match = url.hostname.match(SUPABASE_PROJECT_HOST)
-
-  return match ? match[1].toLowerCase() : null
-}
+// La lista de proyectos no productivos y el parser del ref viven en
+// `deploy-target.ts`: los comparte con el script que CI ejecuta antes de
+// desplegar las Edge Functions. Dos copias se habrian separado, y separarse
+// significa que una de las dos deja de proteger sin decirlo.
+//
+// Esta comprobacion existe por un incidente concreto: `asidominicana.do` sirvio
+// durante tres dias un artefacto cuyo bundle apuntaba al proyecto de desarrollo.
+// Quien se registrara quedaba en la base equivocada y sus pagos iban al merchant
+// de pruebas. Ninguna variable faltaba —estaban todas, y una estaba mal—, asi
+// que el build paso en verde y nada lo detecto hasta la auditoria.
 
 export const REQUIRED_PRODUCTION_ENV: RequiredEnvVar[] = [
   {
@@ -184,7 +171,7 @@ export function validateProductionEnv(
   // contra un origen inalcanzable —`.invalid` en CI, `localhost` en una
   // laptop— no puede dejar a nadie registrado en la base equivocada, y hacerlo
   // fallar solo lograria que se desactivara la guarda para poder trabajar.
-  const supabaseRef = supabaseProjectRef(parseHttpUrl(source.VITE_SUPABASE_URL?.trim()))
+  const supabaseRef = supabaseProjectRefFromUrl(parseHttpUrl(source.VITE_SUPABASE_URL?.trim()))
   const canonicalOriginIsReachable =
     productionSiteUrl !== null &&
     !isLocalHostname(productionSiteUrl.hostname) &&
@@ -194,7 +181,7 @@ export function validateProductionEnv(
     deployEnvironment === 'production' &&
     canonicalOriginIsReachable &&
     supabaseRef &&
-    NON_PRODUCTION_SUPABASE_PROJECT_REFS.includes(supabaseRef as never)
+    isNonProductionProjectRef(supabaseRef)
   ) {
     problems.push({
       key: 'VITE_SUPABASE_URL',

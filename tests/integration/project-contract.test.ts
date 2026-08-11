@@ -298,6 +298,12 @@ describe('project contract', () => {
 
     // No se despliega una función que no pasó su propio lint, test y typecheck.
     expect(functionsJob.slice(0, functionsJob.indexOf('runs-on'))).toContain('- edge-functions')
+
+    // La decisión de destino sale del módulo compartido y probado, no de una
+    // lista de refs reescrita en bash: dos listas se separan, y separarse aquí
+    // significa que una de las dos deja de proteger sin decirlo.
+    expect(functionsJob).toContain('node scripts/assert-edge-deploy-target.ts')
+    expect(functionsJob).not.toContain('jgmojkzthfogynqixkob')
   })
 
   it('does not reintroduce the removed vulnerable PWA plugin chain', () => {
