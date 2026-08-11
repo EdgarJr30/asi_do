@@ -21,9 +21,9 @@ type InstitutionalFooterProps = {
 function CompactFooterLink({ label, to }: { label: string; to: string }) {
   return (
     <Link className="group flex min-h-11 items-center focus:outline-none" to={to}>
-      <span className="flex min-h-8 w-full items-center justify-between gap-1 rounded-control bg-white/6 px-2 text-[0.6875rem] font-medium leading-none whitespace-nowrap text-white/82 transition group-hover:bg-white/12 group-hover:text-white group-focus-visible:ring-2 group-focus-visible:ring-white/70">
+      <span className="flex min-h-9 w-full items-center justify-between gap-1.5 rounded-control bg-white/6 px-2.5 text-xs font-medium leading-none whitespace-nowrap text-white/82 transition group-hover:bg-white/12 group-hover:text-white group-focus-visible:ring-2 group-focus-visible:ring-white/70">
         {label}
-        <MoveRight className="size-3 shrink-0 text-white/44" />
+        <MoveRight className="size-3.5 shrink-0 text-white/44" />
       </span>
     </Link>
   );
@@ -86,7 +86,7 @@ export function InstitutionalFooter({
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
                   Explora
                 </p>
-                <div className="mt-2 grid grid-cols-2 gap-x-1">
+                <div className="mt-2 grid grid-cols-1">
                   {institutionalNavigation.map((item) => (
                     <CompactFooterLink key={item.to} label={item.label} to={item.to} />
                   ))}
@@ -100,7 +100,7 @@ export function InstitutionalFooter({
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
                   Pagos y políticas
                 </p>
-                <div className="mt-2 grid grid-cols-1 gap-x-1 min-[440px]:grid-cols-2">
+                <div className="mt-2 grid grid-cols-1">
                   {paymentPolicyLinks.map((item) => (
                     <CompactFooterLink key={item.to} label={item.label} to={item.to} />
                   ))}

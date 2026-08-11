@@ -43,4 +43,15 @@ describe('institutional navigation', () => {
     expect(within(navigationGroup!).getByText('Plataforma ASI')).toHaveClass('whitespace-nowrap')
     expect(screen.getByText('Devoluciones y cancelaciones')).toHaveClass('whitespace-nowrap')
   })
+
+  it('stacks footer navigation links in one column', () => {
+    render(
+      <MemoryRouter>
+        <InstitutionalFooter />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByText('Inicio').closest('a')?.parentElement).toHaveClass('grid-cols-1')
+    expect(screen.getByText('Centro legal').closest('a')?.parentElement).toHaveClass('grid-cols-1')
+  })
 })
