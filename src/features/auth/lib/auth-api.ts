@@ -662,6 +662,14 @@ export async function submitRecruiterRequest(values: {
     .single()
 
   if (response.error) {
+    if (response.error.message.includes('recruiter_request_already_exists')) {
+      throw new Error('Ya enviaste una solicitud de empresa. No puedes crear otra.')
+    }
+
+    if (response.error.message.includes('recruiter_request_slug_already_exists')) {
+      throw new Error('Esta dirección ya pertenece a otro espacio. Usa otro nombre para la organización.')
+    }
+
     throw response.error
   }
 
@@ -775,6 +783,7 @@ export async function listMyRecruiterRequests(userId: string) {
     .select('*')
     .eq('requester_user_id', userId)
     .order('submitted_at', { ascending: false })
+    .limit(1)
 
   if (response.error) {
     throw response.error

@@ -114,7 +114,7 @@ The MVP should **not** initially include:
 - sign up / sign in
 - standard user registration request for everyone
 - administrative approval before a user account becomes active
-- tenant operator request submission with company, ministry, project, field, or generic-profile validation data
+- one tenant operator request per user, with an automatically derived, read-only workspace address and local previews for the logo and supporting document
 - admin approval flow before tenant operator access is activated
 - candidate account flow
 - tenant workspace creation after approval

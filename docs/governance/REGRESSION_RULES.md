@@ -573,6 +573,9 @@ Do not place the white ASI logo on another colored tile, render the institution 
 ### R-161 — A completed application must enter its terminal state before cache refresh
 Do not await application or job query invalidation before rendering the successful submission or CV-update state. A refreshed application can reveal the newly created row while the mutation callback is still running; the terminal state and its kind must be fixed first so the application wizard never flashes the existing-application editor between submission and confirmation.
 
+### R-162 — Company requests have one immutable derived address and one submission
+Do not let a requester type or change the workspace address, submit a second company request, or reuse an address held by an existing tenant or any prior request. Derive the address from the organization name, enforce both uniqueness rules in PostgreSQL, preview the selected logo and supporting document before submission, and show the resulting request as one current state rather than a history.
+
 ---
 
 ## Maintenance rule

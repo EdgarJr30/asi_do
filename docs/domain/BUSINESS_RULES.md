@@ -67,6 +67,7 @@
 9. Tenant-operator requests enforce minimum data by `tenant_kind`: company requires legal name, ministry requires legal name plus operating scope, project requires sponsoring entity plus operating scope, field requires field region plus sponsoring entity, and generic profile requires conversion intent.
 10. Tenant ownership does not imply platform authority; tenant owners can manage only their approved tenant scope.
 11. When policy requires pastoral or regional endorsement for a company/operator request, that scoped endorsement is advisory input to the platform review flow and never creates the tenant or activates access by itself.
+12. A user may submit only one tenant-operator request. Its workspace address is derived from the organization name, cannot be edited by the requester, and must be rejected at the database layer when that address already belongs to a tenant or any prior request.
 
 ---
 

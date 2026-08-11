@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -32,8 +32,9 @@ import {
   uploadPrivateFile
 } from '@/features/auth/lib/auth-api'
 import { recruiterRequestSchema, type RecruiterRequestValues } from '@/features/auth/lib/auth-schemas'
-import { getTenantKindLabel, tenantKindOptions, tenantKindRequirementSummary } from '@/features/opportunities/lib/opportunity-taxonomy'
+import { tenantKindOptions, tenantKindRequirementSummary } from '@/features/opportunities/lib/opportunity-taxonomy'
 import { RecruiterRequestStatusBadge } from '@/features/recruiter-requests/components/recruiter-request-status-badge'
+import { createTenantSlug } from '@/features/recruiter-requests/lib/recruiter-request'
 import { CountryCodeSelect } from '@/shared/ui/location-selects'
 import { ImageCropDialog } from '@/shared/ui/image-crop-dialog'
 import { captureClientError } from '@/lib/errors/client-error-logger'
@@ -114,6 +115,16 @@ function FilePicker({
   error: string | null
   onChange: (file: File | null) => void
 }) {
+  const previewUrl = useMemo(() => file ? URL.createObjectURL(file) : null, [file])
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+      }
+    }
+  }, [previewUrl])
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3">
@@ -142,6 +153,23 @@ function FilePicker({
           }}
         />
       </label>
+      {file && previewUrl ? (
+        <div className="overflow-hidden rounded-card border border-(--app-border) bg-(--app-surface-elevated)">
+          {file.type.startsWith('image/') ? (
+            <img
+              src={previewUrl}
+              alt={title === 'Logo de la organización' ? 'Vista previa del logo' : 'Vista previa del documento'}
+              className="h-40 w-full object-contain p-3"
+            />
+          ) : (
+            <iframe
+              src={previewUrl}
+              title="Vista previa del documento"
+              className="h-56 w-full bg-white"
+            />
+          )}
+        </div>
+      ) : null}
       {isPreparing ? (
         <p className="inline-flex items-center gap-2 text-xs text-(--app-text-muted)">
           <Spinner size="sm" /> Preparando archivo…
@@ -186,7 +214,18 @@ export function RecruiterRequestPage() {
     control: form.control,
     name: 'requestedTenantKind'
   })
+  const requestedCompanyName = useWatch({
+    control: form.control,
+    name: 'requestedCompanyName'
+  })
   const requestDraft = useWatch({ control: form.control })
+
+  useEffect(() => {
+    form.setValue('requestedTenantSlug', createTenantSlug(requestedCompanyName), {
+      shouldDirty: Boolean(requestedCompanyName),
+      shouldValidate: form.formState.isSubmitted
+    })
+  }, [form, requestedCompanyName])
 
   const myRequestsQuery = useQuery({
     queryKey: MY_REQUESTS_QUERY_KEY,
@@ -299,8 +338,8 @@ export function RecruiterRequestPage() {
   })
 
   const requests = myRequestsQuery.data ?? []
-  const hasOpenRequest = requests.some((request) => request.status === 'submitted' || request.status === 'under_review')
-  const approvedRequest = requests.find((request) => request.status === 'approved')
+  const existingRequest = requests[0] ?? null
+  const approvedRequest = existingRequest?.status === 'approved' ? existingRequest : null
   const contextualRequirements =
     requestedTenantKind === 'ministry'
       ? [requestDraft.requestedCompanyLegalName, requestDraft.operatingScope]
@@ -478,15 +517,33 @@ export function RecruiterRequestPage() {
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div>
-          {hasOpenRequest ? (
-            <Card className="border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-950/30">
+          {myRequestsQuery.isPending ? (
+            <Card className="flex items-center justify-center gap-2 py-10 text-sm text-(--app-text-muted)">
+              <Spinner size="sm" /> Consultando tu solicitud…
+            </Card>
+          ) : myRequestsQuery.isError ? (
+            <Card className="border-rose-200 bg-rose-50 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-950/30 dark:text-rose-200">
+              No pudimos consultar tu solicitud. Intenta nuevamente en unos minutos.
+            </Card>
+          ) : existingRequest ? (
+            <Card className="p-4 sm:p-6">
               <div className="flex items-start gap-3">
-                <Clock3 className="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
-                <div>
-                  <CardTitle>Tu solicitud está en proceso</CardTitle>
-                  <CardDescription className="mt-1 text-amber-800 dark:text-amber-200">
-                    No necesitas enviarla nuevamente. Consulta el estado y cualquier comentario del equipo de revisión en el historial.
+                <Clock3 className="mt-0.5 size-5 shrink-0 text-primary-700 dark:text-primary-300" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <CardTitle>Tu solicitud de empresa</CardTitle>
+                    <RecruiterRequestStatusBadge status={existingRequest.status} />
+                  </div>
+                  <CardDescription className="mt-2">
+                    Solo se admite una solicitud por usuario. Enviada el {new Date(existingRequest.submitted_at).toLocaleDateString()}.
                   </CardDescription>
+                  {existingRequest.review_notes ? (
+                    <p className="mt-4 rounded-card bg-(--app-surface-muted) px-3 py-2 text-sm text-(--app-text-muted)">{existingRequest.review_notes}</p>
+                  ) : null}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {existingRequest.company_logo_path ? <Button variant="outline" onClick={() => void openPrivateAsset(existingRequest.company_logo_path!)}>Ver logo</Button> : null}
+                    {existingRequest.verification_document_path ? <Button variant="outline" onClick={() => void openPrivateAsset(existingRequest.verification_document_path!)}>Ver documento</Button> : null}
+                  </div>
                 </div>
               </div>
             </Card>
@@ -520,11 +577,12 @@ export function RecruiterRequestPage() {
                     <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.requestedCompanyLegalName?.message}</p>
                   </label>
                   <label className="space-y-2 text-sm font-medium text-(--app-text) sm:col-span-2">
-                    <RequestFieldLabel label="Dirección de tu espacio" help="Será la dirección corta con la que tu equipo identificará el espacio de la organización. Usa minúsculas y guiones." />
-                    <div className="flex rounded-card border border-(--app-border) bg-(--app-surface-elevated) focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-(--app-ring)">
+                    <RequestFieldLabel label="Dirección de tu espacio" help="Se genera automáticamente a partir del nombre de la organización y no se puede modificar." />
+                    <div className="flex rounded-card border border-(--app-border) bg-(--app-surface-muted)">
                       <span className="flex items-center border-r border-(--app-border) px-3 text-sm text-(--app-text-muted)">asi.do/</span>
-                      <Input className="border-0 shadow-none focus:ring-0" placeholder="asi-republica-dominicana" {...form.register('requestedTenantSlug')} />
+                      <Input className="border-0 bg-transparent shadow-none focus:ring-0" placeholder="Se genera con el nombre" readOnly aria-readonly="true" {...form.register('requestedTenantSlug')} />
                     </div>
+                    <p className="text-xs text-(--app-text-muted)">Esta dirección se reserva para la primera solicitud que la envíe.</p>
                     <p className="text-xs text-rose-600 dark:text-rose-300">{form.formState.errors.requestedTenantSlug?.message}</p>
                   </label>
                   </div>
@@ -646,7 +704,7 @@ export function RecruiterRequestPage() {
         </div>
 
         <aside className="grid gap-4 xl:sticky xl:top-24">
-          {!hasOpenRequest ? (
+          {!existingRequest && !myRequestsQuery.isPending && !myRequestsQuery.isError ? (
             <Card className="p-4 sm:p-5">
               <CardHeader>
                 <div className="flex items-center justify-between gap-3">
@@ -665,45 +723,6 @@ export function RecruiterRequestPage() {
               </CardContent>
             </Card>
           ) : null}
-
-          <Card className="p-4 sm:p-5">
-            <CardHeader>
-              <CardTitle>Historial de solicitudes</CardTitle>
-              <CardDescription>Consulta el estado y las observaciones de cada revisión.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {myRequestsQuery.isPending ? (
-                <div className="flex items-center justify-center gap-2 rounded-card-lg border border-(--app-border) px-4 py-6 text-sm text-(--app-text-muted)">
-                  <Spinner size="sm" /> Consultando historial…
-                </div>
-              ) : myRequestsQuery.isError ? (
-                <div className="rounded-card-lg border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-950/30 dark:text-rose-200">
-                  No pudimos consultar tus solicitudes. Intenta nuevamente en unos minutos.
-                </div>
-              ) : requests.length === 0 ? (
-                <div className="rounded-card-lg border border-dashed border-(--app-border) px-4 py-6 text-center">
-                  <p className="text-sm font-medium text-(--app-text)">Todavía no hay solicitudes</p>
-                  <p className="mt-1 text-xs leading-5 text-(--app-text-muted)">Cuando envíes la primera, podrás seguir su avance desde aquí.</p>
-                </div>
-              ) : requests.map((request) => (
-                <div key={request.id} className="rounded-card-lg border border-(--app-border) bg-(--app-surface-muted) p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-(--app-text)">{request.requested_company_name}</p>
-                      <p className="mt-1 text-xs text-(--app-text-muted)">{getTenantKindLabel(request.requested_tenant_kind)} · Enviada {new Date(request.submitted_at).toLocaleDateString()}</p>
-                    </div>
-                    <RecruiterRequestStatusBadge status={request.status} />
-                  </div>
-                  {request.review_notes ? <p className="mt-3 rounded-card bg-(--app-surface-elevated) px-3 py-2 text-sm text-(--app-text-muted)">{request.review_notes}</p> : null}
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {request.company_logo_path ? <Button variant="outline" onClick={() => void openPrivateAsset(request.company_logo_path!)}>Ver logo</Button> : null}
-                    {request.verification_document_path ? <Button variant="outline" onClick={() => void openPrivateAsset(request.verification_document_path!)}>Ver documento</Button> : null}
-                    {request.status === 'approved' && request.approved_tenant_id ? <Button onClick={() => void navigate(surfacePaths.workspace.root)}>Gestionar oportunidades</Button> : null}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
 
           {approvedRequest ? (
             <Card className="border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/30 dark:bg-emerald-950/30 sm:p-5">

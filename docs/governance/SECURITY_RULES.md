@@ -104,6 +104,7 @@ Security includes protecting:
 35. RLS checks that depend on a protected relation must not rely on an invoker-context subquery that can be filtered by that relation's own policies. Use a narrow `security definer` predicate that returns only the authorization boolean, revoke public execution, and grant it only to the role that needs the policy.
 36. Legal-document export/print and change-history controls must render only for an active `platform_owner`. Do not treat generic admin-console visibility, `platform_admin`, internal-developer status, or a partial platform permission as equivalent to this superadministrator gate.
 37. Bulk email and notification processors must enforce backpressure in PostgreSQL, not only in the UI: hard recipient and queue caps, serialized enqueue decisions, a single active dispatcher lease, bounded worker batches, idempotency, remote-call timeouts, and an authorized operational status surface are mandatory.
+38. Tenant-operator request uniqueness must be enforced before insert in PostgreSQL, across the requester's full history and across both requested and existing tenant slugs; UI-only checks do not satisfy this rule.
 
 ### Supabase MCP rules for LLM-assisted development
 - Supabase MCP may be used only as an internal developer tool, never as an end-user or customer-facing capability.

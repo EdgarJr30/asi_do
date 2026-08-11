@@ -566,6 +566,7 @@ Rules:
 28. Active membership summaries may show remaining time and activation/expiration dates, but must not render a decorative term-progress bar.
 29. The membership church-reference card must present `Unión` and `Asociación` before `Iglesia local` and `Distrito`. Until complete church and district catalogs exist, the latter two controls must remain required text fields instead of disabled or incomplete selects.
 30. Continuously animated image cards must clip and isolate their media layer. Do not combine perpetual translation with pointer-driven rotation or scale when it can expose raster artifacts outside rounded edges.
+31. The tenant-operator request must show the derived workspace address as read-only, preview the newly selected logo and supporting document before submission, and present the user's single request as one current state rather than a request history.
 
 ---
 

@@ -218,6 +218,8 @@ Technical log line for provider attempts, failures, and retries.
 | user_authority_scopes | id, user_id, authority_type, union_id nullable, association_id nullable, district_id nullable, church_id nullable, source_request_type, source_request_id, starts_at, ends_at nullable, status |
 | audit_logs | id, actor_user_id, actor_membership_id nullable, tenant_id nullable, event_type, entity_type, entity_id, record_id nullable, old_record jsonb nullable, new_record jsonb nullable, request_headers jsonb, jwt_claims jsonb, created_at |
 
+`recruiter_requests` admits one row per requester for the full lifecycle. Its derived `requested_tenant_slug` is reserved across all requests and existing `tenants`.
+
 ### Candidate
 | Entity | Key fields |
 |---|---|
