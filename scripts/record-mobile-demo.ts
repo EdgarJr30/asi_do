@@ -41,6 +41,11 @@ import { mkdirSync, readFileSync, readdirSync, renameSync, rmSync } from 'node:f
 import { resolve } from 'node:path'
 import { chromium, devices, type Locator, type Page } from '@playwright/test'
 
+import { qrCode } from './lib/qr-code.ts'
+
+/** Destino del QR del banner. */
+const SITE_URL = 'https://asidominicana.do'
+
 const DEVICE = devices['iPhone 13']
 const VIEWPORT = { width: 390, height: 844 }
 /** El doble del viewport: el screencast se captura a la densidad del dispositivo. */
@@ -245,64 +250,76 @@ const MOTION_SCRIPT = String.raw`
 `
 
 /**
- * Banner de cierre.
+ * Banner de marca con la llamada a la acción y el QR.
  *
  * Se monta como capa sobre la propia aplicación, no como página aparte: así no
- * hay navegación —ni el parpadeo en blanco que traería— y el paso del último
- * paso al banner es un fundido continuo.
+ * hay navegación —ni el parpadeo en blanco que traería— y el paso de la app al
+ * banner es un fundido continuo.
+ *
+ * Se usa dos veces. Al principio del video aparece ya montado (`instant`), sin
+ * animación de entrada; al final entra escalonado y se queda. Como los dos
+ * extremos acaban en exactamente el mismo dibujo, el corte del bucle —del
+ * último cuadro al primero— no se ve.
  */
-const OUTRO_SCRIPT = String.raw`
+const BANNER_SCRIPT = String.raw`
 (() => {
-  window.__demoOutro = function (logo) {
-    var wrap = document.createElement('div')
-    wrap.id = '__demo_outro'
-    wrap.style.cssText = [
-      'position:fixed', 'inset:0', 'z-index:2147483640', 'opacity:0',
-      'display:flex', 'align-items:center', 'justify-content:center',
-      'padding:44px 34px', 'text-align:center',
-      'background:linear-gradient(158deg,#00224f 0%,#002f6e 46%,#004599 100%)',
-      'color:#ffffff', 'transition:opacity 640ms cubic-bezier(0.22,1,0.36,1)',
-      "font-family:'Manrope','Segoe UI',sans-serif"
-    ].join(';')
+  window.__demoBanner = function (options) {
+    var previous = document.getElementById('__demo_banner')
+    if (previous) previous.remove()
 
-    var glow = document.createElement('div')
-    glow.style.cssText = [
-      'position:absolute', 'inset:0', 'pointer-events:none',
-      'background:radial-gradient(120% 62% at 50% 16%, rgba(255,255,255,0.22), rgba(255,255,255,0) 62%)'
+    var wrap = document.createElement('div')
+    wrap.id = '__demo_banner'
+    wrap.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:2147483640',
+      'display:flex', 'align-items:center', 'justify-content:center',
+      'padding:38px 30px', 'text-align:center',
+      'background:#002f6e',
+      'color:#ffffff',
+      "font-family:'Manrope','Segoe UI',sans-serif",
+      'opacity:' + (options.instant ? '1' : '0'),
+      'transition:opacity 620ms cubic-bezier(0.22,1,0.36,1)'
     ].join(';')
-    wrap.appendChild(glow)
 
     var content = document.createElement('div')
-    content.style.cssText = 'position:relative;display:flex;flex-direction:column;align-items:center'
+    content.style.cssText = 'display:flex;flex-direction:column;align-items:center'
 
+    var animated = !options.instant
     function piece(html, css) {
       var node = document.createElement('div')
       node.innerHTML = html
-      node.style.cssText = css + ';opacity:0;transform:translateY(20px);transition:opacity 720ms cubic-bezier(0.22,1,0.36,1),transform 720ms cubic-bezier(0.22,1,0.36,1)'
+      node.style.cssText = animated
+        ? css + ';opacity:0;transform:translateY(18px);transition:opacity 700ms cubic-bezier(0.22,1,0.36,1),transform 700ms cubic-bezier(0.22,1,0.36,1)'
+        : css
       content.appendChild(node)
       return node
     }
 
     var pieces = [
-      piece('<img alt="ASI" src="' + logo + '" style="width:88px;display:block" />', 'margin-bottom:26px'),
-      piece('EXPERIENCIA ASI', 'font-size:11px;font-weight:800;letter-spacing:0.2em;color:rgba(255,255,255,0.74)'),
+      piece('<img alt="ASI" src="' + options.logo + '" style="width:74px;display:block" />', 'margin-bottom:20px'),
+      piece('EXPERIENCIA ASI', 'font-size:10.5px;font-weight:800;letter-spacing:0.2em;color:rgba(255,255,255,0.74)'),
       piece(
         'Regístrate y sé parte<br/>de la experiencia ASI',
-        'margin-top:14px;font-size:29px;line-height:1.16;font-weight:800;letter-spacing:-0.02em'
+        'margin-top:12px;font-size:26px;line-height:1.18;font-weight:800;letter-spacing:-0.02em'
       ),
       piece(
         'Empleo, negocios y comunidad cristiana en un solo lugar.',
-        'margin-top:16px;max-width:290px;font-size:15px;line-height:1.6;color:rgba(255,255,255,0.80)'
+        'margin-top:12px;max-width:276px;font-size:13.5px;line-height:1.55;color:rgba(255,255,255,0.78)'
       ),
       piece(
-        '<span style="display:inline-flex;align-items:center;gap:9px">Crear mi cuenta<span style="font-size:17px">&#8594;</span></span>',
-        'margin-top:30px;background:#ffffff;color:#002f6e;font-size:15.5px;font-weight:800;padding:16px 30px;border-radius:9999px;box-shadow:0 20px 44px rgba(0,0,0,0.32)'
+        options.qr,
+        'margin-top:22px;background:#ffffff;padding:13px;border-radius:22px;line-height:0;box-shadow:0 22px 46px rgba(0,0,0,0.34)'
       ),
-      piece('asidominicana.do', 'margin-top:28px;font-size:12.5px;letter-spacing:0.08em;color:rgba(255,255,255,0.62)')
+      piece(
+        '<span style="display:inline-flex;align-items:center;gap:9px">Escanea y regístrate<span style="font-size:16px">&#8594;</span></span>',
+        'margin-top:20px;background:#ffffff;color:#002f6e;font-size:14.5px;font-weight:800;padding:13px 26px;border-radius:9999px'
+      ),
+      piece('asidominicana.do', 'margin-top:16px;font-size:12px;letter-spacing:0.08em;color:rgba(255,255,255,0.62)')
     ]
 
     wrap.appendChild(content)
     document.body.appendChild(wrap)
+
+    if (options.instant) return Promise.resolve()
 
     requestAnimationFrame(function () {
       wrap.style.opacity = '1'
@@ -310,11 +327,24 @@ const OUTRO_SCRIPT = String.raw`
         setTimeout(function () {
           node.style.opacity = '1'
           node.style.transform = 'translateY(0)'
-        }, 220 + index * 110)
+        }, 200 + index * 105)
       })
     })
 
-    return new Promise(function (resolve) { setTimeout(resolve, 1400) })
+    return new Promise(function (resolve) { setTimeout(resolve, 1300) })
+  }
+
+  window.__demoBannerHide = function (ms) {
+    var wrap = document.getElementById('__demo_banner')
+    if (!wrap) return Promise.resolve()
+    wrap.style.transition = 'opacity ' + ms + 'ms cubic-bezier(0.22,1,0.36,1)'
+    wrap.style.opacity = '0'
+    return new Promise(function (resolve) {
+      setTimeout(function () {
+        wrap.remove()
+        resolve()
+      }, ms + 60)
+    })
   }
 })()
 `
@@ -421,11 +451,23 @@ class Demo {
     )
   }
 
-  async outro(logoDataUri: string) {
+  async banner(options: { logo: string; qr: string; instant: boolean }) {
     await this.page.evaluate(
-      (logo: string) =>
-        (globalThis as { __demoOutro?: (logo: string) => Promise<void> }).__demoOutro?.(logo),
-      logoDataUri
+      (opts: { logo: string; qr: string; instant: boolean }) =>
+        (
+          globalThis as {
+            __demoBanner?: (o: { logo: string; qr: string; instant: boolean }) => Promise<void>
+          }
+        ).__demoBanner?.(opts),
+      options
+    )
+  }
+
+  async hideBanner(ms = 700) {
+    await this.page.evaluate(
+      (duration: number) =>
+        (globalThis as { __demoBannerHide?: (ms: number) => Promise<void> }).__demoBannerHide?.(duration),
+      ms
     )
   }
 }
@@ -459,6 +501,56 @@ function assertFullFrame(videoPath: string): void {
   }
 }
 
+/**
+ * QR de la web, dibujado como SVG.
+ *
+ * Nivel Q (25 % de recuperación) porque el código se lee de una pantalla
+ * pequeña y a veces en movimiento: sobra margen para el reencuadre y el
+ * desenfoque de la cámara. Los módulos van con esquinas redondeadas y los tres
+ * patrones de posición como anillos, que es lo que le da aire de marca sin
+ * tocar la información: la geometría de cada módulo se respeta.
+ */
+function qrSvg(text: string, pixels: number): string {
+  const code = qrCode(text, 'Q')
+  const quiet = 2
+  const span = code.size + quiet * 2
+  const dark = '#002f6e'
+
+  const isFinder = (x: number, y: number) =>
+    (x < 7 && y < 7) || (x >= code.size - 7 && y < 7) || (x < 7 && y >= code.size - 7)
+
+  const parts: string[] = []
+  for (let y = 0; y < code.size; y += 1) {
+    for (let x = 0; x < code.size; x += 1) {
+      if (!code.modules[y][x] || isFinder(x, y)) continue
+      parts.push(`<rect x="${x + quiet}" y="${y + quiet}" width="1" height="1" rx="0.3"/>`)
+    }
+  }
+
+  for (const [fx, fy] of [
+    [0, 0],
+    [code.size - 7, 0],
+    [0, code.size - 7]
+  ]) {
+    const ox = fx + quiet
+    const oy = fy + quiet
+    parts.push(
+      `<rect x="${ox}" y="${oy}" width="7" height="7" rx="2.1" fill="${dark}"/>`,
+      `<rect x="${ox + 1}" y="${oy + 1}" width="5" height="5" rx="1.5" fill="#ffffff"/>`,
+      `<rect x="${ox + 2}" y="${oy + 2}" width="3" height="3" rx="0.95" fill="${dark}"/>`
+    )
+  }
+
+  return [
+    // Sin `shape-rendering: crispEdges`: apagaría el suavizado y las esquinas
+    // redondeadas saldrían dentadas.
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${pixels}" height="${pixels}" viewBox="0 0 ${span} ${span}">`,
+    `<rect width="${span}" height="${span}" fill="#ffffff"/>`,
+    `<g fill="${dark}">${parts.join('')}</g>`,
+    '</svg>'
+  ].join('')
+}
+
 function logoDataUri(): string {
   const file = resolve(process.cwd(), 'public/brand/asi-logo-white-transparent-192.webp')
   return `data:image/webp;base64,${readFileSync(file).toString('base64')}`
@@ -481,6 +573,7 @@ async function main(): Promise<void> {
   mkdirSync(rawDir, { recursive: true })
 
   const logo = logoDataUri()
+  const qr = qrSvg(SITE_URL, 152)
   // `--force-device-scale-factor=2` es lo que hace que el video salga a 2×.
   // El `deviceScaleFactor` del contexto no basta: Playwright escala el
   // screencast hacia abajo si hace falta, pero nunca hacia arriba, así que
@@ -516,14 +609,21 @@ async function main(): Promise<void> {
     recordVideo: { dir: rawDir, size: VIDEO_SIZE }
   })
   await context.addInitScript(MOTION_SCRIPT)
-  await context.addInitScript(OUTRO_SCRIPT)
+  await context.addInitScript(BANNER_SCRIPT)
 
   const page = await context.newPage()
   const demo = new Demo(page)
 
-  // ── Panel del candidato ───────────────────────────────────────────────────
+  // ── Banner de apertura ────────────────────────────────────────────────────
+  // Se monta ya dibujado, sin entrada: es el primer cuadro útil del video y
+  // tiene que ser idéntico al último para que el bucle no dé un salto.
   await page.goto(`${base}/account`, { waitUntil: 'networkidle' })
-  await demo.pause(1800)
+  await demo.banner({ logo, qr, instant: true })
+  await demo.pause(2800)
+  await demo.hideBanner(760)
+
+  // ── Panel del candidato ───────────────────────────────────────────────────
+  await demo.pause(1200)
   await demo.swipe(230)
   await demo.pause(600)
   // No hace falta devolver el scroll a mano: `tap` acerca el destino con el
@@ -594,10 +694,12 @@ async function main(): Promise<void> {
   await page.waitForLoadState('networkidle')
   await demo.pause(1600)
 
-  // ── Banner de llamada a la acción ─────────────────────────────────────────
+  // ── Banner de cierre ──────────────────────────────────────────────────────
+  // Se sostiene largo a propósito: el QR tiene que quedar quieto el tiempo
+  // suficiente para que a alguien le dé tiempo a sacar el teléfono y escanear.
   await demo.hidePointer()
-  await demo.outro(logo)
-  await demo.pause(4200)
+  await demo.banner({ logo, qr, instant: false })
+  await demo.pause(8500)
 
   await context.close()
   await browser.close()
