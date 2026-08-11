@@ -14,7 +14,7 @@ en vivo). El pendiente se lleva aquí, no como issues nuevos (`REGRESSION_RULES.
 |---|---|
 | **Hoy** | ~~A1~~ ✅ · B1 · C1 · C4 · E1 · E2 |
 | **Corte** | B1→B7, luego C2, C3, C5, C6, C7, luego D5 (D1–D4 hechos; falta crear el environment `production` en GitHub) |
-| **Antes del primer usuario** | J5 · F2 · F6 |
+| **Antes del primer usuario** | **K1** · J5 · F2 · F6 |
 | **Semana 1** | G, H, I |
 
 `B` desbloquea `A`, `C` y media `D`: no se puede rotar la llave de un proyecto que no existe.
@@ -174,6 +174,44 @@ permiso `email:broadcast` solo para owner/super admin. **Desplegado; sin ejercit
       forzar una corrida de `private.enqueue_membership_renewal_reminders()` —el cron no manda nada
       solo, porque de las 2 membresías activas con fecha ninguna está dentro de ventana—.
 
+## K · La instancia no aguanta producción 🔴
+
+Abierto por el incidente del 2026-08-10: **2 h 08 min con la base sin aceptar conexiones**
+(12:06–14:14 UTC). Diagnóstico cerrado con métricas del panel.
+
+**Causa: la instancia se quedó sin RAM y entró en *thrashing* de swap.** En el minuto del corte:
+
+| Métrica | Valor |
+|---|---|
+| RAM total | **411 MB** (Nano) |
+| RAM libre | **5,46 MB (1,33 %)** |
+| Swap | **515 MB — 125,25 %** |
+| Memoria comprometida | 1,4 GB contra un límite de 1,2 GB (**116,71 %**) |
+| IOwait de CPU | **92,18 %** |
+
+Lo que **descarta** el resto: IOPS 14 de 3.000 (0,5 %), disco 224 KB/s de 125 MB/s (0,2 %),
+conexiones 25 de 60, espacio 0,09 GB de 8 GB. Todo lo demás estaba ocioso. Tampoco fue la carga:
+la ventana sana de las 16:58–18:30 movió **el doble** de peticiones (338/min y picos de 84/s,
+contra 161/min y 39/s) sin inmutarse.
+
+Con 5 MB libres, arrancar un proceso —que es literalmente lo que hace pg_cron— espera a que el
+kernel libere páginas: de ahí los `job startup timeout`, una consulta de catálogo tardando 35 s y
+91 `could not accept SSL connection`.
+
+- [ ] **K1 · Subir la instancia de Nano a Micro o superior** 🔴 — es la única acción que ataca la
+      causa. Todo lo demás son paliativos. Bloquea el lanzamiento: 411 MB no sostienen Realtime con
+      18 tablas publicadas, `max_connections = 60` y el panel de Supabase abierto a la vez.
+- [ ] **K2 · `VACUUM FULL` de `user_access_logs`** — 17,8 MB con 7 filas vivas, la tabla más grande
+      del proyecto. Pura hinchazón; devuelve ~17 MB.
+- [ ] **K3 · No dejar el panel de Supabase abierto contra este proyecto mientras se desarrolla** —
+      la pantalla de Functions escribe ~9 MB de ficheros temporales por carga (427 MB en 48 cargas,
+      medido en `pg_stat_statements`). Con la instancia actual eso pesa.
+
+**Lo que ya se cerró a raíz del incidente** (ninguno era la causa, todos bajan la presión):
+reintentos del webhook acotados por edad, timeouts en las 6 fronteras de red de las Edge Functions
+con `check:bounded-io` dentro de `verify`, retención del historial de correo, purga de
+`cron.job_run_details` (70.502 → 20.187 filas) y G2. La regla durable es **R-153**.
+
 ## G · Rendimiento 🟡
 
 Los 5 están en `Duplicate` en Linear: hoy no aparecen en ninguna vista. Re-verificados en código, ninguno empezado.
@@ -194,7 +232,15 @@ Los 5 están en `Duplicate` en Linear: hoy no aparecen en ninguna vista. Re-veri
       `locationOptions` del conjunto completo y resuelve `selectedJob`/`viewJob` buscando en la
       lista. Mover eso al servidor cambia la interacción (filtrado con ida y vuelta en vez de
       instantáneo), así que necesita decisión de producto antes que código.
-- [ ] **G2 · [TASK-274](https://linear.app/mooncode/issue/TASK-274)** — `auth-api.ts:394` hace un `rpc('has_platform_permission')` por permiso. No existe `get_session_snapshot`.
+- [x] **G2 · [TASK-274](https://linear.app/mooncode/issue/TASK-274) permisos en una consulta** — ✅ 2026-08-11, `7f66004`.
+      La hidratación hacía un `rpc('has_platform_permission')` por permiso: 29 peticiones a
+      PostgREST por sesión, sin corte por rol —un candidato sin permisos pedía 29 booleanos para
+      recibir 29 `false`— y en cada login, refresco de token y vuelta al foco. En los logs eran 694
+      de 1.000 peticiones en 14 minutos, con ráfagas de 116 por segundo; acumulado, el segundo
+      consumidor de la base tras el WAL de Realtime. Ahora `my_platform_permissions()` hace el mismo
+      recorrido una vez. Medido en vivo con un login real: **116 llamadas → 4**. La probe no valida
+      una lista escrita a mano, compara las dos funciones entre sí permiso por permiso (verificada
+      por inyección), y 4 tests cubren el cliente, que ningún test tocaba.
 - [ ] **G3 · [TASK-275](https://linear.app/mooncode/issue/TASK-275)** — `pipeline-api.ts:12` sin keyset por etapa.
 - [ ] **G4 · [TASK-278](https://linear.app/mooncode/issue/TASK-278)** — 203 chunks; fijar budgets en CI ([TASK-24](https://linear.app/mooncode/issue/TASK-24)).
 - [ ] **G5 · Escoger qué entra del épico [TASK-14](https://linear.app/mooncode/issue/TASK-14)** (9 subtareas, todas en Todo). Es la superficie pública.
@@ -252,3 +298,8 @@ sobre `storage.*` (exige consulta al remoto).
 | 2026-08-10 | **F1**: recordatorios de renovación. El acceso ya caducaba por fecha (`hasActiveAsiAccess`) sin que nadie avisara nunca: se perdía la plataforma el día del vencimiento y en silencio | pendiente |
 | 2026-08-10 | **J3**: interfaz del envío masivo y baja pública. La probe de superficie cazó de paso que `enforce_initial_membership_period_after_activation` (`1f0db27`) se creó sin `revoke`: PUBLIC y `anon` podían ejecutarla. Cerrado en la misma migración | pendiente |
 | 2026-08-10 | **J1**: base de datos del envío masivo. Los dos guardarraíles del repo saltaron y tenían razón: tabla nueva sin declarar en la matriz de la Fase D, y superficie de `anon` ampliada de 23 a 24 funciones | `074fe6e`, `656363e` |
+| 2026-08-11 | **Incidente del 10-ago cerrado (nueva sección K)**: 2 h 08 min sin base. No fue carga, ni disco, ni conexiones — la instancia Nano (411 MB) se quedó con 5,46 MB libres y el swap al 125 %, con 92 % de IOwait. Sale un bloqueante nuevo: **K1, subir de Nano**. La ventana sana movía el doble de tráfico sin despeinarse | — |
+| 2026-08-11 | **R-153** generaliza R-152 más allá del correo: esperar, reintentar, abanicar y acumular llevan techo, y solo cuenta si lo hace cumplir PostgreSQL, un test o `verify`. Nace `check:bounded-io`, que al primer pase encontró 4 fronteras de red sin timeout | `ba21287` |
+| 2026-08-11 | Reintentos del webhook de Resend acotados por edad del evento. Contestar 4xx/5xx *es* pedir otro reintento: con la base caída, 46 llamadas en 23 minutos que nunca podrían registrarse. Ahora corta antes de verificar la firma y antes de abrir el cliente | `ba21287` |
+| 2026-08-11 | Retención del historial de notificaciones y correo. Purgar solo las 4 tablas daba un techo falso, y purgar `notifications` rompía en silencio los enlaces de baja: el token pasa a registro propio. La probe cazó que el `CASCADE` se llevaba los rebotes pese a sus 730 días declarados | `76fcd43`, `757ec9c` |
+| 2026-08-11 | **G2**: permisos de plataforma en una consulta. 29 peticiones por hidratación → 1, medido en vivo con un login real: 116 llamadas → 4. Los 475 tests no cubrían nada de esto porque mockean el módulo entero | `7f66004`, `aa80bc0` |
