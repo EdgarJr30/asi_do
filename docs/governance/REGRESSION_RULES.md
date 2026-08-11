@@ -570,6 +570,9 @@ Do not let the `Explora` or `Pagos y políticas` link badges become either tiny 
 ### R-160 — The institutional footer identity card prioritizes contact
 Do not place the white ASI logo on another colored tile, render the institution title with muted contrast, crowd the identity rows, or restore prominent platform and donation buttons inside the footer identity card. Keep the legal institution and address icon-led, expose email and telephone as actionable links, and keep payment-processing and currency copy in the Legal Center.
 
+### R-161 — A completed application must enter its terminal state before cache refresh
+Do not await application or job query invalidation before rendering the successful submission or CV-update state. A refreshed application can reveal the newly created row while the mutation callback is still running; the terminal state and its kind must be fixed first so the application wizard never flashes the existing-application editor between submission and confirmation.
+
 ---
 
 ## Maintenance rule
