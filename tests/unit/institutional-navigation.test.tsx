@@ -29,4 +29,18 @@ describe('institutional navigation', () => {
     expect(within(navigationGroup!).getByRole('link', { name: 'Donaciones' })).toBeInTheDocument()
     expect(screen.queryByText('Puente')).not.toBeInTheDocument()
   })
+
+  it('keeps long footer navigation labels on one line', () => {
+    render(
+      <MemoryRouter>
+        <InstitutionalFooter />
+      </MemoryRouter>
+    )
+
+    const navigationGroup = screen.getByText('Explora').parentElement
+
+    expect(navigationGroup).not.toBeNull()
+    expect(within(navigationGroup!).getByText('Plataforma ASI')).toHaveClass('whitespace-nowrap')
+    expect(screen.getByText('Devoluciones y cancelaciones')).toHaveClass('whitespace-nowrap')
+  })
 })

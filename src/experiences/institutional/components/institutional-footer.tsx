@@ -18,6 +18,17 @@ type InstitutionalFooterProps = {
   };
 };
 
+function CompactFooterLink({ label, to }: { label: string; to: string }) {
+  return (
+    <Link className="group flex min-h-11 items-center focus:outline-none" to={to}>
+      <span className="flex min-h-8 w-full items-center justify-between gap-1 rounded-control bg-white/6 px-2 text-[0.6875rem] font-medium leading-none whitespace-nowrap text-white/82 transition group-hover:bg-white/12 group-hover:text-white group-focus-visible:ring-2 group-focus-visible:ring-white/70">
+        {label}
+        <MoveRight className="size-3 shrink-0 text-white/44" />
+      </span>
+    </Link>
+  );
+}
+
 export function InstitutionalFooter({
   platformButton = {
     label: 'Plataforma ASI',
@@ -30,7 +41,7 @@ export function InstitutionalFooter({
     <div className="asi-site">
       <footer className="bg-(--asi-primary) text-white">
         <div className="asi-container py-7 sm:py-8">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-5">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] xl:gap-5">
             <div className="rounded-card-lg border border-white/10 bg-white/6 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.12)] backdrop-blur-sm sm:p-5">
               <div className="flex items-center gap-3">
                 <span className="flex h-12 w-20 shrink-0 items-center justify-center rounded-card bg-white/10 px-3 backdrop-blur-sm sm:w-24">
@@ -52,7 +63,7 @@ export function InstitutionalFooter({
                 Dirección permanente: {merchantCompliance.address}
               </p>
               <div className="mt-3">
-                <PaymentBrandStrip itemClassName="border-white/12 bg-white" />
+                <PaymentBrandStrip compact itemClassName="border-white/12 bg-white" />
               </div>
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 <Link
@@ -70,60 +81,28 @@ export function InstitutionalFooter({
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-card-lg border border-white/10 bg-white/6 p-4 backdrop-blur-sm">
+            <div className="grid gap-3 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+              <div className="rounded-card-lg border border-white/10 bg-white/6 p-3 backdrop-blur-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
                   Explora
                 </p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="mt-2 grid grid-cols-2 gap-x-1">
                   {institutionalNavigation.map((item) => (
-                    <Link
-                      key={item.to}
-                      className="flex min-h-11 items-center justify-between gap-1.5 rounded-card bg-white/6 px-3 py-2 text-[0.8125rem] font-medium leading-4 text-white/82 transition hover:bg-white/12 hover:text-white"
-                      to={item.to}
-                    >
-                      {item.label}
-                      <MoveRight className="size-4 text-white/44" />
-                    </Link>
+                    <CompactFooterLink key={item.to} label={item.label} to={item.to} />
                   ))}
-                  <Link
-                    className="flex min-h-11 items-center justify-between gap-1.5 rounded-card bg-white/6 px-3 py-2 text-[0.8125rem] font-medium leading-4 text-white/82 transition hover:bg-white/12 hover:text-white"
-                    to={surfacePaths.public.home}
-                  >
-                    Plataforma ASI
-                    <MoveRight className="size-4 text-white/44" />
-                  </Link>
-                  <Link
-                    className="flex min-h-11 items-center justify-between gap-1.5 rounded-card bg-white/6 px-3 py-2 text-[0.8125rem] font-medium leading-4 text-white/82 transition hover:bg-white/12 hover:text-white"
-                    to={surfacePaths.auth.signIn}
-                  >
-                    Iniciar sesión
-                    <MoveRight className="size-4 text-white/44" />
-                  </Link>
-                  <Link
-                    className="flex min-h-11 items-center justify-between gap-1.5 rounded-card bg-white/6 px-3 py-2 text-[0.8125rem] font-medium leading-4 text-white/82 transition hover:bg-white/12 hover:text-white"
-                    to={surfacePaths.institutional.donate}
-                  >
-                    Donaciones
-                    <MoveRight className="size-4 text-white/44" />
-                  </Link>
+                  <CompactFooterLink label="Plataforma ASI" to={surfacePaths.public.home} />
+                  <CompactFooterLink label="Iniciar sesión" to={surfacePaths.auth.signIn} />
+                  <CompactFooterLink label="Donaciones" to={surfacePaths.institutional.donate} />
                 </div>
               </div>
 
-              <div className="rounded-card-lg border border-white/10 bg-white/6 p-4 backdrop-blur-sm">
+              <div className="rounded-card-lg border border-white/10 bg-white/6 p-3 backdrop-blur-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
                   Pagos y políticas
                 </p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="mt-2 grid grid-cols-1 gap-x-1 min-[440px]:grid-cols-2">
                   {paymentPolicyLinks.map((item) => (
-                    <Link
-                      key={item.to}
-                      className="flex min-h-11 items-center justify-between gap-1.5 rounded-card bg-white/6 px-3 py-2 text-[0.8125rem] font-medium leading-4 text-white/82 transition hover:bg-white/12 hover:text-white"
-                      to={item.to}
-                    >
-                      {item.label}
-                      <MoveRight className="size-4 text-white/44" />
-                    </Link>
+                    <CompactFooterLink key={item.to} label={item.label} to={item.to} />
                   ))}
                 </div>
               </div>

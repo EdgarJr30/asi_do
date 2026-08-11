@@ -564,6 +564,9 @@ Do not combine continuous floating motion with pointer-driven rotation or scale 
 ### R-158 — Hostinger deploy phases must recover from an exhausted FTPS session
 Do not treat one `lftp` session reaching `max-retries` as a final release failure. Every resumable FTPS upload or activation phase must retry through a fresh, bounded session while preserving atomic entrypoint writes, rollback behavior, and the GitHub Actions time budget.
 
+### R-159 — Institutional footer badges must stay small and single-line
+Do not let the `Explora` or `Pagos y políticas` link badges grow back to card-like controls or wrap their labels onto a second line. Keep the visible badges compact inside a 44px touch target, give long policy labels enough responsive width, and keep the payment brand cards and images small.
+
 ---
 
 ## Maintenance rule

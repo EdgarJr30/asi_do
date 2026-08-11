@@ -26,10 +26,12 @@ const paymentBrandAssets = [
 export function PaymentBrandStrip({
   className,
   itemClassName,
+  compact = false,
   show3DSLabel = false
 }: {
   className?: string
   itemClassName?: string
+  compact?: boolean
   show3DSLabel?: boolean
 }) {
   return (
@@ -39,13 +41,18 @@ export function PaymentBrandStrip({
           key={asset.label}
           className={cn(
             'inline-flex h-10 min-w-13 items-center justify-center rounded-control border border-slate-200 bg-white px-2 shadow-sm',
+            compact && 'h-8 min-w-11 px-1.5',
             itemClassName
           )}
           title={asset.label}
         >
           <img
             alt={asset.label}
-            className={cn('object-contain', asset.className)}
+            className={cn(
+              'object-contain',
+              asset.className,
+              compact && 'max-h-6 max-w-10'
+            )}
             decoding="async"
             loading="lazy"
             src={asset.src}
