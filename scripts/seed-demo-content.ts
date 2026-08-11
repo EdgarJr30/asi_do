@@ -1,9 +1,13 @@
 // Contenido de demostración para grabar el video de la home institucional.
 //
 // Uso (Node >= 22; corre TypeScript de forma nativa):
-//   node scripts/seed-demo-content.ts                            # crea/actualiza el contenido
-//   node scripts/seed-demo-content.ts --candidate=correo@x.do    # además deja un CV al candidato
-//   node scripts/seed-demo-content.ts --purge                    # borra TODO lo sembrado
+//   node scripts/seed-demo-content.ts                              # crea/actualiza el contenido
+//   node scripts/seed-demo-content.ts --candidate=correo@x.do      # además deja un CV al candidato
+//   node scripts/seed-demo-content.ts --company-owner=correo@x.do  # lo hace dueño de la empresa demo
+//   node scripts/seed-demo-content.ts --applicants                 # postulantes para el ATS
+//   node scripts/seed-demo-content.ts --recruiter \
+//     --recruiter-password=<clave>                                  # cuenta de reclutadora del ATS
+//   node scripts/seed-demo-content.ts --purge                      # borra TODO lo sembrado
 //
 // Por qué existe:
 //   La grabación del demo móvil necesita vacantes reales en el board. El proyecto
@@ -26,6 +30,16 @@ const DEMO_SLUG_PREFIX = 'demo-'
 const DEMO_MARK = { demo_seed: true }
 /** Marca en el nombre del archivo para reconocer el CV sembrado y poder borrarlo. */
 const DEMO_RESUME_FILENAME = 'CV-demo-ASI.pdf'
+/**
+ * Dominio de los postulantes de prueba.
+ *
+ * `.invalid` está reservado por la RFC 2606 justo para esto: no existe ni puede
+ * llegar a existir, así que ninguna de estas direcciones va a chocar nunca con
+ * la de una persona real ni va a recibir correo por accidente.
+ */
+const DEMO_APPLICANT_DOMAIN = 'demo.invalid'
+/** La empresa cuyo espacio de trabajo se enseña en el video del ATS. */
+const DEMO_WORKSPACE_TENANT = `${DEMO_SLUG_PREFIX}nexus-digital`
 
 interface DemoCompany {
   tenantId: string
@@ -327,6 +341,88 @@ const JOBS: DemoJob[] = [
   }
 ]
 
+/** Postulantes de prueba, repartidos por el proceso de selección. */
+const APPLICANTS: Array<{
+  name: string
+  headline: string
+  city: string
+  jobSlug: string
+  stage: 'applied' | 'screening' | 'interview' | 'offer'
+  status: 'submitted' | 'in_review' | 'interviewing' | 'offer'
+  daysAgo: number
+  coverLetter: string
+}> = [
+  {
+    name: 'María Fernández',
+    headline: 'Desarrolladora Frontend · React y TypeScript',
+    city: 'Santo Domingo',
+    jobSlug: 'demo-desarrollador-frontend-react',
+    stage: 'interview',
+    status: 'interviewing',
+    daysAgo: 6,
+    coverLetter: 'Cuatro años construyendo interfaces accesibles. Me entusiasma el enfoque de producto del equipo.'
+  },
+  {
+    name: 'José Ramírez',
+    headline: 'Ingeniero de software · Front-end',
+    city: 'Santiago',
+    jobSlug: 'demo-desarrollador-frontend-react',
+    stage: 'screening',
+    status: 'in_review',
+    daysAgo: 4,
+    coverLetter: 'Vengo del mundo del diseño y me pasé al código. Cuido mucho el detalle visual.'
+  },
+  {
+    name: 'Laura Peña',
+    headline: 'Desarrolladora web · React, Next.js',
+    city: 'Santo Domingo',
+    jobSlug: 'demo-desarrollador-frontend-react',
+    stage: 'applied',
+    status: 'submitted',
+    daysAgo: 1,
+    coverLetter: 'Busco un equipo donde el trabajo tenga propósito además de calidad técnica.'
+  },
+  {
+    name: 'Carlos Medina',
+    headline: 'Analista de datos · SQL y visualización',
+    city: 'Santo Domingo',
+    jobSlug: 'demo-analista-de-datos-junior',
+    stage: 'offer',
+    status: 'offer',
+    daysAgo: 9,
+    coverLetter: 'Me gusta explicar con datos lo que al equipo le cuesta ver. Disponible de inmediato.'
+  },
+  {
+    name: 'Rosa Jiménez',
+    headline: 'Analista junior · Reportería y tableros',
+    city: 'La Vega',
+    jobSlug: 'demo-analista-de-datos-junior',
+    stage: 'screening',
+    status: 'in_review',
+    daysAgo: 3,
+    coverLetter: 'Recién graduada, con dos pasantías en análisis de datos y muchas ganas de aprender.'
+  },
+  {
+    name: 'Daniel Castillo',
+    headline: 'Business intelligence · Power BI',
+    city: 'Santo Domingo',
+    jobSlug: 'demo-analista-de-datos-junior',
+    stage: 'applied',
+    status: 'submitted',
+    daysAgo: 2,
+    coverLetter: 'Vengo de operaciones y llevo dos años dedicado a reportería y tableros.'
+  }
+]
+
+function applicantEmail(name: string): string {
+  const slug = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z]+/g, '.')
+  return `demo.${slug}@${DEMO_APPLICANT_DOMAIN}`
+}
+
 function parseArgs(argv: string[]): Record<string, string | true> {
   const out: Record<string, string | true> = {}
   for (const arg of argv) {
@@ -501,6 +597,248 @@ async function seed(client: SupabaseClient, candidateEmail: string | null): Prom
   }
 }
 
+/**
+ * Da a un usuario la propiedad de la empresa de demostración.
+ *
+ * Es lo que hace aparecer la sección "Mi empresa" en el sidebar: el shell la
+ * añade cuando los permisos incluyen `workspace:read`, y ese permiso llega por
+ * la membresía y su rol. Los roles de tenant son globales (`tenant_id is
+ * null`), así que basta con enlazar el rol `tenant_owner` que ya existe.
+ */
+async function seedCompanyOwner(client: SupabaseClient, email: string): Promise<void> {
+  const user = await findUserByEmail(client, email)
+  if (!user) throw new Error(`No existe una cuenta con el correo ${email}`)
+
+  const company = COMPANIES.find((item) => item.slug === DEMO_WORKSPACE_TENANT)
+  if (!company) throw new Error(`No está sembrada la empresa ${DEMO_WORKSPACE_TENANT}`)
+
+  const existing = await client
+    .from('memberships')
+    .select('id')
+    .eq('tenant_id', company.tenantId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (existing.error) throw existing.error
+
+  let membershipId = existing.data?.id as string | undefined
+  if (!membershipId) {
+    const created = await client
+      .from('memberships')
+      .insert({
+        tenant_id: company.tenantId,
+        user_id: user.id,
+        status: 'active',
+        joined_at: new Date().toISOString()
+      })
+      .select('id')
+      .single()
+    if (created.error) throw created.error
+    membershipId = created.data.id as string
+  }
+
+  const role = await client
+    .from('tenant_roles')
+    .select('id')
+    .is('tenant_id', null)
+    .eq('code', 'tenant_owner')
+    .single()
+  if (role.error) throw role.error
+
+  const assignment = await client
+    .from('membership_roles')
+    .upsert(
+      {
+        membership_id: membershipId,
+        role_id: role.data.id as string,
+        assigned_at: new Date().toISOString(),
+        revoked_at: null
+      },
+      { onConflict: 'membership_id,role_id' }
+    )
+  if (assignment.error) throw assignment.error
+
+  console.log(`✓ ${email} es dueño de ${company.name} (aparece "Mi empresa" en el sidebar)`)
+}
+
+/**
+ * Cuenta de reclutadora para el video del módulo de empresa.
+ *
+ * Hace falta una cuenta aparte, y no la del dueño real, porque el espacio de
+ * trabajo se sirve de la primera membresía activa del usuario: quien pertenece
+ * a dos empresas ve la otra. Esta pertenece solo a la empresa de demostración,
+ * así que el ATS sale con sus vacantes y sus candidatos y no con los de nadie
+ * más.
+ */
+async function seedRecruiter(client: SupabaseClient, password: string): Promise<string> {
+  const email = `demo.reclutadora@${DEMO_APPLICANT_DOMAIN}`
+  const fullName = 'Patricia Núñez'
+
+  const company = COMPANIES.find((item) => item.slug === DEMO_WORKSPACE_TENANT)
+  if (!company) throw new Error(`No está sembrada la empresa ${DEMO_WORKSPACE_TENANT}`)
+
+  let user = await findUserByEmail(client, email)
+  if (!user) {
+    const account = await client.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName }
+    })
+    if (account.error) throw account.error
+    user = account.data.user
+  } else {
+    const update = await client.auth.admin.updateUserById(user.id, { password })
+    if (update.error) throw update.error
+  }
+
+  // Onboarding base completo y acceso ASI vigente: sin las dos cosas los guards
+  // la mandan al perfil o al panel de membresía en vez de al espacio de trabajo.
+  const profile = await client
+    .from('users')
+    .update({
+      full_name: fullName,
+      display_name: fullName,
+      locale: 'es',
+      country_code: 'DO',
+      status: 'active',
+      manual_access_override_until: '9999-12-31T00:00:00+00:00',
+      manual_access_override_reason: 'Cuenta de demostración del módulo de empresa'
+    })
+    .eq('id', user.id)
+  if (profile.error) throw profile.error
+
+  const existing = await client
+    .from('memberships')
+    .select('id')
+    .eq('tenant_id', company.tenantId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (existing.error) throw existing.error
+
+  let membershipId = existing.data?.id as string | undefined
+  if (!membershipId) {
+    const created = await client
+      .from('memberships')
+      .insert({
+        tenant_id: company.tenantId,
+        user_id: user.id,
+        status: 'active',
+        joined_at: new Date().toISOString()
+      })
+      .select('id')
+      .single()
+    if (created.error) throw created.error
+    membershipId = created.data.id as string
+  }
+
+  const role = await client
+    .from('tenant_roles')
+    .select('id')
+    .is('tenant_id', null)
+    .eq('code', 'tenant_owner')
+    .single()
+  if (role.error) throw role.error
+
+  const assignment = await client.from('membership_roles').upsert(
+    {
+      membership_id: membershipId,
+      role_id: role.data.id as string,
+      assigned_at: new Date().toISOString(),
+      revoked_at: null
+    },
+    { onConflict: 'membership_id,role_id' }
+  )
+  if (assignment.error) throw assignment.error
+
+  console.log(`✓ reclutadora de demostración lista: ${email} (${company.name})`)
+  return email
+}
+
+/**
+ * Postulantes de prueba repartidos por el proceso de selección.
+ *
+ * Sin ellos el espacio de la empresa se ve vacío —cero candidatos, tablero sin
+ * tarjetas— y no hay nada que enseñar. Cada uno necesita su cuenta porque el
+ * perfil de candidato cuelga de un usuario real.
+ */
+async function seedApplicants(client: SupabaseClient): Promise<void> {
+  const stages = await client.from('pipeline_stages').select('id, code').is('tenant_id', null)
+  if (stages.error) throw stages.error
+  const stageByCode = new Map((stages.data ?? []).map((row) => [row.code as string, row.id as string]))
+
+  const jobs = await client
+    .from('job_postings')
+    .select('id, slug')
+    .in('slug', [...new Set(APPLICANTS.map((applicant) => applicant.jobSlug))])
+  if (jobs.error) throw jobs.error
+  const jobBySlug = new Map((jobs.data ?? []).map((row) => [row.slug as string, row.id as string]))
+
+  let created = 0
+  for (const applicant of APPLICANTS) {
+    const email = applicantEmail(applicant.name)
+    const jobId = jobBySlug.get(applicant.jobSlug)
+    if (!jobId) throw new Error(`Falta la vacante ${applicant.jobSlug}`)
+
+    let user = await findUserByEmail(client, email)
+    if (!user) {
+      const account = await client.auth.admin.createUser({
+        email,
+        email_confirm: true,
+        password: crypto.randomUUID(),
+        user_metadata: { full_name: applicant.name }
+      })
+      if (account.error) throw account.error
+      user = account.data.user
+      created += 1
+    }
+
+    const profileUpsert = await client
+      .from('candidate_profiles')
+      .upsert(
+        {
+          user_id: user.id,
+          headline: applicant.headline,
+          city_name: applicant.city,
+          country_code: 'DO',
+          visibility: 'public',
+          is_visible_to_recruiters: true
+        },
+        { onConflict: 'user_id' }
+      )
+      .select('id')
+      .single()
+    if (profileUpsert.error) throw profileUpsert.error
+
+    // El nombre visible se guarda en `public.users`, que crea el trigger de alta.
+    const nameUpdate = await client
+      .from('users')
+      .update({ full_name: applicant.name, display_name: applicant.name })
+      .eq('id', user.id)
+    if (nameUpdate.error) throw nameUpdate.error
+
+    const submittedAt = daysAgo(applicant.daysAgo)
+    const application = await client
+      .from('applications')
+      .upsert(
+        {
+          job_posting_id: jobId,
+          candidate_profile_id: profileUpsert.data.id as string,
+          status_public: applicant.status,
+          cover_letter: applicant.coverLetter,
+          candidate_display_name_snapshot: applicant.name,
+          candidate_email_snapshot: email,
+          candidate_headline_snapshot: applicant.headline,
+          current_stage_id: stageByCode.get(applicant.stage) ?? null,
+          submitted_at: submittedAt
+        },
+        { onConflict: 'job_posting_id,candidate_profile_id' }
+      )
+    if (application.error) throw application.error
+  }
+
+  console.log(`✓ ${APPLICANTS.length} postulantes en el proceso de selección (${created} cuentas nuevas)`)
+}
+
 async function findUserByEmail(client: SupabaseClient, email: string) {
   const normalized = email.trim().toLowerCase()
   // `listUsers` pagina de 50 en 50; el proyecto tiene pocos usuarios, pero se
@@ -631,7 +969,33 @@ async function purge(client: SupabaseClient): Promise<void> {
     if (response.error) throw response.error
   }
 
-  console.log(`✓ purgado: ${applicationIds.length} postulaciones, ${jobIds.length} vacantes, ${companyIds.length} empresas`)
+  // Las membresías del espacio de trabajo: se borran las de los tenants demo,
+  // que son las únicas que este script pudo crear.
+  const memberships = await client.from('memberships').select('id').in('tenant_id', tenantIds)
+  if (memberships.error) throw memberships.error
+  const membershipIds = (memberships.data ?? []).map((row) => row.id as string)
+  if (membershipIds.length > 0) {
+    const roles = await client.from('membership_roles').delete().in('membership_id', membershipIds)
+    if (roles.error) throw roles.error
+    const response = await client.from('memberships').delete().in('id', membershipIds)
+    if (response.error) throw response.error
+  }
+
+  // Las cuentas de los postulantes de prueba. Borrar el usuario de auth arrastra
+  // en cascada su fila de `public.users` y su perfil de candidato.
+  let removedApplicants = 0
+  for (const applicant of APPLICANTS) {
+    const user = await findUserByEmail(client, applicantEmail(applicant.name))
+    if (!user) continue
+    const removal = await client.auth.admin.deleteUser(user.id)
+    if (removal.error) throw removal.error
+    removedApplicants += 1
+  }
+
+  console.log(
+    `✓ purgado: ${applicationIds.length} postulaciones, ${jobIds.length} vacantes, ${companyIds.length} empresas, ` +
+      `${membershipIds.length} membresías, ${removedApplicants} cuentas de postulante`
+  )
 }
 
 async function main(): Promise<void> {
@@ -655,6 +1019,23 @@ async function main(): Promise<void> {
   }
 
   await seed(client, typeof args.candidate === 'string' ? args.candidate : null)
+
+  if (typeof args['company-owner'] === 'string') {
+    await seedCompanyOwner(client, args['company-owner'])
+  }
+
+  if (args.applicants) {
+    await seedApplicants(client)
+  }
+
+  if (args.recruiter) {
+    const password = typeof args['recruiter-password'] === 'string' ? args['recruiter-password'] : ''
+    if (!password) {
+      console.error('--recruiter necesita --recruiter-password=<clave> (no se guarda en el repo).')
+      process.exit(1)
+    }
+    await seedRecruiter(client, password)
+  }
 }
 
 main().catch((error) => {

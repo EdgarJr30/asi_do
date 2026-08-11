@@ -7,6 +7,8 @@
 //     --email=<correo> --password=<clave> [--layout=desktop]
 //
 // Opciones:
+//   --flow=workspace    graba el módulo de empresa (el ATS) en vez del
+//                       recorrido del candidato; implica --layout=desktop
 //   --layout=desktop    graba a 1440×900 en vez del viewport de teléfono
 //   --base=<url>        origen a grabar (por defecto http://127.0.0.1:4173)
 //   --out=<dir>         carpeta de salida (por defecto reports/demo-movil)
@@ -539,17 +541,29 @@ class Demo {
  * cabecera conserve su forma y no se vea un hueco.
  */
 function maskEmailScript(email: string): string {
+  // El dominio de los postulantes de prueba es `.invalid` porque la RFC 2606 lo
+  // reserva y así ninguna dirección puede existir de verdad. En pantalla, sin
+  // embargo, parece un dato a medio terminar: se muestra con el dominio de
+  // ejemplo que también reserva esa RFC, que se lee como lo que es.
+  const replacements: Array<[string, string]> = [
+    [email, 'cuenta ASI'],
+    ['@demo.invalid', '@example.com']
+  ]
+
   return String.raw`
 (() => {
-  var target = ${JSON.stringify(email)}
-  var replacement = 'cuenta ASI'
+  var replacements = ${JSON.stringify(replacements)}
 
   function scrub(root) {
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
     var node
     while ((node = walker.nextNode())) {
-      if (node.nodeValue && node.nodeValue.indexOf(target) !== -1) {
-        node.nodeValue = node.nodeValue.split(target).join(replacement)
+      if (!node.nodeValue) continue
+      for (var i = 0; i < replacements.length; i += 1) {
+        var pair = replacements[i]
+        if (node.nodeValue.indexOf(pair[0]) !== -1) {
+          node.nodeValue = node.nodeValue.split(pair[0]).join(pair[1])
+        }
       }
     }
   }
@@ -653,6 +667,59 @@ function logoDataUri(): string {
   return `data:image/webp;base64,${readFileSync(file).toString('base64')}`
 }
 
+/**
+ * Recorrido por el módulo de empresa.
+ *
+ * Se navega por el sidebar y no por URL: la gracia del video es enseñar que
+ * todo el reclutamiento vive en un mismo sitio, y eso se cuenta viendo la
+ * navegación, no apareciendo en cada pantalla.
+ */
+async function recordWorkspaceFlow(demo: Demo, page: Page, layout: Layout): Promise<void> {
+  const sidebar = (name: string) => page.getByRole('button', { name, exact: true }).first()
+  const overContent = { x: Math.round(layout.viewport.width * 0.6), y: 560 }
+
+  // Resumen: los indicadores y, más abajo, el embudo y la actividad.
+  await demo.pause(1600)
+  await demo.swipe(300, overContent, 1800)
+  await demo.pause(1100)
+  await demo.swipe(-300, overContent, 1500)
+
+  // Vacantes publicadas, con su conteo de postulaciones.
+  await demo.tap(sidebar('Vacantes'), 2200)
+  await page.waitForLoadState('networkidle')
+  await demo.pause(1800)
+
+  // Aplicaciones: quién aplicó, a qué y en qué estado.
+  await demo.tap(sidebar('Aplicaciones'), 2200)
+  await page.waitForLoadState('networkidle')
+  await demo.pause(2400)
+
+  // El tablero por etapas.
+  await demo.tap(sidebar('Proceso de selección'), 2400)
+  await page.waitForLoadState('networkidle')
+  await demo.pause(2800)
+
+  // El banco de talento de la plataforma.
+  await demo.tap(sidebar('Candidatos'), 2200)
+  await page.waitForLoadState('networkidle')
+  await demo.pause(1400)
+  await demo.swipe(280, overContent, 1700)
+  await demo.pause(1600)
+}
+
+/**
+ * Cierre común: el banner se sostiene largo a propósito, porque el QR tiene que
+ * quedar quieto el tiempo suficiente para sacar el teléfono y escanear.
+ */
+async function closeWithBanner(
+  demo: Demo,
+  options: { logo: string; qr: string; scale: number }
+): Promise<void> {
+  await demo.hidePointer()
+  await demo.banner({ ...options, instant: false })
+  await demo.pause(8500)
+}
+
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2))
   const base = typeof args.base === 'string' ? args.base : 'http://127.0.0.1:4173'
@@ -664,10 +731,14 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
-  const isDesktop = args.layout === 'desktop' || args.desktop === true
+  const isWorkspaceFlow = args.flow === 'workspace'
+  // El módulo de empresa es una consola de escritorio: en un viewport de
+  // teléfono no se ve lo que hay que enseñar.
+  const isDesktop = isWorkspaceFlow || args.layout === 'desktop' || args.desktop === true
   const layout = isDesktop ? LAYOUTS.desktop : LAYOUTS.mobile
 
-  const defaultName = isDesktop ? 'demo-escritorio' : 'demo-movil'
+  const defaultName = isWorkspaceFlow ? 'demo-empresa' : isDesktop ? 'demo-escritorio' : 'demo-movil'
+  const outputName = isWorkspaceFlow ? 'demoAppEmpresa' : isDesktop ? 'demoAppDesktop' : 'demoApp'
   const outDir = resolve(process.cwd(), typeof args.out === 'string' ? args.out : 'reports/demo-movil')
   const rawDir = resolve(outDir, 'raw')
   rmSync(rawDir, { recursive: true, force: true })
@@ -698,7 +769,8 @@ async function main(): Promise<void> {
   await authPage.fill('input[type=email]', email)
   await authPage.fill('input[type=password]', password)
   await authPage.click('button:has-text("Iniciar sesión")')
-  await authPage.waitForURL(/\/account/, { timeout: 30_000 })
+  // Quien tiene empresa aterriza en `/workspace`; quien no, en `/account`.
+  await authPage.waitForURL(/\/(account|workspace)/, { timeout: 30_000 })
   const storageState = await authContext.storageState()
   await authContext.close()
 
@@ -721,13 +793,41 @@ async function main(): Promise<void> {
   const page = await context.newPage()
   const demo = new Demo(page, layout)
 
+  /** Cierre del archivo: nombrar, comprobar y decir qué falta. */
+  const finish = async () => {
+    await context.close()
+    await browser.close()
+
+    const [file] = readdirSync(rawDir).filter((name) => name.endsWith('.webm'))
+    if (!file) throw new Error('Playwright no produjo el video')
+    const finalPath = resolve(outDir, `${defaultName}.raw.webm`)
+    renameSync(resolve(rawDir, file), finalPath)
+    rmSync(rawDir, { recursive: true, force: true })
+    if (layout.checkFullFrame) assertFullFrame(finalPath, layout.video)
+
+    console.log(`✓ video crudo (${layout.name}): ${finalPath}`)
+    console.log(
+      `  Falta comprimirlo a VP9:  scripts/encode-mobile-demo.sh ${relative(process.cwd(), finalPath)} ${relative(
+        process.cwd(),
+        resolve(outDir, `${outputName}.webm`)
+      )}`
+    )
+  }
+
   // ── Banner de apertura ────────────────────────────────────────────────────
   // Se monta ya dibujado, sin entrada: es el primer cuadro útil del video y
   // tiene que ser idéntico al último para que el bucle no dé un salto.
-  await page.goto(`${base}/account`, { waitUntil: 'networkidle' })
+  await page.goto(`${base}${isWorkspaceFlow ? '/workspace' : '/account'}`, { waitUntil: 'networkidle' })
   await demo.banner({ logo, qr, instant: true, scale: layout.bannerScale })
   await demo.pause(2800)
   await demo.hideBanner(760)
+
+  if (isWorkspaceFlow) {
+    await recordWorkspaceFlow(demo, page, layout)
+    await closeWithBanner(demo, { logo, qr, scale: layout.bannerScale })
+    await finish()
+    return
+  }
 
   // ── Panel del candidato ───────────────────────────────────────────────────
   await demo.pause(1200)
@@ -846,30 +946,8 @@ async function main(): Promise<void> {
   await page.waitForLoadState('networkidle')
   await demo.pause(1600)
 
-  // ── Banner de cierre ──────────────────────────────────────────────────────
-  // Se sostiene largo a propósito: el QR tiene que quedar quieto el tiempo
-  // suficiente para que a alguien le dé tiempo a sacar el teléfono y escanear.
-  await demo.hidePointer()
-  await demo.banner({ logo, qr, instant: false, scale: layout.bannerScale })
-  await demo.pause(8500)
-
-  await context.close()
-  await browser.close()
-
-  const [file] = readdirSync(rawDir).filter((name) => name.endsWith('.webm'))
-  if (!file) throw new Error('Playwright no produjo el video')
-  const finalPath = resolve(outDir, `${defaultName}.raw.webm`)
-  renameSync(resolve(rawDir, file), finalPath)
-  rmSync(rawDir, { recursive: true, force: true })
-  if (layout.checkFullFrame) assertFullFrame(finalPath, layout.video)
-
-  console.log(`✓ video crudo (${layout.name}): ${finalPath}`)
-  console.log(
-    `  Falta comprimirlo a VP9:  scripts/encode-mobile-demo.sh ${relative(process.cwd(), finalPath)} ${relative(
-      process.cwd(),
-      resolve(outDir, `${isDesktop ? 'demoAppDesktop' : 'demoApp'}.webm`)
-    )}`
-  )
+  await closeWithBanner(demo, { logo, qr, scale: layout.bannerScale })
+  await finish()
 }
 
 main().catch((error) => {
