@@ -88,6 +88,9 @@ const CAROUSEL_CARD_GAP_REM = 0.6;
 const CAROUSEL_SWIPE_MOMENTUM_MIN_VELOCITY = 120;
 const CAROUSEL_SWIPE_MOMENTUM_DECAY_PER_MS = 0.996;
 const HERO_WHEEL_NAVIGATION_LOCK_MS = 520;
+// El módulo de testimonios queda oculto: no entra en la salida a producción.
+// Poner en `true` para volver a mostrarlo sin rehacer la sección.
+const MOSTRAR_TESTIMONIOS = false;
 
 type InstitutionalCarouselCardItem = (typeof homeCarouselCards)[number];
 
@@ -639,7 +642,7 @@ export function InstitutionalHomePage() {
   );
 
   useEffect(() => {
-    if (shouldReduceMotion) {
+    if (shouldReduceMotion || !MOSTRAR_TESTIMONIOS) {
       return;
     }
 
@@ -1351,104 +1354,106 @@ export function InstitutionalHomePage() {
         </div>
       </InstitutionalSection>
 
-      <InstitutionalSection tone="muted">
-        <div className="space-y-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <InstitutionalLead
-              className="max-w-2xl"
-              content={{
-                eyebrow: 'Testimonios',
-                title:
-                  'Historias de miembros que encontraron respaldo, propósito y comunidad.',
-                description:
-                  'Voces de laicos, profesionales y empresas que hoy sirven acompañados por una red que los sostiene.',
-              }}
-            />
-            <div className="flex items-center gap-2">
-              <button
-                aria-label="Testimonio anterior"
-                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white text-(--asi-primary) shadow-(--asi-shadow-soft) transition hover:bg-(--asi-surface-raised)"
-                type="button"
-                onClick={() => stepTestimonialSlide('prev')}
+      {MOSTRAR_TESTIMONIOS ? (
+        <InstitutionalSection tone="muted">
+          <div className="space-y-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <InstitutionalLead
+                className="max-w-2xl"
+                content={{
+                  eyebrow: 'Testimonios',
+                  title:
+                    'Historias de miembros que encontraron respaldo, propósito y comunidad.',
+                  description:
+                    'Voces de laicos, profesionales y empresas que hoy sirven acompañados por una red que los sostiene.',
+                }}
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  aria-label="Testimonio anterior"
+                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white text-(--asi-primary) shadow-(--asi-shadow-soft) transition hover:bg-(--asi-surface-raised)"
+                  type="button"
+                  onClick={() => stepTestimonialSlide('prev')}
+                >
+                  <ArrowLeft className="size-4" />
+                </button>
+                <button
+                  aria-label="Testimonio siguiente"
+                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white text-(--asi-primary) shadow-(--asi-shadow-soft) transition hover:bg-(--asi-surface-raised)"
+                  type="button"
+                  onClick={() => stepTestimonialSlide('next')}
+                >
+                  <ArrowRight className="size-4" />
+                </button>
+              </div>
+            </div>
+
+            <AnimatePresence initial={false} mode="wait">
+              <motion.div
+                key={`testimonial-${activeTestimonialIndex}`}
+                className="asi-gesture-surface grid gap-4 lg:grid-cols-3"
+                initial={shouldReduceMotion ? false : { opacity: 0.72 }}
+                transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+                animate={shouldReduceMotion ? undefined : { opacity: 1 }}
+                exit={shouldReduceMotion ? undefined : { opacity: 0.72 }}
+                drag={shouldReduceMotion ? false : 'x'}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.08}
+                onDragEnd={(_, info) => {
+                  const direction = getSwipeDirection(info);
+
+                  if (direction === 'next') {
+                    stepTestimonialSlide('next');
+                  }
+
+                  if (direction === 'prev') {
+                    stepTestimonialSlide('prev');
+                  }
+                }}
               >
-                <ArrowLeft className="size-4" />
-              </button>
-              <button
-                aria-label="Testimonio siguiente"
-                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white text-(--asi-primary) shadow-(--asi-shadow-soft) transition hover:bg-(--asi-surface-raised)"
-                type="button"
-                onClick={() => stepTestimonialSlide('next')}
-              >
-                <ArrowRight className="size-4" />
-              </button>
+                {visibleTestimonials.map((item, index) => (
+                  <motion.article
+                    key={item.title}
+                    className={cn(
+                      'institutional-home__testimonial-card rounded-card-lg p-6 text-white',
+                      index > 0 && 'hidden lg:block'
+                    )}
+                    layout
+                  >
+                    <Quote className="size-7 text-white/68" />
+                    <p className="mt-4 text-lg leading-8 text-white/92">
+                      {item.title}
+                    </p>
+                    <p className="mt-4 text-sm leading-6 text-white/74">
+                      {item.description}
+                    </p>
+                    <p className="institutional-home__eyebrow-meta mt-6 text-xs font-semibold uppercase text-white/58">
+                      {item.meta}
+                    </p>
+                  </motion.article>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="flex items-center justify-center gap-2">
+              {homeTestimonials.map((item, index) => (
+                <button
+                  key={item.title}
+                  aria-label={`Ir al testimonio ${index + 1}`}
+                  className={cn(
+                    'h-2.5 rounded-full transition-all',
+                    index === activeTestimonialIndex
+                      ? 'w-8 bg-(--asi-primary)'
+                      : 'w-2.5 bg-(--asi-outline) hover:bg-(--asi-secondary)/40'
+                  )}
+                  type="button"
+                  onClick={() => goToTestimonialSlide(index)}
+                />
+              ))}
             </div>
           </div>
-
-          <AnimatePresence initial={false} mode="wait">
-            <motion.div
-              key={`testimonial-${activeTestimonialIndex}`}
-              className="asi-gesture-surface grid gap-4 lg:grid-cols-3"
-              initial={shouldReduceMotion ? false : { opacity: 0.72 }}
-              transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-              animate={shouldReduceMotion ? undefined : { opacity: 1 }}
-              exit={shouldReduceMotion ? undefined : { opacity: 0.72 }}
-              drag={shouldReduceMotion ? false : 'x'}
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.08}
-              onDragEnd={(_, info) => {
-                const direction = getSwipeDirection(info);
-
-                if (direction === 'next') {
-                  stepTestimonialSlide('next');
-                }
-
-                if (direction === 'prev') {
-                  stepTestimonialSlide('prev');
-                }
-              }}
-            >
-              {visibleTestimonials.map((item, index) => (
-                <motion.article
-                  key={item.title}
-                  className={cn(
-                    'institutional-home__testimonial-card rounded-card-lg p-6 text-white',
-                    index > 0 && 'hidden lg:block'
-                  )}
-                  layout
-                >
-                  <Quote className="size-7 text-white/68" />
-                  <p className="mt-4 text-lg leading-8 text-white/92">
-                    {item.title}
-                  </p>
-                  <p className="mt-4 text-sm leading-6 text-white/74">
-                    {item.description}
-                  </p>
-                  <p className="institutional-home__eyebrow-meta mt-6 text-xs font-semibold uppercase text-white/58">
-                    {item.meta}
-                  </p>
-                </motion.article>
-              ))}
-            </motion.div>
-          </AnimatePresence>
-
-          <div className="flex items-center justify-center gap-2">
-            {homeTestimonials.map((item, index) => (
-              <button
-                key={item.title}
-                aria-label={`Ir al testimonio ${index + 1}`}
-                className={cn(
-                  'h-2.5 rounded-full transition-all',
-                  index === activeTestimonialIndex
-                    ? 'w-8 bg-(--asi-primary)'
-                    : 'w-2.5 bg-(--asi-outline) hover:bg-(--asi-secondary)/40'
-                )}
-                type="button"
-                onClick={() => goToTestimonialSlide(index)}
-              />
-            ))}
-          </div>
-        </div>
-      </InstitutionalSection>
+        </InstitutionalSection>
+      ) : null}
     </div>
   );
 }
