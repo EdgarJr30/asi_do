@@ -12,9 +12,14 @@
 //   --headless          graba sin abrir la ventana del navegador
 //
 // Qué graba:
-//   El recorrido completo de un candidato en viewport de teléfono: iniciar
-//   sesión → explorar vacantes → buscar → abrir la vacante → postularse con el
-//   asistente de 4 pasos → ver la postulación registrada.
+//   El recorrido de un candidato en viewport de teléfono: panel → explorar
+//   vacantes → buscar → abrir la vacante → postularse con el asistente de 4
+//   pasos → ver la postulación registrada.
+//
+//   El inicio de sesión ocurre en un contexto aparte, sin grabar, y la sesión
+//   se traspasa con `storageState`. No es un detalle de comodidad: el video se
+//   publica en la home, y grabar el formulario dejaría el correo de la cuenta
+//   escrito a la vista de cualquiera.
 //
 // Por qué Playwright y no una captura de pantalla del escritorio:
 //   El video se reproduce dentro de un marco de teléfono, así que tiene que
@@ -164,6 +169,18 @@ async function main(): Promise<void> {
   mkdirSync(rawDir, { recursive: true })
 
   const browser = await chromium.launch({ headless: args.headless === true })
+
+  // Inicio de sesión fuera de cámara: solo interesa la sesión resultante.
+  const authContext = await browser.newContext({ ...DEVICE, viewport: VIEWPORT })
+  const authPage = await authContext.newPage()
+  await authPage.goto(`${base}/auth/sign-in`, { waitUntil: 'networkidle' })
+  await authPage.fill('input[type=email]', email)
+  await authPage.fill('input[type=password]', password)
+  await authPage.click('button:has-text("Iniciar sesión")')
+  await authPage.waitForURL(/\/account/, { timeout: 30_000 })
+  const storageState = await authContext.storageState()
+  await authContext.close()
+
   const context = await browser.newContext({
     ...DEVICE,
     viewport: VIEWPORT,
@@ -173,6 +190,7 @@ async function main(): Promise<void> {
     locale: 'es-DO',
     timezoneId: 'America/Santo_Domingo',
     colorScheme: 'light',
+    storageState,
     recordVideo: { dir: rawDir, size: VIDEO_SIZE }
   })
   await context.addInitScript(TAP_MARKER_SCRIPT)
@@ -180,17 +198,9 @@ async function main(): Promise<void> {
   const page = await context.newPage()
   const demo = new Demo(page)
 
-  // ── Inicio de sesión ──────────────────────────────────────────────────────
-  await page.goto(`${base}/auth/sign-in`, { waitUntil: 'networkidle' })
-  await demo.pause(1400)
-  await demo.type(page.locator('input[type=email]'), email, 55)
-  await demo.type(page.locator('input[type=password]'), password, 45)
-  await demo.tap(page.getByRole('button', { name: 'Iniciar sesión' }), 400)
-  await page.waitForURL(/\/account/, { timeout: 30_000 })
-  await page.waitForLoadState('networkidle')
-  await demo.pause(2200)
-
   // ── Panel del candidato ───────────────────────────────────────────────────
+  await page.goto(`${base}/account`, { waitUntil: 'networkidle' })
+  await demo.pause(2600)
   await demo.scrollBy(260, 14)
   await demo.pause(700)
   await demo.scrollBy(-260, 10)
