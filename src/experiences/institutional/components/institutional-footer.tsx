@@ -29,11 +29,11 @@ export function InstitutionalFooter({
   return (
     <div className="asi-site">
       <footer className="bg-(--asi-primary) text-white">
-        <div className="asi-container py-10 sm:py-12">
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-8">
-            <div className="rounded-card-lg border border-white/10 bg-white/6 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.12)] backdrop-blur-sm sm:p-6">
-              <div className="flex items-center gap-4">
-                <span className="flex h-16 w-24 shrink-0 items-center justify-center rounded-card bg-white/10 px-3 backdrop-blur-sm sm:w-28">
+        <div className="asi-container py-7 sm:py-8">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-5">
+            <div className="rounded-card-lg border border-white/10 bg-white/6 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.12)] backdrop-blur-sm sm:p-5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-12 w-20 shrink-0 items-center justify-center rounded-card bg-white/10 px-3 backdrop-blur-sm sm:w-24">
                   <BrandLockup className="w-full" surface="dark" />
                 </span>
                 <div className="min-w-0">
@@ -45,16 +45,16 @@ export function InstitutionalFooter({
                   </p>
                 </div>
               </div>
-              <p className="mt-5 max-w-xl text-sm leading-7 text-white/74 sm:mt-6">
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/74">
                 {merchantCompliance.legalName}. Membresías y donaciones
                 procesadas en {merchantCompliance.currency}.
                 <br />
                 Dirección permanente: {merchantCompliance.address}
               </p>
-              <div className="mt-5">
+              <div className="mt-3">
                 <PaymentBrandStrip itemClassName="border-white/12 bg-white" />
               </div>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 <Link
                   className="asi-button asi-button-secondary w-full justify-center"
                   to={platformButton.to}
@@ -70,16 +70,16 @@ export function InstitutionalFooter({
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
-              <div className="rounded-card-lg border border-white/10 bg-white/6 p-5 backdrop-blur-sm">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-card-lg border border-white/10 bg-white/6 p-4 backdrop-blur-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
                   Explora
                 </p>
-                <div className="mt-4 space-y-2.5">
+                <div className="mt-3 grid grid-cols-2 gap-2">
                   {institutionalNavigation.map((item) => (
                     <Link
                       key={item.to}
-                      className="flex items-center justify-between rounded-card bg-white/6 px-3.5 py-3 text-sm font-medium text-white/82 transition hover:bg-white/12 hover:text-white"
+                      className="flex min-h-11 items-center justify-between gap-1.5 rounded-card bg-white/6 px-3 py-2 text-[0.8125rem] font-medium leading-4 text-white/82 transition hover:bg-white/12 hover:text-white"
                       to={item.to}
                     >
                       {item.label}
@@ -87,21 +87,21 @@ export function InstitutionalFooter({
                     </Link>
                   ))}
                   <Link
-                    className="flex items-center justify-between rounded-card bg-white/6 px-3.5 py-3 text-sm font-medium text-white/82 transition hover:bg-white/12 hover:text-white"
+                    className="flex min-h-11 items-center justify-between gap-1.5 rounded-card bg-white/6 px-3 py-2 text-[0.8125rem] font-medium leading-4 text-white/82 transition hover:bg-white/12 hover:text-white"
                     to={surfacePaths.public.home}
                   >
                     Plataforma ASI
                     <MoveRight className="size-4 text-white/44" />
                   </Link>
                   <Link
-                    className="flex items-center justify-between rounded-card bg-white/6 px-3.5 py-3 text-sm font-medium text-white/82 transition hover:bg-white/12 hover:text-white"
+                    className="flex min-h-11 items-center justify-between gap-1.5 rounded-card bg-white/6 px-3 py-2 text-[0.8125rem] font-medium leading-4 text-white/82 transition hover:bg-white/12 hover:text-white"
                     to={surfacePaths.auth.signIn}
                   >
                     Iniciar sesión
                     <MoveRight className="size-4 text-white/44" />
                   </Link>
                   <Link
-                    className="flex items-center justify-between rounded-card bg-white/6 px-3.5 py-3 text-sm font-medium text-white/82 transition hover:bg-white/12 hover:text-white"
+                    className="flex min-h-11 items-center justify-between gap-1.5 rounded-card bg-white/6 px-3 py-2 text-[0.8125rem] font-medium leading-4 text-white/82 transition hover:bg-white/12 hover:text-white"
                     to={surfacePaths.institutional.donate}
                   >
                     Donaciones
@@ -110,15 +110,15 @@ export function InstitutionalFooter({
                 </div>
               </div>
 
-              <div className="rounded-card-lg border border-white/10 bg-white/6 p-5 backdrop-blur-sm">
+              <div className="rounded-card-lg border border-white/10 bg-white/6 p-4 backdrop-blur-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/64">
                   Pagos y políticas
                 </p>
-                <div className="mt-4 space-y-2.5">
+                <div className="mt-3 grid grid-cols-2 gap-2">
                   {paymentPolicyLinks.map((item) => (
                     <Link
                       key={item.to}
-                      className="flex items-center justify-between rounded-card bg-white/6 px-3.5 py-3 text-sm font-medium text-white/82 transition hover:bg-white/12 hover:text-white"
+                      className="flex min-h-11 items-center justify-between gap-1.5 rounded-card bg-white/6 px-3 py-2 text-[0.8125rem] font-medium leading-4 text-white/82 transition hover:bg-white/12 hover:text-white"
                       to={item.to}
                     >
                       {item.label}
@@ -129,7 +129,7 @@ export function InstitutionalFooter({
               </div>
             </div>
           </div>
-          <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/12 pt-5 text-center text-sm leading-6 text-white/68 sm:flex-row sm:justify-between sm:text-left">
+          <div className="mt-5 flex flex-col items-center gap-2 border-t border-white/12 pt-4 text-center text-xs leading-5 text-white/68 sm:flex-row sm:justify-between sm:text-left">
             <p>
               Copyright © {currentYear} ASI República Dominicana. Compartiendo
               el mensaje de esperanza a través de la fe y el servicio.
