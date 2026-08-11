@@ -49,7 +49,7 @@ export function InstitutionalFooter({
                 {merchantCompliance.legalName}. Membresías y donaciones
                 procesadas en {merchantCompliance.currency}.
                 <br />
-                Dirección permanente: {merchantCompliance.address}.
+                Dirección permanente: {merchantCompliance.address}
               </p>
               <div className="mt-5">
                 <PaymentBrandStrip itemClassName="border-white/12 bg-white" />
@@ -131,8 +131,8 @@ export function InstitutionalFooter({
           </div>
           <div className="mt-8 flex flex-col items-center gap-3 border-t border-white/12 pt-5 text-center text-sm leading-6 text-white/68 sm:flex-row sm:justify-between sm:text-left">
             <p>
-              Copyright © {currentYear} ASI República Dominicana. Compartiendo el
-              mensaje de esperanza a través de la fe y el servicio.
+              Copyright © {currentYear} ASI República Dominicana. Compartiendo
+              el mensaje de esperanza a través de la fe y el servicio.
             </p>
             <AppEnvironmentBadge className="shrink-0" surface="dark" />
           </div>
