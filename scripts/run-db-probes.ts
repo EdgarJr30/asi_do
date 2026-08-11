@@ -76,6 +76,9 @@ const MANIFIESTO: Record<string, Tier> = {
   p1_email_broadcast_probe: 'datos',
   p1_email_broadcast_preview_probe: 'datos',
   p1_membership_renewal_reminders_probe: 'datos',
+  // Compara las dos funciones impersonando a cada titular de rol, así que
+  // necesita usuarios con rol de plataforma cargados.
+  p1_platform_permissions_bulk_probe: 'datos',
   p1_access_log_page_probe: 'datos',
   p1_audit_logs_probe: 'datos',
   p1_rbac_review_moderation_probe: 'datos',

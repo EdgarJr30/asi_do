@@ -71,38 +71,6 @@ interface MembershipQueryRow {
     | null
 }
 
-const platformPermissionChecks = [
-  'platform_dashboard:read',
-  'tenant:read',
-  'user:read',
-  'user:approve',
-  'license:activate',
-  'recruiter_request:read',
-  'recruiter_request:review',
-  'pastor_authority_request:read',
-  'pastor_authority_request:review',
-  'regional_authority_request:read',
-  'regional_authority_request:review',
-  'scoped_user_authorization:read',
-  'scoped_user_authorization:review',
-  'moderation:read',
-  'moderation:act',
-  'support_ticket:read',
-  'support_ticket:update',
-  'plan:read',
-  'plan:update',
-  'billing:read',
-  'feature_flag:read',
-  'feature_flag:update',
-  'app_error_log:read',
-  'audit_log:read',
-  'membership_application:review',
-  'membership_payment:verify',
-  'user:activate',
-  'email:read',
-  'email:resend'
-] as const satisfies readonly PermissionCode[]
-
 function requireSupabase() {
   if (!supabase) {
     throw new Error('Supabase no esta configurado. Completa VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.')
@@ -406,19 +374,18 @@ export async function fetchSessionSnapshot(authUser: User): Promise<SessionSnaps
     } satisfies AppMembership
   })
 
-  const platformPermissionResults = await Promise.all(
-    platformPermissionChecks.map(async (permissionCode) => {
-      const permissionResponse = await client.rpc('has_platform_permission', {
-        permission_code: permissionCode
-      })
+  // Una consulta, no una por permiso. Antes esto era un `Promise.all` sobre los
+  // 29 códigos de permiso de plataforma: 29 peticiones a PostgREST, cada
+  // una con su conexión y su transacción, para resolver algo que sale de un solo
+  // recorrido de las mismas cuatro tablas. Se disparaban en cada hidratación de
+  // sesión —login, refresco de token, vuelta al foco— y sin corte por rol, así
+  // que un candidato sin permisos pedía 29 booleanos para recibir 29 `false`.
+  // Los logs del 2026-08-11 lo medían en 694 de 1.000 peticiones. Ver R-153.
+  const platformPermissionResponse = await client.rpc('my_platform_permissions')
 
-      if (permissionResponse.error) {
-        throw permissionResponse.error
-      }
-
-      return permissionResponse.data ? permissionCode : null
-    })
-  )
+  if (platformPermissionResponse.error) {
+    throw platformPermissionResponse.error
+  }
 
   const platformAdminResponse = await client.rpc('is_platform_admin')
 
@@ -445,8 +412,11 @@ export async function fetchSessionSnapshot(authUser: User): Promise<SessionSnaps
     throw pastorScopeResponse.error
   }
 
-  const platformPermissions = platformPermissionResults.flatMap((permissionCode) =>
-    permissionCode ? [permissionCode] : []
+  // `isPermissionCode` sigue filtrando: la RPC devuelve lo que haya en el
+  // catálogo de la base, que puede adelantarse a los códigos que esta versión
+  // del cliente conoce.
+  const platformPermissions = (platformPermissionResponse.data ?? []).flatMap((permissionCode) =>
+    isPermissionCode(permissionCode) ? [permissionCode] : []
   )
   const permissions = uniquePermissions([...platformPermissions, ...memberships.flatMap((membership) => membership.permissions)])
 

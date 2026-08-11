@@ -4336,6 +4336,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      my_platform_permissions: { Args: never; Returns: string[] }
       my_tenant_ids: { Args: never; Returns: string[] }
       notify_membership_admins: {
         Args: {
