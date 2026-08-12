@@ -241,6 +241,8 @@ describe('project contract', () => {
     expect(targetGuard).toContain('jgmojkzthfogynqixkob')
     expect(ciWorkflow).toContain('E2E_TARGET_ENV: development')
     expect(ciWorkflow).toContain('PRODUCTION_SUPABASE_PROJECT_REF: ${{ vars.PRODUCTION_SUPABASE_PROJECT_REF }}')
+    const productionJob = ciWorkflow.slice(ciWorkflow.indexOf('  deploy-production:'))
+    expect(productionJob).toContain('npx playwright install --with-deps chromium webkit')
   })
 
   // Los dos despliegues automáticos (TASK-255, D1 y D3). Lo que se fija aquí no

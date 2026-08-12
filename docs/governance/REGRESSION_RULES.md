@@ -582,6 +582,9 @@ Do not configure the AZUL service with the legacy `SUPABASE_ANON_KEY` or `SUPABA
 ### R-164 — Auth template promotion must publish the complete set
 Do not treat `Confirm sign up` as the complete production Auth email setup. The protected Management API synchronizer must load and publish `confirmation`, `invite`, `magic_link`, `recovery`, `email_change`, and `reauthentication` together, including their subjects, and abort before writing if any template is unavailable or the target environment does not match.
 
+### R-165 — Production smoke must install every configured browser engine
+Do not run the production Playwright smoke suite after installing only Chromium when its configured projects also use WebKit. The deployment job must install every browser engine required by the suite so a missing runner binary cannot be mistaken for a product failure.
+
 ---
 
 ## Maintenance rule
