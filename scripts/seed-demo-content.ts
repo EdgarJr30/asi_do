@@ -7,6 +7,7 @@
 //   node scripts/seed-demo-content.ts --applicants                 # postulantes para el ATS
 //   node scripts/seed-demo-content.ts --recruiter \
 //     --recruiter-password=<clave>                                  # cuenta de reclutadora del ATS
+//   node scripts/seed-demo-content.ts --clear-application=<correo> # deja regrabar la postulación
 //   node scripts/seed-demo-content.ts --purge                      # borra TODO lo sembrado
 //
 // Por qué existe:
@@ -913,6 +914,51 @@ async function seedCandidateResume(client: SupabaseClient, email: string): Promi
   console.log(`✓ CV de demostración cargado para ${email}`)
 }
 
+/**
+ * Retira las postulaciones de una persona a las vacantes de demostración.
+ *
+ * Sirve para poder regrabar: si el candidato ya aplicó, el asistente entra en
+ * modo "actualizar CV" y el recorrido del video deja de ser el de alguien que
+ * se postula por primera vez.
+ */
+async function clearApplication(client: SupabaseClient, email: string): Promise<void> {
+  const user = await findUserByEmail(client, email)
+  if (!user) throw new Error(`No existe una cuenta con el correo ${email}`)
+
+  const profile = await client
+    .from('candidate_profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (profile.error) throw profile.error
+  if (!profile.data) {
+    console.log(`· ${email} no tiene perfil de candidato`)
+    return
+  }
+
+  const applications = await client
+    .from('applications')
+    .select('id')
+    .eq('candidate_profile_id', profile.data.id as string)
+    .in('job_posting_id', JOBS.map((job) => job.id))
+  if (applications.error) throw applications.error
+
+  const ids = (applications.data ?? []).map((row) => row.id as string)
+  if (ids.length === 0) {
+    console.log(`· ${email} no tiene postulaciones a las vacantes de demostración`)
+    return
+  }
+
+  for (const table of ['application_answers', 'application_notes', 'application_ratings', 'application_stage_history']) {
+    const response = await client.from(table).delete().in('application_id', ids)
+    if (response.error) throw response.error
+  }
+  const removal = await client.from('applications').delete().in('id', ids)
+  if (removal.error) throw removal.error
+
+  console.log(`✓ retiradas ${ids.length} postulaciones de ${email}`)
+}
+
 async function purge(client: SupabaseClient): Promise<void> {
   const jobIds = JOBS.map((job) => job.id)
   const companyIds = COMPANIES.map((company) => company.companyId)
@@ -1015,6 +1061,11 @@ async function main(): Promise<void> {
 
   if (args.purge) {
     await purge(client)
+    return
+  }
+
+  if (typeof args['clear-application'] === 'string') {
+    await clearApplication(client, args['clear-application'])
     return
   }
 

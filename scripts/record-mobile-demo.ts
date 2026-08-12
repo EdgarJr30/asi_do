@@ -10,6 +10,9 @@
 //   --flow=workspace    graba el módulo de empresa (el ATS) en vez del
 //                       recorrido del candidato; implica --layout=desktop
 //   --layout=desktop    graba a 1440×900 en vez del viewport de teléfono
+//   --hq                calidad para proyectar: guarda el cuadro entero que
+//                       compone el navegador (escritorio 2880×1800, móvil
+//                       1170×2532) en vez de la versión reducida para la web
 //   --base=<url>        origen a grabar (por defecto http://127.0.0.1:4173)
 //   --out=<dir>         carpeta de salida (por defecto reports/demo-movil)
 //   --headless          graba sin abrir la ventana del navegador
@@ -533,38 +536,44 @@ class Demo {
 }
 
 /**
- * Sustituye el correo de la cuenta por una etiqueta neutra.
+ * Sustituye por direcciones de ejemplo cualquier correo que salga en pantalla.
  *
- * En escritorio la cabecera lo muestra bajo el nombre, y el video se publica:
- * dejarlo sería repartir la dirección personal del dueño de la cuenta en una
- * página pública. Se reemplaza el texto, no se oculta el elemento, para que la
- * cabecera conserve su forma y no se vea un hueco.
+ * No basta con tapar el de la cuenta que graba. La cabecera muestra la del
+ * usuario, pero el módulo de empresa lista además la de cada persona que
+ * postuló: en cuanto alguien real aplica a una vacante de prueba, su dirección
+ * entra en el video. Como estos videos se publican y se proyectan, se
+ * reescriben todas.
+ *
+ * El dominio de los postulantes de prueba es `.invalid` porque la RFC 2606 lo
+ * reserva y así ninguna dirección puede existir de verdad; en pantalla, sin
+ * embargo, parece un dato a medio terminar, así que se muestra con el dominio
+ * de ejemplo que reserva esa misma RFC.
  */
-function maskEmailScript(email: string): string {
-  // El dominio de los postulantes de prueba es `.invalid` porque la RFC 2606 lo
-  // reserva y así ninguna dirección puede existir de verdad. En pantalla, sin
-  // embargo, parece un dato a medio terminar: se muestra con el dominio de
-  // ejemplo que también reserva esa RFC, que se lee como lo que es.
-  const replacements: Array<[string, string]> = [
-    [email, 'cuenta ASI'],
-    ['@demo.invalid', '@example.com']
-  ]
-
+function maskEmailScript(): string {
   return String.raw`
 (() => {
-  var replacements = ${JSON.stringify(replacements)}
+  var DEMO_DOMAIN = '@demo.invalid'
+  var SHOWN_DOMAIN = '@example.com'
+  var EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g
+
+  function mask(text) {
+    return text.replace(EMAIL, function (match) {
+      // Las de prueba conservan el nombre: ya son ficticias y ayudan a leer la
+      // lista. Cualquier otra se sustituye entera, porque puede ser real.
+      if (match.indexOf(DEMO_DOMAIN) !== -1) {
+        return match.split(DEMO_DOMAIN).join(SHOWN_DOMAIN)
+      }
+      return 'cuenta' + SHOWN_DOMAIN
+    })
+  }
 
   function scrub(root) {
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
     var node
     while ((node = walker.nextNode())) {
-      if (!node.nodeValue) continue
-      for (var i = 0; i < replacements.length; i += 1) {
-        var pair = replacements[i]
-        if (node.nodeValue.indexOf(pair[0]) !== -1) {
-          node.nodeValue = node.nodeValue.split(pair[0]).join(pair[1])
-        }
-      }
+      if (!node.nodeValue || node.nodeValue.indexOf('@') === -1) continue
+      var masked = mask(node.nodeValue)
+      if (masked !== node.nodeValue) node.nodeValue = masked
     }
   }
 
@@ -731,14 +740,26 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
+  // Calidad alta: se guarda el cuadro tal y como lo compone el navegador, sin
+  // la reducción que aplica Playwright, y en móvil se sube la densidad a 3.
+  // Pesa más y cuesta más de componer, pero es lo que hace falta para proyectar.
+  const highQuality = args.hq === true || args.quality === 'alta'
+
   const isWorkspaceFlow = args.flow === 'workspace'
   // El módulo de empresa es una consola de escritorio: en un viewport de
   // teléfono no se ve lo que hay que enseñar.
   const isDesktop = isWorkspaceFlow || args.layout === 'desktop' || args.desktop === true
   const layout = isDesktop ? LAYOUTS.desktop : LAYOUTS.mobile
 
-  const defaultName = isWorkspaceFlow ? 'demo-empresa' : isDesktop ? 'demo-escritorio' : 'demo-movil'
+  const baseName = isWorkspaceFlow ? 'demo-empresa' : isDesktop ? 'demo-escritorio' : 'demo-movil'
+  const defaultName = highQuality ? `${baseName}-hq` : baseName
   const outputName = isWorkspaceFlow ? 'demoAppEmpresa' : isDesktop ? 'demoAppDesktop' : 'demoApp'
+
+  // La densidad con la que pinta el navegador y el tamaño con el que se guarda.
+  const deviceScale = highQuality && !isDesktop ? 3 : 2
+  const video = highQuality
+    ? { width: layout.viewport.width * deviceScale, height: layout.viewport.height * deviceScale }
+    : layout.video
   const outDir = resolve(process.cwd(), typeof args.out === 'string' ? args.out : 'reports/demo-movil')
   const rawDir = resolve(outDir, 'raw')
   rmSync(rawDir, { recursive: true, force: true })
@@ -759,7 +780,7 @@ async function main(): Promise<void> {
   const headless = args.headed === true ? false : isDesktop || args.headless === true
   const browser = await chromium.launch({
     headless,
-    args: ['--force-device-scale-factor=2']
+    args: [`--force-device-scale-factor=${deviceScale}`]
   })
 
   // Inicio de sesión fuera de cámara: solo interesa la sesión resultante.
@@ -779,16 +800,16 @@ async function main(): Promise<void> {
     viewport: layout.viewport,
     // El screencast sale a viewport × densidad; con 2 el video queda nítido sin
     // triplicar el costo de composición de cada cuadro.
-    deviceScaleFactor: 2,
+    deviceScaleFactor: deviceScale,
     locale: 'es-DO',
     timezoneId: 'America/Santo_Domingo',
     colorScheme: 'light',
     storageState,
-    recordVideo: { dir: rawDir, size: layout.video }
+    recordVideo: { dir: rawDir, size: video }
   })
   await context.addInitScript(MOTION_SCRIPT)
   await context.addInitScript(BANNER_SCRIPT)
-  await context.addInitScript(maskEmailScript(email))
+  await context.addInitScript(maskEmailScript())
 
   const page = await context.newPage()
   const demo = new Demo(page, layout)
@@ -803,7 +824,7 @@ async function main(): Promise<void> {
     const finalPath = resolve(outDir, `${defaultName}.raw.webm`)
     renameSync(resolve(rawDir, file), finalPath)
     rmSync(rawDir, { recursive: true, force: true })
-    if (layout.checkFullFrame) assertFullFrame(finalPath, layout.video)
+    if (layout.checkFullFrame) assertFullFrame(finalPath, video)
 
     console.log(`✓ video crudo (${layout.name}): ${finalPath}`)
     console.log(

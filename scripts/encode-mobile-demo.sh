@@ -1,31 +1,44 @@
 #!/usr/bin/env bash
-# Comprime la grabación cruda del demo móvil al formato que sirve la home.
+# Comprime la grabación cruda del demo al formato de destino.
 #
 # Uso:
-#   scripts/encode-mobile-demo.sh [entrada.webm] [salida.webm]
+#   scripts/encode-mobile-demo.sh [entrada.webm] [salida]
+#   scripts/encode-mobile-demo.sh entrada.webm salida.mp4 --presentacion
 #   (por defecto: reports/demo-movil/demo-movil.raw.webm → reports/demo-movil/demoApp.webm)
 #
-# Qué hace y por qué:
-#   - VP9: es lo que `institutional-home-page.tsx` espera del bucket
-#     `public-media`, y pesa la mitad que el VP8 que suelta Playwright.
-#   - Recorta el arranque hasta el primer cuadro del banner. La grabación
-#     empieza cuando se crea la página, así que los primeros segundos son la
-#     app cargando; el video tiene que empezar en el banner, que es lo mismo
-#     con lo que termina. Así el corte del bucle —último cuadro al primero— cae
-#     entre dos cuadros idénticos y no se ve.
-#   - Sin fundidos por el mismo motivo: cualquier entrada o salida a blanco
-#     rompería esa continuidad.
-#   - Sin pista de audio (`-an`): el elemento va `muted`, así que sobra.
+# Dos perfiles:
+#   web (por defecto)  VP9 en WebM, comprimido para que la home cargue rápido.
+#                      Es lo que espera `institutional-home-page.tsx` del bucket
+#                      `public-media`.
+#   --presentacion     H.264 en MP4, casi sin pérdida y con la resolución
+#                      intacta. El formato importa tanto como la calidad: VP9 en
+#                      WebM no lo abren ni Keynote ni PowerPoint ni QuickTime, y
+#                      en una sala eso es el fallo caro.
+#
+# Qué comparten los dos:
+#   - Recortan el arranque hasta el primer cuadro del banner. La grabación
+#     empieza cuando se crea la página, así que los primeros segundos son la app
+#     cargando; el video tiene que empezar en el banner, que es lo mismo con lo
+#     que termina. Así el corte del bucle —último cuadro al primero— cae entre
+#     dos cuadros idénticos y no se ve.
+#   - Sin fundidos, por ese mismo motivo.
+#   - Sin pista de audio (`-an`): no hay nada que oír.
 
 set -euo pipefail
 
 IN="${1:-reports/demo-movil/demo-movil.raw.webm}"
 OUT="${2:-reports/demo-movil/demoApp.webm}"
+PROFILE="web"
+for arg in "$@"; do
+  if [ "$arg" = "--presentacion" ] || [ "$arg" = "--presentation" ]; then PROFILE="presentacion"; fi
+done
 
 if [ ! -f "$IN" ]; then
   echo "No existe la grabación cruda: $IN" >&2
   exit 1
 fi
+
+mkdir -p "$(dirname "$OUT")"
 
 WIDTH="$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of default=noprint_wrappers=1:nokey=1 "$IN")"
 HEIGHT="$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of default=noprint_wrappers=1:nokey=1 "$IN")"
@@ -58,11 +71,31 @@ fi
 # incompleto porque el contexto se cierra mientras se compone.
 LENGTH="$(awk -v d="$DURATION" -v s="$START" 'BEGIN { printf "%.2f", d - s - 0.30 }')"
 
-ffmpeg -hide_banner -v error -y -ss "$START" -i "$IN" -t "$LENGTH" \
-  -c:v libvpx-vp9 -crf 33 -b:v 0 -pix_fmt yuv420p \
-  -row-mt 1 -deadline good -cpu-used 2 -an "$OUT"
+if [ "$PROFILE" = "presentacion" ]; then
+  # Se limita el ancho a 1920. La grabación de escritorio viene a 2880 y
+  # reducirla es un remuestreo con más de dos muestras por píxel: sale más
+  # nítida que grabar a ese tamaño, pesa un tercio y la decodifica cualquier
+  # portátil de sala, que es donde no se puede fallar. El retrato del móvil
+  # (1170 de ancho) pasa intacto.
+  SCALE=""
+  if [ "$WIDTH" -gt 1920 ]; then
+    SCALE="scale=1920:-2:flags=lanczos,"
+  fi
 
-echo "· arranque recortado en ${START}s (primer cuadro del banner)"
+  # `-crf 16` con preset slow deja el texto de la interfaz sin artefactos, que
+  # es lo que se nota al proyectar. `yuv420p` y `+faststart` son los que hacen
+  # que el archivo abra en cualquier reproductor.
+  ffmpeg -hide_banner -v error -y -ss "$START" -i "$IN" -t "$LENGTH" \
+    ${SCALE:+-vf "${SCALE%,}"} \
+    -c:v libx264 -crf 16 -preset slow -profile:v high -level 5.1 \
+    -pix_fmt yuv420p -movflags +faststart -an "$OUT"
+else
+  ffmpeg -hide_banner -v error -y -ss "$START" -i "$IN" -t "$LENGTH" \
+    -c:v libvpx-vp9 -crf 33 -b:v 0 -pix_fmt yuv420p \
+    -row-mt 1 -deadline good -cpu-used 2 -an "$OUT"
+fi
+
+echo "· perfil ${PROFILE} · arranque recortado en ${START}s (primer cuadro del banner)"
 ffprobe -v error -show_entries format=duration,size -show_entries stream=width,height,codec_name \
   -of default=noprint_wrappers=1 "$OUT"
 echo "✓ listo: $OUT"
