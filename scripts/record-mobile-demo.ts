@@ -9,6 +9,14 @@
 // Opciones:
 //   --flow=workspace    graba el módulo de empresa (el ATS) en vez del
 //                       recorrido del candidato; implica --layout=desktop
+//   --flow=membresia    graba la solicitud de membresía completa: portada
+//                       institucional → categorías → registro → confirmación del
+//                       correo → formulario → pago con tarjeta en AZUL. Empieza
+//                       sin sesión, así que no usa --email/--password sino
+//                       --signup-email/--signup-password, la cuenta que crea en
+//                       cámara (y que libera antes de empezar para poder
+//                       regrabar). Necesita el microservicio de pagos levantado
+//                       y que su ALLOWED_ORIGIN incluya el origen que se graba.
 //   --layout=desktop    graba a 1440×900 en vez del viewport de teléfono
 //   --hq                calidad para proyectar: guarda el cuadro entero que
 //                       compone el navegador (escritorio 2880×1800, móvil
@@ -52,6 +60,18 @@ import { qrCode } from './lib/qr-code.ts'
 
 /** Destino del QR del banner. */
 const SITE_URL = 'https://asidominicana.do'
+
+/**
+ * Identificación del navegador en la vista de escritorio.
+ *
+ * Sin esto, Chrome sin ventana se presenta como `HeadlessChrome`, y el
+ * cortafuegos que protege la pasarela de AZUL corta la conexión con un "Access
+ * Denied" en cuanto lo lee. La grabación no se entera: sigue tecleando la
+ * tarjeta contra una página de error y el video sale con el fallo dentro. En
+ * móvil no hace falta porque el perfil de iPhone ya trae el suyo.
+ */
+const DESKTOP_USER_AGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36'
 
 interface Layout {
   name: 'movil' | 'escritorio'
@@ -516,6 +536,28 @@ class Demo {
     await this.pause(420)
   }
 
+  /**
+   * Rellena de golpe, pero tocando el campo primero.
+   *
+   * Para los formularios largos: escribir letra a letra las catorce casillas de
+   * la solicitud dejaría un video que nadie termina de ver. Se toca el campo y
+   * el texto aparece, que se lee igual de bien y cuesta un segundo en vez de
+   * diez. Los campos que cuentan algo —el correo, el nombre— siguen yendo por
+   * `type`.
+   */
+  async fillFast(locator: Locator, text: string) {
+    await this.tap(locator, 120)
+    await locator.first().fill(text)
+    await this.pause(260)
+  }
+
+  /** Elige en un `select` nativo tras señalarlo, para que se vea el cambio. */
+  async choose(locator: Locator, option: { label?: string; index?: number }) {
+    await this.tap(locator, 140)
+    await locator.first().selectOption(option.label ? { label: option.label } : { index: option.index ?? 1 })
+    await this.pause(420)
+  }
+
   async hidePointer() {
     await this.page.evaluate(() =>
       (globalThis as { __demoPointerHide?: () => Promise<void> }).__demoPointerHide?.()
@@ -753,6 +795,381 @@ async function recordWorkspaceFlow(demo: Demo, page: Page, layout: Layout): Prom
 }
 
 /**
+ * Lee `.env.local` a mano.
+ *
+ * No se puede `source`: el archivo trae valores que rompen el parser de zsh y
+ * las variables se quedan vacías sin decir nada.
+ */
+function readLocalEnv(): Record<string, string> {
+  const file = resolve(process.cwd(), '.env.local')
+  const out: Record<string, string> = {}
+  for (const line of readFileSync(file, 'utf8').split('\n')) {
+    const eq = line.indexOf('=')
+    if (eq <= 0 || line.trimStart().startsWith('#')) continue
+    out[line.slice(0, eq).trim()] = line.slice(eq + 1).trim()
+  }
+  return out
+}
+
+/**
+ * Cuenta limpia para el registro que se graba.
+ *
+ * Si la dirección ya existe —porque se regrabó— el formulario respondería
+ * "ese correo ya está registrado" y el recorrido dejaría de ser el de alguien
+ * que llega por primera vez, que es justo lo que el video tiene que enseñar.
+ * Así que se borra antes de empezar.
+ */
+async function resetSignupAccount(env: Record<string, string>, email: string): Promise<void> {
+  const url = env.VITE_SUPABASE_URL
+  const key = env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) throw new Error('Faltan VITE_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en .env.local')
+
+  const headers = { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }
+  const response = await fetch(`${url}/auth/v1/admin/users?per_page=200`, { headers })
+  const { users } = (await response.json()) as { users?: { id: string; email?: string }[] }
+  for (const user of users ?? []) {
+    if (user.email?.toLowerCase() !== email.toLowerCase()) continue
+    await fetch(`${url}/auth/v1/admin/users/${user.id}`, { method: 'DELETE', headers })
+    console.log(`· cuenta previa de ${email} retirada para poder regrabar`)
+  }
+}
+
+/**
+ * El enlace de confirmación, el mismo que Supabase mandaría por correo.
+ *
+ * En el video no hay bandeja de entrada que enseñar, así que se pide por la API
+ * de administración y se abre en cámara.
+ *
+ * El destino va sin parámetros a propósito: la lista de redirecciones
+ * permitidas del proyecto no acepta `/auth/confirm?next=…` y Supabase, en vez
+ * de avisar, cae de vuelta al Site URL y manda la grabación a otro dominio. Se
+ * confirma contra `/auth/confirm` a secas y la vuelta a la solicitud a medias la
+ * hace el guion.
+ */
+async function confirmationLinkFor(
+  env: Record<string, string>,
+  options: { email: string; password: string; base: string }
+): Promise<string> {
+  const url = env.VITE_SUPABASE_URL
+  const key = env.SUPABASE_SERVICE_ROLE_KEY
+  const response = await fetch(`${url}/auth/v1/admin/generate_link`, {
+    method: 'POST',
+    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'signup',
+      email: options.email,
+      password: options.password,
+      redirect_to: `${options.base}/auth/confirm`
+    })
+  })
+  const body = (await response.json()) as { action_link?: string }
+  if (!body.action_link) {
+    throw new Error(`Supabase no devolvió el enlace de confirmación: ${JSON.stringify(body).slice(0, 200)}`)
+  }
+  return body.action_link
+}
+
+/** Datos de la persona ficticia que solicita la membresía en el video. */
+const APPLICANT = {
+  firstName: 'María',
+  lastName: 'Rodríguez',
+  phone: '809-555-1234',
+  province: 'Distrito Nacional',
+  church: 'Iglesia Adventista Central',
+  district: 'Distrito Central',
+  churchCity: 'Santo Domingo',
+  conference: 'Asociación Central Dominicana (ACD)',
+  pastorName: 'Pastor Luis Martínez',
+  pastorPhone: '809-555-7890',
+  shareFaith:
+    'Acompaño grupos pequeños en mi iglesia y participo en jornadas de salud comunitaria con mi profesión.'
+} as const
+
+/** Tarjeta de pruebas de AZUL. No mueve dinero: el entorno es el de pruebas. */
+const TEST_CARD = {
+  number: '4012000033330026',
+  expiry: '12/28',
+  cvv: '123',
+  holder: 'MARIA RODRIGUEZ'
+} as const
+
+/**
+ * Recorrido completo de la solicitud de membresía, desde la portada hasta el
+ * pago con tarjeta.
+ *
+ * Se graba sin sesión previa —al revés que los otros recorridos— porque el
+ * punto del video es justamente que alguien que no existe en la plataforma
+ * llega, se registra y termina pagando su cuota.
+ *
+ * Dos costuras que conviene entender antes de tocar esto:
+ *
+ * - **La confirmación del correo.** Supabase no autoconfirma, así que el
+ *   registro deja la cuenta a la espera de que la persona abra el enlace que le
+ *   llega. En el video no hay bandeja de entrada que enseñar, así que el enlace
+ *   se pide por la API de administración —el mismo que se enviaría por correo— y
+ *   se abre en cámara. Lo que se ve es exactamente lo que vería quien lo abre
+ *   desde su correo.
+ * - **El pago es real contra el entorno de pruebas de AZUL.** La página de pago
+ *   es de AZUL, no nuestra, y la grabación la atraviesa como una más.
+ */
+async function recordMembershipFlow(
+  demo: Demo,
+  page: Page,
+  layout: Layout,
+  options: { base: string; email: string; password: string; confirmationLink: () => Promise<string> }
+): Promise<void> {
+  const isDesktop = layout.name === 'escritorio'
+  const { base, email, password } = options
+
+  // ── Portada institucional ────────────────────────────────────────────────
+  await demo.pause(1100)
+  await demo.swipe(isDesktop ? 320 : 300)
+  await demo.pause(700)
+  await demo.scrollTop(520)
+
+  // El acceso a membresía: en escritorio está en la barra; en teléfono, la
+  // llamada a la acción de la portada lleva al mismo sitio y no obliga a abrir
+  // el menú, que en video se lee peor.
+  const navMembership = page.getByRole('link', { name: 'Membresía', exact: true }).first()
+  const heroMembership = page.getByRole('link', { name: /Suscribirme ahora/i }).first()
+  await demo.tap(isDesktop ? navMembership : heroMembership, 1800)
+  await page.waitForLoadState('networkidle')
+
+  // ── Página de membresía ──────────────────────────────────────────────────
+  await demo.pause(900)
+  await demo.swipe(300)
+  await demo.pause(800)
+  await demo.tap(page.getByRole('link', { name: 'Solicitar membresía', exact: true }).first(), 1800)
+  await page.waitForLoadState('networkidle')
+
+  // ── Elegir categoría ─────────────────────────────────────────────────────
+  await demo.pause(1000)
+  await demo.tap(page.getByRole('button', { name: /^Laico/ }).first(), 1000)
+  await demo.tap(page.getByRole('button', { name: /Continuar con la solicitud/i }), 1600)
+  // La URL lleva el token de elegibilidad: es a donde hay que volver después de
+  // confirmar el correo, así que se guarda antes de salir del formulario.
+  const applyUrl = page.url()
+
+  // ── Crear la cuenta ──────────────────────────────────────────────────────
+  await demo.pause(900)
+  await demo.tap(page.getByRole('link', { name: /Crear mi cuenta/i }).first(), 1800)
+  await page.waitForLoadState('networkidle')
+  await demo.pause(700)
+
+  await demo.type(page.locator('input[name=firstName]'), APPLICANT.firstName, 70)
+  await demo.type(page.locator('input[name=lastName]'), APPLICANT.lastName, 70)
+  await demo.type(page.locator('input[name=email]'), email, 42)
+  await demo.type(page.locator('input[name=password]'), password, 55)
+  await demo.type(page.locator('input[name=confirmPassword]'), password, 55)
+  await demo.pause(500)
+  await demo.tap(page.getByRole('button', { name: /^Continuar/ }), 2600)
+
+  // El aviso de "revisa tu correo" se sostiene: es el paso que explica por qué
+  // el recorrido continúa en otro sitio.
+  await page.getByText(/Revisa tu correo/i).first().waitFor({ timeout: 30_000 })
+  await demo.pause(2600)
+
+  // ── Confirmar el correo ──────────────────────────────────────────────────
+  await demo.hidePointer()
+  await page.goto(await options.confirmationLink(), { waitUntil: 'domcontentloaded' })
+  // La cuenta queda confirmada y con sesión; el aterrizaje es el espacio
+  // personal. Desde ahí se retoma la solicitud que quedó a medias.
+  await page.waitForURL(/\/account/, { timeout: 45_000 })
+  await page.waitForLoadState('networkidle')
+  await demo.pause(2200)
+  await page.goto(applyUrl, { waitUntil: 'networkidle' })
+  await demo.pause(2000)
+
+  // ── Solicitud, fase por fase ─────────────────────────────────────────────
+  //
+  // Avanzar comprueba que la fase cambió de verdad. El formulario no se queja a
+  // gritos: si un campo no valida, se queda donde está y el guion seguiría
+  // tecleando contra la fase equivocada hasta romper diez pasos más adelante,
+  // con un error que no dice nada. Aquí revienta en el sitio, diciendo qué fase
+  // no pasó y qué campo la retiene, que es lo que hace falta para arreglarlo sin
+  // volver a grabar tres minutos a ciegas.
+  const phaseTitle = async () =>
+    (await page.locator('h2:visible').first().innerText().catch(() => '¿?')).trim()
+
+  const next = async () => {
+    const before = await phaseTitle()
+
+    // Se reintenta el toque, no solo la espera. Al cambiar de fase el
+    // formulario hace `scrollTo` suave hacia arriba, así que el botón sigue
+    // moviéndose un rato después de que la fase se dibuje; si el clic cae
+    // mientras se desplaza, aterriza al lado y no pasa nada —ni avance ni
+    // error—, que es justo lo que costó encontrar aquí.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await demo.tap(page.getByRole('button', { name: /^Siguiente/ }).first(), 1400)
+
+      for (let wait = 0; wait < 5; wait += 1) {
+        const after = await phaseTitle()
+        if (after !== before) {
+          console.log(`  · fase: ${before} → ${after}`)
+          return
+        }
+        await demo.pause(400)
+      }
+    }
+
+    // Solo el texto de error de verdad: el rojo de la marca. Las ayudas del
+    // formulario ("Selecciona todas las que apliquen") dicen lo mismo y
+    // despistan.
+    const complaints = [
+      ...new Set(
+        (await page.locator('p[class*="e23744"]:visible').allInnerTexts()).map((text) => text.trim())
+      )
+    ].filter(Boolean)
+    throw new Error(
+      `La solicitud no pasó de «${before}». Falta: ${complaints.join(' · ') || '(sin mensaje de error en pantalla)'}`
+    )
+  }
+
+  // 1 · datos de contacto
+  await demo.fillFast(page.locator('input[name=firstName]'), APPLICANT.firstName)
+  await demo.fillFast(page.locator('input[name=lastName]'), APPLICANT.lastName)
+  await demo.tap(page.getByRole('radio', { name: 'Femenino' }), 700)
+  await demo.fillFast(page.locator('input[name=cellPhone]'), APPLICANT.phone)
+  await demo.fillFast(page.locator('input[name=email]'), email)
+  await demo.choose(page.locator('select').first(), { label: APPLICANT.province })
+  await demo.choose(page.locator('select').nth(1), { index: 1 })
+  await demo.pause(700)
+  await next()
+
+  // 2 · evangelismo personal: se marcan un par de intereses y se cuenta el resto
+  await demo.pause(600)
+  const ministry = page.locator('input[type=checkbox]:visible').first()
+  if (await ministry.count()) await demo.tap(ministry, 500)
+  await demo.fillFast(page.locator('textarea[name=shareFaith]'), APPLICANT.shareFaith)
+  await demo.pause(800)
+  await next()
+
+  // 3 · referencia de la iglesia local
+  //
+  // La unión hay que elegirla aunque su opción ya se vea en el desplegable: el
+  // formulario arranca sin valor y el primer elemento de la lista no es un
+  // marcador de posición, así que parece contestada cuando no lo está. Y elegir
+  // la Unión Dominicana convierte la asociación en un desplegable de las de
+  // verdad; fuera de ella se escribe a mano y el expediente se revisa aparte.
+  await demo.pause(600)
+  await demo.choose(page.locator('select').first(), { label: 'Unión Dominicana' })
+  await demo.pause(700)
+  await demo.choose(page.locator('select[name=conference]'), { label: APPLICANT.conference })
+  await demo.fillFast(page.locator('input[name=homeChurchName]'), APPLICANT.church)
+  await demo.fillFast(page.locator('input[name=churchDistrict]'), APPLICANT.district)
+  await demo.fillFast(page.locator('input[name=churchCity]'), APPLICANT.churchCity)
+  await demo.fillFast(page.locator('input[name=churchStateProvince]'), APPLICANT.province)
+  await demo.fillFast(page.locator('input[name=pastorName]'), APPLICANT.pastorName)
+  await demo.fillFast(page.locator('input[name=pastorPhone]'), APPLICANT.pastorPhone)
+  await demo.pause(800)
+  await next()
+
+  // 4 · cuotas: la facturación ya viene marcada como la dirección de casa
+  await demo.pause(1400)
+  await next()
+
+  // 5 · compromiso: las dos aceptaciones que exige el expediente
+  await demo.pause(700)
+  for (const box of await page.locator('input[type=checkbox]:visible').all()) {
+    if (!(await box.isChecked())) await demo.tap(box, 500)
+  }
+  await demo.pause(900)
+  await demo.tap(page.getByRole('button', { name: /Enviar solicitud/i }), 3200)
+
+  // ── Solicitud recibida ───────────────────────────────────────────────────
+  await page.getByText(/Solicitud recibida|va a aprobación/i).first().waitFor({ timeout: 45_000 })
+  await demo.pause(2600)
+  const goToPayment = page
+    .getByRole('link', { name: /Ir a pagar mi membresía/i })
+    .or(page.getByRole('button', { name: /Ir a pagar mi membresía/i }))
+  await demo.tap(goToPayment, 2600)
+  await page.waitForLoadState('networkidle')
+
+  // ── Perfil mínimo: la compuerta antes del pago ───────────────────────────
+  await demo.pause(1200)
+  const fullName = page.locator('input[name=fullName]')
+  if (await fullName.count()) {
+    await demo.fillFast(fullName, `${APPLICANT.firstName} ${APPLICANT.lastName}`)
+    await demo.fillFast(page.locator('input[name=displayName]'), `${APPLICANT.firstName} R.`)
+    await demo.pause(600)
+    // Tres pasos cortos; el último ofrece omitir la foto.
+    for (let step = 0; step < 3; step += 1) {
+      const advance = page
+        .getByRole('button', { name: /^Guardar y continuar/ })
+        .or(page.getByRole('button', { name: /^Continuar$/ }))
+        .first()
+      if (!(await advance.count())) break
+      await demo.tap(advance, 1600)
+      if (!/profile|onboarding/.test(page.url())) break
+    }
+  }
+
+  // ── Pago de la cuota ─────────────────────────────────────────────────────
+  await page.goto(`${base}/account/membership`, { waitUntil: 'networkidle' })
+  await demo.pause(1600)
+  await demo.swipe(isDesktop ? 260 : 320)
+  await demo.pause(900)
+  await demo.tap(page.locator('input[type=checkbox]:visible').first(), 800)
+  await demo.pause(600)
+  await demo.tap(page.getByRole('button', { name: /Pagar con tarjeta/i }), 2600)
+
+  // ── Página de pago de AZUL ───────────────────────────────────────────────
+  await page.waitForURL(/azul\.com\.do/, { timeout: 60_000 })
+  await page.waitForLoadState('networkidle')
+  await demo.pause(1800)
+
+  // Que la pasarela haya respondido no significa que haya dejado pagar: su
+  // cortafuegos contesta con un "Access Denied" del mismo color. Si el
+  // formulario de la tarjeta no está, se para aquí en vez de teclear un número
+  // de tarjeta contra una página de error y dejarlo grabado.
+  const cardField = page.locator('#CreditCard, input[name=CreditCard]').first()
+  if (!(await cardField.isVisible().catch(() => false))) {
+    const shown = (await page.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 180)
+    throw new Error(`La pasarela de AZUL no mostró el formulario de la tarjeta. Devolvió: ${shown}`)
+  }
+
+  await demo.fillFast(page.locator('#Email, input[name=Email]').first(), email)
+  await demo.type(cardField, TEST_CARD.number, 45)
+  await demo.fillFast(page.locator('#ExpirationDate, input[name=ExpirationDate]').first(), TEST_CARD.expiry)
+  await demo.fillFast(page.locator('#SecurityCode, input[name=SecurityCode]').first(), TEST_CARD.cvv)
+  await demo.fillFast(page.locator('#Name, input[name=Name]').first(), TEST_CARD.holder)
+  await demo.pause(1000)
+  await demo.tap(page.locator('#SubmitButton, input[name=SubmitButton]').first(), 3000)
+
+  // AZUL no cobra de una: enseña un resumen para confirmar y, con
+  // `AZUL_SHOW_TRANSACTION_RESULT=1`, su propio comprobante antes de devolver.
+  // Son pantallas suyas y pueden cambiar sin avisar, así que en vez de fijar una
+  // secuencia se va pulsando el botón que toque mientras se siga en su dominio.
+  //
+  // Sus botones son `input[type=button]`, así que se buscan por el `value`. Y no
+  // se abandona en cuanto una vuelta no encuentra nada: entre pantalla y
+  // pantalla hay un envío del formulario, y mirar justo en ese hueco no
+  // significa que ya no quede nada que pulsar.
+  const azulStep = page
+    .locator('input[value*="Pagar" i], input[value*="Continuar" i], input[value*="Finalizar" i]')
+    .or(page.getByRole('button', { name: /Pagar|Continuar|Finalizar|Volver/i }))
+    .first()
+
+  for (let hop = 0; hop < 12; hop += 1) {
+    if (!/azul\.com\.do/.test(page.url())) break
+    if (await azulStep.isVisible().catch(() => false)) {
+      await demo.tap(azulStep, 3200)
+      await demo.pause(1800)
+    } else {
+      await demo.pause(1500)
+    }
+  }
+
+  // La vuelta es la prueba de que el cobro se completó: el microservicio solo
+  // redirige aquí después de verificar la firma de la respuesta de AZUL.
+  await page.waitForURL(/account\/membership/, { timeout: 120_000 })
+  await page.waitForLoadState('networkidle')
+  await demo.pause(1400)
+  await demo.swipe(240)
+  await demo.pause(2600)
+}
+
+/**
  * Cierre común: entra el banner escalonado y se graba solo hasta que termina de
  * asentarse.
  *
@@ -778,7 +1195,12 @@ async function main(): Promise<void> {
   const email = typeof args.email === 'string' ? args.email : process.env.DEMO_EMAIL
   const password = typeof args.password === 'string' ? args.password : process.env.DEMO_PASSWORD
 
-  if (!email || !password) {
+  const isWorkspaceFlow = args.flow === 'workspace'
+  const isMembershipFlow = args.flow === 'membresia' || args.flow === 'membership'
+
+  // El recorrido de membresía empieza sin sesión —de eso trata— así que no pide
+  // credenciales existentes, sino la cuenta que va a crear delante de la cámara.
+  if (!isMembershipFlow && (!email || !password)) {
     console.error('Faltan credenciales: pasa --email=<correo> --password=<clave> (o DEMO_EMAIL/DEMO_PASSWORD).')
     process.exit(1)
   }
@@ -788,15 +1210,30 @@ async function main(): Promise<void> {
   // Pesa más y cuesta más de componer, pero es lo que hace falta para proyectar.
   const highQuality = args.hq === true || args.quality === 'alta'
 
-  const isWorkspaceFlow = args.flow === 'workspace'
   // El módulo de empresa es una consola de escritorio: en un viewport de
   // teléfono no se ve lo que hay que enseñar.
   const isDesktop = isWorkspaceFlow || args.layout === 'desktop' || args.desktop === true
   const layout = isDesktop ? LAYOUTS.desktop : LAYOUTS.mobile
 
-  const baseName = isWorkspaceFlow ? 'demo-empresa' : isDesktop ? 'demo-escritorio' : 'demo-movil'
+  const baseName = isMembershipFlow
+    ? isDesktop
+      ? 'demo-membresia-escritorio'
+      : 'demo-membresia-movil'
+    : isWorkspaceFlow
+      ? 'demo-empresa'
+      : isDesktop
+        ? 'demo-escritorio'
+        : 'demo-movil'
   const defaultName = highQuality ? `${baseName}-hq` : baseName
-  const outputName = isWorkspaceFlow ? 'demoAppEmpresa' : isDesktop ? 'demoAppDesktop' : 'demoApp'
+  const outputName = isMembershipFlow
+    ? isDesktop
+      ? 'demoMembresiaDesktop'
+      : 'demoMembresia'
+    : isWorkspaceFlow
+      ? 'demoAppEmpresa'
+      : isDesktop
+        ? 'demoAppDesktop'
+        : 'demoApp'
 
   // La densidad con la que pinta el navegador y el tamaño con el que se guarda.
   const deviceScale = highQuality && !isDesktop ? 3 : 2
@@ -811,6 +1248,15 @@ async function main(): Promise<void> {
   const logo = logoDataUri()
   const qr = qrSvg(SITE_URL, layout.qrPixels)
 
+  // La cuenta que se crea delante de la cámara. Se deja libre antes de empezar
+  // para que regrabar siga contando la historia de alguien que llega nuevo.
+  const localEnv = isMembershipFlow ? readLocalEnv() : {}
+  const signupEmail =
+    typeof args['signup-email'] === 'string' ? args['signup-email'] : 'edgarjoel9912+maria@gmail.com'
+  const signupPassword =
+    typeof args['signup-password'] === 'string' ? args['signup-password'] : 'MembresiaAsi2026!'
+  if (isMembershipFlow) await resetSignupAccount(localEnv, signupEmail)
+
   // `--force-device-scale-factor=2` es lo que hace que el video salga a 2×.
   // El `deviceScaleFactor` del contexto no basta: Playwright escala el
   // screencast hacia abajo si hace falta, pero nunca hacia arriba, así que
@@ -823,23 +1269,31 @@ async function main(): Promise<void> {
   const headless = args.headed === true ? false : isDesktop || args.headless === true
   const browser = await chromium.launch({
     headless,
-    args: [`--force-device-scale-factor=${deviceScale}`]
+    // Sin la bandera de automatización: el recorrido de membresía termina en la
+    // pasarela de AZUL, que está detrás de un cortafuegos que bloquea lo que
+    // huele a robot. Ver `DESKTOP_USER_AGENT`.
+    args: [`--force-device-scale-factor=${deviceScale}`, '--disable-blink-features=AutomationControlled']
   })
 
-  // Inicio de sesión fuera de cámara: solo interesa la sesión resultante.
-  const authContext = await browser.newContext({ ...layout.device, viewport: layout.viewport })
-  const authPage = await authContext.newPage()
-  await authPage.goto(`${base}/auth/sign-in`, { waitUntil: 'networkidle' })
-  await authPage.fill('input[type=email]', email)
-  await authPage.fill('input[type=password]', password)
-  await authPage.click('button:has-text("Iniciar sesión")')
-  // Quien tiene empresa aterriza en `/workspace`; quien no, en `/account`.
-  await authPage.waitForURL(/\/(account|workspace)/, { timeout: 30_000 })
-  const storageState = await authContext.storageState()
-  await authContext.close()
+  // Inicio de sesión fuera de cámara: solo interesa la sesión resultante. El
+  // recorrido de membresía es la excepción: arranca sin sesión a propósito.
+  let storageState: Awaited<ReturnType<Awaited<ReturnType<typeof browser.newContext>>['storageState']>> | undefined
+  if (!isMembershipFlow) {
+    const authContext = await browser.newContext({ ...layout.device, viewport: layout.viewport })
+    const authPage = await authContext.newPage()
+    await authPage.goto(`${base}/auth/sign-in`, { waitUntil: 'networkidle' })
+    await authPage.fill('input[type=email]', email as string)
+    await authPage.fill('input[type=password]', password as string)
+    await authPage.click('button:has-text("Iniciar sesión")')
+    // Quien tiene empresa aterriza en `/workspace`; quien no, en `/account`.
+    await authPage.waitForURL(/\/(account|workspace)/, { timeout: 30_000 })
+    storageState = await authContext.storageState()
+    await authContext.close()
+  }
 
   const context = await browser.newContext({
     ...layout.device,
+    ...(isDesktop ? { userAgent: DESKTOP_USER_AGENT } : {}),
     viewport: layout.viewport,
     // El screencast sale a viewport × densidad; con 2 el video queda nítido sin
     // triplicar el costo de composición de cada cuadro.
@@ -885,11 +1339,51 @@ async function main(): Promise<void> {
   // grabación queda como una marca de color: el compresor busca ese azul para
   // saber dónde empieza la app, y monta encima el sostenido y el fundido a
   // partir de la captura.
-  await page.goto(`${base}${isWorkspaceFlow ? '/workspace' : '/account'}`, { waitUntil: 'networkidle' })
+  const entryPath = isMembershipFlow ? '/' : isWorkspaceFlow ? '/workspace' : '/account'
+  await page.goto(`${base}${entryPath}`, { waitUntil: 'networkidle' })
   await demo.banner({ logo, qr, instant: true, scale: layout.bannerScale })
   await demo.pause(1000)
   await bannerStill(page, bannerPath)
   await demo.hideBanner(0)
+
+  if (isMembershipFlow) {
+    try {
+      await recordMembershipFlow(demo, page, layout, {
+        base,
+        email: signupEmail,
+        password: signupPassword,
+        confirmationLink: () =>
+          confirmationLinkFor(localEnv, { email: signupEmail, password: signupPassword, base })
+      })
+    } catch (error) {
+      // Una toma de esto dura minutos. Cuando se rompe, la pantalla del momento
+      // dice en un vistazo lo que el mensaje de error no: en qué paso estaba y
+      // qué había puesto.
+      const shot = resolve(outDir, `${defaultName}.fallo.png`)
+      await page.screenshot({ path: shot, timeout: 15_000 }).catch(() => undefined)
+      // Y qué se podía pulsar: media parte del recorrido pasa por pantallas de
+      // AZUL, que son suyas y cambian sin avisar. Saber cómo se llama el botón
+      // ahorra otra toma de tres minutos a ciegas.
+      const clickables = await page
+        .locator('a:visible, button:visible, input[type=submit], input[type=button]')
+        // Sin tipos del DOM: este archivo compila con `tsconfig.node.json`.
+        .evaluateAll((nodes) =>
+          nodes
+            .map((node) => {
+              const el = node as unknown as { tagName: string; type?: string; value?: string; textContent?: string }
+              return `${el.tagName.toLowerCase()}${el.type ? `[${el.type}]` : ''} «${(el.value || el.textContent || '').trim().slice(0, 40)}»`
+            })
+            .slice(0, 25)
+        )
+        .catch(() => [])
+      console.error(`✗ se rompió en ${page.url()}\n  pantalla del momento: ${shot}`)
+      if (clickables.length) console.error(`  se podía pulsar: ${clickables.join(' · ')}`)
+      throw error
+    }
+    await closeWithBanner(demo, { logo, qr, scale: layout.bannerScale })
+    await finish()
+    return
+  }
 
   if (isWorkspaceFlow) {
     await recordWorkspaceFlow(demo, page, layout)
