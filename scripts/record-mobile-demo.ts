@@ -558,6 +558,10 @@ function maskEmailScript(): string {
 
   function mask(text) {
     return text.replace(EMAIL, function (match) {
+      // Ya reescrita: el observador vuelve a pasar por el mismo nodo cada vez
+      // que React lo toca, y sin esta salida la segunda pasada se comería
+      // también el nombre de los postulantes de prueba.
+      if (match.indexOf(SHOWN_DOMAIN) !== -1) return match
       // Las de prueba conservan el nombre: ya son ficticias y ayudan a leer la
       // lista. Cualquier otra se sustituye entera, porque puede ser real.
       if (match.indexOf(DEMO_DOMAIN) !== -1) {

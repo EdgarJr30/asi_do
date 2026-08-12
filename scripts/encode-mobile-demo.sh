@@ -29,8 +29,12 @@ set -euo pipefail
 IN="${1:-reports/demo-movil/demo-movil.raw.webm}"
 OUT="${2:-reports/demo-movil/demoApp.webm}"
 PROFILE="web"
+TARGET_WIDTH=""
 for arg in "$@"; do
-  if [ "$arg" = "--presentacion" ] || [ "$arg" = "--presentation" ]; then PROFILE="presentacion"; fi
+  case "$arg" in
+    --presentacion|--presentation) PROFILE="presentacion" ;;
+    --ancho=*) TARGET_WIDTH="${arg#--ancho=}" ;;
+  esac
 done
 
 if [ ! -f "$IN" ]; then
@@ -71,26 +75,31 @@ fi
 # incompleto porque el contexto se cierra mientras se compone.
 LENGTH="$(awk -v d="$DURATION" -v s="$START" 'BEGIN { printf "%.2f", d - s - 0.30 }')"
 
-if [ "$PROFILE" = "presentacion" ]; then
-  # Se limita el ancho a 1920. La grabación de escritorio viene a 2880 y
-  # reducirla es un remuestreo con más de dos muestras por píxel: sale más
-  # nítida que grabar a ese tamaño, pesa un tercio y la decodifica cualquier
-  # portátil de sala, que es donde no se puede fallar. El retrato del móvil
-  # (1170 de ancho) pasa intacto.
-  SCALE=""
-  if [ "$WIDTH" -gt 1920 ]; then
-    SCALE="scale=1920:-2:flags=lanczos,"
-  fi
+# Ancho de salida. Por defecto, el perfil de presentación se limita a 1920: la
+# grabación de escritorio viene a 2880 y reducirla es un remuestreo con más de
+# dos muestras por píxel, así que sale más nítida que grabar a ese tamaño, pesa
+# un tercio y la decodifica cualquier portátil de sala, que es donde no se puede
+# fallar. El retrato del móvil (1170) pasa intacto.
+if [ -z "$TARGET_WIDTH" ] && [ "$PROFILE" = "presentacion" ] && [ "$WIDTH" -gt 1920 ]; then
+  TARGET_WIDTH=1920
+fi
 
+SCALE=""
+if [ -n "$TARGET_WIDTH" ] && [ "$TARGET_WIDTH" -lt "$WIDTH" ]; then
+  SCALE="scale=${TARGET_WIDTH}:-2:flags=lanczos"
+fi
+
+if [ "$PROFILE" = "presentacion" ]; then
   # `-crf 16` con preset slow deja el texto de la interfaz sin artefactos, que
   # es lo que se nota al proyectar. `yuv420p` y `+faststart` son los que hacen
   # que el archivo abra en cualquier reproductor.
   ffmpeg -hide_banner -v error -y -ss "$START" -i "$IN" -t "$LENGTH" \
-    ${SCALE:+-vf "${SCALE%,}"} \
+    ${SCALE:+-vf "$SCALE"} \
     -c:v libx264 -crf 16 -preset slow -profile:v high -level 5.1 \
     -pix_fmt yuv420p -movflags +faststart -an "$OUT"
 else
   ffmpeg -hide_banner -v error -y -ss "$START" -i "$IN" -t "$LENGTH" \
+    ${SCALE:+-vf "$SCALE"} \
     -c:v libvpx-vp9 -crf 33 -b:v 0 -pix_fmt yuv420p \
     -row-mt 1 -deadline good -cpu-used 2 -an "$OUT"
 fi
