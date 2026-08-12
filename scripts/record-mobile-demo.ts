@@ -304,6 +304,11 @@ const MOTION_SCRIPT = String.raw`
  * animación de entrada; al final entra escalonado y se queda. Como los dos
  * extremos acaban en exactamente el mismo dibujo, el corte del bucle —del
  * último cuadro al primero— no se ve.
+ *
+ * Aquí solo se graba el movimiento: la entrada escalonada del final y el cuadro
+ * que sirve de marca para recortar el arranque. El rato que el banner se queda
+ * quieto NO sale de esta grabación, sino de la captura fija que hace
+ * `bannerStill()`; el porqué está ahí.
  */
 const BANNER_SCRIPT = String.raw`
 (() => {
@@ -380,17 +385,25 @@ const BANNER_SCRIPT = String.raw`
 
     if (options.instant) return Promise.resolve()
 
+    var STEP = 105
+    var DELAY = 200
+    var MOVE = 700
+
     requestAnimationFrame(function () {
       wrap.style.opacity = '1'
       pieces.forEach(function (node, index) {
         setTimeout(function () {
           node.style.opacity = '1'
           node.style.transform = 'translateY(0)'
-        }, 200 + index * 105)
+        }, DELAY + index * STEP)
       })
     })
 
-    return new Promise(function (resolve) { setTimeout(resolve, 1300) })
+    // Resuelve cuando la última pieza termina de entrar, no antes. Quien graba
+    // necesita ese instante exacto: a partir de ahí el banner ya no se mueve, y
+    // todo lo que se siga grabando es azul plano parpadeando.
+    var settled = DELAY + (pieces.length - 1) * STEP + MOVE
+    return new Promise(function (resolve) { setTimeout(resolve, settled) })
   }
 
   window.__demoBannerHide = function (ms) {
@@ -533,6 +546,25 @@ class Demo {
       ms
     )
   }
+}
+
+/**
+ * Guarda el banner como imagen fija, sin pasar por el codec del navegador.
+ *
+ * El motivo es el parpadeo. Playwright graba con VP8 en tiempo real, y un azul
+ * plano a pantalla completa es el peor caso posible para ese codec: nunca llega
+ * a estabilizarse. Medido sobre la grabación anterior, en los 8,6 s en los que
+ * el banner está inmóvil el cuadro cambia 80 veces, con manchones de banding que
+ * aparecen y se van. No es algo que el recomprimido pueda arreglar: ya viene
+ * dentro del archivo crudo.
+ *
+ * Así que el rato quieto se compone después a partir de este PNG, que es sin
+ * pérdida y siempre el mismo cuadro. De paso el QR sale limpio, que importa
+ * porque la gente lo escanea, y el corte del bucle queda entre dos cuadros
+ * idénticos de verdad y no solo parecidos.
+ */
+async function bannerStill(page: Page, path: string): Promise<void> {
+  await page.screenshot({ path, animations: 'disabled' })
 }
 
 /**
@@ -721,8 +753,12 @@ async function recordWorkspaceFlow(demo: Demo, page: Page, layout: Layout): Prom
 }
 
 /**
- * Cierre común: el banner se sostiene largo a propósito, porque el QR tiene que
- * quedar quieto el tiempo suficiente para sacar el teléfono y escanear.
+ * Cierre común: entra el banner escalonado y se graba solo hasta que termina de
+ * asentarse.
+ *
+ * El sostenido largo —el que hace falta para sacar el teléfono y escanear el
+ * QR— lo pone el compresor a partir del PNG. Aquí sobra: grabarlo solo añadiría
+ * los ocho segundos de parpadeo que se quieren evitar.
  */
 async function closeWithBanner(
   demo: Demo,
@@ -730,7 +766,10 @@ async function closeWithBanner(
 ): Promise<void> {
   await demo.hidePointer()
   await demo.banner({ ...options, instant: false })
-  await demo.pause(8500)
+  // Solo el margen que el compresor recorta del final: así el último cuadro
+  // útil es justo el banner recién asentado, y el fundido hacia el PNG arranca
+  // ahí en vez de después de un rato de azul plano parpadeando.
+  await demo.pause(300)
 }
 
 async function main(): Promise<void> {
@@ -817,6 +856,7 @@ async function main(): Promise<void> {
 
   const page = await context.newPage()
   const demo = new Demo(page, layout)
+  const bannerPath = resolve(outDir, `${defaultName}.banner.png`)
 
   /** Cierre del archivo: nombrar, comprobar y decir qué falta. */
   const finish = async () => {
@@ -831,6 +871,7 @@ async function main(): Promise<void> {
     if (layout.checkFullFrame) assertFullFrame(finalPath, video)
 
     console.log(`✓ video crudo (${layout.name}): ${finalPath}`)
+    console.log(`✓ banner fijo: ${bannerPath}`)
     console.log(
       `  Falta comprimirlo a VP9:  scripts/encode-mobile-demo.sh ${relative(process.cwd(), finalPath)} ${relative(
         process.cwd(),
@@ -840,12 +881,15 @@ async function main(): Promise<void> {
   }
 
   // ── Banner de apertura ────────────────────────────────────────────────────
-  // Se monta ya dibujado, sin entrada: es el primer cuadro útil del video y
-  // tiene que ser idéntico al último para que el bucle no dé un salto.
+  // Se monta ya dibujado, se captura como PNG y se retira de golpe. En la
+  // grabación queda como una marca de color: el compresor busca ese azul para
+  // saber dónde empieza la app, y monta encima el sostenido y el fundido a
+  // partir de la captura.
   await page.goto(`${base}${isWorkspaceFlow ? '/workspace' : '/account'}`, { waitUntil: 'networkidle' })
   await demo.banner({ logo, qr, instant: true, scale: layout.bannerScale })
-  await demo.pause(2800)
-  await demo.hideBanner(760)
+  await demo.pause(1000)
+  await bannerStill(page, bannerPath)
+  await demo.hideBanner(0)
 
   if (isWorkspaceFlow) {
     await recordWorkspaceFlow(demo, page, layout)
