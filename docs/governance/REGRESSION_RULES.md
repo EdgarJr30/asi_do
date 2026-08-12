@@ -579,6 +579,9 @@ Do not let a requester type or change the workspace address, submit a second com
 ### R-163 — The AZUL service uses current Supabase key names
 Do not configure the AZUL service with the legacy `SUPABASE_ANON_KEY` or `SUPABASE_SERVICE_ROLE_KEY` names. It must require `SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` without aliases or fallbacks; the secret key remains server-only and must never use a `VITE_*` prefix.
 
+### R-164 — Auth template promotion must publish the complete set
+Do not treat `Confirm sign up` as the complete production Auth email setup. The protected Management API synchronizer must load and publish `confirmation`, `invite`, `magic_link`, `recovery`, `email_change`, and `reauthentication` together, including their subjects, and abort before writing if any template is unavailable or the target environment does not match.
+
 ---
 
 ## Maintenance rule

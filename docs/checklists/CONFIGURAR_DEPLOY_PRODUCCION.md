@@ -100,7 +100,7 @@ on conflict (key) do update set value = excluded.value;
 - [ ] Redirect URLs: `/auth/confirm`, `/auth/reset-password`, `/auth/sign-in`, `/candidate/profile`
       (sin `/auth/reset-password` la recuperación se rompe en silencio)
 - [ ] Activar protección de contraseñas filtradas
-- [ ] Plantilla del correo:
+- [ ] Las 6 plantillas Auth (`confirmation`, `invite`, `magic_link`, `recovery`, `email_change`, `reauthentication`):
 
 ```bash
 SUPABASE_ACCESS_TOKEN=<token> SUPABASE_PROJECT_REF=<REF-PROD> AUTH_DEPLOY_ENV=production \

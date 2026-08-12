@@ -87,7 +87,7 @@ mismo artefacto versionado: usan `SiteURL`, `ConfirmationURL`, `Data` y `Email`,
 resuelve dentro del proyecto que genera el correo. Así, un registro de desarrollo no puede construir el
 logo, el acceso ni la confirmación con el dominio de producción.
 
-`scripts/sync-auth-email-template.ts` promociona `Confirm sign up` mediante la Management API. Antes de
+`scripts/sync-auth-email-template.ts` promociona las seis plantillas Auth versionadas mediante la Management API. Antes de
 escribir, compara el `project_ref` y el `site_url` remoto con los valores esperados y conoce explícitamente
 la identidad de producción; rechaza tanto producción apuntando a otro proyecto como desarrollo apuntando a
 producción. El comando y sus variables están documentados en `supabase/README.md`.
