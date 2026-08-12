@@ -45,7 +45,9 @@ describe('auth email template synchronization guard', () => {
 
 describe('auth email template synchronization payload', () => {
   it('publishes every versioned Auth template and subject in one payload', async () => {
-    const payload = await buildAuthTemplatePayload(async (fileName) => `<html>${fileName}</html>`)
+    const payload = await buildAuthTemplatePayload((fileName) =>
+      Promise.resolve(`<html>${fileName}</html>`)
+    )
 
     expect(payload).toEqual({
       mailer_subjects_confirmation: 'Confirma tu cuenta en ASI',
