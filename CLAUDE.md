@@ -49,6 +49,22 @@ supabase db diff --linked --schema public      # reproduce el job de drift en lo
 
 Con eso se puede reproducir el drift sin esperar al job de GitHub. La primera corrida descarga varias imágenes y tarda ~10 min; las siguientes, poco. Lo demás sigue igual: **la verificación de datos y privilegios va contra el proyecto remoto** con `supabase db query --linked`.
 
+## Grabar los videos de demostración
+
+El guion y el compresor están documentados en su propia cabecera (`scripts/record-mobile-demo.ts`). Lo que no se deduce de ahí:
+
+- **El banner no se graba, se compone.** El sostenido azul sale de un PNG que deja la grabación, porque el codec en tiempo real del navegador no estabiliza nunca un color plano a pantalla completa y parpadea. Si cambias el banner, se regraba: el PNG y el video tienen que salir de la misma toma.
+- **El recorrido de membresía necesita el microservicio de pagos** (`cd services/azul-payments && npm run dev`) y que su `ALLOWED_ORIGIN`/`APP_URL` incluyan el origen que se graba. Por eso ese recorrido se graba contra `http://localhost:5173` y no contra el `127.0.0.1:4173` de los demás: es lo que ya trae el `.env` del servicio.
+
+```bash
+node scripts/seed-demo-content.ts --candidate=<correo> --company-owner=<correo> --applicants
+node scripts/seed-demo-content.ts --clear-application=<correo>   # antes de regrabar al candidato
+node scripts/record-mobile-demo.ts --email=<correo> --password=<clave> --hq [--layout=desktop|--flow=workspace]
+node scripts/record-mobile-demo.ts --flow=membresia --base=http://localhost:5173 --hq [--layout=desktop]
+scripts/encode-mobile-demo.sh <toma>.raw.webm <salida>.webm --ancho=780   # web (VP9)
+scripts/encode-mobile-demo.sh <toma>.raw.webm <salida>.mp4 --presentacion # sala (H.264)
+```
+
 ## Git
 
 - **Commitear directo en `staging`.** Es la rama de trabajo desde el 2026-08-09: `main` dejó de ser el destino por defecto cuando `staging` pasó a publicar en Hostinger (job `deploy-staging` de `ci.yml`, que solo se dispara en `refs/heads/staging`). Un cambio commiteado en `main` no se despliega ni se prueba en el sitio de staging.
