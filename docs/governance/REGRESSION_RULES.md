@@ -576,6 +576,9 @@ Do not await application or job query invalidation before rendering the successf
 ### R-162 — Company requests have one immutable derived address and one submission
 Do not let a requester type or change the workspace address, submit a second company request, or reuse an address held by an existing tenant or any prior request. Derive the address from the organization name, enforce both uniqueness rules in PostgreSQL, preview the selected logo and supporting document before submission, and show the resulting request as one current state rather than a history.
 
+### R-163 — The AZUL service uses current Supabase key names
+Do not configure the AZUL service with the legacy `SUPABASE_ANON_KEY` or `SUPABASE_SERVICE_ROLE_KEY` names. It must require `SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` without aliases or fallbacks; the secret key remains server-only and must never use a `VITE_*` prefix.
+
 ---
 
 ## Maintenance rule

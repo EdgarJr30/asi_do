@@ -77,8 +77,8 @@ Variables de entorno (secret store del proveedor — ver `.env.example`):
 | `AZUL_CURRENCY_CODE` | `$` |
 | `AZUL_SHOW_TRANSACTION_RESULT` | `1` para que AZUL muestre el comprobante antes del retorno |
 | `SUPABASE_URL` | URL del proyecto |
-| `SUPABASE_ANON_KEY` | anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | service_role (solo aquí) |
+| `SUPABASE_PUBLISHABLE_KEY` | publishable key (`sb_publishable_...`) |
+| `SUPABASE_SECRET_KEY` | secret key (`sb_secret_...`, solo aquí) |
 | `APP_URL` | `https://<tu-dominio-en-hostinger>` |
 | `SERVICE_PUBLIC_URL` | `https://<subdominio-pagos-o-railway>` |
 | `ALLOWED_ORIGIN` | `https://<tu-dominio-en-hostinger>`; para varios origins, separa con coma |

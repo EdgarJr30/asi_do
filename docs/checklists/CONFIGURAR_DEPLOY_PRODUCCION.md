@@ -122,7 +122,7 @@ npx tsx scripts/sync-auth-email-template.ts --dry-run
 | `AZUL_MERCHANT_TYPE` / `AZUL_CURRENCY_CODE` / `AZUL_SHOW_TRANSACTION_RESULT` | `ECommerce` / `$` / `1` |
 | `SERVICE_PUBLIC_URL` | la URL que dé Railway |
 | `ALLOWED_ORIGIN` / `APP_URL` | `https://asidominicana.do` |
-| `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` | los de producción |
+| `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY` | los de producción |
 | `RECONCILE_ENABLED` / `RECONCILE_CRON` / `RECONCILE_STALE_MINUTES` | `true` / `*/5 * * * *` / `15` |
 | `PORT` / `LOG_LEVEL` | `8080` / `info` |
 

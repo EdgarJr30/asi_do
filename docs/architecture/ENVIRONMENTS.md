@@ -149,6 +149,8 @@ Staging se empaqueta con `npm run build:staging`; producción con `npm run build
 | `AZUL_PAYMENT_URL` | `pruebas.azul.com.do` | `contpagos.azul.com.do` |
 | `SERVICE_PUBLIC_URL` | dominio del servicio en staging | dominio en producción |
 | `ALLOWED_ORIGIN` / `APP_URL` | dominio de staging | dominio de producción |
+| `SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` de staging | `sb_publishable_...` de producción |
+| `SUPABASE_SECRET_KEY` | `sb_secret_...` de staging | `sb_secret_...` de producción |
 
 Cruzar credenciales aquí significa cobrar de verdad desde staging, o no cobrar en producción. Es el punto de mayor riesgo de toda la lista.
 

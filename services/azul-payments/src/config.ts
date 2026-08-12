@@ -24,8 +24,8 @@ export interface AppConfig {
   appUrl: string
 
   supabaseUrl: string
-  supabaseAnonKey: string
-  supabaseServiceRoleKey: string
+  supabasePublishableKey: string
+  supabaseSecretKey: string
 
   azul: {
     merchantId: string
@@ -68,8 +68,8 @@ export function loadConfig(): AppConfig {
     appUrl: required('APP_URL').replace(/\/+$/, ''),
 
     supabaseUrl: required('SUPABASE_URL').replace(/\/+$/, ''),
-    supabaseAnonKey: required('SUPABASE_ANON_KEY'),
-    supabaseServiceRoleKey: required('SUPABASE_SERVICE_ROLE_KEY'),
+    supabasePublishableKey: required('SUPABASE_PUBLISHABLE_KEY'),
+    supabaseSecretKey: required('SUPABASE_SECRET_KEY'),
 
     azul: {
       merchantId: required('AZUL_MERCHANT_ID'),
