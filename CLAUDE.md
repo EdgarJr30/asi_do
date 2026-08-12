@@ -55,6 +55,7 @@ El guion y el compresor están documentados en su propia cabecera (`scripts/reco
 
 - **El banner no se graba, se compone.** El sostenido azul sale de un PNG que deja la grabación, porque el codec en tiempo real del navegador no estabiliza nunca un color plano a pantalla completa y parpadea. Si cambias el banner, se regraba: el PNG y el video tienen que salir de la misma toma.
 - **El recorrido de membresía necesita el microservicio de pagos** (`cd services/azul-payments && npm run dev`) y que su `ALLOWED_ORIGIN`/`APP_URL` incluyan el origen que se graba. Por eso ese recorrido se graba contra `http://localhost:5173` y no contra el `127.0.0.1:4173` de los demás: es lo que ya trae el `.env` del servicio.
+- **El color hay que declararlo en las dos puntas o el video sale quemado.** Chrome codifica el screencast con la matriz BT.601 y no la etiqueta; si el compresor la hereda, el archivo queda marcado `bt470bg` (PAL) sin primarias ni curva, y los reproductores con gestión de color de macOS estiran ese gamut hasta el P3 del monitor: blancos que se van y saturación de más. Los píxeles nunca estuvieron mal, solo mal descritos. Por eso la grabación fuerza `--force-color-profile=srgb` (sin ella el navegador rasteriza en el perfil del monitor y el resultado cambia según la máquina) y el compresor convierte la matriz a BT.709 y etiqueta matriz, primarias, curva y rango. Si al final `ffprobe` no dice `bt709` en las cuatro, el video saldrá saturado.
 
 ```bash
 node scripts/seed-demo-content.ts --candidate=<correo> --company-owner=<correo> --applicants

@@ -6,7 +6,7 @@
 //   node scripts/seed-demo-content.ts --company-owner=correo@x.do  # lo hace dueño de la empresa demo
 //   node scripts/seed-demo-content.ts --applicants                 # postulantes para el ATS
 //   node scripts/seed-demo-content.ts --recruiter \
-//     --recruiter-password=<clave>                                  # cuenta de reclutadora del ATS
+//     --recruiter-password=<clave>                                  # cuenta de reclutamiento del ATS
 //   node scripts/seed-demo-content.ts --clear-application=<correo> # deja regrabar la postulación
 //   node scripts/seed-demo-content.ts --purge                      # borra TODO lo sembrado
 //
@@ -354,8 +354,8 @@ const APPLICANTS: Array<{
   coverLetter: string
 }> = [
   {
-    name: 'María Fernández',
-    headline: 'Desarrolladora Frontend · React y TypeScript',
+    name: 'Juan Pérez',
+    headline: 'Desarrollador Frontend · React y TypeScript',
     city: 'Santo Domingo',
     jobSlug: 'demo-desarrollador-frontend-react',
     stage: 'interview',
@@ -364,7 +364,7 @@ const APPLICANTS: Array<{
     coverLetter: 'Cuatro años construyendo interfaces accesibles. Me entusiasma el enfoque de producto del equipo.'
   },
   {
-    name: 'José Ramírez',
+    name: 'Pedro Gómez',
     headline: 'Ingeniero de software · Front-end',
     city: 'Santiago',
     jobSlug: 'demo-desarrollador-frontend-react',
@@ -374,8 +374,8 @@ const APPLICANTS: Array<{
     coverLetter: 'Vengo del mundo del diseño y me pasé al código. Cuido mucho el detalle visual.'
   },
   {
-    name: 'Laura Peña',
-    headline: 'Desarrolladora web · React, Next.js',
+    name: 'Luis Santana',
+    headline: 'Desarrollador web · React, Next.js',
     city: 'Santo Domingo',
     jobSlug: 'demo-desarrollador-frontend-react',
     stage: 'applied',
@@ -394,14 +394,14 @@ const APPLICANTS: Array<{
     coverLetter: 'Me gusta explicar con datos lo que al equipo le cuesta ver. Disponible de inmediato.'
   },
   {
-    name: 'Rosa Jiménez',
+    name: 'Rafael Guzmán',
     headline: 'Analista junior · Reportería y tableros',
     city: 'La Vega',
     jobSlug: 'demo-analista-de-datos-junior',
     stage: 'screening',
     status: 'in_review',
     daysAgo: 3,
-    coverLetter: 'Recién graduada, con dos pasantías en análisis de datos y muchas ganas de aprender.'
+    coverLetter: 'Recién graduado, con dos pasantías en análisis de datos y muchas ganas de aprender.'
   },
   {
     name: 'Daniel Castillo',
@@ -662,7 +662,7 @@ async function seedCompanyOwner(client: SupabaseClient, email: string): Promise<
 }
 
 /**
- * Cuenta de reclutadora para el video del módulo de empresa.
+ * Cuenta de reclutamiento para el video del módulo de empresa.
  *
  * Hace falta una cuenta aparte, y no la del dueño real, porque el espacio de
  * trabajo se sirve de la primera membresía activa del usuario: quien pertenece
@@ -672,7 +672,11 @@ async function seedCompanyOwner(client: SupabaseClient, email: string): Promise<
  */
 async function seedRecruiter(client: SupabaseClient, password: string): Promise<string> {
   const email = `demo.reclutadora@${DEMO_APPLICANT_DOMAIN}`
-  const fullName = 'Patricia Núñez'
+  // El correo sigue diciendo `reclutadora` a propósito: es la llave con la que
+  // se busca la cuenta ya sembrada. Cambiarlo crearía una segunda y el espacio
+  // de trabajo quedaría con dos miembros. No se ve en cámara: el recorrido de
+  // empresa navega por el sidebar y nunca abre el menú de la cuenta.
+  const fullName = 'Juan Pérez'
 
   const company = COMPANIES.find((item) => item.slug === DEMO_WORKSPACE_TENANT)
   if (!company) throw new Error(`No está sembrada la empresa ${DEMO_WORKSPACE_TENANT}`)
@@ -751,7 +755,7 @@ async function seedRecruiter(client: SupabaseClient, password: string): Promise<
   )
   if (assignment.error) throw assignment.error
 
-  console.log(`✓ reclutadora de demostración lista: ${email} (${company.name})`)
+  console.log(`✓ cuenta de reclutamiento de demostración lista: ${email} (${company.name})`)
   return email
 }
 

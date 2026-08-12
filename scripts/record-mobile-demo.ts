@@ -903,8 +903,8 @@ async function confirmationLinkFor(
 
 /** Datos de la persona ficticia que solicita la membresía en el video. */
 const APPLICANT = {
-  firstName: 'María',
-  lastName: 'Rodríguez',
+  firstName: 'Juan',
+  lastName: 'Pérez',
   phone: '809-555-1234',
   province: 'Distrito Nacional',
   church: 'Iglesia Adventista Central',
@@ -922,7 +922,7 @@ const TEST_CARD = {
   number: '4012000033330026',
   expiry: '12/28',
   cvv: '123',
-  holder: 'MARIA RODRIGUEZ'
+  holder: 'JUAN PEREZ'
 } as const
 
 /**
@@ -1298,7 +1298,7 @@ async function main(): Promise<void> {
   // para que regrabar siga contando la historia de alguien que llega nuevo.
   const localEnv = isMembershipFlow ? readLocalEnv() : {}
   const signupEmail =
-    typeof args['signup-email'] === 'string' ? args['signup-email'] : 'edgarjoel9912+maria@gmail.com'
+    typeof args['signup-email'] === 'string' ? args['signup-email'] : 'edgarjoel9912+juan@gmail.com'
   const signupPassword =
     typeof args['signup-password'] === 'string' ? args['signup-password'] : 'MembresiaAsi2026!'
   if (isMembershipFlow) await resetSignupAccount(localEnv, signupEmail)
@@ -1318,7 +1318,17 @@ async function main(): Promise<void> {
     // Sin la bandera de automatización: el recorrido de membresía termina en la
     // pasarela de AZUL, que está detrás de un cortafuegos que bloquea lo que
     // huele a robot. Ver `DESKTOP_USER_AGENT`.
-    args: [`--force-device-scale-factor=${deviceScale}`, '--disable-blink-features=AutomationControlled']
+    //
+    // `--force-color-profile=srgb` fija en qué espacio rasteriza el navegador.
+    // Sin ella rasteriza en el perfil del monitor —P3 en cualquier Mac
+    // reciente—, así que los números que quedan grabados dependen de la
+    // pantalla donde se grabó y el video sale distinto en cada máquina. Con la
+    // bandera, lo grabado es sRGB y coincide con lo que el compresor etiqueta.
+    args: [
+      `--force-device-scale-factor=${deviceScale}`,
+      '--force-color-profile=srgb',
+      '--disable-blink-features=AutomationControlled'
+    ]
   })
 
   // Inicio de sesión fuera de cámara: solo interesa la sesión resultante. El

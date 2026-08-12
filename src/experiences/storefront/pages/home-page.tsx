@@ -843,11 +843,11 @@ export function HomePage() {
               <div className="flex flex-1 flex-col justify-center rounded-[11px] border bg-(--app-surface-muted) p-3.5">
                 <div className="flex items-center gap-2.5">
                   <div className="flex size-8 items-center justify-center rounded-full bg-[#2d52a8] text-xs font-bold text-white">
-                    MR
+                    JP
                   </div>
                   <div>
                     <p className="text-[12.5px] font-bold leading-[1.2] text-(--app-text)">
-                      María Rendón
+                      Juan Pérez
                     </p>
                     <p className="mt-0.5 text-[11px] text-(--app-text-subtle)">
                       Product Designer

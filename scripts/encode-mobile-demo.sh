@@ -24,6 +24,9 @@
 #     verdad: el primero y el último salen del mismo PNG.
 #   - De la grabación se usa solo el recorrido por la app, entre la marca azul
 #     del arranque y el final. Los fundidos de entrada y salida los hace ffmpeg.
+#   - Salen etiquetados como BT.709 de rango limitado, que es lo que el
+#     contenido es de verdad. Sin eso los reproductores con gestión de color de
+#     macOS los pintan sobresaturados. Ver el bloque de COLOR_TAGS.
 #   - Sin pista de audio (`-an`): no hay nada que oír.
 #
 # Opciones:
@@ -147,10 +150,31 @@ if [ -n "$TARGET_WIDTH" ] && [ "$TARGET_WIDTH" -lt "$WIDTH" ]; then
     'BEGIN { h = int(H * w / W + 0.5); printf "%d", h - (h % 2) }')"
 fi
 
+# El color, que es de donde salía el aspecto quemado. Chrome codifica el
+# screencast con la matriz BT.601 y el contenedor no la etiqueta; ffmpeg
+# heredaba esa matriz al archivo final y lo marcaba `bt470bg` —PAL— dejando las
+# primarias y la curva sin declarar. Un reproductor con gestión de color
+# (QuickTime, Safari, Preview, Chrome en macOS) deduce entonces que el material
+# tiene gamut PAL y lo estira hasta el del monitor, que en un Mac es P3: de ahí
+# los blancos que se van y el color de más. Los píxeles siempre estuvieron bien
+# —el azul institucional redondea 0,47,110 → 0,46,114—, lo que estaba mal era lo
+# que el archivo decía de ellos. El contenido es sRGB, así que aquí se convierte
+# la matriz a BT.709 y se etiquetan las tres cosas de forma explícita.
+COLOR_TAGS="range=tv:color_primaries=bt709:color_trc=bt709"
+
 # El PNG llega a la densidad con la que pinta el navegador, que puede ser mayor
 # que el video: reducirlo aquí es un remuestreo con muestras de sobra y sale más
-# nítido que haberlo capturado ya pequeño.
-PREP="scale=${OUT_W}:${OUT_H}:flags=lanczos,fps=25,format=yuv420p,setsar=1"
+# nítido que haberlo capturado ya pequeño. Viene en RGB, así que se convierte
+# una sola vez y ya directo a BT.709.
+PREP_PNG="scale=${OUT_W}:${OUT_H}:flags=lanczos:out_color_matrix=bt709:out_range=tv,\
+fps=25,format=yuv420p,setparams=colorspace=bt709:${COLOR_TAGS},setsar=1"
+
+# La grabación llega en BT.601 sin etiquetar: se declara lo que es y se
+# convierte la matriz. Las primarias ya son las de sRGB, así que ahí no hay
+# conversión que hacer y el filtro las deja pasar.
+PREP_APP="setparams=colorspace=bt470bg:${COLOR_TAGS},\
+scale=${OUT_W}:${OUT_H}:flags=lanczos,fps=25,\
+colorspace=space=bt709:primaries=bt709:trc=bt709:range=tv:format=yuv420p,setsar=1"
 
 # Dónde cae cada fundido. El primero termina justo cuando el banner de apertura
 # agota su sostenido; el segundo, al final del recorrido por la app. `xfade` se
@@ -160,7 +184,7 @@ OFF2="$(awk -v i="$INTRO" -v l="$LENGTH" -v f="$FADE" 'BEGIN { printf "%.3f", i 
 TOTAL="$(awk -v i="$INTRO" -v l="$LENGTH" -v o="$OUTRO" -v f="$FADE" \
   'BEGIN { printf "%.2f", i + l + o - 2 * f }')"
 
-FILTER="[0:v]${PREP}[intro];[1:v]${PREP}[app];[2:v]${PREP}[outro];\
+FILTER="[0:v]${PREP_PNG}[intro];[1:v]${PREP_APP}[app];[2:v]${PREP_PNG}[outro];\
 [intro][app]xfade=transition=fade:duration=${FADE}:offset=${OFF1}[ia];\
 [ia][outro]xfade=transition=fade:duration=${FADE}:offset=${OFF2}[v]"
 
@@ -173,7 +197,8 @@ if [ "$PROFILE" = "presentacion" ]; then
   ffmpeg -hide_banner -v error -y "${INPUTS[@]}" \
     -filter_complex "$FILTER" -map "[v]" \
     -c:v libx264 -crf 16 -preset slow -profile:v high -level 5.1 \
-    -pix_fmt yuv420p -movflags +faststart -an "$OUT"
+    -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv \
+    -movflags +faststart -an "$OUT"
 else
   # `-aq-mode 0` reparte el cuantizador por igual: con el reparto adaptativo, el
   # azul plano del banner recibe distinto trato en cada cuadro clave y vuelve a
@@ -181,10 +206,12 @@ else
   ffmpeg -hide_banner -v error -y "${INPUTS[@]}" \
     -filter_complex "$FILTER" -map "[v]" \
     -c:v libvpx-vp9 -crf 33 -b:v 0 -pix_fmt yuv420p -aq-mode 0 \
+    -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv \
     -row-mt 1 -deadline good -cpu-used 2 -an "$OUT"
 fi
 
 echo "· perfil ${PROFILE} · app de ${START}s a $(awk -v s="$START" -v l="$LENGTH" 'BEGIN { printf "%.2f", s + l }')s · banners ${INTRO}s/${OUTRO}s desde $(basename "$BANNER") · total ${TOTAL}s"
-ffprobe -v error -show_entries format=duration,size -show_entries stream=width,height,codec_name \
+ffprobe -v error -show_entries format=duration,size \
+  -show_entries stream=width,height,codec_name,color_range,color_space,color_primaries,color_transfer \
   -of default=noprint_wrappers=1 "$OUT"
 echo "✓ listo: $OUT"
