@@ -562,7 +562,7 @@ jobs:
       # Va despues de publicar a proposito: comprueba lo que hay en el dominio,
       # no lo que se construyo.
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Smoke de produccion
         run: npm run test:e2e:production-smoke
