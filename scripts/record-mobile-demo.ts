@@ -503,25 +503,57 @@ class Demo {
     }
   }
 
+  /**
+   * Toca un elemento.
+   *
+   * Antes de pulsar comprueba que en ese punto está de verdad el elemento que
+   * se quiere tocar. El clic va por coordenadas —hace falta para que el puntero
+   * se vea moverse— y eso tiene un riesgo que Playwright normalmente cubre: si
+   * la página todavía se está acomodando (un `scrollTo` suave, una card que
+   * termina de entrar), entre medir y pulsar el destino se ha movido y el clic
+   * cae en el vecino. No falla: hace otra cosa. Costó tres tomas descubrir que
+   * "Continuar con la solicitud" estaba abriendo el detalle de categorías.
+   */
   async tap(locator: Locator, settle = 900) {
     const target = locator.first()
     await target.waitFor({ state: 'visible' })
     await this.bringIntoView(target)
 
-    const box = await target.boundingBox()
-    if (!box) throw new Error('No se pudo ubicar el elemento a tocar')
+    let x = 0
+    let y = 0
 
-    const x = box.x + box.width / 2
-    const y = box.y + box.height / 2
+    // La comprobación va justo antes del clic, no antes de mover el puntero:
+    // entre una cosa y otra pasan seis décimas —lo que dura el gesto— y es ahí
+    // donde la página termina de acomodarse y el destino se desplaza.
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const box = await target.boundingBox()
+      if (!box) throw new Error('No se pudo ubicar el elemento a tocar')
+      x = box.x + box.width / 2
+      y = box.y + box.height / 2
 
-    await this.page.evaluate(
-      ([px, py, ms]: [number, number, number]) =>
-        (
-          globalThis as { __demoPointerTo?: (x: number, y: number, ms: number) => Promise<void> }
-        ).__demoPointerTo?.(px, py, ms),
-      [x, y, 460] as [number, number, number]
-    )
-    await this.pause(160)
+      await this.page.evaluate(
+        ([px, py, ms]: [number, number, number]) =>
+          (
+            globalThis as { __demoPointerTo?: (x: number, y: number, ms: number) => Promise<void> }
+          ).__demoPointerTo?.(px, py, ms),
+        [x, y, attempt === 0 ? 460 : 180] as [number, number, number]
+      )
+      await this.pause(160)
+
+      const onTarget = await target.evaluate((node, point: [number, number]) => {
+        // Sin tipos del DOM: este archivo compila con `tsconfig.node.json`.
+        const el = node as unknown as {
+          ownerDocument: { elementFromPoint: (x: number, y: number) => unknown }
+          contains: (other: unknown) => boolean
+        }
+        const hit = el.ownerDocument.elementFromPoint(point[0], point[1])
+        if (!hit) return false
+        return el.contains(hit) || (hit as { contains: (o: unknown) => boolean }).contains(node)
+      }, [x, y] as [number, number])
+
+      if (onTarget) break
+      await this.pause(320)
+    }
     await this.page.evaluate(() =>
       (globalThis as { __demoPress?: () => Promise<void> }).__demoPress?.()
     )
@@ -927,12 +959,14 @@ async function recordMembershipFlow(
   await demo.pause(700)
   await demo.scrollTop(520)
 
-  // El acceso a membresía: en escritorio está en la barra; en teléfono, la
-  // llamada a la acción de la portada lleva al mismo sitio y no obliga a abrir
-  // el menú, que en video se lee peor.
-  const navMembership = page.getByRole('link', { name: 'Membresía', exact: true }).first()
-  const heroMembership = page.getByRole('link', { name: /Suscribirme ahora/i }).first()
-  await demo.tap(isDesktop ? navMembership : heroMembership, 1800)
+  // El acceso a membresía. En escritorio está en la barra; en teléfono hay que
+  // abrir el menú. La llamada a la acción de la portada no sirve de atajo: en
+  // esa vista lleva a la plataforma, no a membresía.
+  if (!isDesktop) {
+    await demo.tap(page.getByRole('button', { name: /Abrir menú/i }).first(), 1200)
+  }
+  await demo.tap(page.getByRole('link', { name: 'Membresía', exact: true }).first(), 1800)
+  await page.waitForURL(/\/membership/, { timeout: 30_000 })
   await page.waitForLoadState('networkidle')
 
   // ── Página de membresía ──────────────────────────────────────────────────
@@ -943,9 +977,21 @@ async function recordMembershipFlow(
   await page.waitForLoadState('networkidle')
 
   // ── Elegir categoría ─────────────────────────────────────────────────────
+  //
+  // El par se reintenta junto: si el toque en la categoría no aterriza —las
+  // tarjetas son altas y en teléfono la página aún se está acomodando—,
+  // "Continuar" no lleva a ninguna parte y el recorrido se queda aquí sin decir
+  // por qué.
   await demo.pause(1000)
-  await demo.tap(page.getByRole('button', { name: /^Laico/ }).first(), 1000)
-  await demo.tap(page.getByRole('button', { name: /Continuar con la solicitud/i }), 1600)
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await demo.tap(page.getByRole('button', { name: /^Laico/ }).first(), 1000)
+    await demo.tap(page.getByRole('button', { name: /Continuar con la solicitud/i }), 1600)
+    if (!/\/eligibility/.test(page.url())) break
+    await demo.pause(700)
+  }
+  if (/\/eligibility/.test(page.url())) {
+    throw new Error('No se pudo pasar de la elección de categoría.')
+  }
   // La URL lleva el token de elegibilidad: es a donde hay que volver después de
   // confirmar el correo, así que se guarda antes de salir del formulario.
   const applyUrl = page.url()
@@ -1312,6 +1358,16 @@ async function main(): Promise<void> {
   const demo = new Demo(page, layout)
   const bannerPath = resolve(outDir, `${defaultName}.banner.png`)
 
+  // Rastro de por dónde pasó. Cuando una navegación falla, la página se queda en
+  // `chrome-error://chromewebdata/` y ni la URL ni la captura dicen desde dónde
+  // venía, que es lo único que hace falta saber.
+  const trail: string[] = []
+  page.on('framenavigated', (frame) => {
+    if (frame !== page.mainFrame()) return
+    const url = frame.url()
+    if (url && url !== trail.at(-1)) trail.push(url)
+  })
+
   /** Cierre del archivo: nombrar, comprobar y decir qué falta. */
   const finish = async () => {
     await context.close()
@@ -1377,6 +1433,7 @@ async function main(): Promise<void> {
         )
         .catch(() => [])
       console.error(`✗ se rompió en ${page.url()}\n  pantalla del momento: ${shot}`)
+      console.error(`  por dónde pasó: ${trail.slice(-6).map((url) => url.slice(0, 90)).join('\n                  ')}`)
       if (clickables.length) console.error(`  se podía pulsar: ${clickables.join(' · ')}`)
       throw error
     }
