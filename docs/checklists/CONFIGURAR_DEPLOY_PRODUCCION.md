@@ -23,8 +23,8 @@ Las migraciones **no** van en ese flujo: se aplican a mano antes de mergear.
 
 ## 1 · Crear el proyecto Supabase
 
-- [ ] supabase.com → New project, región `us-east-1`
-- [ ] Guardar la contraseña de la base (no se vuelve a ver)
+- [x] supabase.com → New project, región `us-east-1`
+- [x] Guardar la contraseña de la base (no se vuelve a ver)
 - [ ] Copiar el `project_ref` → de aquí en adelante, `<REF-PROD>`
 - [ ] Anotarlo en `ENVIRONMENTS.md` §2 y commitear
 
@@ -88,7 +88,7 @@ on conflict (key) do update set value = excluded.value;
 
 ## 5 · Resend
 
-- [ ] Dominio `asidominicana.do` verificado (SPF, DKIM, DMARC)
+- [x] Dominio `asidominicana.do` verificado (SPF, DKIM, DMARC)
 - [ ] API key nueva, solo *sending access* → va al paso 3
 - [ ] Remitente `notificaciones@asidominicana.do` con `Reply-To` real
 - [ ] Webhook → `https://<REF-PROD>.supabase.co/functions/v1/resend-webhook`; su `whsec_…` va al paso 3
