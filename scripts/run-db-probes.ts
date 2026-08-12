@@ -62,6 +62,9 @@ const MANIFIESTO: Record<string, Tier> = {
   p1_storage_truncate_grants_probe: 'catalogo',
   p2_fase_d_authenticated_grants_probe: 'catalogo',
   p2_platform_grants_probe: 'catalogo',
+  // Se monta su propio historial (notificación, entrega, evento, token) y no
+  // mira a ningún usuario del fixture, así que corre en base vacía.
+  p1_notification_retention_probe: 'catalogo',
 
   p0_anon_surface_probe: 'datos',
   p0_azul_settlement_probe: 'datos',
@@ -69,10 +72,19 @@ const MANIFIESTO: Record<string, Tier> = {
   p0_error_ingestion_probe: 'datos',
   p0_notification_authz_probe: 'datos',
   p0_users_guard_probe: 'datos',
+  p1_contact_form_probe: 'datos',
+  p1_email_broadcast_probe: 'datos',
+  p1_email_broadcast_preview_probe: 'datos',
+  p1_membership_renewal_reminders_probe: 'datos',
+  // Compara las dos funciones impersonando a cada titular de rol, así que
+  // necesita usuarios con rol de plataforma cargados.
+  p1_platform_permissions_bulk_probe: 'datos',
   p1_access_log_page_probe: 'datos',
   p1_audit_logs_probe: 'datos',
   p1_rbac_review_moderation_probe: 'datos',
   p1_rls_initplan_probe: 'datos',
+  p1_tenant_job_application_counts_probe: 'datos',
+  p1_workspace_dashboard_metrics_probe: 'datos',
   p2_talent_directory_search_probe: 'datos',
   p2_tenant_applications_page_probe: 'datos',
 }

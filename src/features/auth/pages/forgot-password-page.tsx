@@ -14,6 +14,7 @@ import {
   passwordRecoveryRequestSchema,
   type PasswordRecoveryRequestValues
 } from '@/features/auth/lib/auth-schemas'
+import { PASSWORD_RESET_WINDOW_LABEL } from '@/features/auth/lib/password-reset-window'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 
 function FieldError({ message }: { message?: string }) {
@@ -79,8 +80,8 @@ export function ForgotPasswordPage() {
             </h1>
             <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
               Si <span className="font-semibold text-(--app-text)">{sentToEmail}</span> tiene una cuenta en ASI, le
-              acabamos de enviar un enlace para crear una contraseña nueva. El enlace caduca en una hora y solo puede
-              usarse una vez.
+              acabamos de enviar un enlace para crear una contraseña nueva. El enlace caduca en{' '}
+              {PASSWORD_RESET_WINDOW_LABEL} y solo puede usarse una vez.
             </p>
           </div>
         </div>

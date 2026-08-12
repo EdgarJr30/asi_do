@@ -90,7 +90,7 @@ tests/
 
 ### Environment strategy
 - Local development is the primary integration environment.
-- Netlify Deploy Previews are the default shared validation surface for branch and pull request work.
+- `dev.asidominicana.do`, published from the `staging` branch, is the default shared validation surface for branch and pull request work.
 - Production deploys from `main`.
 - Do not add a dedicated or long-lived staging environment unless a reviewed architecture decision changes that rule.
 - Stress, migration, and high-risk operational validation must target local or explicitly approved development/preview environments, never production by default.
@@ -271,7 +271,7 @@ Add structured logs/events for critical flows where possible.
 - `/admin/access-logs` reads this sensitive history through `admin_user_access_log_page`, which enforces platform audit permission, records a `user_access_log.viewed` audit event, and preserves real server paging for infinite-scroll UX.
 - A daily `pg_cron` task removes user access records older than 180 days. The generic public-table audit trigger is intentionally removed from this table to avoid duplicating IP/user-agent into a store with a different retention policy.
 - Notification persistence is split into `notifications`, `notification_preferences`, `push_subscriptions`, `notification_deliveries`, and `notification_delivery_logs`.
-- `process-email-deliveries` drains pending email deliveries; `resend-webhook` verifies signed provider callbacks and records sent, delivered, delayed, failed, suppressed, bounced, complained, opened, and clicked outcomes idempotently.
+- `process-email-deliveries` drains pending email deliveries through a five-minute single-flight lease, batches of at most 20, idempotency, backpressure, and bounded database/provider calls; `resend-webhook` verifies signed callbacks, times out failed persistence quickly, and records provider outcomes idempotently through an indexed message correlation path.
 - Browser subscriptions are registered from the client through SQL RPC helpers, not ad hoc table writes.
 - Push dispatch runs through the `send-notification` Edge Function so VAPID secrets stay server-side while delivery status remains in Postgres.
 - The current repository migration extends an already-existing remote identity/RBAC baseline. Backfill missing baseline migrations into `supabase/migrations/` before altering that identity layer again.
@@ -300,12 +300,16 @@ Add structured logs/events for critical flows where possible.
 ## 10. Deployment assumptions
 - local development remains the primary day-to-day workflow
 - GitHub Actions is the source of truth for CI quality gates
-- `npm run verify` is the required CI command for pull requests and `main`
-- Netlify handles preview deployments for pull requests once the repository is connected
-- Netlify publishes production from `main`
-- since 2026-08-07 the SPA is also served from Hostinger on `asidominicana.do` (manual `dist/` upload, rules in `public/.htaccess`); Netlify remains the rollback target until Hostinger is validated — see `docs/architecture/DESPLIEGUE_HOSTINGER.md`
+- `npm run verify` is the required CI command for pull requests, `staging`, and `main`
+- Hostinger receives the built SPA through GitHub Actions: `staging` publishes to
+  `dev.asidominicana.do`; `main` is reserved for the separately protected production target
+- Hostinger releases upload immutable hashed assets before atomically replacing `index.html` and
+  `sw.js`, verify the public result over HTTPS, and restore the prior entrypoints on failure; routine
+  activation never deletes the previous release's bundles
+- the FTP account must remain scoped to the intended document root — see
+  `docs/architecture/DESPLIEGUE_HOSTINGER.md`
 - environment variables managed per environment
-- Netlify manages build-time frontend environments for preview and production
+- GitHub Actions environments hold the build-time frontend variables for staging and production
 - Supabase project separation is required once production data exists
 - Supabase MCP or other LLM-connected developer tooling must target a non-production scoped project or branch by default
 - migrations applied consistently

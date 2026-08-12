@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowRight, Check, Eye, EyeOff, X } from 'lucide-react'
+import { ArrowRight, Check, Eye, EyeOff, MailCheck, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAppSession } from '@/app/providers/app-session-provider'
@@ -14,7 +14,7 @@ import { PageLoader } from '@/components/ui/loader'
 import { PasswordPolicyHints } from '@/features/auth/components/password-policy-hints'
 import { signUpFormSchema, type SignUpFormValues } from '@/features/auth/lib/auth-schemas'
 import { Input } from '@/components/ui/input'
-import { signUpWithPassword, toErrorMessage } from '@/features/auth/lib/auth-api'
+import { resendSignUpConfirmation, signUpWithPassword, toErrorMessage } from '@/features/auth/lib/auth-api'
 import { reportErrorWithToast } from '@/lib/errors/error-reporting'
 import { PLATFORM_REGISTRATION_LOCKED, PLATFORM_REGISTRATION_LOCKED_MESSAGE } from '@/shared/config/launch-access'
 
@@ -32,6 +32,9 @@ export function SignUpPage() {
   const session = useAppSession()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [sentToEmail, setSentToEmail] = useState<string | null>(null)
+  const [resendSeconds, setResendSeconds] = useState(60)
+  const [isResending, setIsResending] = useState(false)
   const nextPath = getSafeNextPath(location.search)
   const prefillEmail = new URLSearchParams(location.search).get('email') ?? ''
   const form = useForm<SignUpFormValues>({
@@ -48,6 +51,18 @@ export function SignUpPage() {
   const confirmValue = useWatch({ control: form.control, name: 'confirmPassword' }) ?? ''
   const confirmTouched = confirmValue.length > 0
   const passwordsMatch = confirmTouched && confirmValue === passwordValue
+
+  useEffect(() => {
+    if (!sentToEmail || resendSeconds <= 0) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setResendSeconds((seconds) => Math.max(0, seconds - 1))
+    }, 1_000)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [resendSeconds, sentToEmail])
 
   if (!session.isSupabaseConfigured) {
     return (
@@ -93,6 +108,8 @@ export function SignUpPage() {
       toast.success('Revisa tu correo', {
         description: 'Te enviamos un enlace para confirmar tu cuenta y preparar tu perfil.'
       })
+      setSentToEmail(values.email)
+      setResendSeconds(60)
     } catch (error) {
       await reportErrorWithToast({
         title: 'No pudimos crear tu cuenta',
@@ -104,6 +121,83 @@ export function SignUpPage() {
         userMessage: 'No pudimos crear tu cuenta con esos datos.'
       })
     }
+  }
+
+  async function handleResend() {
+    if (!sentToEmail || resendSeconds > 0 || isResending) {
+      return
+    }
+
+    setIsResending(true)
+    try {
+      await resendSignUpConfirmation({ email: sentToEmail, nextPath })
+      setResendSeconds(60)
+      toast.success('Correo reenviado', {
+        description: 'Te enviamos un nuevo enlace de confirmación.'
+      })
+    } catch (error) {
+      await reportErrorWithToast({
+        title: 'No pudimos reenviar el correo',
+        source: 'auth.sign-up.resend',
+        route: surfacePaths.auth.signUp,
+        userId: null,
+        error,
+        description: 'Espera un momento e inténtalo nuevamente.',
+        userMessage: 'No pudimos reenviar el correo de confirmación.'
+      })
+    } finally {
+      setIsResending(false)
+    }
+  }
+
+  if (sentToEmail) {
+    return (
+      <section className="w-full">
+        <div className="mb-6 flex flex-col items-start gap-4">
+          <span className="flex size-11 items-center justify-center rounded-control bg-primary-50 text-primary-600 dark:bg-primary-500/15 dark:text-primary-300">
+            <MailCheck className="size-5" />
+          </span>
+          <div>
+            <h1 className="text-[1.9rem] font-bold tracking-[-0.03em] text-(--app-text) sm:text-[2.1rem]">
+              Revisa tu correo
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-(--app-text-muted)">
+              Enviamos un enlace de confirmación a{' '}
+              <span className="font-semibold text-(--app-text)">{sentToEmail}</span>. Ábrelo para activar tu cuenta y
+              continuar; no necesitas registrarte nuevamente.
+            </p>
+          </div>
+        </div>
+
+        <Button
+          className="h-12 w-full rounded-control text-sm"
+          disabled={resendSeconds > 0 || isResending}
+          variant="outline"
+          onClick={() => void handleResend()}
+        >
+          {isResending
+            ? 'Reenviando...'
+            : resendSeconds > 0
+              ? `Reenviar en ${resendSeconds} s`
+              : 'Reenviar correo'}
+        </Button>
+
+        <p className="mt-3 text-center text-xs leading-5 text-(--app-text-subtle)">
+          Si no lo ves, revisa la carpeta de correo no deseado.
+        </p>
+
+        <p className="mt-6 text-center text-sm text-(--app-text-muted)">
+          ¿Ya confirmaste tu cuenta?{' '}
+          <button
+            className="font-semibold text-primary-600 transition hover:text-primary-700 dark:text-primary-300 dark:hover:text-primary-200"
+            type="button"
+            onClick={() => void navigate(`${surfacePaths.auth.signIn}${buildAuthRedirectQuery(location.search)}`)}
+          >
+            Inicia sesión
+          </button>
+        </p>
+      </section>
+    )
   }
 
   return (

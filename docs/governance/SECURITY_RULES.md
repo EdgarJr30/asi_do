@@ -46,9 +46,16 @@ Security includes protecting:
 - Configure strong security headers, including CSP where feasible, plus frame, referrer, and MIME-sniff protections.
 - Avoid loading third-party scripts without a documented reason and risk review.
 - Service worker caching must not expose tenant-sensitive data across sessions or tenants.
-- CI secrets and hosting environment variables must live in GitHub Actions or Netlify configuration, never in the repository.
+- CI secrets and hosting environment variables must live in GitHub Actions environments or the hosting panel, never in the repository.
 - Preview and production build-time environments must stay separated so preview does not reuse production configuration accidentally.
 - Auth callback origins must be environment-bound: development uses the live browser origin; staging and production use injected HTTPS origins validated at build time. Production must match its canonical production origin, staging must differ from it, and neither deployed environment may emit localhost links.
+
+### Production data and E2E isolation
+- Never provide a production `service_role`/secret key to Playwright, CI test jobs, or developer test environments.
+- Suites that create, modify, or delete data may target only Supabase local, development, or staging.
+- Every remote mutating E2E run must declare `E2E_TARGET_ENV`, and its project ref must belong to the allow-list versioned in `target-guard.ts`; changing CI variables cannot expand it.
+- `E2E_SUPABASE_URL` outside that allow-list or matching `PRODUCTION_SUPABASE_PROJECT_REF` must abort before the administrative client is created.
+- Production verification uses only `npm run test:e2e:production-smoke`, without administrative credentials or data mutations.
 
 ### Dependency and release hygiene
 - Keep dependencies reviewable and minimal.
@@ -96,6 +103,8 @@ Security includes protecting:
 34. IP address, user-agent, timezone, and derived device labels are sensitive approximate context. They must remain restricted to authorized security/support use and must never be presented as exact location or conclusive user identity.
 35. RLS checks that depend on a protected relation must not rely on an invoker-context subquery that can be filtered by that relation's own policies. Use a narrow `security definer` predicate that returns only the authorization boolean, revoke public execution, and grant it only to the role that needs the policy.
 36. Legal-document export/print and change-history controls must render only for an active `platform_owner`. Do not treat generic admin-console visibility, `platform_admin`, internal-developer status, or a partial platform permission as equivalent to this superadministrator gate.
+37. Bulk email and notification processors must enforce backpressure in PostgreSQL, not only in the UI: hard recipient and queue caps, serialized enqueue decisions, a single active dispatcher lease, bounded worker batches, idempotency, remote-call timeouts, and an authorized operational status surface are mandatory.
+38. Tenant-operator request uniqueness must be enforced before insert in PostgreSQL, across the requester's full history and across both requested and existing tenant slugs; UI-only checks do not satisfy this rule.
 
 ### Supabase MCP rules for LLM-assisted development
 - Supabase MCP may be used only as an internal developer tool, never as an end-user or customer-facing capability.

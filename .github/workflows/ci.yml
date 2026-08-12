@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - staging
   # Relanzar a mano sin inventar un commit vacio: cuando el fallo esta en un
   # secreto (no en el codigo), la unica forma de reprobarlo era pushear algo.
   workflow_dispatch:
@@ -23,7 +24,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -42,7 +43,7 @@ jobs:
       # Los valores son ficticios a proposito: lo que CI comprueba es que el
       # proyecto compila y empaqueta, no la configuracion del despliegue. Esa la
       # sigue guardando el mismo `validateProductionEnv` en el build real de
-      # Netlify, que es el unico que se publica y el unico que ve los valores
+      # despliegue, que es el unico que se publica y el unico que ve los valores
       # verdaderos.
       - name: Run repository verification
         run: npm run verify
@@ -60,7 +61,7 @@ jobs:
       # pase; se sube solo cuando el job falla, que es cuando hace falta.
       - name: Upload test report on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: vitest-junit-${{ github.run_id }}
           path: test-results/junit.xml
@@ -74,12 +75,12 @@ jobs:
       - name: Enforce coverage thresholds
         run: npm run test:coverage
 
-      # Los sourcemaps se generan como `hidden` y `netlify.toml` bloquea su
+      # Los sourcemaps se generan como `hidden` y `public/.htaccess` bloquea su
       # descarga publica, asi que la unica copia utilizable para mapear un stack
       # de `app_error_logs` es esta.
       - name: Upload sourcemaps
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: sourcemaps-${{ github.sha }}
           path: dist/assets/*.map
@@ -98,7 +99,7 @@ jobs:
         working-directory: services/azul-payments
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -119,7 +120,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -137,7 +138,7 @@ jobs:
 
       - name: Upload mutation report on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: mutation-report-${{ github.run_id }}
           path: reports/mutation/
@@ -154,7 +155,7 @@ jobs:
     # revisa nadie.
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Deno
         uses: denoland/setup-deno@v2
@@ -183,7 +184,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -211,12 +212,29 @@ jobs:
         env:
           E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
           E2E_SERVICE_ROLE_KEY: ${{ secrets.E2E_SERVICE_ROLE_KEY }}
+          E2E_TARGET_ENV: development
+          PRODUCTION_SUPABASE_PROJECT_REF: ${{ vars.PRODUCTION_SUPABASE_PROJECT_REF }}
+          VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+
+      # Recuperar contrasena es el unico flujo que usa quien ya no puede entrar:
+      # si se rompe, la persona afectada no tiene como reportarlo desde dentro
+      # del producto. Se provee su propia cuenta efimera y la borra, igual que el
+      # smoke autenticado, asi que no deja rastro en el proyecto remoto.
+      - name: Run password recovery suite
+        run: npm run test:e2e:recovery
+        env:
+          E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          E2E_SERVICE_ROLE_KEY: ${{ secrets.E2E_SERVICE_ROLE_KEY }}
+          E2E_TARGET_ENV: development
+          PRODUCTION_SUPABASE_PROJECT_REF: ${{ vars.PRODUCTION_SUPABASE_PROJECT_REF }}
+          E2E_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
           VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
 
       - name: Upload Playwright report on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-smoke-${{ github.run_id }}
           path: |
@@ -231,7 +249,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -251,3 +269,300 @@ jobs:
       # `audit-exceptions.json`.
       - name: Enforce dependency audit policy
         run: npm run audit:policy
+
+  # D3 · Las Edge Functions dejan de salir desde una laptop.
+  #
+  # Hasta hoy se desplegaban a mano, lo que tiene dos consecuencias que no se ven
+  # hasta que duelen: no queda registro de qué versión corre en el remoto, y el
+  # despliegue **no pasa por `db push`**, así que una función desplegada y un
+  # repositorio sin commitear se separan sin que nada avise.
+  #
+  # Se ejecuta en paralelo con el despliegue del frontend, no antes: acoplarlos
+  # daría una garantía falsa de orden entre dos cosas que igual se publican por
+  # separado. Un cambio que rompa el contrato entre frontend y función tiene que
+  # ir en dos despliegues, primero la función.
+  deploy-edge-functions:
+    name: Deploy Edge Functions
+    if: (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs:
+      - verify
+      - edge-functions
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Cada rama contra su propio proyecto. Si `main` empujara las funciones al
+    # proyecto de desarrollo, el cron de produccion dispararia contra las
+    # funciones equivocadas —es exactamente el fallo que B4 documenta—.
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.111.0
+
+      # Para la guarda de destino. No hace falta `npm ci`: el script no importa
+      # nada de `node_modules`, solo el modulo compartido del repositorio.
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      # Fallo ruidoso y con instrucciones: un despliegue de funciones que se
+      # salta en silencio es como se llega a "creiamos que estaban desplegadas".
+      # Los valores llegan por `env:` y no interpolados en el script: una
+      # expresion `${{ }}` dentro de un `run` se sustituye como texto antes de
+      # que bash lo lea, asi que su contenido puede convertirse en comandos.
+      # Comprobar que **existen** no basta, y esa era la debilidad de este paso:
+      # un secret o una var que el environment no define **no queda vacia**, la
+      # hereda del repositorio. Como el repositorio tiene las de `db-drift.yml`
+      # —que apuntan al proyecto de desarrollo—, olvidarse de declarar
+      # `SUPABASE_PROJECT_REF` en el environment `production` no fallaba: pasaba
+      # en verde y publicaba las funciones de produccion en la base de
+      # desarrollo. Es el fallo B4 del checklist, y la herencia lo hacia
+      # silencioso justo donde mas caro sale.
+      #
+      # Por eso se comprueba el **valor**, no solo la presencia. La decision vive
+      # en `src/shared/config/deploy-target.ts` y no aqui: la comparte con la
+      # validacion del build del frontend y esta probada en
+      # `tests/unit/deploy-target.test.ts`. Reimplementarla en bash significaba
+      # mantener dos listas de refs, y dos listas se separan — momento en el que
+      # una de las dos deja de proteger sin decirlo.
+      - name: Comprobar configuracion del entorno
+        env:
+          APP_URL: ${{ vars.VITE_AUTH_SITE_URL }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          DEPLOY_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+        run: node scripts/assert-edge-deploy-target.ts
+
+      # El token no entra en la comprobacion de arriba porque su valor no se
+      # puede validar sin usarlo; lo unico afirmable es que existe.
+      - name: Comprobar que hay credencial
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          DEPLOY_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+        run: |
+          if [[ -z "${SUPABASE_ACCESS_TOKEN:-}" ]]; then
+            echo "Falta el secret SUPABASE_ACCESS_TOKEN del entorno '$DEPLOY_ENVIRONMENT'." >&2
+            echo "Configuralo en Settings → Environments → ese entorno." >&2
+            exit 1
+          fi
+
+      - name: Sincronizar origen de enlaces de correo
+        env:
+          APP_URL: ${{ vars.VITE_AUTH_SITE_URL }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+        run: supabase secrets set APP_URL="$APP_URL" --project-ref "$SUPABASE_PROJECT_REF"
+
+      # `--use-api` empaqueta en el servidor. Sin la bandera, el CLI intenta
+      # aplanar `node_modules` con Docker y termina en
+      # `UnknownError: An error occurred in Effect.tryPromise` justo despues de
+      # `Bundling Function`: sin codigo HTTP y sin pista de que fallo.
+      #
+      # Sin nombre de funcion despliega todas las de `supabase/functions`; los
+      # directorios que empiezan por `_` (como `_shared`) no son funciones y el
+      # CLI los ignora.
+      - name: Deploy Edge Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+        run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF" --use-api
+
+      # Deja en el log que quedo desplegado y con que fecha. Es el registro que
+      # no existia cuando se desplegaba a mano.
+      - name: Listar lo que quedo desplegado
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+        run: supabase functions list --project-ref "$SUPABASE_PROJECT_REF"
+
+  deploy-staging:
+    name: Deploy staging to Hostinger
+    if: github.ref == 'refs/heads/staging' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs:
+      - verify
+      - azul-service
+      - mutation-testing
+      - edge-functions
+      - e2e-smoke
+      - dependency-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: staging
+      url: https://dev.asidominicana.do
+    env:
+      VITE_APP_NAME: ${{ vars.VITE_APP_NAME }}
+      VITE_AUTH_SITE_URL: ${{ vars.VITE_AUTH_SITE_URL }}
+      VITE_AZUL_PAYMENTS_URL: ${{ vars.VITE_AZUL_PAYMENTS_URL }}
+      VITE_DEPLOY_ENV: ${{ vars.VITE_DEPLOY_ENV }}
+      VITE_PRODUCTION_SITE_URL: ${{ vars.VITE_PRODUCTION_SITE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_WEB_PUSH_PUBLIC_KEY: ${{ vars.VITE_WEB_PUSH_PUBLIC_KEY }}
+      HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+      HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}
+      HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
+      HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build staging artifact
+        run: npm run build:staging
+
+      - name: Preserve staging sourcemaps
+        uses: actions/upload-artifact@v6
+        with:
+          name: staging-sourcemaps-${{ github.sha }}
+          path: dist/assets/*.map
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Prepare public artifact
+        run: |
+          find dist/assets -type f -name '*.map' -delete
+          test -f dist/.htaccess
+          test -f dist/index.html
+          test -z "$(find dist -type f -name '*.map' -print -quit)"
+
+      - name: Preserve deployable artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: staging-dist-${{ github.sha }}
+          path: dist/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Install FTP client
+        run: sudo apt-get update && sudo apt-get install --yes lftp
+
+      # Publica primero los assets con hash, activa index.html y sw.js al final
+      # mediante temporales, verifica por HTTPS y restaura los entrypoints si la
+      # comprobacion posterior falla. Los bundles anteriores se conservan para
+      # no romper las pestañas que estaban abiertas durante el despliegue.
+      - name: Activate verified staging release
+        run: scripts/deploy-hostinger-release.sh dist https://dev.asidominicana.do
+
+  # D1 · El despliegue de produccion, espejo de `deploy-staging`.
+  #
+  # Existe porque hoy no habia ninguno, y su ausencia ya causo el incidente que
+  # abre `docs/checklists/SALIDA_A_PRODUCCION.md`: `asidominicana.do` sirvio
+  # durante tres dias un artefacto subido a mano cuyo bundle apuntaba al proyecto
+  # Supabase de desarrollo. Sin un camino automatico, subir a mano es el unico
+  # camino, y subir a mano es como se equivoca uno de base.
+  #
+  # Las diferencias con staging son tres y son todas deliberadas:
+  #   · sale de `main`, no de `staging`;
+  #   · el environment `production` puede exigir revision manual antes de correr,
+  #     que es donde vive la ultima oportunidad de parar un despliegue;
+  #   · construye en modo produccion (`npm run build`), y ese modo es el que
+  #     activa `validateProductionEnv` con su negativa a publicar contra la base
+  #     de desarrollo.
+  deploy-production:
+    name: Deploy production to Hostinger
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs:
+      - verify
+      - azul-service
+      - mutation-testing
+      - edge-functions
+      - e2e-smoke
+      - dependency-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://asidominicana.do
+    env:
+      VITE_APP_NAME: ${{ vars.VITE_APP_NAME }}
+      VITE_AUTH_SITE_URL: ${{ vars.VITE_AUTH_SITE_URL }}
+      VITE_AZUL_PAYMENTS_URL: ${{ vars.VITE_AZUL_PAYMENTS_URL }}
+      VITE_DEPLOY_ENV: ${{ vars.VITE_DEPLOY_ENV }}
+      VITE_PRODUCTION_SITE_URL: ${{ vars.VITE_PRODUCTION_SITE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_WEB_PUSH_PUBLIC_KEY: ${{ vars.VITE_WEB_PUSH_PUBLIC_KEY }}
+      HOSTINGER_HOST: ${{ secrets.HOSTINGER_HOST }}
+      HOSTINGER_PASSWORD: ${{ secrets.HOSTINGER_PASSWORD }}
+      HOSTINGER_PORT: ${{ secrets.HOSTINGER_PORT }}
+      HOSTINGER_USERNAME: ${{ secrets.HOSTINGER_USERNAME }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Modo produccion: `.env.production` fija `VITE_DEPLOY_ENV=production` y el
+      # resto lo inyecta el environment. `validateProductionEnv` aborta aqui si
+      # falta una variable critica o si el bundle apuntaria a una base que no es
+      # la de produccion.
+      - name: Build production artifact
+        run: npm run build
+
+      # Los sourcemaps se guardan y **no** se publican: con ellos, cambiar la
+      # extension en la URL de un bundle basta para leerse el fuente entero.
+      - name: Preserve production sourcemaps
+        uses: actions/upload-artifact@v6
+        with:
+          name: production-sourcemaps-${{ github.sha }}
+          path: dist/assets/*.map
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Prepare public artifact
+        run: |
+          find dist/assets -type f -name '*.map' -delete
+          test -f dist/.htaccess
+          test -f dist/index.html
+          test -z "$(find dist -type f -name '*.map' -print -quit)"
+
+      # El artefacto exacto que se publico, por si hay que reponerlo sin
+      # reconstruir: un rebuild meses despues no da el mismo bundle.
+      - name: Preserve deployable artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: production-dist-${{ github.sha }}
+          path: dist/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Install FTP client
+        run: sudo apt-get update && sudo apt-get install --yes lftp
+
+      # Mismo script que staging: publica primero los assets con hash, activa
+      # index.html y sw.js al final mediante temporales, verifica por HTTPS y
+      # restaura los entrypoints si la comprobacion falla.
+      - name: Activate verified production release
+        run: scripts/deploy-hostinger-release.sh dist https://asidominicana.do
+
+      # Lectura pura contra el sitio ya publicado, sin service_role. Si el
+      # despliegue quedo servible pero roto, esto lo dice antes que un usuario.
+      # Va despues de publicar a proposito: comprueba lo que hay en el dominio,
+      # no lo que se construyo.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Smoke de produccion
+        run: npm run test:e2e:production-smoke

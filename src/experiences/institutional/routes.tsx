@@ -13,6 +13,9 @@ const ContactUsPage = lazy(() => import('@/experiences/institutional/pages/conta
 const DirectoryPage = lazy(() => import('@/experiences/institutional/pages/directory-page').then(({ DirectoryPage }) => ({ default: DirectoryPage })))
 const DonatePage = lazy(() => import('@/experiences/institutional/pages/donate-page').then(({ DonatePage }) => ({ default: DonatePage })))
 const EligibilityPage = lazy(() => import('@/experiences/institutional/pages/eligibility-page').then(({ EligibilityPage }) => ({ default: EligibilityPage })))
+const EmailUnsubscribePage = lazy(() =>
+  import('@/experiences/institutional/pages/email-unsubscribe-page').then(({ EmailUnsubscribePage }) => ({ default: EmailUnsubscribePage }))
+)
 const InstitutionalHomePage = lazy(() =>
   import('@/experiences/institutional/pages/institutional-home-page').then(({ InstitutionalHomePage }) => ({ default: InstitutionalHomePage }))
 )
@@ -30,10 +33,11 @@ const LegalCenterPage = lazy(() =>
 const LegalDocumentPage = lazy(() =>
   import('@/experiences/institutional/pages/legal-document-page').then(({ LegalDocumentPage }) => ({ default: LegalDocumentPage }))
 )
-const ProjectFundingPage = lazy(() =>
-  import('@/experiences/institutional/pages/project-funding-page').then(({ ProjectFundingPage }) => ({ default: ProjectFundingPage }))
-)
-const ProjectsPage = lazy(() => import('@/experiences/institutional/pages/projects-page').then(({ ProjectsPage }) => ({ default: ProjectsPage })))
+// Imports de Proyectos comentados junto con sus rutas (ver más abajo).
+// const ProjectFundingPage = lazy(() =>
+//   import('@/experiences/institutional/pages/project-funding-page').then(({ ProjectFundingPage }) => ({ default: ProjectFundingPage }))
+// )
+// const ProjectsPage = lazy(() => import('@/experiences/institutional/pages/projects-page').then(({ ProjectsPage }) => ({ default: ProjectsPage })))
 const WhoWeArePage = lazy(() => import('@/experiences/institutional/pages/who-we-are-page').then(({ WhoWeArePage }) => ({ default: WhoWeArePage })))
 
 export const institutionalRoutes: RouteObject[] = [
@@ -93,22 +97,25 @@ export const institutionalRoutes: RouteObject[] = [
           </RouteSuspense>
         )
       },
-      {
-        path: 'projects',
-        element: (
-          <RouteSuspense>
-            <ProjectsPage />
-          </RouteSuspense>
-        )
-      },
-      {
-        path: 'projects/funding',
-        element: (
-          <RouteSuspense>
-            <ProjectFundingPage />
-          </RouteSuspense>
-        )
-      },
+      // Proyectos oculto hasta que la sección esté lista: sin ruta, /projects y
+      // /projects/funding caen en el comodín '*' y responden 404. Las páginas y
+      // su contenido siguen en el repo para reactivarlas descomentando esto.
+      // {
+      //   path: 'projects',
+      //   element: (
+      //     <RouteSuspense>
+      //       <ProjectsPage />
+      //     </RouteSuspense>
+      //   )
+      // },
+      // {
+      //   path: 'projects/funding',
+      //   element: (
+      //     <RouteSuspense>
+      //       <ProjectFundingPage />
+      //     </RouteSuspense>
+      //   )
+      // },
       {
         path: 'donate',
         element: (
@@ -194,6 +201,17 @@ export const institutionalRoutes: RouteObject[] = [
         element: (
           <RouteSuspense>
             <NewsPage />
+          </RouteSuspense>
+        )
+      },
+      {
+        // Enlace del pie de las campañas. Ruta pública a propósito: quien se da
+        // de baja llega desde su cliente de correo y no tiene por qué tener
+        // cuenta — una lista cargada a mano no son todos usuarios.
+        path: 'correos/baja',
+        element: (
+          <RouteSuspense>
+            <EmailUnsubscribePage />
           </RouteSuspense>
         )
       },

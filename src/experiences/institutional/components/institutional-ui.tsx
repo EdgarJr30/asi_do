@@ -179,8 +179,8 @@ export function InstitutionalCtaBand({
 }: {
   title: string;
   description: string;
-  primaryAction: InstitutionalAction;
-  secondaryAction: InstitutionalAction;
+  primaryAction?: InstitutionalAction;
+  secondaryAction?: InstitutionalAction;
 }) {
   return (
     <InstitutionalSection tone="brand">
@@ -196,8 +196,12 @@ export function InstitutionalCtaBand({
             {description}
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:justify-end">
-            <InstitutionalActionLink action={primaryAction} />
-            <InstitutionalActionLink action={secondaryAction} />
+            {primaryAction ? (
+              <InstitutionalActionLink action={primaryAction} />
+            ) : null}
+            {secondaryAction ? (
+              <InstitutionalActionLink action={secondaryAction} />
+            ) : null}
           </div>
         </div>
       </div>

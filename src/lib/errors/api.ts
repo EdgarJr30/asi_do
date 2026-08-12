@@ -96,37 +96,6 @@ export async function countAppErrorLogs(filter: 'open' | 'resolved'): Promise<nu
   return response.count ?? 0
 }
 
-export async function listAppErrorLogs(limit = 50) {
-  const client = requireSupabase()
-  const response = await client
-    .from('app_error_logs')
-    .select(
-      `
-        *,
-        affected_user:users!app_error_logs_user_id_fkey (
-          id,
-          email,
-          display_name,
-          full_name
-        ),
-        resolved_by_user:users!app_error_logs_resolved_by_user_id_fkey (
-          id,
-          email,
-          display_name,
-          full_name
-        )
-      `
-    )
-    .order('created_at', { ascending: false })
-    .limit(limit)
-
-  if (response.error) {
-    throw response.error
-  }
-
-  return (response.data ?? []) as AppErrorLogRecord[]
-}
-
 export async function updateAppErrorResolution(values: {
   errorId: string
   isResolved: boolean

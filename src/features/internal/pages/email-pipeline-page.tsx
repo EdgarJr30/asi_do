@@ -26,6 +26,7 @@ import { Select } from '@/components/ui/select'
 import { StatCard } from '@/components/ui/stat-card'
 import { Textarea } from '@/components/ui/textarea'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
+import { EmailBroadcastPanel } from '@/features/internal/components/email-broadcast-panel'
 import {
   clearTestEmails,
   fetchEmailDeliveriesPage,
@@ -37,6 +38,7 @@ import {
   type EmailDeliveryRow,
   type EmailDeliveryStatus,
   type EmailStatusFilter,
+  type EmailProviderEventFilter,
   type SimulateScenario
 } from '@/features/internal/lib/email-pipeline-api'
 
@@ -50,16 +52,19 @@ const STATUS_META: Record<EmailDeliveryStatus, { label: string; variant: BadgeVa
   sent: { label: 'Enviado', variant: 'default' },
   failed: { label: 'Fallido', variant: 'soft' },
   read: { label: 'Leído', variant: 'default' },
-  clicked: { label: 'Con clic', variant: 'default' }
+  clicked: { label: 'Con clic', variant: 'default' },
+  suppressed: { label: 'Dado de baja', variant: 'outline' }
 }
 
 const TYPE_LABEL: Record<string, string> = {
   'email.test': 'Prueba',
+  'email.broadcast': 'Campaña',
   'membership.application_submitted': 'Solicitud enviada',
   'membership.payment_submitted': 'Comprobante subido',
   'membership.reviewed': 'Solicitud revisada',
   'membership.payment_reviewed': 'Pago revisado',
-  'membership.activated': 'Membresía activada'
+  'membership.activated': 'Membresía activada',
+  'membership.renewal_reminder': 'Aviso de renovación'
 }
 
 const PROVIDER_EVENT_LABEL: Record<string, string> = {
@@ -122,11 +127,15 @@ const TEST_KEY = ['email-pipeline', 'test'] as const
 export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } = {}) {
   const { permissions, authUser } = useAppSession()
   const canResend = permissions.includes('email:resend')
+  // Permiso propio: reenviar un correo a una persona y escribirle a miles no son
+  // el mismo poder (solo dueño de plataforma y super administrador).
+  const canBroadcast = permissions.includes('email:broadcast')
   const queryClient = useQueryClient()
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<EmailStatusFilter>('all')
+  const [eventFilter, setEventFilter] = useState<EmailProviderEventFilter | 'all'>('all')
   const [selected, setSelected] = useState<EmailDeliveryRow | null>(null)
 
   // El input responde en vivo; la búsqueda paginada solo golpea el servidor
@@ -141,11 +150,22 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
     setStatusFilter(value)
     setPage(1)
   }
+  const onEventFilter = (value: EmailProviderEventFilter | 'all') => {
+    setEventFilter(value)
+    setPage(1)
+  }
 
   const statsQuery = useQuery({ queryKey: STATS_KEY, queryFn: fetchEmailDeliveryStats })
   const pageQuery = useQuery({
-    queryKey: [...PAGE_KEY, { page, search: debouncedSearch, statusFilter }],
-    queryFn: () => fetchEmailDeliveriesPage({ page, pageSize: PAGE_SIZE, search: debouncedSearch, status: statusFilter }),
+    queryKey: [...PAGE_KEY, { page, search: debouncedSearch, statusFilter, eventFilter }],
+    queryFn: () =>
+      fetchEmailDeliveriesPage({
+        page,
+        pageSize: PAGE_SIZE,
+        search: debouncedSearch,
+        status: statusFilter,
+        event: eventFilter === 'all' ? undefined : eventFilter
+      }),
     placeholderData: keepPreviousData
   })
 
@@ -216,6 +236,23 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
           <option value="failed">Fallidos</option>
           <option value="read">Leídos</option>
           <option value="clicked">Con clic</option>
+          <option value="suppressed">Dados de baja</option>
+        </Select>
+        {/*
+          Separado del selector de estado a propósito: el estado es lo que
+          asi_do sabe de la entrega, y esto es lo que dijo Resend. Mezclarlos en
+          una sola lista sugeriría que se pueden combinar, y no se pueden.
+        */}
+        <Select
+          aria-label="Evento del proveedor"
+          value={eventFilter}
+          onChange={(event) => onEventFilter(event.target.value as EmailProviderEventFilter | 'all')}
+        >
+          <option value="all">Cualquier evento</option>
+          <option value="email.bounced">Rebotados</option>
+          <option value="email.complained">Marcados como spam</option>
+          <option value="email.suppressed">Suprimidos</option>
+          <option value="email.delivery_delayed">Con retraso vigente</option>
         </Select>
       </div>
 
@@ -241,6 +278,8 @@ export function EmailPipelinePage({ embedded = false }: { embedded?: boolean } =
           </div>
         </div>
       ) : null}
+
+      {canBroadcast ? <EmailBroadcastPanel defaultTestRecipient={authUser?.email ?? ''} /> : null}
 
       {canResend ? <TestPanel defaultTo={authUser?.email ?? ''} onView={setSelected} /> : null}
 

@@ -8,15 +8,23 @@
  */
 
 function normalizeActionUrl(actionUrl: string | null | undefined, appUrl: string) {
-  if (!actionUrl || actionUrl.trim().length === 0) {
-    return appUrl
+  const appOrigin = appUrl.replace(/\/+$/, '')
+  const requestedUrl = actionUrl?.trim() ?? ''
+
+  if (!requestedUrl) {
+    return appOrigin
   }
 
-  if (actionUrl.startsWith('http://') || actionUrl.startsWith('https://')) {
-    return actionUrl
+  if (requestedUrl.startsWith('http://') || requestedUrl.startsWith('https://')) {
+    try {
+      const legacyUrl = new URL(requestedUrl)
+      return `${appOrigin}${legacyUrl.pathname}${legacyUrl.search}${legacyUrl.hash}`
+    } catch {
+      return appOrigin
+    }
   }
 
-  return `${appUrl.replace(/\/+$/, '')}/${actionUrl.replace(/^\/+/, '')}`
+  return `${appOrigin}/${requestedUrl.replace(/^\/+/, '')}`
 }
 
 function escapeHtml(value: string) {
@@ -182,6 +190,27 @@ function getEmailTheme(type: string) {
     }
   }
 
+  // Aviso de vencimiento. El tono es el de un recordatorio útil y no el de una
+  // alerta roja: al primero de los cuatro le faltan treinta días y todavía no
+  // hay nada roto. El ámbar advierte sin llegar a alarmar.
+  if (type === 'membership.renewal_reminder') {
+    return {
+      eyebrow: 'Renovación de membresía',
+      accent: '#b45309',
+      accentSoft: '#fffbeb',
+      accentBorder: '#fde68a',
+      badgeLabel: 'Vencimiento próximo',
+      actionLabel: 'Renovar mi membresía',
+      summaryTitle: 'Qué hacer',
+      summaryItems: [
+        'Abre tu panel de membresía y completa el pago de renovación.',
+        'Tu acceso a la plataforma depende de la vigencia: al vencer, se suspende hasta que renueves.'
+      ],
+      supportTitle: 'Por qué recibes esto',
+      supportBody: 'Es un aviso de tu cuenta, no una campaña: te llega aunque hayas dado de baja los correos informativos.'
+    }
+  }
+
   if (type === 'membership.renewed') {
     return {
       eyebrow: 'Renovación de membresía',
@@ -242,6 +271,13 @@ export function buildEmailContent(input: {
   body: string
   actionUrl: string | null
   recipientName: string
+  /**
+   * Enlace de baja. Solo lo llevan los correos de campaña: un transaccional
+   * —confirmar la cuenta, recuperar la contraseña— no se puede "dar de baja",
+   * y ofrecerlo invitaría a apagar justo los correos sin los que no se entra al
+   * producto.
+   */
+  unsubscribeUrl?: string | null
 }) {
   const ctaUrl = normalizeActionUrl(input.actionUrl, input.appUrl)
   const theme = getEmailTheme(input.type)
@@ -256,6 +292,10 @@ export function buildEmailContent(input: {
   const escapedActionLabel = escapeHtml(theme.actionLabel)
   const logoUrl = `${input.appUrl.replace(/\/+$/, '')}/brand/asi-logo-light.no-bg.png`
   const contentHtml = formatHtmlParagraphs(input.body)
+  const unsubscribeUrl = input.unsubscribeUrl?.trim() ?? ''
+  const unsubscribeHtml = unsubscribeUrl
+    ? `<br /><a href="${escapeHtml(unsubscribeUrl)}" style="color:#8290ab; text-decoration:underline;">Darse de baja de estos correos</a>`
+    : ''
   const summaryItemsHtml = theme.summaryItems
     .map(
       (item) => `
@@ -285,7 +325,8 @@ export function buildEmailContent(input: {
     '',
     `${theme.actionLabel}: ${ctaUrl}`,
     '',
-    `${theme.supportTitle}: ${theme.supportBody}`
+    `${theme.supportTitle}: ${theme.supportBody}`,
+    ...(unsubscribeUrl ? ['', `Darse de baja de estos correos: ${unsubscribeUrl}`] : [])
   ].join('\n')
   const html = `
     <div style="margin:0; padding:0; background:#f4f7ff;">
@@ -396,7 +437,7 @@ export function buildEmailContent(input: {
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border-top:1px solid #e8edf5;">
                           <tr>
                             <td style="padding:24px 0 0; font-size:12px; line-height:1.8; color:#8290ab;">
-                              Este correo fue enviado por ASI Rep. Dominicana como parte de la experiencia oficial de asi_do.
+                              Este correo fue enviado por ASI Rep. Dominicana como parte de la experiencia oficial de asi_do.${unsubscribeHtml}
                             </td>
                           </tr>
                         </table>

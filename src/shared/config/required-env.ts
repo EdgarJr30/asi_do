@@ -13,6 +13,10 @@
  * puedan usar el plugin de Vite y las pruebas sin arrastrar `import.meta.env`.
  */
 
+// Import relativo y no por alias `@/`: `vite.config.ts` importa este modulo
+// directamente, y ahi todavia no existe la resolucion de alias.
+import { isNonProductionProjectRef, supabaseProjectRefFromUrl } from './deploy-target'
+
 export interface RequiredEnvVar {
   key: string
   why: string
@@ -58,6 +62,17 @@ function isLocalHostname(hostname: string) {
 function normalizedOrigin(url: URL) {
   return url.origin.toLowerCase()
 }
+
+// La lista de proyectos no productivos y el parser del ref viven en
+// `deploy-target.ts`: los comparte con el script que CI ejecuta antes de
+// desplegar las Edge Functions. Dos copias se habrian separado, y separarse
+// significa que una de las dos deja de proteger sin decirlo.
+//
+// Esta comprobacion existe por un incidente concreto: `asidominicana.do` sirvio
+// durante tres dias un artefacto cuyo bundle apuntaba al proyecto de desarrollo.
+// Quien se registrara quedaba en la base equivocada y sus pagos iban al merchant
+// de pruebas. Ninguna variable faltaba —estaban todas, y una estaba mal—, asi
+// que el build paso en verde y nada lo detecto hasta la auditoria.
 
 export const REQUIRED_PRODUCTION_ENV: RequiredEnvVar[] = [
   {
@@ -149,6 +164,32 @@ export function validateProductionEnv(
     })
   }
 
+  // Solo se prohibe en produccion: staging **si** puede correr contra la base de
+  // desarrollo, y de hecho es la topologia de hoy.
+  //
+  // Y solo cuando el artefacto puede llegar a alguien. Un build de produccion
+  // contra un origen inalcanzable —`.invalid` en CI, `localhost` en una
+  // laptop— no puede dejar a nadie registrado en la base equivocada, y hacerlo
+  // fallar solo lograria que se desactivara la guarda para poder trabajar.
+  const supabaseRef = supabaseProjectRefFromUrl(parseHttpUrl(source.VITE_SUPABASE_URL?.trim()))
+  const canonicalOriginIsReachable =
+    productionSiteUrl !== null &&
+    !isLocalHostname(productionSiteUrl.hostname) &&
+    !productionSiteUrl.hostname.endsWith('.invalid')
+
+  if (
+    deployEnvironment === 'production' &&
+    canonicalOriginIsReachable &&
+    supabaseRef &&
+    isNonProductionProjectRef(supabaseRef)
+  ) {
+    problems.push({
+      key: 'VITE_SUPABASE_URL',
+      problem: 'apunta a un proyecto Supabase de desarrollo, no al de produccion',
+      why: 'quien se registre en ese despliegue queda en la base equivocada y sus pagos van al merchant de pruebas'
+    })
+  }
+
   return problems
 }
 
@@ -161,7 +202,7 @@ export function formatEnvValidationError(problems: EnvValidationProblem[]): stri
   return (
     `Build de produccion abortado: ${problems.length} variable(s) de entorno sin configurar.\n\n` +
     `${lines.join('\n')}\n\n` +
-    'Configuralas en el entorno del build (Netlify, CI o .env.production) y vuelve a intentar.\n' +
+    'Configuralas en el entorno del build (CI o .env.production) y vuelve a intentar.\n' +
     'Se aborta aqui a proposito: sin estas variables el build termina igual, pero publica una\n' +
     'aplicacion que no puede autenticar ni cobrar, y el fallo no se ve hasta que un usuario lo sufre.'
   )

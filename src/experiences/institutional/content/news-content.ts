@@ -9,11 +9,12 @@ export const newsPageContent: InstitutionalPageContent = {
     title: 'Noticias curadas para una voz institucional más editorial y menos improvisada.',
     description:
       'La sección de news debe ayudar a mantener agenda, actualidad y cobertura sin caer en una lista plana de comunicados.',
-    primaryAction: {
-      label: 'Ver proyectos',
-      to: surfacePaths.institutional.projects,
-      variant: 'primary',
-    },
+    // Proyectos oculto hasta que la sección esté lista (la ruta sigue viva).
+    // primaryAction: {
+    //   label: 'Ver proyectos',
+    //   to: surfacePaths.institutional.projects,
+    //   variant: 'primary',
+    // },
     secondaryAction: {
       label: 'Ir a home',
       to: surfacePaths.institutional.home,
@@ -77,15 +78,16 @@ export const newsPageContent: InstitutionalPageContent = {
   cta: {
     title: 'Mantén viva la conversación con una agenda editorial clara.',
     description: 'Noticias y multimedia deben complementarse, no competir por el mismo espacio.',
-    primaryAction: {
-      label: 'Explorar proyectos',
-      to: surfacePaths.institutional.projects,
-      variant: 'primary',
-    },
-    secondaryAction: {
-      label: 'Explorar proyectos',
-      to: surfacePaths.institutional.projects,
-      variant: 'secondary',
-    },
+    // Proyectos oculto hasta que la sección esté lista (la ruta sigue viva).
+    // primaryAction: {
+    //   label: 'Explorar proyectos',
+    //   to: surfacePaths.institutional.projects,
+    //   variant: 'primary',
+    // },
+    // secondaryAction: {
+    //   label: 'Explorar proyectos',
+    //   to: surfacePaths.institutional.projects,
+    //   variant: 'secondary',
+    // },
   },
 }

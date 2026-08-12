@@ -8,10 +8,12 @@ Runbook para servir el frontend desde **Hostinger**, con el dominio comprado en 
 > se inyecta al construir para impedir que otro entorno lo herede.
 > Falta lo que solo se hace desde los paneles: Hostinger (§2, §3), Cloudflare (§2, §3) y la subida (§5).
 >
-> **Netlify sigue publicado** (`asi-do.netlify.app`) como vuelta atrás, y `netlify.toml` se mantiene.
 > Deliberadamente **fuera de alcance** en esta fase, porque el objetivo es solo que la app cargue:
-> - **AZUL sigue sin desplegar** (`VITE_AZUL_PAYMENTS_URL` apunta a `localhost:8080`). Los pagos con
->   tarjeta **no funcionarán** en el sitio de Hostinger. Es lo esperado, no un fallo del despliegue.
+> - **AZUL ya está desplegado para staging** (2026-08-09) en
+>   `https://azul-payments-staging-staging.up.railway.app`, con merchant de pruebas. Verificado:
+>   `/healthz` responde 200 y el preflight CORS acepta `https://dev.asidominicana.do` y **no** un
+>   origen ajeno. **De producción no hay nada verificado**: sigue pendiente su propio servicio con
+>   credenciales reales.
 > - **No se rota la `service_role` key.** Sigue siendo requisito del corte a producción real
 >   (`ENVIRONMENTS.md` §5), no de esta prueba.
 
@@ -21,10 +23,10 @@ Runbook para servir el frontend desde **Hostinger**, con el dominio comprado en 
 
 | Pieza | Antes | Después |
 |---|---|---|
-| SPA (frontend) | Netlify | **Hostinger** (hosting compartido, Apache/LiteSpeed) |
+| SPA (frontend) | sin hosting propio | **Hostinger** (hosting compartido, Apache/LiteSpeed) |
 | Registrador del dominio | nic.do | nic.do — **sin cambios** |
 | DNS autoritativo | Cloudflare | Cloudflare — **sin cambios** |
-| `services/azul-payments` | sin desplegar (`localhost:8080`) | sin desplegar — **fuera de alcance de esta fase** |
+| `services/azul-payments` | sin desplegar (`localhost:8080`) | **Railway**: staging desplegado; producción pendiente |
 | Supabase (BD, Auth, Storage, Edge Functions) | Supabase | Supabase — **sin cambios** |
 
 **No muevas los nameservers a Hostinger.** El DNS sigue en Cloudflare; Hostinger solo aporta el servidor
@@ -52,7 +54,7 @@ secretos, healthcheck y cron de conciliación. Se queda en Railway (ver `docs/pa
 | `A` | `@` | IP de Hostinger | 🔘 **DNS only** (gris) |
 | `A` | `www` | IP de Hostinger | 🔘 **DNS only** (gris) |
 
-Elimina los registros `A`/`CNAME` anteriores que apuntaran a Netlify.
+Elimina cualquier registro `A`/`CNAME` anterior que apunte a otro hosting.
 
 Empieza en gris a propósito: el certificado gratuito de Hostinger se valida por HTTP contra el origen y
 falla si Cloudflare intercepta.
@@ -76,10 +78,10 @@ origen detrás del proxy es precisamente lo que provoca el bucle.
 
 ---
 
-## 4. `.htaccess` — traducción de `netlify.toml`
+## 4. `.htaccess` — configuración del servidor
 
-Todo lo que hoy resuelve `netlify.toml` (SPA fallback, redirects, cache, bloqueo de sourcemaps) hay que
-reimplementarlo en Apache. Este archivo va en la **raíz de `public_html`**.
+Todo lo que necesita la SPA en el servidor (fallback, redirects, cache, bloqueo de sourcemaps) se
+resuelve en Apache. Este archivo va en la **raíz de `public_html`**.
 
 **El archivo vive en el repo: [`public/.htaccess`](../../public/.htaccess).** Es la única copia; este
 documento no la duplica a propósito, porque una copia pegada aquí se queda desfasada al primer cambio.
@@ -91,13 +93,13 @@ Lo que resuelve, en orden: redirect `/go` → home, 404 de los `.map` y del `.DS
 archivos y directorios reales (esto es lo que sirve `/presentation`), catch-all de la SPA a `index.html`,
 `Cache-Control` por tipo de recurso, MIME de `.webmanifest`/`.avif`/`.webp`/`.woff2` y compresión.
 
-### Diferencias respecto a `netlify.toml`
+### Particularidades de Apache/LiteSpeed
 
-| Regla de Netlify | En Hostinger |
+| Necesidad | Cómo se resuelve |
 |---|---|
-| `/presentation` y `/presentation/*` → 200 | Lo resuelve el passthrough de `-f`/`-d` + `DirectoryIndex` |
-| `/presentation/*` con cache de 7 días | Su `index.html` cae en la regla `\.html$` (revalida). Inofensivo: es una página estática pequeña |
-| `/assets/*.map` → 404 forzado | Igual, más la recomendación de §5 de no subirlos |
+| `/presentation` y `/presentation/*` sirven su estático | Passthrough de `-f`/`-d` + `DirectoryIndex` |
+| Cache de `/presentation` | Su `index.html` cae en la regla `\.html$` (revalida). Inofensivo: es una página estática pequeña |
+| `/assets/*.map` → 404 | `RewriteRule` forzada, más la recomendación de §5 de no subirlos |
 | Headers por ruta | `SetEnvIf Request_URI` (Apache no permite `<Directory>` dentro de `.htaccess`) |
 
 Hostinger corre **LiteSpeed**, que lee `.htaccess` con sintaxis compatible con `mod_rewrite`,
@@ -116,12 +118,19 @@ npm run verify          # puerta de calidad: lint + typecheck + test + build
 npm run build:hosting   # rebuild + aparta los sourcemaps; deja dist/ listo para subir
 ```
 
-> ⚠️ **El build local hornea tu `.env.local`.** En Netlify las llaves las inyectaba el panel; aquí no hay
-> panel, así que `vite build` toma `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
+> ⚠️ **El build local hornea tu `.env.local`.** No hay panel que inyecte las llaves, así que
+> `vite build` toma `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`,
 > `VITE_AZUL_PAYMENTS_URL` y `VITE_WEB_PUSH_PUBLIC_KEY` del `.env.local` de tu máquina y las escribe
 > **dentro del bundle**. Revisa esos cuatro valores antes de cada build de release: lo que tengas en local
-> es lo que queda publicado. Hoy `VITE_AZUL_PAYMENTS_URL=http://localhost:8080`, y por eso los pagos con
-> tarjeta no funcionan en el sitio publicado.
+> es lo que queda publicado. Hoy `.env.local` y `.env.staging.local` traen
+> `VITE_AZUL_PAYMENTS_URL=http://localhost:8080`, así que **un build hecho a mano publica una app cuyos
+> pagos apuntan a tu máquina**.
+>
+> Esto vale solo para el camino manual. El job `deploy-staging` de `ci.yml` no lee ningún `.env`: inyecta
+> las 8 `VITE_*` desde las *environment variables* del entorno `staging` de GitHub, y el guardia de
+> `validateProductionEnv` aborta el build si falta alguna de las 6 obligatorias. Si añades una variable a
+> `REQUIRED_PRODUCTION_ENV` sin darla de alta ahí, el build falla **solo en CI** — ya pasó con
+> `VITE_AZUL_PAYMENTS_URL` el 2026-08-09.
 
 **Los sourcemaps no se suben.** De eso se encarga `build:hosting`: los mueve a
 `.sourcemaps/<sha-corto>/` (ignorado por git) y deja `dist/` limpio. Son ~200 archivos y existen para
@@ -130,21 +139,68 @@ regla 404 del `.htaccess` es la segunda línea de defensa, no la primera.
 
 Si construyes con `npm run build` a secas, sácalos tú antes de subir.
 
-**Subida** — cualquiera de las tres:
+**Subida** — para una primera carga sin tráfico todavía sirven hPanel o una copia manual. Con usuarios
+activos, usa el script versionado:
 
-- **hPanel → Administrador de archivos**: comprime `dist/` en zip, súbelo a `public_html` y extrae.
-  Lo más simple para la primera vez. Ojo: el zip debe contener el *contenido* de `dist/`, no la carpeta.
-- **FTP/SFTP** (repetible):
+- **GitHub Actions** (recomendado): ejecuta `scripts/deploy-hostinger-release.sh` después de construir y
+  preservar el artefacto. Es el camino descrito en §5.1.
+- **FTP/FTPS manual**, solo para recuperación operativa y con las mismas credenciales acotadas:
   ```bash
-  lftp -u <usuario>,<clave> ftp://<host> -e \
-    "mirror -R --delete --verbose dist/ /public_html; bye"
+  HOSTINGER_HOST=<host> HOSTINGER_PORT=<puerto> \
+  HOSTINGER_USERNAME=<usuario> HOSTINGER_PASSWORD=<clave> \
+    scripts/deploy-hostinger-release.sh dist https://dev.asidominicana.do
   ```
-  `--delete` es lo que evita que queden bundles viejos huérfanos acumulándose.
+- **hPanel → Administrador de archivos**: queda reservado para la primera carga sin tráfico o para
+  restaurar un artefacto conocido. Extraer un zip directamente sobre el document root no es un deploy
+  sin interrupciones.
 - **hPanel → Git**: apunta al repo y despliega por `git pull`. Solo sirve si versionas `dist/`, cosa que
   este repo no hace (`dist/` no se commitea). No recomendado.
 
 **Verifica que `.htaccess` subió**: los clientes FTP y el extractor de zip ocultan los dotfiles por
 defecto. En el Administrador de archivos hay que activar "mostrar archivos ocultos".
+
+### 5.1 Staging automático desde GitHub Actions
+
+La rama `staging` pasa por todos los jobs de `.github/workflows/ci.yml`. Solo cuando terminan en verde,
+el job `deploy-staging` construye con `npm run build:staging`, conserva los sourcemaps como artefacto,
+los retira de `dist/`, comprueba `dist/.htaccess` y publica únicamente el artefacto estático.
+
+Las credenciales viven en el GitHub Environment `staging`, nunca en el repositorio. La cuenta FTP está
+limitada al document root de `dev.asidominicana.do` y la sesión inicia directamente dentro de
+`zzz_dev`; el workflow publica en `.` sin ejecutar un `cd` ni requerir `HOSTINGER_PATH`.
+
+hPanel entrega la IP del servidor como hostname FTP, pero el endpoint FTPS presenta un certificado
+`*.hstgr.io`. El workflow mantiene `ssl:verify-certificate=yes` para validar la cadena TLS y desactiva
+solo `ssl:check-hostname`, porque el nombre del certificado no puede coincidir con una dirección IP.
+
+El primer deploy se ejecutó sin borrado y confirmó en hPanel que la raíz FTP corresponde exclusivamente
+a `zzz_dev`. Aun con ese aislamiento, el deploy normal **no usa `--delete`**: una pestaña abierta puede
+pedir después un chunk del release anterior y no debe recibir 404 durante una navegación diferida.
+
+`scripts/deploy-hostinger-release.sh` aplica tres fases:
+
+1. Sube a `assets/` únicamente los bundles con hash que todavía no existen.
+2. Actualiza los demás archivos, salvo `index.html` y `sw.js`, mediante un temporal en el mismo
+   directorio y un renombrado. Después descarga por HTTPS cada asset y compara su SHA-256 con el
+   artefacto local; no depende de `Content-Length`, que Cloudflare/LiteSpeed puede omitir en `HEAD`.
+3. Activa `index.html` y luego `sw.js`, también mediante temporales; comprueba que ambos coinciden con el
+   artefacto y, si falla, restaura automáticamente los dos entrypoints anteriores.
+
+Antes de transferir, descarga por HTTPS los entrypoints vigentes que usaría un rollback. No los lee por
+FTPS: Hostinger puede agotar los reintentos incluso en un `get` pequeño mientras el mismo archivo sigue
+respondiendo correctamente por HTTPS. FTPS queda reservado para las escrituras del release y del rollback.
+
+El mirror usa una sola transferencia, reanuda archivos parciales y tolera hasta tres reconexiones por
+sesión. Si `lftp` agota ese límite, la fase completa abre una sesión nueva hasta dos veces más; las fases
+son reanudables y conservan los temporales, por lo que no repiten archivos completos ni activan un release
+incompleto. La transferencia serial evita que Hostinger cierre conexiones paralelas durante cargas largas
+y el límite total cabe dentro del timeout del job. GitHub Actions también cancela la corrida anterior de
+la misma rama antes de que dos releases compitan por el document root.
+
+Los assets con hash de releases anteriores se conservan a propósito. La limpieza es mantenimiento de
+capacidad, no parte de la activación: debe hacerse fuera del deploy, con respaldo, conservando como
+mínimo los dos releases más recientes y comprobando primero que ningún `index.html` retenido referencia
+los archivos candidatos. Nunca se ejecuta un `mirror --delete` sobre el document root con tráfico.
 
 ---
 
@@ -157,8 +213,9 @@ El dominio nuevo aparece en varios sitios. Si te saltas uno, el síntoma típico
 |---|---|---|
 | Entorno del build de producción | `VITE_AUTH_SITE_URL`, `VITE_PRODUCTION_SITE_URL` | Deben contener el mismo origen HTTPS público; no se versionan |
 | `supabase/config.toml` `[auth]` | `site_url` + `additional_redirect_urls` | ✅ en el repo — ⚠️ **falta aplicarlo al proyecto remoto** |
-| Edge Functions (secretos del proyecto) | `APP_URL` | ⬜ Pendiente. Solo afecta a los enlaces de los correos |
-| Railway (`services/azul-payments`) | `ALLOWED_ORIGIN`, `APP_URL` | ⬜ N/A: AZUL no está desplegado |
+| Edge Functions (secretos del proyecto) | `APP_URL` | ✅ sincronizado por CI desde `VITE_AUTH_SITE_URL`; desarrollo corregido a `https://dev.asidominicana.do` |
+| Railway (`services/azul-payments`) | `ALLOWED_ORIGIN`, `APP_URL` | ✅ staging: preflight desde `https://dev.asidominicana.do` aceptado y origen ajeno rechazado — ⬜ producción pendiente |
+| GitHub → entorno `staging` | las 8 `VITE_*` del job (6 obligatorias para `validateProductionEnv`) | ✅ completas desde 2026-08-09 — faltaba `VITE_AZUL_PAYMENTS_URL` y el build abortaba solo en CI |
 | Cloudflare | registros `A`, modo SSL | ⬜ Pendiente (§2 y §3) |
 
 **Lo del `config.toml` no es automático.** Ese archivo gobierna el Supabase *local*; el proyecto remoto
@@ -170,9 +227,6 @@ supabase config push --linked
 
 O a mano en el dashboard → *Authentication* → *URL Configuration*. Si no se hace, **el login rebota**:
 Auth rechaza el redirect a un dominio que no tiene en su lista. Es el fallo número uno de este cambio.
-
-Se dejaron también los cuatro redirects de `asi-do.netlify.app` en la lista, para que Netlify siga
-sirviendo de vuelta atrás mientras se valida Hostinger.
 
 Los `VITE_*` se hornean en el bundle: cambiarlos **exige rebuild**, no basta con reiniciar nada. Antes de `npm run build:hosting`, exporta ambas URLs públicas; el build aborta si apuntan a orígenes distintos o locales.
 
@@ -197,22 +251,22 @@ curl -o /dev/null -w '%{http_code}\n' https://asidominicana.do/assets/index-abc.
 Y a mano, en el navegador:
 1. Login completo (el redirect de Auth es lo primero que se rompe con dominio nuevo).
 2. Una foto de perfil (valida Storage + CORS).
-3. ~~Un pago de prueba de membresía end-to-end~~ — **no aplica**: AZUL no está desplegado. Recupera este
-   paso el día que el microservicio salga a Railway.
+3. Un pago de prueba de membresía end-to-end. **Ya aplica en staging**: el microservicio está en Railway
+   con merchant de pruebas. Que `/healthz` responda y que CORS acepte el origen no prueba que se cobre:
+   eso solo lo dice recorrer el pago con una tarjeta de prueba de AZUL y ver la membresía activarse.
 4. Recarga dura en una ruta profunda como `/workspace/applications` → debe cargar, no dar 404.
 
 ---
 
-## 8. Qué pierdes al salir de Netlify
+## 8. Límites del hosting compartido
 
 Decisión informada, no sorpresas:
 
-- **Deploy automático desde `main`.** Pasa a ser manual (§5) o hay que montar un job de FTP en CI.
-- **Deploy previews por rama** y **rollback de un clic** al deploy anterior.
-- **CDN global.** Hostinger sirve desde un solo datacenter; el proxy naranja de Cloudflare lo compensa
-  en buena medida para los estáticos.
-- **Headers y redirects versionados junto al código** con la garantía de que se aplican. Con `.htaccess`
-  el archivo se puede quedar sin subir y nadie se entera.
+- **No hay deploy previews por rama** ni **rollback de un clic** al deploy anterior.
+- **No hay CDN global.** Hostinger sirve desde un solo datacenter; el proxy naranja de Cloudflare lo
+  compensa en buena medida para los estáticos.
+- **Los headers y redirects viajan en `.htaccess`**, sin garantía de que se apliquen: el archivo se
+  puede quedar sin subir y nadie se entera. Por eso `release-metadata.test.ts` asserta sus reglas.
 
 A cambio: coste fijo predecible y un panel único para dominio, correo y hosting.
 
@@ -226,12 +280,13 @@ A cambio: coste fijo predecible y un panel único para dominio, correo y hosting
 - [x] `npm run build:hosting`: build + aparta los ~200 sourcemaps fuera de `dist/` (§5).
 - [x] Dominio retirado de `.env.production`; el build exige inyectarlo y validarlo contra el origen canónico.
 - [x] Los 4 archivos de test con el dominio quemado.
-- [x] `tests/unit/release-metadata.test.ts`: ahora asserta la regla `.map` **de los dos** hosts, más el
-      fallback de la SPA del `.htaccess`.
-- [x] Comentarios de `vite.config.ts` que nombraban solo a `netlify.toml`.
+- [x] `tests/unit/release-metadata.test.ts`: asserta la regla `.map` del `.htaccess`, más el fallback
+      de la SPA.
+- [x] Comentarios de `vite.config.ts` sobre la configuración del servidor.
 - [x] Documentos de topología: `README.md`, `ENVIRONMENTS.md`, `TECHNICAL_ARCHITECTURE.md`,
       `docs/pasarelaDePagos/despliegue-azul.md`.
-- [x] `netlify.toml` y `.github/workflows/ci.yml` **se mantienen**: Netlify sigue siendo la vuelta atrás.
+- [x] **2026-08-10: Netlify retirado del repo por completo** — `netlify.toml`, sus asserts, comentarios
+      y menciones en documentos. Hostinger es la única topología del frontend.
 
 ### Pendiente — solo se hace desde los paneles
 
@@ -243,13 +298,22 @@ A cambio: coste fijo predecible y un panel único para dominio, correo y hosting
 - [ ] Revisar los `VITE_*` de `.env.local` (§5), `npm run verify` en verde, `npm run build:hosting` y
       subir el `dist/` resultante.
 - [ ] Pasar la verificación de §7 (salvo el paso 3, que no aplica).
-- [ ] Mantener `asi-do.netlify.app` activo unos días como plan de vuelta atrás.
+- [ ] Quitar del panel de Supabase Auth los 4 redirects de `asi-do.netlify.app` que quedan en la
+      allow-list del proyecto remoto (el `config.toml` del repo ya no los trae).
+- [ ] Crear `A dev → 212.1.208.190` en Cloudflare inicialmente como **DNS only**, emitir/verificar SSL y
+      comprobar que `dev.asidominicana.do` responde antes de habilitar proxy.
 
 ### Aplazado a propósito
 
-- [ ] Desplegar `services/azul-payments` en Railway y apuntar `VITE_AZUL_PAYMENTS_URL` al dominio real.
+- [x] Desplegar `services/azul-payments` **de staging** en Railway y apuntar ahí `VITE_AZUL_PAYMENTS_URL`.
+      ✅ 2026-08-09 — `https://azul-payments-staging-staging.up.railway.app`, merchant de pruebas.
+- [ ] Desplegar el `services/azul-payments` **de producción** con las credenciales reales de AZUL y su
+      propia `VITE_AZUL_PAYMENTS_URL`. Sin esto, el sitio de producción cobra contra el merchant de
+      pruebas o contra nada.
 - [ ] Rotar la `service_role` key (requisito del corte a producción, `ENVIRONMENTS.md` §5).
-- [ ] Automatizar la subida por FTP en CI, o asumir el deploy manual.
+- [x] Automatizar staging por FTPS en CI y confirmar que `/` es exclusivamente `zzz_dev`.
+- [x] Sustituir el mirror destructivo por activación en tres fases, verificación HTTPS y rollback de
+      entrypoints; los bundles anteriores se conservan para las pestañas activas.
 
 ---
 
@@ -257,4 +321,4 @@ A cambio: coste fijo predecible y un panel único para dominio, correo y hosting
 
 - `docs/architecture/ENVIRONMENTS.md` — inventario de conmutación por entorno
 - `docs/pasarelaDePagos/despliegue-azul.md` — microservicio AZUL en Railway
-- `netlify.toml` — la configuración que este documento traduce
+- `public/.htaccess` — la configuración de servidor que este documento explica

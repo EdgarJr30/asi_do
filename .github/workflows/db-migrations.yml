@@ -38,13 +38,13 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Versión fijada a propósito: la reproducibilidad es justo lo que este job
       # verifica, así que el CLI no debe cambiar bajo nuestros pies. Subir la
       # versión es un cambio deliberado, no un efecto secundario.
       - name: Set up Supabase CLI
-        uses: supabase/setup-cli@v1
+        uses: supabase/setup-cli@v3
         with:
           version: 2.111.0
 

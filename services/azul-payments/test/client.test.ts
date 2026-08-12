@@ -10,8 +10,8 @@ const baseConfig: AppConfig = {
   servicePublicUrl: 'https://svc.example.com',
   appUrl: 'https://asidominicana.do',
   supabaseUrl: 'https://example.supabase.co',
-  supabaseAnonKey: 'anon',
-  supabaseServiceRoleKey: 'service',
+  supabasePublishableKey: 'sb_publishable_test',
+  supabaseSecretKey: 'sb_secret_test',
   azul: {
     merchantId: '39038540035',
     merchantName: 'Prueba AZUL',

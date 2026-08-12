@@ -23,3 +23,7 @@ reports/
 rediseno/
 rediseño/
 logosPasareladePago/
+
+# Material de campaña: se trabaja desde aquí con `node publicidad/build-email-convencion.mjs`,
+# pero no se versiona. Son binarios pesados de un solo uso, no código de la plataforma.
+publicidad/

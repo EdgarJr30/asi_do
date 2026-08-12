@@ -2,7 +2,28 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
 
 import { corsHeaders } from '../_shared/cors.ts'
+import { fetchWithTimeout, withTimeout } from '../_shared/fetch-with-timeout.ts'
 import { resolvePublishableKey } from '../_shared/supabase-keys.ts'
+
+/** Tope de espera a PostgREST. Ver R-152. */
+const DATABASE_REQUEST_TIMEOUT_MS = 8_000
+
+/**
+ * Tope por suscripción. El bucle recorre todos los dispositivos del
+ * destinatario, así que un endpoint push que no contesta retrasaría también a
+ * los demás; con el tope, cada uno falla por su cuenta.
+ */
+const PUSH_REQUEST_TIMEOUT_MS = 10_000
+
+/**
+ * Lo que se lee de la respuesta de web-push. Se declara aquí porque los tipos
+ * del paquete llegan sin estrechar y antes se leía a ciegas.
+ */
+interface WebPushResult {
+  statusCode?: number
+  headers?: Record<string, unknown>
+  body?: string
+}
 
 interface SendNotificationRequest {
   recipientUserId: string
@@ -175,7 +196,8 @@ Deno.serve(async (req) => {
       global: {
         headers: {
           Authorization: authorization
-        }
+        },
+        fetch: fetchWithTimeout(fetch, DATABASE_REQUEST_TIMEOUT_MS)
       }
     })
 
@@ -265,23 +287,26 @@ Deno.serve(async (req) => {
 
     for (const row of pushRows) {
       try {
-        const result = await webpush.sendNotification(
-          {
-            endpoint: row.subscription_endpoint,
-            keys: {
-              auth: row.auth_key,
-              p256dh: row.p256dh_key
-            }
-          },
-          JSON.stringify({
-            title: row.notification_title,
-            body: row.notification_body,
-            actionUrl: normalizeActionUrl(row.notification_action_url),
-            notificationId: row.notification_id,
-            deliveryId: row.push_delivery_id,
-            payload: row.notification_payload,
-            locale: row.subscription_locale
-          })
+        const result = await withTimeout<WebPushResult>(
+          webpush.sendNotification(
+            {
+              endpoint: row.subscription_endpoint,
+              keys: {
+                auth: row.auth_key,
+                p256dh: row.p256dh_key
+              }
+            },
+            JSON.stringify({
+              title: row.notification_title,
+              body: row.notification_body,
+              actionUrl: normalizeActionUrl(row.notification_action_url),
+              notificationId: row.notification_id,
+              deliveryId: row.push_delivery_id,
+              payload: row.notification_payload,
+              locale: row.subscription_locale
+            })
+          ),
+          PUSH_REQUEST_TIMEOUT_MS
         )
 
         await updateDeliveryStatus(supabase, {

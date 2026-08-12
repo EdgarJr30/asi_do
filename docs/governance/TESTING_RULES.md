@@ -71,6 +71,12 @@ These tests should prioritize mobile viewport coverage for the core hiring loop.
 Minimum smoke coverage now includes auth callback shell, first-run profile setup, tenant-operator request, jobs discovery, applications, and pipeline surfaces.
 Institutional motion carousels that depend on looping, autoplay, or gesture negotiation must add browser coverage for the affected engines when their behavior changes, including WebKit desktop/mobile checks, Android-like mobile Chromium checks when touch behavior changes, and assertions that the visible viewport does not expose a blank edge while the loop advances.
 
+Mutating E2E suites run only against local, development, or staging. Remote runs must set
+`E2E_TARGET_ENV`, and their project ref must belong to the allow-list versioned in `target-guard.ts`;
+`PRODUCTION_SUPABASE_PROJECT_REF` adds an explicit deny when production exists. The administrative client
+aborts before connecting when the destination is production or cannot be proven safe. Production runs only
+`npm run test:e2e:production-smoke`, which has no `service_role`, login fixture, or data mutation.
+
 ### Manual QA
 Manual checks remain required for:
 - installability
@@ -153,6 +159,8 @@ The repository must keep these commands meaningful:
 - `npm run test:mutation`
 - `npm run test:e2e`
 - `npm run test:e2e:smoke`
+- `npm run test:e2e:production-smoke`
+- `npm run test:e2e:recovery`
 - `npm run test:functions`
 - `npm run test:probes`
 - `npm run test:probes:catalogo`
@@ -186,7 +194,7 @@ Every runner therefore gets its own values, and all three must stay in sync:
 Rules:
 1. Do not make a test's result depend on `.env.local`. If a module reads an environment variable at load time and that variable changes what renders, stub it in `src/test/env.ts`.
 2. The `build` that closes `verify` runs in production mode, so it passes through `validateProductionEnv`. Adding a variable to `REQUIRED_PRODUCTION_ENV` without adding it to the verify step's `env:` block aborts the build **in CI only**. Change both in the same task.
-3. CI values are deliberately fictitious: CI proves the project compiles, bundles, and renders, not that the deployment is configured. The real guard stays in the Netlify build, which is the only one that publishes and the only one that sees real values.
+3. CI values are deliberately fictitious: CI proves the project compiles, bundles, and renders, not that the deployment is configured. The real guard stays in the deploy build, which is the only one that publishes and the only one that sees real values.
 
 ### 9.2 Timing: budgets live in configuration, not in defaults
 `findBy*` and `waitFor` default to one second of wall-clock time, spent by the route's deferred chunk, the first render, and animated step transitions. A CI runner is slower than a laptop, and `--coverage` instruments every module on top of that, so the default turns the slowest tests into machine-dependent coin flips.
@@ -274,6 +282,19 @@ CI must keep both layers executable:
 
 Never replace these checks with a single snapshot of a committed production URL. Endpoints belong to deployment configuration; the repository owns the invariants that decide whether those values are safe.
 
+### 11.1 Staging deployment is an executable repository contract
+
+`tests/integration/project-contract.test.ts` must keep the staging branch in CI, require the Hostinger
+job to wait for the quality jobs, build with the staging mode, use the protected `staging` GitHub
+Environment, and preserve the production-safe activation order. Its contract rejects destructive root
+mirrors and requires missing hashed assets first, temporary-file replacement, `index.html` before
+`sw.js`, pre-activation SHA-256 checks over downloaded asset bodies, post-activation HTTPS verification,
+and automatic restoration of the previous entrypoints on failure. Asset verification must not depend
+on `HEAD` exposing `Content-Length`; Cloudflare/LiteSpeed is allowed to omit that response header. The
+rollback backup must read the public entrypoints over retrying HTTPS rather than opening an FTPS
+download: a transient FTP read failure must stop before activation only when the public backup also
+cannot be obtained.
+
 ---
 
 ## 12. Database probes must announce a machine-readable verdict
@@ -344,7 +365,11 @@ Declare the client surface **structurally** (`rpc`, `from().insert()`) instead o
 
 `createDatabaseDouble` records every RPC call and insert, and **fails loudly on an RPC the test did not declare** rather than returning a silent `null`. `createResendDouble` records what would have been sent and rejects any URL that is not Resend's endpoint. No production module imports them, so they never reach a deployed bundle.
 
-### 13.4 Local runs need Deno installed
+### 13.4 Email load safeguards are a CI contract
+
+`tests/integration/email-pipeline-safety-contract.test.ts` must fail if campaign/queue caps, the dispatcher lease, the Resend correlation index, or Edge Function timeouts disappear. Provider timeout tests must also prove that a delivery returns to the idempotent retry path instead of aborting an entire batch.
+
+### 13.5 Local runs need Deno installed
 
 CI provisions it with `denoland/setup-deno`; a workstation does not have it by default.
 
@@ -376,6 +401,30 @@ guard. It reads **files**, so it inherits R2's weakness: the deployed database i
 fully derivable from `migrations/`. And it indexes **by name, not by signature**, so an
 overload where only one version carries the grant still passes. Exercising the RPC for
 real is a separate, more expensive check (R9.2 in `docs/checklists/COBERTURA_CRITICA_EN_CI.md`).
+
+### 14.0 `check:bounded-io` — no remote call without a deadline
+
+Same shape, different gap. On 2026-08-10 PostgreSQL stopped accepting connections for
+two hours; the Edge Functions that talked to it without a time budget hung until the
+edge cut them at ~90–150 s, and every provider retry opened another identical wait. The
+outage became the outage *plus* a request storm aimed at the database that was already
+down.
+
+`npm run check:bounded-io` (part of `npm run verify`, therefore part of CI) asserts that
+every network boundary in `supabase/functions/` carries a deadline:
+
+1. each `createClient(…)` passes a `fetch` wrapped in `fetchWithTimeout`;
+2. each direct `fetch(…)` goes through that wrapper;
+3. each networked SDK that bypasses `fetch` — today only `webpush.sendNotification` —
+   is wrapped in `withTimeout`. That list is declared by hand in the script, because
+   adding one is a deliberate act that deserves the thought about its ceiling.
+
+It reads **files**, so it inherits the same R2 weakness as `check:rpc-grants`. And it
+bounds *waiting* only: caps on size — batches, recipients, queue depth — live in
+PostgreSQL and are covered by §13.4. Its anti-silence floor is finding zero boundaries
+at all, which means the extractor broke rather than the code improved.
+
+The rule it enforces is R-153, which generalizes R-152 past email.
 
 ### 14.1 The guard must fail when the guard breaks
 

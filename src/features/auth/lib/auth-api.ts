@@ -71,38 +71,6 @@ interface MembershipQueryRow {
     | null
 }
 
-const platformPermissionChecks = [
-  'platform_dashboard:read',
-  'tenant:read',
-  'user:read',
-  'user:approve',
-  'license:activate',
-  'recruiter_request:read',
-  'recruiter_request:review',
-  'pastor_authority_request:read',
-  'pastor_authority_request:review',
-  'regional_authority_request:read',
-  'regional_authority_request:review',
-  'scoped_user_authorization:read',
-  'scoped_user_authorization:review',
-  'moderation:read',
-  'moderation:act',
-  'support_ticket:read',
-  'support_ticket:update',
-  'plan:read',
-  'plan:update',
-  'billing:read',
-  'feature_flag:read',
-  'feature_flag:update',
-  'app_error_log:read',
-  'audit_log:read',
-  'membership_application:review',
-  'membership_payment:verify',
-  'user:activate',
-  'email:read',
-  'email:resend'
-] as const satisfies readonly PermissionCode[]
-
 function requireSupabase() {
   if (!supabase) {
     throw new Error('Supabase no esta configurado. Completa VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.')
@@ -159,7 +127,7 @@ function normalizeStorageUploadErrorMessage(file: File, errorMessage: string) {
   return errorMessage
 }
 
-export function getAuthRedirectUrl(nextPath = surfacePaths.candidate.profile) {
+export function getAuthRedirectUrl(nextPath: string = surfacePaths.candidate.profile) {
   const originCandidate = getAuthRedirectOrigin()
 
   if (!originCandidate) {
@@ -264,6 +232,21 @@ export async function signUpWithPassword(values: {
   }
 
   return response.data
+}
+
+export async function resendSignUpConfirmation(values: { email: string; nextPath?: string | null }) {
+  const client = requireSupabase()
+  const response = await client.auth.resend({
+    type: 'signup',
+    email: values.email,
+    options: {
+      emailRedirectTo: getAuthRedirectUrl(values.nextPath ?? surfacePaths.candidate.profile)
+    }
+  })
+
+  if (response.error) {
+    throw response.error
+  }
 }
 
 export async function signInWithPassword(values: { email: string; password: string }) {
@@ -391,19 +374,18 @@ export async function fetchSessionSnapshot(authUser: User): Promise<SessionSnaps
     } satisfies AppMembership
   })
 
-  const platformPermissionResults = await Promise.all(
-    platformPermissionChecks.map(async (permissionCode) => {
-      const permissionResponse = await client.rpc('has_platform_permission', {
-        permission_code: permissionCode
-      })
+  // Una consulta, no una por permiso. Antes esto era un `Promise.all` sobre los
+  // 29 códigos de permiso de plataforma: 29 peticiones a PostgREST, cada
+  // una con su conexión y su transacción, para resolver algo que sale de un solo
+  // recorrido de las mismas cuatro tablas. Se disparaban en cada hidratación de
+  // sesión —login, refresco de token, vuelta al foco— y sin corte por rol, así
+  // que un candidato sin permisos pedía 29 booleanos para recibir 29 `false`.
+  // Los logs del 2026-08-11 lo medían en 694 de 1.000 peticiones. Ver R-153.
+  const platformPermissionResponse = await client.rpc('my_platform_permissions')
 
-      if (permissionResponse.error) {
-        throw permissionResponse.error
-      }
-
-      return permissionResponse.data ? permissionCode : null
-    })
-  )
+  if (platformPermissionResponse.error) {
+    throw platformPermissionResponse.error
+  }
 
   const platformAdminResponse = await client.rpc('is_platform_admin')
 
@@ -430,8 +412,11 @@ export async function fetchSessionSnapshot(authUser: User): Promise<SessionSnaps
     throw pastorScopeResponse.error
   }
 
-  const platformPermissions = platformPermissionResults.flatMap((permissionCode) =>
-    permissionCode ? [permissionCode] : []
+  // `isPermissionCode` sigue filtrando: la RPC devuelve lo que haya en el
+  // catálogo de la base, que puede adelantarse a los códigos que esta versión
+  // del cliente conoce.
+  const platformPermissions = (platformPermissionResponse.data ?? []).flatMap((permissionCode) =>
+    isPermissionCode(permissionCode) ? [permissionCode] : []
   )
   const permissions = uniquePermissions([...platformPermissions, ...memberships.flatMap((membership) => membership.permissions)])
 
@@ -592,32 +577,6 @@ export async function uploadPublicFile(options: {
   return uploadResponse.data.path
 }
 
-export async function removePublicFile(options: {
-  bucket: PublicStorageBucket
-  path: string
-}) {
-  const client = requireSupabase()
-  const normalizedPath = normalizeStoragePath(options.path)
-  // La miniatura se borra junto al original; `remove` ignora las rutas que no
-  // existen, así que sirve también para archivos previos a esta optimización.
-  const response = await client.storage
-    .from(options.bucket)
-    .remove([normalizedPath, deriveThumbnailPath(normalizedPath)])
-
-  if (response.error) {
-    throw response.error
-  }
-}
-
-/**
- * Descarta un objeto reemplazado sin propagar el fallo.
- *
- * El orden importa: solo se llama **después** de que la referencia en base ya
- * apunta al archivo nuevo. Si el borrado falla, la base queda consistente y el
- * archivo viejo se vuelve huérfano —lo recoge `npm run media:orphans`—; borrar
- * antes de actualizar la referencia sí perdería un archivo vivo, así que nunca
- * se hace en ese orden.
- */
 export async function discardReplacedFileQuietly(
   bucket: PublicStorageBucket,
   path: string | null | undefined
@@ -703,6 +662,14 @@ export async function submitRecruiterRequest(values: {
     .single()
 
   if (response.error) {
+    if (response.error.message.includes('recruiter_request_already_exists')) {
+      throw new Error('Ya enviaste una solicitud de empresa. No puedes crear otra.')
+    }
+
+    if (response.error.message.includes('recruiter_request_slug_already_exists')) {
+      throw new Error('Esta dirección ya pertenece a otro espacio. Usa otro nombre para la organización.')
+    }
+
     throw response.error
   }
 
@@ -816,6 +783,7 @@ export async function listMyRecruiterRequests(userId: string) {
     .select('*')
     .eq('requester_user_id', userId)
     .order('submitted_at', { ascending: false })
+    .limit(1)
 
   if (response.error) {
     throw response.error

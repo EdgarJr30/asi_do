@@ -180,29 +180,23 @@ La primera base del MVP ya define en Supabase:
 
 ### CI/CD
 
-El flujo por defecto queda en **local + preview + production** usando **GitHub Actions + Netlify**:
+El flujo por defecto queda en **local + staging + production** usando **GitHub Actions + Hostinger**:
 
 - `CI`: corre `npm run verify` en cada PR y en cada push a `main`.
-- `Preview`: Netlify crea `Deploy Previews` automáticamente para cada PR al conectar el repo.
-- `Production`: Netlify publica automáticamente desde la rama `main`.
+- `Staging`: `dev.asidominicana.do` se publica desde la rama `staging` mediante GitHub Actions.
+- `Production`: `asidominicana.do` en Hostinger.
 
-Desde 2026-08-07 se está probando además **Hostinger** con el dominio propio `asidominicana.do`, con
-subida manual del `dist/` y sin deploy automático. Netlify se mantiene como vuelta atrás. El runbook
-completo es `docs/architecture/DESPLIEGUE_HOSTINGER.md`.
+El runbook completo es `docs/architecture/DESPLIEGUE_HOSTINGER.md`.
 
 Archivos clave:
 
 - `.github/workflows/ci.yml`
-- `netlify.toml`
-- `public/.htaccess` (equivalente de `netlify.toml` para Hostinger; si tocas uno, toca el otro)
+- `public/.htaccess` (rewrites, cache y bloqueo de sourcemaps del sitio publicado)
 
 Configuración recomendada:
 
-- conectar el repositorio a Netlify con `main` como production branch
-- configurar en Netlify las variables `VITE_APP_NAME`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`
-- revisar que Netlify use `npm run build` y publique `dist` como define `netlify.toml`
+- configurar `VITE_APP_NAME`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` en el entorno del build
 - usar branch protection en `main` y marcar el job `Verify quality gate` como required check
-- si quieres evitar deploys manuales directos, activar en Netlify la opcion de requerir Git workflows para produccion
 
 ## English
 
@@ -267,26 +261,23 @@ npm run version:apply
 
 ### CI/CD
 
-The default delivery flow is **local + preview + production** using **GitHub Actions + Netlify**:
+The default delivery flow is **local + staging + production** using **GitHub Actions + Hostinger**:
 
 - `CI`: runs `npm run verify` on every PR and every push to `main`.
-- `Preview`: Netlify creates Deploy Previews automatically for each pull request once the repository is connected.
-- `Production`: Netlify publishes automatically from the `main` branch.
+- `Staging`: `dev.asidominicana.do` deploys from the `staging` branch through GitHub Actions.
+- `Production`: `asidominicana.do` on Hostinger.
 
-Since 2026-08-07 **Hostinger** is also being trialled on the project's own domain `asidominicana.do`,
-with manual `dist/` uploads and no automatic deploy. Netlify stays as the rollback target. Full runbook
-in `docs/architecture/DESPLIEGUE_HOSTINGER.md`.
+The release uploads hashed assets first, activates `index.html` and `sw.js` last through temporary
+files, verifies the public result, and restores the previous entrypoints on failure. Routine
+deployment does not delete prior bundles, so an already-open tab can finish loading its release. Full
+runbook in `docs/architecture/DESPLIEGUE_HOSTINGER.md`.
 
 Key files:
 
 - `.github/workflows/ci.yml`
-- `netlify.toml`
-- `public/.htaccess` (the Hostinger counterpart of `netlify.toml`; change one, change the other)
+- `public/.htaccess` (rewrites, caching, and sourcemap blocking for the published site)
 
 Recommended setup:
 
-- connect the repository to Netlify with `main` as the production branch
-- configure `VITE_APP_NAME`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY` in Netlify
-- confirm that Netlify uses `npm run build` and publishes `dist` as defined in `netlify.toml`
+- configure `VITE_APP_NAME`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY` in the build environment
 - use branch protection on `main` and mark the `Verify quality gate` job as a required check
-- if you want to block manual production publishes, enable Netlify's Git-based production deploy enforcement

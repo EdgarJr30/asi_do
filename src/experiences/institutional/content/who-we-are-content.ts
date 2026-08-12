@@ -23,7 +23,8 @@ interface WhoWeAreHeroContent {
   supportTitle: string;
   supportCopy: string;
   primaryAction: InstitutionalAction;
-  secondaryAction: InstitutionalAction;
+  // Opcional mientras Proyectos esté oculto: el hero se queda con una sola acción.
+  secondaryAction?: InstitutionalAction;
 }
 
 interface WhoWeAreHeroMedia {
@@ -90,11 +91,12 @@ export const whoWeAreHeroContent: WhoWeAreHeroContent = {
     to: surfacePaths.institutional.membership,
     variant: 'primary',
   },
-  secondaryAction: {
-    label: 'Explorar proyectos',
-    to: surfacePaths.institutional.projects,
-    variant: 'secondary',
-  },
+  // Proyectos oculto hasta que la sección esté lista (la ruta sigue viva).
+  // secondaryAction: {
+  //   label: 'Explorar proyectos',
+  //   to: surfacePaths.institutional.projects,
+  //   variant: 'secondary',
+  // },
 };
 
 export const whoWeAreHeroHighlights: string[] = [

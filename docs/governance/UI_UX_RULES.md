@@ -40,6 +40,7 @@ When a future redesign changes these rules, the new decision must still be bench
 10. **Platform-internal surfaces must reuse one shared shell.** Candidate routes, workspace routes, and operational `/platform/*` routes such as jobs should share the same sidebar/navbar construction, adapting only navigation copy and allowed destinations instead of diverging into separate chrome patterns.
 11. **First-run profile setup must feel guided, not administrative.** Required account setup should live inside the user's profile experience with short staged disclosure, visible progress, concise copy, and one primary action per step. Optional profile depth must be deferred to the normal profile editor.
 12. **The running environment must remain visible without competing with the task.** A single contextual status badge identifies Local, Staging, or Producción and the current release phase. Public and authentication surfaces place it inside their footer; authenticated product surfaces anchor it in the sidebar footer, reducing it to a compact indicator when the desktop sidebar is collapsed. It must never float over page content or mobile navigation. The badge uses restrained semantic color and is the future home of the application version; version numbers must not be duplicated elsewhere in the product chrome.
+13. **The institutional footer must stay compact.** Preserve its legal identity, contact, payment-brand, navigation, and environment information, but use restrained card padding, small payment marks, and short vertical spacing so it does not read as another full landing section. Its identity card uses the standalone white logo without a backing tile, a clear high-contrast title, icon-led institution and address rows, and actionable email and phone links instead of prominent platform/donation buttons. Payment-processing copy belongs in the Legal Center. Navigation links must stack in one column within each group, remain on one line, and use a moderately compact visual badge inside a minimum 44px touch target.
 
 ## 3.1 Mandatory UI libraries
 The project must standardize on the same libraries for reusable UI building blocks.
@@ -104,6 +105,7 @@ Do:
 1. Create an easy-to-read layout with clear alignment and grouping.
 2. Keep related items visually connected through spacing and structure.
 3. Reduce competing emphasis so the next action feels obvious.
+4. Keep public navigation links in plainly named groups; do not split related destinations under ambiguous labels.
 
 Don't:
 1. Scatter related information across disconnected sections.
@@ -318,6 +320,7 @@ Surface-direction rule:
 - Authentication must live in its own isolated shell. Login and sign-up cannot inherit employer sidebars, admin console navigation, or any dashboard chrome.
 - Desktop auth should use a split composition: a calm light form pane for the active task and a branded informational pane that reinforces trust, product value, and platform context. On mobile, collapse to a single-column form-first flow without losing brand recognition.
 - Auth loading states rendered inside the auth shell must stay bounded to the form pane; do not use full-screen loaders inside login or sign-up outlets because the shell already owns viewport height.
+- After a registration email is sent, replace the sign-up form with a clear confirmation state that identifies the destination email and explains that the next step is opening the link. Keep resend unavailable for the provider cooldown, show the remaining wait, and allow resending from that state without asking the user to register again.
 - Page loaders must keep the brand mark, visible label, and supporting hint on the same horizontal axis. Decorative trailing animation such as loading dots must not participate in the label's layout width or shift its optical center.
 - The operational app shell should use a dark brand-anchored sidebar with grouped navigation, a light top bar with breadcrumb context, and a soft light content canvas. Dense internal work such as vacancies, candidates, and pipeline should feel compact and purposeful rather than marketing-like.
 - Navigation must be contextual by audience: public, auth, candidate, employer, and internal surfaces each need their own navigation model.
@@ -423,6 +426,8 @@ Apple-inspired UI rules:
 8. Match the keyboard and input type to the field purpose.
 9. Use `autocomplete`, `inputmode`, and appropriate validation hints where supported.
 10. If a field has a tricky requirement, show helper text before the user fails validation.
+11. Empty select instructions must use the same muted color as text placeholders. Apply the normal text color only after the user has selected a real value.
+12. Long free-text fields with a maximum length must expose that limit in the control and show a compact, accessible count of the remaining characters.
 
 ### 10.3 Validation rules
 1. Validation messages must be specific and actionable.
@@ -553,9 +558,15 @@ Rules:
 22. Administrative membership and platform-user queues must sort records by creation date from newest to oldest and expose that date in every row. Their cards should make identity, current state, key metadata, and the next operational action visually distinct; membership cards should present the application, payment, and access sequence as a short numbered path instead of an undifferentiated text block.
 22. Workspace settings must use the visible label `Configuración de empresa` in menus, navigation, breadcrumbs, and page headings so users do not confuse tenant/company administration with their personal profile settings.
 23. The authenticated profile menu must expose a visible `Página institucional` action before sign-out so candidates, company users, and administrators can return directly to the institutional marketing site.
+24. An inactive membership with a verified initial payment must show a clear pending-activation state instead of a running progress bar, activation date, expiration date, or remaining-time countdown. Explain that the full paid term begins when the authorized administrator activates it.
 24. Customer-facing actions that enter the authenticated product must use the neutral Spanish label `Abrir plataforma`. Do not use `Abrir mi empresa`, because users may have platform access before belonging to a company, and do not expose mixed-language equivalents such as `Abrir mi workspace`.
 25. Public legal surfaces must use an editorial, highly compact reading rhythm rather than marketing-hero proportions. Keep the legal-center masthead shallow, its heading below display scale and on one line at desktop widths, policy cards low-padding and scannable, document mastheads short, navigation tabs tight, and clauses comfortably readable without oversized headings or vertical gaps. Do not expose internal document version numbers or effective-date badges. Export/print and change-history controls are operational and must appear only to `platform_owner`. At desktop widths, the center heading and first row of policy cards should fit comfortably within a short viewport without making the cards feel like feature panels. Do not add explanatory copy about each policy having a citable URL; the policy links already communicate that behavior. The compact treatment must apply consistently to `/legal` and every linked policy route on mobile and desktop.
 26. Secondary entity-registration details on public legal surfaces must use progressive disclosure. Keep the trigger compact, descriptive, keyboard accessible, and closed by default; reveal the complete legal identity only when the reader requests it.
+27. Payment trust notices that follow a primary checkout action must occupy their own row with a visible spacing gap. Do not let inline layout attach the notice to the button at wider viewports.
+28. Active membership summaries may show remaining time and activation/expiration dates, but must not render a decorative term-progress bar.
+29. The membership church-reference card must present `Unión` and `Asociación` before `Iglesia local` and `Distrito`. Until complete church and district catalogs exist, the latter two controls must remain required text fields instead of disabled or incomplete selects.
+30. Continuously animated image cards must clip and isolate their media layer. Do not combine perpetual translation with pointer-driven rotation or scale when it can expose raster artifacts outside rounded edges.
+31. The tenant-operator request must show the derived workspace address as read-only, preview the newly selected logo and supporting document before submission, and present the user's single request as one current state rather than a request history.
 
 ---
 

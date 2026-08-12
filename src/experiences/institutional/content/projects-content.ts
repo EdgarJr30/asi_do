@@ -93,12 +93,6 @@ export const projectsImpactStats: ProjectImpactStat[] = [
   },
 ];
 
-export const overflowProjects2025 = [
-  'Ellen G. White Estate Digital Project',
-  'Hearts for Mission International (Africa)',
-  'Roofs Over Africa/One Day Church',
-] as const;
-
 export const currentProjects2025: ProjectFeature[] = [
   {
     name: 'ASAP Ministries',

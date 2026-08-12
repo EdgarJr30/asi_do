@@ -44,20 +44,6 @@ export const genderOptions = [
   { value: 'male', label: 'Masculino' },
 ] as const
 
-export const youngProfessionalStageOptions = [
-  { value: 'student', label: 'Estudiante' },
-  { value: 'recent-graduate', label: 'Recién graduado' },
-  { value: 'intern', label: 'Pasante' },
-  { value: 'resident', label: 'Residente' },
-  { value: 'entrepreneur', label: 'Joven emprendedor' },
-] as const
-
-/**
- * Sector en el que ejerce el profesional. Reutiliza la taxonomía curada del job
- * board para que un miembro profesional quede clasificado con los mismos ids que
- * las empresas y vacantes de la plataforma; se añaden los rubros que la
- * taxonomía de empresas no cubre para una persona (oficios, artes, hogar).
- */
 export const PROFESSIONAL_SECTOR_OTHER = OTHER_SECTOR_ID
 
 export const professionalSectorOptions = [

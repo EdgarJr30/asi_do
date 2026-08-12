@@ -10,6 +10,54 @@ type AuthTemplateTarget = {
   productionSiteUrl: string
 }
 
+type ReadAuthTemplate = (fileName: string) => Promise<string>
+
+const AUTH_EMAIL_TEMPLATES = [
+  {
+    name: 'confirmation',
+    fileName: 'confirmation.html',
+    subject: 'Confirma tu cuenta en ASI'
+  },
+  {
+    name: 'invite',
+    fileName: 'invite.html',
+    subject: 'Tu acceso a ASI ya esta listo'
+  },
+  {
+    name: 'magic_link',
+    fileName: 'magic_link.html',
+    subject: 'Accede a ASI con tu enlace seguro'
+  },
+  {
+    name: 'recovery',
+    fileName: 'recovery.html',
+    subject: 'Restablece tu acceso a ASI'
+  },
+  {
+    name: 'email_change',
+    fileName: 'email_change.html',
+    subject: 'Confirma el cambio de tu correo'
+  },
+  {
+    name: 'reauthentication',
+    fileName: 'reauthentication.html',
+    subject: 'Codigo de verificacion de seguridad'
+  }
+] as const
+
+export async function buildAuthTemplatePayload(
+  readTemplate: ReadAuthTemplate
+): Promise<Record<string, string>> {
+  const payload: Record<string, string> = {}
+
+  for (const template of AUTH_EMAIL_TEMPLATES) {
+    payload[`mailer_subjects_${template.name}`] = template.subject
+    payload[`mailer_templates_${template.name}_content`] = await readTemplate(template.fileName)
+  }
+
+  return payload
+}
+
 const normalizeUrl = (value: string) => new URL(value).toString().replace(/\/$/, '')
 
 export function validateAuthTemplateTarget(target: AuthTemplateTarget): string[] {
@@ -100,30 +148,32 @@ async function main() {
     throw new Error(`Sincronización rechazada:\n- ${errors.join('\n- ')}`)
   }
 
-  const template = await readFile(
-    new URL('../supabase/templates/confirmation.html', import.meta.url),
-    'utf8'
+  const templatePayload = await buildAuthTemplatePayload((fileName) =>
+    readFile(new URL(`../supabase/templates/${fileName}`, import.meta.url), 'utf8')
   )
 
   if (process.argv.includes('--dry-run')) {
-    console.log(`Validación correcta para ${deployEnvironment} (${targetProjectRef}); no se aplicaron cambios.`)
+    console.log(
+      `Validación correcta para ${deployEnvironment} (${targetProjectRef}); ` +
+        `${AUTH_EMAIL_TEMPLATES.length} plantillas listas y sin cambios aplicados.`
+    )
     return
   }
 
   const updateResponse = await fetch(endpoint, {
     method: 'PATCH',
     headers,
-    body: JSON.stringify({
-      mailer_subjects_confirmation: 'Confirma tu cuenta en ASI',
-      mailer_templates_confirmation_content: template
-    })
+    body: JSON.stringify(templatePayload)
   })
 
   if (!updateResponse.ok) {
     throw new Error(`No se pudo actualizar la plantilla (${updateResponse.status}).`)
   }
 
-  console.log(`Plantilla Confirm sign up sincronizada en ${deployEnvironment} (${targetProjectRef}).`)
+  console.log(
+    `${AUTH_EMAIL_TEMPLATES.length} plantillas Auth sincronizadas en ` +
+      `${deployEnvironment} (${targetProjectRef}).`
+  )
 }
 
 const isDirectExecution = process.argv[1]

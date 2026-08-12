@@ -127,9 +127,11 @@ export function WhoWeArePage() {
                 <InstitutionalActionLink
                   action={whoWeAreHeroContent.primaryAction}
                 />
-                <InstitutionalActionLink
-                  action={whoWeAreHeroContent.secondaryAction}
-                />
+                {whoWeAreHeroContent.secondaryAction ? (
+                  <InstitutionalActionLink
+                    action={whoWeAreHeroContent.secondaryAction}
+                  />
+                ) : null}
               </motion.div>
             </motion.div>
           </motion.div>

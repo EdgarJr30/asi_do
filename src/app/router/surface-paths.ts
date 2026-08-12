@@ -27,7 +27,10 @@ export const surfacePaths = {
     whoWeAre: '/who-we-are',
     contactUs: '/contact-us',
     directory: '/directory',
-    news: '/news'
+    news: '/news',
+    // La baja de una campaña. Se abre sin sesión desde el pie del correo, así
+    // que vive en la superficie institucional y no bajo `/account`.
+    emailUnsubscribe: '/correos/baja'
   },
   storefront: storefrontPaths,
   public: storefrontPaths,

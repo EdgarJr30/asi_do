@@ -27,7 +27,7 @@ Consecuencias que hay que tener presentes mientras dure:
 | Entorno | Supabase | Frontend | AZUL | Datos |
 |---|---|---|---|---|
 | **Development** | proyecto `dev` (el actual) | local y `dev.asidominicana.do` | merchant de pruebas | sintéticos, desechables |
-| **Staging** | opcional en el futuro | branch deploy | merchant de pruebas | sintéticos o anonimizados |
+| **Staging** | opcional en el futuro | `dev.asidominicana.do` desde la rama `staging` (job `deploy-staging`) | merchant de pruebas, en Railway desde 2026-08-09 | sintéticos o anonimizados |
 | **Production** | proyecto `prod` | `asidominicana.do` en Hostinger | **merchant real** | reales |
 
 Desarrollo y producción usan obligatoriamente proyectos Supabase distintos. Staging es opcional; si se
@@ -42,14 +42,15 @@ activa, tendrá un tercer proyecto o Supabase Branching con datos sintéticos, s
    commit + push a una rama ──────► CI: verify + replay de migraciones
               │
               ▼
-        merge a main ─────────────► deploy automático a STAGING
+      merge a staging ────────────► deploy automático a STAGING
               │                     (frontend + migraciones + Edge Functions)
               ▼
      verificación en staging
      (probes, smoke E2E, QA manual)
               │
               ▼
-        tag de release ───────────► deploy a PRODUCCIÓN
+        merge a main ─────────────► deploy a PRODUCCIÓN
+                                     (environment protegido)
 ```
 
 Reglas que sostienen el flujo:
@@ -59,6 +60,10 @@ Reglas que sostienen el flujo:
 3. **El artefacto que se promueve es un commit**, no un archivo suelto ni un cambio hecho a mano en el dashboard.
 4. **Staging no lleva datos de producción con PII.** Si hace falta volumen realista, se genera con el arnés (`npm run harness:seed`) o se anonimiza antes de cargar.
 5. **Los secretos no se comparten entre entornos.** Cada proyecto tiene su propio juego completo. Un secreto que sirve en dos entornos convierte un incidente de staging en un incidente de producción.
+6. **Los E2E que escriben datos nunca apuntan a producción.** `E2E_TARGET_ENV` solo admite
+   `development` o `staging`; todo destino remoto debe pertenecer a la allow-list versionada y se rechaza
+   si coincide con `PRODUCTION_SUPABASE_PROJECT_REF`. Producción usa únicamente
+   `npm run test:e2e:production-smoke`, sin `service_role`.
 
 ## 4. Inventario de conmutación
 
@@ -70,7 +75,7 @@ Todo lo que es específico de entorno. Esta es la lista que hay que recorrer al 
 |---|---|---|
 | `project_id` | `supabase/config.toml` | Uno por entorno |
 | `site_url`, `additional_redirect_urls` | `supabase/config.toml` (`[auth]`) | Hoy describen solo el proyecto dev; producción tendrá configuración aislada |
-| Llave publicable (`sb_publishable_…`) | Netlify, `.env.local`, AZUL, Edge Functions | Pública por diseño |
+| Llave publicable (`sb_publishable_…`) | Entorno de build, `.env.local`, AZUL, Edge Functions | Pública por diseño |
 | Llave secreta (`sb_secret_…`) | Solo servidor: AZUL y Edge Functions | Omite RLS. Nunca en el browser |
 
 > Las llaves migraron al formato `sb_publishable_` / `sb_secret_` el 2026-08-02; las JWT `anon` / `service_role` quedaron retiradas.
@@ -82,7 +87,7 @@ mismo artefacto versionado: usan `SiteURL`, `ConfirmationURL`, `Data` y `Email`,
 resuelve dentro del proyecto que genera el correo. Así, un registro de desarrollo no puede construir el
 logo, el acceso ni la confirmación con el dominio de producción.
 
-`scripts/sync-auth-email-template.ts` promociona `Confirm sign up` mediante la Management API. Antes de
+`scripts/sync-auth-email-template.ts` promociona las seis plantillas Auth versionadas mediante la Management API. Antes de
 escribir, compara el `project_ref` y el `site_url` remoto con los valores esperados y conoce explícitamente
 la identidad de producción; rechaza tanto producción apuntando a otro proyecto como desarrollo apuntando a
 producción. El comando y sus variables están documentados en `supabase/README.md`.
@@ -90,6 +95,12 @@ producción. El comando y sus variables están documentados en `supabase/README.
 En CI, desarrollo y producción deben ser environments protegidos distintos, cada uno con su
 `SUPABASE_PROJECT_REF`, `EXPECTED_AUTH_SITE_URL` y token. `PRODUCTION_SUPABASE_PROJECT_REF` y
 `PRODUCTION_AUTH_SITE_URL` actúan como límite común, no como destino implícito.
+
+La allow-list `ALLOWED_REMOTE_E2E_PROJECT_REFS` vive en `tests/e2e/support/target-guard.ts`; agregar staging
+requiere un cambio revisable en el repositorio, no solo editar un secreto. La variable de repositorio
+`PRODUCTION_SUPABASE_PROJECT_REF` no es secreta y añade una segunda negación explícita cuando exista
+producción. Si `E2E_TARGET_ENV` no es `development`/`staging`, el destino no está autorizado o coincide con
+producción, `createServiceClient()` aborta antes de usar la llave administrativa. No existe bandera de emergencia.
 
 **Llamando a las APIs a mano (`curl`, `fetch`):** la API de **Storage** rechaza las llaves nuevas si solo van en `Authorization: Bearer` — responde `403 {"message":"Invalid Compact JWS"}` porque intenta parsearlas como JWT. Hay que mandar **además** el header `apikey`. PostgREST se conforma con cualquiera de los dos, así que el fallo aparece solo al tocar Storage y el mensaje no apunta a la causa.
 
@@ -101,7 +112,7 @@ curl -X DELETE "$URL/storage/v1/object/avatars" \
 
 Esto **no afecta al código del proyecto**: `supabase-js` pone los dos headers solo con `createClient(url, key)`, así que `scripts/media-orphans.ts` y las Edge Functions no necesitan nada especial. Es una trampa exclusiva de las llamadas crudas desde la terminal.
 
-### 4.2 Frontend (build de Vite / Netlify)
+### 4.2 Frontend (build de Vite)
 
 `VITE_DEPLOY_ENV` · `VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` · `VITE_AUTH_SITE_URL` · `VITE_PRODUCTION_SITE_URL` · `VITE_AZUL_PAYMENTS_URL` · `VITE_WEB_PUSH_PUBLIC_KEY`
 
@@ -113,9 +124,11 @@ Staging se empaqueta con `npm run build:staging`; producción con `npm run build
 
 ### 4.3 Edge Functions (secretos del proyecto Supabase)
 
-`ASI_SUPABASE_PUBLISHABLE_KEY` · `ASI_SUPABASE_SECRET_KEY` · `APP_URL` · `EMAIL_FROM_ADDRESS_DEV` · `RESEND_API_KEY_DEV` · `RESEND_WEBHOOK_SECRET_DEV` · `EMAIL_PROCESSOR_SECRET` · `WEB_PUSH_VAPID_PUBLIC_KEY` · `WEB_PUSH_VAPID_PRIVATE_KEY` · `WEB_PUSH_CONTACT_EMAIL` · `STRESS_HARNESS_ENABLED` · `HARNESS_ENV` · `HARNESS_PRODUCTION_TARGETS`
+`ASI_SUPABASE_PUBLISHABLE_KEY` · `ASI_SUPABASE_SECRET_KEY` · `APP_URL` · `EMAIL_FROM_ADDRESS` · `RESEND_API_KEY` · `RESEND_WEBHOOK_SECRET` · `EMAIL_PROCESSOR_SECRET` · `WEB_PUSH_VAPID_PUBLIC_KEY` · `WEB_PUSH_VAPID_PRIVATE_KEY` · `WEB_PUSH_CONTACT_EMAIL` · `STRESS_HARNESS_ENABLED` · `HARNESS_ENV` · `HARNESS_PRODUCTION_TARGETS`
 
-`RESEND_WEBHOOK_SECRET_DEV` es exclusivo de cada endpoint/entorno. La Edge Function `resend-webhook` valida el cuerpo crudo y los headers `svix-*`; nunca debe reutilizarse como llave de envío ni exponerse al frontend. El procesador y el webhook usan exclusivamente los tres nombres `_DEV` en todos los entornos; no se mantienen alias antiguos sin sufijo.
+`APP_URL` no se mantiene a mano: el job `deploy-edge-functions` lo sincroniza desde `VITE_AUTH_SITE_URL` del GitHub Environment y rechaza si el origen no corresponde a staging o producción. La plantilla conserva únicamente la ruta de enlaces absolutos legados para que ningún correo pueda volver a otro host.
+
+`RESEND_WEBHOOK_SECRET` es exclusivo de cada endpoint/entorno. La Edge Function `resend-webhook` valida el cuerpo crudo y los headers `svix-*`; nunca debe reutilizarse como llave de envío ni exponerse al frontend. El procesador y el webhook usan exclusivamente los tres nombres canónicos sin sufijo; no se mantienen alias `_DEV`.
 
 **Las claves VAPID deben ser distintas por entorno.** Compartirlas hace que una suscripción push de staging reciba notificaciones de producción.
 
@@ -136,12 +149,24 @@ Staging se empaqueta con `npm run build:staging`; producción con `npm run build
 | `AZUL_PAYMENT_URL` | `pruebas.azul.com.do` | `contpagos.azul.com.do` |
 | `SERVICE_PUBLIC_URL` | dominio del servicio en staging | dominio en producción |
 | `ALLOWED_ORIGIN` / `APP_URL` | dominio de staging | dominio de producción |
+| `SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` de staging | `sb_publishable_...` de producción |
+| `SUPABASE_SECRET_KEY` | `sb_secret_...` de staging | `sb_secret_...` de producción |
 
 Cruzar credenciales aquí significa cobrar de verdad desde staging, o no cobrar en producción. Es el punto de mayor riesgo de toda la lista.
 
-### 4.6 Netlify
+### 4.6 Proveedor de frontend
 
-Un sitio o dos contextos de build: `main` → staging, tag/rama de release → producción. Cada contexto con su propio juego de variables.
+Dos destinos y dos GitHub Environments: `staging` → `dev.asidominicana.do` y `main` →
+`asidominicana.do`. Cada uno conserva su propio juego de variables. El deploy de Hostinger construye
+`dist/` en GitHub Actions y publica solo ese artefacto; nunca versiona `dist/` ni despliega el checkout
+crudo con hPanel Git.
+
+Los dos jobs existen desde 2026-08-10: `deploy-staging` y `deploy-production` en `ci.yml`, espejos
+salvo por la rama, el environment y el modo de build. **El de producción no puede publicar un bundle
+que apunte a un proyecto Supabase de desarrollo:** `validateProductionEnv` lo rechaza por la
+allow-list versionada de `src/shared/config/required-env.ts`, que es la que faltaba cuando
+`asidominicana.do` sirvió tres días la base de desarrollo. La comprobación solo aplica cuando el
+origen canónico es alcanzable, para no dejar en rojo el `verify` de cada laptop.
 
 ## 5. Qué dejar preparado ahora
 
@@ -153,10 +178,14 @@ Para que la activación de staging sea "cambiar entornos y ya", esto conviene re
 - [ ] **Rotar la `service_role` key antes del corte a producción.** Estuvo escrita en claro en `audit_logs` desde marzo hasta el saneamiento de TASK-260, legible por cualquier portador de `audit_log:read`. El saneamiento la quitó de la base pero **no invalida la llave**, y esa llave **bypassa RLS por completo**. Decisión del propietario (2026-08-02): **no se rota ahora**, porque el acceso a `audit_log:read` estuvo limitado a personas de confianza y no hay indicio de filtración. Queda como paso obligatorio del corte a producción, no como remediación pendiente. Al rotarla hay que resincronizar `.env.local`, el microservicio AZUL y las Edge Functions.
 
 - [ ] **Cero cambios manuales desde el dashboard de Supabase.** Todo por migración. Un `GRANT` o una policy hecha a mano no viaja a staging.
-- [ ] **Despliegue de Edge Functions por CI**, no `supabase functions deploy` desde la laptop.
-- [x] **Unificar la topología documentada.** ✅ 2026-08-04. Resuelto: no era una decisión pendiente sino texto obsoleto en un solo documento. **No existe ni un archivo de configuración de Hostinger en el repositorio**, mientras que `netlify.toml`, `railway.json` y el `Dockerfile` del microservicio sí están, y tres documentos ya decían Netlify. La topología única —SPA en Netlify, `services/azul-payments` en Railway, plataforma en Supabase— queda declarada en `docs/pasarelaDePagos/despliegue-azul.md`, que es el runbook que manda.
-
-  **Reabierto el 2026-08-07:** ahora sí hay configuración de Hostinger en el repo (`public/.htaccess`) y el dominio propio `asidominicana.do` está configurado en Supabase. Desde 2026-08-09 el frontend ya no lo conserva en `.env.production`: el entorno de despliegue lo inyecta y el build valida su correspondencia. La SPA se sirve desde **dos** sitios a propósito y de forma temporal: Netlify como vuelta atrás mientras se valida Hostinger. Runbook: `docs/architecture/DESPLIEGUE_HOSTINGER.md`. Vuelve a quedar una sola topología en cuanto se retire uno de los dos.
+- [x] **Despliegue de Edge Functions por CI**, no `supabase functions deploy` desde la laptop. ✅ 2026-08-10.
+  Job `deploy-edge-functions` de `ci.yml`: sale de `staging` y de `main`, cada rama contra el proyecto de
+  su propio GitHub Environment, y usa `--use-api` porque el empaquetado local falla con un error opaco
+  justo después de `Bundling Function`. Requiere `secrets.SUPABASE_ACCESS_TOKEN` y `vars.SUPABASE_PROJECT_REF`
+  **por entorno**; si faltan, el job falla nombrándolos en vez de saltarse en silencio. Corre en paralelo
+  con el despliegue del frontend: un cambio que rompa el contrato entre ambos necesita dos despliegues,
+  primero el de la función.
+- [x] **Unificar la topología documentada.** ✅ 2026-08-10. Hubo un periodo con dos hosts del frontend conviviendo a propósito; se cerró retirando Netlify por completo del repositorio. Topología única: **SPA en Hostinger** (`public/.htaccess`, runbook `docs/architecture/DESPLIEGUE_HOSTINGER.md`), `services/azul-payments` en **Railway** (`railway.json`, `Dockerfile`), plataforma en **Supabase**. El dominio ya no vive en `.env.production` desde 2026-08-09: lo inyecta el entorno de despliegue y el build valida su correspondencia.
 
 ## 6. Runbook: activar staging
 
@@ -172,8 +201,8 @@ Cuando llegue el momento, en orden:
 3. **Cargar los secretos** de las secciones 4.3 y 4.4 con valores **nuevos** de staging. Generar claves VAPID propias y un `EMAIL_PROCESSOR_SECRET` propio.
 4. **Ajustar `email_dispatch_url`** al ref de staging. Verificar que apunta al proyecto correcto antes de habilitar el cron de correo.
 5. **Desplegar las Edge Functions** al proyecto de staging.
-6. **Desplegar el microservicio AZUL** de staging, con credenciales de prueba, y apuntar `VITE_AZUL_PAYMENTS_URL` ahí.
-7. **Configurar el contexto de Netlify** para staging con su juego de variables.
+6. ~~**Desplegar el microservicio AZUL** de staging, con credenciales de prueba, y apuntar `VITE_AZUL_PAYMENTS_URL` ahí.~~ ✅ 2026-08-09 — `https://azul-payments-staging-staging.up.railway.app`. La URL **no se versiona**: vive en las *environment variables* del entorno `staging` de GitHub, que es de donde la toma el job `deploy-staging`.
+7. **Configurar el entorno `staging` de GitHub** con su juego de variables de build.
 8. **Sembrar datos** con `npm run harness:seed`. Nunca copiar producción con PII.
 9. **Verificar de punta a punta:** login, solicitud de membresía, pago con tarjeta de prueba, envío de correo, notificación push.
 10. **Promover el flujo de trabajo:** a partir de aquí, producción solo recibe cambios que ya pasaron por staging.

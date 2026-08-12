@@ -24,11 +24,12 @@ export const donatePageContent: InstitutionalPageContent = {
       to: `${surfacePaths.institutional.donate}#donar-ahora`,
       variant: 'primary',
     },
-    secondaryAction: {
-      label: 'Ver proyectos',
-      to: surfacePaths.institutional.projectFunding,
-      variant: 'secondary',
-    },
+    // Proyectos oculto hasta que la sección esté lista (la ruta sigue viva).
+    // secondaryAction: {
+    //   label: 'Ver proyectos',
+    //   to: surfacePaths.institutional.projectFunding,
+    //   variant: 'secondary',
+    // },
     image: 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Comunidad adventista unida en servicio y misión',
     aside: [
@@ -220,10 +221,11 @@ export const donatePageContent: InstitutionalPageContent = {
       to: `${surfacePaths.institutional.donate}#donar-ahora`,
       variant: 'primary',
     },
-    secondaryAction: {
-      label: 'Ver financiamiento de proyectos',
-      to: surfacePaths.institutional.projectFunding,
-      variant: 'secondary',
-    },
+    // Proyectos oculto hasta que la sección esté lista (la ruta sigue viva).
+    // secondaryAction: {
+    //   label: 'Ver financiamiento de proyectos',
+    //   to: surfacePaths.institutional.projectFunding,
+    //   variant: 'secondary',
+    // },
   },
 }

@@ -114,7 +114,7 @@ The MVP should **not** initially include:
 - sign up / sign in
 - standard user registration request for everyone
 - administrative approval before a user account becomes active
-- tenant operator request submission with company, ministry, project, field, or generic-profile validation data
+- one tenant operator request per user, with an automatically derived, read-only workspace address and local previews for the logo and supporting document
 - admin approval flow before tenant operator access is activated
 - candidate account flow
 - tenant workspace creation after approval
@@ -311,7 +311,9 @@ The commercial model must separate individual ASI membership/subscription from t
 
 The individual candidate-only user who applies to opportunities but does not publish opportunities is the `Joven Profesional` membership path with an annual dues amount of $25. Other annual membership categories and dues are documented in the commercial model and must not be replaced by generic "student" or generic paid-user labels.
 
-Renewal payments by already active members must extend the active membership/subscription term automatically from the current expiration date, record the new payment as the latest comprobante, and notify the member plus platform admins. Initial membership payments still require the governed admin activation step before protected access is granted.
+Membership intake must present union and association before local church and district. While the local church and district catalogs are incomplete, applicants enter those two values directly; the platform keeps `church_id` empty and sends the application through administrative review until it can be reconciled safely.
+
+Renewal payments by already active members must extend the active membership/subscription term automatically from the current expiration date, record the new payment as the latest comprobante, and notify the member plus platform admins. An initial verified payment remains pending final activation without starting its term; the activation timestamp and expiration are established together when the authorized administrator activates the membership.
 
 Platform admins must be able to audit AZUL card transactions from Administración › Finanzas, including membership dues and donations, with exact transaction timestamp, order/tracking identifiers, masked card data, status, authorization code, approved amount, and the complete stored gateway payload in a detail modal for support and reconciliation.
 

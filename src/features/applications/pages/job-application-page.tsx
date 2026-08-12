@@ -212,6 +212,17 @@ export function JobApplicationPage() {
     },
     onSuccess: async () => {
       const nextSuccessKind = existingApplication ? 'updated' : 'submitted'
+
+      // La invalidación de postulaciones puede revelar inmediatamente la fila
+      // recién creada. Fijamos antes el estado terminal para que ese refresco
+      // no renderice por un instante el flujo de «Actualizar CV enviado».
+      setSuccessKind(nextSuccessKind)
+      setApplicationSubmitted(true)
+      setMaxVisitedStep(TOTAL_STEPS - 1)
+      if (!existingApplication) {
+        clearApplicationDraft(draftKey)
+      }
+
       toast.success(nextSuccessKind === 'updated' ? 'CV actualizado' : 'Postulación enviada', {
         description:
           nextSuccessKind === 'updated'
@@ -220,12 +231,6 @@ export function JobApplicationPage() {
       })
       await queryClient.invalidateQueries({ queryKey: APPLICATIONS_QUERY_SCOPE })
       await queryClient.invalidateQueries({ queryKey: ['jobs'] })
-      if (!existingApplication) {
-        clearApplicationDraft(draftKey)
-      }
-      setSuccessKind(nextSuccessKind)
-      setApplicationSubmitted(true)
-      setMaxVisitedStep(TOTAL_STEPS - 1)
     },
     onError: async (error) => {
       await reportErrorWithToast({

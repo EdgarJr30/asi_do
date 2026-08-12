@@ -242,7 +242,7 @@ Do not regress the shared application shell into route matching that leaves two 
 Do not let authenticated platform screens drift back toward oversized marketing proportions. Internal pages such as `Company`, `Jobs`, `Candidates`, `Applications`, and `Pipeline` should keep compact cards, restrained paddings, smaller but still accessible controls, and copy that goes straight to the hiring task. Avoid restoring decorative top metric bands, checklist banners, or “experience status” explainer panels that do not materially help the user complete the current workflow. Forms should stay grouped into logical sections with tighter desktop layouts and concise ATS-oriented labels and descriptions.
 
 ### R-083 — The environment strategy must stay lean and avoid a standing staging tier
-Do not reintroduce a dedicated or long-lived staging environment by default. The current operating model is local development, Netlify Deploy Previews for shared validation, and production from `main`. Stress, migration, or operational validation should target local or explicitly approved development/preview environments unless a reviewed architecture decision changes that baseline.
+Do not reintroduce a dedicated or long-lived staging environment by default. The current operating model is local development, `dev.asidominicana.do` (published from `staging`) for shared validation, and production from `main`. Stress, migration, or operational validation should target local or explicitly approved development/preview environments unless a reviewed architecture decision changes that baseline.
 
 ### R-084 — Final license activation stays permission-driven and tightly delegated
 Do not hard-code final license activation to broad admin categories, union roles, or pastoral roles. `license:activate` is granted by default only to `Super Administrator` and `Platform Support`, and any additional activator must receive that permission through an explicit super-administrator assignment that remains auditable.
@@ -427,8 +427,8 @@ Do not place warning, error, exclamation, or alert-style icons beside form label
 ### R-119 — Membership onboarding copy must separate payment from activation
 Do not tell users that a submitted membership application or a completed payment makes the membership active. The post-onboarding and post-application experience must make the sequence clear: base account data, payment, review/approval, then final activation. Avoid internal words such as `persistido` in user-facing success messages, and avoid `tour` labels in the base onboarding UI because they are unclear and fragile on mobile.
 
-### R-120 — Membership reference must start with local church
-Do not make applicants choose the church territory manually before selecting their local church in the membership application reference step. The `Iglesia local` control must appear first, and `Unión` must be derived from the selected church instead of requiring manual applicant input.
+### R-120 — Membership church reference must match the available catalogs
+Do not require applicants to select a local church or district from incomplete catalogs. In the membership reference step, show `Unión` and `Asociación` first, then capture `Iglesia local` and `Distrito` as required text fields. Keep `church_id` empty until a canonical church can be reconciled, so the application remains in the admin review path instead of being routed to the wrong pastor.
 
 ### R-121 — Talent saving and detail actions must remain usable
 Do not make the talent-pool insert policy read recruiter-visible candidate profiles through invoker-context RLS. The policy must preserve `candidate_directory:read`, bind `saved_by_user_id` to `auth.uid()`, and evaluate profile visibility through a narrow boolean-only security-definer predicate. The candidate detail side sheet must keep every footer action inside its narrow panel; long actions must occupy their own row instead of relying on viewport breakpoints that can force horizontal overflow. Opening or closing a candidate through the `candidate` query parameter must preserve the current scroll position instead of returning the directory to its first row. The global route scroll manager must ignore query-only transitions and reset the page only when the pathname or hash changes.
@@ -494,13 +494,93 @@ Do not let a test carry its point on decorative copy, and do not leave a failure
 Do not let route-level and render-level stale chunk failures drift into separate screens, unaccented Spanish, technical browser language, or a blank page. Both paths must reuse the shared version-update fallback with its calm SVG illustration, the exact recovery context, and one clear `Recargar` action that loads the latest frontend version.
 
 ### R-141 — Resend sending credentials keep one explicit naming contract
-Do not reintroduce `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS`, or `RESEND_WEBHOOK_SECRET` as aliases or fallbacks. The email pipeline must read only `RESEND_API_KEY_DEV`, `EMAIL_FROM_ADDRESS_DEV`, and the separate `RESEND_WEBHOOK_SECRET_DEV` required for signed delivery-event verification. None of these values may use a `VITE_*` prefix or be exposed to the browser.
+Do not reintroduce the `_DEV` aliases. The email pipeline must read only `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS`, and the separate `RESEND_WEBHOOK_SECRET` required for signed delivery-event verification. The names stay identical across environments while their values remain environment-specific. None of these values may use a `VITE_*` prefix or be exposed to the browser.
 
 ### R-142 — Auth email links must never cross environments
 Do not commit a runtime Auth endpoint into `.env.development`, `.env.staging`, or `.env.production`. Development must build confirmation and recovery callbacks from the browser origin even if a public URL leaks into local configuration. Staging and production must inject `VITE_AUTH_SITE_URL`; every deployed build must declare `VITE_DEPLOY_ENV` and `VITE_PRODUCTION_SITE_URL`, reject HTTP/localhost, require production to match its canonical origin, and forbid staging from using that origin. Every callback must also exist in the corresponding Supabase project's redirect allow-list, because an unlisted `redirectTo` silently falls back to `site_url`.
 
 ### R-143 — Environment status belongs to structural chrome, never floating content
 Do not render the Local, Staging, or Producción status badge as a fixed or floating overlay. Public and authentication surfaces must keep it inside their footer, while authenticated product surfaces must keep it in the sidebar footer with a compact state when the desktop sidebar is collapsed. The same component remains the future home of application versioning, but until versioning is introduced it shows only the environment and `Beta`.
+
+### R-144 — Hostinger deployments promote branches and publish built artifacts only
+Do not connect Hostinger hPanel Git directly to the Vite checkout or publish repository source files. GitHub Actions owns the build and publishes only `dist/`: `staging` targets `dev.asidominicana.do`, while `main` is reserved for the protected production target. Staging must wait for every CI quality job and use its own GitHub Environment. With active traffic, never run `mirror --delete` against the document root or publish `index.html` before its hashed assets: upload missing assets first, replace mutable files through same-directory temporaries, activate `index.html` and `sw.js` last, verify the public release, and restore the previous entrypoints when that verification fails. Old hashed bundles are retained so tabs opened on the prior release can finish lazy imports.
+
+### R-145 — AI communication and documents must stay brief
+Codex and Claude Code must answer directly, concretely, and briefly. Lead with the result and include only decision-relevant context; do not add introductions, recaps, obvious explanations, or unsolicited next steps. Plans and Markdown documents must be short and scannable, preferably as compact checklists or tables, limited to what will be done, what was achieved, why it matters, what remains, and any real dependency, acceptance criterion, or material risk. Add detail only when the user asks or when omitting it would create a technical, security, or operational risk.
+
+### R-146 — The membership payment trust notice must not attach to the checkout button
+Do not render the AZUL security notice as inline content beside the membership payment button. It must begin on its own row below the primary action with a visible vertical gap on mobile and desktop.
+
+### R-147 — Initial membership time starts at final activation
+Do not derive an inactive member's activation or expiration dates from payment initiation or verification. An initial verified payment must remain pending final activation with no effective period; the authorized activation RPC sets the activation timestamp, expiration, and payment period together, and the pending UI must show no running countdown.
+
+### R-148 — Base onboarding exits to the step the member can actually complete
+Do not send everyone to the payment panel after the base profile wizard, and do not rely on an intermediate summary screen or countdown: saving the profile rehydrates the session and unmounts the wizard, so the exit must navigate immediately. Resolve the destination with `resolveMembershipOnboardingStep` against fresh membership state — incomplete profile → profile, no application → eligibility, draft → the application form, submitted application without payment → the membership panel, already paid → profile. While the application is missing or still a draft, the membership panel must state that payment is blocked and what unlocks it, instead of showing payment as merely "pending".
+
+### R-149 — Institutional headings must own their contrast
+Do not use an undefined institutional heading class or let headings inside light institutional surfaces inherit the global application theme color. Every `asi-heading-*` variant used by institutional pages must define its own `--asi-text` color so headings remain readable even when the global theme is dark.
+
+### R-150 — Mutating E2E suites must fail closed before reaching production
+Do not give Playwright a production `service_role`/secret key or run account, membership, payment, job, or cleanup fixtures against production. Every remote administrative E2E run must declare `E2E_TARGET_ENV=development|staging`, and its project ref must belong to the allow-list versioned in `target-guard.ts`; changing environment variables alone must never expand that list. A target outside the allow-list or matching `PRODUCTION_SUPABASE_PROJECT_REF` must abort before `createClient`. Production verification is limited to `npm run test:e2e:production-smoke`, which must remain read-only and independent from `support/realtime`.
+
+### R-151 — Sent registration must become a confirmation state
+Do not leave the sign-up form active after the confirmation email is sent. Replace it with a clear `Revisa tu correo` state that shows the destination, explains that the user must open the link instead of registering again, and offers confirmation-email resend only after a visible provider cooldown.
+
+### R-152 — Email load must fail closed before PostgreSQL is saturated
+Do not allow bulk email, manual dispatch, cron, provider latency, or webhook retries to create unbounded database work. PostgreSQL must reject oversized/rate-limited campaigns and an over-capacity queue before inserting deliveries; dispatch stays single-flight and batch-bounded; database/provider calls have short timeouts; retries preserve idempotency; and operators can inspect queue depth, lease state, and the last dispatcher error. UI warnings alone never satisfy this rule.
+
+### R-153 — Repeated or remote work must carry its own ceiling
+R-152 states this for email. It is not an email rule. **No unit of work in this repository may repeat, grow, or wait without a limit written next to it**, whatever the feature.
+
+Four ceilings, each mandatory wherever the shape applies:
+
+| Shape | Required ceiling | Where it must live |
+|---|---|---|
+| **Waiting** on a remote service (database, provider, sibling service) | An explicit timeout | The call site. Enforced by `npm run check:bounded-io` |
+| **Retrying** anything, including a non-2xx we return to make a caller retry | A budget: max attempts, or an age window past which the work is dropped and logged | The retrying side, never only the caller's schedule |
+| **Fanning out** (recipients, rows, jobs, batch size, concurrency) | A hard numeric cap that rejects before doing the work | PostgreSQL where a client could reach it; a named constant otherwise |
+| **Accumulating** rows (logs, events, history, queues) | A retention or archival job scheduled in the same migration that creates the table | The migration |
+
+Three specifics that follow, and that were each violated in the 2026-08-10 incident:
+
+- **Returning a 4xx/5xx to a webhook provider is a retry request.** An endpoint that answers non-2xx to an event it can never process asks to be called forever. Bound it on our side and acknowledge past the budget; do not rely on the provider's retry schedule, which we neither control nor test.
+- **A degradation elsewhere must not become load here.** When a dependency stops answering, our request rate against it must fall, not stay flat or rise.
+- **The cheapest check goes first.** Shed a request before verifying signatures, before opening a client, and before touching the database — never after.
+
+A limit only counts if it is enforced by PostgreSQL, by a test, or by `npm run verify`. A comment, a form's `maxlength`, or a reviewer's attention does not count.
+
+### R-154 — Active membership validity must not use a progress bar
+Do not render a decorative progress bar for the remaining active-membership term. Keep the remaining-time label and activation/expiration dates as the compact validity summary.
+
+### R-155 — Empty selects must not look completed
+Do not render an empty select instruction with the same dark text used for a selected value. Province/state, city, country, hierarchy, sector, and any equivalent select must use the form placeholder gray while empty and switch to the normal text color only after a real selection.
+
+### R-156 — Notification email links must stay inside their environment
+Do not keep `APP_URL` as an independently maintained Edge Function secret or trust an absolute `action_url` stored by an older notification. Edge Function deployment must derive `APP_URL` from the protected environment's `VITE_AUTH_SITE_URL`, reject an origin that does not match staging or production, and rewrite legacy absolute actions onto that current origin while preserving only their internal path, query, and fragment.
+
+### R-157 — Animated ecosystem images must keep clean rounded edges
+Do not combine continuous floating motion with pointer-driven rotation or scale on institutional ecosystem images. Keep the media layer clipped and isolated so browser compositing cannot paint image fragments outside the rounded card.
+
+### R-158 — Hostinger deploy phases must recover from an exhausted FTPS session
+Do not treat one `lftp` session reaching `max-retries` as a final release failure. Every resumable FTPS upload or activation phase must retry through a fresh, bounded session while preserving atomic entrypoint writes, rollback behavior, and the GitHub Actions time budget.
+
+### R-159 — Institutional footer badges must stay restrained, stacked, and single-line
+Do not let the `Explora` or `Pagos y políticas` link badges become either tiny labels or large card-like controls, wrap their text, or return to a multi-column button grid. Stack every link in one column within its group, keep the visible badge moderately compact inside a 44px touch target, and keep the payment brand cards and images small.
+
+### R-160 — The institutional footer identity card prioritizes contact
+Do not place the white ASI logo on another colored tile, render the institution title with muted contrast, crowd the identity rows, or restore prominent platform and donation buttons inside the footer identity card. Keep the legal institution and address icon-led, expose email and telephone as actionable links, and keep payment-processing and currency copy in the Legal Center.
+
+### R-161 — A completed application must enter its terminal state before cache refresh
+Do not await application or job query invalidation before rendering the successful submission or CV-update state. A refreshed application can reveal the newly created row while the mutation callback is still running; the terminal state and its kind must be fixed first so the application wizard never flashes the existing-application editor between submission and confirmation.
+
+### R-162 — Company requests have one immutable derived address and one submission
+Do not let a requester type or change the workspace address, submit a second company request, or reuse an address held by an existing tenant or any prior request. Derive the address from the organization name, enforce both uniqueness rules in PostgreSQL, preview the selected logo and supporting document before submission, and show the resulting request as one current state rather than a history.
+
+### R-163 — The AZUL service uses current Supabase key names
+Do not configure the AZUL service with the legacy `SUPABASE_ANON_KEY` or `SUPABASE_SERVICE_ROLE_KEY` names. It must require `SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY` without aliases or fallbacks; the secret key remains server-only and must never use a `VITE_*` prefix.
+
+### R-164 — Auth template promotion must publish the complete set
+Do not treat `Confirm sign up` as the complete production Auth email setup. The protected Management API synchronizer must load and publish `confirmation`, `invite`, `magic_link`, `recovery`, `email_change`, and `reauthentication` together, including their subjects, and abort before writing if any template is unavailable or the target environment does not match.
 
 ---
 

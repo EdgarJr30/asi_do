@@ -116,8 +116,12 @@ export function MembershipPage() {
               className="mt-10 flex flex-col gap-3 sm:flex-row"
               variants={itemVariants}
             >
-              <InstitutionalActionLink action={hero.primaryAction} />
-              <InstitutionalActionLink action={hero.secondaryAction} />
+              {hero.primaryAction ? (
+                <InstitutionalActionLink action={hero.primaryAction} />
+              ) : null}
+              {hero.secondaryAction ? (
+                <InstitutionalActionLink action={hero.secondaryAction} />
+              ) : null}
             </motion.div>
           </motion.div>
 
@@ -187,7 +191,9 @@ export function MembershipPage() {
           </div>
 
           <div className="flex justify-center">
-            <InstitutionalActionLink action={hero.primaryAction} />
+            {hero.primaryAction ? (
+              <InstitutionalActionLink action={hero.primaryAction} />
+            ) : null}
           </div>
         </div>
       </InstitutionalSection>

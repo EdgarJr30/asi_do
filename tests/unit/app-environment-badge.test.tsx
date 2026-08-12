@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
@@ -38,5 +38,31 @@ describe('application environment badge', () => {
     )
 
     expect(screen.getByLabelText(/Entorno Local; fase Beta/).closest('footer')).toBeInTheDocument()
+  })
+
+  it('presents footer contact information as actionable links without payment copy', () => {
+    render(
+      <MemoryRouter>
+        <InstitutionalFooter />
+      </MemoryRouter>
+    )
+
+    const contactCard = screen.getByTestId('institutional-footer-contact-card')
+
+    expect(within(contactCard).getByRole('link', { name: /hola@asidominicana\.do/i })).toHaveAttribute(
+      'href',
+      'mailto:hola@asidominicana.do'
+    )
+    expect(within(contactCard).getByRole('link', { name: /829 910 0333/i })).toHaveAttribute(
+      'href',
+      'tel:+18299100333'
+    )
+    expect(within(contactCard).getByRole('link', { name: /Prolongación Fantino Falco/i })).toHaveAttribute(
+      'target',
+      '_blank'
+    )
+    expect(within(contactCard).queryByText(/procesadas en/i)).not.toBeInTheDocument()
+    expect(within(contactCard).queryByRole('link', { name: 'Plataforma ASI' })).not.toBeInTheDocument()
+    expect(within(contactCard).queryByRole('link', { name: 'Donaciones' })).not.toBeInTheDocument()
   })
 })

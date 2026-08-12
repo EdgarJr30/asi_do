@@ -21,7 +21,9 @@ const DESKTOP_ONLY_SPECS = [
   // config sirve `npm run dev`).
   '**/pwa/**',
   '**/membership-admin-console.spec.ts',
+  '**/password-recovery.spec.ts',
   '**/membership-full-submission.spec.ts',
+  '**/onboarding-next-step.spec.ts',
   '**/membership-needs-more-info.spec.ts',
   '**/pastor-membership-queue.spec.ts'
 ]

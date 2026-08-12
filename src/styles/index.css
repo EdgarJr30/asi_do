@@ -407,6 +407,15 @@
     font-weight: 700;
   }
 
+  .asi-heading-md {
+    font-family: 'Manrope', 'Segoe UI', sans-serif;
+    font-size: clamp(1.25rem, 2vw, 1.75rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--asi-text);
+    font-weight: 700;
+  }
+
   .asi-copy {
     color: var(--asi-text-muted);
     font-size: 1rem;

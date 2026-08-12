@@ -63,10 +63,10 @@ import { cn } from '@/lib/utils/cn'
 const DEFAULT_COUNTRY = 'República Dominicana'
 
 /**
- * El campo "Unión" solo ofrece la Unión Dominicana (la jerarquía cargada en el
- * sistema) y una salida "Otro" para quien pertenece a una iglesia de otro país:
- * ahí no hay cascada que recorrer, así que se pide el país y los datos de la
- * iglesia a mano y la solicitud viaja sin `church_id` (la revisa un admin).
+ * El campo "Unión" solo ofrece la Unión Dominicana y una salida "Otro" para
+ * quien pertenece a una iglesia de otro país. Asociación usa el catálogo
+ * disponible; iglesia local y distrito se capturan como texto libre hasta que
+ * existan sus listados canónicos.
  */
 const CHURCH_UNION_DOMINICAN = 'union-dominicana'
 const CHURCH_UNION_OTHER = 'otro'
@@ -126,6 +126,7 @@ export interface MembershipApplicationValues {
   churchCountry: string
   churchId: string
   homeChurchName: string
+  churchDistrict: string
   churchCity: string
   churchStateProvince: string
   conference: string
@@ -229,6 +230,7 @@ const referenceStepFields = [
   'churchCountry',
   'churchId',
   'homeChurchName',
+  'churchDistrict',
   'churchCity',
   'churchStateProvince',
   'conference',
@@ -352,6 +354,7 @@ function buildApplicationSchema(categorySlug: string) {
       churchCountry: z.string().trim(),
       churchId: z.string().trim(),
       homeChurchName: z.string().trim().min(2, 'Ingresa el nombre de tu iglesia local.'),
+      churchDistrict: z.string().trim().min(2, 'Ingresa el distrito de tu iglesia.'),
       churchCity: z.string().trim().min(2, 'Ingresa la ciudad de tu iglesia local.'),
       churchStateProvince: z.string().trim().min(2, 'Ingresa la provincia o estado de tu iglesia.'),
       conference: z.string().trim().min(2, 'Ingresa la asociación o conferencia.'),
@@ -459,16 +462,8 @@ function buildApplicationSchema(categorySlug: string) {
         })
       }
 
-      // Iglesia de la Unión Dominicana: obligatorio elegirla en la jerarquía.
-      // Iglesia de otro país: no hay jerarquía, se pide el país y el resto a mano.
       if (values.churchUnion === CHURCH_UNION_OTHER) {
         requireField('churchCountry', 'el país de tu iglesia', 2)
-      } else if (!z.string().uuid().safeParse(values.churchId.trim()).success) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Selecciona tu iglesia.',
-          path: ['churchId'],
-        })
       }
 
       if (!values.billingSameAsHome) {
@@ -581,6 +576,7 @@ function createDefaultValues(token: EligibilityToken): MembershipApplicationValu
     churchCountry: DEFAULT_COUNTRY,
     churchId: '',
     homeChurchName: '',
+    churchDistrict: '',
     churchCity: '',
     churchStateProvince: '',
     conference: '',
@@ -794,10 +790,17 @@ function SelectField({
 }) {
   const generatedId = useId()
   const fieldId = props.id ?? generatedId
+  const hasValue = Array.isArray(props.value)
+    ? props.value.length > 0
+    : props.value !== undefined && props.value !== null && props.value !== ''
 
   return (
     <Field label={label} help={help} hint={hint} error={error} htmlFor={fieldId} required={required}>
-      <select id={fieldId} className={cn(fieldInputClassName, className)} {...props}>
+      <select
+        id={fieldId}
+        className={cn(fieldInputClassName, !hasValue && 'text-[#8a96a8]', className)}
+        {...props}
+      >
         {children}
       </select>
     </Field>
@@ -875,138 +878,58 @@ function DominicanCitySelectField({
   )
 }
 
-interface SelectedChurch {
-  id: string
-  name: string
-  city: string | null
-  associationName: string | null
-}
-
 /**
- * Selector jerárquico en cascada (unión → asociación → distrito → iglesia).
- * Al elegir una iglesia entrega el `church_id` real, que habilita el auto-ruteo
- * al pastor con alcance sobre esa iglesia.
- *
- * Con unión "Otro" (iglesia de otro país) no hay jerarquía que recorrer: solo se
- * pide el país y los datos de la iglesia se capturan a mano fuera de esta tarjeta.
+ * Unión y asociación conservan los catálogos disponibles. Iglesia local y
+ * distrito se escriben directamente porque todavía no existe un listado
+ * canónico completo para esos niveles.
  */
 function ChurchHierarchyPicker({
-  value,
-  error,
   union,
+  association,
+  associationError,
+  churchName,
+  churchNameError,
+  district,
+  districtError,
   country,
   countryError,
   onUnionChange,
+  onAssociationChange,
+  onChurchNameChange,
+  onDistrictChange,
   onCountryChange,
-  onSelect,
 }: {
-  value: string
-  error?: string
   union: string
+  association: string
+  associationError?: string
+  churchName: string
+  churchNameError?: string
+  district: string
+  districtError?: string
   country: string
   countryError?: string
   onUnionChange: (union: string) => void
+  onAssociationChange: (association: string) => void
+  onChurchNameChange: (churchName: string) => void
+  onDistrictChange: (district: string) => void
   onCountryChange: (country: string) => void
-  onSelect: (church: SelectedChurch | null) => void
 }) {
   const hierarchyQuery = useQuery({ queryKey: ['authority-hierarchy'], queryFn: fetchAuthorityHierarchy })
   const data = hierarchyQuery.data
 
   const unions = useMemo(() => data?.unions ?? [], [data])
   const associations = useMemo(() => data?.associations ?? [], [data])
-  const districts = useMemo(() => data?.districts ?? [], [data])
-  const churches = useMemo(() => data?.churches ?? [], [data])
-
-  // Cadena derivada de la iglesia ya seleccionada (p. ej. al volver al paso).
-  const selectedChurch = useMemo(() => churches.find((item) => item.id === value) ?? null, [churches, value])
-  const selectedDistrict = useMemo(
-    () => districts.find((item) => item.id === selectedChurch?.district_id) ?? null,
-    [districts, selectedChurch]
-  )
-  const selectedAssociation = useMemo(
-    () => associations.find((item) => item.id === selectedDistrict?.association_id) ?? null,
-    [associations, selectedDistrict]
-  )
-  const selectedUnion = useMemo(
-    () => unions.find((item) => item.id === selectedAssociation?.union_id) ?? null,
-    [unions, selectedAssociation]
-  )
-
-  const [associationId, setAssociationId] = useState('')
-  const [districtId, setDistrictId] = useState('')
 
   const isForeignChurch = union === CHURCH_UNION_OTHER
-  // Única unión ofrecida: la que tiene la jerarquía cargada en el sistema.
   const dominicanUnion = useMemo(
     () => unions.find((item) => item.code === CHURCH_UNION_DOMINICAN) ?? unions[0] ?? null,
     [unions]
   )
 
-  // La iglesia seleccionada manda; si aún no hay una, los filtros locales ayudan a encontrarla.
-  const effectiveUnionId = isForeignChurch ? '' : selectedUnion?.id || dominicanUnion?.id || ''
-  const effectiveAssociationId = selectedAssociation?.id || associationId || ''
-  const effectiveDistrictId = selectedDistrict?.id || districtId || ''
-
-  const associationById = useMemo(
-    () => new Map(associations.map((item) => [item.id, item])),
-    [associations]
-  )
-  const districtById = useMemo(() => new Map(districts.map((item) => [item.id, item])), [districts])
-
   const filteredAssociations = useMemo(
-    () => associations.filter((item) => item.union_id === effectiveUnionId),
-    [associations, effectiveUnionId]
+    () => associations.filter((item) => item.union_id === dominicanUnion?.id),
+    [associations, dominicanUnion]
   )
-  const filteredDistricts = useMemo(
-    () => districts.filter((item) => item.association_id === effectiveAssociationId),
-    [districts, effectiveAssociationId]
-  )
-  // Universo de iglesias de la unión: aunque ya haya una elegida, el desplegable
-  // nunca debe ofrecer iglesias de otra unión.
-  const churchesInUnion = useMemo(() => {
-    if (!effectiveUnionId) return churches
-
-    return churches.filter((item) => {
-      const district = districtById.get(item.district_id)
-      const association = district ? associationById.get(district.association_id) : null
-      return association?.union_id === effectiveUnionId
-    })
-  }, [associationById, churches, districtById, effectiveUnionId])
-
-  const filteredChurches = useMemo(() => {
-    if (effectiveDistrictId) {
-      return churchesInUnion.filter((item) => item.district_id === effectiveDistrictId)
-    }
-
-    if (effectiveAssociationId) {
-      return churchesInUnion.filter(
-        (item) => districtById.get(item.district_id)?.association_id === effectiveAssociationId
-      )
-    }
-
-    return churchesInUnion
-  }, [churchesInUnion, districtById, effectiveAssociationId, effectiveDistrictId])
-  const churchOptions = value ? churchesInUnion : filteredChurches
-
-  const emit = (churchId: string) => {
-    const church = churches.find((item) => item.id === churchId) ?? null
-    if (!church) {
-      setAssociationId('')
-      setDistrictId('')
-      onSelect(null)
-      return
-    }
-    const district = districts.find((item) => item.id === church.district_id)
-    const association = associations.find((item) => item.id === district?.association_id)
-    setAssociationId(association?.id ?? '')
-    setDistrictId(district?.id ?? '')
-    onSelect({
-      id: church.id,
-      name: church.name,
-      city: church.city,
-      associationName: association?.name ?? null,
-    })
-  }
 
   return (
     <div className="rounded-card border border-(--asi-outline) bg-white p-4">
@@ -1029,6 +952,58 @@ function ChurchHierarchyPicker({
         </SelectField>
 
         {isForeignChurch ? (
+          <TextField
+            label="Asociación"
+            help="Asociación a la que pertenece tu iglesia."
+            name="conference"
+            required
+            error={associationError}
+            value={association}
+            onChange={(event) => onAssociationChange(event.target.value)}
+          />
+        ) : (
+          <SelectField
+            label="Asociación"
+            help="Asociación a la que pertenece tu iglesia."
+            name="conference"
+            required
+            error={associationError}
+            value={association}
+            disabled={hierarchyQuery.isLoading || filteredAssociations.length === 0}
+            onChange={(event) => onAssociationChange(event.target.value)}
+          >
+            <option value="">Selecciona tu asociación…</option>
+            {filteredAssociations.map((item) => (
+              <option key={item.id} value={item.name}>
+                {item.name}
+              </option>
+            ))}
+          </SelectField>
+        )}
+
+        <TextField
+          label="Iglesia local"
+          help="Escribe el nombre de tu iglesia."
+          name="homeChurchName"
+          placeholder="Nombre de tu iglesia local"
+          required
+          error={churchNameError}
+          value={churchName}
+          onChange={(event) => onChurchNameChange(event.target.value)}
+        />
+
+        <TextField
+          label="Distrito"
+          help="Escribe el distrito al que pertenece tu iglesia."
+          name="churchDistrict"
+          placeholder="Nombre del distrito"
+          required
+          error={districtError}
+          value={district}
+          onChange={(event) => onDistrictChange(event.target.value)}
+        />
+
+        {isForeignChurch ? (
           <CountryNameSelectField
             label="País de tu iglesia"
             help="País donde está tu iglesia local."
@@ -1037,65 +1012,7 @@ function ChurchHierarchyPicker({
             value={country}
             onChange={(event) => onCountryChange(event.target.value)}
           />
-        ) : (
-          <>
-            <SelectField
-              label="Iglesia local"
-              help="Elige tu iglesia para completar su territorio."
-              required
-              error={error}
-              value={value}
-              disabled={hierarchyQuery.isLoading || churches.length === 0}
-              onChange={(event) => emit(event.target.value)}
-            >
-              <option value="">Selecciona tu iglesia…</option>
-              {churchOptions.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </SelectField>
-
-            <SelectField
-              label="Asociación"
-              help="Asociación de tu iglesia."
-              required
-              value={effectiveAssociationId}
-              disabled={!effectiveUnionId}
-              onChange={(event) => {
-                setAssociationId(event.target.value)
-                setDistrictId('')
-                onSelect(null)
-              }}
-            >
-              <option value="">Selecciona tu asociación…</option>
-              {filteredAssociations.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </SelectField>
-
-            <SelectField
-              label="Distrito"
-              help="Ubica al pastor revisor."
-              required
-              value={effectiveDistrictId}
-              disabled={!effectiveAssociationId}
-              onChange={(event) => {
-                setDistrictId(event.target.value)
-                onSelect(null)
-              }}
-            >
-              <option value="">Selecciona tu distrito…</option>
-              {filteredDistricts.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </SelectField>
-          </>
-        )}
+        ) : null}
       </div>
 
       {isForeignChurch ? (
@@ -1105,11 +1022,6 @@ function ChurchHierarchyPicker({
         </p>
       ) : null}
 
-      {!hierarchyQuery.isLoading && !isForeignChurch && unions.length === 0 ? (
-        <p className="mt-3 text-sm text-(--asi-text-muted)">
-          Aún no hay iglesias cargadas en el sistema. Contacta a un administrador para completar este paso.
-        </p>
-      ) : null}
     </div>
   )
 }
@@ -1799,13 +1711,21 @@ export function MembershipApplicationForm({
     control: form.control,
     name: 'gender',
   })
-  const selectedChurchId = useWatch({
-    control: form.control,
-    name: 'churchId',
-  })
   const churchUnion = useWatch({
     control: form.control,
     name: 'churchUnion',
+  })
+  const churchAssociation = useWatch({
+    control: form.control,
+    name: 'conference',
+  })
+  const homeChurchName = useWatch({
+    control: form.control,
+    name: 'homeChurchName',
+  })
+  const churchDistrict = useWatch({
+    control: form.control,
+    name: 'churchDistrict',
   })
   const churchCountry = useWatch({
     control: form.control,
@@ -1835,7 +1755,6 @@ export function MembershipApplicationForm({
     void form.trigger(erroredFieldsKey.split(',') as ApplicationFieldName[])
   }, [erroredFieldsKey, form, watchedValues])
 
-  const isForeignChurch = churchUnion === CHURCH_UNION_OTHER
   const isContactCountryDominican = isDominicanRepublicCountryName(contactCountry)
   const isOrganizationCountryDominican = isDominicanRepublicCountryName(organizationCountry)
   const isBillingCountryDominican = isDominicanRepublicCountryName(billingCountry)
@@ -2442,18 +2361,21 @@ export function MembershipApplicationForm({
       {currentStep.id === 'reference' ? (
         <ApplicationSection title="Referencia">
         <ChurchHierarchyPicker
-          value={selectedChurchId}
-          error={errors.churchId?.message}
           union={churchUnion}
+          association={churchAssociation}
+          associationError={errors.conference?.message}
+          churchName={homeChurchName}
+          churchNameError={errors.homeChurchName?.message}
+          district={churchDistrict}
+          districtError={errors.churchDistrict?.message}
           country={churchCountry}
           countryError={errors.churchCountry?.message}
           onUnionChange={(nextUnion) => {
             form.setValue('churchUnion', nextUnion, { shouldDirty: true, shouldValidate: true })
-            // Cambiar de unión invalida lo capturado: la iglesia de la jerarquía y
-            // los datos que esa selección había autocompletado.
             form.setValue('churchId', '', { shouldDirty: true, shouldValidate: true })
+            form.setValue('conference', '', { shouldDirty: true, shouldValidate: true })
             form.setValue('homeChurchName', '', { shouldDirty: true })
-            form.setValue('conference', '', { shouldDirty: true })
+            form.setValue('churchDistrict', '', { shouldDirty: true })
             form.setValue(
               'churchCountry',
               nextUnion === CHURCH_UNION_OTHER ? '' : DEFAULT_COUNTRY,
@@ -2463,39 +2385,18 @@ export function MembershipApplicationForm({
           onCountryChange={(nextCountry) => {
             form.setValue('churchCountry', nextCountry, { shouldDirty: true, shouldValidate: true })
           }}
-          onSelect={(church) => {
-            form.setValue('churchId', church?.id ?? '', { shouldValidate: true, shouldDirty: true })
-            if (church) {
-              form.setValue('homeChurchName', church.name, { shouldValidate: true })
-              if (church.city) {
-                form.setValue('churchCity', church.city, { shouldValidate: true })
-              }
-              if (church.associationName) {
-                form.setValue('conference', church.associationName, { shouldValidate: true })
-              }
-            } else {
-              form.setValue('conference', '', { shouldValidate: true, shouldDirty: true })
-            }
+          onAssociationChange={(nextAssociation) => {
+            form.setValue('conference', nextAssociation, { shouldDirty: true, shouldValidate: true })
+            form.setValue('churchId', '', { shouldDirty: true })
+          }}
+          onChurchNameChange={(nextChurchName) => {
+            form.setValue('homeChurchName', nextChurchName, { shouldDirty: true, shouldValidate: true })
+            form.setValue('churchId', '', { shouldDirty: true })
+          }}
+          onDistrictChange={(nextDistrict) => {
+            form.setValue('churchDistrict', nextDistrict, { shouldDirty: true, shouldValidate: true })
           }}
         />
-
-        {isForeignChurch ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            <TextField
-              label="Nombre de la iglesia local"
-              required
-              error={errors.homeChurchName?.message}
-              {...form.register('homeChurchName')}
-            />
-            <TextField
-              label="Asociación"
-              help="Asociación a la que pertenece tu iglesia."
-              required
-              error={errors.conference?.message}
-              {...form.register('conference')}
-            />
-          </div>
-        ) : null}
 
         <div className="grid gap-4 md:grid-cols-2">
           <TextField

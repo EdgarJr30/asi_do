@@ -32,13 +32,6 @@ export const compensationTypeOptions = [
 
 export type CompensationTypeOption = (typeof compensationTypeValues)[number]
 
-export const opportunityStageLabels: Record<OpportunityTypeOption, string[]> = {
-  employment: ['Applied', 'Screening', 'Interview', 'Offer', 'Hired', 'Rejected'],
-  project: ['Submitted', 'Under review', 'Approved', 'Active', 'Completed', 'Declined'],
-  volunteer: ['Registered', 'Validating', 'Assigned', 'Completed', 'Not selected', 'Withdrawn'],
-  professional_service: ['Requested', 'Reviewing', 'Conversation', 'Selected', 'Closed', 'Declined']
-}
-
 export const tenantKindRequirementSummary: Record<TenantKindOption, string[]> = {
   company: ['Razón social', 'Email corporativo'],
   ministry: ['Razón social', 'Alcance del ministerio', 'Email de contacto'],

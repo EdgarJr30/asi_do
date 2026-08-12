@@ -3,7 +3,12 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveResendConfig } from '../_shared/resend-config.ts'
 import { resolveServiceKey } from '../_shared/supabase-keys.ts'
+import { fetchWithTimeout } from '../_shared/fetch-with-timeout.ts'
 import { processEmailDeliveries } from './process.ts'
+
+export const MAX_DELIVERIES_PER_RUN = 20
+export const DATABASE_REQUEST_TIMEOUT_MS = 8_000
+export const PROVIDER_REQUEST_TIMEOUT_MS = 15_000
 
 /**
  * Shell HTTP: autentica al llamante, resuelve la configuración del entorno y
@@ -34,6 +39,9 @@ function toErrorMessage(error: unknown) {
 }
 
 Deno.serve(async (req) => {
+  let leaseToken = ''
+  let releaseLease: (() => Promise<void>) | null = null
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -53,22 +61,42 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const serviceRoleKey = resolveServiceKey()
     const { apiKey: resendApiKey, fromAddress: fromEmail } = resolveResendConfig((name) => Deno.env.get(name))
-    const appUrl = Deno.env.get('APP_URL') ?? 'http://localhost:5173'
+    const appUrl = Deno.env.get('APP_URL')?.trim() ?? ''
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.')
+    if (!supabaseUrl || !serviceRoleKey || !appUrl) {
+      throw new Error('SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and APP_URL are required.')
     }
 
-    const limit = Math.min(Number(new URL(req.url).searchParams.get('limit') ?? '20') || 20, 50)
+    const body = (await req.json().catch(() => ({}))) as { leaseToken?: unknown }
+    leaseToken = typeof body.leaseToken === 'string' ? body.leaseToken : ''
+
+    const requestedLimit = Number(new URL(req.url).searchParams.get('limit') ?? MAX_DELIVERIES_PER_RUN)
+    const limit = Math.min(
+      Math.max(Number.isFinite(requestedLimit) ? requestedLimit : MAX_DELIVERIES_PER_RUN, 1),
+      MAX_DELIVERIES_PER_RUN
+    )
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         persistSession: false
-      }
+      },
+      global: { fetch: fetchWithTimeout(fetch, DATABASE_REQUEST_TIMEOUT_MS) }
     })
+    if (leaseToken) {
+      releaseLease = async () => {
+        const release = await supabase.rpc('release_email_dispatch_lease', {
+          p_lease_token: leaseToken
+        })
+        if (release.error) {
+          console.error('Email dispatcher lease could not be released.', {
+            errorCode: release.error.code
+          })
+        }
+      }
+    }
 
     const result = await processEmailDeliveries({
       database: supabase,
-      fetch: (input, init) => fetch(input, init),
+      fetch: fetchWithTimeout(fetch, PROVIDER_REQUEST_TIMEOUT_MS),
       resendApiKey,
       fromEmail,
       appUrl,
@@ -83,5 +111,13 @@ Deno.serve(async (req) => {
       },
       500
     )
+  } finally {
+    if (releaseLease) {
+      try {
+        await releaseLease()
+      } catch {
+        // El lease vence solo. No se prolonga la caída intentando liberarlo.
+      }
+    }
   }
 })

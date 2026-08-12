@@ -32,8 +32,14 @@ export function InstitutionalInteriorPage({
                 {content.hero.description}
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <InstitutionalActionLink action={content.hero.primaryAction} />
-                <InstitutionalActionLink action={content.hero.secondaryAction} />
+                {content.hero.primaryAction ? (
+                  <InstitutionalActionLink action={content.hero.primaryAction} />
+                ) : null}
+                {content.hero.secondaryAction ? (
+                  <InstitutionalActionLink
+                    action={content.hero.secondaryAction}
+                  />
+                ) : null}
               </div>
               <div className="mt-6 grid grid-cols-3 gap-3">
                 {content.hero.aside.map((item) => {
@@ -79,8 +85,14 @@ export function InstitutionalInteriorPage({
                 {content.hero.description}
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <InstitutionalActionLink action={content.hero.primaryAction} />
-                <InstitutionalActionLink action={content.hero.secondaryAction} />
+                {content.hero.primaryAction ? (
+                  <InstitutionalActionLink action={content.hero.primaryAction} />
+                ) : null}
+                {content.hero.secondaryAction ? (
+                  <InstitutionalActionLink
+                    action={content.hero.secondaryAction}
+                  />
+                ) : null}
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">

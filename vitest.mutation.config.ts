@@ -10,7 +10,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['tests/unit/permissions.test.ts'],
+    include: ['tests/unit/permissions.test.ts', 'tests/unit/e2e-target-guard.test.ts'],
     // Sin reporters explicitos, Vitest 4 anade solo el de `github-actions`, que
     // escribe un bloque en el resumen del job. Stryker corre esta config una vez
     // por mutante, asi que el resumen salia con ~36 "Vitest Test Report" y, peor,

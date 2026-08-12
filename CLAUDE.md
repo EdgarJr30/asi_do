@@ -11,6 +11,7 @@ Este archivo **no repite** `AGENTS.md` ni `docs/`. Contiene solo dos cosas: el m
 | Necesitas | Mira |
 |---|---|
 | Reglas de producto, guardrails, definición de hecho | `AGENTS.md` |
+| Qué falta para salir a producción | `docs/checklists/SALIDA_A_PRODUCCION.md` |
 | Correcciones durables del usuario (R-001…) | `docs/governance/REGRESSION_RULES.md` |
 | Seguridad y las 35 reglas de Supabase | `docs/governance/SECURITY_RULES.md` |
 | Convenciones de código, TS, React, formularios | `docs/governance/CODING_RULES.md` |
@@ -19,6 +20,7 @@ Este archivo **no repite** `AGENTS.md` ni `docs/`. Contiene solo dos cosas: el m
 | Flujo de trabajo de migraciones | `supabase/README.md` |
 | Por qué Realtime va por invalidación | `docs/adr/0001-realtime-via-react-query-invalidation.md` |
 | Pasarela AZUL | `docs/pasarelaDePagos/` |
+| Diseño del comprobante de pago (valores exactos) | `design_handoff_comprobante_pago/README.md` |
 
 Empieza por el `README.md` más cercano al código que tocas antes de abrir los docs canónicos.
 
@@ -47,9 +49,28 @@ supabase db diff --linked --schema public      # reproduce el job de drift en lo
 
 Con eso se puede reproducir el drift sin esperar al job de GitHub. La primera corrida descarga varias imágenes y tarda ~10 min; las siguientes, poco. Lo demás sigue igual: **la verificación de datos y privilegios va contra el proyecto remoto** con `supabase db query --linked`.
 
+## Grabar los videos de demostración
+
+El guion y el compresor están documentados en su propia cabecera (`scripts/record-mobile-demo.ts`). Lo que no se deduce de ahí:
+
+- **El banner no se graba, se compone.** El sostenido azul sale de un PNG que deja la grabación, porque el codec en tiempo real del navegador no estabiliza nunca un color plano a pantalla completa y parpadea. Si cambias el banner, se regraba: el PNG y el video tienen que salir de la misma toma.
+- **El recorrido de membresía necesita el microservicio de pagos** (`cd services/azul-payments && npm run dev`) y que su `ALLOWED_ORIGIN`/`APP_URL` incluyan el origen que se graba. Por eso ese recorrido se graba contra `http://localhost:5173` y no contra el `127.0.0.1:4173` de los demás: es lo que ya trae el `.env` del servicio.
+- **El color hay que declararlo en las dos puntas o el video sale quemado.** Chrome codifica el screencast con la matriz BT.601 y no la etiqueta; si el compresor la hereda, el archivo queda marcado `bt470bg` (PAL) sin primarias ni curva, y los reproductores con gestión de color de macOS estiran ese gamut hasta el P3 del monitor: blancos que se van y saturación de más. Los píxeles nunca estuvieron mal, solo mal descritos. Por eso la grabación fuerza `--force-color-profile=srgb` (sin ella el navegador rasteriza en el perfil del monitor y el resultado cambia según la máquina) y el compresor convierte la matriz a BT.709 y etiqueta matriz, primarias, curva y rango. Si al final `ffprobe` no dice `bt709` en las cuatro, el video saldrá saturado.
+
+```bash
+node scripts/seed-demo-content.ts --candidate=<correo> --company-owner=<correo> --applicants
+node scripts/seed-demo-content.ts --clear-application=<correo>   # antes de regrabar al candidato
+node scripts/record-mobile-demo.ts --email=<correo> --password=<clave> --hq [--layout=desktop|--flow=workspace]
+node scripts/record-mobile-demo.ts --flow=membresia --base=http://localhost:5173 --hq [--layout=desktop]
+scripts/encode-mobile-demo.sh <toma>.raw.webm <salida>.webm --ancho=780   # web (VP9)
+scripts/encode-mobile-demo.sh <toma>.raw.webm <salida>.mp4 --presentacion # sala (H.264)
+```
+
 ## Git
 
-- **Commitear directo en `main`.** No crear ramas salvo que se pida explícitamente.
+- **Commitear directo en `staging`.** Es la rama de trabajo desde el 2026-08-09: `main` dejó de ser el destino por defecto cuando `staging` pasó a publicar en Hostinger (job `deploy-staging` de `ci.yml`, que solo se dispara en `refs/heads/staging`). Un cambio commiteado en `main` no se despliega ni se prueba en el sitio de staging.
+- **No crear ramas** salvo que se pida explícitamente. `staging` ya es la rama; no hace falta otra encima.
+- `main` recibe lo que se promueve desde `staging`, no commits directos.
 - Todo cambio termina en un commit dentro de la misma tarea (`AGENTS.md` #9).
 - Mensajes de commit en español, con el porqué del cambio, no solo el qué.
 - **Puede haber otras sesiones trabajando este repo a la vez.** Corre `git status` antes de commitear y **añade archivos por ruta explícita, nunca `git add -A`**: es fácil llevarte trabajo ajeno a medias.
@@ -90,5 +111,7 @@ No pongas texto "Cargando…" suelto: usa el loader. No metas `updated_at` en la
 ## Estilo de trabajo
 
 - **Ediciones quirúrgicas.** No reescribas archivos o componentes completos cuando bastan cambios puntuales.
+- **Comunicación directa.** Responde con el resultado y solo el contexto necesario para decidir. Sin introducciones, recapitulaciones ni explicaciones no solicitadas.
+- **Documentos breves.** Los planes y archivos Markdown deben ser escaneables: qué se hará, qué se logró, por qué importa y qué falta. Usa listas o tablas compactas; elimina relleno y amplía solo si el usuario lo pide o existe un riesgo material.
 - Comentarios de código en español, igual que el resto del repo.
 - Prefiere la implementación correcta más pequeña (`AGENTS.md` #10).

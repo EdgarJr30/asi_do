@@ -18,6 +18,7 @@ import {
 import { InstitutionalCard, InstitutionalSection } from '@/experiences/institutional/components/institutional-ui'
 import { cardReveal, gridStagger, pageStagger } from '@/shared/ui/card-motion'
 import { printReceipt, receiptPlainText, shareReceipt, type ReceiptLine } from '@/shared/ui/receipt'
+import { formatReceiptAmount } from '@/shared/ui/receipt-format'
 import { FieldHelp } from '@/components/ui/field-help'
 import { Spinner } from '@/components/ui/loader'
 import { cn } from '@/lib/utils/cn'
@@ -29,11 +30,19 @@ function donationReceiptLines(receipt: DonationReceipt): ReceiptLine[] {
     ['Comercio', 'ASI Rep. Dominicana'],
     ['No. de orden', receipt.orderNumber],
     ['Donante', receipt.donorName ?? '—'],
-    ['Monto', `${receipt.currency} ${receipt.amount.toLocaleString('es-DO')}`],
+    ['Monto', formatReceiptAmount(receipt.amount, receipt.currency)],
     ['Resultado', receipt.status === 'verified' ? 'Aprobado' : receipt.status],
     ['No. de autorización', receipt.authorizationCode ?? '—'],
     ['Referencia', receipt.azulRrn ?? '—'],
-    ['Fecha', new Date(receipt.settledAt ?? receipt.createdAt).toLocaleString('es-DO')]
+    // Formato largo en español: es el que espera el comprobante impreso.
+    [
+      'Fecha',
+      new Date(receipt.settledAt ?? receipt.createdAt).toLocaleDateString('es-DO', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      })
+    ]
   ]
 }
 
@@ -53,7 +62,7 @@ function DonationReceiptCard({ receipt }: { receipt: DonationReceipt }) {
       <div className="mt-4 flex gap-2">
         <button
           type="button"
-          onClick={() => printReceipt(DONATION_RECEIPT_TITLE, lines)}
+          onClick={() => printReceipt(DONATION_RECEIPT_TITLE, lines, { eyebrow: 'Donación' })}
           className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-control border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
         >
           Descargar

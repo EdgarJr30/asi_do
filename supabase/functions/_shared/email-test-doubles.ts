@@ -104,6 +104,8 @@ const RESEND_EMAILS_ENDPOINT = 'https://api.resend.com/emails'
 /** Lo que el procesador *habría* enviado, ya desempaquetado. */
 export interface RecordedEmail {
   to: string[]
+  /** Vacío salvo en los correos que traen `payload.reply_to` (formulario de contacto). */
+  replyTo: string[]
   from: string
   subject: string
   html: string
@@ -150,6 +152,7 @@ export function createResendDouble(respond?: ResendResponder): ResendDouble {
 
     const email: RecordedEmail = {
       to: Array.isArray(payload.to) ? (payload.to as string[]) : [],
+      replyTo: Array.isArray(payload.reply_to) ? (payload.reply_to as string[]) : [],
       from: typeof payload.from === 'string' ? payload.from : '',
       subject: typeof payload.subject === 'string' ? payload.subject : '',
       html: typeof payload.html === 'string' ? payload.html : '',

@@ -18,12 +18,14 @@ const repoRoot = resolve(import.meta.dirname, '../..')
 
 const contractPaths = {
   deactivateMembership: 'supabase/migrations/20260703120000_deactivate_active_membership.sql',
+  activateMembershipTerm: 'supabase/migrations/20260810010000_start_initial_membership_term_on_activation.sql',
   submitApplication: 'supabase/migrations/20260625100000_application_submit_pipeline_stage.sql',
   movePipeline: 'supabase/migrations/20260315083000_ats_lite_pipeline.sql',
   publishLimit: 'supabase/migrations/20260315103000_platform_ops_foundations.sql',
   moderation: 'supabase/migrations/20260801150000_p1_fix_broken_rpc_enums_and_ambiguity.sql',
   serviceWorker: 'public/sw.js',
-  offlineBanner: 'src/components/ui/offline-banner.tsx'
+  offlineBanner: 'src/components/ui/offline-banner.tsx',
+  emailPipelineSafety: 'supabase/migrations/20260810143000_email_pipeline_backpressure.sql'
 } as const
 
 interface BusinessWorld {
@@ -45,6 +47,31 @@ interface BusinessWorld {
 function readContract(path: string) {
   return readFileSync(resolve(repoRoot, path), 'utf8')
 }
+
+Given('el contrato de protección del pipeline de correos', function (this: BusinessWorld) {
+  this.contract = readContract(contractPaths.emailPipelineSafety)
+})
+
+When('se intenta superar la capacidad segura de la cola', function () {
+  // La migración versionada contiene la decisión server-side.
+})
+
+Then('la campaña se rechaza antes de crear entregas', function (this: BusinessWorld) {
+  assertContains(
+    this.contract,
+    "v_queue_capacity constant integer := 500",
+    "raise exception 'EMAIL_PIPELINE_BACKPRESSURE",
+    "pg_advisory_xact_lock(hashtextextended('email_pipeline_enqueue', 0))"
+  )
+})
+
+Then('solo puede existir un procesador de correos activo', function (this: BusinessWorld) {
+  assertContains(
+    this.contract,
+    'create table if not exists private.email_pipeline_control',
+    "dispatch_lease_until = v_now + interval '5 minutes'"
+  )
+})
 
 function assertContains(contract: string | undefined, ...fragments: string[]) {
   assert.ok(contract, 'El escenario no cargó su contrato ejecutable')
@@ -130,8 +157,16 @@ Given('el contrato administrativo de inactivación de membresía', function (thi
   this.contract = readContract(contractPaths.deactivateMembership)
 })
 
+Given('el contrato de inicio de vigencia de membresía', function (this: BusinessWorld) {
+  this.contract = readContract(contractPaths.activateMembershipTerm)
+})
+
 When('se inspecciona su efecto persistente', function () {
   // La verificación ocurre sobre la migración versionada que define el RPC.
+})
+
+When('se inspecciona la transición de activación final', function () {
+  // La verificación ocurre sobre el trigger y la RPC versionados.
 })
 
 Then('la membresía queda suspendida y la suscripción finalizada', function (this: BusinessWorld) {
@@ -149,6 +184,28 @@ Then('se registra el evento auditado {string}', function (this: BusinessWorld, e
 
 Then('exige autenticación y rol de administrador de plataforma', function (this: BusinessWorld) {
   assertContains(this.contract, 'if auth.uid() is null', 'if not public.is_platform_admin()')
+})
+
+Then(
+  'el pago inicial permanece sin período mientras la membresía no está activa',
+  function (this: BusinessWorld) {
+    assertContains(
+      this.contract,
+      "if new.intent = 'initial'",
+      "v_membership_status is distinct from 'active'",
+      'new.period_start := null',
+      'new.period_end := null'
+    )
+  }
+)
+
+Then('la activación fija el inicio y vencimiento del término pagado', function (this: BusinessWorld) {
+  assertContains(
+    this.contract,
+    'membership_activated_at = v_now',
+    'period_start = v_now::date',
+    'period_end = v_expires::date'
+  )
 })
 
 Given(

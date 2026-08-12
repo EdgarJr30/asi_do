@@ -74,7 +74,14 @@ enable_confirmations = true
 secure_password_change = true
 max_frequency = "1m0s"
 otp_length = 8
-otp_expiry = 3600
+# 15 minutos, no la hora que trae GoTrue por defecto: un enlace de recuperación
+# es una credencial de cuenta completa viajando por correo, y una hora es tiempo
+# de sobra para que la reenvíen, se quede en un buzón compartido o la lea quien
+# no debe. GoTrue no permite un plazo por plantilla, así que este número también
+# acorta la confirmación de registro y el cambio de correo: es intencional.
+# `PASSWORD_RESET_WINDOW_SECONDS` (src/features/auth/lib/password-reset-window.ts)
+# replica este valor para que la pantalla no prometa más tiempo del que hay.
+otp_expiry = 900
 
 [auth.email.template.confirmation]
 subject = "Confirma tu cuenta en ASI"

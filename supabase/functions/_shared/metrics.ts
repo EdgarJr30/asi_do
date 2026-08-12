@@ -1,6 +1,8 @@
 // Recolector de métricas de latencia/throughput para el arnés de estrés.
 // Puro y sin dependencias de runtime (sirve en Deno y Node).
 
+import { withTimeout } from './fetch-with-timeout.ts'
+
 export type LatencySample = {
   // ms transcurridos de la operación individual
   durationMs: number
@@ -144,24 +146,4 @@ export async function runWithConcurrency<T>(
   const workers = Array.from({ length: Math.max(1, concurrency) }, () => worker())
   await Promise.all(workers)
   collector.stop()
-}
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number, onTimeout: () => void): Promise<T> {
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) return promise
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      onTimeout()
-      reject(new Error(`timeout after ${timeoutMs}ms`))
-    }, timeoutMs)
-    promise.then(
-      (value) => {
-        clearTimeout(timer)
-        resolve(value)
-      },
-      (error) => {
-        clearTimeout(timer)
-        reject(error)
-      }
-    )
-  })
 }

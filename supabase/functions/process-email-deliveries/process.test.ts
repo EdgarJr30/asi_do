@@ -34,6 +34,7 @@ Deno.test('el camino feliz envía un correo al destinatario reclamado y cierra l
   const delivery = buildDelivery()
   const database = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: [delivery] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: true })
   })
   const resend = createResendDouble()
@@ -44,7 +45,7 @@ Deno.test('el camino feliz envía un correo al destinatario reclamado y cierra l
     ...validConfig
   })
 
-  assertEquals(result, { processedCount: 1, sentCount: 1, failedCount: 0 })
+  assertEquals(result, { processedCount: 1, sentCount: 1, failedCount: 0, suppressedCount: 0 })
 
   // Qué se habría enviado, y a quién.
   assertEquals(resend.sent.length, 1)
@@ -77,6 +78,7 @@ Deno.test('el camino feliz envía un correo al destinatario reclamado y cierra l
 Deno.test('el cuerpo del correo lleva el contenido de la notificación y el enlace absoluto', async () => {
   const database = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: [buildDelivery()] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: true })
   })
   const resend = createResendDouble()
@@ -108,10 +110,37 @@ Deno.test('sin entregas reclamadas no se toca al proveedor', async () => {
     ...validConfig
   })
 
-  assertEquals(result, { processedCount: 0, sentCount: 0, failedCount: 0 })
+  assertEquals(result, { processedCount: 0, sentCount: 0, failedCount: 0, suppressedCount: 0 })
   assertEquals(resend.sent.length, 0)
   assertEquals(database.rpcCalls.length, 1)
   assertEquals(database.inserts.length, 0)
+})
+
+Deno.test('un timeout del proveedor libera la entrega para reintento sin tumbar el lote', async () => {
+  const delivery = buildDelivery()
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: [delivery] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
+    complete_email_delivery: () => ({ data: true })
+  })
+
+  const result = await processEmailDeliveries({
+    database: database.client,
+    fetch: () => Promise.reject(new DOMException('timeout', 'AbortError')),
+    ...validConfig
+  })
+
+  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 1, suppressedCount: 0 })
+  assertEquals(database.argsFor('complete_email_delivery'), [
+    {
+      p_delivery_id: delivery.delivery_id,
+      p_claim_token: delivery.claim_token,
+      p_status: 'pending',
+      p_response_code: 504,
+      p_provider_message_id: null,
+      p_response_payload: { error: 'provider_timeout_or_network_error' }
+    }
+  ])
 })
 
 Deno.test('la reserva pide el lote con el lease y el tope de intentos del contrato', async () => {
@@ -155,6 +184,7 @@ Deno.test('regla 1: cada entrega del lote sale una sola vez, con su propia clave
   )
   const database = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: deliveries }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: true })
   })
   const resend = createResendDouble()
@@ -165,7 +195,7 @@ Deno.test('regla 1: cada entrega del lote sale una sola vez, con su propia clave
     ...validConfig
   })
 
-  assertEquals(result, { processedCount: 3, sentCount: 3, failedCount: 0 })
+  assertEquals(result, { processedCount: 3, sentCount: 3, failedCount: 0, suppressedCount: 0 })
   assertEquals(resend.sent.map((email) => email.idempotencyKey), [
     'idempotency-a',
     'idempotency-b',
@@ -189,6 +219,7 @@ Deno.test('regla 2: con payload.to el correo sale al probador y el real no apare
   })
   const database = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: [delivery] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: true })
   })
   const resend = createResendDouble()
@@ -213,6 +244,7 @@ Deno.test('regla 2: un payload.to en blanco no se toma como override', async () 
     claim_email_deliveries: () => ({
       data: [buildDelivery({ payload: { to: '   ', test: true } })]
     }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: true })
   })
   const resend = createResendDouble()
@@ -224,6 +256,59 @@ Deno.test('regla 2: un payload.to en blanco no se toma como override', async () 
   })
 
   assertEquals(resend.sent[0].to, ['miembro@example.com'])
+})
+
+Deno.test('contacto: payload.reply_to hace que "Responder" escriba al visitante', async () => {
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({
+      data: [
+        buildDelivery({
+          notification_type: 'contact.message',
+          payload: {
+            to: 'hola@asidominicana.do',
+            reply_to: 'visitante@example.com',
+            recipientName: 'Equipo ASI'
+          },
+          recipient_email: null
+        })
+      ]
+    }),
+    email_delivery_is_suppressed: () => ({ data: false }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resend = createResendDouble()
+
+  await processEmailDeliveries({
+    database: database.client,
+    fetch: resend.fetch,
+    ...validConfig
+  })
+
+  assertEquals(resend.sent[0].to, ['hola@asidominicana.do'])
+  assertEquals(resend.sent[0].replyTo, ['visitante@example.com'])
+})
+
+Deno.test('contacto: un reply_to que no es una dirección se descarta', async () => {
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({
+      data: [
+        buildDelivery({
+          payload: { reply_to: 'no es un correo\nBcc: alguien@example.com' }
+        })
+      ]
+    }),
+    email_delivery_is_suppressed: () => ({ data: false }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resend = createResendDouble()
+
+  await processEmailDeliveries({
+    database: database.client,
+    fetch: resend.fetch,
+    ...validConfig
+  })
+
+  assertEquals(resend.sent[0].replyTo, [])
 })
 
 // ── Regla 3 · Destinatario correcto ─────────────────────────────────────────
@@ -245,6 +330,7 @@ Deno.test('regla 3: el contenido de una entrega no puede salir al destinatario d
   })
   const database = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: [iglesiaA, iglesiaB] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: true })
   })
   const resend = createResendDouble()
@@ -289,7 +375,7 @@ Deno.test('regla 3: una entrega sin destinatario se cierra fallida y no llega al
     ...validConfig
   })
 
-  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 1 })
+  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 1, suppressedCount: 0 })
   assertEquals(resend.sent.length, 0)
   assertEquals(database.argsFor('complete_email_delivery')[0].p_status, 'failed')
   assertEquals(database.argsFor('complete_email_delivery')[0].p_response_code, 422)
@@ -298,6 +384,7 @@ Deno.test('regla 3: una entrega sin destinatario se cierra fallida y no llega al
 Deno.test('regla 3: sin configuración de proveedor falla cerrado, no envía a ciegas', async () => {
   const database = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: [buildDelivery()] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: true })
   })
   const resend = createResendDouble()
@@ -309,7 +396,7 @@ Deno.test('regla 3: sin configuración de proveedor falla cerrado, no envía a c
     resendApiKey: ''
   })
 
-  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 1 })
+  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 1, suppressedCount: 0 })
   assertEquals(resend.sent.length, 0)
   assertEquals(database.argsFor('complete_email_delivery')[0].p_status, 'failed')
   assertEquals(database.argsFor('complete_email_delivery')[0].p_response_code, 503)
@@ -321,6 +408,7 @@ Deno.test('regla 4: un fallo transitorio deja la entrega pendiente y el reintent
   const primerIntento = buildDelivery({ attempt_count: 1 })
   const firstDatabase = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: [primerIntento] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: true })
   })
   const firstResend = createResendDouble(() => ({
@@ -334,7 +422,7 @@ Deno.test('regla 4: un fallo transitorio deja la entrega pendiente y el reintent
     ...validConfig
   })
 
-  assertEquals(firstRun, { processedCount: 1, sentCount: 0, failedCount: 1 })
+  assertEquals(firstRun, { processedCount: 1, sentCount: 0, failedCount: 1, suppressedCount: 0 })
   // 'pending' y no 'failed': marcarlo definitivo aquí convertía un fallo
   // transitorio del proveedor en un correo que no se envía nunca.
   assertEquals(firstDatabase.argsFor('complete_email_delivery')[0].p_status, 'pending')
@@ -344,6 +432,7 @@ Deno.test('regla 4: un fallo transitorio deja la entrega pendiente y el reintent
   const segundoIntento = buildDelivery({ attempt_count: 2 })
   const secondDatabase = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: [segundoIntento] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: true })
   })
   const secondResend = createResendDouble()
@@ -364,6 +453,7 @@ Deno.test('regla 4: agotados los intentos el fallo pasa a definitivo', async () 
   for (const [attemptCount, expectedStatus] of [[4, 'pending'], [5, 'failed'], [6, 'failed']] as const) {
     const database = createDatabaseDouble({
       claim_email_deliveries: () => ({ data: [buildDelivery({ attempt_count: attemptCount })] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
       complete_email_delivery: () => ({ data: true })
     })
 
@@ -386,6 +476,7 @@ Deno.test('regla 4: agotados los intentos el fallo pasa a definitivo', async () 
 Deno.test('regla 5: el rechazo del proveedor se guarda entero y no se marca enviada', async () => {
   const database = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: [buildDelivery()] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: true })
   })
 
@@ -398,7 +489,7 @@ Deno.test('regla 5: el rechazo del proveedor se guarda entero y no se marca envi
     ...validConfig
   })
 
-  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 1 })
+  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 1, suppressedCount: 0 })
 
   const closeArgs = database.argsFor('complete_email_delivery')[0]
   assertEquals(closeArgs.p_response_code, 422)
@@ -420,6 +511,7 @@ Deno.test('regla 5: el rechazo del proveedor se guarda entero y no se marca envi
 Deno.test('regla 5: una respuesta que no es JSON no rompe el ciclo ni inventa un id', async () => {
   const database = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: [buildDelivery(), buildDelivery({ idempotency_key: 'segunda' })] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: true })
   })
 
@@ -435,7 +527,7 @@ Deno.test('regla 5: una respuesta que no es JSON no rompe el ciclo ni inventa un
 
   // La segunda entrega se procesa igual: un cuerpo ilegible del proveedor no
   // puede tumbar el resto del lote.
-  assertEquals(result, { processedCount: 2, sentCount: 1, failedCount: 1 })
+  assertEquals(result, { processedCount: 2, sentCount: 1, failedCount: 1, suppressedCount: 0 })
 
   const closeArgs = database.argsFor('complete_email_delivery')
   assertEquals(closeArgs[0].p_status, 'pending')
@@ -450,6 +542,7 @@ Deno.test('regla 5: un cierre rechazado por token caducado deja rastro', async (
   // fila: `complete_email_delivery` devuelve false y no escribe nada.
   const database = createDatabaseDouble({
     claim_email_deliveries: () => ({ data: [buildDelivery()] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
     complete_email_delivery: () => ({ data: false })
   })
 
@@ -461,4 +554,95 @@ Deno.test('regla 5: un cierre rechazado por token caducado deja rastro', async (
 
   const levels = database.inserts.map((insert) => insert.values.log_level)
   assertEquals(levels.includes('warn'), true, 'el cierre rechazado debe quedar registrado')
+})
+
+// ── Envío masivo (J2) ────────────────────────────────────────────────────────
+// Las dos reglas que introduce el correo de campaña. La primera es la que hace
+// que el enlace de baja signifique algo; la segunda, la que evita ofrecérselo a
+// quien no puede permitirse apagarlo.
+
+Deno.test('campaña: una baja posterior al encolado impide el envío', async () => {
+  const database = createDatabaseDouble({
+    claim_email_deliveries: () => ({
+      data: [
+        buildDelivery({
+          notification_type: 'email.broadcast',
+          payload: { to: 'baja@example.com', unsubscribe_token: '33333333-3333-4333-8333-333333333333' }
+        })
+      ]
+    }),
+    email_delivery_is_suppressed: () => ({ data: true }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resend = createResendDouble()
+
+  const result = await processEmailDeliveries({
+    database: database.client,
+    fetch: resend.fetch,
+    ...validConfig
+  })
+
+  // Lo que de verdad importa: no salió nada.
+  assertEquals(resend.sent.length, 0)
+  assertEquals(result, { processedCount: 1, sentCount: 0, failedCount: 0, suppressedCount: 1 })
+
+  // Y no se contabiliza como fallo: quien se dio de baja no es una avería, y
+  // ese contador es el que alguien mira para decidir si el pipeline está roto.
+  const cierre = database.argsFor('complete_email_delivery')[0]
+  assertEquals(cierre.p_status, 'suppressed')
+})
+
+Deno.test('campaña: el correo lleva el enlace de baja y el transaccional no', async () => {
+  const campana = createDatabaseDouble({
+    claim_email_deliveries: () => ({
+      data: [
+        buildDelivery({
+          notification_type: 'email.broadcast',
+          payload: { to: 'alguien@example.com', unsubscribe_token: '44444444-4444-4444-8444-444444444444' }
+        })
+      ]
+    }),
+    email_delivery_is_suppressed: () => ({ data: false }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resendCampana = createResendDouble()
+
+  await processEmailDeliveries({
+    database: campana.client,
+    fetch: resendCampana.fetch,
+    ...validConfig
+  })
+
+  const cuerpo = resendCampana.sent[0]
+  const html = cuerpo.html as string
+  const texto = cuerpo.text as string
+  assertEquals(
+    html.includes('/correos/baja?token=44444444-4444-4444-8444-444444444444'),
+    true,
+    'el HTML de la campaña debe llevar el enlace de baja'
+  )
+  assertEquals(
+    texto.includes('/correos/baja?token=44444444-4444-4444-8444-444444444444'),
+    true,
+    'la versión de texto también: hay clientes que solo muestran esa'
+  )
+
+  // Un transaccional no lo lleva. Ofrecer "darse de baja" en el correo de
+  // confirmación de cuenta o de recuperación de contraseña invita a apagar
+  // justo los correos sin los que no se puede entrar al producto.
+  const transaccional = createDatabaseDouble({
+    claim_email_deliveries: () => ({ data: [buildDelivery()] }),
+    email_delivery_is_suppressed: () => ({ data: false }),
+    complete_email_delivery: () => ({ data: true })
+  })
+  const resendTransaccional = createResendDouble()
+
+  await processEmailDeliveries({
+    database: transaccional.client,
+    fetch: resendTransaccional.fetch,
+    ...validConfig
+  })
+
+  assertEquals((resendTransaccional.sent[0].html as string).includes('/correos/baja'), false)
+  assertEquals((resendTransaccional.sent[0].text as string).includes('/correos/baja'), false)
 })

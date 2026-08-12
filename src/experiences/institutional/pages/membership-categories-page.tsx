@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import { AnimatePresence, motion } from 'motion/react'
-import { ArrowLeft, CheckCircle2, ChevronDown } from 'lucide-react'
+import { ArrowLeft, ChevronDown } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { surfacePaths } from '@/app/router/surface-paths'
@@ -74,24 +74,6 @@ function CategoryCard({ cat }: { cat: typeof membershipCategories[number] }) {
                 {cat.description}
               </p>
 
-              {/* Requisitos */}
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-(--asi-secondary)">
-                  Requisitos
-                </p>
-                <ul className="mt-3 space-y-2">
-                  {cat.requirements.map((req) => (
-                    <li
-                      key={req}
-                      className="flex items-start gap-2.5 text-sm leading-6 text-(--asi-text-muted)"
-                    >
-                      <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-(--asi-primary)" />
-                      {req}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
               {/* Nota */}
               {cat.note && (
                 <p className="border-t border-(--asi-outline) pt-4 text-xs italic leading-5 text-(--asi-text-muted)">
@@ -131,8 +113,8 @@ export function MembershipCategoriesPage() {
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="asi-heading-lg">Detalle de Categorías</h2>
             <p className="asi-copy mt-3">
-              Revise los requisitos de cada categoría para encontrar la que
-              mejor se adapta a su situación.
+              Revise cada categoría para encontrar la que mejor se adapta a su
+              situación.
             </p>
           </div>
 
@@ -140,54 +122,6 @@ export function MembershipCategoriesPage() {
             {membershipCategories.map((cat) => (
               <CategoryCard key={cat.slug} cat={cat} />
             ))}
-          </div>
-        </div>
-      </InstitutionalSection>
-
-      {/* ── Tabla de cuotas ──────────────────────────────────── */}
-      <InstitutionalSection tone="muted">
-        <div className="space-y-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="asi-heading-lg">Cuotas Anuales de Membresía</h2>
-            <p className="asi-copy mt-3">
-              Las cuotas son fijadas por la junta de ASI de la División
-              Interamericana. Un tercio se queda en el capítulo local, un tercio
-              va al capítulo de la unión y un tercio se remite a ASI-DIA.
-            </p>
-          </div>
-
-          <div className="mx-auto max-w-2xl overflow-hidden rounded-card-lg outline-1 outline-(--asi-outline)">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-(--asi-primary) text-white">
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Categoría
-                  </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">
-                    Cuota anual
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-(--asi-outline) bg-(--asi-surface-raised)">
-                {membershipCategories.map((cat) => (
-                  <tr
-                    key={cat.slug}
-                    className="transition-colors hover:bg-(--asi-canvas)"
-                  >
-                    <td className="px-6 py-4 text-sm font-medium text-(--asi-text)">
-                      {cat.name}
-                    </td>
-                    <td
-                      className={`px-6 py-4 text-right text-sm font-semibold ${
-                        duesColor[cat.slug] ?? 'text-(--asi-text)'
-                      }`}
-                    >
-                      {cat.dues}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </div>
       </InstitutionalSection>

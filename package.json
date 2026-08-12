@@ -26,6 +26,8 @@
     "test:mutation": "stryker run",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.ts",
+    "test:e2e:production-smoke": "E2E_SKIP_WEBSERVER=1 E2E_BASE_URL=https://asidominicana.do E2E_SERVICE_ROLE_KEY= SUPABASE_SERVICE_ROLE_KEY= E2E_TARGET_ENV=production playwright test tests/e2e/production-smoke.spec.ts",
+    "test:e2e:recovery": "playwright test tests/e2e/password-recovery.spec.ts --project=desktop-webkit",
     "test:e2e:realtime": "playwright test tests/e2e/realtime-job-board.spec.ts --project=desktop-webkit",
     "test:e2e:pwa": "playwright test --config=playwright.pwa.config.ts",
     "test:functions": "deno test supabase/functions",
@@ -38,9 +40,10 @@
     "media:orphans:apply": "node scripts/media-orphans.ts --apply --yes",
     "audit:policy": "node scripts/audit-policy.ts",
     "check:rpc-grants": "node scripts/check-rpc-grants.ts",
+    "check:bounded-io": "node scripts/check-bounded-io.ts",
     "version:plan": "node scripts/release-plan.mjs",
     "version:apply": "changeset version && npm install --package-lock-only",
-    "verify": "npm run lint && npm run typecheck && npm run check:rpc-grants && npm run test && npm run test:acceptance && npm run build"
+    "verify": "npm run lint && npm run typecheck && npm run check:rpc-grants && npm run check:bounded-io && npm run test && npm run test:acceptance && npm run build"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
@@ -50,7 +53,6 @@
     "@supabase/supabase-js": "^2.99.1",
     "@tanstack/react-query": "^5.90.21",
     "clsx": "^2.1.1",
-    "countries-states-cities": "^1.0.6",
     "i18next": "^25.8.18",
     "i18next-browser-languagedetector": "^8.2.1",
     "inspirational-quotes": "^2.0.1",

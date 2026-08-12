@@ -22,13 +22,13 @@ Cada tarea se identifica `R{hallazgo}.{n}` y dice **cómo se sabe que está hech
 | [R4](#r4--pagos-buena-criptografía-ningún-camino-feliz) | Pagos sin camino feliz probado | 🔴 bloqueante | ✅ **cerrado** — 26 tests nuevos en el servicio + 25 en el cliente |
 | [R5](#r5--el-bucle-ats-sin-e2e) | Bucle ATS sin e2e | 🟠 | ☐ abierto |
 | [R6](#r6--las-mejores-specs-nunca-corren) | 1 de 11 specs e2e corre en CI | 🟠 | ☐ abierto |
-| [R7](#r7--recuperar-contraseña-sin-pruebas) | Recuperar contraseña sin pruebas | 🟠 | ☐ abierto |
+| [R7](#r7--recuperar-contraseña-sin-pruebas) | Recuperar contraseña sin pruebas | 🟠 | ✅ **cerrado** — 16 tests de unidad + 4 e2e en CI |
 | [R8](#r8--liberrorsapits-al-0-) | `lib/errors/api.ts` al 0 % | 🟡 | ☐ abierto |
 | [R9](#r9--51-rpc-de-cliente-verificadas-a-mano) | Check de grants de RPC sin automatizar | 🟡 | ✅ **R9.1 en `verify`** — 51/51; queda R9.2, ya desbloqueado por R1.5 |
 | [R10](#r10--sin-axe-en-runtime) | Sin `axe` en runtime | 🟡 | ☐ abierto |
 | [L1](#limpieza) | `membership-apply-debug.spec.ts` es resto de depuración | 🧹 | ☐ abierto |
 
-**Números medidos, no estimados:** 337 tests pasan en la raíz (56 archivos, 11 s) y 57 en
+**Números medidos, no estimados:** 354 tests pasan en la raíz (59 archivos) y 57 en
 `services/azul-payments`. Cobertura 27,29 % de líneas sobre un denominador que **ya excluye
 páginas y componentes**; el umbral subió de 21 % a 26 % con el trinquete de R4.
 
@@ -43,7 +43,7 @@ botón de deshacer.
 | Cuándo | Qué | Por qué |
 |---|---|---|
 | **Antes de salir** (~2 días) | R1 ✅ + R3 ✅ + R4 ✅ + R9.1 ✅ | Lo irreversible — **completo** |
-| **Semana 1** (~4 días) | R5, R6, R7, R8, R10, L1 | Lo que duele pero se arregla |
+| **Semana 1** (~4 días) | R5, R6, R7 ✅, R8, R10, L1 | Lo que duele pero se arregla |
 | **Deuda** | R2 | Hacerlo con prisa produce tests frágiles — peor que el hueco actual |
 
 ## El cuello de botella compartido
@@ -73,7 +73,8 @@ conviene no resolver R6 duplicando el atajo del `service_role` contra el remoto.
                                       └── R9.2 (ejercitar RPC críticas) ← ya desbloqueado
 
   Pistas independientes, avanzan en paralelo:
-  R3 (5 reglas de correo) ✅ · R4 (callback aprobado) ✅ · R9.1 (guardia de grants) ✅ · R7 · R8 · R10
+  R3 (5 reglas de correo) ✅ · R4 (callback aprobado) ✅ · R9.1 (guardia de grants) ✅
+  R7 (recuperar contraseña) ✅ · R8 · R10
 ```
 
 ---
@@ -532,6 +533,7 @@ otras 10 existen, están escritas y nunca corren.
 | Spec | Qué cubre | Por qué no está en CI |
 |---|---|---|
 | `smoke.spec.ts` | público + autenticado | ✅ **corre** |
+| `password-recovery` | recuperar contraseña de punta a punta | ✅ **corre** (R7.1) — cuenta efímera propia |
 | `pastor-membership-queue` | cola del pastor con RLS por iglesia | escribiría datos reales en el remoto |
 | `membership-admin-console` | activación por admin | ídem |
 | `membership-full-submission` | solicitud completa | ídem |
@@ -580,13 +582,68 @@ no tiene un camino alternativo: no puede reportarlo desde dentro del producto.
 
 ## Tareas
 
-- [ ] **R7.1 · e2e del flujo completo**
-  Solicitar enlace → recibir → establecer contraseña nueva → entrar con ella.
-  *Hecho cuando:* corre en CI.
+- [x] **R7.1 · e2e del flujo completo**
+  *Hecho:* `tests/e2e/password-recovery.spec.ts`, 4 pruebas, `npm run test:e2e:recovery` en el job
+  `e2e-smoke` de `ci.yml`. Se provee su propia cuenta efímera con `service_role` y la borra al
+  terminar, igual que el smoke autenticado: no deja rastro en el proyecto remoto.
 
-- [ ] **R7.2 · Casos borde**
-  Enlace caducado, enlace ya usado, correo inexistente (no debe revelar si la cuenta existe).
-  *Hecho cuando:* los 3 tienen test.
+  El recorrido completo —pedir el enlace, abrirlo, fijar contraseña nueva y **entrar con ella**—
+  más el aserto que de verdad cierra el flujo: **la contraseña vieja deja de abrir**. Sin él, un
+  `updateUser` que no hiciera nada pasaría la prueba.
+
+  Tres obstáculos y cómo se resolvieron, porque los tres se volverían a encontrar:
+  · **No hay bandeja que consultar en CI.** El enlace se acuña con `admin.generateLink`, que
+    produce el mismo token que iría en el correo sin enviarlo. Que el correo *salga* es de la
+    plantilla y del proveedor (`auth-email-template-sync`, R3); esta prueba cubre qué pasa cuando
+    alguien lo abre.
+  · **El `action_link` no se puede navegar.** El origen del servidor de pruebas
+    (`127.0.0.1:4173`) no está en `additional_redirect_urls`, y GoTrue **ignora en silencio** un
+    `redirectTo` que no esté en la lista: el navegador acabaría en el sitio desplegado en vez de
+    en el código bajo prueba. Se aterriza por el fragmento de la URL, que es exactamente lo que
+    entrega GoTrue en flujo implícito y lo que `detectSessionInUrl` consume.
+  · **Solicitar con la cuenta real enviaría un correo de verdad** a un dominio `.test` en cada
+    corrida: un rebote duro por pasada, que es como se quema la reputación del remitente. La
+    solicitud por interfaz se hace con una dirección inexistente, y no se pierde nada: GoTrue
+    responde 200 exista o no la cuenta, que es justo la propiedad que se está afirmando.
+
+- [x] **R7.2 · Casos borde**
+  *Hecho:* los 3, repartidos entre e2e y unidad según dónde se puedan observar.
+  `tests/unit/password-recovery-request.test.tsx` (5), `tests/unit/password-reset-page.test.tsx`
+  (10), `tests/unit/password-recovery-link.test.ts` (4) y `tests/unit/password-reset-window.test.ts`
+  (5) — 24 tests, dentro de `npm test` y por tanto de `verify`.
+
+  | Caso borde | Dónde | Qué se asevera |
+  |---|---|---|
+  | Correo inexistente | e2e + unidad | La confirmación es **carácter a carácter la misma** exista o no la cuenta (el correo se redacta antes de comparar). Un formulario que responde distinto es un verificador de padrón, y aquí el padrón son los miembros de una iglesia. |
+  | Enlace ya usado | e2e | GoTrue rechaza el segundo canje del mismo token, y la pantalla que ve quien reabre el correo dice "Este enlace ya no sirve" con la salida a pedir otro. |
+  | Enlace caducado / tecleado a mano | e2e + unidad | Mismo estado observable desde el cliente —sin sesión—: nunca se muestra el formulario, porque `updateUser` fallaría después de escribir la contraseña dos veces. |
+  | Plazo agotado con la pantalla abierta | unidad | El enlace dura 15 minutos (`otp_expiry`), pero abrirlo crea una sesión de una hora que el SDK refresca sola. La pantalla cuenta desde el `iat` del token —recargar no regala tiempo— y al llegar a cero cierra la sesión de recuperación de verdad, no solo el formulario. |
+
+  **El aserto que no estaba en el enunciado y es el que más importa:** distinguir *«todavía
+  hidratando»* de *«sin sesión»*. Confundirlas le dice «este enlace ya no sirve» a alguien cuyo
+  enlace sí sirve, y esa persona no tiene otra vía ni para entrar ni para reportarlo.
+
+  **Verificado con mutación** (5 inyectadas, las 5 muertas):
+
+  | Regresión inyectada | La mata |
+  |---|---|
+  | `updateAccountPassword` no llama a `updateUser` | e2e: la contraseña vieja sigue abriendo |
+  | Quitar el guardia de hidratación de la pantalla | "espera a que la sesión hidrate" |
+  | Cerrar la sesión antes de guardar | el aserto de orden de "guarda… cierra… y manda a estrenarla" |
+  | Confirmar el envío aunque el proveedor falle | "no simula haber enviado" |
+  | `redirectTo` apuntando a `/auth/confirm` | las 2 del contrato del enlace |
+
+  **Hallazgo al escribir las pruebas:** un correo con formato imposible (`esto-no-es-un-correo`)
+  lo para la validación nativa del `type="email"` y el submit no llega ni a React, así que probar
+  con él mide el navegador, no el esquema. La costura real es un correo sin dominio de primer
+  nivel (`usuario@dominio`): pasa el filtro nativo y lo para zod, que es lo que evita gastar un
+  viaje al proveedor contra su límite de envíos.
+
+  **Añadido de paso, por lo barato que sale:** una guardia de coherencia sobre
+  `additional_redirect_urls` de `config.toml` — todo origen habilitado para `/auth/confirm` debe
+  estarlo para `/auth/reset-password`. Es el error que de verdad se comete: añadir un dominio
+  copiando la línea del callback y olvidar la gemela. El resultado es una recuperación rota **sin
+  ningún error de por medio**, porque GoTrue cae al `site_url` en silencio.
 
 ---
 
@@ -712,6 +769,8 @@ comprobación de accesibilidad automatizada en ninguna capa.
 | 2026-08-09 | Una tabla nueva sin entrada en la matriz de la Fase D **rompe** la probe, no avisa | Es el mecanismo que obliga a decidir la superficie de cada tabla en vez de heredarla de los default privileges. Costó una línea en `email_delivery_events` y detectó el hueco el mismo día. |
 | 2026-08-09 | La superficie de base de datos se declara **estructuralmente** siempre que TypeScript lo permita; si no, cast documentado | Es lo que impide que el doble se aleje del cliente real sin que CI lo note. Funciona con `rpc` (R3.1, R4.1) y **no** con el encadenado de PostgREST: `tsc` aborta con TS2589. Comprobado, no supuesto — y anotado donde se reintentaría. |
 | 2026-08-09 | El CRUD administrativo de `donation-api` se deja sin cubrir con R4 cerrado | R4 se prioriza por irreversibilidad, no por porcentaje. Un envoltorio de PostgREST sin lógica solo se puede "probar" aseverando el propio encadenado: el test frágil que la decisión de R2 evita. |
+| 2026-08-09 | El e2e de recuperación acuña el enlace con `generateLink` en vez de leer una bandeja | No hay buzón que consultar en CI y el token es el mismo que iría en el correo. Separa además las dos preguntas: que el correo *salga* lo cubre R3 y `auth-email-template-sync`; que el enlace *funcione al abrirlo*, esta prueba. |
+| 2026-08-09 | La solicitud por interfaz del e2e usa una dirección inexistente, no la cuenta de prueba | Con la cuenta real, cada corrida de CI enviaría un correo a un dominio `.test`: un rebote duro por pasada, que es como se quema la reputación del remitente. No se pierde cobertura porque GoTrue responde 200 exista o no la cuenta — que es justo la propiedad que se asevera. |
 | 2026-08-09 | Los umbrales de cobertura suben a 26/30/19/26 en el mismo commit que R4 | El trinquete solo sirve si se aprieta cuando el número real se despega; dejarlo en 21 % con 27 % medido regala 6 puntos de margen para que la cobertura baje sin que nadie se entere. |
 
 ---
@@ -731,3 +790,4 @@ comprobación de accesibilidad automatizada en ninguna capa.
 | 2026-08-09 | **R9.1**: `check-rpc-grants.ts` en `verify` — 51/51, modelo "último evento gana"; suelo por parser tras descubrir que romper el estático dejaba la guardia en verde | `2c2864c` |
 | 2026-08-09 | Cerrados los dos fallos de paridad CI/local: el badge heredaba `VITE_DEPLOY_ENV=production` del step de `verify` (`fb8b190`), y el intermitente sin diagnosticar resultó ser `dashboard-failure-states` saliendo **a la red de verdad** por no mockear `listPublicJobs` — 1 fallo en 14 corridas antes, 14/14 después | `072cfa8` |
 | 2026-08-09 | **R4 cerrado**: camino feliz del callback y `reconcile` con dobles (26 tests en el servicio), `azul-api`/`donation-api` fuera del 0 % (25 tests), reparto de capas con `p0_azul_settlement`; corregido el `return` que dejaba las donaciones sin conciliar; umbrales de cobertura al alza | `8a2c79f` |
+| 2026-08-09 | **R7 cerrado**: e2e de recuperación en CI (enlace acuñado con `generateLink`, aterrizaje por fragmento, la contraseña vieja deja de abrir) + 16 tests de unidad de no-divulgación y estados del enlace; guardia de coherencia sobre `additional_redirect_urls` | `e13d4c9` |

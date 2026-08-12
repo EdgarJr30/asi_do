@@ -1,6 +1,6 @@
 # ==========================================================
 # asi_do — Hostinger (Apache / LiteSpeed) · public_html
-# Traducción de netlify.toml. Si cambias uno, cambia el otro.
+# Única configuración de servidor del frontend: rewrites, cache y bloqueos.
 # Vive en public/ para que `vite build` lo copie a dist/.
 # ==========================================================
 

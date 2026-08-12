@@ -23,6 +23,8 @@
 17. User access records are retained for at most 180 days and then deleted automatically.
 18. Only platform administrators with `audit_log:read` may inspect user access records, and each administrative read must leave a separate semantic audit event.
 19. IP address, timezone, browser, operating system, and device category are approximate technical context and must not be represented as exact physical location or conclusive identity.
+20. An initial membership payment confirms the purchased term but does not start it. The term starts only when an authorized administrator performs final activation; until then, the membership remains pending and accrues no elapsed days.
+21. A membership application may capture church and district as required free text while their canonical catalogs are incomplete. Such an application must keep `church_id` empty and remain admin-reviewable until its church is reconciled; it must not be routed to a pastor by guessed territory.
 
 ---
 
@@ -65,6 +67,7 @@
 9. Tenant-operator requests enforce minimum data by `tenant_kind`: company requires legal name, ministry requires legal name plus operating scope, project requires sponsoring entity plus operating scope, field requires field region plus sponsoring entity, and generic profile requires conversion intent.
 10. Tenant ownership does not imply platform authority; tenant owners can manage only their approved tenant scope.
 11. When policy requires pastoral or regional endorsement for a company/operator request, that scoped endorsement is advisory input to the platform review flow and never creates the tenant or activates access by itself.
+12. A user may submit only one tenant-operator request. Its workspace address is derived from the organization name, cannot be edited by the requester, and must be rejected at the database layer when that address already belongs to a tenant or any prior request.
 
 ---
 
@@ -172,6 +175,8 @@
 11. Core workflow notifications must be emitted from durable server-side workflows for application submit, operator-request review, membership/access changes, tenant/team changes, candidate-facing status changes, interviews, and moderation/support operations.
 12. The canonical notification implementation contract lives in `docs/product/NOTIFICATION_IMPLEMENTATION_PLAN.md`.
 13. Email provider callbacks must be signature-verified, idempotent, and retained as a chronological event history; delayed, bounced, complained, suppressed, opened, and clicked events must remain reviewable by authorized platform operators.
+14. Campaign email must be server-bounded: at most 200 requested recipients per campaign, no more than one campaign every 10 minutes, and no enqueue that would take the shared email queue above 500 in-flight deliveries.
+15. Email dispatch must be single-flight, use bounded batches and timeouts, and expose queue depth, lease state, and the last dispatcher error to authorized platform operators.
 
 ---
 

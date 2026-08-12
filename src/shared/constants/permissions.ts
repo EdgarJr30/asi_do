@@ -32,6 +32,10 @@ export const permissionCatalog = [
   'user:activate',
   'email:read',
   'email:resend',
+  // Envío masivo. Separado de `email:resend` a propósito: reenviar un correo a
+  // una persona y escribirle a miles no son el mismo poder, así que solo lo
+  // llevan `platform_owner` y `super_administrator`.
+  'email:broadcast',
   'workspace:read',
   'workspace:update',
   'company_profile:read',

@@ -239,7 +239,16 @@ const canonicalTailwindPlugin = {
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'coverage', 'node_modules', 'supabase/functions', 'services', 'src/shared/types/database.ts']
+    // `design_handoff_*` guarda entregables de diseño (HTML/JS de prototipo), no código de la app.
+    ignores: [
+      'dist',
+      'coverage',
+      'node_modules',
+      'supabase/functions',
+      'services',
+      'design_handoff_comprobante_pago',
+      'src/shared/types/database.ts'
+    ]
   },
   js.configs.recommended,
   {

@@ -451,16 +451,26 @@ describe('surface access states', () => {
     expect(await screen.findByRole('heading', { name: 'Dejemos tu cuenta lista' })).toBeInTheDocument()
   })
 
-  it('sends completed base onboarding to the membership payment panel', async () => {
+  // Sin solicitud de membresía el asistente NO sale al pago: manda a iniciarla.
+  // El resto de destinos vive en tests/integration/membership-onboarding-redirect.
+  it('sends completed base onboarding to start the membership application', async () => {
+    // Recién registrado: sin membresía activa, que es lo que hace que el
+    // asistente tenga que empujarlo al pipeline en vez de a su perfil.
+    const freshProfile = {
+      ...completeProfile({ id: 'user-6', email: 'newer@example.com' }),
+      full_name: 'New user',
+      display_name: 'New user',
+      locale: 'es',
+      country_code: 'DO',
+      asi_membership_status: 'none',
+      user_subscription_status: 'none',
+      membership_expires_at: null,
+      subscription_expires_at: null
+    }
+
     authState.session = { user: { id: 'user-6', email: 'newer@example.com' } }
     authState.snapshot = {
-      profile: {
-        ...completeProfile({ id: 'user-6', email: 'newer@example.com' }),
-        full_name: 'New user',
-        display_name: 'New user',
-        locale: 'es',
-        country_code: 'DO'
-      },
+      profile: freshProfile,
       memberships: [],
       permissions: [],
       platformPermissions: [],
@@ -476,11 +486,9 @@ describe('surface access states', () => {
     expect(await screen.findByRole('heading', { name: 'Idioma y país' })).toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: 'Continuar' })[0])
     expect(await screen.findByRole('heading', { name: 'Una foto ayuda, pero no bloquea' })).toBeInTheDocument()
-    fireEvent.click(screen.getAllByRole('button', { name: 'Guardar e ir al pago' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Guardar y continuar' })[0])
 
-    expect(await screen.findByText(/El siguiente paso es pagar tu membresía/i)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /Pagar mi membresía ahora/i }))
-
-    expect(await screen.findByRole('heading', { name: 'Tu membresía' })).toBeInTheDocument()
+    // Al guardar sale solo: sin solicitud, a elegir categoría para empezarla.
+    expect(await screen.findByRole('heading', { name: /Elige tu categoría de membresía/i })).toBeInTheDocument()
   })
 })

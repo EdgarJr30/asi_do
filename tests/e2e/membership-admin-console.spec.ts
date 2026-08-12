@@ -129,6 +129,26 @@ test.describe('consola de administración de membresías', () => {
       })
       .toBe('active')
 
+    const { data: activatedMembership, error: activatedMembershipError } = await admin
+      .from('users')
+      .select('membership_activated_at,membership_expires_at')
+      .eq('id', applicant!.userId)
+      .single<{ membership_activated_at: string | null; membership_expires_at: string | null }>()
+    if (activatedMembershipError) throw activatedMembershipError
+
+    expect(activatedMembership.membership_activated_at).toBeTruthy()
+    expect(activatedMembership.membership_expires_at).toBeTruthy()
+
+    const { data: activatedPayment, error: activatedPaymentError } = await admin
+      .from('membership_payments')
+      .select('period_start,period_end')
+      .eq('id', paymentId)
+      .single<{ period_start: string | null; period_end: string | null }>()
+    if (activatedPaymentError) throw activatedPaymentError
+
+    expect(activatedPayment.period_start).toBe(activatedMembership.membership_activated_at!.slice(0, 10))
+    expect(activatedPayment.period_end).toBe(activatedMembership.membership_expires_at!.slice(0, 10))
+
     expect(pageErrors).toEqual([])
   })
 })

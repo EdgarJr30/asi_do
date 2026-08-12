@@ -50,7 +50,7 @@ SPA (localhost:5173)  →  microservicio (localhost:8080)  →  AZUL pruebas  �
 | Supabase | `azul_enabled=true`, `currency=DOP` en la config de pago activa |
 
 Para pruebas locales, `services/azul-payments/.env` debe permitir el origin del Vite local:
-`ALLOWED_ORIGIN=http://localhost:5173,https://asi-do.netlify.app`. Si el navegador muestra
+`ALLOWED_ORIGIN=http://localhost:5173,https://asidominicana.do`. Si el navegador muestra
 `Failed to fetch` al iniciar una renovación, revisa primero ese valor y confirma que
 `curl http://localhost:8080/healthz` responda.
 

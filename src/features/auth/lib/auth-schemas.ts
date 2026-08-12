@@ -92,7 +92,7 @@ export const recruiterRequestSchema = z
     requestedTenantSlug: z
       .string()
       .trim()
-      .min(3, 'La dirección debe tener al menos 3 caracteres.')
+      .min(2, 'La dirección debe tener al menos 2 caracteres.')
       .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Usa minúsculas, números y guiones.'),
     companyWebsiteUrl: z.union([z.url('Escribe una URL válida.'), z.literal('')]).optional(),
     companyEmail: z.union([z.email('Escribe un correo válido.'), z.literal('')]).optional(),

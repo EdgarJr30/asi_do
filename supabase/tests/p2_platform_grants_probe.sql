@@ -107,10 +107,22 @@ begin
   select count(*) into v_n
   from pg_proc p
   join pg_namespace n on n.oid = p.pronamespace
+  -- 25 desde 2026-08-10. Las dos que subieron están justificadas:
+  --
+  --   · `email_unsubscribe`: la baja de una campaña llega desde el cliente de
+  --     correo, sin sesión posible. Su superficie es un token uuid aleatorio por
+  --     destinatario; no acepta direcciones, no dice a quién pertenece el token
+  --     y responde igual ante uno inventado que ante uno caducado, para no ser
+  --     un oráculo.
+  --   · `submit_contact_message`: el formulario público de contacto se envía sin
+  --     cuenta. No es una superficie abierta: acota a 3 mensajes por hora y
+  --     correo, 60 por hora en total, y limita el largo de cada campo.
+  --
+  -- Cualquier otra subida de este número hay que justificarla igual o revertirla.
   where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute');
-  if v_n = 23 then v_ok := v_ok + 1; else
+  if v_n = 25 then v_ok := v_ok + 1; else
     v_fail := v_fail + 1;
-    v_out := v_out || format(E'\n  C2: %s funciones ejecutables por `anon`, se esperaban 23', v_n);
+    v_out := v_out || format(E'\n  C2: %s funciones ejecutables por `anon`, se esperaban 25', v_n);
   end if;
 
   select count(*) into v_n

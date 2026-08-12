@@ -17,7 +17,7 @@ REGISTRO          SOLICITUD           PAGO              APROBACIÓN          VER
  ATS bloqueado     (auto-ruteo)       status=submitted    (pastoral ref ✓)  (solo admin)       sub=active +1 año
 ```
 
-El ATS se desbloquea **solo** cuando se cumplen las 3 condiciones y un **admin** hace clic en "Activar". El botón "Activar" permanece deshabilitado hasta que (aprobación ✓ + pago verificado ✓). Separación de funciones (initiator ≠ reviewer ≠ verifier ≠ activator).
+El ATS se desbloquea **solo** cuando se cumplen las 3 condiciones y un **admin** hace clic en "Activar". El botón "Activar" permanece deshabilitado hasta que (aprobación ✓ + pago verificado ✓), y la vigencia pagada comienza en ese instante, no en la fecha del pago. Separación de funciones (initiator ≠ reviewer ≠ verifier ≠ activator).
 
 ## 2. Actores y responsabilidades
 
@@ -45,7 +45,7 @@ notificaciones, audit log, RPCs de revisión de autoridad, `hasActiveAsiAccess()
 
 ## 4. Flujos (pipelines)
 
-**🧑 Miembro:** signup → panel de progreso (4 pasos en vivo) → solicitud (categoría + selector jerárquico de iglesia)
+**🧑 Miembro:** signup → panel de progreso (4 pasos en vivo) → solicitud (categoría + unión/asociación + iglesia/distrito escritos)
 → pantalla de pago (datos de transferencia + cuota + subir comprobante) → espera → notificación de activación → ATS habilitado.
 
 **⛪ Pastor:** signup → solicita autoridad (elige iglesias) → admin otorga alcance → cola con **solo** las solicitudes de
@@ -56,7 +56,7 @@ autoridad a pastores.
 
 ## 5. Gating (enforcement)
 - `hasActiveAsiAccess()` + `RequireActiveAsiAccess` ya bloquean el ATS. Activar = flip de flags
-  (`status=active, approval=approved, membership=active, subscription=active, +1 año`).
+  (`status=active, approval=approved, membership=active, subscription=active`) e inicio del término adquirido desde la fecha de activación.
 - **Nuevo guard**: usuario autenticado pero NO activo → redirige al **panel de membresía** (no a "forbidden").
 - **Edge**: pastores/admins se activan por el admin (override) sin requerir pago.
 
@@ -72,12 +72,12 @@ autoridad a pastores.
    - ✅ RLS de lectura scoped del pastor en `institutional_membership_applications` (guardada contra `church_id null`).
    - ✅ Fix de seguridad en `review_membership_application`: el camino del pastor exige `church_id not null` (sin iglesia → solo admin).
 2. **Flujo del miembro** — formulario (categoría + iglesia), panel de progreso, subida de comprobante. **✅ COMPLETA**
-   - ✅ Selector jerárquico de iglesia (unión→asociación→distrito→iglesia) → escribe `church_id` y dispara auto-ruteo.
+   - ✅ Unión y asociación usan los catálogos disponibles; iglesia local y distrito se capturan como texto libre. `church_id` queda vacío hasta conciliación administrativa y la solicitud entra a la cola admin.
    - ✅ Jerarquía de prueba sembrada (Unión Dominicana: 4 asociaciones, 8 distritos, 16 iglesias).
    - ✅ Subida de comprobante: upload al bucket privado `membership-receipts` + `insert` en `membership_payments` (status=submitted), reflejado en el panel; re-subida tras rechazo soportada.
    - ✅ Entrada del flujo: panel → "Iniciar mi solicitud" va a elegibilidad (categoría) → formulario; tras enviar, CTA "Ir a mi panel de membresía" regresa al panel de pago.
    - ✅ El miembro puede ver/descargar su comprobante subido (URL firmada) desde el panel.
-   - ✅ **Envío habilitado + validado e2e de punta a punta** (`tests/e2e/membership-full-submission.spec.ts`): flag `MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED=false`; un miembro logueado completa el formulario real de 6 pasos (categoría `retired`) y lo envía → se crea la solicitud con `requester_user_id` correcto (RLS insert_self), `church_id` del picker y **auto-ruteo al pastor** (`assigned_queue=pastor`). Los CTAs de registro del storefront/app derivan de `PLATFORM_REGISTRATION_LOCKED`.
+   - ✅ **Envío habilitado + validado e2e de punta a punta** (`tests/e2e/membership-full-submission.spec.ts`): flag `MEMBERSHIP_APPLICATION_SUBMISSIONS_LOCKED=false`; un miembro logueado completa el formulario real de 6 pasos y lo envía → se crea la solicitud con `requester_user_id` correcto (RLS insert_self). Los CTAs de registro del storefront/app derivan de `PLATFORM_REGISTRATION_LOCKED`.
 3. **Cola del pastor** — bandeja scoped, aprobar/más-info/rechazar, subir comprobante. **✅ COMPLETA**
    - ✅ Detección del pastor en sesión: `activePastorScopeCount` en `SessionSnapshot` (cuenta de `user_authority_scopes` activos `pastor_administrator`) → `session.isMembershipReviewerPastor`.
    - ✅ Página `PastorMembershipQueuePage` en `/account/membership-queue` (dentro del shell; sin requerir ATS activo). Item de nav "Solicitudes de mi iglesia" (grupo Pastoral) solo visible para pastores.
@@ -92,7 +92,7 @@ autoridad a pastores.
    - Nota: el helper se refactorizó en `20260622140000` (join directo contra `user_authority_scopes`, equivalente; no corrige bug — un falso negativo en pruebas se debió a un usuario sembrado que fue eliminado, lo que dejó la solicitud sin `requester` y borró su pago en cascada).
 4. **Consola admin** — solicitudes + pagos, validar pago, botón Activar/Inactivar, módulo de datos bancarios, audit. **✅ COMPLETA**
    - ✅ Página `MembershipConsolePage` en `/admin/membership` (gateada por `membership_payment:verify`); nav admin "Administrar membresías". Lista cada solicitud accionable con su último pago y el estado de la cuenta del miembro, con filtros de activas/inactivas y paginación.
-   - ✅ Acciones por solicitud: revisar (aprobar/más-info/rechazar) vía RPC `review_membership_application`; verificar/rechazar pago vía `verify_membership_payment`; ver comprobante (URL firmada); **Activar membresía** vía `activate_member` (habilitado solo con solicitud aprobada + pago verificado; flip de flags + `+1 año`); **Inactivar membresía** vía `deactivate_member` (retira acceso protegido con auditoría). Todo audita.
+   - ✅ Acciones por solicitud: revisar (aprobar/más-info/rechazar) vía RPC `review_membership_application`; verificar/rechazar pago vía `verify_membership_payment`; ver comprobante (URL firmada); **Activar membresía** vía `activate_member` (habilitado solo con solicitud aprobada + pago verificado; inicia desde ese momento el término comprado); **Inactivar membresía** vía `deactivate_member` (retira acceso protegido con auditoría). Todo audita.
    - ✅ Consolidación: se retiró la sección de membresía de `RecruiterReviewPage` (`/admin/approvals`) que usaba un UPDATE directo sin auditoría; se eliminaron las funciones muertas `reviewInstitutionalMembershipApplication`/`listPendingInstitutionalMembershipApplications`. El módulo de datos bancarios ya existía en `/admin/payments`.
    - ✅ **Validado e2e** (`tests/e2e/membership-admin-console.spec.ts`): un admin de plataforma aprueba → verifica pago → activa; confirmado en BD (flags del miembro a `active`/`approved`, `+1 año`) y en `audit_logs` (`membership_payment.verified`, `member.activated`, actor=admin).
 5. **Notificaciones + pulido** — eventos por transición; recordatorios de renovación (después). **✅ COMPLETA (envío automático)**
@@ -106,7 +106,7 @@ autoridad a pastores.
 - **Datos bancarios** reales → se cargan desde el módulo admin (sembrados de prueba por ahora).
 
 ## Decisiones acordadas
-- Ruteo: el solicitante elige iglesia de la jerarquía → auto-ruteo al pastor con alcance; sin pastor → cola admin.
+- Ruteo: mientras iglesia y distrito sean texto libre, `church_id` queda vacío y la solicitud va a la cola admin; el auto-ruteo pastoral se habilita después de conciliarla con la jerarquía canónica.
 - Activación: aprobación + pago verificado + clic "Activar" de admin (admin-only el paso final).
 - Pago: anual por categoría, comprobante, renovación manual.
 - Validación del pago: solo admins. Pastor aprueba la referencia pastoral.

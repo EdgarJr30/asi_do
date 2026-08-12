@@ -46,8 +46,8 @@ This architecture is recommended because the project needs:
 The deployment baseline should stay intentionally lean for solo development:
 
 - local development for daily work
-- Netlify Deploy Previews for pull request validation
-- Netlify production deployment from `main`
+- `dev.asidominicana.do` (Hostinger, from the `staging` branch) for shared validation
+- Hostinger production deployment from `main`
 - no dedicated or long-lived staging environment in the current operating model; use local plus preview environments until an explicit architecture decision changes that baseline
 
 ---

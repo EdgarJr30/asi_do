@@ -1,9 +1,4 @@
-import { listTenantJobs } from '@/features/jobs/lib/jobs-api'
-import {
-  applicationAvatarPath,
-  applicationCandidateName,
-  fetchPipelineBoard
-} from '@/features/pipeline/lib/pipeline-api'
+import { supabase } from '@/lib/supabase/client'
 
 export interface DashboardFunnelStage {
   stageId: string
@@ -51,23 +46,6 @@ export interface WorkspaceDashboardMetrics {
   recentActivity: DashboardActivityItem[]
 }
 
-const TERMINAL_STATUSES = new Set(['rejected', 'withdrawn', 'hired'])
-
-function isInterviewStage(code: string | null | undefined, name: string | null | undefined) {
-  const value = `${code ?? ''} ${name ?? ''}`.toLowerCase()
-  return value.includes('interview') || value.includes('entrevista')
-}
-
-function isOfferStage(code: string | null | undefined, name: string | null | undefined) {
-  const value = `${code ?? ''} ${name ?? ''}`.toLowerCase()
-  return value.includes('offer') || value.includes('oferta')
-}
-
-function isHiredStage(code: string | null | undefined, name: string | null | undefined) {
-  const value = `${code ?? ''} ${name ?? ''}`.toLowerCase()
-  return value.includes('hired') || value.includes('contrat')
-}
-
 function getPeriodStart(periodDays?: number, offsetDays = 0) {
   if (!periodDays) {
     return null
@@ -79,152 +57,45 @@ function getPeriodStart(periodDays?: number, offsetDays = 0) {
   return start
 }
 
-function inPeriod(value: string, start: Date | null, end: Date | null) {
-  if (!start) {
-    return true
+function requireSupabase() {
+  if (!supabase) {
+    throw new Error('Supabase no esta configurado. Completa VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.')
   }
 
-  const date = new Date(value)
-  return date >= start && (!end || date < end)
+  return supabase
 }
 
-type PipelineApplication = Awaited<ReturnType<typeof fetchPipelineBoard>>['applications'][number]
-type PipelineStage = Awaited<ReturnType<typeof fetchPipelineBoard>>['stages'][number]
-
-function isActiveApplication(application: PipelineApplication) {
-  return !TERMINAL_STATUSES.has(application.status_public)
-}
-
-function isInterviewApplication(application: PipelineApplication, stageById: Map<string, PipelineStage>) {
-  const stage = application.current_stage_id ? stageById.get(application.current_stage_id) : null
-  return application.status_public === 'interviewing' || isInterviewStage(stage?.code, stage?.name)
-}
-
-function isOfferApplication(application: PipelineApplication, stageById: Map<string, PipelineStage>) {
-  const stage = application.current_stage_id ? stageById.get(application.current_stage_id) : null
-  return application.status_public === 'offer' || isOfferStage(stage?.code, stage?.name)
-}
-
-function isHiredApplication(application: PipelineApplication, stageById: Map<string, PipelineStage>) {
-  const stage = application.current_stage_id ? stageById.get(application.current_stage_id) : null
-  return application.status_public === 'hired' || isHiredStage(stage?.code, stage?.name)
-}
-
+/**
+ * Métricas del dashboard del workspace.
+ *
+ * Antes se descargaba el tablero completo —todas las postulaciones del tenant
+ * con notas, calificaciones y usuario anidados— más todas las vacantes, para
+ * calcular nueve números y dos listas de treinta. El coste crecía con el
+ * histórico aunque la pantalla mostrara siempre lo mismo. Ahora agrega la base
+ * y aquí solo queda decidir el periodo (TASK-276).
+ *
+ * Las fronteras se calculan en el cliente **a propósito**: salen de la
+ * medianoche local del navegador, y resolverlas en la base las movería a
+ * medianoche UTC — en República Dominicana (UTC-4), las cuatro primeras horas
+ * de cada día caerían en el periodo equivocado.
+ */
 export async function fetchWorkspaceDashboardMetrics(
   tenantId: string,
   options?: { periodDays?: number }
 ): Promise<WorkspaceDashboardMetrics> {
-  const [board, jobs] = await Promise.all([fetchPipelineBoard(tenantId), listTenantJobs(tenantId)])
-  const { stages, applications } = board
-
-  const stageById = new Map(stages.map((stage) => [stage.id, stage]))
+  const client = requireSupabase()
   const periodStart = getPeriodStart(options?.periodDays)
   const previousPeriodStart = getPeriodStart(options?.periodDays, options?.periodDays)
-  const periodApplications = applications.filter((application) => inPeriod(application.submitted_at, periodStart, null))
-  const previousApplications =
-    periodStart && previousPeriodStart
-      ? applications.filter((application) => inPeriod(application.submitted_at, previousPeriodStart, periodStart))
-      : []
-  const periodOpenJobs = periodStart
-    ? jobs.filter((job) => job.status === 'published' && inPeriod(job.published_at ?? job.updated_at, periodStart, null)).length
-    : jobs.filter((job) => job.status === 'published').length
-  const previousOpenJobs =
-    periodStart && previousPeriodStart
-      ? jobs.filter(
-          (job) =>
-            job.status === 'published' && inPeriod(job.published_at ?? job.updated_at, previousPeriodStart, periodStart)
-        ).length
-      : 0
-  const totalApplications = periodApplications.length
 
-  const funnel: DashboardFunnelStage[] = stages.map((stage) => {
-    const count = periodApplications.filter((application) => application.current_stage_id === stage.id).length
-    return {
-      stageId: stage.id,
-      name: stage.name,
-      count,
-      percent: totalApplications > 0 ? Math.round((count / totalApplications) * 100) : 0
-    }
+  const response = await client.rpc('workspace_dashboard_metrics', {
+    p_tenant_id: tenantId,
+    p_period_start: periodStart ? periodStart.toISOString() : null,
+    p_previous_period_start: previousPeriodStart ? previousPeriodStart.toISOString() : null
   })
 
-  const activeCandidates = periodApplications.filter(isActiveApplication).length
-  const interviews = periodApplications.filter((application) => isInterviewApplication(application, stageById)).length
-  const offers = periodApplications.filter((application) => isOfferApplication(application, stageById)).length
-  const hired = periodApplications.filter((application) => isHiredApplication(application, stageById)).length
-  const previousActiveCandidates = previousApplications.filter(isActiveApplication).length
-  const previousInterviews = previousApplications.filter((application) => isInterviewApplication(application, stageById)).length
-  const previousOffers = previousApplications.filter((application) => isOfferApplication(application, stageById)).length
-
-  const recentApplications: DashboardRecentApplication[] = [...periodApplications]
-    .sort((left, right) => new Date(right.submitted_at).getTime() - new Date(left.submitted_at).getTime())
-    .slice(0, 30)
-    .map((application) => {
-      const stage = application.current_stage_id ? stageById.get(application.current_stage_id) : null
-      const ratings = application.application_ratings ?? []
-      const score = ratings.length
-        ? Math.round((ratings.reduce((sum, rating) => sum + rating.score, 0) / ratings.length) * 20)
-        : null
-
-      return {
-        applicationId: application.id,
-        candidateName: applicationCandidateName(application),
-        avatarPath: applicationAvatarPath(application),
-        position: application.job_posting?.title ?? 'Vacante',
-        stageName: stage?.name ?? null,
-        stageCode: stage?.code ?? null,
-        score,
-        submittedAt: application.submitted_at
-      }
-    })
-
-  const activity: DashboardActivityItem[] = []
-  for (const application of periodApplications) {
-    const candidateName = applicationCandidateName(application)
-    const jobTitle = application.job_posting?.title ?? 'Vacante'
-    activity.push({
-      id: `app-${application.id}`,
-      kind: 'application',
-      candidateName,
-      jobTitle,
-      summary: 'aplicó a una vacante',
-      occurredAt: application.submitted_at
-    })
-    for (const note of application.application_notes ?? []) {
-      activity.push({
-        id: `note-${note.id}`,
-        kind: 'note',
-        candidateName,
-        jobTitle,
-        summary: 'recibió una nueva nota',
-        occurredAt: note.created_at
-      })
-    }
-    for (const rating of application.application_ratings ?? []) {
-      activity.push({
-        id: `rating-${rating.id}`,
-        kind: 'rating',
-        candidateName,
-        jobTitle,
-        summary: `fue calificado · ${rating.score}/5`,
-        occurredAt: rating.created_at
-      })
-    }
+  if (response.error) {
+    throw response.error
   }
 
-  const recentActivity = activity
-    .sort((left, right) => new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime())
-    .slice(0, 30)
-
-  return {
-    stats: { openJobs: periodOpenJobs, activeCandidates, interviews, offers, hired },
-    deltas: {
-      openJobs: periodOpenJobs - previousOpenJobs,
-      activeCandidates: activeCandidates - previousActiveCandidates,
-      interviews: interviews - previousInterviews,
-      offers: offers - previousOffers
-    },
-    funnel,
-    recentApplications,
-    recentActivity
-  }
+  return response.data as unknown as WorkspaceDashboardMetrics
 }
