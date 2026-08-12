@@ -57,9 +57,9 @@ Supabase → Edge Functions → Secrets. **Ninguno copiado de desarrollo.**
 | `ASI_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_…` de producción |
 | `ASI_SUPABASE_SECRET_KEY` | `sb_secret_…` de producción |
 | `APP_URL` | `https://asidominicana.do` |
-| `RESEND_API_KEY_DEV` | la key del paso 5 |
-| `EMAIL_FROM_ADDRESS_DEV` | `ASI Dominicana <notificaciones@asidominicana.do>` |
-| `RESEND_WEBHOOK_SECRET_DEV` | el `whsec_…` del paso 5 |
+| `RESEND_API_KEY` | la key del paso 5 |
+| `EMAIL_FROM_ADDRESS` | `ASI Dominicana <notificaciones@asidominicana.do>` |
+| `RESEND_WEBHOOK_SECRET` | el `whsec_…` del paso 5 |
 | `EMAIL_PROCESSOR_SECRET` | `openssl rand -hex 32` |
 | `WEB_PUSH_VAPID_PUBLIC_KEY` / `WEB_PUSH_VAPID_PRIVATE_KEY` | par nuevo: `npx web-push generate-vapid-keys` |
 | `WEB_PUSH_CONTACT_EMAIL` | `mailto:eperez@cilm.do` |
@@ -69,7 +69,7 @@ Supabase → Edge Functions → Secrets. **Ninguno copiado de desarrollo.**
 - [ ] Los 12 cargados
 - [ ] En el proyecto de **desarrollo**: añadir `<REF-PROD>` a `HARNESS_PRODUCTION_TARGETS`
 
-> El sufijo `_DEV` es el nombre canónico en todos los entornos. No inventes variantes sin sufijo.
+> Los tres nombres de Resend son iguales en desarrollo y producción; cambia únicamente sus valores por entorno.
 
 ## 4 · `runtime_secrets` (SQL Editor de producción)
 

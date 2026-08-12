@@ -124,11 +124,11 @@ Staging se empaqueta con `npm run build:staging`; producción con `npm run build
 
 ### 4.3 Edge Functions (secretos del proyecto Supabase)
 
-`ASI_SUPABASE_PUBLISHABLE_KEY` · `ASI_SUPABASE_SECRET_KEY` · `APP_URL` · `EMAIL_FROM_ADDRESS_DEV` · `RESEND_API_KEY_DEV` · `RESEND_WEBHOOK_SECRET_DEV` · `EMAIL_PROCESSOR_SECRET` · `WEB_PUSH_VAPID_PUBLIC_KEY` · `WEB_PUSH_VAPID_PRIVATE_KEY` · `WEB_PUSH_CONTACT_EMAIL` · `STRESS_HARNESS_ENABLED` · `HARNESS_ENV` · `HARNESS_PRODUCTION_TARGETS`
+`ASI_SUPABASE_PUBLISHABLE_KEY` · `ASI_SUPABASE_SECRET_KEY` · `APP_URL` · `EMAIL_FROM_ADDRESS` · `RESEND_API_KEY` · `RESEND_WEBHOOK_SECRET` · `EMAIL_PROCESSOR_SECRET` · `WEB_PUSH_VAPID_PUBLIC_KEY` · `WEB_PUSH_VAPID_PRIVATE_KEY` · `WEB_PUSH_CONTACT_EMAIL` · `STRESS_HARNESS_ENABLED` · `HARNESS_ENV` · `HARNESS_PRODUCTION_TARGETS`
 
 `APP_URL` no se mantiene a mano: el job `deploy-edge-functions` lo sincroniza desde `VITE_AUTH_SITE_URL` del GitHub Environment y rechaza si el origen no corresponde a staging o producción. La plantilla conserva únicamente la ruta de enlaces absolutos legados para que ningún correo pueda volver a otro host.
 
-`RESEND_WEBHOOK_SECRET_DEV` es exclusivo de cada endpoint/entorno. La Edge Function `resend-webhook` valida el cuerpo crudo y los headers `svix-*`; nunca debe reutilizarse como llave de envío ni exponerse al frontend. El procesador y el webhook usan exclusivamente los tres nombres `_DEV` en todos los entornos; no se mantienen alias antiguos sin sufijo.
+`RESEND_WEBHOOK_SECRET` es exclusivo de cada endpoint/entorno. La Edge Function `resend-webhook` valida el cuerpo crudo y los headers `svix-*`; nunca debe reutilizarse como llave de envío ni exponerse al frontend. El procesador y el webhook usan exclusivamente los tres nombres canónicos sin sufijo; no se mantienen alias `_DEV`.
 
 **Las claves VAPID deben ser distintas por entorno.** Compartirlas hace que una suscripción push de staging reciba notificaciones de producción.
 

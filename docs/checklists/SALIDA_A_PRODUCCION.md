@@ -55,7 +55,7 @@ Runbook `ENVIRONMENTS.md` §6. El replay de migraciones y las 17 probes ya está
 - [ ] **C2 · Rotar la `service_role`** (`ENVIRONMENTS.md:157`). Estuvo en claro en `audit_logs` desde marzo. Resincronizar `.env.local`, AZUL y Edge Functions. *Cierra cuando:* la vieja da 401 y el cron encadena 20 corridas.
 - [ ] **C3 · Cablear AZUL producción** — `AZUL_ENVIRONMENT=production` + §4.5 completa. *Cierra cuando:* un cobro real mínimo activa membresía y aparece en `reconcile`.
 - [ ] **C4 · Separar API keys de Resend por entorno.** Hoy hay una sola `asi-dev` que puede administrar dominios, webhooks y keys. *Sale hoy.*
-- [ ] **C5 · Remitente correcto + `Reply-To`** — confirmado: `EMAIL_FROM_ADDRESS_DEV` vale
+- [ ] **C5 · Remitente correcto + `Reply-To`** — confirmado: `EMAIL_FROM_ADDRESS` vale
       `ASI Rep. Dominicana <noreply@asidominicana.do>`; debe ser `ASI Dominicana <notificaciones@asidominicana.do>`.
 - [ ] **C6 · Matriz de entregabilidad** — Gmail, Outlook, apertura, clic y rebote visibles en Resend y `/admin/correos`. Luego revocar la key vieja.
 - [ ] **C7 · Re-correr advisors de Supabase** ([TASK-175](https://linear.app/mooncode/issue/TASK-175)) y activar **protección de contraseñas filtradas**.

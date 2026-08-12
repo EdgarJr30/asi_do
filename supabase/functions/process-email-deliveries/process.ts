@@ -214,8 +214,8 @@ export async function processEmailDeliveries(
         responseCode: 503,
         responsePayload: {
           missingConfig: [
-            !resendApiKey ? 'RESEND_API_KEY_DEV' : null,
-            !fromEmail ? 'EMAIL_FROM_ADDRESS_DEV' : null
+            !resendApiKey ? 'RESEND_API_KEY' : null,
+            !fromEmail ? 'EMAIL_FROM_ADDRESS' : null
           ].filter(Boolean)
         }
       })
